@@ -1,0 +1,65 @@
+<asset-sg-map
+    [rdStudies$]="rdStudies$"
+    [rdCurrentAssetDetail$]="rdCurrentAssetDetail$"
+    [searchPolygon$]="searchPolygon$"
+    [highlightAssetStudies]="highlightAssetStudies$"
+    (polygonChanged)="polygonChanged$.next($event)"
+    (assetClicked)="assetClicked$.next($event)"
+    (mapInitialised)="handleMapInitialised()"></asset-sg-map>
+
+<asset-sg-asset-picker
+    [assets]="assetsForPicker$"
+    [currentAssetId]="currentAssetId$"
+    (assetMouseOver)="highlightAssetStudies$.next($event)" />
+
+<ng-template #templateAppBarPortalContent>
+    <input
+        #searchInput
+        class="search-input"
+        [placeholder]="'search.textSearchFieldPlaceholder' | translate"
+        (keydown)="_searchTextKeyDown$.next($event)" />
+</ng-template>
+
+<ng-template #templateDrawerPortalContent>
+    <asset-sg-drawer *rxLet="drawerState$ | push; let drawerState">
+        <asset-sg-drawer-panel
+            widthPercentageOfViewPanel="0.2"
+            [display]="drawerState.showRefineOrStartSearch === 'show-refine'">
+            <asset-sg-asset-search-refine
+                [style.visibility]="drawerState.showRefineOrStartSearch === 'show-refine' ? 'visible' : 'hidden'"
+                [rdRefineVM$]="rdRefineVM$"
+                [rdReferenceDataVM$]="rdReferenceDataVM$"
+                [searchPolygon$]="searchPolygon$"
+                (refinementChanged)="refinementChanged$.next($event)"
+                (removePolygon)="removePolygon$.next()" />
+        </asset-sg-drawer-panel>
+        <asset-sg-drawer-panel widthPercentageOfViewPanel="0.2" [display]="drawerState.showResults">
+            <asset-sg-asset-search-results
+                [style.visibility]="drawerState.showResults ? 'visible' : 'hidden'"
+                [rdAssets$]="rdSearchAssets$"
+                (closeSearchResultsClicked)="closeSearchResultsClicked$.next($event)"
+                (assetMouseOver)="highlightAssetStudies$.next($event)"
+                [currentAssetId$]="currentAssetId$" />
+        </asset-sg-drawer-panel>
+        <asset-sg-drawer-panel
+            widthPercentageOfViewPanel="0.2"
+            [display]="drawerState.showRefineOrStartSearch === 'show-start-search'">
+            <div class="flex flex-column pl-2">
+                <button
+                    asset-sg-icon-button
+                    class="self-end mt-4 mr-4"
+                    [attr.aria-label]="'search.closeInstructions' | translate"
+                    (click)="closeInstructions$.next()">
+                    <svg-icon key="close"></svg-icon>
+                </button>
+                <h3 translate class="mt-0">search.searchInstructionsHeading</h3>
+                <p translate class="m-0 mr-4">search.searchInstructions</p>
+            </div>
+        </asset-sg-drawer-panel>
+        <asset-sg-drawer-panel widthPercentageOfViewPanel="0.3" [display]="drawerState.showDetail">
+            <asset-sg-asset-search-detail
+                [style.visibility]="drawerState.showDetail ? 'visible' : 'hidden'"
+                [rdAssetDetail$]="rdCurrentAssetDetail$" />
+        </asset-sg-drawer-panel>
+    </asset-sg-drawer>
+</ng-template>

@@ -1,0 +1,84 @@
+name: 'Pulumi deployment to cluster'
+description: 'Starts a pulumi deployment to the cluster'
+inputs:
+    # secrets for login etc
+    pulumiConfigSecret:
+        description: 'Pulumi config secret'
+        required: true
+    npmPkgToken:
+        description: 'token for npm pkg access'
+        required: true
+    awsAccessKeyId:
+        description: 'AWS access key id'
+        required: true
+    awsSecretAccessKey:
+        description: 'AWS secret access key'
+        required: true
+    eksClusterName:
+        description: 'AWS EKS cluster name'
+        required: true
+    eksRoleArn:
+        description: 'AWS EKS Role ARN'
+        required: true
+    # variables for pulumi setup
+    pulumiConfigPassphrase:
+        description: 'Pulumi config passphrase'
+        required: true
+    stack:
+        description: 'Pulumi stack name'
+        required: true
+    command:
+      description: "Pulumi command to run"
+      required: false
+      default: "preview"
+    region:
+        description: 'AWS region'
+        required: false
+        default: 'eu-central-1'
+    s3Bucket:
+        description: 'S3 bucket for pulumi state'
+        required: false
+        default: 'swissgeol-assets-swisstopo'
+    version:
+        description: 'App version for assets'
+        required: false
+        default: 'dev'
+runs:
+    using: 'composite'
+    steps:
+        # https://github.com/marketplace/actions/configure-aws-credentials-for-github-actions
+        - name: configure aws credentials
+          uses: aws-actions/configure-aws-credentials@v2
+          with:
+              aws-access-key-id: ${{ inputs.awsAccessKeyId }}
+              aws-secret-access-key: ${{ inputs.awsSecretAccessKey }}
+              aws-region: ${{ inputs.region }}
+
+        - name: Create kubeconfig
+          shell: bash
+          working-directory: ./deployment
+          run: |
+            aws --region ${{ inputs.region }} eks update-kubeconfig --name ${{ inputs.eksClusterName }} --alias swissgeol-${{ inputs.eksClusterName }} --role-arn ${{ inputs.eksRoleArn }}
+            kubectl get namespaces
+
+        - name: install pulumi deps
+          shell: bash
+          working-directory: ./deployment
+          run: |
+            echo "//npm.pkg.github.com/:_authToken=${{ inputs.npmPkgToken }}" >> .npmrc
+            npm ci
+
+        # https://github.com/marketplace/actions/pulumi-cli-action
+        - name: execute pulumi
+          uses: pulumi/actions@v4
+          with:
+              command: ${{ inputs.command }}
+              stack-name: ${{ inputs.stack }}
+              cloud-url: 's3://${{ inputs.s3Bucket }}?region=${{ inputs.region }}&awssdk=v2'
+              work-dir: ./deployment
+              config-map: "{ geoadmin-swissgeol-asset:version: {value: ${{ inputs.version }}, secret: false }}"
+          env:
+              AWS_ACCESS_KEY_ID: ${{ inputs.awsAccessKeyId }}
+              AWS_SECRET_ACCESS_KEY: ${{ inputs.awsSecretAccessKey }}
+              AWS_REGION: ${{ inputs.region }}
+              PULUMI_CONFIG_PASSPHRASE: ${{ inputs.pulumiConfigPassphrase }}

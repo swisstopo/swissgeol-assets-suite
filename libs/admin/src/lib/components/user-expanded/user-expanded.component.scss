@@ -1,0 +1,72 @@
+@use '../../styles/variables';
+
+:host {
+    display: block;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+}
+
+.edit-area {
+    display: flex;
+    flex-direction: column;
+    background-color: variables.$white;
+    padding: 0rem 1rem 1rem 1rem;
+}
+
+.label-email {
+    padding-top: 1rem;
+}
+
+.header {
+    display: grid;
+    align-items: center;
+    padding: 0.5rem 0;
+    grid-template-areas: 'email delete';
+    grid-template-columns: 1fr auto;
+    margin-bottom: 1rem;
+}
+
+.email {
+    grid-area: email;
+    color: variables.$cyan-09;
+    font-weight: variables.$font-bold;
+}
+
+.email-form-field {
+    align-self: flex-start;
+    min-width: 32rem;
+}
+
+.roles-radio-group {
+    margin-bottom: 1rem;
+    align-self: flex-start;
+}
+
+label,
+.label-heading {
+    font-size: 0.875rem;
+    color: variables.$grey-09;
+    font-weight: variables.$font-bold;
+}
+
+.label-heading--before-form-field {
+    margin-bottom: 0.75rem;
+}
+
+.lang-form-field {
+    align-self: flex-start;
+}
+
+.mdc-text-field--filled:not(.mdc-text-field--disabled) {
+    background-color: variables.$grey-00;
+}
+
+.asset-sg-dialog {
+    min-height: unset;
+    .email {
+        margin: 1rem 1rem 2rem 2rem;
+    }
+}

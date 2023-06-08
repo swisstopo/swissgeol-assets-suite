@@ -1,0 +1,288 @@
+@use 'app/styles/variables';
+@use 'app/styles/mixins' as mixins;
+@use '@angular/material' as mat;
+@use 'sass:map';
+
+@include mat.core();
+
+$asset-sg-palette: map.set(mat.$indigo-palette, 500, variables.$cyan-03);
+
+$asset-sg-primary: mat.define-palette($asset-sg-palette);
+$asset-sg-accent: mat.define-palette(mat.$pink-palette, A200, A100, A400);
+$asset-sg-warn: mat.define-palette(mat.$red-palette);
+
+$asset-sg-theme: mat.define-light-theme(
+    (
+        color: (
+            primary: $asset-sg-primary,
+            accent: $asset-sg-accent,
+            warn: $asset-sg-warn,
+        ),
+    )
+);
+
+@include mat.select-theme($asset-sg-theme);
+.mat-mdc-select-value {
+    color: variables.$grey-09;
+}
+.mat-mdc-select-disabled .mat-mdc-select-value {
+    color: variables.$grey-08;
+}
+.mdc-menu-surface.mat-mdc-select-panel {
+    padding-bottom: 0 !important;
+}
+.mat-mdc-select-panel {
+    &::-webkit-scrollbar {
+        width: 16px;
+        height: 16px;
+    }
+    &::-webkit-scrollbar-button {
+        background-color: transparent;
+        &:vertical:decrement {
+            height: 8px;
+        }
+        &:vertical:increment {
+            height: 0px;
+        }
+        &:horizontal:decrement,
+        &:horizontal:increment {
+            width: 8px;
+        }
+    }
+    &::-webkit-scrollbar-track {
+        background-color: transparent;
+        border-color: transparent;
+        border-style: solid;
+        background-clip: content-box;
+        &:vertical {
+            border-width: 0 6px 0 4px;
+        }
+        &:horizontal {
+            border-width: 4px 0 6px 0;
+        }
+    }
+    &::-webkit-scrollbar-thumb {
+        background-color: #bcc1c6;
+        border-color: transparent;
+        border-style: solid;
+        background-clip: content-box;
+        &:vertical {
+            border-width: 0 6px 0 4px;
+        }
+        &:horizontal {
+            border-width: 4px 0 6px 0;
+        }
+    }
+}
+
+mat-option.mat-mdc-option {
+    font-size: 1rem;
+    line-height: 2.5rem;
+    height: 2.5rem;
+    min-height: 2.5rem;
+    .mat-pseudo-checkbox {
+        color: variables.$cyan-09;
+    }
+    &.mat-mdc-option-active,
+    &:hover:not(.mdc-list-item--disabled),
+    &:focus:not(.mdc-list-item--disabled) {
+        background-color: variables.$cyan-01;
+    }
+    &.mdc-list-item--selected,
+    &.mdc-list-item--activated {
+        background-color: variables.$grey-01;
+        .mdc-list-item__primary-text {
+            color: variables.$cyan-09;
+        }
+        .mat-pseudo-checkbox {
+            color: variables.$dark-red;
+        }
+    }
+    &.mdc-list-item--disabled {
+        opacity: 1;
+        .mdc-list-item__primary-text {
+            color: variables.$grey-06;
+        }
+    }
+
+    &.ellipsis {
+        .mdc-list-item__primary-text {
+            @include mixins.text-ellipsis;
+        }
+    }
+}
+
+@include mat.legacy-autocomplete-theme($asset-sg-theme);
+.mat-autocomplete-panel .mat-option.mat-selected:not(.mat-active):not(:hover):not(.mat-option-disabled) {
+    color: inherit;
+    background-color: variables.$grey-01;
+}
+
+// this is for legacy autocomplete, the mat-option for select is defined above
+mat-option.mat-option {
+    &:first-of-type {
+        margin-top: 0.25rem;
+    }
+    font-size: 1rem;
+    line-height: 2.5rem;
+    height: 2.5rem;
+    &.mat-active,
+    &:hover:not(.mat-option-disabled),
+    &:focus:not(.mat-option-disabled) {
+        background-color: variables.$cyan-01;
+    }
+    &.mat-active {
+        outline: 2px solid #4d90fe;
+        outline-offset: -2px;
+    }
+}
+
+@include mat.form-field-theme($asset-sg-theme);
+.mat-mdc-form-field {
+    &:hover,
+    &.mat-focused {
+        .mat-mdc-form-field-focus-overlay {
+            opacity: 0;
+        }
+    }
+    &:not(.mat-form-field-no-animations) .mdc-line-ripple,
+    .mdc-line-ripple {
+        &:after {
+            transition: none !important;
+            opacity: 1;
+            transform: scaleX(1);
+            border-bottom-color: variables.$cyan-06;
+        }
+    }
+    &:hover,
+    &.mat-focused {
+        .mdc-line-ripple {
+            &:after {
+                border-bottom-color: variables.$cyan-03;
+            }
+        }
+    }
+    .mat-mdc-text-field-wrapper:not(.mdc-text-field--outlined) .mat-mdc-form-field-infix {
+        min-height: 3.5rem;
+        padding-top: 1.5rem;
+        padding-bottom: 0.5rem;
+    }
+    .mat-mdc-text-field-wrapper .mat-mdc-form-field-flex .mat-mdc-floating-label {
+        top: 1.75rem;
+    }
+    .mat-mdc-form-field-icon-suffix {
+        padding-right: 0.25rem;
+    }
+    .mdc-text-field--invalid {
+        .mdc-floating-label {
+            color: variables.$red-09;
+        }
+        .mdc-line-ripple {
+            &:after {
+                border-bottom-color: variables.$red-09;
+            }
+        }
+    }
+    &.mat-form-field-disabled,
+    &.readonly {
+        .mdc-text-field {
+            background-color: variables.$grey-01;
+            .mdc-floating-label {
+                color: variables.$grey-08;
+            }
+        }
+        .mdc-line-ripple {
+            &:after {
+                transition: none !important;
+                opacity: 1;
+                transform: scaleX(1);
+                border-bottom-color: variables.$grey-01;
+            }
+        }
+    }
+    &.no-subscript {
+        .mat-mdc-form-field-subscript-wrapper {
+            display: none;
+        }
+    }
+}
+.mdc-text-field .mdc-text-field__input {
+    caret-color: variables.$dark-red;
+}
+.mat-mdc-form-field-error {
+    font-size: 0.75rem;
+    color: variables.$red-09;
+}
+
+.mdc-text-field--filled {
+    &:not(.mdc-text-field--disabled) {
+        background-color: variables.$white;
+        .mdc-floating-label {
+            color: variables.$grey-08;
+        }
+    }
+}
+.edit-area {
+    .mdc-text-field--filled {
+        &:not(.mdc-text-field--disabled) {
+            background-color: variables.$grey-00;
+        }
+    }
+}
+
+@include mat.datepicker-theme($asset-sg-theme);
+button.mat-icon-button {
+    border-radius: 0;
+    background-color: white;
+}
+.mdc-icon-button.mat-mdc-icon-button:disabled {
+    color: variables.$grey-06;
+}
+mat-datepicker-toggle button.mdc-icon-button {
+    color: variables.$cyan-09;
+    height: 3rem;
+    width: 3rem;
+    padding: 0.75rem;
+    &:focus,
+    &:hover {
+        color: variables.$red;
+    }
+    &:active {
+        color: variables.$dark-red;
+    }
+}
+.mat-calendar-body {
+    font-size: 1rem;
+}
+.mat-calendar-table-header th {
+    font-size: 0.875rem;
+}
+.mat-calendar-body-label,
+.mat-calendar-period-button {
+    font-size: 1rem;
+}
+mat-datepicker-content.mat-datepicker-content .mat-calendar {
+    width: 19.5rem;
+    height: 24.5rem;
+}
+
+@include mat.progress-bar-theme($asset-sg-theme);
+@include mat.radio-theme($asset-sg-theme);
+.mat-mdc-radio-button.mat-accent {
+    --mdc-radio-selected-focus-icon-color: #{variables.$dark-red};
+    --mdc-radio-selected-hover-icon-color: #{variables.$dark-red};
+    --mdc-radio-selected-icon-color: #{variables.$dark-red};
+    --mdc-radio-selected-pressed-icon-color: #{variables.$dark-red};
+    --mat-mdc-radio-checked-ripple-color: #{variables.$dark-red};
+}
+
+@include mat.menu-theme($asset-sg-theme);
+.mat-mdc-menu-item:hover:not([disabled]),
+.mat-mdc-menu-item.cdk-program-focused:not([disabled]),
+.mat-mdc-menu-item.cdk-keyboard-focused:not([disabled]),
+.mat-mdc-menu-item-highlighted:not([disabled]) {
+    background-color: variables.$cyan-01;
+    svg-icon {
+        color: variables.$red;
+    }
+}

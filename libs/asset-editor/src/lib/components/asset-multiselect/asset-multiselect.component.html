@@ -1,0 +1,25 @@
+<mat-form-field class="mb-2" floatLabel="always">
+    <mat-label>{{ singularLabel }}</mat-label>
+    <mat-select
+        [ngModel]="_selectedItemCodes"
+        (ngModelChange)="_setSelectedItemCodes($event)"
+        multiple="true"
+        [disabled]="_disabled"
+        [placeholder]="noSelectedItemsLabel || placeholder || ''"
+        [ngClass]="{ 'place-holder-normal': !!noSelectedItemsLabel }">
+        <mat-select-trigger>
+            {{ _selectedItemCodes.length }} {{ _selectedItemCodes.length === 1 ? singularLabel : pluralLabel }}
+        </mat-select-trigger>
+        <mat-option class="ellipsis" *ngFor="let item of _itemsArray" [value]="item.code">{{
+            item | valueItemName
+        }}</mat-option>
+    </mat-select>
+</mat-form-field>
+<ul class="tags" *ngIf="_selectedItemCodes.length > 0">
+    <li *ngFor="let itemCode of _selectedItemCodes">
+        <button asset-sg-reset (click)="_removeItem(itemCode)" [disabled]="_disabled || itemCode === fallbackCode">
+            <span> {{ items[itemCode] | valueItemName }} </span>
+            <svg-icon key="close" *ngIf="!_disabled && itemCode !== fallbackCode"></svg-icon>
+        </button>
+    </li>
+</ul>

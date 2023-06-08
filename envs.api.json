@@ -1,0 +1,107 @@
+{
+    "$schema": "https://sos-ch-dk-2.exo.io/lqd/json/env-schema.json",
+    "onePassword": [
+        {
+            "itemUrl": "https://start.1password.com/open/i?v=q7jk2jxvqwnfjyxlitdnvz2xg4&i=bxw5lk4zwh4ouple6ulowqxste",
+            "mapping": [
+                {
+                    "field": "Benutzername",
+                    "env": "POSTGRES_USER"
+                },
+                {
+                    "field": "Passwort",
+                    "env": "POSTGRES_PASSWORD"
+                },
+                {
+                    "field": "database",
+                    "env": "POSTGRES_DB"
+                },
+                {
+                    "field": "URL",
+                    "env": "POSTGRES_URL"
+                },
+                {
+                    "field": "port",
+                    "env": "POSTGRES_PORT"
+                }
+            ]
+        },
+        {
+            "itemUrl": "https://start.1password.com/open/i?v=q7jk2jxvqwnfjyxlitdnvz2xg4&i=mjbcvmegzkd7qvxw2sndykowlm",
+            "mapping": [
+                {
+                    "field": "password",
+                    "env": "GOTRUE_JWT_SECRET"
+                }
+            ]
+        },
+        {
+            "itemUrl": "https://start.1password.com/open/i?v=q7jk2jxvqwnfjyxlitdnvz2xg4&i=3rilud3qyopmzgcdeonstmrvli",
+            "mapping": [
+                {
+                    "field": "username",
+                    "env": "ELASTICSEARCH_USERNAME"
+                },
+                {
+                    "field": "password",
+                    "env": "ELASTICSEARCH_PASSWORD"
+                }
+            ]
+        },
+        {
+            "itemUrl": "https://start.1password.com/open/i?v=q7jk2jxvqwnfjyxlitdnvz2xg4&i=xbabbwscr5wtakuxj3lir2we3q",
+            "mapping": [
+                {
+                    "field": "region",
+                    "env": "S3_REGION"
+                },
+                {
+                    "field": "endpoint",
+                    "env": "S3_ENDPOINT"
+                },
+                {
+                    "field": "key",
+                    "env": "S3_ACCESS_KEY_ID"
+                },
+                {
+                    "field": "secret",
+                    "env": "S3_SECRET_ACCESS_KEY"
+                },
+                {
+                    "field": "bucket",
+                    "env": "S3_BUCKET_NAME"
+                }
+            ]
+        }
+    ],
+    "envs": [
+        {
+            "name": "DATABASE_URL",
+            "value": "postgres://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(POSTGRES_URL):$(POSTGRES_PORT)/$(POSTGRES_DB)"
+        },
+        {
+            "name": "ELASTICSEARCH_URL",
+            "value": "http://10.0.0.28:9200/"
+        },
+        {
+            "name": "FRONTEND_URL",
+            "value": "https://asset-sg.lqd.lambda-it.ch/"
+        },
+        {
+            "name": "AUTH_URL",
+            "value": "http://asset-swissgeol-ch-web-api-auth-deploy-dev:9999/"
+        },
+        {
+            "name": "S3_ASSET_FOLDER",
+            "value": "asset_files"
+        },
+        {
+            "name": "OCR_URL",
+            "value": "http://swissgeol-ocr-ocr-dev.swissgeol-dev.svc.6deaeb9f-e5ef-4f56-b232-d9cdf596da8a.cluster.local:5000"
+        },
+        {
+            "name": "OCR_CALLBACK_URL",
+            "value": "https://asset-sg.lqd.lambda-it.ch/api"
+        }
+    ]
+}

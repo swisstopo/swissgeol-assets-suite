@@ -1,0 +1,31 @@
+encryptionsalt: v1:lTcM7gC+GHI=:v1:kh6W3ak+T5NFtCRq:tuMXDgqxpVKFH+Yf5aGW5Jkku30NuA==
+config:
+    geoadmin-swissgeol-asset:apiDbCon:
+        secure: v1:BoafVy7yhi+d5MBK:GFWEJnaI8wvkjZ2f9SU/k9+sC+laNCFgLJAO1m3c7WN5HKvqZbS6a6fbrFM/QxhStaDlh3ZTvnMXfIDI4Oygtgzq6SCDuPqPXMasd1ApUX5zNKHyQAnhgXR32I05t33B5sGzUkIQGpeF3Uw+/DyZ37r9DKdHxMFUWb+1mocflikm5RCDwUYPFu4xTKwEd1FIn8IF+jGXTmtHqtEphhgqlzo8g2bD63UZNVJzqZA1CyKZgLr1NjSqYabtie+t4QV4FOkvyK3glSLJ9v66eavp8g==
+    geoadmin-swissgeol-asset:authDbCon:
+        secure: v1:Hwvvv5n+n054ITCH:+d7UKMi6DJnZ3Q6GLvUE5/5NO6AYB8qqfWZFRNY1oZaO1+8802Uv4iKcEpKJuoN+9RLaSFVIl+c4iV2KRM5Y69Sl4YeFsdwQouakdURJIeBn4vqn25b4xWbLGHgF83Jc9HOSbQP4azGIbvKhk8Jt/YVe9P6otiV/YjgqY04f6h4a2USmRRXLMJMeJW8UAJCvtnZUkyTESnq+S2MbKbzW/g/12AIdFG1OhC7OSAS7qcuofopYUfZvD3lDOn0lqWUA7Zo2aq7TN6oPbcHEL0i1pOecD/0=
+    geoadmin-swissgeol-asset:authDisableSignup: 'false'
+    geoadmin-swissgeol-asset:authSmtp:
+        admin_email: swissgeol@swisstopo.ch
+        host: mailrelay.swissgeol.ch
+        port: 25
+    geoadmin-swissgeol-asset:authSmtpPass:
+        secure: v1:5xbCZh7AAJDWNcr+:tHOKb+e++oJKrCk5g8aoTHi40MIDbOrymeY/MvmzAs1+wbSl
+    geoadmin-swissgeol-asset:elasticPassword:
+        secure: v1:95bRCyJJ58GRwzcl:iuCMfwrJ0/lUojRcIRkiO8i8dWI+lUsVVjsYUKXdrQD/SWmJP7GFn1BmNIU=
+    geoadmin-swissgeol-asset:elasticVersion: 8.6.2
+    geoadmin-swissgeol-asset:env: prod
+    geoadmin-swissgeol-asset:ghcr-registry-secret:
+        secure: v1:z6bCRCOao2zX2Dz2:EiIASTu+pbxMVTRKnE1cgDTUfH8SJAzmL9l7pxqWOOMP4Nu4jSF+f7QFomD82GHi+ddCKqghUGxj9r8o1dezR6XzFjuBFSIOOqTGuEWSXBt3nYBdUIxM7KNm8YOmVmBXNZeFMBxr1MFcecqIMn6GHR5NWzHNkN5KuXvvShbFuVk6GXTCqfk+Bn5GdblMCjpDCG2/w/Ay9g2QuEX9QxbSUGN1Wr0=
+    geoadmin-swissgeol-asset:s3:
+        bucket: swissgeol-assets-swisstopo
+        endpoint: https://s3.eu-central-1.amazonaws.com
+        region: eu-central-1
+    geoadmin-swissgeol-asset:s3AccessKeyId:
+        secure: v1:qxwdOAXw0LpR9IlE:HFn3V5nHmt22fgUajreMPM7yPUNJsrcKZlqIDYBruSA7DxScPerq+aQ7MGo=
+    geoadmin-swissgeol-asset:s3SecretAccessKey:
+        secure: v1:1wnUxik2LalkkWv/:Ud5skErM9ORk2xNYcEG8i+QjNAXn4NBe/keqc2Np/k1jzqDM7635v51ex1LW+dIvzEl+hWjg3QYaGlKFXYJZ6X1ypkf+ERTv
+    geoadmin-swissgeol-asset:searchEncryptionKey:
+        secure: v1:VBPGplDKXMuaQZrt:OCSfb4QzEGfkH6mKC7Le0fh6eAYcU5gnFXmszoqhk5WTPH75KEmXJ19jMJs=
+    geoadmin-swissgeol-asset:url: assets.swissgeol.ch
+    kubernetes:context: swissgeol-prod

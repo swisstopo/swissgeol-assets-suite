@@ -1,0 +1,6 @@
+.*/**
+**/node_modules
+dist/**
+bin/**
+tmp/**
+# Add more unecessary build/runtime file globs to reduce build time

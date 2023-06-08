@@ -1,0 +1,25 @@
+<button asset-sg-icon-button (click)="_zoomPlusClicked$.next($event)" [attr.aria-label]="'map.zoomIn' | translate">
+    <svg-icon key="zoom-plus" />
+</button>
+<button
+    asset-sg-icon-button
+    (click)="_zoomOriginClicked$.next($event)"
+    [attr.aria-label]="'map.zoomToOrigin' | translate">
+    <svg-icon key="zoom-origin" />
+</button>
+<button asset-sg-icon-button (click)="_zoomMinusClicked$.next($event)" [attr.aria-label]="'map.zoomOut' | translate">
+    <svg-icon key="zoom-minus" />
+</button>
+<span aria-hidden="true" class="divider"></span>
+<label class="checkbox-wrapper">
+    <span [id]="drawingModelLabel" class="cdk-visually-hidden" translate>{{
+        drawModeCheckbox.checked ? 'map.drawingModeOn' : 'map.drawingModeOff'
+    }}</span>
+    <input
+        type="checkbox"
+        class="cdk-visually-hidden"
+        #drawModeCheckbox
+        [attr.aria-labelledby]="drawingModelLabel"
+        (change)="drawingModeChangedHandler($event)" />
+    <svg-icon key="polygon" />
+</label>

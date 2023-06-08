@@ -1,0 +1,36 @@
+@use './variables';
+
+@mixin text-ellipsis($lines: 1) {
+    text-overflow: ellipsis;
+    overflow: hidden;
+    word-break: break-word;
+    @if ($lines > 1) {
+        display: -webkit-box;
+        -webkit-line-clamp: $lines;
+        -webkit-box-orient: vertical;
+    } @else {
+        white-space: nowrap;
+    }
+}
+
+@mixin button-reset {
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+    font-family: inherit;
+    font-weight: variables.$font-medium;
+    font-size: 1rem;
+    color: inherit;
+    background-color: inherit;
+
+    &[aria-disabled='true'] {
+        cursor: default;
+    }
+}
+
+@mixin font-size-14 {
+    font-size: 0.875rem;
+    line-height: calc(20 / 14);
+}

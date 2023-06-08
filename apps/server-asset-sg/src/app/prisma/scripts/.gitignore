@@ -1,0 +1,4 @@
+swisstopo-lambda_prodDaten_asset_swissgeol
+import-shapes.stage.sh
+import-shapes.prod.sh
+import-shapes.dev.sh

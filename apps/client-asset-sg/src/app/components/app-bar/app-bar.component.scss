@@ -1,0 +1,46 @@
+@use '../../styles/variables';
+
+:host {
+    box-shadow: 0px 4px 4px #00000029;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+}
+
+.logo {
+    margin-left: 24px;
+}
+
+.search-input {
+    margin-left: 6rem;
+    line-height: 3.5rem;
+    padding: 0 1rem;
+    border: none;
+    outline: none;
+    background-color: variables.$cyan-01;
+    width: 33rem;
+    font-weight: variables.$font-medium;
+
+    &:focus {
+        background-color: variables.$focused;
+    }
+
+    &::placeholder {
+        color: variables.$grey-09;
+    }
+}
+
+.language-links {
+    flex: 1 1 auto;
+    display: flex;
+    justify-content: flex-end;
+    margin-right: 24px;
+    a {
+        margin-left: 0.5rem;
+        color: variables.$grey-09;
+        &[aria-disabled='true'] {
+            color: variables.$grey-06;
+            cursor: default;
+        }
+    }
+}

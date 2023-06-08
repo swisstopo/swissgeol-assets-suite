@@ -1,0 +1,34 @@
+@use '../../styles/variables';
+@use '../../styles/mixins';
+
+:host {
+    display: block;
+    padding: 0 1rem 1rem 0;
+}
+
+.form-column {
+    width: 34rem;
+}
+
+textarea {
+    resize: none;
+}
+
+.file-grid {
+    display: grid;
+    grid-template-areas: 'status delete' 'name delete';
+    &.no-status {
+        align-items: center;
+        grid-template-areas: 'name delete';
+    }
+    grid-template-columns: auto 3rem;
+    :nth-child(1) {
+        grid-area: name;
+    }
+    :nth-child(2) {
+        grid-area: delete;
+    }
+    :nth-child(3) {
+        grid-area: status;
+    }
+}

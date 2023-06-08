@@ -1,0 +1,48 @@
+<ng-container *rxLet="referenceDataVM$">
+    <ng-container *rxLet="assetEditDetail$">
+        <form [formGroup]="_form">
+            <div #tabsWrapper class="tabs-wrapper"></div>
+            <ng-template #tabPanelGeneralContent>
+                <asset-sg-editor-tab-general [referenceDataVM$]="referenceDataVM$" />
+            </ng-template>
+            <ng-template #tabPanelUsageContent>
+                <asset-sg-editor-tab-usage [referenceDataVM$]="referenceDataVM$" />
+            </ng-template>
+            <ng-template #tabPanelContactsContent>
+                <asset-sg-editor-tab-contacts
+                    [referenceDataVM$]="referenceDataVM$"
+                    (editContact)="editContact($event)"
+                    (createContact)="createContact($event)" />
+            </ng-template>
+            <ng-template #tabPanelReferencesContent>
+                <asset-sg-editor-tab-references></asset-sg-editor-tab-references>
+            </ng-template>
+            <ng-template #tabPanelGeometriesContent>
+                <asset-sg-editor-tab-geometries></asset-sg-editor-tab-geometries>
+            </ng-template>
+            <ng-template #tabPanelAdministrationContent>
+                <asset-sg-editor-tab-administration
+                    [referenceDataVM$]="referenceDataVM$"
+                    [assetEditDetail$]="assetEditDetail$"
+                    (save)="save()" />
+            </ng-template>
+        </form>
+    </ng-container>
+</ng-container>
+<ng-template #tmplDiscardDialog>
+    <div class="asset-sg-dialog" cdkTrapFocus [cdkTrapFocusAutoCapture]="true">
+        <div translate>edit.questionDiscardChanges</div>
+        <div class="button-area mt-8">
+            <button asset-sg-primary translate (click)="_discardDialogRef?.close(true)">yes</button>
+            <button asset-sg-secondary cdkFocusInitial translate (click)="_discardDialogRef?.close(false)">no</button>
+        </div>
+    </div>
+</ng-template>
+<mat-progress-bar mode="indeterminate" *ngIf="_showProgressBar$ | push" />
+<a
+    [routerLink]="['../..']"
+    asset-sg-icon-button
+    class="absolute t-1.5 r-3"
+    [attr.alt]="'edit.closeManageAsset' | translate"
+    ><svg-icon key="close"></svg-icon
+></a>

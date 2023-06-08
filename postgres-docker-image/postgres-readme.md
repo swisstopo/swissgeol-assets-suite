@@ -1,0 +1,5 @@
+-   first build the image using build.sh
+-   then login to docker registry:
+    -   docker login registry.lambda-it.ch -u username
+-   push the image to the registry:
+    -   docker push registry.lambda-it.ch/lambda/postgis-gotrue

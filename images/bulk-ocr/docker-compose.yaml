@@ -1,0 +1,9 @@
+version: '3.7'
+
+services:
+    batch-ocr:
+        container_name: asset-swissgeol-ch-batch-ocr
+        image: registry.lambda-it.ch/lambda/asset-swissgel-ch-batch-ocr
+        volumes:
+            - ./volumes/pdfs:/mnt/pdfs
+            - ./flask:/mnt/flask

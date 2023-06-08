@@ -1,0 +1,39 @@
+@use '../../styles/mixins';
+@use '../../styles/variables';
+
+:host {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 5px 1px;
+}
+
+[asset-sg-reset].menu-bar-item {
+    height: 4rem;
+    width: 100%;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: variables.$grey-09;
+
+    &[aria-disabled='true'] {
+        cursor: default;
+        color: variables.$grey-06;
+    }
+
+    &.active {
+        color: variables.$dark-red;
+    }
+
+    &:hover:not(.active):not([aria-disabled='true']) {
+        color: variables.$red;
+    }
+}
+
+span {
+    @include mixins.text-ellipsis(2);
+    max-width: 100%;
+}

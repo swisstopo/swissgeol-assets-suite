@@ -1,0 +1,38 @@
+{
+    "name": "ngx-kobalte",
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "sourceRoot": "libs/ngx-kobalte/src",
+    "projectType": "library",
+    "targets": {
+        "build": {
+            "executor": "@nrwl/vite:build",
+            "outputs": ["{options.outputPath}"],
+            "options": {
+                "outputPath": "dist/libs/ngx-kobalte"
+            }
+        },
+        "publish": {
+            "executor": "nx:run-commands",
+            "options": {
+                "command": "node tools/scripts/publish.mjs ngx-kobalte {args.ver} {args.tag}"
+            },
+            "dependsOn": ["build"]
+        },
+        "test": {
+            "executor": "@nrwl/vite:test",
+            "outputs": ["coverage/libs/ngx-kobalte"],
+            "options": {
+                "passWithNoTests": true,
+                "reportsDirectory": "../../coverage/libs/ngx-kobalte"
+            }
+        },
+        "lint": {
+            "executor": "@nrwl/linter:eslint",
+            "outputs": ["{options.outputFile}"],
+            "options": {
+                "lintFilePatterns": ["libs/ngx-kobalte/**/*.ts"]
+            }
+        }
+    },
+    "tags": []
+}

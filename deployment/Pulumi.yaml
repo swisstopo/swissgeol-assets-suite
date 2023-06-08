@@ -1,0 +1,3 @@
+name: geoadmin-swissgeol-asset
+runtime: nodejs
+description: swissgeol asset deployment configuration

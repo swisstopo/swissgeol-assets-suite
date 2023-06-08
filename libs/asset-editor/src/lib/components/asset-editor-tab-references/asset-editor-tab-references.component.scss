@@ -1,0 +1,37 @@
+@use '../../styles/mixins';
+
+:host {
+    display: flex;
+    padding: 0 1rem 1rem 0;
+}
+
+::ng-deep {
+    mat-option.mat-mdc-option.asset-search-option {
+        line-height: unset;
+        height: unset;
+        padding-top: 0.625rem;
+        padding-bottom: 0.625rem;
+    }
+}
+
+.form-column {
+    width: 34rem;
+}
+
+.asset {
+    display: grid;
+    grid-template-areas: 'title buttons';
+    grid-template-columns: auto 2.5rem;
+    grid-template-rows: auto;
+
+    :nth-child(1) {
+        grid-area: title;
+    }
+    :nth-child(2) {
+        grid-area: buttons;
+    }
+}
+
+.title-public {
+    @include mixins.text-ellipsis(2);
+}

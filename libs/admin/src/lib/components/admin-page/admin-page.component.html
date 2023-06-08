@@ -1,0 +1,38 @@
+<ng-template #templateDrawerPortalContent>
+    <asset-sg-drawer>
+        <asset-sg-drawer-panel widthPercentageOfViewPanel="0.4" [display]="true" *rxLet="sm.state$; let state">
+            <div *ngIf="sm.stateIs.stateApiError(state)">error!</div>
+            <div class="drawer-panel-content">
+                <mat-progress-bar mode="indeterminate" *ngIf="state.showProgressBar" />
+                <ng-container *ngIf="!sm.stateIsAnyOf(['loading', 'stateApiError'])(state)">
+                    <button
+                        asset-sg-primary
+                        class="create-new-user-button"
+                        [disabled]="!sm.stateIs.readMode(state)"
+                        (click)="sm.createUser()"
+                        translate>
+                        userManagement.createNewUser
+                    </button>
+                    <asset-sg-user-expanded
+                        class="create-new-user"
+                        *ngIf="sm.stateIs.createMode(state)"
+                        (userExpandedOutput)="handleUserExpandedOutput($event)" />
+                    <div class="user-list">
+                        <ng-container *rxFor="let user of state.usersVM; trackBy: trackByFn">
+                            <asset-sg-user-expanded
+                                *ngIf="user.expanded; else notExpanded"
+                                [user]="user"
+                                (userExpandedOutput)="handleUserExpandedOutput($event)" />
+                            <ng-template #notExpanded>
+                                <asset-sg-user-collapsed
+                                    [user]="user"
+                                    [disableEdit]="user.disableEdit"
+                                    (editClicked)="sm.editUser(user.id)" />
+                            </ng-template>
+                        </ng-container>
+                    </div>
+                </ng-container>
+            </div>
+        </asset-sg-drawer-panel>
+    </asset-sg-drawer>
+</ng-template>

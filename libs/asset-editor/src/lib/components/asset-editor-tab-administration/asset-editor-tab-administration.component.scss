@@ -1,0 +1,19 @@
+:host {
+    display: flex;
+    padding: 0 1rem 1rem 0;
+}
+
+.form-column {
+    width: 34rem;
+}
+
+.status-works-scroll-list {
+    max-height: 10rem;
+    overflow-y: scroll;
+    margin-right: -1.5rem;
+}
+
+[asset-sg-primary].save-button {
+    padding-left: 3rem;
+    padding-right: 3rem;
+}

@@ -1,0 +1,49 @@
+{{if eq .Data.lang "de"}}
+
+<h2>Einladung für assets.swissgeol.ch Login</h2>
+
+<p>Guten Tag</p>
+<p>
+    Es wurde für Sie ein Login erstellt für den Zugang bei asset.swissgeol.ch. Bitte aktivieren Sie den Benutzer über
+    den folgenden Link:<br />
+    <a href="{{ .ConfirmationURL }}&lang=de">{{ .ConfirmationURL }}&lang=de</a>
+</p>
+<p>
+    Freundliche Grüsse<br />
+    Ihr Swisstopo Team
+</p>
+
+{{else if eq .Data.lang "fr"}}
+
+<h2>FR: Einladung für assets.swissgeol.ch Login</h2>
+
+<a href="{{ .ConfirmationURL }}&lang=fr">{{ .ConfirmationURL }}&lang=fr</a>
+
+{{else if eq .Data.lang "it"}}
+
+<h2>IT: Einladung für assets.swissgeol.ch Login</h2>
+
+<a href="{{ .ConfirmationURL }}&lang=it">{{ .ConfirmationURL }}&lang=it</a>
+
+{{else if eq .Data.lang "rm"}}
+
+<h2>RM: Einladung für assets.swissgeol.ch Login</h2>
+
+<a href="{{ .ConfirmationURL }}&lang=rm">{{ .ConfirmationURL }}&lang=rm</a>
+
+{{else}}
+
+<h2>Invitation to assets.swissgeol.ch</h2>
+
+<p>Hello</p>
+<p>
+    A login has been created for you to access assset.swissgeol.ch. Please activate the account via the following
+    link:<br />
+    <a href="{{ .ConfirmationURL }}&lang=en">{{ .ConfirmationURL }}&lang=en</a>
+</p>
+<p>
+    Best regards<br />
+    Your Swisstopo Team
+</p>
+
+{{end}}

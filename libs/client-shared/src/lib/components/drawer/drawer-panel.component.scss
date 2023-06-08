@@ -1,0 +1,15 @@
+:host {
+    min-width: calc(var(--viewport-width) * var(--width-percentage-of-viewport));
+    width: calc(var(--viewport-width) * var(--width-percentage-of-viewport));
+    overflow: hidden;
+    position: relative;
+    ::ng-deep {
+        > :first-child {
+            height: 100%;
+        }
+    }
+}
+
+:host[data-width-percentage-of-view-panel='1'] {
+    margin-right: -1rem;
+}

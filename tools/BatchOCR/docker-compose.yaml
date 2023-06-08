@@ -1,0 +1,29 @@
+version: '3.9'
+services:
+    ocr:
+        image: 'registry.lambda-it.ch/swissgeol/ocr:1.1.0'
+        ports:
+            - '5000:5000'
+        environment:
+            - OCR_CPUS=4
+            # - OCR_CPUS=2
+            - OPTIMIZE_LEVEL=0
+            - OMP_THREAD_LIMIT=1
+        deploy:
+            restart_policy:
+                condition: on-failure
+                delay: 10s
+                max_attempts: 10
+                window: 10s
+            labels:
+                registry: 'ghcr'
+            resources:
+                limits:
+                    # cpus: '1'
+                    cpus: '3'
+                    memory: 32G
+                reservations:
+                    # cpus: '1'
+                    # memory: 2048M
+                    cpus: '3'
+                    memory: 16G

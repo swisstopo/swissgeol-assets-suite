@@ -1,0 +1,425 @@
+name: "Lambda Quick Deploy"
+description: "Deploy a Lambda function to the Lambda K8s cluster"
+inputs:
+  name:
+    description: "The name of deployment to make it unique"
+    required: true
+  dotenv-file:
+    description: "The path to the .env file"
+    required: true
+    default: "./.env.deploy"
+  deploy-type:
+    description: "The type of deployment"
+    required: true
+  github-secrets:
+    description: "The Github secrets to use"
+    required: true
+  deployment-envs:
+    description: "The variables used in the running container environemnt"
+    required: false
+  build-step:
+    description: "A custom build step run before the deployment"
+    required: false
+
+runs:
+  using: "composite"
+  steps:
+    ######################################
+    # Normalize variables
+    ######################################
+
+    - name: Validate if valid inputs-deploy_type
+      shell: bash
+      run: |
+        # Should either be set to web-app or web-api
+        if [[ "${{ inputs.deploy-type }}" != "web-app" && "${{ inputs.deploy-type }}" != "web-api" ]]; then
+          echo "::error::[VALIDATION] Invalid deploy-type: '${{ inputs.deploy-type }}', valid values are 'web-app' or 'web-api'"
+          exit 400
+        fi
+
+    # https://github.com/marketplace/actions/dotenv-action
+    - name: Read ${{ inputs.dotenv-file }} file
+      uses: falti/dotenv-action@v1
+      id: dotenv
+      with:
+        path: "${{ inputs.dotenv-file }}"
+
+    - name: Pre deployment step
+      if: inputs.build-step
+      shell: bash
+      run: |
+        echo "Running custom build step"
+        ${{ inputs.build-step }}
+
+    - name: Github secrets
+      id: secrets
+      shell: bash
+      run: |
+        echo 'CONTAINER_REGISTRY_TOKEN=${{ fromJson(inputs.github-secrets).CONTAINER_REGISTRY_TOKEN }}' >> $GITHUB_OUTPUT
+        echo 'CONTAINER_REGISTRY_USERNAME=${{ fromJson(inputs.github-secrets).CONTAINER_REGISTRY_USERNAME }}' >> $GITHUB_OUTPUT
+        echo 'GENERAL_ACTIONWF_TOKEN=${{ fromJson(inputs.github-secrets).GENERAL_ACTIONWF_TOKEN }}' >> $GITHUB_OUTPUT
+        echo 'GH_NPM_ACCESSTOKEN=${{ fromJson(inputs.github-secrets).GH_NPM_ACCESSTOKEN }}' >> $GITHUB_OUTPUT
+        echo 'LAMBDA_EXO_KUBECONFIG=${{ fromJson(inputs.github-secrets).LAMBDA_EXO_KUBECONFIG }}' >> $GITHUB_OUTPUT
+        echo 'PULUMI_CONFIG_PASSPHRASE=${{ fromJson(inputs.github-secrets).PULUMI_CONFIG_PASSPHRASE }}' >> $GITHUB_OUTPUT
+        echo 'PULUMI_LQD_S3_ACCESS_ID=${{ fromJson(inputs.github-secrets).PULUMI_LQD_S3_ACCESS_ID }}' >> $GITHUB_OUTPUT
+        echo 'PULUMI_LQD_S3_ACCESS_KEY=${{ fromJson(inputs.github-secrets).PULUMI_LQD_S3_ACCESS_KEY }}' >> $GITHUB_OUTPUT
+
+    - name: Normalized variables
+      shell: bash
+      id: normalized
+      run: |
+        ## Prepare all variables
+        PROJECT="${{github.event.repository.name}}"
+        BRANCH=$(echo ${GITHUB_REF} | sed 's#refs/heads/##' | sed 's#/#--#')
+        REG_AUTH=$(echo -n '${{ steps.secrets.outputs.CONTAINER_REGISTRY_USERNAME }}:${{ steps.secrets.outputs.CONTAINER_REGISTRY_TOKEN }}' | base64 -w0)
+        REG_AUTH_ENC=$(echo -n "{\"auths\":{\"registry.lambda-it.ch\":{\"auth\":\"${REG_AUTH}\"}}}" | base64 -w0)
+        IDENTIFIER="${PROJECT}-${BRANCH}-${{ inputs.deploy-type }}-${{ inputs.name }}"
+        STACK_DIR="stacks"
+        STACK_NAME="lqd-${IDENTIFIER}"
+        STACK_PATH="./${STACK_DIR}/${STACK_NAME}"
+        NAMESPACE="lambda-quick-deployment"
+        URL="${{steps.dotenv.outputs.url_prefix}}.lqd.lambda-it.ch"
+        VERSION="${{steps.dotenv.outputs.version}}"
+        DOCKER_CONTEXT="${{steps.dotenv.outputs.docker_context}}"
+        DOCKERFILE_PATH="${{steps.dotenv.outputs.dockerfile_path}}"
+        DOCKER_IMAGE="${{steps.dotenv.outputs.docker_image}}"
+        PORT="${{steps.dotenv.outputs.port}}"
+        URL_PATH="${{steps.dotenv.outputs.url_path}}"
+        COMPRESS="${{steps.dotenv.outputs.compress_responses}}"
+        BASIC_AUTH="${{steps.dotenv.outputs.basic_auth}}"
+
+        if [ -z "$COMPRESS" ]; then
+          COMPRESS=true
+        fi
+        if [ -z "$VERSION" ]; then
+          if [ -z "${DOCKER_IMAGE}" ]; then
+            VERSION="${BRANCH}-latest"
+          else
+            if [[ "${DOCKER_IMAGE}" == *":"* ]]; then
+              VERSION="${DOCKER_IMAGE##*:}"
+              DOCKER_IMAGE="${DOCKER_IMAGE%%:*}"
+            else
+              VERSION="latest"
+            fi
+          fi
+        fi
+        if [ -z "$DOCKERFILE_PATH" ]; then
+          DOCKERFILE_PATH="Dockerfile"
+        fi
+        if [ -z "$DOCKER_CONTEXT" ]; then
+          DOCKER_CONTEXT="."
+        fi
+        if [ -z "$PORT" ]; then
+          PORT="80"
+        fi
+        # If $BASIC_AUTH equals "default"
+        if [ "$BASIC_AUTH" = "default" ]; then
+          BASIC_AUTH="https://start.1password.com/open/i?a=SQMVORNVPRBJFOXHVQXATLEU24&v=q7jk2jxvqwnfjyxlitdnvz2xg4&i=wwsk4llxresg6il7b4oizfusjq&h=lambda-it.1password.com"
+        fi
+        if [ -z "${{steps.dotenv.outputs.url_prefix}}" ]; then
+          URL="${IDENTIFIER}.lqd.lambda-it.ch"
+        fi
+        # If file ${{ inputs.deployment-envs }} exists
+        if [ -f "${{ inputs.deployment-envs }}" ]; then
+          echo "deployment-envs=$(cat ${{ inputs.deployment-envs }} | base64 -w0 )" >> $GITHUB_OUTPUT
+        fi
+
+        ## Register outputs
+        echo "project=${PROJECT}" >> $GITHUB_OUTPUT
+        echo "branch=${BRANCH}" >> $GITHUB_OUTPUT
+        echo "container-auth-config=${REG_AUTH_ENC}" >> $GITHUB_OUTPUT
+        echo "identifier=${IDENTIFIER}" >> $GITHUB_OUTPUT
+        echo "stack-dir=${STACK_DIR}" >> $GITHUB_OUTPUT
+        echo "stack-name=${STACK_NAME}" >> $GITHUB_OUTPUT
+        echo "stack-path=${STACK_PATH}" >> $GITHUB_OUTPUT
+        echo "namespace=${NAMESPACE}" >> $GITHUB_OUTPUT
+        echo "version=${VERSION}" >> $GITHUB_OUTPUT
+        echo "docker-context=${DOCKER_CONTEXT}" >> $GITHUB_OUTPUT
+        echo "dockerfile-path=${DOCKERFILE_PATH}" >> $GITHUB_OUTPUT
+        if [ -z "${DOCKER_IMAGE}" ]; then
+          echo "docker-image=registry.lambda-it.ch/lqd-containers/${IDENTIFIER}" >> $GITHUB_OUTPUT
+          echo "has-image=false" >> $GITHUB_OUTPUT
+        else
+          echo "docker-image=${DOCKER_IMAGE}" >> $GITHUB_OUTPUT
+          echo "has-image=true" >> $GITHUB_OUTPUT
+        fi
+        echo "url-path=${URL_PATH}" >> $GITHUB_OUTPUT
+        echo "compress=${COMPRESS}" >> $GITHUB_OUTPUT
+        echo "port=${PORT}" >> $GITHUB_OUTPUT
+        echo "basic-auth=${BASIC_AUTH}" >> $GITHUB_OUTPUT
+
+        ## Normalize the given or generated URL, should not be longer than 64 chars
+        if [ "${#URL}" -gt 64 ]; then
+          URL="$(echo $URL | md5sum | cut -b 1-32).lqd.lambda-it.ch"
+        fi
+
+        ## Register the URL output
+        echo "url=${URL}" >> $GITHUB_OUTPUT
+
+        echo "###########################################"
+        echo "## [OUTPUTS] Registered necessary outputs:"
+        echo "branch: \"${BRANCH}\""
+        echo "container-auth-config: \"${REG_AUTH_ENC}\""
+        echo "identifier: \"${IDENTIFIER}\""
+        echo "url: \"${URL}\""
+        echo "stack-path: \"${STACK_PATH}\""
+        echo "docker-context: \"${DOCKER_CONTEXT}\""
+        echo "dockerfile-path: \"${DOCKERFILE_PATH}\""
+        echo "docker-image: \"${DOCKER_IMAGE}\""
+        echo
+
+    - name: Validating normalized outputs
+      shell: bash
+      run: |
+        echo "###########################################"
+        echo "## [VALIDATION] Validating normalized outputs:"
+
+        if [ -z "${{ steps.normalized.outputs.project }}" ]; then
+          echo "::error::[VALIDATION] The project name is empty, should come from github.event"
+          exit 500
+        fi
+        if [ -z "${{ steps.normalized.outputs.branch }}" ]; then
+          echo "::error::[VALIDATION] The branch name is empty, should come from github.ref"
+          exit 500
+        fi
+        if [ -z "${{ steps.normalized.outputs.container-auth-config }}" ]; then
+          echo "::error::[VALIDATION] The container-auth-config is empty, please check the CONTAINER_REGISTRY_* values"
+          exit 400
+        fi
+        if [ -z "${{ steps.normalized.outputs.identifier }}" ]; then
+          echo "::error::[VALIDATION] The identifier is empty"
+          exit 500
+        fi
+        if [ -z "${{ steps.normalized.outputs.version }}" ]; then
+          echo "::error::[VALIDATION] The version is empty, please check the .env file"
+          exit 400
+        fi
+        if [ -z "${{ steps.normalized.outputs.docker-context }}" ]; then
+          echo "::error::[VALIDATION] The docker-context is empty, please check the .env file"
+          exit 400
+        fi
+        if [ -z "${{ steps.normalized.outputs.dockerfile-path }}" ]; then
+          echo "::error::[VALIDATION] The dockerfile-path is empty, please check the .env file"
+          exit 400
+        fi
+        if [ "${{ steps.normalized.outputs.has-image }}" == "false" ]; then
+          if [ ! -f "${{ steps.normalized.outputs.docker-context }}/${{ steps.normalized.outputs.dockerfile-path }}" ]; then
+            echo "::error::[VALIDATION] No file ${{ steps.normalized.outputs.dockerfile-path }} found at ${{ steps.normalized.outputs.docker-context }}, please check the .env file"
+            exit 400
+          fi
+        fi
+
+    ######################################
+    # Build the Docker image
+    ######################################
+
+    # Cache Docker layers https://evilmartians.com/chronicles/build-images-on-github-actions-with-docker-layer-caching
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+      if: steps.normalized.outputs.has-image == 'false'
+
+    - name: Cache Docker layers
+      uses: actions/cache@v3
+      if: steps.normalized.outputs.has-image == 'false'
+      with:
+        path: /tmp/.buildx-cache
+        key: ${{ runner.os }}-buildx-${{ github.sha }}
+        restore-keys: |
+          ${{ runner.os }}-buildx-
+
+    # https://github.com/marketplace/actions/docker-login
+    - name: Login to Docker Hub
+      uses: docker/login-action@v2
+      if: steps.normalized.outputs.has-image == 'false'
+      with:
+        registry: https://registry.lambda-it.ch/
+        username: ${{ steps.secrets.outputs.CONTAINER_REGISTRY_USERNAME }}
+        password: ${{ steps.secrets.outputs.CONTAINER_REGISTRY_TOKEN }}
+
+    # And make it available for builds
+    - name: Build and push
+      uses: docker/build-push-action@v3
+      if: steps.normalized.outputs.has-image == 'false'
+      with:
+        context: ${{ steps.normalized.outputs.docker-context }}
+        file: ${{ steps.normalized.outputs.docker-context }}/${{ steps.normalized.outputs.dockerfile-path }}
+        push: true
+        tags: registry.lambda-it.ch/lqd-containers/${{ steps.normalized.outputs.identifier }}:${{ steps.normalized.outputs.version }}
+        cache-from: type=local,src=/tmp/.buildx-cache
+        cache-to: type=local,dest=/tmp/.buildx-cache-new
+
+    # https://github.com/docker/build-push-action/issues/252
+    # https://github.com/moby/buildkit/issues/1896
+    - name: Move cache
+      if: steps.normalized.outputs.has-image == 'false'
+      shell: bash
+      run: |
+        rm -rf /tmp/.buildx-cache
+        mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+
+    - name: Docker finished
+      if: steps.normalized.outputs.has-image == 'false'
+      shell: bash
+      run: |
+        echo "########################"
+        echo "## [DOCKER] Built image:"
+        echo "registry.lambda-it.ch/lqd-containers/${{ steps.normalized.outputs.identifier }}:${{ steps.normalized.outputs.version }}"
+        echo
+
+    # ######################################
+    # # Deployment with Pulumi
+    ######################################
+
+    - name: "Checkout pulumi lqd-stacks"
+      uses: actions/checkout@v3
+      with:
+        repository: "Lambda-IT/lqd-stacks"
+        path: "deployment"
+        ref: main
+        token: "${{ steps.secrets.outputs.GENERAL_ACTIONWF_TOKEN }}"
+
+    # https://github.com/marketplace/actions/kubectl-tool-installer
+    - name: Install Kubectl
+      uses: azure/setup-kubectl@v3
+
+    - name: Create Kubeconfig
+      shell: bash
+      run: |
+        mkdir -p ~/.kube
+
+        ## Add the kubeconfig stored in the github secret to ~/.kube/config
+        echo -n '${{ steps.secrets.outputs.LAMBDA_EXO_KUBECONFIG }}' | base64 -d > ~/.kube/config
+        echo "## [K8s] Kubeconfig initialized"
+
+    # https://github.com/marketplace/actions/setup-pulumi-cli
+    - name: Install Pulumi CLI
+      uses: pulumi/setup-pulumi@v2
+    - name: Create pulumi stack
+      shell: bash
+      id: pulumi
+      working-directory: deployment
+      run: |
+        pulumi login -c "s3://lqd?endpoint=https://sos-ch-dk-2.exo.io"
+        echo "## [INIT] pulumi authenticated"
+
+        echo -e "//npm.pkg.github.com/:_authToken=${{ steps.secrets.outputs.GH_NPM_ACCESSTOKEN }}\n@lambda-it:registry=https://npm.pkg.github.com" > ~/.npmrc
+        echo "## [INIT] updated .npmrc"
+        cat ~/.npmrc
+        echo
+
+        if [ ! -d "./${{ steps.normalized.outputs.stack-path }}" ]
+        then
+          echo "## [CREATING] Start"
+
+          echo "action=NEW" >> $GITHUB_OUTPUT
+          mkdir ${{ steps.normalized.outputs.stack-path }}
+          cd ${{ steps.normalized.outputs.stack-path }}
+          echo "## [CREATING] currently at"
+          pwd
+
+          pulumi new https://github.com/Lambda-IT/pulumi-templates/tree/main/lqd/${{ inputs.deploy-type }} \
+            -s '${{ steps.normalized.outputs.stack-name }}' \
+            -n '${{ inputs.deploy-type }}-${{ inputs.name }}' \
+            -d 'A Lambda quick ${{ inputs.deploy-type }} deployment project' \
+            -y
+
+          echo "## [CREATING] created stack"
+        else
+          echo "## [UPDATING] Start"
+          echo "action=UPDATE" >> $GITHUB_OUTPUT
+
+          cd ${{ steps.normalized.outputs.stack-path }}
+          echo "## [UPDATING] currently at"
+          pwd
+          echo
+
+          npm ci
+          echo "## [UPDATING] npm ci finished"
+        fi
+
+        echo "## [CONFIG] Updating configs..."
+        pulumi config set-all --stack ${{ steps.normalized.outputs.stack-name }} \
+          --plaintext "kubernetes:context"="lambda-lqd" \
+          --plaintext namespace="${{ steps.normalized.outputs.namespace }}" \
+          --plaintext url="${{ steps.normalized.outputs.url }}" \
+          --plaintext path="${{ steps.normalized.outputs.url-path }}" \
+          --plaintext port="${{ steps.normalized.outputs.port }}" \
+          --plaintext project="${{ steps.normalized.outputs.project }}" \
+          --plaintext environments="${{ steps.normalized.outputs.deployment-envs }}" \
+          --plaintext component="${{ steps.normalized.outputs.branch }}" \
+          --plaintext compress="${{ steps.normalized.outputs.compress }}" \
+          --plaintext container-image="${{ steps.normalized.outputs.docker-image }}" \
+          --plaintext onepassword-basic-auth="${{ steps.normalized.outputs.basic-auth }}" \
+          --plaintext version="${{ steps.normalized.outputs.version }}"
+        echo "#############################"
+        echo "## [CONFIG] Updated configs:"
+        cat Pulumi.${{ steps.normalized.outputs.stack-name }}.yaml
+        echo
+
+        PREV_REGISTRY_SECRET=$(pulumi config get registry-secret --stack ${{ steps.normalized.outputs.stack-name }})
+        if [ "$PREV_REGISTRY_SECRET" != "${{ steps.normalized.outputs.container-auth-config }}" ]
+        then
+          echo "## [CONFIG] Updating registry secret"
+          pulumi config set --stack ${{ steps.normalized.outputs.stack-name }} \
+            --secret registry-secret "${{ steps.normalized.outputs.container-auth-config }}"
+        fi
+      env:
+        AWS_ACCESS_KEY_ID: ${{ steps.secrets.outputs.PULUMI_LQD_S3_ACCESS_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ steps.secrets.outputs.PULUMI_LQD_S3_ACCESS_KEY }}
+        AWS_REGION: "ch-dk-2"
+        PULUMI_CONFIG_PASSPHRASE: ${{ steps.secrets.outputs.PULUMI_CONFIG_PASSPHRASE }}
+
+    - name: "Commit changed files"
+      shell: bash
+      working-directory: deployment
+      run: |
+        echo "## [GIT] Configuring user and repository"
+        git config --local user.email "support@lambda-it.ch"
+        git config --local user.name "Lambda Quick Deployment"
+        git config remote.github.url >&- || git remote add github "https://github.com/Lambda-IT/lqd-stacks.git"
+        git add .
+        echo "## [GIT] Checking if there are changes..."
+        if [ -z "$(git status --porcelain)" ]; then
+          echo "## [GIT] No changes detected, aborting."
+          exit 0
+        fi
+
+        echo "## [GIT] Commiting changes..."
+        git commit -m "[${{ steps.pulumi.outputs.action }}] ${{ inputs.deploy-type }}-${{ inputs.name }} deployment
+
+        ID:      ${{ steps.normalized.outputs.identifier }}
+        PROJECT: ${{ steps.normalized.outputs.project }}
+        BRANCH:  ${{ steps.normalized.outputs.branch }}
+        VERSION: ${{ steps.normalized.outputs.version }}"
+
+        echo "###################"
+        echo "## [GIT] Commited:"
+        git log -1
+
+        echo '## [GIT] Pull rebasing in case of changes...'
+        git pull --rebase github main
+        echo "## [GIT] Pushing changes..."
+        git push github HEAD:main
+        echo "## [GIT] Pushed successfully"
+
+    - name: Deploy pulumi stack
+      shell: bash
+      working-directory: deployment
+      run: |
+        pulumi login -c "s3://lqd?endpoint=https://sos-ch-dk-2.exo.io"
+
+        cd ${{ steps.normalized.outputs.stack-path }}
+        echo "## [DEPLOYMENT] Deploying..."
+        pulumi up --diff -y --stack ${{ steps.normalized.outputs.stack-name }}
+        echo "###############################################################"
+        echo "## [DEPLOYMENT] Deployed ${{ steps.normalized.outputs.stack-name }}"
+      env:
+        AWS_ACCESS_KEY_ID: ${{ steps.secrets.outputs.PULUMI_LQD_S3_ACCESS_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ steps.secrets.outputs.PULUMI_LQD_S3_ACCESS_KEY }}
+        AWS_REGION: "ch-dk-2"
+        PULUMI_CONFIG_PASSPHRASE: ${{ steps.secrets.outputs.PULUMI_CONFIG_PASSPHRASE }}
+
+    - name: Restart deployment
+      shell: bash
+      run: |
+        kubectl rollout restart deployment --selector app=${{ inputs.deploy-type }}-${{ inputs.name }},component=${{ steps.normalized.outputs.branch }},project=${{ steps.normalized.outputs.project }} --namespace ${{ steps.normalized.outputs.namespace }}

@@ -1,0 +1,15 @@
+name: "Generate Version for Asset"
+description: "Generates a new version from git sha"
+inputs:
+  path:
+    description: "path for version.json"
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - name: generate version.json
+      shell: bash
+      run: |
+        VERSION="{\"tag\": \"generated_by_build\",\"build\": \"${{github.run_number}}\",\"commit\": \"${{github.sha}}\"}"
+        echo $VERSION > ${{ inputs.path }}/version.json
+        cat ${{ inputs.path }}/version.json

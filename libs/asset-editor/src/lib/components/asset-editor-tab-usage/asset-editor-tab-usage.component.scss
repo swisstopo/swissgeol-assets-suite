@@ -1,0 +1,10 @@
+@use '../../styles/variables';
+@use '../../styles/mixins';
+
+.form-column {
+    width: 34rem;
+}
+
+.asset-sg-dialog {
+    min-height: unset;
+}
