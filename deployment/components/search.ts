@@ -100,7 +100,7 @@ export function deployKibana(initConfig: InitPulumiConfig, cfg: Config, args: Ad
         })
         .addEnvironment({
             name: 'ELASTICSEARCH_HOSTS',
-            value: 'http://kibana_system:$(ELASTICSEARCH_PASSWORD)@swissgeol-asset-elasticsearch-prod:9200',
+            value: `http://kibana_system:$(ELASTICSEARCH_PASSWORD)@swissgeol-asset-elasticsearch-${metadata.labels.env}:9200`,
         })
         .addEnvironment({
             name: 'xpack.encryptedSavedObjects.encryptionKey',

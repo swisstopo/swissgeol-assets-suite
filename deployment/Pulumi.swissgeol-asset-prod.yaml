@@ -8,7 +8,7 @@ config:
     geoadmin-swissgeol-asset:authSmtp:
         admin_email: swissgeol@swisstopo.ch
         host: mailrelay.swissgeol.ch
-        port: 465
+        port: 25
     geoadmin-swissgeol-asset:authSmtpPass:
         secure: v1:5xbCZh7AAJDWNcr+:tHOKb+e++oJKrCk5g8aoTHi40MIDbOrymeY/MvmzAs1+wbSl
     geoadmin-swissgeol-asset:elasticPassword:
@@ -28,4 +28,5 @@ config:
     geoadmin-swissgeol-asset:searchEncryptionKey:
         secure: v1:VBPGplDKXMuaQZrt:OCSfb4QzEGfkH6mKC7Le0fh6eAYcU5gnFXmszoqhk5WTPH75KEmXJ19jMJs=
     geoadmin-swissgeol-asset:url: assets.swissgeol.ch
+    geoadmin-swissgeol-asset:version: 1.0.2
     kubernetes:context: swissgeol-prod
