@@ -8,7 +8,7 @@ config:
     geoadmin-swissgeol-asset:authSmtp:
         admin_email: swissgeol@swisstopo.ch
         host: mailrelay.swissgeol.ch
-        port: 465
+        port: 25
     geoadmin-swissgeol-asset:authSmtpPass:
         secure: v1:5xbCZh7AAJDWNcr+:tHOKb+e++oJKrCk5g8aoTHi40MIDbOrymeY/MvmzAs1+wbSl
     geoadmin-swissgeol-asset:elasticPassword:
