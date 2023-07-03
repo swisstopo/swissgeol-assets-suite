@@ -2,7 +2,7 @@ name: Swissgeol Asset Dev Deploy
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   workflow_dispatch:
 env:
   APP_IMAGE: ghcr.io/geoadmin/swissgeol-asset-app:dev
@@ -13,55 +13,55 @@ jobs:
   build-web-app:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-node@v3
-      with:
-        node-version: 18
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
 
-    - name: generate version.json
-      id: generate-version
-      uses: ./.github/actions/generate-version
-      with:
-        path: ./apps/client-asset-sg/src/assets
+      - name: generate version.json
+        id: generate-version
+        uses: ./.github/actions/generate-version
+        with:
+          path: ./apps/client-asset-sg/src/assets
 
-    - name: Build app Docker image
-      run: docker build . -f ./apps/client-asset-sg/docker/Dockerfile -t ${{ env.APP_IMAGE }}
+      - name: Build app Docker image
+        run: docker build . -f ./apps/client-asset-sg/docker/Dockerfile -t ${{ env.APP_IMAGE }}
 
-    - name: Push container image
-      id: registry-push
-      uses: ./.github/actions/registry-push
-      with:
-        image: ${{ env.APP_IMAGE }}
-        username: ${{ vars.SWISSGEOL_BUILD_USERNAME }}
-        password: ${{ secrets.SWISSGEOL_BUILD_PAT }}
+      - name: Push container image
+        id: registry-push
+        uses: ./.github/actions/registry-push
+        with:
+          image: ${{ env.APP_IMAGE }}
+          username: ${{ vars.SWISSGEOL_BUILD_USERNAME }}
+          password: ${{ secrets.SWISSGEOL_BUILD_PAT }}
 
   # ------------------
   build-web-api:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-node@v3
-      with:
-        node-version: 18
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
 
-    - name: generate version.json
-      id: generate-version
-      uses: ./.github/actions/generate-version
-      with:
-        path: ./apps/server-asset-sg/src/assets
+      - name: generate version.json
+        id: generate-version
+        uses: ./.github/actions/generate-version
+        with:
+          path: ./apps/server-asset-sg/src/assets
 
-    - name: Run NPM build
-      run: |
-        npm ci
-        npm run build -- server-asset-sg
-    - name: Retag Image
-      working-directory: ./apps/server-asset-sg/docker
-      run: docker tag registry.lambda-it.ch/asset-swissgeol/api:latest ${{ env.API_IMAGE }}
+      - name: Run NPM build
+        run: |
+          npm ci
+          npm run build -- server-asset-sg
+      - name: Retag Image
+        working-directory: ./apps/server-asset-sg/docker
+        run: docker tag registry.lambda-it.ch/asset-swissgeol/api:latest ${{ env.API_IMAGE }}
 
-    - name: Push container image
-      id: registry-push
-      uses: ./.github/actions/registry-push
-      with:
-        image: ${{ env.API_IMAGE }}
-        username: ${{ vars.SWISSGEOL_BUILD_USERNAME }}
-        password: ${{ secrets.SWISSGEOL_BUILD_PAT }}
+      - name: Push container image
+        id: registry-push
+        uses: ./.github/actions/registry-push
+        with:
+          image: ${{ env.API_IMAGE }}
+          username: ${{ vars.SWISSGEOL_BUILD_USERNAME }}
+          password: ${{ secrets.SWISSGEOL_BUILD_PAT }}
