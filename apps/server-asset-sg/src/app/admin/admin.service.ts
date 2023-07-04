@@ -79,6 +79,14 @@ export class AdminService {
                         path.join(user.lang, `/a/set-password?ts=${Date.now()}`),
                         process.env.FRONTEND_URL,
                     ).href;
+                    console.log(
+                        'createUser',
+                        JSON.stringify({
+                            userLang: user.lang,
+                            frontendUrl: process.env.FRONTEND_URL,
+                            redirect_to,
+                        }),
+                    );
                     return _fetch(inviteUrl, {
                         method: 'POST',
                         headers: { Authorization: 'Bearer ' + accessToken, redirect_to },
