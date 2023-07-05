@@ -89,7 +89,7 @@ export class AdminService {
                     );
                     return _fetch(inviteUrl, {
                         method: 'POST',
-                        headers: { Authorization: 'Bearer ' + accessToken, redirect_to },
+                        headers: { Authorization: 'Bearer ' + accessToken, redirect_to, referer: redirect_to },
                         body: JSON.stringify({ email: user.email, data: RawUserMetaData.encode({ lang: user.lang }) }),
                     });
                 }, unknownToUnknownError),

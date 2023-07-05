@@ -38,7 +38,7 @@ const confirmAdminUser = (email: string) => {
             TE.tryCatch(
                 () =>
                     prisma.$executeRawUnsafe(
-                        `insert into asset_user select id, 'master-editor' as role from auth.users where email = '${email}';`,
+                        `insert into asset_user select id, 'admin' as role from auth.users where email = '${email}';`,
                     ),
                 unknownToError,
             ),
