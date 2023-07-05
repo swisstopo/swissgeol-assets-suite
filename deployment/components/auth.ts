@@ -18,7 +18,7 @@ export default function deployAuth(initConfig: InitPulumiConfig, cfg: Config, ar
         })
         .addEnvironment({
             name: 'GOTRUE_SITE_URL',
-            value: url,
+            value: `https://${url}`,
         })
         .addEnvironment({
             name: 'GOTRUE_DB_DRIVER',
