@@ -4,7 +4,7 @@ import * as E from 'fp-ts/Either';
 import { pipe } from 'fp-ts/function';
 import * as TE from 'fp-ts/TaskEither';
 
-import { unknownToError } from '@asset-sg/core';
+import { TypedError, unknownErrorTag, unknownToError } from '@asset-sg/core';
 
 import { assetFolder, bucketName, createS3Client, destroyS3Client } from './common';
 
@@ -14,21 +14,16 @@ export const getFile = (prismaClient: PrismaClient, fileId: number) => {
         s3Client =>
             pipe(
                 TE.tryCatch(() => pipe(prismaClient.file.findFirstOrThrow({ where: { fileId } })), unknownToError),
-                TE.chain(({ fileName }) =>
-                    pipe(
+                TE.chainW(({ fileName }) => {
+                    const key = (assetFolder ? assetFolder + '/' : '') + fileName;
+                    return pipe(
                         TE.tryCatch(
-                            () =>
-                                s3Client.send(
-                                    new GetObjectCommand({
-                                        Key: (assetFolder ? assetFolder + '/' : '') + fileName,
-                                        Bucket: bucketName,
-                                    }),
-                                ),
-                            unknownToError,
+                            () => s3Client.send(new GetObjectCommand({ Key: key, Bucket: bucketName })),
+                            e => new TypedError(unknownErrorTag, e, 'Unable to get file from S3 with key ' + key),
                         ),
                         TE.map(a => ({ ...a, fileName })),
-                    ),
-                ),
+                    );
+                }),
                 TE.map(a => ({
                     fileName: a.fileName,
                     stream: a.Body as NodeJS.ReadableStream,

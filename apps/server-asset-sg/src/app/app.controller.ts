@@ -98,6 +98,7 @@ export class AppController {
 
         const e = await this.appService.getFile(maybeFileId.right)();
         if (E.isLeft(e)) {
+            console.log(JSON.stringify(e.left));
             throw new HttpException(e.left.message, 500);
         }
         const result = e.right;
