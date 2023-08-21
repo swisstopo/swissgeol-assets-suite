@@ -10,7 +10,7 @@ export default function deployApi(initConfig: InitPulumiConfig, cfg: Config, arg
         pulumiConfig: { appUrls },
     } = deployCfg.values();
     deployCfg.setReplicas(1).setResources({
-        limits: { cpu: '1', memory: '256M' },
+        limits: { cpu: '1', memory: '1024M' },
         requests: { cpu: '0.25', memory: '64M' },
     });
 
