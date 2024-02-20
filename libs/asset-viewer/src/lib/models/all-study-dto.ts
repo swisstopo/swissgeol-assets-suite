@@ -2,7 +2,7 @@ import * as D from 'io-ts/Decoder';
 import * as TEq from 'io-ts/Eq';
 import { Equals, assert } from 'tsafe';
 
-import { AllStudyDTOFromAPI, eqLV95, LV95 } from '@asset-sg/shared';
+import {  AllStudyDTOFromAPI, LV95, eqLV95 } from '@asset-sg/shared';
 
 export const AllStudyDTO = D.struct({
     studyId: D.string,

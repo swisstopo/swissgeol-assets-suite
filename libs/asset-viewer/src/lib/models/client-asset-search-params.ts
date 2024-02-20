@@ -9,7 +9,7 @@ import * as C from 'io-ts/Codec';
 import * as D from 'io-ts/Decoder';
 
 import { CT } from '@asset-sg/core';
-import { DateId, eqLV95, LV95 } from '@asset-sg/shared';
+import { DateId, LV95, eqLV95 } from '@asset-sg/shared';
 
 export const RefinementGeomCode = C.fromDecoder(
     D.union(D.literal('Point'), D.literal('Polygon'), D.literal('LineString'), D.literal('None')),
