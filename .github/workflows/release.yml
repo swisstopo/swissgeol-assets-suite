@@ -1,0 +1,115 @@
+name: release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version number (e.g. 1.12)"
+        required: true
+jobs:
+  release_app:
+    name: release app
+    needs:
+      - read_version
+    runs-on: ubuntu-latest
+    steps:
+      - name: Login to GitHub Packages
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
+
+      - name: Pull docker image
+        run: docker pull ${{ vars.BASE_IMAGE_NAME }}-app:release-candidate
+
+      - name: Tag docker image
+        run: |
+          docker tag ${{ vars.BASE_IMAGE_NAME }}-app:release-candidate ${{ vars.BASE_IMAGE_NAME }}-app:${{ inputs.VERSION }}
+          docker tag ${{ vars.BASE_IMAGE_NAME }}-app:release-candidate ${{ vars.BASE_IMAGE_NAME }}-app:latest
+
+      - name: Push docker image
+        run: |
+          docker push ${{ vars.BASE_IMAGE_NAME }}-app:${{ inputs.VERSION }}
+          docker push ${{ vars.BASE_IMAGE_NAME }}-app:latest
+
+  release_api:
+    name: release api
+    needs:
+      - read_version
+    runs-on: ubuntu-latest
+    steps:
+      - name: Login to GitHub Packages
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
+
+      - name: Pull docker image
+        run: docker pull ${{ vars.BASE_IMAGE_NAME }}-api:release-candidate
+
+      - name: Tag docker image
+        run: |
+          docker tag ${{ vars.BASE_IMAGE_NAME }}-api:release-candidate ${{ vars.BASE_IMAGE_NAME }}-api:${{ inputs.VERSION }}
+          docker tag ${{ vars.BASE_IMAGE_NAME }}-api:release-candidate ${{ vars.BASE_IMAGE_NAME }}-api:latest
+
+      - name: Push docker image
+        run: |
+          docker push ${{ vars.BASE_IMAGE_NAME }}-api:${{ inputs.VERSION }}
+          docker push ${{ vars.BASE_IMAGE_NAME }}-api:latest
+
+
+  tag_commit:
+    name: 'tag commit'
+    needs:
+      - release_app
+      - release_api
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create/update latest tag
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.git.createRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: 'refs/tags/latest',
+              sha: context.sha
+            }).catch(err => {
+              if (err.status !== 422) throw err;
+              github.rest.git.updateRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: 'tags/latest',
+                sha: context.sha
+              });
+            })
+
+      - name: Create/update version tag
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.git.createRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: 'refs/tags/${{ inputs.VERSION }}',
+              sha: context.sha
+            }).catch(err => {
+              if (err.status !== 422) throw err;
+              github.rest.git.updateRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: 'tags/${{ inputs.VERSION }}',
+                sha: context.sha
+              });
+            })
+
+  create_release:
+    name: 'create release'
+    needs:
+      - release_app
+      - release_api
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: '${{ inputs.VERSION }}'
+          name: 'swissgeol-assets v${{ inputs.VERSION }}'
+          generate_release_notes: true
+          make_latest: true

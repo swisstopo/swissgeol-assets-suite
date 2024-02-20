@@ -50,7 +50,7 @@
                             [routerLink]="['.']"
                             [queryParams]="{ assetId: asset.assetId }"
                             queryParamsHandling="merge"
-                            class="asset-title-public"
+                            class="asset-title-public break-word"
                             [class.active]="currentAssetId._tag === 'Some' && asset.assetId === currentAssetId.value"
                             [innerHTML]="asset.titlePublic"></a>
                         <div class="asset-kind-format">

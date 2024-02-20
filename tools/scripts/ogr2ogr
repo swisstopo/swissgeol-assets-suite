@@ -1,4 +1,0 @@
-#!/bin/sh
-
-docker run --rm osgeo/gdal:alpine-small-3.5.1 ogr2ogr
-

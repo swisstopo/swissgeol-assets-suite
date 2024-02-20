@@ -66,7 +66,7 @@
             background-color: #87d7e6;
             color: #357183;
         }
-        &:active:not(focus) {
+        &:active:not(:focus) {
             box-shadow: none;
             background-color: variables.$cyan-06;
             color: variables.$white;
@@ -110,7 +110,7 @@
         &:focus {
             color: variables.$red;
         }
-        &:active:not(focus) {
+        &:active:not(:focus) {
             color: variables.$dark-red;
         }
     }
@@ -135,7 +135,7 @@
         &:focus {
             color: variables.$red;
         }
-        &:active:not(focus) {
+        &:active:not(:focus) {
             color: variables.$dark-red;
         }
     }

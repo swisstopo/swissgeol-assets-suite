@@ -10,10 +10,10 @@
                 "parallel": false,
                 "commands": [
                     {
-                        "command": "nx run server-asset-sg:gen-prisma-client"
+                        "command": "npx nx run server-asset-sg:gen-prisma-client"
                     },
                     {
-                        "command": "nx run server-asset-sg:build-app"
+                        "command": "npx nx run server-asset-sg:build-app"
                     },
                     {
                         "command": "npx shx cp apps/server-asset-sg/docker/* dist/apps/server-asset-sg"
@@ -23,9 +23,6 @@
                     },
                     {
                         "command": "npx shx sed -i \"s/(\\.\\.\\/)*node_modules/\\.\\/node_modules/g\" dist/apps/server-asset-sg/schema.prisma"
-                    },
-                    {
-                        "command": "docker build -t registry.lambda-it.ch/asset-swissgeol/api:latest dist/apps/server-asset-sg"
                     }
                 ]
             }
@@ -80,7 +77,8 @@
             "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
             "options": {
                 "jestConfig": "apps/server-asset-sg/jest.config.ts",
-                "passWithNoTests": true
+                "passWithNoTests": true,
+                "codeCoverage": true
             }
         },
         "gen-prisma-client": {

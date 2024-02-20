@@ -1,7 +1,7 @@
 {
     "editor.codeActionsOnSave": {
-        "source.organizeImports": false,
-        "source.fixAll.eslint": true
+        "source.organizeImports": "never",
+        "source.fixAll.eslint": "explicit"
     },
     "peacock.color": "#0b7285",
     "peacock.remoteColor": "#000",

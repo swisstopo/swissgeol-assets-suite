@@ -1,7 +1,7 @@
 import { AppTranslations } from './i18n';
 
 export const frAppTranslations: AppTranslations = {
-    logoSwissConfederation: 'Logo Confédération suisse',
+    logoSwissGeol: 'Logo Swissgeol Assets',
     ok: 'OK',
     submit: 'Envoyer',
     cancel: 'Annuler',
@@ -32,41 +32,6 @@ export const frAppTranslations: AppTranslations = {
         drawingModeOn: 'Mode de dessin activé',
         drawingModeOff: 'Mode de dessin désactivé',
         dragHandleLabel: 'Poignée de tirage',
-    },
-    auth: {
-        signInHeading: 'Inscription à assets.swissgeol',
-        email: 'E-Mail',
-        password: 'Mot de passe',
-        signIn: 'Inscrire',
-        forgotPassword: 'Oublié le mot de passe ?',
-        invalidCredentials: 'Données de connexion non valables',
-        error: {
-            required: 'Ce champ est obligatoire',
-            email: 'Bitte geben Sie eine gültige E-Mail-Adresse ein',
-        },
-        recovery: {
-            enterEmail:
-                'Saisissez votre adresse e-mail et un lien pour réinitialiser votre mot de passe vous sera envoyé par e-mail.',
-            backToLogin: "Retour à l'inscription",
-            tooManyRequests:
-                "Pour des raisons de sécurité, vous ne pouvez en faire la demande qu'une fois toutes les 60 secondes.",
-            recoverySuccess:
-                'Veuillez cliquer sur le lien que vous avez reçu par e-mail pour réinitialiser votre mot de passe.',
-        },
-        reset: {
-            welcome: 'Créer un nouveau mot de passe',
-            enterPassword: 'Veuillez saisir un mot de passe.',
-            unauthorised: 'Non autorisé',
-            invalidEmailLink: "Le lien e-mail n'est pas valide ou a expiré.",
-        },
-        set: {
-            welcome: 'Bienvenue sur asset.swissgeol',
-            enterPassword: "Veuillez saisir un mot de passe pour terminer l'enregistrement.",
-        },
-    },
-    userManagement: {
-        createNewUser: 'Créer un nouvel utilisateur',
-        confirmDelete: " Voulez-vous vraiment supprimer l'utilisateur suivant ?",
     },
     search: {
         textSearchFieldPlaceholder: 'Recherche par titre original ou public et auteur ou déposant',
@@ -255,5 +220,10 @@ export const frAppTranslations: AppTranslations = {
         adminInstructionsEdit: 'Recherche un asset via le menu Assets pour le gérer.',
         adminInstructionsCreateHeading: 'Nouvel asset',
         adminInstructionsCreate: 'Créer un nouvel asset',
+        adminInstructionsSyncElasticAssetsHeading: 'Synchroniser les assets avec Elasticsearch',
+        adminInstructionsSyncElasticAssets:
+            'Fait correspondre l\'état d\'Elasticsearch avec la base de données.'
+            + ' Cela permet de s\'assurer que la recherche inclut tous les actifs existants.',
+        adminInstructionsSyncElasticAssetsStart: 'Démarrer la synchronisation',
     },
 };

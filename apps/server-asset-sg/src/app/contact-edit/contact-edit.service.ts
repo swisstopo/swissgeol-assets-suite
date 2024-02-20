@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { Contact as DbContact } from '@prisma/client';
 import { pipe } from 'fp-ts/function';
 import * as TE from 'fp-ts/TaskEither';
 
@@ -14,7 +15,7 @@ export class ContactEditService {
     public createContact(contact: PatchContact) {
         return pipe(
             TE.tryCatch(() => this.prismaService.contact.create({ data: contact }), unknownToUnknownError),
-            TE.map(contact => {
+            TE.map((contact: DbContact) => {
                 const { contactId: id, ...rest } = contact;
                 return Contact.encode({ id, ...rest });
             }),

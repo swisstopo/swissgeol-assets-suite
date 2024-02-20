@@ -1,7 +1,7 @@
 <ng-container *rxLet="_referenceDataVM$ | push; let vm">
-    <form [formGroup]="_form" class="flex flex-row">
+    <form [formGroup]="_form" class="flex flex-row max-h-full">
         <div class="flex flex-column form-column mr-8">
-            <div class="flex flex-column bg-white mb-4 py-4 px-6">
+            <div class="flex flex-column bg-white mb-4 py-4 px-6 overflow-y-scroll ">
                 <div class="font-bold mb-4" translate>edit.tabs.usage.internalUsage</div>
                 <div *ngIf="_form.controls['publicUse'].value" class="flex mb-2 bg-orange-01 px-3 py-2">
                     <svg-icon key="warning-filled" class="mr-3"></svg-icon

@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnInit, Output
 import { FormBuilder, FormGroupDirective } from '@angular/forms';
 import { RxState } from '@rx-angular/state';
 import * as O from 'fp-ts/Option';
-import { Observable, map, take } from 'rxjs';
+import { Observable } from 'rxjs';
 
 import { fromAppShared } from '@asset-sg/client-shared';
 import { DateId } from '@asset-sg/shared';
@@ -55,7 +55,6 @@ export class AssetEditorTabAdministrationComponent implements OnInit {
 
     @Input()
     public set referenceDataVM$(value: Observable<fromAppShared.ReferenceDataVM>) {
-        // value.pipe(take(1)).subscribe(v => console.log(v));
         this._state.connect('referenceDataVM', value);
     }
 
@@ -69,7 +68,6 @@ export class AssetEditorTabAdministrationComponent implements OnInit {
         if (this._rootFormGroup.invalid) {
             this._rootFormGroup.markAllAsTouched();
         }
-        // console.log(this._form);
     }
 
     public save() {

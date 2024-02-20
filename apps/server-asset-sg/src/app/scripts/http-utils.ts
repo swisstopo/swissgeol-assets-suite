@@ -4,7 +4,7 @@ import * as TE from 'fp-ts/TaskEither';
 import { Response } from 'node-fetch';
 
 // eslint-disable-next-line @nrwl/nx/enforce-module-boundaries
-import { unknownToError } from '../../../../../libs/core/src';
+import { unknownToError } from '@asset-sg/core';
 
 export const httpJson = (req: () => Promise<Response>) =>
     pipe(
