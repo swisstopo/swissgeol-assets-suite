@@ -12,15 +12,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4        
 
-      - name: setup node.je
+      - name: Setup node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20 
           cache: 'npm'    
 
-      - run: npm ci
-      - run: npm run build
-      - run: npm run test
-      - run: npm run lint
+      - name: Install packages
+        run: npm ci
+
+      - name: Build 
+        run: npm run build
+
+      - name: Run unit-tests
+        run: npm run test
+
+      - name: Analyze code with lint
+        run: npm run lint
 
 
