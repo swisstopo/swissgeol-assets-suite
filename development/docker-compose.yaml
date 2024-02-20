@@ -26,7 +26,7 @@ services:
             POSTGRES_PASSWORD: ${DB_PASSWORD}
             POSTGRES_DB: postgres      
         volumes:
-            - ./initdb:/docker-entrypoint-initdb.d
+            - ./init/db:/docker-entrypoint-initdb.d
             - ./volumes/db/data/postgres:/var/lib/postgresql/data
         healthcheck:
             test: "pg_isready -U ${DB_USER} -d postgres -h db"

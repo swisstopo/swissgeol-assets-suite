@@ -16,7 +16,6 @@ The following steps must be carried out once:
 3. Set environment variables for dockers in `web-asset-swissgeol\development\.env`
 4. Set environment variables for assets-server in `web-asset-swissgeol\apps\server-asset-sg\.env.local`
 
-
 ### Starting the development environment
 
 1. Start docker with `web-asset-swissgeol\development>docker-compose up`.
@@ -31,6 +30,11 @@ The following steps must be carried out once:
 | postgresSQL (docker)   | localhost:5432                                   | .env `$DB_USER`       |.env `$DB_PASSWORD`      |
 | Elasticsearch (docker) | [localhost:9200](http://localhost:9200)          | n/a                   | n/a                     |
 | Kibana (docker)        | [localhost:5601](http://localhost:5601)          | n/a                   | n/a                     |
-| pgAdmin (docker)       | [localhost:3001](http://localhost:3001/)         | .env `$PGADMIN_EMAIL` |.env `$PGADMIN_PASSWORD` |
+| pgAdmin (docker)       | [localhost:5051](http://localhost:5051/)         | .env `$PGADMIN_EMAIL` |.env `$PGADMIN_PASSWORD` |
 | MinIO (docker)         | [localhost:9001](http://localhost:9001/)         | .env `$STORAGE_USER`  |.env `$STORAGE_PASSWORD` |
 | smtp4dev (docker)      | [localhost:5000](http://localhost:5000/)         | n/a                   | n/a                     |
+
+### Creating elastic-search index
+
+1. Execute in Kibana (`http://localhost:5601/app/dev_tools#/console`) the commands fro file `web-asset-swissgeol\development\init\elasticsearch\index`.
+ 

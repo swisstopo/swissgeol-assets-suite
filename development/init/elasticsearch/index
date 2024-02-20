@@ -1,0 +1,62 @@
+PUT /swissgeol_asset_asset
+
+
+PUT /swissgeol_asset_asset/_mapping
+{
+  "properties": {
+    "assetId": {
+      "type": "integer"
+    },
+    "assetKindItemCode": {
+      "type": "keyword"
+    },
+    "authorIds": {
+      "type": "integer"
+    },
+    "contactNames": {
+      "type": "text",
+      "fields": {
+        "keyword": {
+          "type": "keyword",
+          "ignore_above": 256
+        }
+      }
+    },
+    "createDate": {
+      "type": "long"
+    },
+    "createDateId": {
+      "type": "integer"
+    },
+    "languageItemCode": {
+      "type": "keyword"
+    },
+    "manCatLabelItemCodes": {
+      "type": "keyword"
+    },
+    "sgsId": {
+      "type": "keyword"
+    },
+    "titleOriginal": {
+      "type": "text",
+      "fields": {
+        "keyword": {
+          "type": "keyword",
+          "ignore_above": 256
+        }
+      }
+    },
+    "titlePublic": {
+      "type": "text",
+      "fields": {
+        "keyword": {
+          "type": "keyword",
+          "ignore_above": 256
+        }
+      }
+    },
+    "usageCode": {
+      "type": "keyword"
+    }
+  }
+}
