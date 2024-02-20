@@ -5,7 +5,8 @@
     "scripts": {
         "ng": "nx",
         "start": "concurrently \"nx serve server-asset-sg\" \"nx serve client-asset-sg --disableHostCheck=true\"",
-        "build": "nx build",
+        "build": "concurrently \"nx build server-asset-sg\" \"nx build client-asset-sg\"",
+        "test": "nx run-many --target=test --all",
         "postinstall": "node ./decorate-angular-cli.js"
     },
     "private": true,

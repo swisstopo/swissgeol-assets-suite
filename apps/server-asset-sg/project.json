@@ -23,9 +23,6 @@
                     },
                     {
                         "command": "npx shx sed -i \"s/(\\.\\.\\/)*node_modules/\\.\\/node_modules/g\" dist/apps/server-asset-sg/schema.prisma"
-                    },
-                    {
-                        "command": "docker build -t registry.lambda-it.ch/asset-swissgeol/api:latest dist/apps/server-asset-sg"
                     }
                 ]
             }

@@ -15,6 +15,7 @@ The following steps must be carried out once:
 2. Create prisma-client for database-access with `web-asset-swissgeol\apps\server-asset-sg> ng gen-prisma-client`.
 3. Set environment variables for dockers in `web-asset-swissgeol\development\.env`
 4. Set environment variables for assets-server in `web-asset-swissgeol\apps\server-asset-sg\.env.local`
+5. Create local postgis-gotrue docker-image `development\images\db> docker build -t postgis-gotrue .`
 
 ### Starting the development environment
 
