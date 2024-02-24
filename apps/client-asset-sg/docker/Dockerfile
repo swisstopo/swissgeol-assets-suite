@@ -18,7 +18,7 @@ COPY --from=ui-builder /app/dist/apps/client-asset-sg .
 
 # this nginx base image will parse the template and will move it to 
 # /etc/nginx/conf.d/default.conf before it starts nginx process
-COPY container/nginx.conf /etc/nginx/templates/default.conf.template
+COPY /apps/client-asset-sg/docker/nginx.conf /etc/nginx/templates/default.conf.template
 
 HEALTHCHECK --interval=10s --timeout=5s --start-period=10s --retries=3 CMD wget localhost -q -O - > /dev/null 2>&1
 
