@@ -1,4 +1,4 @@
-# Assets
+# SwissGeol Asset
 
 ## Setting up the development environment
 
@@ -10,25 +10,26 @@ The following components must be installed on the development computer:
 
 The following steps must be carried out once:
 
-1. Install all necessary modules with `web-asset-swissgeol> npm install`.
-2. Decorate the Angular CLI with the Nx CLI `web-asset-swissgeol> npm run postinstall`.
-2. Create prisma-client for database-access with `web-asset-swissgeol\apps\server-asset-sg> ng gen-prisma-client`.
-3. Set environment variables for dockers in `web-asset-swissgeol\development\.env`
-4. Set environment variables for assets-server in `web-asset-swissgeol\apps\server-asset-sg\.env.local`
-5. Create local postgis-gotrue docker-image `development\images\db> docker build -t postgis-gotrue .`
-6. Creating elastic-search index. Execute in Kibana (`http://localhost:5601/app/dev_tools#/console`) the commands fro file `web-asset-swissgeol\development\init\elasticsearch\index`. --> docker must be started (see below)
+1. Clone git repository whit `> git clone https://github.com/geoadmin/web-asset-swissgeol.git`.
+2. Install all necessary modules with `web-asset-swissgeol> npm install`.
+3. Decorate the Angular CLI with the Nx CLI `web-asset-swissgeol> npm run postinstall`.
+4. Create prisma-client for database-access with `web-asset-swissgeol\apps\server-asset-sg> ng gen-prisma-client`.
+5. Set environment variables for dockers in `web-asset-swissgeol\development\.env`
+6. Set environment variables for assets-server in `web-asset-swissgeol\apps\server-asset-sg\.env.local`
+7. Create local postgis-gotrue docker-image `development\images\db> docker build -t postgis-gotrue .`
+8. Creating elastic-search index. Execute in Kibana (`http://localhost:5601/app/dev_tools#/console`) the commands fro file `web-asset-swissgeol\development\init\elasticsearch\index`. --> docker must be started (see below)
 
 ### Starting the development environment
 
 1. Start docker with `web-asset-swissgeol\development>docker-compose up`.
-2. Start assets-app with `web-asset-swissgeol>npm run start`.
+2. Start asset-swissgeol app with `web-asset-swissgeol>npm run start`.
 
 **The following services/applications are then available**
 
-| 🔖 App/Service           | 🔗Link                                           | 🧞User               | 🔐Password              |
-| :---------------------- --| :------------------------------------------------| :---------------------| :---------------------- |
-| Assets  (client)          | [localhost:4200](http://localhost:4200/)         | `admin@assets.sg`     | `adminAssets`           |
-| Assets REST API  (server) | [localhost:3333/api/](http://localhost:3333/api) | n/a                   | n/a                     |
+| 🔖App/Service            | 🔗Link                                           | 🧞User                | 🔐Password             |
+| :-------------------------| :------------------------------------------------| :---------------------| :-----------------------|
+| Asset (client)            | [localhost:4200](http://localhost:4200/)         | `admin@assets.sg`     | `adminAssets`           |
+| Asset REST API  (server)  | [localhost:3333/api/](http://localhost:3333/api) | n/a                   | n/a                     |
 | postgresSQL (docker)      | localhost:5432                                   | .env `$DB_USER`       |.env `$DB_PASSWORD`      |
 | Elasticsearch (docker)    | [localhost:9200](http://localhost:9200)          | n/a                   | n/a                     |
 | Kibana (docker)           | [localhost:5601](http://localhost:5601)          | n/a                   | n/a                     |

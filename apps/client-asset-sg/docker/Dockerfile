@@ -11,7 +11,7 @@ RUN npx nx build client-asset-sg
 
 # final image build
 FROM nginx:mainline-alpine
-LABEL maintainer=support@lambda-it.ch
+LABEL maintainer=EBP Schweiz AG
 
 WORKDIR /usr/share/nginx/html
 COPY --from=ui-builder /app/dist/apps/client-asset-sg .
