@@ -26,16 +26,16 @@ The following steps must be carried out once:
 
 **The following services/applications are then available**
 
-| 🔖App/Service            | 🔗Link                                           | 🧞User                | 🔐Password             |
-| :-------------------------| :------------------------------------------------| :---------------------| :-----------------------|
-| Asset (client)            | [localhost:4200](http://localhost:4200/)         | `admin@assets.sg`     | `adminAssets`           |
-| Asset REST API  (server)  | [localhost:3333/api/](http://localhost:3333/api) | n/a                   | n/a                     |
-| postgresSQL (docker)      | localhost:5432                                   | .env `$DB_USER`       |.env `$DB_PASSWORD`      |
-| Elasticsearch (docker)    | [localhost:9200](http://localhost:9200)          | n/a                   | n/a                     |
-| Kibana (docker)           | [localhost:5601](http://localhost:5601)          | n/a                   | n/a                     |
-| pgAdmin (docker)          | [localhost:5051](http://localhost:5051/)         | .env `$PGADMIN_EMAIL` |.env `$PGADMIN_PASSWORD` |
-| MinIO (docker)            | [localhost:9001](http://localhost:9001/)         | .env `$STORAGE_USER`  |.env `$STORAGE_PASSWORD` |
-| smtp4dev (docker)         | [localhost:5000](http://localhost:5000/)         | n/a                   | n/a                     |
+| 🔖App/Service            | 🔗Link                                           | 🧞User                  | 🔐Password             |
+| :-------------------------| :------------------------------------------------| :-----------------------| :-----------------------|
+| Assets (client)           | [localhost:4200](http://localhost:4200/)         | `admin@swissgeol.assets`| `swissgeol_assets`    |
+| Assets REST API (server)  | [localhost:3333/api/](http://localhost:3333/api) | n/a                     | n/a                     |
+| postgresSQL (docker)      | localhost:5432                                   | .env `$DB_USER`         |.env `$DB_PASSWORD`      |
+| Elasticsearch (docker)    | [localhost:9200](http://localhost:9200)          | n/a                     | n/a                     |
+| Kibana (docker)           | [localhost:5601](http://localhost:5601)          | n/a                     | n/a                     |
+| pgAdmin (docker)          | [localhost:5051](http://localhost:5051/)         | .env `$PGADMIN_EMAIL`   |.env `$PGADMIN_PASSWORD` |
+| MinIO (docker)            | [localhost:9001](http://localhost:9001/)         | .env `$STORAGE_USER`    |.env `$STORAGE_PASSWORD` |
+| smtp4dev (docker)         | [localhost:5000](http://localhost:5000/)         | n/a                     | n/a                     |
 
 ### Creating elastic-search index
 

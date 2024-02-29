@@ -2,6 +2,3 @@
 
 volumes
 .env
-
-# Temporär
-02_dump.sql

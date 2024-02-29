@@ -2,7 +2,7 @@ version: '3.7'
 
 services:
     storage:
-        container_name: asset-swissgeol-storage
+        container_name: swissgeol-assets-storage
         image: quay.io/minio/minio
         restart: unless-stopped
         ports:
@@ -16,7 +16,7 @@ services:
         command: server --console-address ":9001" /data
 
     db:
-        container_name: asset-swissgeol-postgres
+        container_name: swissgeol-assets-postgres
         image: postgis-gotrue
         restart: unless-stopped
         ports:
@@ -35,7 +35,7 @@ services:
             retries: 10
 
     pgadmin:
-        container_name: asset-swissgeol-pgadmin
+        container_name: swissgeol-assets-pgadmin
         image: dpage/pgadmin4
         depends_on:
             db:
@@ -51,7 +51,7 @@ services:
             - ./volumes/pgadmin/data:/var/lib/pgadmin
         
     gotrue:
-        container_name: asset-swissgeol-gotrue
+        container_name: swissgeol-assets-gotrue
         image: supabase/gotrue@sha256:794d7df376329df93c0d9ed9237868363de5c858301147e08e6620fb67d1a2c6
         depends_on:
             db:
@@ -73,7 +73,7 @@ services:
             GOTRUE_SMTP_ADMIN_EMAIL: admin@go.true
             GOTRUE_SMTP_HOST: smtp4dev
             GOTRUE_SMTP_PORT: 25
-            GOTRUE_SMTP_SENDER_NAME: asset-swissgeol
+            GOTRUE_SMTP_SENDER_NAME: swissgeol-assets
             GOTRUE_MAILER_URLPATHS_INVITE: http://localhost:4200/auth/verify
             GOTRUE_MAILER_URLPATHS_CONFIRMATION: /auth/v1/verify
             GOTRUE_MAILER_URLPATHS_RECOVERY: http://localhost:4200/auth/verify
@@ -82,7 +82,7 @@ services:
             GOTRUE_MAILER_TEMPLATES_RECOVERY: http://localhost:4200/assets/email-templates/recover.html
             
     elasticsearch:
-        container_name: asset-swissgeol-elasticsearch
+        container_name: swissgeol-assets-elasticsearch
         image: docker.elastic.co/elasticsearch/elasticsearch:8.12.1
         restart: unless-stopped
         ports:
@@ -96,7 +96,7 @@ services:
             - ./volumes/elasticsearch/data:/usr/share/elasticsearch/data        
 
     kibana:
-        container_name: asset-swissgeol-kibana
+        container_name: swissgeol-assets-kibana
         image: docker.elastic.co/kibana/kibana:8.12.1
         depends_on:
             - elasticsearch
@@ -107,7 +107,7 @@ services:
             ELASTICSEARCH_HOSTS: http://elasticsearch:9200        
 
     smtp4dev:
-        container_name: asset-swissgeol-smtp
+        container_name: swissgeol-assets-smtp
         image: rnwood/smtp4dev:v3
         restart: unless-stopped
         ports:
