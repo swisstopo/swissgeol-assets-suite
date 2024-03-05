@@ -40,7 +40,8 @@ jobs:
             org.opencontainers.image.version=v${{ env.VERSION }}
             org.opencontainers.image.maintainer=EBP Schweiz AG
           tags: |
-            type=semver,pattern=v{{version}}
+            type=${{ env.VERSION }}
+            type=semver,pattern=v{{env.VERSION}}
 
       - name: Collect Docker image metadata
         id: meta-api
@@ -52,6 +53,7 @@ jobs:
             org.opencontainers.image.version=v${{ env.VERSION }}
             org.opencontainers.image.maintainer=EBP Schweiz AG
           tags: |
+            type=${{ env.VERSION }}
             type=semver,pattern=v{{version}}
 
       - name: Log in to the GitHub container registry
