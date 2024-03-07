@@ -1,5 +1,5 @@
 export const deAppTranslations = {
-    logoSwissConfederation: 'Logo Schweizerische Eidgenossenschaft',
+    logoSwissGeol: 'Logo swissgeol',
     ok: 'OK',
     submit: 'Absenden',
     cancel: 'Abbrechen',
