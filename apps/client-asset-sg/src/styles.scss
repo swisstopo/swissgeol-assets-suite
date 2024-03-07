@@ -877,3 +877,7 @@ input {
 .ellipsis {
     @include mixins.text-ellipsis;
 }
+
+.break-word {
+  word-break: break-all;
+}
