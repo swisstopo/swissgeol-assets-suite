@@ -71,8 +71,8 @@
                 <ng-container *ngIf="uiMode !== 'view'">
                     <ng-container *ngIf="getForm(uiMode); let form">
                         <form *ngIf="form" [formGroup]="form">
-                            <div class="flex flex-column form-column mb-12">
-                                <div class="flex flex-column bg-white py-4 px-6 max-h-full">
+                            <div class="flex flex-column form-column mb-12 max-h-full ">
+                                <div class="flex flex-column bg-white py-4 px-6 overflow-y-scroll">
                                     <mat-form-field
                                         class="mb-2"
                                         *ngIf="uiMode === 'linkExisting' || uiMode === 'linkNew'">

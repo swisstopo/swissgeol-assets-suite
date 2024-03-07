@@ -1,6 +1,11 @@
 @use '../../styles/variables';
 @use '../../styles/mixins';
 
+:host {
+  display: block;
+  padding: 0 1rem 1rem 0;
+}
+
 .form-column {
     width: 34rem;
 }
