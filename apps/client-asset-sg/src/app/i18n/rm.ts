@@ -1,7 +1,7 @@
 import { AppTranslations } from './i18n';
 
 export const rmAppTranslations: AppTranslations = {
-    logoSwissGeol: 'Logo swissgeol',
+    logoSwissGeol: 'Logo Swissgeol Assets',
     ok: 'OK',
     submit: 'RM Absenden',
     cancel: 'RM Abbrechen',

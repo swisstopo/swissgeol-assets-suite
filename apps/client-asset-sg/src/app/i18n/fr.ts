@@ -1,7 +1,7 @@
 import { AppTranslations } from './i18n';
 
 export const frAppTranslations: AppTranslations = {
-    logoSwissGeol: 'Logo swissgeol',
+    logoSwissGeol: 'Logo Swissgeol Assets',
     ok: 'OK',
     submit: 'Envoyer',
     cancel: 'Annuler',
