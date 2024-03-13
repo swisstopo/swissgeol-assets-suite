@@ -9,7 +9,7 @@ on:
 env:
   REGISTRY: ghcr.io
   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  BASE_IMAGE_NAME: ghcr.io/swissgeol-assets
+  BASE_IMAGE_NAME: ghcr.io/geoadmin/swissgeol-assets
 
 jobs:
   create-pre-release:
@@ -26,7 +26,7 @@ jobs:
           echo COMMITED_AT=$(git show -s --format=%cI `git rev-parse HEAD`) >> $GITHUB_ENV
           echo REVISION=$(git rev-parse --short HEAD) >> $GITHUB_ENV
 
-      - name: Collect Docker image metadata
+      - name: Collect Docker image metadata (app)
         id: meta-app
         uses: docker/metadata-action@v5
         with:
@@ -41,7 +41,7 @@ jobs:
             type=edge
             type=semver,pattern=v{{version}},value=${{ env.VERSION }}
 
-      - name: Collect Docker image metadata
+      - name: Collect Docker image metadata (api)
         id: meta-api
         uses: docker/metadata-action@v5
         with:

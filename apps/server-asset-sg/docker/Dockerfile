@@ -5,6 +5,6 @@ COPY . .
 
 RUN npm install
 RUN ./node_modules/.bin/prisma generate
-RUN npm run build -- server-asset-sg
+RUN nx build server-asset-sg
 
 CMD ["node", "main.js"]
