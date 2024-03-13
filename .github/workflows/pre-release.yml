@@ -9,7 +9,7 @@ on:
 env:
   REGISTRY: ghcr.io
   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  BASE_IMAGE_NAME: ${{ env.REGISTRY }}/swissgeol-assets
+  BASE_IMAGE_NAME: ghcr.io/swissgeol-assets
 
 jobs:
   create-pre-release:
