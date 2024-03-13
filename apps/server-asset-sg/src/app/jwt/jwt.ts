@@ -5,6 +5,15 @@ import * as R from 'fp-ts/ReadonlyRecord';
 import * as D from 'io-ts/Decoder';
 import * as jwt from 'jsonwebtoken';
 
+export const jwtFromToken = (token: string, jwtSecret: string) => {
+    const decoded = jwt.decode(token, { complete: true });
+    console.log('decoded', decoded);
+    /*if(decoded?.payload){
+        console.log('verify', jwt.verify(token, jwtSecret, { algorithms: ['RS256'] }));
+    }*/
+    return decoded;
+}
+
 export const jwtFromCookie = (cookieKey: string, jwtSecret: string) => (reqHeaderCookie: unknown) =>
     pipe(
         reqHeaderCookie,

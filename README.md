@@ -36,6 +36,7 @@ The following steps must be carried out once:
 | pgAdmin (docker)          | [localhost:5051](http://localhost:5051/)         | .env `$PGADMIN_EMAIL`   |.env `$PGADMIN_PASSWORD` |
 | MinIO (docker)            | [localhost:9001](http://localhost:9001/)         | .env `$STORAGE_USER`    |.env `$STORAGE_PASSWORD` |
 | smtp4dev (docker)         | [localhost:5000](http://localhost:5000/)         | n/a                     | n/a                     |
+| oidc-server (docker)      | [localhost:4011](http://localhost:4011/)         | n/a                     | n/a                     |
 
 ### Creating elastic-search index
 

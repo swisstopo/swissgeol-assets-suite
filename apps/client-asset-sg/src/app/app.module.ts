@@ -19,7 +19,7 @@ import { PushModule } from '@rx-angular/template/push';
 import * as O from 'fp-ts/Option';
 import * as C from 'io-ts/Codec';
 
-import { AuthInterceptor } from '@asset-sg/auth';
+import { AuthInterceptor, AuthModule } from '@asset-sg/auth';
 import {
     AnchorComponent,
     ButtonComponent,
@@ -103,11 +103,12 @@ registerLocaleData(locale_deCH, 'de-CH');
         AnchorComponent,
         ButtonComponent,
         DialogModule,
-        A11yModule,
+        A11yModule,  
+        AuthModule,      
     ],
     providers: [
         provideSvgIcons(icons),
-        { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },
+       // { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },
         { provide: MAT_FORM_FIELD_DEFAULT_OPTIONS, useValue: { appearance: 'fill', floatLabel: 'auto' } },
         { provide: CURRENT_LANG, useFactory: currentLangFactory },
     ],

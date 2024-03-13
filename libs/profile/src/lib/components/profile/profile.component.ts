@@ -55,11 +55,9 @@ export class ProfileComponent extends RxState<ProfileComponentState> {
             this._cd.detectChanges();
         });
 
-        this.logoutClicked$.pipe(switchMap(() => this._authService.logout())).subscribe(rd => {
-            if (rdIsComplete(rd)) {
+        this.logoutClicked$.pipe(switchMap(async () => this._authService.logOut())).subscribe(rd => {
                 this._store.dispatch(appSharedStateActions.logout());
                 this._router.navigate(['/']);
-            }
         });
     }
 }

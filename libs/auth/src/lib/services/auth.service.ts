@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import * as RD from '@devexperts/remote-data-ts';
 import { TranslateService } from '@ngx-translate/core';
+import { OAuthService } from 'angular-oauth2-oidc';
 import * as E from 'fp-ts/Either';
 import { flow } from 'fp-ts/function';
 import * as D from 'io-ts/Decoder';
@@ -24,11 +25,26 @@ export class AuthService {
     private _httpClient = inject(HttpClient);
     private _dcmnt = inject(DOCUMENT);
     private _translateService = inject(TranslateService);
+    private _oauthService = inject(OAuthService);
 
     private _getUserProfile() {
         return this._httpClient
             .get('/api/user')
             .pipe(map(decode(User)), OE.catchErrorW(httpErrorResponseOrUnknownError));
+    }
+
+    init(): void {
+        this._oauthService.configure({
+            issuer: 'http://localhost:4011',
+            redirectUri: window.location.origin,
+            postLogoutRedirectUri: window.location.origin,
+            clientId: 'assets-client',
+            scope: 'openid profile local_groups_scope',
+            responseType: 'code',
+            showDebugInformation: true,
+          });
+          this._oauthService.loadDiscoveryDocumentAndLogin();
+          this._oauthService.setupAutomaticSilentRefresh();
     }
 
     getUserProfile(): ORD.ObservableRemoteData<ApiError, User> {
@@ -55,7 +71,12 @@ export class AuthService {
         );
     }
 
+    logOut(): void {
+        this._oauthService.logOut();
+    }
+
     logout(): ORD.ObservableRemoteData<ApiError, void> {
+        this._oauthService.logOut();
         const accessToken = localStorage.getItem('accessToken');
         return this._httpClient
             .post(

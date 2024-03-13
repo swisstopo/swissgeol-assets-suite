@@ -47,6 +47,7 @@
         "@turf/boolean-within": "^6.5.0",
         "@turf/helpers": "^6.5.0",
         "@turf/midpoint": "^6.5.0",
+        "angular-oauth2-oidc": "^17.0.1",
         "bezier-easing": "^2.1.0",
         "csv-parse": "^5.3.3",
         "cuid": "^3.0.0",
