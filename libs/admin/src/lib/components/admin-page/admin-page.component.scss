@@ -21,6 +21,11 @@ mat-progress-bar {
     width: calc(100% - 1rem);
 }
 
+.user-list {
+  height: calc(100% - 4.5rem);
+  overflow-y: scroll;
+}
+
 asset-sg-user-collapsed,
 asset-sg-user-expanded {
     margin-bottom: 1rem;

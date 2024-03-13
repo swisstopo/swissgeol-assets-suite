@@ -2,7 +2,7 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, ElementRef, OnInit, ViewChild, inject } from '@angular/core';
 import { FormBuilder, FormControl, FormGroupDirective, Validators } from '@angular/forms';
 import { MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
-import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { UntilDestroy } from '@ngneat/until-destroy';
 import * as A from 'fp-ts/Array';
 import * as E from 'fp-ts/Either';
 import { flow, pipe } from 'fp-ts/function';
@@ -13,7 +13,6 @@ import {
     catchError,
     combineLatest,
     debounceTime,
-    delay,
     distinctUntilChanged,
     map,
     of,
