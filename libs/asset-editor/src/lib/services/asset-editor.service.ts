@@ -1,10 +1,9 @@
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import * as RD from '@devexperts/remote-data-ts';
 import * as E from 'fp-ts/Either';
-import { flow, pipe } from 'fp-ts/function';
-import { EMPTY, concat, concatAll, forkJoin, map, merge, of, startWith, switchMap, toArray } from 'rxjs';
-
+import { flow } from 'fp-ts/function';
+import {  concat, forkJoin, map, of, startWith, toArray } from 'rxjs';
 import { ApiError, httpErrorResponseError } from '@asset-sg/client-shared';
 import { OE, ORD, decodeError, unknownError } from '@asset-sg/core';
 import { Contact, PatchAsset, PatchContact } from '@asset-sg/shared';

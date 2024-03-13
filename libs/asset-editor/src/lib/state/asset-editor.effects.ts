@@ -6,7 +6,7 @@ import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { pipe } from 'fp-ts/function';
 import * as O from 'fp-ts/Option';
 import * as D from 'io-ts/Decoder';
-import { Observable, concat, concatMap, forkJoin, map, partition, share, switchMap, tap } from 'rxjs';
+import { Observable, concatMap, map, partition, share, switchMap, tap } from 'rxjs';
 
 import { appSharedStateActions, filterNavigateToComponent } from '@asset-sg/client-shared';
 import { DT, ORD, partitionEither } from '@asset-sg/core';
