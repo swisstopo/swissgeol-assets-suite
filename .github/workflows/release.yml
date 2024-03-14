@@ -13,6 +13,7 @@ env:
   REGISTRY: ghcr.io
   TAG_NAME: ${{ github.event.inputs.TAG_NAME || github.event.release.tag_name }}
   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  BASE_IMAGE_NAME: ghcr.io/geoadmin/swissgeol-assets
 
 jobs:
   retag-docker-image:
@@ -26,11 +27,10 @@ jobs:
       - name: Set environment variables
         run: |
           echo VERSION=${TAG_NAME#v} >> $GITHUB_ENV
-          echo BASE_IMAGE_NAME=$REGISTRY/$(echo ${GITHUB_REPOSITORY,,}) >> $GITHUB_ENV
           echo COMMITED_AT=$(git show -s --format=%cI `git rev-parse HEAD`) >> $GITHUB_ENV
           echo REVISION=$(git rev-parse --short HEAD) >> $GITHUB_ENV
 
-      - name: Collect Docker image metadata
+      - name: Collect Docker image metadata (app)
         id: meta-app
         uses: docker/metadata-action@v5
         with:
@@ -40,9 +40,9 @@ jobs:
             org.opencontainers.image.version=v${{ env.VERSION }}
             org.opencontainers.image.maintainer=EBP Schweiz AG
           tags: |
-            type=semver,pattern=v{{version}}
+            type=semver,pattern=v${{ env.VERSION }}
 
-      - name: Collect Docker image metadata
+      - name: Collect Docker image metadata (api)
         id: meta-api
         uses: docker/metadata-action@v5
         with:
@@ -52,7 +52,7 @@ jobs:
             org.opencontainers.image.version=v${{ env.VERSION }}
             org.opencontainers.image.maintainer=EBP Schweiz AG
           tags: |
-            type=semver,pattern=v{{version}}
+            type=semver,pattern=v${{ env.VERSION }}
             
       - name: Log in to the GitHub container registry
         uses: docker/login-action@v3
@@ -118,7 +118,7 @@ jobs:
 
       - name: Commit, push and create pull request
         run: |
-          git config --global user.email "office@ebp.ch"
+          git config --global user.email "suport@ebp.ch"
           git config --global user.name "ebp-build"
           git commit -am "$GIT_COMMIT_MESSAGE"
           git push --set-upstream origin $GIT_BRANCH_NAME
