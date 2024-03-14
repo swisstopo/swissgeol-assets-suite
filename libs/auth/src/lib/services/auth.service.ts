@@ -13,6 +13,7 @@ import urlJoin from 'url-join';
 import { ApiError, httpErrorResponseOrUnknownError } from '@asset-sg/client-shared';
 import { OE, ORD, decode, decodeError } from '@asset-sg/core';
 import { User } from '@asset-sg/shared';
+import { oAuthConfig } from '../../../../../configs/oauth.config';
 
 const TokenEndpointResponse = D.struct({
     access_token: D.string,
@@ -35,13 +36,15 @@ export class AuthService {
 
     init(): void {
         this._oauthService.configure({
-            issuer: 'http://localhost:4011',
-            redirectUri: window.location.origin,
-            postLogoutRedirectUri: window.location.origin,
-            clientId: 'assets-client',
-            scope: 'openid profile local_groups_scope',
-            responseType: 'code',
-            showDebugInformation: true,
+            issuer: oAuthConfig.issuer,
+            redirectUri:  window.location.origin,
+            postLogoutRedirectUri:  window.location.origin,
+            clientId: oAuthConfig.clientId,
+            scope: oAuthConfig.scope,
+            responseType: oAuthConfig.responseType,
+            showDebugInformation: oAuthConfig.showDebugInformation,
+          strictDiscoveryDocumentValidation: false,
+          dummyClientSecret: oAuthConfig.clientSecret,
           });
           this._oauthService.loadDiscoveryDocumentAndLogin();
           this._oauthService.setupAutomaticSilentRefresh();
