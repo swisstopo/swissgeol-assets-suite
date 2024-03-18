@@ -1,6 +1,6 @@
 <form [formGroup]="editForm">
     <div class="edit-area">
-        <div *ngIf="user; else createUser" class="header">
+        <div *ngIf="user" class="header">
             <div class="email">
                 {{ user.email }}
             </div>
@@ -20,13 +20,6 @@
                 </div>
             </ng-template>
         </div>
-        <ng-template #createUser>
-            <div class="label-heading label-heading--before-form-field label-email" translate>auth.email</div>
-            <mat-form-field class="email-form-field">
-                <mat-label translate>auth.email</mat-label>
-                <input matInput type="email" formControlName="email" />
-            </mat-form-field>
-        </ng-template>
         <label id="role">Rolle</label>
         <mat-radio-group class="roles-radio-group" aria-labelledby="role" formControlName="role">
             <mat-radio-button [value]="UserRole.admin">Admin</mat-radio-button>
