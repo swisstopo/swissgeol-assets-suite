@@ -1,26 +1,22 @@
-import * as path from 'node:path';
-
 import { Injectable } from '@nestjs/common';
 import * as A from 'fp-ts/Array';
 import * as E from 'fp-ts/Either';
 import { flow, pipe } from 'fp-ts/function';
 import * as TE from 'fp-ts/TaskEither';
-import * as D from 'io-ts/Decoder';
 
 import {
     DecodeError,
     TypedError,
     UnknownError,
     decodeError,
-    isNil,
     unknownErrorTag,
     unknownToError,
     unknownToUnknownError,
 } from '@asset-sg/core';
-import { UserPatch, UserPost, UserRoleEnum, Users } from '@asset-sg/shared';
+import { UserPatch, Users } from '@asset-sg/shared';
 
 import { PrismaService } from '../prisma/prisma.service';
-import { PrismaUsersDecoder, RawUserMetaData } from '../user/models';
+import { PrismaUsersDecoder } from '../user/models';
 
 const _importDynamic = new Function('modulePath', 'return import(modulePath)');
 export const _fetch = async function (...args: unknown[]) {
@@ -37,7 +33,7 @@ export class AdminService {
             TE.tryCatch(
                 () =>
                     this.prismaService.assetUser.findMany({
-                        select: { id: true, role: true, user: { select: { email: true, raw_user_meta_data: true } } },
+                        select: { id: true, role: true, email: true, lang: true },
                     }),
                 unknownToUnknownError,
             ),
@@ -52,78 +48,10 @@ export class AdminService {
                     where: { id },
                     data: {
                         role: user.role,
-                        user: {
-                            update: {
-                                raw_user_meta_data: RawUserMetaData.encode({ lang: user.lang }),
-                            },
-                        },
+                      lang: user.lang,
                     },
                 }),
             unknownToUnknownError,
-        );
-    }
-
-    createUser(accessToken: string, user: UserPost) {
-        return pipe(
-            pipe(
-                TE.tryCatch(
-                    () => this.prismaService.assetUser.findFirst({ where: { user: { email: user.email } } }),
-                    unknownToUnknownError,
-                ),
-            ),
-            TE.filterOrElseW(isNil, () => new TypedError('PermissionDeniedError', `User already exists`)),
-            TE.chainW(() =>
-                TE.tryCatch(() => {
-                    const inviteUrl = new URL('/invite', process.env.AUTH_URL).href;
-                    const redirect_to = new URL(
-                        path.join(user.lang, `/a/set-password?ts=${Date.now()}`),
-                        process.env.FRONTEND_URL,
-                    ).href;
-                    console.log(
-                        'createUser',
-                        JSON.stringify({
-                            userLang: user.lang,
-                            frontendUrl: process.env.FRONTEND_URL,
-                            redirect_to,
-                        }),
-                    );
-                    return _fetch(inviteUrl, {
-                        method: 'POST',
-                        headers: { Authorization: 'Bearer ' + accessToken, redirect_to, referer: redirect_to },
-                        body: JSON.stringify({ email: user.email, data: RawUserMetaData.encode({ lang: user.lang }) }),
-                    });
-                }, unknownToUnknownError),
-            ),
-            TE.filterOrElseW(
-                res => res.status === 200,
-                res =>
-                    new TypedError(
-                        'PermissionDeniedError',
-                        `Failed to create user. status ${res.status}. statusText: ${res.statusText} `,
-                    ),
-            ),
-            TE.chainW(res => TE.tryCatch(() => res.json(), unknownToUnknownError)),
-            TE.chainEitherKW(flow(D.struct({ id: D.string }).decode, E.mapLeft(decodeError))),
-            TE.chainW(({ id }) =>
-                TE.tryCatch(
-                    () =>
-                        this.prismaService.assetUser.create({
-                            data: {
-                                id,
-                                role: user.role,
-                            },
-                        }),
-                    unknownToUnknownError,
-                ),
-            ),
-            TE.chain(({ id }) =>
-                user.role === UserRoleEnum.admin
-                    ? TE.tryCatch(
-                          () => this.prismaService.users.update({ where: { id }, data: { role: 'service_role' } }),
-                          unknownToUnknownError,
-                      )
-                    : TE.right(null),
-            ),
         );
     }
 

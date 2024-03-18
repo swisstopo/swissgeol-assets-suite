@@ -1,5 +1,4 @@
-import { Controller, Delete, Get, HttpCode, HttpException, Param, Put, Req, Res } from '@nestjs/common';
-import { Response } from 'express';
+import { Controller, Delete, Get, HttpCode, HttpException, Param, Put, Req } from '@nestjs/common';
 import * as E from 'fp-ts/Either';
 import * as D from 'io-ts/Decoder';
 
@@ -17,7 +16,7 @@ export class UserController {
 
     @Get('')
     async getUser(@Req() req: AuthenticatedRequest) {
-        const e = await this.userService.getUser(req.jwtPayload.sub || '')();
+        const e = await this.userService.getUser(req.jwtPayload.sub ?? "", req.jwtPayload.username.split("_")[1])();
         if (E.isLeft(e)) {
             console.error(e.left);
             req.res?.clearCookie(cookieKey);

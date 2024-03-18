@@ -5,6 +5,7 @@ import * as TE from 'fp-ts/TaskEither';
 import { DecodeError, UnknownError, decode, unknownToUnknownError } from '@asset-sg/core';
 import { SearchAssetResult, User } from '@asset-sg/shared';
 
+import { AdminService } from '../admin/admin.service';
 import { PrismaService } from '../prisma/prisma.service';
 
 import { getFavourites } from './get-favourites';
@@ -12,21 +13,59 @@ import { PrismaUserDecoder } from './models';
 
 @Injectable()
 export class UserService {
-    constructor(private readonly prismaService: PrismaService) {}
+    constructor(private readonly prismaService: PrismaService, private readonly adminServie: AdminService) {}
 
-    getUser(assetUserId: string): TE.TaskEither<UnknownError | DecodeError, User> {
+    getUser(assetUserId: string, email?: string): TE.TaskEither<UnknownError | DecodeError | Error, User> {
         return pipe(
             TE.tryCatch(
                 () =>
-                    this.prismaService.assetUser.findUnique({
-                        select: { id: true, role: true, user: { select: { email: true, raw_user_meta_data: true } } },
+                    this.prismaService.assetUser.findFirst({
+                        select: { id: true, role: true, email: true, lang: true},
                         where: { id: assetUserId },
                     }),
                 unknownToUnknownError,
             ),
-            TE.chainEitherKW(decode(PrismaUserDecoder)),
+          TE.chain(userOrNull => {
+            console.log('getUser: Prisma findFirst result', { userOrNull });
+            return userOrNull ? TE.right(userOrNull) : pipe(
+              this.createDefaultUser(assetUserId, email ?? ""),
+              TE.map(newUser => {
+                console.log('getUser: User created', { newUser });
+                return newUser;
+              })
+            );
+          }),
+          TE.chainEitherKW(decode(PrismaUserDecoder)),
         );
     }
+
+  createDefaultUser(assetUserId: string, email: string): TE.TaskEither<DecodeError | Error, User> {
+    return pipe(
+      TE.tryCatch(
+        () => this.prismaService.assetUser.create({
+          data: {
+            id: assetUserId,
+            oidcId: assetUserId,
+            email: email ?? "example@email.com",
+            role: 'viewer',
+            lang: 'de',
+          },
+          select: {
+            id: true,
+            email: true,
+            role: true,
+            lang: true,
+          },
+        }),
+        (error: unknown) => new Error('Failed to create user: ' + (error instanceof Error ? error.message : String(error)))
+      ),
+      TE.map(user => {
+        console.log("userservice 2", user)
+
+      }),
+      TE.chainEitherKW(decode(PrismaUserDecoder)),
+    );
+  }
 
     getFavourites(assetUserId: string): TE.TaskEither<Error, SearchAssetResult> {
         return getFavourites(this.prismaService, assetUserId);

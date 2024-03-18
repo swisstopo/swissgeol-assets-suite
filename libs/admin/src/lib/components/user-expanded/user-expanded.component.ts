@@ -15,11 +15,7 @@ import { makeADT, ofType } from '@morphic-ts/adt';
 import * as O from 'fp-ts/Option';
 
 import { ButtonComponent, ViewChildMarker } from '@asset-sg/client-shared';
-import { User, UserRoleEnum, UserWithoutId } from '@asset-sg/shared';
-
-interface UserCreated extends UserWithoutId {
-    _tag: 'userCreated';
-}
+import { User, UserRoleEnum } from '@asset-sg/shared';
 
 interface UserEdited extends User {
     _tag: 'userEdited';
@@ -34,13 +30,12 @@ interface UserExpandCanceled {
 }
 
 export const UserExpandedOutput = makeADT('_tag')({
-    userCreated: ofType<UserCreated>(),
     userEdited: ofType<UserEdited>(),
     userExpandCanceled: ofType<UserExpandCanceled>(),
     userDelete: ofType<UserDelete>(),
 });
 
-export type UserExpandedOutput = UserCreated | UserEdited | UserDelete | UserExpandCanceled;
+export type UserExpandedOutput = UserEdited | UserDelete | UserExpandCanceled;
 
 @Component({
     selector: 'asset-sg-user-expanded',
@@ -97,10 +92,6 @@ export class UserExpandedComponent {
             if (!role || !lang) return;
 
             this.userExpandedOutput.emit(UserExpandedOutput.of.userEdited({ ...this.user, role, lang }));
-        } else {
-            const { email, role, lang } = this.editForm.getRawValue();
-            if (!email || !role || !lang) return;
-            this.userExpandedOutput.emit(UserExpandedOutput.of.userCreated({ email, role, lang }));
         }
     }
 
