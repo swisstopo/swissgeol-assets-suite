@@ -37,7 +37,7 @@ jobs:
           images: ${{ env.BASE_IMAGE_NAME }}-app
           labels: |
             org.opencontainers.image.created=${{ env.COMMITED_AT }}
-            org.opencontainers.image.version=v${{ env.VERSION }}
+            org.opencontainers.image.version=${{ env.VERSION }}
             org.opencontainers.image.maintainer=EBP Schweiz AG
           tags: |
             type=semver,pattern=v{{version}},value=${{ env.VERSION }}
@@ -49,7 +49,7 @@ jobs:
           images: ${{ env.BASE_IMAGE_NAME }}-api
           labels: |
             org.opencontainers.image.created=${{ env.COMMITED_AT }}
-            org.opencontainers.image.version=v${{ env.VERSION }}
+            org.opencontainers.image.version=${{ env.VERSION }}
             org.opencontainers.image.maintainer=EBP Schweiz AG
           tags: |
             
