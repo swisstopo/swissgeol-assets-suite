@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       TAG_NAME:
-        description: "Version (Tag)"
+        description: "Tag Name"
         required: true
 
 env:
