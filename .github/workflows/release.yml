@@ -19,17 +19,20 @@ jobs:
 
   retag-docker-image:
     runs-on: ubuntu-latest
-    name: Push updated Docker image
+    name: Create new release and tag packates as latest
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+    
       - name: Create Release 
         uses: actions/create-release@v1 
         id: create_release 
         with: 
           draft: false 
           prerelease: false 
-          release_name: ${{ env.TAG_NAME }} 
-          tag_name: ${{ env.TAG_NAME }} 
+          release_name: v${{ env.TAG_NAME }} 
+          tag_name: v${{ env.TAG_NAME }} 
           body_path: CHANGELOG.md 
         env: 
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
