@@ -91,13 +91,15 @@ jobs:
           cache-from: type=registry,ref=${{ env.BASE_IMAGE_NAME }}-api:edge
           cache-to: type=inline
 
-      - name: Create GitHub pre-release
-        run: |
-          gh api \
-            --method POST \
-            --header "Accept: application/vnd.github+json" \
-            /repos/${GITHUB_REPOSITORY}/releases \
-            -f tag_name='${{ env.VERSION }}' \
-            -f target_commitish='develop' \
-            -f name='${{ env.VERSION }}' \
-            -F prerelease=true \
+      - name: Create pre-elease
+        id: create_release
+        uses: actions/create-release@v1
+        with:
+          tag_name: ${{ env.VERSION }}
+          release_name: ${{ env.VERSION }}
+          body_path: CHANGELOG.md
+          commitish: develop
+          prerelease: true
+          draft: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
