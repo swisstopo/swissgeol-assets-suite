@@ -3,28 +3,26 @@ import { NextFunction, Request, Response } from 'express';
 import * as E from 'fp-ts/Either';
 import { pipe } from 'fp-ts/function';
 import * as jwt from 'jsonwebtoken';
-import * as jkwToPem from 'jwk-to-pem';
+import * as jwkToPem from 'jwk-to-pem';
 
 import { AuthenticatedRequest } from '../models/request';
+import { HttpService } from '@nestjs/axios';
+import { oAuthConfig } from '../../../../../configs/oauth.config';
 
 @Injectable()
 export class JwtMiddleware implements NestMiddleware {
+    constructor(private httpService: HttpService) {}
+
     async use(req: Request, _res: Response, next: NextFunction) {
         const token = this.extractTokenFromHeader(req);
 
         const decoded = jwt.decode(token!, { complete: true });
         console.log('decoded', decoded);
 
-        const signingKey = {
-            alg: 'RS256',
-            e: 'AQAB',
-            kid: '7v8YKx69eOSpHLdg9kvar1w4nCVJ6qgvMPmuDVWPwx0=',
-            kty: 'RSA',
-            n: 'xFUfYJKkTnjz0weuXARn1m-YWB7IOMOVit1IrbWZ7ZddofvotAwFKwqsqyVZ7Jqo0VF_CZVdHQeJ1uGBi5KQAZ2YydsbRjXTZ0sNFLkP0AOLCEsdH7ppdY65q7JxGGMnRif4nfsWoacDd1zmOP3nz6DDZo6xyBJvrgOrhEEEyTzSb4EJCYyU_va0knTe3bI7PLODzj8RlKmxgGFcboW5ZLy1Fy7fpURnT32GR36OQLwmNjrUsWHjT4tvCp1OuXGp_rk5VhckUh3r48POQ3-S63Qm-AiQTqCx8un7YOsoLmcsykC3KGIzHjW6q5ywZjq5fGwIXG-4LBMPsCVKKcDLwQ',
-            use: 'sig',
-        };
-
-        const pem = jkwToPem(signingKey);
+        const response = await this.httpService.get(`${oAuthConfig.issuer}/.well-known/jwks.json`).toPromise();
+        const jwks = response!.data.keys;
+        const signingKey = jwks.find((key: any) => key.kid === decoded?.header.kid);
+        const pem = jwkToPem(signingKey);
 
         const result = pipe(
             token,
