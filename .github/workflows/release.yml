@@ -31,7 +31,8 @@ jobs:
           release_name: ${{ env.TAG_NAME }} 
           tag_name: ${{ env.TAG_NAME }} 
           body_path: CHANGELOG.md 
-          env: GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        env: 
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Retag to latest
         uses: koraykoska/retag-docker-image@0.2.4
