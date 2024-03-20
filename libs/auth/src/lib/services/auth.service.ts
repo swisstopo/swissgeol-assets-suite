@@ -1,6 +1,6 @@
 import { DOCUMENT } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { Injectable, inject } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import * as RD from '@devexperts/remote-data-ts';
 import { TranslateService } from '@ngx-translate/core';
 import { OAuthService } from 'angular-oauth2-oidc';
@@ -11,7 +11,7 @@ import { catchError, map, of, startWith, tap } from 'rxjs';
 import urlJoin from 'url-join';
 
 import { ApiError, httpErrorResponseOrUnknownError } from '@asset-sg/client-shared';
-import { OE, ORD, decode, decodeError } from '@asset-sg/core';
+import { decode, decodeError, OE, ORD } from '@asset-sg/core';
 import { User } from '@asset-sg/shared';
 import { oAuthConfig } from '../../../../../configs/oauth.config';
 
@@ -19,6 +19,7 @@ const TokenEndpointResponse = D.struct({
     access_token: D.string,
     refresh_token: D.string,
 });
+
 interface TokenEndpointResponse extends D.TypeOf<typeof TokenEndpointResponse> {}
 
 @Injectable({ providedIn: 'root' })
@@ -37,17 +38,17 @@ export class AuthService {
     init(): void {
         this._oauthService.configure({
             issuer: oAuthConfig.issuer,
-            redirectUri:  window.location.origin,
-            postLogoutRedirectUri:  window.location.origin,
+            redirectUri: window.location.origin,
+            postLogoutRedirectUri: window.location.origin,
             clientId: oAuthConfig.clientId,
             scope: oAuthConfig.scope,
             responseType: oAuthConfig.responseType,
             showDebugInformation: oAuthConfig.showDebugInformation,
-          strictDiscoveryDocumentValidation: false,
-          dummyClientSecret: oAuthConfig.clientSecret,
-          });
-          this._oauthService.loadDiscoveryDocumentAndLogin();
-          this._oauthService.setupAutomaticSilentRefresh();
+            strictDiscoveryDocumentValidation: false,
+            dummyClientSecret: oAuthConfig.clientSecret,
+        });
+        this._oauthService.loadDiscoveryDocumentAndLogin();
+        this._oauthService.setupAutomaticSilentRefresh();
     }
 
     getUserProfile(): ORD.ObservableRemoteData<ApiError, User> {
