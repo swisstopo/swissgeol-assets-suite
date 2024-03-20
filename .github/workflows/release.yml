@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       TAG_NAME:
-        description: "Tag name"
+        description: "Version (Tag)"
         required: true
 
 env:
@@ -16,110 +16,30 @@ env:
   BASE_IMAGE_NAME: ghcr.io/geoadmin/swissgeol-assets
 
 jobs:
+
   retag-docker-image:
     runs-on: ubuntu-latest
     name: Push updated Docker image
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - name: Create Release 
+        if: startsWith(github.ref, 'refs/tags/') 
+        uses: actions/create-release@v1 
+        id: create_release 
+        with: 
+          draft: false 
+          prerelease: false 
+          release_name: ${{ env.TAG_NAME }} 
+          tag_name: ${{ env.TAG_NAME }} 
+          body_path: CHANGELOG.md 
+          env: GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Set environment variables
-        run: |
-          echo VERSION=${TAG_NAME#v} >> $GITHUB_ENV
-          echo COMMITED_AT=$(git show -s --format=%cI `git rev-parse HEAD`) >> $GITHUB_ENV
-          echo REVISION=$(git rev-parse --short HEAD) >> $GITHUB_ENV
-
-      - name: Collect Docker image metadata (app)
-        id: meta-app
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.BASE_IMAGE_NAME }}-app
-          labels: |
-            org.opencontainers.image.created=${{ env.COMMITED_AT }}
-            org.opencontainers.image.version=${{ env.VERSION }}
-            org.opencontainers.image.maintainer=EBP Schweiz AG
-          tags: |
-            type=semver,pattern=v{{version}},value=${{ env.VERSION }}
-
-      - name: Collect Docker image metadata (api)
-        id: meta-api
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.BASE_IMAGE_NAME }}-api
-          labels: |
-            org.opencontainers.image.created=${{ env.COMMITED_AT }}
-            org.opencontainers.image.version=${{ env.VERSION }}
-            org.opencontainers.image.maintainer=EBP Schweiz AG
-          tags: |
-            
-            
-      - name: Log in to the GitHub container registry
-        uses: docker/login-action@v3
+      - name: Retag to latest
+        uses: koraykoska/retag-docker-image@0.2.4
         with:
           registry: ${{ env.REGISTRY }}
-          username: ${{ github.repository_owner  }}
+          name: ${{ env.BASE_IMAGE_NAME }}-app
+          old_tag: ${{ github.sha }}
+          new_tag: latest
+          username: github
           password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build and push Docker image (app)
-        uses: docker/build-push-action@v5
-        with:
-          context: ./
-          file: ./apps/client-asset-sg/docker/Dockerfile
-          push: true
-          build-args: |
-            VERSION=${{ env.VERSION }}
-            REVISION=${{ env.REVISION }}
-          tags: ${{ steps.meta-app.outputs.tags }}
-          labels: ${{ steps.meta-app.outputs.labels }}
-          cache-from: type=registry,ref=${{ env.BASE_IMAGE_NAME }}-app:edge
-          cache-to: type=inline
-
-      - name: Build and push Docker image (api)
-        uses: docker/build-push-action@v5
-        with:
-          context: ./
-          file: ./apps/server-asset-sg/docker/Dockerfile
-          push: true
-          build-args: |
-            VERSION=${{ env.VERSION }}
-            REVISION=${{ env.REVISION }}
-          tags: ${{ steps.meta-api.outputs.tags }}
-          labels: ${{ steps.meta-api.outputs.labels }}
-          cache-from: type=registry,ref=${{ env.BASE_IMAGE_NAME }}-api:edge
-          cache-to: type=inline
-
-  patch-changelog:
-    runs-on: ubuntu-latest
-    name: Patch CHANGELOG.md and update GitHub release notes
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set environment variables
-        run: |
-          echo GIT_BRANCH_NAME=mark-version-${TAG_NAME#v}-as-released >> $GITHUB_ENV
-          echo GIT_COMMIT_MESSAGE=Mark version ${TAG_NAME#v} as released >> $GITHUB_ENV
-          echo RELEASE_ID=$(gh api -H "Accept: application/vnd.github+json" /repos/${GITHUB_REPOSITORY}/releases/tags/${TAG_NAME} | jq '.id') >> $GITHUB_ENV
-
-      - name: Get changelog for this specific release and update release notes
-        run: |
-          gh api \
-            --method PATCH \
-            --header "Accept: application/vnd.github+json" \
-            /repos/${GITHUB_REPOSITORY}/releases/${RELEASE_ID} \
-            -f body="$(./get-changelog.sh)"
-
-      - name: Checkout new branch and patch changelog
-        run: |
-          git checkout -b $GIT_BRANCH_NAME
-          sed -i "/^\#\# \[Unreleased\]$/a \\\n\#\# $TAG_NAME - $(date '+%Y-%m-%d')" CHANGELOG.md
-
-      - name: Commit, push and create pull request
-        run: |
-          git config --global user.email "suport@ebp.ch"
-          git config --global user.name "ebp-build"
-          git commit -am "$GIT_COMMIT_MESSAGE"
-          git push --set-upstream origin $GIT_BRANCH_NAME
-          gh pr create --title "$GIT_COMMIT_MESSAGE" --body ""
