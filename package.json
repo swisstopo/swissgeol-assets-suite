@@ -23,7 +23,7 @@
         "@angular/platform-browser": "15.1.0",
         "@angular/platform-browser-dynamic": "15.1.0",
         "@angular/router": "15.1.0",
-        "@aws-sdk/client-s3": "^3.241.0",
+        "@aws-sdk/client-s3": "^3.537.0",
         "@devexperts/remote-data-ts": "^2.1.1",
         "@elastic/elasticsearch": "^8.5.0",
         "@kobalte/core": "^0.4.0",
