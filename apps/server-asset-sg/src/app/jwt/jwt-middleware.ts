@@ -15,40 +15,16 @@ export class JwtMiddleware implements NestMiddleware {
     constructor() {}
 
     async use(req: Request, _res: Response, next: NextFunction) {
-        // const token = this.extractTokenFromHeader(req);
-        //
-        // const decoded = jwt.decode(token!, { complete: true });
-        // console.log('decoded', decoded);
-        //
-        // const response = await this.httpService.get(`${oAuthConfig.issuer}/.well-known/jwks.json`).toPromise();
-        // const jwks = response!.data.keys;
-        // const signingKey = jwks.find((key: any) => key.kid === decoded?.header.kid);
-        // const pem = jwkToPem(signingKey);
-        // console.log('pem', pem);
-        //
-        // const result = pipe(
-        //     token,
-        //     E.fromNullable(new Error('No token found')),
-        //     E.chain(token => this.verifyTokenOld(token, pem)),
-        // );
-        //
-
-        // const jwk = await this.getJwkTE()();
-        // const token1 = this.extractTokenFromHeaderE(req);
-        // const res = pipe(
-        //   token1,
-        //   this.decodeTokenE,
-        //   E.chain(decoded => this.getSigningKeyE(decoded, jwk)),
-        //   this.jwkToPemE,
-        //   E.chain(pem => this.verifyToken(token1, pem))
-        // )
-
+        const jwk = await this.getJwkTE()();
         const token = this.extractTokenFromHeaderE(req);
-        const decoded = this.decodeTokenE(token);
-        const jwks = await this.getJwkTE()();
-        const signingKey = this.getSigningKeyE(decoded, jwks);
-        const pem = this.jwkToPemE(signingKey);
-        const result = this.verifyToken(token, pem);
+
+        const result = pipe(
+            token,
+            E.chain(this.decodeTokenE),
+            E.chain(decoded => this.getSigningKeyE(decoded, jwk)),
+            this.jwkToPemE,
+            E.chain(pem => this.verifyToken(token, pem)),
+        );
 
         if (E.isRight(result)) {
             (req as AuthenticatedRequest).accessToken = result.right.accessToken;
@@ -73,21 +49,16 @@ export class JwtMiddleware implements NestMiddleware {
         );
     }
 
-    private decodeTokenE(token: E.Either<Error, string>): E.Either<Error, Jwt> {
+    private decodeTokenE(token: string): E.Either<Error, Jwt> {
         return pipe(
-            token,
-            E.chain(tokenString =>
-                pipe(
-                    E.tryCatch(() => jwt.decode(tokenString, { complete: true }), E.toError),
-                    E.chain(decoded =>
-                        decoded !== null ? E.right(decoded) : E.left(new Error('Token decoding resulted in null')),
-                    ),
-                ),
+            E.tryCatch(() => jwt.decode(token, { complete: true }), E.toError),
+            E.chain(decoded =>
+                decoded !== null ? E.right(decoded) : E.left(new Error('Token decoding resulted in null')),
             ),
         );
     }
 
-    private getJwkTE(): TE.TaskEither<Error, object[]> {
+    private getJwkTE(): TE.TaskEither<Error, JwksKey[]> {
         return pipe(
             TE.tryCatch(
                 () => axios.get(`${oAuthConfig.issuer}/.well-known/jwks.json`),
@@ -97,22 +68,13 @@ export class JwtMiddleware implements NestMiddleware {
         );
     }
 
-    private getSigningKeyE(
-        decodedE: E.Either<Error, Jwt>,
-        jwksE: E.Either<Error, JwksKey[]>,
-    ): E.Either<Error, JwksKey> {
+    private getSigningKeyE(decoded: Jwt, jwksE: E.Either<Error, JwksKey[]>): E.Either<Error, JwksKey> {
         return pipe(
-            decodedE,
-            E.chain(decoded =>
+            jwksE,
+            E.chain(jwks =>
                 pipe(
-                    jwksE,
-                    E.chain(jwks =>
-                        pipe(
-                            jwks.find((key: any) => key.kid === decoded.header.kid),
-                            signingKey =>
-                                signingKey ? E.right(signingKey) : E.left(new Error('Matching object not found')),
-                        ),
-                    ),
+                    jwks.find((key: any) => key.kid === decoded.header.kid),
+                    signingKey => (signingKey ? E.right(signingKey) : E.left(new Error('Matching object not found'))),
                 ),
             ),
         );
@@ -130,7 +92,7 @@ export class JwtMiddleware implements NestMiddleware {
         );
     }
 
-    private verifyToken2(
+    private verifyToken(
         token: E.Either<Error, string>,
         pem: string,
     ): E.Either<
@@ -149,28 +111,6 @@ export class JwtMiddleware implements NestMiddleware {
                         (err: unknown) => new Error(`Invalid token: ${(err as Error).message}`),
                     ),
                     E.map(verified => ({ accessToken: tokenString, jwtPayload: verified })),
-                ),
-            ),
-        );
-    }
-
-    private verifyToken(
-        token: E.Either<Error, string>,
-        pem: E.Either<Error, string>,
-    ): E.Either<
-        Error,
-        {
-            accessToken: string;
-            jwtPayload: string | JwtPayload;
-        }
-    > {
-        return pipe(
-            token,
-            E.chain(token =>
-                pipe(
-                    pem,
-                    E.map(pemString => jwt.verify(token, pemString, { algorithms: ['RS256'] })),
-                    E.map(verified => ({ accessToken: token, jwtPayload: verified })),
                 ),
             ),
         );
