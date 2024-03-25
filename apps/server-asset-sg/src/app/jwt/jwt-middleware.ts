@@ -8,21 +8,13 @@ import { Jwt, JwtPayload } from 'jsonwebtoken';
 import * as jwkToPem from 'jwk-to-pem';
 import axios from 'axios';
 import { AuthenticatedRequest } from '../models/request';
-import { HttpService } from '@nestjs/axios';
 import { oAuthConfig } from '../../../../../configs/oauth.config';
 
 @Injectable()
 export class JwtMiddleware implements NestMiddleware {
-    constructor(private httpService: HttpService) {}
+    constructor() {}
 
     async use(req: Request, _res: Response, next: NextFunction) {
-        const token = this.extractTokenFromHeaderE(req);
-        const decoded = this.decodeTokenE(token);
-        const jwks = await this.getJwkTE()();
-        const signingKey = this.getSigningKeyE(decoded, jwks);
-        const pem = this.jwkToPemTE(signingKey);
-        const result = this.verifyToken2(token, pem as unknown as string);
-
         // const token = this.extractTokenFromHeader(req);
         //
         // const decoded = jwt.decode(token!, { complete: true });
@@ -40,6 +32,23 @@ export class JwtMiddleware implements NestMiddleware {
         //     E.chain(token => this.verifyTokenOld(token, pem)),
         // );
         //
+
+        // const jwk = await this.getJwkTE()();
+        // const token1 = this.extractTokenFromHeaderE(req);
+        // const res = pipe(
+        //   token1,
+        //   this.decodeTokenE,
+        //   E.chain(decoded => this.getSigningKeyE(decoded, jwk)),
+        //   this.jwkToPemE,
+        //   E.chain(pem => this.verifyToken(token1, pem))
+        // )
+
+        const token = this.extractTokenFromHeaderE(req);
+        const decoded = this.decodeTokenE(token);
+        const jwks = await this.getJwkTE()();
+        const signingKey = this.getSigningKeyE(decoded, jwks);
+        const pem = this.jwkToPemE(signingKey);
+        const result = this.verifyToken(token, pem);
 
         if (E.isRight(result)) {
             (req as AuthenticatedRequest).accessToken = result.right.accessToken;
@@ -78,15 +87,6 @@ export class JwtMiddleware implements NestMiddleware {
         );
     }
 
-    private decodeToken(token: string): E.Either<Error, Jwt> {
-        return pipe(
-            E.tryCatch(() => jwt.decode(token, { complete: true }), E.toError),
-            E.chain(decoded =>
-                decoded !== null ? E.right(decoded) : E.left(new Error('Token decoding resulted in null')),
-            ),
-        );
-    }
-
     private getJwkTE(): TE.TaskEither<Error, object[]> {
         return pipe(
             TE.tryCatch(
@@ -94,28 +94,6 @@ export class JwtMiddleware implements NestMiddleware {
                 reason => new Error(`${reason}`),
             ),
             TE.map(response => response.data.keys),
-        );
-    }
-
-    private getSigningKeyTE(
-        decoded: E.Either<Error, Jwt>,
-        jwks: TE.TaskEither<Error, object[]>,
-    ): TE.TaskEither<Error, object> {
-        return pipe(
-            decoded,
-            TE.fromEither, // Convert decoded from Either to TaskEither
-            TE.chain(decodedJwt =>
-                pipe(
-                    jwks,
-                    TE.map(jwks =>
-                        E.fromNullable(new Error('Key not found'))(
-                            // Handle the case where no key is found
-                            jwks.find((key: any) => key.kid === decodedJwt.header.kid),
-                        ),
-                    ),
-                    TE.chain(TE.fromEither), // Lift the Either<Error, JwksKey> into TaskEither<Error, JwksKey>
-                ),
-            ),
         );
     }
 
@@ -140,38 +118,13 @@ export class JwtMiddleware implements NestMiddleware {
         );
     }
 
-    private jwkToPemTE(signingKey: E.Either<Error, object>): E.Either<Error, string> {
+    private jwkToPemE(signingKey: E.Either<Error, object>): E.Either<Error, string> {
         return pipe(
             signingKey,
-            E.chain(signingKeyString => jwkToPem(signingKeyString)),
-        );
-    }
-
-    private extractTokenFromHeader(request: Request): string | undefined {
-        const [type, token] = request.headers.authorization?.split(' ') ?? [];
-        return type === 'Bearer' ? token : undefined;
-    }
-
-    private verifyToken(
-        token: E.Either<Error, string>,
-        pem: E.Either<Error, string>,
-    ): E.Either<
-        Error,
-        {
-            accessToken: string;
-            jwtPayload: string | JwtPayload;
-        }
-    > {
-        return pipe(
-            token,
-            E.chain(token =>
-                pipe(
-                    pem,
-                    E.map(pemString => {
-                        console.log('pemString', E.isRight(pem));
-                        return jwt.verify(token, pem, { algorithms: ['RS256'] });
-                    }),
-                    E.map(verified => ({ accessToken: token, jwtPayload: verified })),
+            E.chain(signingKeyObject =>
+                E.tryCatch(
+                    () => jwkToPem(signingKeyObject), // Attempt to convert JWK to PEM
+                    error => new Error(`Failed to convert JWK to PEM: ${error}`), // Catch and wrap any errors
                 ),
             ),
         );
@@ -201,22 +154,25 @@ export class JwtMiddleware implements NestMiddleware {
         );
     }
 
-    private verifyTokenOld(
-        token: string,
-        secret: string,
+    private verifyToken(
+        token: E.Either<Error, string>,
+        pem: E.Either<Error, string>,
     ): E.Either<
         Error,
         {
             accessToken: string;
-            jwtPayload: any;
+            jwtPayload: string | JwtPayload;
         }
     > {
         return pipe(
-            E.tryCatch(
-                () => jwt.verify(token, secret, { algorithms: ['RS256'] }),
-                (err: unknown) => new Error(`Invalid token: ${(err as Error).message}`),
+            token,
+            E.chain(token =>
+                pipe(
+                    pem,
+                    E.map(pemString => jwt.verify(token, pemString, { algorithms: ['RS256'] })),
+                    E.map(verified => ({ accessToken: token, jwtPayload: verified })),
+                ),
             ),
-            E.map(decoded => ({ accessToken: token, jwtPayload: decoded })),
         );
     }
 }
