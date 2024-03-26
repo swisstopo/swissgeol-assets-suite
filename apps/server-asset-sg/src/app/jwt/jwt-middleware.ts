@@ -1,4 +1,4 @@
-import { Injectable, NestMiddleware } from '@nestjs/common';
+import { Inject, Injectable, NestMiddleware } from '@nestjs/common';
 import { NextFunction, Request, Response } from 'express';
 import * as E from 'fp-ts/Either';
 import * as TE from 'fp-ts/TaskEither';
@@ -9,23 +9,36 @@ import * as jwkToPem from 'jwk-to-pem';
 import axios from 'axios';
 import { AuthenticatedRequest } from '../models/request';
 import { oAuthConfig } from '../../../../../configs/oauth.config';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
 
 @Injectable()
 export class JwtMiddleware implements NestMiddleware {
-    constructor() {}
+    constructor(@Inject(CACHE_MANAGER) private cacheManager: Cache) {}
 
     async use(req: Request, _res: Response, next: NextFunction) {
-        const jwk = await this.getJwkTE()();
+        // Get JWK from cache if exists, otherwise fetch from issuer and set to cache for 1 minute
+        const cachedJwk = await this.getJwkFromCache()();
+        const jwk = E.isRight(cachedJwk) ? cachedJwk : await this.getJwkTE()();
+        await this.cacheManager.set('jwk', E.isRight(jwk) ? jwk.right : [], 60 * 1000);
+
         const token = this.extractTokenFromHeaderE(req);
 
+        // Decode token, get JWK, convert JWK to PEM, and verify token
         const result = pipe(
             token,
             E.chain(this.decodeTokenE),
-            E.chain(decoded => this.getSigningKeyE(decoded, jwk)),
+            E.chain(decoded =>
+                pipe(
+                    jwk,
+                    E.chain(jwk => this.getSigningKeyE(decoded, jwk)),
+                ),
+            ),
             this.jwkToPemE,
             E.chain(pem => this.verifyToken(token, pem)),
         );
 
+        // Set accessToken and jwtPayload to request if verification is successful
         if (E.isRight(result)) {
             (req as AuthenticatedRequest).accessToken = result.right.accessToken;
             (req as AuthenticatedRequest).jwtPayload = result.right.jwtPayload as JwtPayload;
@@ -33,6 +46,16 @@ export class JwtMiddleware implements NestMiddleware {
         } else {
             throw result.left;
         }
+    }
+
+    private getJwkFromCache(): TE.TaskEither<Error, JwksKey[]> {
+        return pipe(
+            TE.tryCatch(
+                () => this.cacheManager.get('jwk'),
+                reason => new Error(`${reason}`),
+            ),
+            TE.chain(cache => (cache ? TE.right(cache as JwksKey[]) : TE.left(new Error('No cache found')))),
+        );
     }
 
     private extractTokenFromHeaderE(request: Request): E.Either<Error, string> {
@@ -68,15 +91,10 @@ export class JwtMiddleware implements NestMiddleware {
         );
     }
 
-    private getSigningKeyE(decoded: Jwt, jwksE: E.Either<Error, JwksKey[]>): E.Either<Error, JwksKey> {
+    private getSigningKeyE(decoded: Jwt, jwks: JwksKey[]): E.Either<Error, JwksKey> {
         return pipe(
-            jwksE,
-            E.chain(jwks =>
-                pipe(
-                    jwks.find((key: any) => key.kid === decoded.header.kid),
-                    signingKey => (signingKey ? E.right(signingKey) : E.left(new Error('Matching object not found'))),
-                ),
-            ),
+            jwks.find((key: any) => key.kid === decoded.header.kid),
+            signingKey => (signingKey ? E.right(signingKey) : E.left(new Error('Matching object not found'))),
         );
     }
 

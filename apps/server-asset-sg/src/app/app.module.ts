@@ -14,10 +14,11 @@ import { JwtMiddleware } from './jwt/jwt-middleware';
 import { OcrController } from './ocr/ocr.controller';
 import { PrismaService } from './prisma/prisma.service';
 import { UserController } from './user/user.controller';
+import { CacheModule } from '@nestjs/cache-manager';
 import { UserService } from './user/user.service';
 
 @Module({
-    imports: [HttpModule, ScheduleModule.forRoot()],
+    imports: [HttpModule, ScheduleModule.forRoot(), CacheModule.register()],
     controllers: [
         AppController,
         AdminController,

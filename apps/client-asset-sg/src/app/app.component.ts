@@ -25,14 +25,14 @@ export class AppComponent {
 
     constructor() {
         this._authService.init();
-        
+
         const wndw = this._wndw;
         assert(wndw != null);
 
         fromEvent(wndw, 'resize')
             .pipe(debounceTime(50), startWith(null), untilDestroyed(this))
             .subscribe(() => {
-                let fontSize = '1rem';
+                let fontSize;
                 const width = window.innerWidth;
                 if (width >= fullHdWidth) {
                     fontSize = '1rem';
