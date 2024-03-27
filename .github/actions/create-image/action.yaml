@@ -10,6 +10,9 @@ inputs:
   TAG:
     description: 'The tag of the image'
     required: true
+  LATEST:
+    description: 'The latest tag of the image'
+    required: true
   DOCKERFILE:
     description: 'The path to the Dockerfile'
     required: true
@@ -39,7 +42,7 @@ runs:
           org.opencontainers.image.version=${{ inputs.VERSION }}
           org.opencontainers.image.maintainer=EBP Schweiz AG
         flavor: |
-          latest=false
+          latest=${{ inputs.LATEST }}
         tags: |
           type=${{ inputs.TAG }}
           type=semver,pattern={{version}},value=${{ inputs.VERSION }}
