@@ -1,16 +1,14 @@
 name: release
 
 on:
-  release:
-    types: [released]
   workflow_dispatch:
     inputs:
-      TAG_NAME:
-        description: "Tag Name"
+      VERSION:
+        description: "Version number (e.g. 1.2.3)"
         required: true
 
 env:
-  TAG_NAME: ${{ github.event.inputs.TAG_NAME || github.event.release.tag_name }}
+  VERSION: ${{ github.event.inputs.VERSION }}
   BASE_IMAGE_NAME: ghcr.io/geoadmin/swissgeol-assets
   GH_TOKEN: ${{ github.token }}
 
@@ -28,9 +26,10 @@ jobs:
         uses: ./.github/actions/create-image
         with:
           IMAGE_NAME: ${{ env.BASE_IMAGE_NAME }}-app
-          VERSION: ${{ env.TAG_NAME }}
+          VERSION: ${{ env.VERSION }}
           PREFIX: v
           TAG: release
+          CACHE: release-candidate
           LATEST: true
           DOCKERFILE: ./apps/client-asset-sg/docker/Dockerfile
           TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -39,9 +38,10 @@ jobs:
         uses: ./.github/actions/create-image
         with:
           IMAGE_NAME: ${{ env.BASE_IMAGE_NAME }}-api
-          VERSION: ${{ env.TAG_NAME }}
+          VERSION: ${{ env.VERSION }}
           PREFIX: v
           TAG: release
+          CACHE: release-candidate
           LATEST: true
           DOCKERFILE: ./apps/server-asset-sg/docker/Dockerfile
           TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -56,9 +56,9 @@ jobs:
 
       - name: Set environment variables
         run: |
-          echo GIT_BRANCH_NAME=mark-version-${TAG_NAME#v}-as-released >> $GITHUB_ENV
-          echo GIT_COMMIT_MESSAGE=Mark version ${TAG_NAME#v} as released >> $GITHUB_ENV
-          echo RELEASE_ID=$(gh api -H "Accept: application/vnd.github+json" /repos/${GITHUB_REPOSITORY}/releases/tags/${TAG_NAME} | jq '.id') >> $GITHUB_ENV
+          echo GIT_BRANCH_NAME=mark-version-${VERSION#v}-as-released >> $GITHUB_ENV
+          echo GIT_COMMIT_MESSAGE=Mark version ${VERSION#v} as released >> $GITHUB_ENV
+          echo RELEASE_ID=$(gh api -H "Accept: application/vnd.github+json" /repos/${GITHUB_REPOSITORY}/releases/tags/v${VERSION} | jq '.id') >> $GITHUB_ENV
 
       - name: Get changelog for this specific release and update release notes
         run: |
@@ -71,7 +71,7 @@ jobs:
       - name: Checkout new branch and patch changelog
         run: |
           git checkout -b $GIT_BRANCH_NAME
-          sed -i "/^\#\# \[Unreleased\]$/a \\\n\#\# $TAG_NAME - $(date '+%Y-%m-%d')" CHANGELOG.md
+          sed -i "/^\#\# \[Unreleased\]$/a \\\n\#\# $VERSION - $(date '+%Y-%m-%d')" CHANGELOG.md
 
       - name: Commit, push and create pull request
         run: |

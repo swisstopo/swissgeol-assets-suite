@@ -24,8 +24,9 @@ jobs:
         with:
           IMAGE_NAME: ${{ env.BASE_IMAGE_NAME }}-app
           VERSION: ${{ env.VERSION }}
-          PREFIX: rc
+          PREFIX: v
           TAG: release-candidate
+          CACHE: edge
           LATEST: false
           DOCKERFILE: ./apps/client-asset-sg/docker/Dockerfile
           TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -35,8 +36,9 @@ jobs:
         with:
           IMAGE_NAME: ${{ env.BASE_IMAGE_NAME }}-api
           VERSION: ${{ env.VERSION }}
-          PREFIX: rc
+          PREFIX: v
           TAG: release-candidate
+          CACHE: edge
           LATEST: false
           DOCKERFILE: ./apps/server-asset-sg/docker/Dockerfile
           TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -45,8 +47,8 @@ jobs:
         id: create_release
         uses: actions/create-release@v1
         with:
-          tag_name: ${{ env.VERSION }}
-          release_name: ${{ env.VERSION }}
+          tag_name: v${{ env.VERSION }}
+          release_name: v${{ env.VERSION }}
           body_path: CHANGELOG.md
           commitish: develop
           prerelease: true

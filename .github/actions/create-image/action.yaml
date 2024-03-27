@@ -16,6 +16,9 @@ inputs:
   LATEST:
     description: 'The latest tag of the image'
     required: true
+  CACHE:
+    description: 'The cache tag of the image'
+    required: true
   DOCKERFILE:
     description: 'The path to the Dockerfile'
     required: true
@@ -68,5 +71,5 @@ runs:
           REVISION=${{ env.REVISION }}
         tags: ${{ steps.meta-data.outputs.tags }}
         labels: ${{ steps.meta-data.outputs.labels }}
-        cache-from: type=registry,ref=${{ inputs.IMAGE_NAME }}:${{ inputs.TAG }}
+        cache-from: type=registry,ref=${{ inputs.IMAGE_NAME }}:${{ inputs.CACHE }}
         cache-to: type=inline
