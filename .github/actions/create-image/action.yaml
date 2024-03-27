@@ -44,7 +44,7 @@ runs:
         flavor: |
           latest=${{ inputs.LATEST }}
         tags: |
-          type=${{ inputs.TAG }}
+          ${{ inputs.TAG }}
           type=semver,pattern={{version}},value=${{ inputs.VERSION }}
 
     - name: Log in to the GitHub container registry

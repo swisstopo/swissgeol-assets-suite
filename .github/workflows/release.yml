@@ -28,7 +28,7 @@ jobs:
         with:
           IMAGE_NAME: ${{ env.BASE_IMAGE_NAME }}-app
           VERSION: ${{ env.TAG_NAME }}
-          TAG: latest
+          TAG: release
           LATEST: true
           DOCKERFILE: ./apps/client-asset-sg/docker/Dockerfile
           TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -38,7 +38,7 @@ jobs:
         with:
           IMAGE_NAME: ${{ env.BASE_IMAGE_NAME }}-api
           VERSION: ${{ env.TAG_NAME }}
-          TAG: latest
+          TAG: release
           LATEST: true
           DOCKERFILE: ./apps/server-asset-sg/docker/Dockerfile
           TOKEN: ${{ secrets.GITHUB_TOKEN }}
