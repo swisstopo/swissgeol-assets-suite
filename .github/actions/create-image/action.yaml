@@ -13,7 +13,7 @@ inputs:
   DOCKERFILE:
     description: 'The path to the Dockerfile'
     required: true
-    
+
 runs:
   using: 'composite'
   steps:
@@ -21,6 +21,7 @@ runs:
       uses: actions/checkout@v4
 
     - name: Set environment variables
+      shell: bash
       run: |
         echo COMMITED_AT=$(git show -s --format=%cI ${{ github.sha }}) >> $GITHUB_ENV
         echo REVISION=$(git rev-parse --short HEAD) >> $GITHUB_ENV
