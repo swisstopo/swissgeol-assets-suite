@@ -49,7 +49,7 @@ runs:
       with:
         registry: ${{ env.REGISTRY }}
         username: ${{ github.repository_owner }}
-        password: ${{ input.TOKEN }}
+        password: ${{ inputs.TOKEN }}
 
     - name: Build and push Docker image
       uses: docker/build-push-action@v5
