@@ -31,6 +31,7 @@ jobs:
           VERSION: ${{ env.VERSION }}
           TAG: edge
           DOCKERFILE: ./apps/client-asset-sg/docker/Dockerfile
+        secrets: inherit
 
       - name: Build and push docker image (api)
         uses: ./.github/actions/create-image
@@ -39,3 +40,4 @@ jobs:
           VERSION: ${{ env.VERSION }}
           TAG: edge
           DOCKERFILE: ./apps/server-asset-sg/docker/Dockerfile
+        secrets: inherit
