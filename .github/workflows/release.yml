@@ -12,6 +12,7 @@ on:
 env:
   TAG_NAME: ${{ github.event.inputs.TAG_NAME || github.event.release.tag_name }}
   BASE_IMAGE_NAME: ghcr.io/geoadmin/swissgeol-assets
+  GH_TOKEN: ${{ github.token }}
 
 jobs:
 
