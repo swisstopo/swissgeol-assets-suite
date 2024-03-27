@@ -27,6 +27,7 @@ jobs:
         with:
           IMAGE_NAME: ${{ env.BASE_IMAGE_NAME }}-app
           VERSION: ${{ env.VERSION }}
+          PREFIX: e
           TAG: type=edge
           LATEST: false
           DOCKERFILE: ./apps/client-asset-sg/docker/Dockerfile
@@ -37,6 +38,7 @@ jobs:
         with:
           IMAGE_NAME: ${{ env.BASE_IMAGE_NAME }}-api
           VERSION: ${{ env.VERSION }}
+          PREFIX: e
           TAG: type=edge
           LATEST: false
           DOCKERFILE: ./apps/server-asset-sg/docker/Dockerfile
