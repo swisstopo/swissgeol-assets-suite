@@ -1,9 +1,6 @@
-name: Pre-release
+name: pre-release
 
 on:
-  # push:
-  #  branches:
-  #    - develop
   workflow_dispatch:
 
 env:
@@ -38,7 +35,7 @@ jobs:
           flavor: |
             latest=false
           tags: |
-            type=edge
+            type=rc
             type=semver,pattern={{version}},value=${{ env.VERSION }}
 
       - name: Collect Docker image metadata (api)
@@ -53,7 +50,7 @@ jobs:
           flavor: |
             latest=false
           tags: |
-            type=edge
+            type=rc
             type=semver,pattern={{version}},value=${{ env.VERSION }}
 
       - name: Log in to the GitHub container registry
@@ -74,7 +71,7 @@ jobs:
             REVISION=${{ env.REVISION }}
           tags: ${{ steps.meta-app.outputs.tags }}
           labels: ${{ steps.meta-app.outputs.labels }}
-          cache-from: type=registry,ref=${{ env.BASE_IMAGE_NAME }}-app:edge
+          cache-from: type=registry,ref=${{ env.BASE_IMAGE_NAME }}-app:rc
           cache-to: type=inline
 
       - name: Build and push Docker image (api)
@@ -88,7 +85,7 @@ jobs:
             REVISION=${{ env.REVISION }}
           tags: ${{ steps.meta-api.outputs.tags }}
           labels: ${{ steps.meta-api.outputs.labels }}
-          cache-from: type=registry,ref=${{ env.BASE_IMAGE_NAME }}-api:edge
+          cache-from: type=registry,ref=${{ env.BASE_IMAGE_NAME }}-api:rc
           cache-to: type=inline
 
       - name: Create pre-elease
