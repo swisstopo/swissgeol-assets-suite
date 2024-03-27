@@ -13,6 +13,9 @@ inputs:
   DOCKERFILE:
     description: 'The path to the Dockerfile'
     required: true
+  TOKEN:  
+    description: 'The GitHub token'
+    required: true
 
 runs:
   using: 'composite'
@@ -46,7 +49,7 @@ runs:
       with:
         registry: ${{ env.REGISTRY }}
         username: ${{ github.repository_owner }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+        password: ${{ input.TOKEN }}
 
     - name: Build and push Docker image
       uses: docker/build-push-action@v5
