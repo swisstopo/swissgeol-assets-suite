@@ -76,7 +76,11 @@ export class AuthService {
     }
 
     logOut(): void {
-        this._oauthService.logOut();
+        this._oauthService.logOut({
+            client_id: oAuthConfig.clientId,
+            redirect_uri: window.location.origin,
+            response_type: oAuthConfig.responseType,
+        });
     }
 
     logout(): ORD.ObservableRemoteData<ApiError, void> {
