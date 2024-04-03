@@ -1,62 +1,29 @@
-import { Dialog } from '@angular/cdk/dialog';
-import {
-    HttpErrorResponse,
-    HttpEvent,
-    HttpHandler,
-    HttpInterceptor,
-    HttpRequest,
-    HttpResponse,
-} from '@angular/common/http';
-import { Injectable, inject } from '@angular/core';
-import * as RD from '@devexperts/remote-data-ts';
-import { Observable, Subject, exhaustMap, filter, map, retry, shareReplay, startWith, take } from 'rxjs';
-
-import { LoginComponent } from '../components/login';
+import { HttpErrorResponse, HttpEvent, HttpHandler, HttpInterceptor, HttpRequest } from '@angular/common/http';
+import { inject, Injectable } from '@angular/core';
+import { Observable, throwError } from 'rxjs';
+import { OAuthService } from 'angular-oauth2-oidc';
+import { oAuthConfig } from 'configs/oauth.config';
 
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
-    private loginSignal$ = new Subject<void>();
-    private loginResult$ = this.loginSignal$.pipe(
-        exhaustMap(() => this.attemptRefreshTokenThenLoginFromComponent().pipe(map(RD.success), startWith(RD.pending))),
-        shareReplay({ bufferSize: 1, refCount: false }),
-    );
-
-    private dialog = inject(Dialog);
+    private _oauthService = inject(OAuthService);
 
     intercept(req: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
-        return next.handle(req).pipe(
-            filter(event => event instanceof HttpResponse),
-            retry({
-                delay: (error: HttpErrorResponse) => {
-                    if (error.status !== 401) {
-                        throw error;
-                    }
-                    return this.login();
-                },
-            }),
-        );
-    }
+        const token = sessionStorage.getItem('access_token');
 
-    private login() {
-        setTimeout(() => {
-            this.loginSignal$.next();
-        });
-        return this.loginResult$.pipe(filter(RD.isSuccess), take(1));
-    }
-
-    private attemptRefreshTokenThenLoginFromComponent() {
-        return this.loginFromComponent();
-    }
-
-    private loginFromComponent() {
-        try {
-            const dialogRef = this.dialog.open(LoginComponent, {
-                disableClose: true,
+        if (req.url.includes(oAuthConfig.issuer) || req.url.includes('token')) {
+            return next.handle(req);
+        } else if (token && !this._oauthService.hasValidAccessToken()) {
+            this._oauthService.logOut({
+                client_id: oAuthConfig.clientId,
+                redirect_uri: window.location.origin,
+                response_type: oAuthConfig.responseType,
             });
-            return dialogRef.closed;
-        } catch (e) {
-            console.log(e);
-            throw e;
+            return throwError(new HttpErrorResponse({ status: 401, statusText: 'Unauthorized' }));
+        } else if (!token) {
+            return throwError(new HttpErrorResponse({ status: 401, statusText: 'No Token' }));
+        } else {
+            return next.handle(req);
         }
     }
 }

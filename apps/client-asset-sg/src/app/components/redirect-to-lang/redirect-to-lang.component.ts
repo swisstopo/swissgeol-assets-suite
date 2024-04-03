@@ -6,14 +6,15 @@ import * as D from 'io-ts/Decoder';
 import queryString from 'query-string';
 
 import { Lang } from '@asset-sg/shared';
+import { AuthService } from '@asset-sg/auth';
 
 @UntilDestroy()
 @Component({
     selector: 'asset-sg-redirect-to-lang',
-    template: 'redirect',
+    template: 'Redirect to main page...',
 })
 export class RedirectToLangComponent {
-    constructor(route: ActivatedRoute, router: Router) {
+    constructor(route: ActivatedRoute, router: Router, authService: AuthService) {
         route.queryParams.pipe(untilDestroyed(this)).subscribe(params => {
             const paramsDecoded = D.struct({
                 lang: Lang,
@@ -25,6 +26,10 @@ export class RedirectToLangComponent {
                 const { lang, ...rest } = query;
                 const newUrl = `/${paramsDecoded.right.lang}${url}?${queryString.stringify(rest)}`;
                 router.navigateByUrl(newUrl);
+            } else if (!authService.isLoggedIn()) {
+                setTimeout(() => {
+                    router.navigate(['/de']);
+                }, 500);
             } else {
                 router.navigate(['/de']);
             }

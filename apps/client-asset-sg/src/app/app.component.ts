@@ -5,7 +5,6 @@ import { debounceTime, fromEvent, startWith } from 'rxjs';
 import { assert } from 'tsafe';
 
 import { AppPortalService, setCssCustomProperties } from '@asset-sg/client-shared';
-import { FavouriteService } from '@asset-sg/favourite';
 import { AuthService } from '@asset-sg/auth';
 
 const fullHdWidth = 1920;
@@ -20,12 +19,8 @@ export class AppComponent {
     private _wndw = inject(WINDOW);
 
     public appPortalService = inject(AppPortalService);
-    private _favouriteService = inject(FavouriteService);
-    private _authService = inject(AuthService);
 
-    constructor() {
-        this._authService.init();
-
+    constructor(private readonly _authService: AuthService) {
         const wndw = this._wndw;
         assert(wndw != null);
 

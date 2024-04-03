@@ -10,10 +10,12 @@ import * as D from 'io-ts/Decoder';
 import { catchError, map, of, startWith, tap } from 'rxjs';
 import urlJoin from 'url-join';
 
-import { ApiError, httpErrorResponseOrUnknownError } from '@asset-sg/client-shared';
+import { ApiError, appSharedStateActions, httpErrorResponseOrUnknownError } from '@asset-sg/client-shared';
 import { decode, decodeError, OE, ORD } from '@asset-sg/core';
 import { User } from '@asset-sg/shared';
 import { oAuthConfig } from '../../../../../configs/oauth.config';
+import { Store } from '@ngrx/store';
+import { AppState } from '../../../../../apps/client-asset-sg/src/app/state/app-state';
 
 const TokenEndpointResponse = D.struct({
     access_token: D.string,
@@ -24,9 +26,12 @@ interface TokenEndpointResponse extends D.TypeOf<typeof TokenEndpointResponse> {
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
+    private store = inject(Store<AppState>);
+
     private _httpClient = inject(HttpClient);
     private _dcmnt = inject(DOCUMENT);
     private _translateService = inject(TranslateService);
+
     private _oauthService = inject(OAuthService);
 
     private _getUserProfile() {
@@ -35,8 +40,8 @@ export class AuthService {
             .pipe(map(decode(User)), OE.catchErrorW(httpErrorResponseOrUnknownError));
     }
 
-    init(): void {
-        this._oauthService.configure({
+    constructor(oauthService: OAuthService) {
+        oauthService.configure({
             issuer: oAuthConfig.issuer,
             redirectUri: window.location.origin,
             postLogoutRedirectUri: window.location.origin,
@@ -46,13 +51,21 @@ export class AuthService {
             showDebugInformation: oAuthConfig.showDebugInformation,
             strictDiscoveryDocumentValidation: false,
             dummyClientSecret: oAuthConfig.clientSecret,
+            tokenEndpoint: oAuthConfig.tokenEndpoint,
         });
-        this._oauthService.loadDiscoveryDocumentAndLogin();
-        this._oauthService.setupAutomaticSilentRefresh();
+        oauthService.loadDiscoveryDocumentAndLogin().then(() => {
+            this.store.dispatch(appSharedStateActions.loadUserProfile());
+            this.store.dispatch(appSharedStateActions.loadReferenceData());
+        });
+        oauthService.setupAutomaticSilentRefresh({ timeoutFactor: 0.01 });
     }
 
     getUserProfile(): ORD.ObservableRemoteData<ApiError, User> {
         return this._getUserProfile().pipe(map(RD.fromEither), startWith(RD.pending));
+    }
+
+    isLoggedIn(): boolean {
+        return this._oauthService.hasValidAccessToken();
     }
 
     login(email: string, password: string): ORD.ObservableRemoteData<ApiError, User> {

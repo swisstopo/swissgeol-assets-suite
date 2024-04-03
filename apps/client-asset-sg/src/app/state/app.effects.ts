@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { NavigationEnd, Router, RouterStateSnapshot } from '@angular/router';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
@@ -11,7 +11,7 @@ import { combineLatest, distinctUntilChanged, filter, map, merge, switchMap, tak
 import { AuthService } from '@asset-sg/auth';
 import { appSharedStateActions, fromAppShared } from '@asset-sg/client-shared';
 import { ORD } from '@asset-sg/core';
-import { Lang, eqLangRight } from '@asset-sg/shared';
+import { eqLangRight, Lang } from '@asset-sg/shared';
 
 import { AppSharedStateService } from './app-shared-state.service';
 import { AppState } from './app-state';
