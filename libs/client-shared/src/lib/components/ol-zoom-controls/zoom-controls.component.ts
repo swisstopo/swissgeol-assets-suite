@@ -6,6 +6,7 @@ import { Observable, Subject } from 'rxjs';
 import { ButtonComponent } from '../button';
 
 let uniqueId = 0;
+
 @Component({
     standalone: true,
     selector: 'asset-sg-map-zoom-controls',
@@ -16,6 +17,7 @@ let uniqueId = 0;
 })
 export class ZoomControlsComponent implements OnDestroy {
     @ViewChild('drawModeCheckbox') private drawModeCheckbox!: ElementRef<HTMLInputElement>;
+    @ViewChild('selectionModeCheckbox') private selectionModeCheckbox!: ElementRef<HTMLInputElement>;
 
     public _zoomPlusClicked$ = new Subject<Event>();
     public readonly zoomPlusClicked$: Observable<Event> = this._zoomPlusClicked$;
@@ -27,10 +29,16 @@ export class ZoomControlsComponent implements OnDestroy {
     public readonly zoomMinusClicked$: Observable<Event> = this._zoomMinusClicked$;
 
     public drawingModelLabel = `asset-sg-map-zoom-controls--drawing-mode--${uniqueId++}`;
+    public selectionModelLabel = `asset-sg-map-zoom-controls--selection-mode--${uniqueId++}`;
 
     public setDrawingMode(value: boolean) {
-        this.drawModeCheckbox.nativeElement.checked = value;
+        this.selectionModeCheckbox.nativeElement.checked = value;
         this._drawingMode$.next(value);
+    }
+
+    public setSelectionMode(value: boolean) {
+        this.selectionModeCheckbox.nativeElement.checked = value;
+        this._selectionMode$.next(value);
     }
 
     constructor(public host: ElementRef<HTMLElement>) {}
@@ -44,8 +52,16 @@ export class ZoomControlsComponent implements OnDestroy {
     public _drawingMode$ = new Subject<boolean>();
     public drawingMode$ = this._drawingMode$.asObservable();
 
+    public _selectionMode$ = new Subject<boolean>();
+    public selectionMode$ = this._selectionMode$.asObservable();
+
     drawingModeChangedHandler(event: Event): void {
         const target = event.target as HTMLInputElement;
         this._drawingMode$.next(target.checked);
+    }
+
+    selectionModeChangedHandler(event: Event): void {
+        const target = event.target as HTMLInputElement;
+        this._selectionMode$.next(target.checked);
     }
 }

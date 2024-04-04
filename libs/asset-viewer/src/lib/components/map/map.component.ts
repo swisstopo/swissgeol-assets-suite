@@ -77,7 +77,7 @@ const initialMapState: MapState = {
     rdStudies: RD.initial,
     isMapInitialised: false,
     drawingMode: false,
-    selectionMode: true,
+    selectionMode: false,
     polygon: O.none,
     highlightAssetStudies: O.none,
 };
@@ -481,6 +481,9 @@ export class MapComponent {
                             layerFilter: layer => layer === vectorLayerAllStudies,
                         },
                     );
+                    if (clickedFeatureIds.length > 0) {
+                        zoomControlsInstance.setSelectionMode(false);
+                    }
                     return pipe(
                         studies,
                         A.filter(s => clickedFeatureIds.includes(s.studyId)),
@@ -526,6 +529,7 @@ export class MapComponent {
     createZoomControlsComponent() {
         const zoomControlsComponent = this._viewContainerRef.createComponent(ZoomControlsComponent);
         this.state.connect('drawingMode', zoomControlsComponent.instance.drawingMode$.pipe(delay(0)));
+        this.state.connect('selectionMode', zoomControlsComponent.instance.selectionMode$.pipe(delay(0)));
         return zoomControlsComponent;
     }
 }
