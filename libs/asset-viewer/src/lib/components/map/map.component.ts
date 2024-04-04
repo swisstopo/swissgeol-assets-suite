@@ -1,5 +1,5 @@
 import { DOCUMENT } from '@angular/common';
-import { Component, ElementRef, EventEmitter, Input, Output, ViewChild, ViewContainerRef, inject } from '@angular/core';
+import { Component, ElementRef, EventEmitter, inject, Input, Output, ViewChild, ViewContainerRef } from '@angular/core';
 import * as RD from '@devexperts/remote-data-ts';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { RxState } from '@rx-angular/state';
@@ -20,7 +20,6 @@ import CircleStyle from 'ol/style/Circle';
 import Style from 'ol/style/Style';
 import View from 'ol/View';
 import {
-    Observable,
     asyncScheduler,
     delay,
     distinctUntilChanged,
@@ -29,6 +28,7 @@ import {
     identity,
     map,
     merge,
+    Observable,
     share,
     shareReplay,
     subscribeOn,
@@ -38,25 +38,25 @@ import {
 } from 'rxjs';
 
 import {
-    LifecycleHooks,
-    LifecycleHooksDirective,
-    WGStoLV95,
-    WindowService,
-    ZoomControlsComponent,
     createFeaturesFromStudies,
     decorateFeature,
     featureStyles,
     fitToSwitzerland,
     isoWGSLat,
     isoWGSLng,
+    LifecycleHooks,
+    LifecycleHooksDirective,
     lv95ToWGS,
     olCoordsFromLV95Array,
     olZoomControls,
     toLonLat,
+    WGStoLV95,
+    WindowService,
+    ZoomControlsComponent,
     zoomToStudies,
 } from '@asset-sg/client-shared';
-import { OO, ORD, makePairs, rdSequenceProps } from '@asset-sg/core';
-import { LV95, eqLV95Array } from '@asset-sg/shared';
+import { makePairs, OO, ORD, rdSequenceProps } from '@asset-sg/core';
+import { eqLV95Array, LV95 } from '@asset-sg/shared';
 
 import { AllStudyDTO } from '../../models';
 import { AllStudyService } from '../../services/all-study.service';
@@ -67,6 +67,7 @@ interface MapState {
     rdStudies: RDStudiesVM;
     isMapInitialised: boolean;
     drawingMode: boolean;
+    selectionMode: boolean;
     polygon: O.Option<LV95[]>;
     highlightAssetStudies: O.Option<number>;
 }
@@ -76,6 +77,7 @@ const initialMapState: MapState = {
     rdStudies: RD.initial,
     isMapInitialised: false,
     drawingMode: false,
+    selectionMode: true,
     polygon: O.none,
     highlightAssetStudies: O.none,
 };
@@ -449,6 +451,44 @@ export class MapComponent {
                 untilDestroyed(this),
             )
             .subscribe(this.assetClicked$);
+
+        fromEventPattern<MapBrowserEvent<PointerEvent>>(
+            h => olMap.on('click', h),
+            h => olMap.un('click', h),
+        )
+            .pipe(
+                withLatestFrom(this.state.select('selectionMode')),
+                filter(([, selectionMode]) => selectionMode),
+                switchMap(([event]) => {
+                    return this._allStudyService.getAllStudies().pipe(
+                        ORD.fromFilteredSuccess,
+                        map(A.map(addPointGeometry)),
+                        map(studies => ({
+                            event,
+                            studies,
+                        })),
+                    );
+                }),
+                map(({ event, studies }) => {
+                    const clickedFeatureIds: string[] = [];
+                    olMap.forEachFeatureAtPixel(
+                        event.pixel,
+                        feature => {
+                            const id = feature.getId();
+                            id && clickedFeatureIds.push(String(id));
+                        },
+                        {
+                            layerFilter: layer => layer === vectorLayerAllStudies,
+                        },
+                    );
+                    return pipe(
+                        studies,
+                        A.filter(s => clickedFeatureIds.includes(s.studyId)),
+                        A.map(s => s.studyId),
+                    );
+                }),
+            )
+            .subscribe(ss => console.log(ss));
 
         this.state
             .select(['highlightAssetStudies', 'rdStudies'], ({ rdStudies, highlightAssetStudies }) =>

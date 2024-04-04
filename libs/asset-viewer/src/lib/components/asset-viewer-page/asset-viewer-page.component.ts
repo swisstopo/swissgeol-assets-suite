@@ -6,11 +6,11 @@ import {
     ChangeDetectorRef,
     Component,
     ElementRef,
+    inject,
     NgZone,
     TemplateRef,
     ViewChild,
     ViewContainerRef,
-    inject,
 } from '@angular/core';
 import { Router } from '@angular/router';
 import * as RD from '@devexperts/remote-data-ts';
@@ -21,16 +21,16 @@ import { flow } from 'fp-ts/function';
 import { Eq as eqNumber } from 'fp-ts/number';
 import * as O from 'fp-ts/Option';
 import {
-    Observable,
-    Subject,
     asyncScheduler,
     delay,
     filter,
     map,
     merge,
+    Observable,
     observeOn,
     partition,
     share,
+    Subject,
     switchMap,
     take,
     withLatestFrom,
@@ -38,12 +38,12 @@ import {
 
 import {
     AppPortalService,
-    LifecycleHooks,
-    LifecycleHooksDirective,
     appSharedStateActions,
     fromAppShared,
+    LifecycleHooks,
+    LifecycleHooksDirective,
 } from '@asset-sg/client-shared';
-import { ORD, isTruthy, rdSequenceProps } from '@asset-sg/core';
+import { isTruthy, ORD, rdSequenceProps } from '@asset-sg/core';
 import { LV95 } from '@asset-sg/shared';
 
 import { BaseClientAssetSearchRefinement } from '../../models';
