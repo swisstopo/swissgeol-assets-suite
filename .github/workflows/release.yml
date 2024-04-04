@@ -1,20 +1,19 @@
-name: Release
+name: release
 
 on:
-  release:
-    types: [released]
   workflow_dispatch:
     inputs:
-      TAG_NAME:
-        description: "Tag name"
+      VERSION:
+        description: "Version number (e.g. 1.2.3)"
         required: true
 
 env:
-  REGISTRY: ghcr.io
-  TAG_NAME: ${{ github.event.inputs.TAG_NAME || github.event.release.tag_name }}
-  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  VERSION: ${{ github.event.inputs.VERSION }}
+  BASE_IMAGE_NAME: ghcr.io/geoadmin/swissgeol-assets
+  GH_TOKEN: ${{ github.token }}
 
 jobs:
+
   retag-docker-image:
     runs-on: ubuntu-latest
     name: Push updated Docker image
@@ -23,72 +22,30 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set environment variables
-        run: |
-          echo VERSION=${TAG_NAME#v} >> $GITHUB_ENV
-          echo BASE_IMAGE_NAME=$REGISTRY/$(echo ${GITHUB_REPOSITORY,,}) >> $GITHUB_ENV
-          echo COMMITED_AT=$(git show -s --format=%cI `git rev-parse HEAD`) >> $GITHUB_ENV
-          echo REVISION=$(git rev-parse --short HEAD) >> $GITHUB_ENV
-
-      - name: Collect Docker image metadata
-        id: meta-app
-        uses: docker/metadata-action@v5
+      - name: Build and push docker image (app)
+        uses: ./.github/actions/create-image
         with:
-          images: ${{ env.BASE_IMAGE_NAME }}-app
-          labels: |
-            org.opencontainers.image.created=${{ env.COMMITED_AT }}
-            org.opencontainers.image.version=v${{ env.VERSION }}
-            org.opencontainers.image.maintainer=EBP Schweiz AG
-          tags: |
-            type=semver,pattern=v{{version}}
+          IMAGE_NAME: ${{ env.BASE_IMAGE_NAME }}-app
+          VERSION: ${{ env.VERSION }}
+          PREFIX: v
+          TAG: release
+          CACHE: release-candidate
+          LATEST: true
+          DOCKERFILE: ./apps/client-asset-sg/docker/Dockerfile
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Collect Docker image metadata
-        id: meta-api
-        uses: docker/metadata-action@v5
+      - name: Build and push docker image (api)
+        uses: ./.github/actions/create-image
         with:
-          images: ${{ env.BASE_IMAGE_NAME }}-api
-          labels: |
-            org.opencontainers.image.created=${{ env.COMMITED_AT }}
-            org.opencontainers.image.version=v${{ env.VERSION }}
-            org.opencontainers.image.maintainer=EBP Schweiz AG
-          tags: |
-            type=semver,pattern=v{{version}}
-            
-      - name: Log in to the GitHub container registry
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.repository_owner  }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build and push Docker image (app)
-        uses: docker/build-push-action@v5
-        with:
-          context: ./
-          file: ./apps/client-asset-sg/docker/Dockerfile
-          push: true
-          build-args: |
-            VERSION=${{ env.VERSION }}
-            REVISION=${{ env.REVISION }}
-          tags: ${{ steps.meta-app.outputs.tags }}
-          labels: ${{ steps.meta-app.outputs.labels }}
-          cache-from: type=registry,ref=${{ env.BASE_IMAGE_NAME }}-app:edge
-          cache-to: type=inline
-
-      - name: Build and push Docker image (api)
-        uses: docker/build-push-action@v5
-        with:
-          context: ./
-          file: ./apps/server-asset-sg/docker/Dockerfile
-          push: true
-          build-args: |
-            VERSION=${{ env.VERSION }}
-            REVISION=${{ env.REVISION }}
-          tags: ${{ steps.meta-api.outputs.tags }}
-          labels: ${{ steps.meta-api.outputs.labels }}
-          cache-from: type=registry,ref=${{ env.BASE_IMAGE_NAME }}-api:edge
-          cache-to: type=inline
-
+          IMAGE_NAME: ${{ env.BASE_IMAGE_NAME }}-api
+          VERSION: ${{ env.VERSION }}
+          PREFIX: v
+          TAG: release
+          CACHE: release-candidate
+          LATEST: true
+          DOCKERFILE: ./apps/server-asset-sg/docker/Dockerfile
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
   patch-changelog:
     runs-on: ubuntu-latest
     name: Patch CHANGELOG.md and update GitHub release notes
@@ -99,9 +56,9 @@ jobs:
 
       - name: Set environment variables
         run: |
-          echo GIT_BRANCH_NAME=mark-version-${TAG_NAME#v}-as-released >> $GITHUB_ENV
-          echo GIT_COMMIT_MESSAGE=Mark version ${TAG_NAME#v} as released >> $GITHUB_ENV
-          echo RELEASE_ID=$(gh api -H "Accept: application/vnd.github+json" /repos/${GITHUB_REPOSITORY}/releases/tags/${TAG_NAME} | jq '.id') >> $GITHUB_ENV
+          echo GIT_BRANCH_NAME=mark-version-${VERSION#v}-as-released >> $GITHUB_ENV
+          echo GIT_COMMIT_MESSAGE=Mark version ${VERSION#v} as released >> $GITHUB_ENV
+          echo RELEASE_ID=$(gh api -H "Accept: application/vnd.github+json" /repos/${GITHUB_REPOSITORY}/releases/tags/v${VERSION} | jq '.id') >> $GITHUB_ENV
 
       - name: Get changelog for this specific release and update release notes
         run: |
@@ -114,11 +71,11 @@ jobs:
       - name: Checkout new branch and patch changelog
         run: |
           git checkout -b $GIT_BRANCH_NAME
-          sed -i "/^\#\# \[Unreleased\]$/a \\\n\#\# $TAG_NAME - $(date '+%Y-%m-%d')" CHANGELOG.md
+          sed -i "/^\#\# \[Unreleased\]$/a \\\n\#\# $VERSION - $(date '+%Y-%m-%d')" CHANGELOG.md
 
       - name: Commit, push and create pull request
         run: |
-          git config --global user.email "office@ebp.ch"
+          git config --global user.email "suport@ebp.ch"
           git config --global user.name "ebp-build"
           git commit -am "$GIT_COMMIT_MESSAGE"
           git push --set-upstream origin $GIT_BRANCH_NAME

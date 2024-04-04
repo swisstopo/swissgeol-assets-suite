@@ -23,7 +23,7 @@
         "@angular/platform-browser": "15.1.0",
         "@angular/platform-browser-dynamic": "15.1.0",
         "@angular/router": "15.1.0",
-        "@aws-sdk/client-s3": "^3.241.0",
+        "@aws-sdk/client-s3": "^3.537.0",
         "@devexperts/remote-data-ts": "^2.1.1",
         "@elastic/elasticsearch": "^8.5.0",
         "@kobalte/core": "^0.4.0",
@@ -77,7 +77,7 @@
         "zone.js": "~0.11.4"
     },
     "devDependencies": {
-        "@angular-devkit/build-angular": "15.1.1",
+        "@angular-devkit/build-angular": "15.2.10",
         "@angular-eslint/eslint-plugin": "~15.0.0",
         "@angular-eslint/eslint-plugin-template": "~15.0.0",
         "@angular-eslint/template-parser": "~15.0.0",
@@ -126,7 +126,7 @@
         "ts-node": "10.9.1",
         "type-zoo": "^3.4.1",
         "typescript": "~4.8.2",
-        "vite": "^4.0.1",
+        "vite": "^4.5.2",
         "vite-plugin-dts": "~1.7.1",
         "vite-plugin-eslint": "^1.8.1",
         "vite-tsconfig-paths": "^4.0.2",

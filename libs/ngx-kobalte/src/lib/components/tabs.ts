@@ -1,7 +1,7 @@
 import { Tabs } from '@kobalte/core';
 import type { TabsContentOptions, TabsRootOptions, TabsTriggerOptions } from '@kobalte/core/dist/types/tabs';
 import { Observable } from 'rxjs';
-import { Accessor, createSignal } from 'solid-js';
+import { Accessor } from 'solid-js';
 import h from 'solid-js/h';
 import { render } from 'solid-js/web';
 
@@ -23,8 +23,7 @@ export interface KobalteTabProps {
 
 export function KobalteTabs(element: HTMLElement, props: KobalteTabsProps, tabs$: Observable<KobalteTabProps[]>) {
     const tabs = fromWithStartWith(tabs$, []);
-    // const [tabKey, setTabKey] = createSignal<string | undefined>(undefined);
-    // setTimeout(() => setTabKey('usage'));
+
     render(
         () =>
             h(Tabs.Root, props, () => [

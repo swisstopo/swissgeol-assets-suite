@@ -16,7 +16,7 @@
         <ng-container *rxLet="rdAssetDetail$ | push; let rdAssetDetail">
             <ng-container *ngIf="rdAssetDetail._tag === 'RemoteSuccess'">
                 <div class="flex flex-row justify-between mb-4">
-                    <div class="text-dark-red font-bold mt-2.5" [innerHTML]="rdAssetDetail.value.titlePublic"></div>
+                    <div class="text-dark-red break-word font-bold mt-2.5" [innerHTML]="rdAssetDetail.value.titlePublic"></div>
                     <a
                         *ngIf="null | isEditor"
                         asset-sg-icon-button
