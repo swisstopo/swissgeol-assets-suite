@@ -50,6 +50,14 @@
             }
           ]
         },
+        "int": {
+          "fileReplacements": [
+            {
+              "replace": "apps/client-asset-sg/src/environments/environment.ts",
+              "with": "apps/client-asset-sg/src/environments/environment.int.ts"
+            }
+          ]
+        },
         "development": {
           "buildOptimizer": false,
           "optimization": false,
@@ -67,14 +75,16 @@
         "production": {
           "browserTarget": "client-asset-sg:build:production"
         },
+        "int": {
+          "browserTarget": "client-asset-sg:build:int"
+        },
         "development": {
           "browserTarget": "client-asset-sg:build:development"
         }
       },
       "defaultConfiguration": "development",
       "options": {
-        "proxyConfig": "apps/client-asset-sg/proxy.conf.json",
-        "port": 3000
+        "proxyConfig": "apps/client-asset-sg/proxy.conf.json"
       }
     },
     "extract-i18n": {
