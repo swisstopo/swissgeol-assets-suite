@@ -19,6 +19,7 @@ import { ResetPasswordDialogComponent } from './components/reset-password-dialog
 import { ResetPasswordPageComponent } from './components/reset-password-page';
 import { SetPasswordDialogComponent } from './components/set-password-dialog/set-password-dialog.component';
 import { SetPasswordPageComponent } from './components/set-password-page';
+import { environment } from '../../../../apps/client-asset-sg/src/environments/environment';
 
 @NgModule({
     imports: [
@@ -51,12 +52,13 @@ import { SetPasswordPageComponent } from './components/set-password-page';
         AnchorComponent,
         OAuthModule.forRoot({
             resourceServer: {
-              sendAccessToken: true,
-              //allowedUrls:['http://localhost:3000'],
+                sendAccessToken: true,
+                allowedUrls: [],
+                customUrlValidation: (url: string) => !url.includes(environment.oauth_tokenEndpoint),
             },
-          }
-        ),
+        }),
     ],
+    exports: [OAuthModule],
     providers: [provideSvgIcons(icons)],
     declarations: [ResetPasswordDialogComponent, SetPasswordDialogComponent],
 })

@@ -19,7 +19,7 @@ import { PushModule } from '@rx-angular/template/push';
 import * as O from 'fp-ts/Option';
 import * as C from 'io-ts/Codec';
 
-import { AuthInterceptor } from '@asset-sg/auth';
+import { AuthInterceptor, AuthModule } from '@asset-sg/auth';
 import {
     AnchorComponent,
     ButtonComponent,
@@ -39,7 +39,6 @@ import { AppBarComponent, MenuBarComponent, NotFoundComponent, RedirectToLangCom
 import { appTranslations } from './i18n';
 import { AppSharedStateEffects } from './state';
 import { appSharedStateReducer } from './state/app-shared.reducer';
-import { OAuthModule } from 'angular-oauth2-oidc';
 
 registerLocaleData(locale_deCH, 'de-CH');
 
@@ -105,13 +104,7 @@ registerLocaleData(locale_deCH, 'de-CH');
         ButtonComponent,
         DialogModule,
         A11yModule,
-        // AuthModule,
-        OAuthModule.forRoot({
-            resourceServer: {
-                sendAccessToken: true,
-                //allowedUrls:['http://localhost:3000'],
-            },
-        }),
+        AuthModule,
     ],
     providers: [
         provideSvgIcons(icons),

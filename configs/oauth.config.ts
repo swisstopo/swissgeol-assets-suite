@@ -4,6 +4,5 @@ export const oAuthConfig = {
     scope: 'email openid profile',
     responseType: 'code',
     showDebugInformation: true,
-    clientSecret: '9g5ps1ghrthrs90ooih738k24ki0hh65sqpha2g9depbvsadabi',
     tokenEndpoint: 'https://ngm-dev.auth.eu-west-1.amazoncognito.com/oauth2/token',
 };

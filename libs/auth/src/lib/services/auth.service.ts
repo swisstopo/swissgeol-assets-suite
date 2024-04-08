@@ -13,7 +13,6 @@ import urlJoin from 'url-join';
 import { ApiError, appSharedStateActions, httpErrorResponseOrUnknownError } from '@asset-sg/client-shared';
 import { decode, decodeError, OE, ORD } from '@asset-sg/core';
 import { User } from '@asset-sg/shared';
-import { oAuthConfig } from '../../../../../configs/oauth.config';
 import { Store } from '@ngrx/store';
 import { AppState } from '../../../../../apps/client-asset-sg/src/app/state/app-state';
 
@@ -34,30 +33,29 @@ export class AuthService {
 
     private _oauthService = inject(OAuthService);
 
-    private _getUserProfile() {
-        return this._httpClient
-            .get('/api/user')
-            .pipe(map(decode(User)), OE.catchErrorW(httpErrorResponseOrUnknownError));
-    }
-
-    constructor(oauthService: OAuthService) {
-        oauthService.configure({
-            issuer: oAuthConfig.issuer,
+    public configureOAuth(
+        issuer: string,
+        clientId: string,
+        scope: string,
+        showDebugInformation: boolean,
+        tokenEndpoint: string,
+    ) {
+        this._oauthService.configure({
+            issuer,
             redirectUri: window.location.origin,
             postLogoutRedirectUri: window.location.origin,
-            clientId: oAuthConfig.clientId,
-            scope: oAuthConfig.scope,
-            responseType: oAuthConfig.responseType,
-            showDebugInformation: oAuthConfig.showDebugInformation,
+            clientId,
+            scope,
+            responseType: 'code',
+            showDebugInformation,
             strictDiscoveryDocumentValidation: false,
-            dummyClientSecret: oAuthConfig.clientSecret,
-            tokenEndpoint: oAuthConfig.tokenEndpoint,
+            tokenEndpoint,
         });
-        oauthService.loadDiscoveryDocumentAndLogin().then(() => {
+        this._oauthService.loadDiscoveryDocumentAndLogin().then(() => {
             this.store.dispatch(appSharedStateActions.loadUserProfile());
             this.store.dispatch(appSharedStateActions.loadReferenceData());
         });
-        oauthService.setupAutomaticSilentRefresh({ timeoutFactor: 0.01 });
+        this._oauthService.setupAutomaticSilentRefresh();
     }
 
     getUserProfile(): ORD.ObservableRemoteData<ApiError, User> {
@@ -90,10 +88,16 @@ export class AuthService {
 
     logOut(): void {
         this._oauthService.logOut({
-            client_id: oAuthConfig.clientId,
+            client_id: this._oauthService.clientId,
             redirect_uri: window.location.origin,
-            response_type: oAuthConfig.responseType,
+            response_type: this._oauthService.responseType,
         });
+    }
+
+    private _getUserProfile() {
+        return this._httpClient
+            .get('/api/user')
+            .pipe(map(decode(User)), OE.catchErrorW(httpErrorResponseOrUnknownError));
     }
 
     logout(): ORD.ObservableRemoteData<ApiError, void> {

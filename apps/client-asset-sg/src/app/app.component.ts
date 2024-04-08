@@ -3,9 +3,9 @@ import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { WINDOW } from 'ngx-window-token';
 import { debounceTime, fromEvent, startWith } from 'rxjs';
 import { assert } from 'tsafe';
-
 import { AppPortalService, setCssCustomProperties } from '@asset-sg/client-shared';
 import { AuthService } from '@asset-sg/auth';
+import { environment } from '../environments/environment';
 
 const fullHdWidth = 1920;
 
@@ -21,6 +21,14 @@ export class AppComponent {
     public appPortalService = inject(AppPortalService);
 
     constructor(private readonly _authService: AuthService) {
+        this._authService.configureOAuth(
+            environment.oauth_issuer,
+            environment.oauth_clientId,
+            environment.oauth_scope,
+            environment.oauth_showDebugInformation,
+            environment.oauth_tokenEndpoint,
+        );
+
         const wndw = this._wndw;
         assert(wndw != null);
 
