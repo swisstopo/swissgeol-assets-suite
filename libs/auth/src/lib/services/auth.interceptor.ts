@@ -1,7 +1,7 @@
 import { HttpErrorResponse, HttpEvent, HttpHandler, HttpInterceptor, HttpRequest } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { Observable, throwError } from 'rxjs';
 import { OAuthService } from 'angular-oauth2-oidc';
+import { Observable, throwError } from 'rxjs';
 
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
@@ -11,8 +11,8 @@ export class AuthInterceptor implements HttpInterceptor {
         const token = sessionStorage.getItem('access_token');
 
         if (
-            (this._oauthService.issuer && req.url.includes(this._oauthService.issuer!)) ||
-            req.url.includes(this._oauthService.tokenEndpoint!) ||
+            (this._oauthService.issuer && req.url.includes(this._oauthService.issuer)) ||
+            (this._oauthService.tokenEndpoint && req.url.includes(this._oauthService.tokenEndpoint)) ||
             req.url.includes('oauth-config/config')
         ) {
             return next.handle(req);
