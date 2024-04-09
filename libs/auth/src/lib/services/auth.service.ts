@@ -10,11 +10,9 @@ import * as D from 'io-ts/Decoder';
 import { catchError, map, of, startWith, tap } from 'rxjs';
 import urlJoin from 'url-join';
 
-import { ApiError, appSharedStateActions, httpErrorResponseOrUnknownError } from '@asset-sg/client-shared';
+import { ApiError, httpErrorResponseOrUnknownError } from '@asset-sg/client-shared';
 import { decode, decodeError, OE, ORD } from '@asset-sg/core';
 import { User } from '@asset-sg/shared';
-import { Store } from '@ngrx/store';
-import { AppState } from '../../../../../apps/client-asset-sg/src/app/state/app-state';
 
 const TokenEndpointResponse = D.struct({
     access_token: D.string,
@@ -25,7 +23,7 @@ interface TokenEndpointResponse extends D.TypeOf<typeof TokenEndpointResponse> {
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-    private store = inject(Store<AppState>);
+    // private store = inject(Store<AppState>);
 
     private _httpClient = inject(HttpClient);
     private _dcmnt = inject(DOCUMENT);
@@ -52,8 +50,8 @@ export class AuthService {
             tokenEndpoint,
         });
         this._oauthService.loadDiscoveryDocumentAndLogin().then(() => {
-            this.store.dispatch(appSharedStateActions.loadUserProfile());
-            this.store.dispatch(appSharedStateActions.loadReferenceData());
+            // this.store.dispatch(appSharedStateActions.loadUserProfile());
+            // this.store.dispatch(appSharedStateActions.loadReferenceData());
         });
         this._oauthService.setupAutomaticSilentRefresh();
     }
