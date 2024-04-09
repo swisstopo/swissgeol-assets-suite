@@ -19,8 +19,8 @@ import { pipe } from 'fp-ts/function';
 import * as TE from 'fp-ts/TaskEither';
 import * as D from 'io-ts/Decoder';
 
-import { DT, decodeError } from '@asset-sg/core';
-import { PatchAsset, isEditor } from '@asset-sg/shared';
+import { decodeError, DT } from '@asset-sg/core';
+import { isEditor, PatchAsset } from '@asset-sg/shared';
 
 import { isNotFoundError, permissionDeniedError } from '../errors';
 import { AuthenticatedRequest } from '../models/request';
@@ -79,9 +79,9 @@ export class AssetEditController {
         )();
         if (E.isLeft(e)) {
             console.error(e.left);
-            if (e.left._tag === 'decodeError') {
-                throw new HttpException(e.left.message, 400);
-            }
+            // if (e.left._tag === 'decodeError') {
+            //     throw new HttpException(e.left.message, 400);
+            // }
             throw new HttpException(e.left.message, 500);
         }
         return e.right;
@@ -113,9 +113,9 @@ export class AssetEditController {
         )();
         if (E.isLeft(e)) {
             console.error(e.left);
-            if (e.left._tag === 'decodeError') {
-                throw new HttpException(e.left.message, 400);
-            }
+            // if (e.left._tag === 'decodeError') {
+            //     throw new HttpException(e.left.message, 400);
+            // }
             throw new HttpException(e.left.message, 500);
         }
         return e.right;
@@ -140,9 +140,9 @@ export class AssetEditController {
         )();
         if (E.isLeft(e)) {
             console.error(e.left);
-            if (e.left._tag === 'decodeError') {
-                throw new HttpException(e.left.message, 400);
-            }
+            // if (e.left._tag === 'decodeError') {
+            //     throw new HttpException(e.left.message, 400);
+            // }
             throw new HttpException(e.left.message, 500);
         }
         return e.right;
@@ -163,9 +163,9 @@ export class AssetEditController {
         )();
         if (E.isLeft(e)) {
             console.error(e.left);
-            if (e.left._tag === 'decodeError') {
-                throw new HttpException(e.left.message, 400);
-            }
+            // if (e.left._tag === 'decodeError') {
+            //     throw new HttpException(e.left.message, 400);
+            // }
             throw new HttpException(e.left.message, 500);
         }
         return e.right;

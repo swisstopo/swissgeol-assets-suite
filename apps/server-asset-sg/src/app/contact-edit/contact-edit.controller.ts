@@ -3,8 +3,8 @@ import * as E from 'fp-ts/Either';
 import { pipe } from 'fp-ts/function';
 import * as TE from 'fp-ts/TaskEither';
 
-import { DT, decodeError } from '@asset-sg/core';
-import { PatchContact, isEditor } from '@asset-sg/shared';
+import { decodeError, DT } from '@asset-sg/core';
+import { isEditor, PatchContact } from '@asset-sg/shared';
 
 import { permissionDeniedError } from '../errors';
 import { AuthenticatedRequest } from '../models/request';
@@ -30,9 +30,9 @@ export class ContactEditController {
 
         if (E.isLeft(e)) {
             console.error(e.left);
-            if (e.left._tag === 'decodeError') {
-                throw new HttpException(e.left.message, 400);
-            }
+            // if (e.left._type === 'decodeError') {
+            //     throw new HttpException(e.left.message, 400);
+            // }
             throw new HttpException(e.left.message, 500);
         }
         return e.right;
@@ -58,9 +58,9 @@ export class ContactEditController {
 
         if (E.isLeft(e)) {
             console.error(e.left);
-            if (e.left._tag === 'decodeError') {
-                throw new HttpException(e.left.message, 400);
-            }
+            // if (e.left._tag === 'decodeError') {
+            //     throw new HttpException(e.left.message, 400);
+            // }
             throw new HttpException(e.left.message, 500);
         }
         return e.right;
