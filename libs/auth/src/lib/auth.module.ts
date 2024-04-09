@@ -53,8 +53,7 @@ import { SetPasswordPageComponent } from './components/set-password-page';
             resourceServer: {
                 sendAccessToken: true,
                 allowedUrls: [],
-                customUrlValidation: (url: string) =>
-                    !url.includes('https://ngm-dev.auth.eu-west-1.amazoncognito.com/oauth2/token'),
+                customUrlValidation: (url: string) => !url.includes('oauth2/token'),
             },
         }),
     ],

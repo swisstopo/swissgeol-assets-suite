@@ -16,6 +16,7 @@ import { PrismaService } from './prisma/prisma.service';
 import { UserController } from './user/user.controller';
 import { CacheModule } from '@nestjs/cache-manager';
 import { UserService } from './user/user.service';
+import { OAuthController } from './oauth-config/oauth-config.controller';
 
 @Module({
     imports: [HttpModule, ScheduleModule.forRoot(), CacheModule.register()],
@@ -26,11 +27,12 @@ import { UserService } from './user/user.service';
         AssetEditController,
         ContactEditController,
         OcrController,
+        OAuthController,
     ],
     providers: [AppService, AdminService, PrismaService, UserService, AssetEditService, ContactEditService],
 })
 export class AppModule implements NestModule {
     configure(consumer: MiddlewareConsumer) {
-        consumer.apply(JwtMiddleware).exclude('api/ocr/(.*)').forRoutes('*');
+        consumer.apply(JwtMiddleware).exclude('api/oauth-config/config', 'api/ocr/(.*)').forRoutes('*');
     }
 }

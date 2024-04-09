@@ -11,15 +11,16 @@ export class AuthInterceptor implements HttpInterceptor {
         const token = sessionStorage.getItem('access_token');
 
         if (
-            req.url.includes('https://cognito-idp.eu-west-1.amazonaws.com/eu-west-1_dbfEb2FuH') ||
-            req.url.includes('https://ngm-dev.auth.eu-west-1.amazoncognito.com/oauth2/token')
+            (this._oauthService.issuer && req.url.includes(this._oauthService.issuer!)) ||
+            req.url.includes(this._oauthService.tokenEndpoint!) ||
+            req.url.includes('oauth-config/config')
         ) {
             return next.handle(req);
         } else if (token && !this._oauthService.hasValidAccessToken()) {
             this._oauthService.logOut({
-                client_id: '2tq8nn0vu3hoor3trgpq6k87b7',
+                client_id: this._oauthService.clientId,
                 redirect_uri: window.location.origin,
-                response_type: 'code',
+                response_type: this._oauthService.responseType,
             });
             return throwError(new HttpErrorResponse({ status: 401, statusText: 'Unauthorized' }));
         } else if (!token) {

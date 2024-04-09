@@ -23,15 +23,13 @@ interface TokenEndpointResponse extends D.TypeOf<typeof TokenEndpointResponse> {
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-    // private store = inject(Store<AppState>);
-
     private _httpClient = inject(HttpClient);
     private _dcmnt = inject(DOCUMENT);
     private _translateService = inject(TranslateService);
 
     private _oauthService = inject(OAuthService);
 
-    public configureOAuth(
+    public async configureOAuth(
         issuer: string,
         clientId: string,
         scope: string,
@@ -49,10 +47,7 @@ export class AuthService {
             strictDiscoveryDocumentValidation: false,
             tokenEndpoint,
         });
-        this._oauthService.loadDiscoveryDocumentAndLogin().then(() => {
-            // this.store.dispatch(appSharedStateActions.loadUserProfile());
-            // this.store.dispatch(appSharedStateActions.loadReferenceData());
-        });
+        await this._oauthService.loadDiscoveryDocumentAndLogin();
         this._oauthService.setupAutomaticSilentRefresh();
     }
 

@@ -5,7 +5,6 @@ import * as D from 'io-ts/Decoder';
 import { DT } from '@asset-sg/core';
 
 import { isNotFoundError } from '../errors';
-import { cookieKey } from '../jwt/jwt-middleware';
 import { AuthenticatedRequest } from '../models/request';
 
 import { UserService } from './user.service';
@@ -16,11 +15,9 @@ export class UserController {
 
     @Get('')
     async getUser(@Req() req: AuthenticatedRequest) {
-        const e = await this.userService.getUser(req.jwtPayload.sub ?? "", req.jwtPayload.username.split("_")[1])();
+        const e = await this.userService.getUser(req.jwtPayload.sub ?? '', req.jwtPayload.username.split('_')[1])();
         if (E.isLeft(e)) {
             console.error(e.left);
-            req.res?.clearCookie(cookieKey);
-            req.res?.clearCookie('asset-sg-refresh-token');
             throw new HttpException('Resource not found', 400);
         }
         return e.right;

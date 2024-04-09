@@ -8,7 +8,6 @@ import { Jwt, JwtPayload } from 'jsonwebtoken';
 import * as jwkToPem from 'jwk-to-pem';
 import axios from 'axios';
 import { AuthenticatedRequest } from '../models/request';
-import { oAuthConfig } from '../../../../../configs/oauth.config';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 
@@ -84,7 +83,7 @@ export class JwtMiddleware implements NestMiddleware {
     private getJwkTE(): TE.TaskEither<Error, JwksKey[]> {
         return pipe(
             TE.tryCatch(
-                () => axios.get(`${oAuthConfig.issuer}/.well-known/jwks.json`),
+                () => axios.get(`${process.env.OAUTH_ISSUER}/.well-known/jwks.json`),
                 reason => new Error(`${reason}`),
             ),
             TE.map(response => response.data.keys),
@@ -103,7 +102,7 @@ export class JwtMiddleware implements NestMiddleware {
             signingKey,
             E.chain(signingKeyObject =>
                 E.tryCatch(
-                    () => jwkToPem(signingKeyObject), // Attempt to convert JWK to PEM
+                    () => jwkToPem(signingKeyObject as jwkToPem.JWK), // Attempt to convert JWK to PEM
                     error => new Error(`Failed to convert JWK to PEM: ${error}`), // Catch and wrap any errors
                 ),
             ),
