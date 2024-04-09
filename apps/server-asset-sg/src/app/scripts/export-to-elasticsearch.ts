@@ -11,6 +11,7 @@ import { Eq as EqString } from 'fp-ts/string';
 import * as D from 'io-ts/Decoder';
 import * as G from 'io-ts/Guard';
 import { Overwrite } from 'type-zoo';
+import * as dotenv from 'dotenv';
 
 import { isNotNil } from '../../../../../libs/core/src/';
 import { ElasticSearchAsset } from '../../../../../libs/shared/src/';
@@ -26,7 +27,27 @@ export const date: D.Decoder<unknown, Date> = D.fromGuard(dateGuard, 'Date');
 export const dateIdFromDate = (d: Date) => (d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate()) as DateId;
 export const DateIdFromDate = pipe(date, D.map(dateIdFromDate));
 
-const index = 'asset-swissgeol-asset';
+dotenv.config();
+
+const index = 'swissgeol_asset_asset';
+
+const mappingProperties = {
+    assetId: { type: 'integer' },
+    properties: {
+      assetId: {type: "integer" },
+      assetKindItemCode: { type: "keyword" },
+      authorIds: { type: "integer" },
+      contactNames: { type: "text",fields: {keyword: {type: "keyword",ignore_above: 256}}},
+      createDate: { type: "long" },
+      createDateId: { type: "integer" },
+      languageItemCode: { type: "keyword" },
+      manCatLabelItemCodes: { type: "keyword" },
+      sgsId: { type: "keyword" },
+      titleOriginal: { type: "text", fields: { keyword: { type: "keyword", ignore_above: 256 }} },
+      titlePublic: {type: "text",fields: {keyword: {type: "keyword",ignore_above: 256}}},
+      usageCode: { type: "keyword" }
+    }
+  };
 
 const main = async () => {
     try {
@@ -41,34 +62,20 @@ const main = async () => {
                   }
                 : {}),
         };
-        // console.log({ options });
+        console.log({ options });
 
         const client = new Client(options);
 
-        // console.log('connected');
+        console.log('connected');
 
-        // console.log({ client });
-
+        
         const exists = await client.indices.exists({ index });
-        if (exists) {
-            await client.indices.delete({ index });
+        if (!exists) {
+           /* await client.indices.create({
+                index,
+                mappings: mappingProperties
+            });*/
         }
-
-        await client.indices.create({
-            index,
-            mappings: {
-                properties: {
-                    assetId: { type: 'integer' },
-                    createDateId: { type: 'integer' },
-                    authorIds: { type: 'integer' },
-                    assetKindItemCode: { type: 'keyword' },
-                    languageItemCode: { type: 'keyword' },
-                    usageCode: { type: 'keyword' },
-                    manCatLabelItemCodes: { type: 'keyword' },
-                    sgsId: { type: 'keyword' },
-                },
-            },
-        });
 
         const prisma = new PrismaClient();
 
@@ -173,141 +180,16 @@ const main = async () => {
             ),
         );
 
-        // const assets = pipe(
-        //     dataset,
-        //     NEA.group(EqRawAssetByAssetId),
-        //     NEA.fromArray,
-        //     O.map(
-        //         flow(
-        //             A.filter(a => a.length > 1),
-        //             A.splitAt(3),
-        //             a => a[0],
-        //         ),
-        //     ),
-        // );
-        // const dataset = await prisma.asset.findMany({
-        //     // where: { assetId: { lt: 10 } },
-        //     // where: { AND: [{ assetId: { gte: 0 } }, { assetId: { lte: 32768 } }] },
-        //     take: 32000,
-        //     select: {
-        //         assetId: true,
-        //         titlePublic: true,
-        //         assetContacts: {
-        //             where: { role: 'author' },
-        //             select: {
-        //                 contact: {
-        //                     select: {
-        //                         name: true,
-        //                     },
-        //                 },
-        //             },
-        //         },
-        //     },
-        // });
-        // const dataset = await prisma.asset.findMany({
-        //     select: {
-        //         assetId: true,
-        //         titlePublic: true,
-        //         // internalUses: {
-        //         //     select: {
-        //         //         isAvailable: true,
-        //         //     },
-        //         // },
-        //     },
-        //     // include: {
-        //     //     languageItem: true,
-        //     // },
-        // });
-        //
-        //
-
-        // const dataset2 = dataset.map(x => ({
-        //     assetId: x.assetId,
-        //     titlePublic: x.titlePublic,
-        //     authors: x.assetContacts.map(y => y.contact.name),
-        // }));
-
-        // console.log((dataset as any).filter((a: any) => !a.authorName));
-        // console.log(dataset.length);
-        //
-        // console.log(JSON.stringify(assets, null, 4));
 
         if (E.isRight(assets)) {
-            // console.log(assets.right.slice(1, 10));
-            // console.log(assets.right.filter(a => a.assetId === 38981)[0]);
             const operations = assets.right.flatMap(doc => [
                 { index: { _index: 'swissgeol_asset_asset', _id: doc.assetId } },
                 doc,
             ]);
-            // console.log(operations[0]);
-
-            // console.log(assets.right.filter(a => a.assetId === 34153)[0]);
-
-            // console.log(operations);
-            //
+            
             const bulkResponse = await client.bulk({ refresh: true, operations });
             console.log(bulkResponse);
-            //
-            // const SearchResults = D.struct({
-            //     hits: D.struct({
-            //         hits: D.array(
-            //             D.struct({
-            //                 fields: D.struct({
-            //                     assetId: D.array(D.number),
-            //                 }),
-            //             }),
-            //         ),
-            //     }),
-            //     aggregations: D.struct({
-            //         authors: D.struct({
-            //             buckets: D.array(D.struct({ key: D.string, doc_count: D.number })),
-            //         }),
-            //     }),
-            // });
-
-            // const foo = pipe(
-            //     TE.tryCatch(
-            //         () =>
-            //             client.search({
-            //                 // size: 10000,
-            //                 query: {
-            //                     bool: {
-            //                         must: {
-            //                             query_string: {
-            //                                 query: 'Schenker',
-            //                                 fields: ['titlePublic', 'titleOriginal', 'contactNames'],
-            //                             },
-            //                         },
-            //                     },
-            //                 },
-            //                 aggs: {
-            //                     authorIds: { terms: { field: 'authorIds' } },
-            //                     minCreateDate: { min: { field: 'createDate' } },
-            //                     maxCreateDate: { max: { field: 'createDate' } },
-            //                 },
-            //                 fields: [
-            //                     'assetId',
-            //                     'titlePublic',
-            //                     'titleOriginal',
-            //                     'createDate',
-            //                     'authorIds',
-            //                     'contactNames',
-            //                 ],
-            //                 _source: false,
-            //             }),
-            //         unknownToError,
-            //     ),
-            //     // TE.chainW(flow(SearchResults.decode, E.mapLeft(D.draw), TE.fromEither)),
-            //     // TE.mapLeft(e => console.log(JSON.stringify(e, null, 4))),
-            // );
-
-            // foo().then(a => {
-            //     if (a._tag === 'Right') {
-            //         console.log(a.right.aggregations);
-            //     }
-            // });
-            // console.log('hi', JSON.stringify(results, null, 4));
-        } else {
+                    } else {
             console.log(D.draw(assets.left));
         }
     } catch (e) {
@@ -316,5 +198,3 @@ const main = async () => {
 };
 
 main().then(() => console.log('done'));
-
-// client.indices.delete({ index: 'asset' });
