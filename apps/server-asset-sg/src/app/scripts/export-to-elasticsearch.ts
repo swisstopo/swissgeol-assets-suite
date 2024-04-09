@@ -11,7 +11,6 @@ import { Eq as EqString } from 'fp-ts/string';
 import * as D from 'io-ts/Decoder';
 import * as G from 'io-ts/Guard';
 import { Overwrite } from 'type-zoo';
-import * as dotenv from 'dotenv';
 
 import { isNotNil } from '../../../../../libs/core/src/';
 import { ElasticSearchAsset } from '../../../../../libs/shared/src/';
@@ -27,27 +26,7 @@ export const date: D.Decoder<unknown, Date> = D.fromGuard(dateGuard, 'Date');
 export const dateIdFromDate = (d: Date) => (d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate()) as DateId;
 export const DateIdFromDate = pipe(date, D.map(dateIdFromDate));
 
-dotenv.config();
-
 const index = 'swissgeol_asset_asset';
-
-const mappingProperties = {
-    assetId: { type: 'integer' },
-    properties: {
-      assetId: {type: "integer" },
-      assetKindItemCode: { type: "keyword" },
-      authorIds: { type: "integer" },
-      contactNames: { type: "text",fields: {keyword: {type: "keyword",ignore_above: 256}}},
-      createDate: { type: "long" },
-      createDateId: { type: "integer" },
-      languageItemCode: { type: "keyword" },
-      manCatLabelItemCodes: { type: "keyword" },
-      sgsId: { type: "keyword" },
-      titleOriginal: { type: "text", fields: { keyword: { type: "keyword", ignore_above: 256 }} },
-      titlePublic: {type: "text",fields: {keyword: {type: "keyword",ignore_above: 256}}},
-      usageCode: { type: "keyword" }
-    }
-  };
 
 const main = async () => {
     try {
@@ -67,15 +46,6 @@ const main = async () => {
         const client = new Client(options);
 
         console.log('connected');
-
-        
-        const exists = await client.indices.exists({ index });
-        if (!exists) {
-           /* await client.indices.create({
-                index,
-                mappings: mappingProperties
-            });*/
-        }
 
         const prisma = new PrismaClient();
 
