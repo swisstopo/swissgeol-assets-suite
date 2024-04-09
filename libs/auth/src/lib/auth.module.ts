@@ -19,7 +19,6 @@ import { ResetPasswordDialogComponent } from './components/reset-password-dialog
 import { ResetPasswordPageComponent } from './components/reset-password-page';
 import { SetPasswordDialogComponent } from './components/set-password-dialog/set-password-dialog.component';
 import { SetPasswordPageComponent } from './components/set-password-page';
-import { environment } from '../../../../apps/client-asset-sg/src/environments/environment';
 
 @NgModule({
     imports: [
@@ -54,7 +53,8 @@ import { environment } from '../../../../apps/client-asset-sg/src/environments/e
             resourceServer: {
                 sendAccessToken: true,
                 allowedUrls: [],
-                customUrlValidation: (url: string) => !url.includes(environment.oauth_tokenEndpoint),
+                customUrlValidation: (url: string) =>
+                    !url.includes('https://ngm-dev.auth.eu-west-1.amazoncognito.com/oauth2/token'),
             },
         }),
     ],
