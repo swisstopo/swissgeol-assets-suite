@@ -50,7 +50,6 @@ export class AdminPageComponent {
         ),
         getUsers: () => this._adminService.getUsers(),
         updateUser: user => this._adminService.updateUser(user),
-        createUser: user => this._adminService.createUser(user),
         deleteUser: id => this._adminService.deleteUser(id),
     });
 
@@ -66,7 +65,6 @@ export class AdminPageComponent {
 
     public handleUserExpandedOutput(output: UserExpandedOutput): void {
         UserExpandedOutput.match({
-            userCreated: user => this.sm.saveCreatedUser(user),
             userEdited: user => this.sm.saveEditedUser(user),
             userExpandCanceled: () => this.sm.cancelEditOrSave(),
             userDelete: user => this.sm.deleteUser(user.id),

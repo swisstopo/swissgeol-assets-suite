@@ -19,7 +19,7 @@ import { PushModule } from '@rx-angular/template/push';
 import * as O from 'fp-ts/Option';
 import * as C from 'io-ts/Codec';
 
-import { AuthInterceptor } from '@asset-sg/auth';
+import { AuthInterceptor, AuthModule } from '@asset-sg/auth';
 import {
     AnchorComponent,
     ButtonComponent,
@@ -104,6 +104,7 @@ registerLocaleData(locale_deCH, 'de-CH');
         ButtonComponent,
         DialogModule,
         A11yModule,
+        AuthModule,
     ],
     providers: [
         provideSvgIcons(icons),
@@ -115,6 +116,7 @@ registerLocaleData(locale_deCH, 'de-CH');
 })
 export class AppModule {
     private _translateService = inject(TranslateService);
+
     constructor() {
         this._translateService.setDefaultLang('de');
     }
@@ -123,9 +125,11 @@ export class AppModule {
 export interface Encoder<O, A> {
     readonly encode: (a: A) => O;
 }
+
 function optionFromNullable<O, A>(encoder: Encoder<O, A>): Encoder<O | null, O.Option<A>> {
     return {
         encode: O.fold(() => null, encoder.encode),
     };
 }
+
 const foooobar = optionFromNullable(C.string);

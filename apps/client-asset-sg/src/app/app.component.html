@@ -1,10 +1,10 @@
 <asset-sg-app-bar>
-    <ng-template [cdkPortalOutlet]="appPortalService.appBarPortalContent$ | push"></ng-template>
+  <ng-template [cdkPortalOutlet]="appPortalService.appBarPortalContent$ | push"></ng-template>
 </asset-sg-app-bar>
 <asset-sg-menu-bar />
 <div class="router-outlet">
-    <router-outlet></router-outlet>
+  <router-outlet></router-outlet>
 </div>
 <div class="drawer-portal">
-    <ng-template [cdkPortalOutlet]="appPortalService.drawerPortalContent$ | push"></ng-template>
+  <ng-template [cdkPortalOutlet]="appPortalService.drawerPortalContent$ | push"></ng-template>
 </div>

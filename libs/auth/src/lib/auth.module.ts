@@ -11,6 +11,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { ForModule } from '@rx-angular/template/for';
 import { LetModule } from '@rx-angular/template/let';
 import { PushModule } from '@rx-angular/template/push';
+import { OAuthModule } from 'angular-oauth2-oidc';
 
 import { AnchorComponent, ButtonComponent, icons } from '@asset-sg/client-shared';
 
@@ -46,10 +47,17 @@ import { SetPasswordPageComponent } from './components/set-password-page';
         MatFormFieldModule,
         MatInputModule,
         MatProgressBarModule,
-
         ButtonComponent,
         AnchorComponent,
+        OAuthModule.forRoot({
+            resourceServer: {
+                sendAccessToken: true,
+                allowedUrls: [],
+                customUrlValidation: (url: string) => !url.includes('oauth2/token'),
+            },
+        }),
     ],
+    exports: [OAuthModule],
     providers: [provideSvgIcons(icons)],
     declarations: [ResetPasswordDialogComponent, SetPasswordDialogComponent],
 })

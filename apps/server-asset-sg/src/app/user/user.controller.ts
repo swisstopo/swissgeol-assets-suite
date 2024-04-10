@@ -1,12 +1,10 @@
-import { Controller, Delete, Get, HttpCode, HttpException, Param, Put, Req, Res } from '@nestjs/common';
-import { Response } from 'express';
+import { Controller, Delete, Get, HttpCode, HttpException, Param, Put, Req } from '@nestjs/common';
 import * as E from 'fp-ts/Either';
 import * as D from 'io-ts/Decoder';
 
 import { DT } from '@asset-sg/core';
 
 import { isNotFoundError } from '../errors';
-import { cookieKey } from '../jwt/jwt-middleware';
 import { AuthenticatedRequest } from '../models/request';
 
 import { UserService } from './user.service';
@@ -17,11 +15,9 @@ export class UserController {
 
     @Get('')
     async getUser(@Req() req: AuthenticatedRequest) {
-        const e = await this.userService.getUser(req.jwtPayload.sub || '')();
+        const e = await this.userService.getUser(req.jwtPayload.sub ?? '', req.jwtPayload.username.split('_')[1])();
         if (E.isLeft(e)) {
             console.error(e.left);
-            req.res?.clearCookie(cookieKey);
-            req.res?.clearCookie('asset-sg-refresh-token');
             throw new HttpException('Resource not found', 400);
         }
         return e.right;

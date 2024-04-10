@@ -1,11 +1,11 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpException, Param, Patch, Post, Req } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpException, Param, Patch, Req } from '@nestjs/common';
 import * as E from 'fp-ts/Either';
 import { pipe } from 'fp-ts/function';
 import * as TE from 'fp-ts/TaskEither';
 import * as D from 'io-ts/Decoder';
 
 import { decodeError, serializeError } from '@asset-sg/core';
-import { UserPatch, UserPost } from '@asset-sg/shared';
+import { UserPatch } from '@asset-sg/shared';
 
 import { AuthenticatedRequest } from '../models/request';
 
@@ -39,25 +39,6 @@ export class AdminController {
         if (E.isLeft(e)) {
             console.error(e.left);
             if (e.left._tag === 'decodeError') {
-                throw new HttpException(e.left.message, 400);
-            }
-            throw new HttpException(e.left.message, 500);
-        }
-    }
-
-    @Post('user')
-    @HttpCode(201)
-    async createUser(@Req() req: AuthenticatedRequest, @Body() body: UserPost) {
-        const e = await pipe(
-            UserPost.decode(body),
-            E.mapLeft(decodeError),
-            TE.fromEither,
-            TE.chainW(user => this.adminService.createUser(req.accessToken, user)),
-        )();
-        if (E.isLeft(e)) {
-            console.error(e.left);
-            if (e.left._tag === 'decodeError') {
-                console.log(D.draw(e.left.cause));
                 throw new HttpException(e.left.message, 400);
             }
             throw new HttpException(e.left.message, 500);

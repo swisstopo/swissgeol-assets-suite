@@ -7,6 +7,7 @@ generator client {
 datasource db {
     provider = "postgresql"
     url      = env("DATABASE_URL")
+    shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
     schemas  = ["public", "auth"]
 }
 
@@ -107,7 +108,6 @@ model users {
     reauthentication_token      String?      @default("") @db.VarChar(255)
     reauthentication_sent_at    DateTime?    @db.Timestamptz(6)
     identities                  identities[]
-    AssetUser                   AssetUser?
 
     @@index([instance_id])
     @@schema("auth")
@@ -770,8 +770,10 @@ model StatusWorkItem {
 
 model AssetUser {
     id                 String               @id @db.Uuid
-    user               users                @relation(fields: [id], references: [id])
     role               String
+    email              String
+    lang               String
+    oidcId             String
     AssetUserFavourite AssetUserFavourite[]
 
     @@map("asset_user")

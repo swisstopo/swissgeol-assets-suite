@@ -42,6 +42,8 @@ export const UserPost = D.struct({
     email: D.string,
     role: UserRoleDecoder,
     lang: D.string,
+    oidcId: D.string,
+  id: D.string
 });
 export interface UserPost extends D.TypeOf<typeof UserPost> {}
 
