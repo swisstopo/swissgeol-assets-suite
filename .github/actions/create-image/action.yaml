@@ -71,4 +71,4 @@ runs:
           REVISION=${{ env.REVISION }}
         tags: ${{ steps.meta-data.outputs.tags }}
         labels: ${{ steps.meta-data.outputs.labels }}
-        no-cache: false
+        no-cache: true
