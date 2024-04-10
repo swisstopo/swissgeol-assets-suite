@@ -71,5 +71,3 @@ runs:
           REVISION=${{ env.REVISION }}
         tags: ${{ steps.meta-data.outputs.tags }}
         labels: ${{ steps.meta-data.outputs.labels }}
-        cache-from: type=registry,ref=${{ inputs.IMAGE_NAME }}:${{ inputs.CACHE }}
-        cache-to: type=inline
