@@ -25,22 +25,6 @@ export class AdminService {
         );
     }
 
-    public createUser(user: Omit<User, 'id'>): ORD.ObservableRemoteData<ApiError, void> {
-        return this._httpClient
-            .post(`/api/admin/user`, {
-                email: user.email,
-                role: user.role,
-                lang: user.lang,
-            })
-            .pipe(
-                map(() => E.right(undefined)),
-                // TODO need to test instance of HttpErrorResponse here
-                OE.catchErrorW(httpErrorResponseError),
-                map(RD.fromEither),
-                startWith(RD.pending),
-            );
-    }
-
     public updateUser(user: User): ORD.ObservableRemoteData<ApiError, void> {
         return this._httpClient
             .patch(`/api/admin/user/${user.id}`, {
@@ -58,7 +42,6 @@ export class AdminService {
 
     public deleteUser(id: string): ORD.ObservableRemoteData<ApiError, void> {
         console.log('888', id);
-        // return delayObservable(2000, ORD.success(undefined));
         return this._httpClient.delete(`/api/admin/user/${id}`).pipe(
             tap(a => console.log('deleteUser', a)),
             map(() => E.right(undefined)),

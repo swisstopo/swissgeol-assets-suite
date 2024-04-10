@@ -80,7 +80,6 @@ npm run start
 ```
 
 ### Local Services and Applications
-
 | 🔖App/Service            | 🔗Link                                           | 🧞User                   | 🔐Password               |
 |:-------------------------|:-------------------------------------------------|:-------------------------|:-------------------------|
 | Assets (client)          | [localhost:4200](http://localhost:4200/)         | `admin@swissgeol.assets` | `swissgeol_assets`       |
@@ -91,7 +90,7 @@ npm run start
 | pgAdmin (docker)         | [localhost:5051](http://localhost:5051/)         | .env `$PGADMIN_EMAIL`    | .env `$PGADMIN_PASSWORD` |
 | MinIO (docker)           | [localhost:9001](http://localhost:9001/)         | .env `$STORAGE_USER`     | .env `$STORAGE_PASSWORD` |
 | smtp4dev (docker)        | [localhost:5000](http://localhost:5000/)         | n/a                      | n/a                      |
-
+| oidc-server (docker)     | [localhost:4011](http://localhost:4011/)         | n/a                      | n/a                      |
 
 # Configuration
 ## Asset Server Configuration

@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import * as RD from '@devexperts/remote-data-ts';
 import { TranslateService } from '@ngx-translate/core';
+import { OAuthService } from 'angular-oauth2-oidc';
 import * as E from 'fp-ts/Either';
 import { flow } from 'fp-ts/function';
 import * as D from 'io-ts/Decoder';
@@ -17,6 +18,7 @@ const TokenEndpointResponse = D.struct({
     access_token: D.string,
     refresh_token: D.string,
 });
+
 interface TokenEndpointResponse extends D.TypeOf<typeof TokenEndpointResponse> {}
 
 @Injectable({ providedIn: 'root' })
@@ -25,14 +27,36 @@ export class AuthService {
     private _dcmnt = inject(DOCUMENT);
     private _translateService = inject(TranslateService);
 
-    private _getUserProfile() {
-        return this._httpClient
-            .get('/api/user')
-            .pipe(map(decode(User)), OE.catchErrorW(httpErrorResponseOrUnknownError));
+    private _oauthService = inject(OAuthService);
+
+    public async configureOAuth(
+        issuer: string,
+        clientId: string,
+        scope: string,
+        showDebugInformation: boolean,
+        tokenEndpoint: string,
+    ) {
+        this._oauthService.configure({
+            issuer,
+            redirectUri: window.location.origin,
+            postLogoutRedirectUri: window.location.origin,
+            clientId,
+            scope,
+            responseType: 'code',
+            showDebugInformation,
+            strictDiscoveryDocumentValidation: false,
+            tokenEndpoint,
+        });
+        await this._oauthService.loadDiscoveryDocumentAndLogin();
+        this._oauthService.setupAutomaticSilentRefresh();
     }
 
     getUserProfile(): ORD.ObservableRemoteData<ApiError, User> {
         return this._getUserProfile().pipe(map(RD.fromEither), startWith(RD.pending));
+    }
+
+    isLoggedIn(): boolean {
+        return this._oauthService.hasValidAccessToken();
     }
 
     login(email: string, password: string): ORD.ObservableRemoteData<ApiError, User> {
@@ -55,7 +79,22 @@ export class AuthService {
         );
     }
 
+    logOut(): void {
+        this._oauthService.logOut({
+            client_id: this._oauthService.clientId,
+            redirect_uri: window.location.origin,
+            response_type: this._oauthService.responseType,
+        });
+    }
+
+    private _getUserProfile() {
+        return this._httpClient
+            .get('/api/user')
+            .pipe(map(decode(User)), OE.catchErrorW(httpErrorResponseOrUnknownError));
+    }
+
     logout(): ORD.ObservableRemoteData<ApiError, void> {
+        this._oauthService.logOut();
         const accessToken = localStorage.getItem('accessToken');
         return this._httpClient
             .post(
