@@ -1,11 +1,15 @@
+import { HttpClient } from '@angular/common/http';
 import { Component, inject } from '@angular/core';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { Store } from '@ngrx/store';
 import { WINDOW } from 'ngx-window-token';
-import { debounceTime, fromEvent, startWith } from 'rxjs';
+import { debounceTime, fromEvent, map, startWith } from 'rxjs';
 import { assert } from 'tsafe';
 
-import { AppPortalService, setCssCustomProperties } from '@asset-sg/client-shared';
 import { AuthService } from '@asset-sg/auth';
+import { AppPortalService, appSharedStateActions, setCssCustomProperties } from '@asset-sg/client-shared';
+
+import { AppState } from './state/app-state';
 
 const fullHdWidth = 1920;
 
@@ -17,10 +21,31 @@ const fullHdWidth = 1920;
 })
 export class AppComponent {
     private _wndw = inject(WINDOW);
-
+    private _httpClient = inject(HttpClient);
     public appPortalService = inject(AppPortalService);
+    private store = inject(Store<AppState>);
 
     constructor(private readonly _authService: AuthService) {
+        this._httpClient
+            .get('api/oauth-config/config')
+            .pipe(
+                map((response: any) => {
+                    return response;
+                }),
+            )
+            .subscribe(async oAuthConfig => {
+                await this._authService.configureOAuth(
+                    oAuthConfig.oauth_issuer,
+                    oAuthConfig.oauth_clientId,
+                    oAuthConfig.oauth_scope,
+                    oAuthConfig.oauth_showDebugInformation,
+                    oAuthConfig.oauth_tokenEndpoint,
+                );
+
+                this.store.dispatch(appSharedStateActions.loadUserProfile());
+                this.store.dispatch(appSharedStateActions.loadReferenceData());
+            });
+
         const wndw = this._wndw;
         assert(wndw != null);
 

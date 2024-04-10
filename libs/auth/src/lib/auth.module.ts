@@ -51,12 +51,13 @@ import { SetPasswordPageComponent } from './components/set-password-page';
         AnchorComponent,
         OAuthModule.forRoot({
             resourceServer: {
-              sendAccessToken: true,
-              //allowedUrls:['http://localhost:3000'],
+                sendAccessToken: true,
+                allowedUrls: [],
+                customUrlValidation: (url: string) => !url.includes('oauth2/token'),
             },
-          }
-        ),
+        }),
     ],
+    exports: [OAuthModule],
     providers: [provideSvgIcons(icons)],
     declarations: [ResetPasswordDialogComponent, SetPasswordDialogComponent],
 })

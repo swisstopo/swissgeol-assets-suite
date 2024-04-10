@@ -3,14 +3,14 @@ import { DialogModule } from '@angular/cdk/dialog';
 import { registerLocaleData } from '@angular/common';
 import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
 import locale_deCH from '@angular/common/locales/de-CH';
-import { inject, NgModule } from '@angular/core';
+import { NgModule, inject } from '@angular/core';
 import { MAT_FORM_FIELD_DEFAULT_OPTIONS } from '@angular/material/form-field';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { RouterModule } from '@angular/router';
-import { provideSvgIcons, SvgIconComponent } from '@ngneat/svg-icon';
+import { SvgIconComponent, provideSvgIcons } from '@ngneat/svg-icon';
 import { EffectsModule } from '@ngrx/effects';
-import { FullRouterStateSerializer, routerReducer, StoreRouterConnectingModule } from '@ngrx/router-store';
+import { FullRouterStateSerializer, StoreRouterConnectingModule, routerReducer } from '@ngrx/router-store';
 import { StoreModule } from '@ngrx/store';
 import { TranslateLoader, TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ForModule } from '@rx-angular/template/for';
@@ -19,14 +19,14 @@ import { PushModule } from '@rx-angular/template/push';
 import * as O from 'fp-ts/Option';
 import * as C from 'io-ts/Codec';
 
-import { AuthInterceptor } from '@asset-sg/auth';
+import { AuthInterceptor, AuthModule } from '@asset-sg/auth';
 import {
     AnchorComponent,
     ButtonComponent,
     CURRENT_LANG,
+    TranslateTsLoader,
     currentLangFactory,
     icons,
-    TranslateTsLoader,
 } from '@asset-sg/client-shared';
 import { storeLogger } from '@asset-sg/core';
 
@@ -39,7 +39,6 @@ import { AppBarComponent, MenuBarComponent, NotFoundComponent, RedirectToLangCom
 import { appTranslations } from './i18n';
 import { AppSharedStateEffects } from './state';
 import { appSharedStateReducer } from './state/app-shared.reducer';
-import { OAuthModule } from 'angular-oauth2-oidc';
 
 registerLocaleData(locale_deCH, 'de-CH');
 
@@ -105,13 +104,7 @@ registerLocaleData(locale_deCH, 'de-CH');
         ButtonComponent,
         DialogModule,
         A11yModule,
-        // AuthModule,
-        OAuthModule.forRoot({
-            resourceServer: {
-                sendAccessToken: true,
-                //allowedUrls:['http://localhost:3000'],
-            },
-        }),
+        AuthModule,
     ],
     providers: [
         provideSvgIcons(icons),
