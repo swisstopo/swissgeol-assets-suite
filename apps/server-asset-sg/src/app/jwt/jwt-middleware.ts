@@ -1,15 +1,16 @@
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Inject, Injectable, NestMiddleware } from '@nestjs/common';
+import axios from 'axios';
+import { Cache } from 'cache-manager';
 import { NextFunction, Request, Response } from 'express';
 import * as E from 'fp-ts/Either';
-import * as TE from 'fp-ts/TaskEither';
 import { pipe } from 'fp-ts/function';
+import * as TE from 'fp-ts/TaskEither';
 import * as jwt from 'jsonwebtoken';
 import { Jwt, JwtPayload } from 'jsonwebtoken';
 import * as jwkToPem from 'jwk-to-pem';
-import axios from 'axios';
+
 import { AuthenticatedRequest } from '../models/request';
-import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { Cache } from 'cache-manager';
 
 @Injectable()
 export class JwtMiddleware implements NestMiddleware {

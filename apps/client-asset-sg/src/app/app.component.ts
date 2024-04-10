@@ -1,12 +1,14 @@
+import { HttpClient } from '@angular/common/http';
 import { Component, inject } from '@angular/core';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { Store } from '@ngrx/store';
 import { WINDOW } from 'ngx-window-token';
 import { debounceTime, fromEvent, map, startWith } from 'rxjs';
 import { assert } from 'tsafe';
-import { AppPortalService, appSharedStateActions, setCssCustomProperties } from '@asset-sg/client-shared';
+
 import { AuthService } from '@asset-sg/auth';
-import { HttpClient } from '@angular/common/http';
-import { Store } from '@ngrx/store';
+import { AppPortalService, appSharedStateActions, setCssCustomProperties } from '@asset-sg/client-shared';
+
 import { AppState } from './state/app-state';
 
 const fullHdWidth = 1920;
