@@ -24,7 +24,7 @@ services:
         environment:
             POSTGRES_USER: ${DB_USER}
             POSTGRES_PASSWORD: ${DB_PASSWORD}
-            POSTGRES_DB: postgres      
+            POSTGRES_DB: postgres
         volumes:
             - ./init/db:/docker-entrypoint-initdb.d
             - ./volumes/db/data/postgres:/var/lib/postgresql/data
@@ -42,14 +42,14 @@ services:
                 condition: service_healthy
         restart: unless-stopped
         ports:
-            - 5051:5050        
+            - 5051:5050
         environment:
             PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
             PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
             PGADMIN_LISTEN_PORT: 5050
         volumes:
             - ./volumes/pgadmin/data:/var/lib/pgadmin
-        
+
     gotrue:
         container_name: swissgeol-assets-gotrue
         image: supabase/gotrue@sha256:794d7df376329df93c0d9ed9237868363de5c858301147e08e6620fb67d1a2c6
@@ -80,11 +80,13 @@ services:
             GOTRUE_MAILER_URLPATHS_EMAIL_CHANGE: /auth/v1/verify
             GOTRUE_MAILER_TEMPLATES_INVITE: http://localhost:4200/assets/email-templates/invite.html
             GOTRUE_MAILER_TEMPLATES_RECOVERY: http://localhost:4200/assets/email-templates/recover.html
-            
+
     elasticsearch:
         container_name: swissgeol-assets-elasticsearch
         image: docker.elastic.co/elasticsearch/elasticsearch:8.12.1
         restart: unless-stopped
+        entrypoint: ["/bin/tini", "--"]
+        command: ["sh", "-c", "/init/init.sh & /usr/local/bin/docker-entrypoint.sh"]
         ports:
             - 9200:9200
         environment:
@@ -93,7 +95,8 @@ services:
             discovery.type: single-node
             cluster.routing.allocation.disk.threshold_enabled: false
         volumes:
-            - ./volumes/elasticsearch/data:/usr/share/elasticsearch/data        
+            - ./init/elasticsearch/:/init/:ro
+            - ./volumes/elasticsearch/data:/usr/share/elasticsearch/data
 
     kibana:
         container_name: swissgeol-assets-kibana
@@ -104,7 +107,7 @@ services:
         ports:
             - 5601:5601
         environment:
-            ELASTICSEARCH_HOSTS: http://elasticsearch:9200        
+            ELASTICSEARCH_HOSTS: http://elasticsearch:9200
 
     smtp4dev:
         container_name: swissgeol-assets-smtp
