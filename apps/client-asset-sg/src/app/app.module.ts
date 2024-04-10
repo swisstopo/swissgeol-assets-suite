@@ -3,14 +3,14 @@ import { DialogModule } from '@angular/cdk/dialog';
 import { registerLocaleData } from '@angular/common';
 import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
 import locale_deCH from '@angular/common/locales/de-CH';
-import { inject, NgModule } from '@angular/core';
+import { NgModule, inject } from '@angular/core';
 import { MAT_FORM_FIELD_DEFAULT_OPTIONS } from '@angular/material/form-field';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { RouterModule } from '@angular/router';
-import { provideSvgIcons, SvgIconComponent } from '@ngneat/svg-icon';
+import { SvgIconComponent, provideSvgIcons } from '@ngneat/svg-icon';
 import { EffectsModule } from '@ngrx/effects';
-import { FullRouterStateSerializer, routerReducer, StoreRouterConnectingModule } from '@ngrx/router-store';
+import { FullRouterStateSerializer, StoreRouterConnectingModule, routerReducer } from '@ngrx/router-store';
 import { StoreModule } from '@ngrx/store';
 import { TranslateLoader, TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ForModule } from '@rx-angular/template/for';
@@ -24,9 +24,9 @@ import {
     AnchorComponent,
     ButtonComponent,
     CURRENT_LANG,
+    TranslateTsLoader,
     currentLangFactory,
     icons,
-    TranslateTsLoader,
 } from '@asset-sg/client-shared';
 import { storeLogger } from '@asset-sg/core';
 

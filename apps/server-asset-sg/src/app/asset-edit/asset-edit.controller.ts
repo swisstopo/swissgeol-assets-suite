@@ -19,8 +19,8 @@ import { pipe } from 'fp-ts/function';
 import * as TE from 'fp-ts/TaskEither';
 import * as D from 'io-ts/Decoder';
 
-import { decodeError, DT } from '@asset-sg/core';
-import { isEditor, PatchAsset } from '@asset-sg/shared';
+import { DT, decodeError } from '@asset-sg/core';
+import { PatchAsset, isEditor } from '@asset-sg/shared';
 
 import { isNotFoundError, permissionDeniedError } from '../errors';
 import { AuthenticatedRequest } from '../models/request';

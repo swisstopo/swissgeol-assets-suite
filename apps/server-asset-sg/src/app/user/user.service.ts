@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { pipe } from 'fp-ts/function';
 import * as TE from 'fp-ts/TaskEither';
 
-import { decode, DecodeError, UnknownError, unknownToUnknownError } from '@asset-sg/core';
+import { DecodeError, UnknownError, decode, unknownToUnknownError } from '@asset-sg/core';
 import { SearchAssetResult, User } from '@asset-sg/shared';
 
 import { AdminService } from '../admin/admin.service';

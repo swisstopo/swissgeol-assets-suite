@@ -1,4 +1,5 @@
 import { HttpModule } from '@nestjs/axios';
+import { CacheModule } from '@nestjs/cache-manager';
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ScheduleModule } from '@nestjs/schedule';
 
@@ -11,12 +12,11 @@ import { AssetEditService } from './asset-edit/asset-edit.service';
 import { ContactEditController } from './contact-edit/contact-edit.controller';
 import { ContactEditService } from './contact-edit/contact-edit.service';
 import { JwtMiddleware } from './jwt/jwt-middleware';
+import { OAuthController } from './oauth-config/oauth-config.controller';
 import { OcrController } from './ocr/ocr.controller';
 import { PrismaService } from './prisma/prisma.service';
 import { UserController } from './user/user.controller';
-import { CacheModule } from '@nestjs/cache-manager';
 import { UserService } from './user/user.service';
-import { OAuthController } from './oauth-config/oauth-config.controller';
 
 @Module({
     imports: [HttpModule, ScheduleModule.forRoot(), CacheModule.register()],

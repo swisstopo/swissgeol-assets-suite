@@ -5,8 +5,8 @@ import * as E from 'fp-ts/Either';
 import * as D from 'io-ts/Decoder';
 import queryString from 'query-string';
 
-import { Lang } from '@asset-sg/shared';
 import { AuthService } from '@asset-sg/auth';
+import { Lang } from '@asset-sg/shared';
 
 @UntilDestroy()
 @Component({

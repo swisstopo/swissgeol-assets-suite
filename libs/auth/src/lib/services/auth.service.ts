@@ -1,6 +1,6 @@
 import { DOCUMENT } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { inject, Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import * as RD from '@devexperts/remote-data-ts';
 import { TranslateService } from '@ngx-translate/core';
 import { OAuthService } from 'angular-oauth2-oidc';
@@ -11,7 +11,7 @@ import { catchError, map, of, startWith, tap } from 'rxjs';
 import urlJoin from 'url-join';
 
 import { ApiError, httpErrorResponseOrUnknownError } from '@asset-sg/client-shared';
-import { decode, decodeError, OE, ORD } from '@asset-sg/core';
+import { OE, ORD, decode, decodeError } from '@asset-sg/core';
 import { User } from '@asset-sg/shared';
 
 const TokenEndpointResponse = D.struct({

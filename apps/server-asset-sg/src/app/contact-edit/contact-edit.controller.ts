@@ -3,8 +3,8 @@ import * as E from 'fp-ts/Either';
 import { pipe } from 'fp-ts/function';
 import * as TE from 'fp-ts/TaskEither';
 
-import { decodeError, DT } from '@asset-sg/core';
-import { isEditor, PatchContact } from '@asset-sg/shared';
+import { DT, decodeError } from '@asset-sg/core';
+import { PatchContact, isEditor } from '@asset-sg/shared';
 
 import { permissionDeniedError } from '../errors';
 import { AuthenticatedRequest } from '../models/request';
