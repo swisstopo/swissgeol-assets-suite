@@ -4,7 +4,7 @@ import { sequenceS } from 'fp-ts/Apply';
 import * as A from 'fp-ts/Array';
 import * as E from 'fp-ts/Either';
 import { contramap } from 'fp-ts/Eq';
-import { Lazy, flow, pipe } from 'fp-ts/function';
+import { flow, Lazy, pipe } from 'fp-ts/function';
 import * as NEA from 'fp-ts/NonEmptyArray';
 import * as N from 'fp-ts/number';
 import * as O from 'fp-ts/Option';
@@ -15,17 +15,17 @@ import * as TE from 'fp-ts/TaskEither';
 import * as C from 'io-ts/Codec';
 import * as D from 'io-ts/Decoder';
 
-import { DT, decodeError, isNotNil, unknownToError, unknownToUnknownError } from '@asset-sg/core';
+import { decodeError, DT, isNotNil, unknownToError, unknownToUnknownError } from '@asset-sg/core';
 import {
     AssetSearchParams,
     BaseAssetDetail,
     DateId,
     DateIdFromDate,
+    makeUsageCode,
     SearchAssetResult,
     SearchAssetResultCodec,
     SearchAssetResultOutput,
     UsageCode,
-    makeUsageCode,
 } from '@asset-sg/shared';
 
 import { notFoundError } from './errors';
@@ -36,11 +36,16 @@ import {
     SearchAssetElasticResultDecoder,
     SearchResultsElasticData,
 } from './models/SearchAssetElasticResult';
-import { postgresStudiesByAssetId } from './postgres-studies/postgres-studies';
+import {
+    createAllStudyQuery,
+    decodeStudyQueryResult,
+    postgresStudiesByAssetId,
+} from './postgres-studies/postgres-studies';
 import { PrismaService } from './prisma/prisma.service';
 import { createElasticSearchClient } from './search/elastic-search-client';
-import { findAssetsByPolygon } from './search/find-assets-by-polygon';
+import { executeAssetQuery, findAssetsByPolygon } from './search/find-assets-by-polygon';
 import { searchAssets } from './search/find-assets-by-search-text';
+import { makeSearchAssetResult } from './search/search-asset';
 
 @Injectable()
 export class AppService {
@@ -50,7 +55,9 @@ export class AppService {
         const polygonParam = polygon.map(point => `${point[0]} ${point[1]}`).join(',');
 
         const result = await this.prismaService.$queryRawUnsafe(
-            `select id, accident_uid, year, month, canton, ST_AsText(geom) as geom from bicycle_accidents where ST_INTERSECTS(geom, ST_GeomFromText('POLYGON((${polygonParam}))', 2056))`,
+            `select id, accident_uid, year, month, canton, ST_AsText(geom) as geom
+       from bicycle_accidents
+       where ST_INTERSECTS(geom, ST_GeomFromText('POLYGON((${polygonParam}))', 2056))`,
         );
         return { result };
     }
@@ -110,9 +117,28 @@ export class AppService {
             }),
         );
     }
+
     // findAssetsByPolygon(polygon: [number, number][]) {
     //     return findAssetsByPolygon(this.prismaService, polygon);
     // }
+
+    searchAssetsByStudyIds(ids: string[]): TE.TaskEither<Error, SearchAssetResult> {
+        const whereClause = `study_id in (${ids.map(id => `'${id}'`).join(',')})`;
+        return pipe(
+            TE.tryCatch(() => this.prismaService.$queryRawUnsafe(createAllStudyQuery(whereClause)), unknownToError),
+            TE.chain(decodeStudyQueryResult),
+            TE.chain(studies => {
+                const assetIds = studies.map(study => study.assetId);
+                return pipe(
+                    executeAssetQuery(this.prismaService, assetIds),
+                    TE.map(assets => [assets, studies] as const),
+                );
+            }),
+            TE.map(([assets, studies]) => {
+                return makeSearchAssetResult(assets, studies);
+            }),
+        );
+    }
 
     // findAssetsByPolygon(polygon: [number, number][]) {
     //     const polygonParam = polygon.map(point => `${point[0]} ${point[1]}`).join(',');
@@ -267,40 +293,37 @@ export class AppService {
                 TE.chain(assetIds =>
                     TE.tryCatch(
                         () => this.prismaService.$queryRaw`
-                            select
-        	                    a.asset_id as "assetId",
-	                            a.title_public as "titlePublic",
-	                            a.create_date as "createDate",
-                                a.asset_kind_item_code as "assetKindItemCode",
-                                a.asset_format_item_code as "assetFormatItemCode",
-                                a.language_item_code as "languageItemCode",
-                                mclr.man_cat_label_item_code as "manCatLabelItemCode",
-                                ac.contact_id as "contactId",
-                                ac.role as "contactRole",
-                                ius.is_available as "internalUse",
-								pus.is_available as "publicUse",
-	                            s.study_id as "studyId",
-	                            s.geom_text as "studyGeomText"
-                            from
-	                            asset a
-                            inner join
-								internal_use ius
-							on  ius.internal_use_id = a.internal_use_id							    
-							inner join
-								public_use pus
-							on  pus.public_use_id = a.public_use_id							    
-                            left join
-	                            all_study s
-                            on  s.asset_id = a.asset_id
-                            left join
-	                            asset_contact ac
-                            on  ac.asset_id = a.asset_id
-                            left join
-                                man_cat_label_ref mclr
-                            on  ac.asset_id = mclr.asset_id
-                            where
-                                a.asset_id in (${Prisma.join(assetIds)})
-                    `,
+              select a.asset_id                   as "assetId",
+                     a.title_public               as "titlePublic",
+                     a.create_date                as "createDate",
+                     a.asset_kind_item_code       as "assetKindItemCode",
+                     a.asset_format_item_code     as "assetFormatItemCode",
+                     a.language_item_code         as "languageItemCode",
+                     mclr.man_cat_label_item_code as "manCatLabelItemCode",
+                     ac.contact_id                as "contactId",
+                     ac.role                      as "contactRole",
+                     ius.is_available             as "internalUse",
+                     pus.is_available             as "publicUse",
+                     s.study_id                   as "studyId",
+                     s.geom_text                  as "studyGeomText"
+              from asset a
+                     inner join
+                   internal_use ius
+                   on ius.internal_use_id = a.internal_use_id
+                     inner join
+                   public_use pus
+                   on pus.public_use_id = a.public_use_id
+                     left join
+                   all_study s
+                   on s.asset_id = a.asset_id
+                     left join
+                   asset_contact ac
+                   on ac.asset_id = a.asset_id
+                     left join
+                   man_cat_label_ref mclr
+                   on ac.asset_id = mclr.asset_id
+              where a.asset_id in (${Prisma.join(assetIds)})
+            `,
                         unknownToError,
                     ),
                 ),

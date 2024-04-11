@@ -11,7 +11,7 @@ import { postgresStudiesByPolygon } from '../postgres-studies/postgres-studies';
 
 import { makeSearchAssetResult, searchAssetQuery } from './search-asset';
 
-const executeAssetQuery = (prismaClient: PrismaClient, assetIds: number[]) =>
+export const executeAssetQuery = (prismaClient: PrismaClient, assetIds: number[]) =>
     TE.tryCatch(
         () =>
             prismaClient.asset.findMany({
@@ -22,6 +22,7 @@ const executeAssetQuery = (prismaClient: PrismaClient, assetIds: number[]) =>
     );
 
 export interface AssetQueryResults extends GetRightTypeOfTaskEither<ReturnType<typeof executeAssetQuery>> {}
+
 export type AssetQueryResult = AssetQueryResults[number];
 
 export function findAssetsByPolygon(prismaClient: PrismaClient, polygon: LV95[]) {

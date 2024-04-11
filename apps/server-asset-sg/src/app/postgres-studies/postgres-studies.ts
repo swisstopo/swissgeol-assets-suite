@@ -19,23 +19,21 @@ export const PostgresAllStudies = C.array(
         geomText: C.string,
     }),
 );
+
 export interface PostgresAllStudies extends D.TypeOf<typeof PostgresAllStudies> {}
 
-const decodeStudyQueryResult = flow(
+export const decodeStudyQueryResult = flow(
     PostgresAllStudies.decode,
     E.mapLeft(e => new Error(D.draw(e))),
     TE.fromEither,
 );
 
-const createAllStudyQuery = (whereClause: string) => `
-        select
-            asset_id as "assetId",
-            study_id as "studyId",
-            geom_text as "geomText"
-        from
-            public.all_study
-        where
-            ${whereClause}
+export const createAllStudyQuery = (whereClause: string) => `
+  select asset_id  as "assetId",
+         study_id  as "studyId",
+         geom_text as "geomText"
+  from public.all_study
+  where ${whereClause}
 `;
 
 const allStudyQuery = (prismaClient: PrismaClient, whereClause: string): TE.TaskEither<Error, PostgresAllStudies> =>
@@ -62,15 +60,12 @@ export const postgresStudiesByAssetIds = (
     pipe(
         TE.tryCatch(
             () => prismaClient.$queryRaw`
-            select
-                asset_id as "assetId",
-                study_id as "studyId",
-                geom_text as "geomText"
-            from
-                public.all_study
-            where
-                asset_id in (${Prisma.join(assetIds)})
-            `,
+        select asset_id  as "assetId",
+               study_id  as "studyId",
+               geom_text as "geomText"
+        from public.all_study
+        where asset_id in (${Prisma.join(assetIds)})
+      `,
             unknownToError,
         ),
         TE.chain(decodeStudyQueryResult),
@@ -94,11 +89,12 @@ export const updateStudies = (prismaClient: PrismaClient, studies: { studyId: st
                     TE.tryCatch(
                         () =>
                             prismaClient.$executeRawUnsafe(
-                                `update public.study_${type} set
-                                     geom = st_geomfromtext('${study.geomText}', 2056)
-                                 where
-                                     study_${type}_id = ${studyId}
-                                 and st_equals(geom, st_geomfromtext('${study.geomText}', 2056)) = false`,
+                                `update public.study_${type}
+                 set geom = st_geomfromtext('${study.geomText}', 2056)
+                 where study_${type}_id = ${studyId}
+                   and st_equals(geom
+                     , st_geomfromtext('${study.geomText}'
+                     , 2056)) = false`,
                             ),
                         unknownToUnknownError,
                     ),
@@ -132,7 +128,7 @@ export const createStudies = (prismaClient: PrismaClient, assetId: number, study
                         () =>
                             prismaClient.$executeRawUnsafe(
                                 `insert into public.study_${type} (asset_id, geom_quality_item_code, geom)
-                                 values (${assetId}, 'unkown', st_geomfromtext('${geomText}', 2056))`,
+                 values (${assetId}, 'unkown', st_geomfromtext('${geomText}', 2056))`,
                             ),
                         unknownToUnknownError,
                     ),
@@ -170,13 +166,15 @@ export const deleteStudies = (prismaClient: PrismaClient, assetId: number, study
                                 () =>
                                     studyIdsToKeep.length === 0
                                         ? prismaClient.$executeRawUnsafe(
-                                              `delete from public.study_${type} where asset_id = ${assetId}`,
+                                              `delete
+                       from public.study_${type}
+                       where asset_id = ${assetId}`,
                                           )
                                         : prismaClient.$executeRawUnsafe(
-                                              `delete from public.study_${type}
-                                           where
-                                               asset_id = ${assetId}
-                                           and study_${type}_id not in (${studyIdsToKeep.join(',')})`,
+                                              `delete
+                       from public.study_${type}
+                       where asset_id = ${assetId}
+                         and study_${type}_id not in (${studyIdsToKeep.join(',')})`,
                                           ),
                                 unknownToUnknownError,
                             ),

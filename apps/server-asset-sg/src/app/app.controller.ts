@@ -1,4 +1,4 @@
-import { Controller, Get, HttpException, Param, Query, Req, Res } from '@nestjs/common';
+import { Body, Controller, Get, HttpException, Param, Post, Query, Req, Res } from '@nestjs/common';
 import { Request, Response } from 'express';
 import * as E from 'fp-ts/Either';
 import * as D from 'io-ts/Decoder';
@@ -20,6 +20,16 @@ export class AppController {
     @Get('search-asset')
     async searchAsset(@Query('searchText') searchText: string) {
         const e = await this.appService.searchAssets(searchText)();
+        if (E.isLeft(e)) {
+            console.error(e.left);
+            throw new HttpException(e.left.message, 500);
+        }
+        return e.right;
+    }
+
+    @Post('assets')
+    async searchAssets(@Body() body: { ids: string[] }) {
+        const e = await this.appService.searchAssetsByStudyIds(body.ids)();
         if (E.isLeft(e)) {
             console.error(e.left);
             throw new HttpException(e.left.message, 500);
