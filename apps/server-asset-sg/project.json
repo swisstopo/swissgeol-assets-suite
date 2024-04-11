@@ -77,7 +77,8 @@
             "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
             "options": {
                 "jestConfig": "apps/server-asset-sg/jest.config.ts",
-                "passWithNoTests": true
+                "passWithNoTests": true,
+                "codeCoverage": true
             }
         },
         "gen-prisma-client": {
