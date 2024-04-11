@@ -13,6 +13,7 @@ ALTER TABLE "public"."asset_user" DROP CONSTRAINT "asset_user_id_fkey";
 ALTER TABLE "auth"."users" ALTER COLUMN "confirmed_at" DROP EXPRESSION;
 
 -- AlterTable
+DELETE FROM "public"."asset_user";
 ALTER TABLE "public"."asset_user" ADD COLUMN     "email" TEXT NOT NULL,
 ADD COLUMN     "lang" TEXT NOT NULL,
 ADD COLUMN     "oidcId" TEXT NOT NULL;

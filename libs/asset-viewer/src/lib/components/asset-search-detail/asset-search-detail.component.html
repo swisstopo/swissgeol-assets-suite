@@ -41,6 +41,7 @@
                     </ng-container>
                 </div>
                 <table class="asset-details">
+                    <caption></caption>
                     <tr>
                         <th translate="search.file" class="icon-height"></th>
                         <td>
@@ -173,6 +174,7 @@
                         <td>
                             <ng-container *ngIf="rdAssetDetail.value.statusWorks.length === 0">&ndash;</ng-container>
                             <table class="status-works">
+                                <caption></caption>
                                 <tr *rxFor="let statusWork of rdAssetDetail.value.statusWorks">
                                     <th>{{ statusWork.statusWorkDate | assetSgDate }}</th>
                                     <td>{{ statusWork.statusWork | valueItemName }}</td>
