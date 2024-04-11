@@ -1,4 +1,3 @@
-import { ENTER } from '@angular/cdk/keycodes';
 import { TemplatePortal } from '@angular/cdk/portal';
 import {
     ApplicationRef,
@@ -17,7 +16,6 @@ import * as RD from '@devexperts/remote-data-ts';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { Store } from '@ngrx/store';
 import * as A from 'fp-ts/Array';
-import { flow } from 'fp-ts/function';
 import { Eq as eqNumber } from 'fp-ts/number';
 import * as O from 'fp-ts/Option';
 import {
@@ -44,12 +42,12 @@ import {
     LifecycleHooksDirective,
 } from '@asset-sg/client-shared';
 import { isTruthy, ORD, rdSequenceProps } from '@asset-sg/core';
-import { LV95 } from '@asset-sg/shared';
 
 import { BaseClientAssetSearchRefinement } from '../../models';
 import * as actions from '../../state/asset-viewer.actions';
 import { AppStateWithAssetViewer } from '../../state/asset-viewer.reducer';
 import * as fromAssetViewer from '../../state/asset-viewer.selectors';
+import { AssetSearchService } from '../../services/asset-search.service';
 
 @UntilDestroy()
 @Component({
@@ -86,17 +84,6 @@ export class AssetViewerPageComponent {
     public refinementChanged$ = new Subject<O.Option<BaseClientAssetSearchRefinement>>();
     public removePolygon$ = new Subject<void>();
 
-    public _searchTextKeyDown$ = new Subject<KeyboardEvent>();
-    private _searchTextChanged$ = this._searchTextKeyDown$.pipe(
-        filter(ev => ev.keyCode === ENTER),
-        map(ev => {
-            const value = (ev.target as HTMLInputElement).value;
-            return value ? O.some(value) : O.none;
-        }),
-    );
-
-    public polygonChanged$ = new Subject<LV95[]>();
-    public assetClicked$ = new Subject<number[]>();
     public closeSearchResultsClicked$ = new Subject<void>();
     public closeInstructions$ = new Subject<void>();
 
@@ -104,7 +91,11 @@ export class AssetViewerPageComponent {
 
     public highlightAssetStudies$ = new Subject<O.Option<number>>();
 
-    constructor() {
+    public assetClicked$ = new Subject<number[]>();
+    searchQuery = '';
+    selectedStudyIds: string[] = [];
+
+    constructor(private readonly assetSearchService: AssetSearchService) {
         const setupPortals$ = this._lc.afterViewInit$.pipe(
             observeOn(asyncScheduler),
             switchMap(
@@ -165,15 +156,6 @@ export class AssetViewerPageComponent {
             this.closeSearchResultsClicked$.pipe(map(() => actions.closeRefineAndResults())),
             this.closeInstructions$.pipe(map(() => appSharedStateActions.closePanel())),
             this.refinementChanged$.pipe(map(refinement => actions.refine({ refinement }))),
-            this._searchTextChanged$.pipe(
-                map(
-                    flow(
-                        O.map(text => actions.searchByText({ text })),
-                        O.getOrElseW(() => actions.clearSearchText()),
-                    ),
-                ),
-            ),
-            this.polygonChanged$.pipe(map(polygon => actions.searchByPolygon({ polygon }))),
             this.removePolygon$.pipe(map(() => actions.removePolygon())),
         )
             .pipe(untilDestroyed(this))
@@ -186,5 +168,16 @@ export class AssetViewerPageComponent {
                 this._store.dispatch(actions.mapInitialised());
             });
         });
+    }
+
+    public handleSearchKey(event: KeyboardEvent) {
+        if (event.key === 'Enter') {
+            this.doSearch(this.selectedStudyIds);
+        }
+    }
+
+    public doSearch(filter: string[]) {
+        this.selectedStudyIds = filter;
+        this.assetSearchService.searchByStudyIds(filter).subscribe();
     }
 }

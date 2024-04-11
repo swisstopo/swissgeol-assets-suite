@@ -8,7 +8,7 @@ import queryString from 'query-string';
 import { map, startWith } from 'rxjs';
 
 import { ApiError, httpErrorResponseError } from '@asset-sg/client-shared';
-import { OE, ORD, decodeError } from '@asset-sg/core';
+import { decodeError, OE, ORD } from '@asset-sg/core';
 import { AssetSearchParamsOld, LV95, ReferenceData } from '@asset-sg/shared';
 
 import { AssetDetail, SearchAssetResultClient, SearchAssetResultClientDecoder } from '../models';
@@ -39,6 +39,17 @@ export class AssetSearchService {
         const qs = AssetSearchParamsToQueryString.encode({ filterKind: 'polygon', polygon, searchText: O.none });
         return this._httpClient
             .get('/api/asset/?' + qs)
+            .pipe(
+                map(flow(SearchAssetResultClientDecoder.decode, E.mapLeft(decodeError))),
+                OE.catchErrorW(httpErrorResponseError),
+                map(RD.fromEither),
+                startWith(RD.pending),
+            );
+    }
+
+    public searchByStudyIds(studyIds: string[]): ORD.ObservableRemoteData<ApiError, SearchAssetResultClient> {
+        return this._httpClient
+            .post('/api/assets', { ids: studyIds })
             .pipe(
                 map(flow(SearchAssetResultClientDecoder.decode, E.mapLeft(decodeError))),
                 OE.catchErrorW(httpErrorResponseError),

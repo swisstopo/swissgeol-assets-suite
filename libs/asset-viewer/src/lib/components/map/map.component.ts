@@ -93,6 +93,7 @@ const initialMapState: MapState = {
 export class MapComponent {
     @ViewChild('map', { static: true }) mapDiv!: ElementRef<HTMLDivElement>;
     @Output('polygonChanged') public polygonChanged$ = new EventEmitter<LV95[]>();
+    @Output('studiesSelected') public studiesSelected$ = new EventEmitter<string[]>();
 
     private _lc = inject(LifecycleHooks);
     private _dcmnt = inject(DOCUMENT);
@@ -452,6 +453,39 @@ export class MapComponent {
             )
             .subscribe(this.assetClicked$);
 
+        // const dragBox = new DragBox({
+        //     condition: platformModifierKeyOnly,
+        // });
+        //
+        // dragBox.on('boxend', event => {
+        //     const extent = dragBox.getGeometry().getExtent();
+        //     vectorSourceAllStudies.forEachFeature(f => {
+        //         const geometry = f.getGeometry();
+        //         if (geometry && geometry.intersectsExtent(extent)) {
+        //             clickSelect.getFeatures().push(f);
+        //             console.log(clickSelect.getFeatures().getArray());
+        //         }
+        //     });
+        // });
+        // olMap.addInteraction(dragBox);
+        //
+        // fromEventPattern(
+        //     h => clickSelect.on('select', h),
+        //     h => clickSelect.un('select', h),
+        // )
+        //     .pipe(
+        //         withLatestFrom(this.state.select('selectionMode')),
+        //         filter(([, selectionMode]) => selectionMode),
+        //         map(([event]) => {
+        //             console.log('event', event);
+        //             zoomControlsInstance.setSelectionMode(false);
+        //             return event;
+        //         }),
+        //     )
+        //     .subscribe(event => {
+        //         console.log('event2', event);
+        //     });
+
         fromEventPattern<MapBrowserEvent<PointerEvent>>(
             h => olMap.on('click', h),
             h => olMap.un('click', h),
@@ -491,7 +525,10 @@ export class MapComponent {
                     );
                 }),
             )
-            .subscribe(ss => console.log(ss));
+            .subscribe(ss => {
+                this.studiesSelected$.emit(ss);
+                console.log(ss);
+            });
 
         this.state
             .select(['highlightAssetStudies', 'rdStudies'], ({ rdStudies, highlightAssetStudies }) =>

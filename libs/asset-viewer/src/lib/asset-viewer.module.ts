@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { ReactiveFormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MAT_DATE_FORMATS, MAT_DATE_LOCALE } from '@angular/material/core';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -90,6 +90,7 @@ import { assetViewerReducer } from './state/asset-viewer.reducer';
         DrawerComponent,
         DrawerPanelComponent,
         DatepickerToggleIconComponent,
+        FormsModule,
     ],
     providers: [
         { provide: MAT_DATE_LOCALE, useValue: de },
