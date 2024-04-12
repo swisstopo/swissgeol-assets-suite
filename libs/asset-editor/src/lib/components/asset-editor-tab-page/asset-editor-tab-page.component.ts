@@ -90,16 +90,6 @@ export class AssetEditorTabPageComponent {
                     if (this._location.path().match(/(\w+)/g)?.[3] === 'new') {
                         this._location.replaceState(this._location.path().replace(/new/, String(asset.assetId)));
                     }
-
-                    const siblingAssets = [...asset.siblingXAssets];
-                    const knownSiblingAssetsIds = new Set(siblingAssets.map(({ assetId }) => assetId));
-                    for (const siblingAsset of asset.siblingYAssets) {
-                        if (knownSiblingAssetsIds.has(siblingAsset.assetId)) {
-                            continue;
-                        }
-                        siblingAssets.push(siblingAsset)
-                    }
-
                     this._form.patchValue({
                         general: {
                             id: asset.assetId,
@@ -137,7 +127,7 @@ export class AssetEditorTabPageComponent {
                             thisAssetId: asset.assetId,
                             assetMain: O.toNullable(asset.assetMain),
                             childAssets: asset.subordinateAssets,
-                            siblingAssets,
+                            siblingAssets: [...asset.siblingXAssets, ...asset.siblingYAssets],
                         },
                         administration: {
                             sgsId: asset.sgsId,
