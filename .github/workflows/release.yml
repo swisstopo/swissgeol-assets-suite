@@ -1,82 +1,50 @@
-name: release
-
 on:
   workflow_dispatch:
     inputs:
-      VERSION:
-        description: "Version number (e.g. 1.2.3)"
+      version:
+        description: "Version number (e.g. 1.12)"
         required: true
-
-env:
-  VERSION: ${{ github.event.inputs.VERSION }}
-  BASE_IMAGE_NAME: ghcr.io/geoadmin/swissgeol-assets
-  GH_TOKEN: ${{ github.token }}
-
 jobs:
-
-  retag-docker-image:
+  release_app:
+    name: release app
+    needs:
+      - read_version
     runs-on: ubuntu-latest
-    name: Push updated Docker image
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - name: Login to GitHub Packages
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
 
-      - name: Build and push docker image (app)
-        uses: ./.github/actions/create-image
-        with:
-          IMAGE_NAME: ${{ env.BASE_IMAGE_NAME }}-app
-          VERSION: ${{ env.VERSION }}
-          PREFIX: v
-          TAG: release
-          CACHE: release-candidate
-          LATEST: true
-          DOCKERFILE: ./apps/client-asset-sg/docker/Dockerfile
-          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Pull docker image
+        run: docker pull ${{ vars.BASE_IMAGE_NAME }}-app:release-candidate
 
-      - name: Build and push docker image (api)
-        uses: ./.github/actions/create-image
-        with:
-          IMAGE_NAME: ${{ env.BASE_IMAGE_NAME }}-api
-          VERSION: ${{ env.VERSION }}
-          PREFIX: v
-          TAG: release
-          CACHE: release-candidate
-          LATEST: true
-          DOCKERFILE: ./apps/server-asset-sg/docker/Dockerfile
-          TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      
-  patch-changelog:
+      - name: Tag docker image
+        run: |
+          docker tag ${{ vars.BASE_IMAGE_NAME }}-app:release-candidate ${{ vars.BASE_IMAGE_NAME }}-app:${{ inputs.VERSION }}
+          docker tag ${{ vars.BASE_IMAGE_NAME }}-app:release-candidate ${{ vars.BASE_IMAGE_NAME }}-app:latest
+
+      - name: Push docker image
+        run: |
+          docker push ${{ vars.BASE_IMAGE_NAME }}-app:${{ inputs.VERSION }}
+          docker push ${{ vars.BASE_IMAGE_NAME }}-app:latest
+
+  release_api:
+    name: release api
+    needs:
+      - read_version
     runs-on: ubuntu-latest
-    name: Patch CHANGELOG.md and update GitHub release notes
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - name: Login to GitHub Packages
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
 
-      - name: Set environment variables
-        run: |
-          echo GIT_BRANCH_NAME=mark-version-${VERSION#v}-as-released >> $GITHUB_ENV
-          echo GIT_COMMIT_MESSAGE=Mark version ${VERSION#v} as released >> $GITHUB_ENV
-          echo RELEASE_ID=$(gh api -H "Accept: application/vnd.github+json" /repos/${GITHUB_REPOSITORY}/releases/tags/v${VERSION} | jq '.id') >> $GITHUB_ENV
+      - name: Pull docker image
+        run: docker pull ${{ vars.BASE_IMAGE_NAME }}-api:release-candidate
 
-      - name: Get changelog for this specific release and update release notes
+      - name: Tag docker image
         run: |
-          gh api \
-            --method PATCH \
-            --header "Accept: application/vnd.github+json" \
-            /repos/${GITHUB_REPOSITORY}/releases/${RELEASE_ID} \
-            -f body="$(./get-changelog.sh)"
+          docker tag ${{ vars.BASE_IMAGE_NAME }}-api:release-candidate ${{ vars.BASE_IMAGE_NAME }}-api:${{ inputs.VERSION }}
+          docker tag ${{ vars.BASE_IMAGE_NAME }}-api:release-candidate ${{ vars.BASE_IMAGE_NAME }}-api:latest
 
-      - name: Checkout new branch and patch changelog
+      - name: Push docker image
         run: |
-          git checkout -b $GIT_BRANCH_NAME
-          sed -i "/^\#\# \[Unreleased\]$/a \\\n\#\# $VERSION - $(date '+%Y-%m-%d')" CHANGELOG.md
-
-      - name: Commit, push and create pull request
-        run: |
-          git config --global user.email "suport@ebp.ch"
-          git config --global user.name "ebp-build"
-          git commit -am "$GIT_COMMIT_MESSAGE"
-          git push --set-upstream origin $GIT_BRANCH_NAME
-          gh pr create --title "$GIT_COMMIT_MESSAGE" --body ""
+          docker push ${{ vars.BASE_IMAGE_NAME }}-api:${{ inputs.VERSION }}
+          docker push ${{ vars.BASE_IMAGE_NAME }}-api:latest
