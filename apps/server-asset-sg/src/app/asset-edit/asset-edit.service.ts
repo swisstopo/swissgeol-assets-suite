@@ -196,32 +196,10 @@ export class AssetEditService {
         return pipe(
             TE.tryCatch(
                 () =>
-                    this.prismaService.assetXAssetY.findMany({
+                    this.prismaService.assetXAssetY.deleteMany({
                         where: { OR: [{ assetXId: assetId }, { assetYId: assetId }] },
                     }),
                 unknownToUnknownError,
-            ),
-            TE.map(dbSiblingAssets =>
-                dbSiblingAssets.filter(
-                    a =>
-                        !patchAsset.siblingAssetIds.includes(a.assetXId) &&
-                        !patchAsset.siblingAssetIds.includes(a.assetYId),
-                ),
-            ),
-            TE.chain(dbSiblingAssetsToDelete =>
-                pipe(
-                    dbSiblingAssetsToDelete,
-                    A.map(({ assetXId, assetYId }) =>
-                        TE.tryCatch(
-                            () =>
-                                this.prismaService.assetXAssetY.delete({
-                                    where: { assetXId_assetYId: { assetXId, assetYId } },
-                                }),
-                            unknownToUnknownError,
-                        ),
-                    ),
-                    A.sequence(TE.ApplicativeSeq),
-                ),
             ),
             TE.chain(() =>
                 TE.tryCatch(
