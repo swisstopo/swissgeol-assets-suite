@@ -1,6 +1,3 @@
-PUT /swissgeol_asset_asset
-
-PUT /swissgeol_asset_asset/_mapping
 {
   "properties": {
     "assetId": {
