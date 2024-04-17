@@ -101,7 +101,7 @@ jobs:
 
   build_and_push_app:
     name: 'build and push app'
-    if: github.event_name == 'push' && github.ref == 'refs/head/develop'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
     needs:
       - build
     runs-on: ubuntu-latest
@@ -115,7 +115,7 @@ jobs:
 
   build_and_push_api:
     name: 'build and push api'
-    if: github.event_name == 'push' && github.ref == 'refs/head/develop'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
     needs:
       - build
     runs-on: ubuntu-latest
@@ -155,7 +155,7 @@ jobs:
 
   tag_rc_image:
     name: tag rc image
-    if: github.event_name == 'push' && github.ref == 'refs/head/main'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs:
       - build
     runs-on: ubuntu-latest
