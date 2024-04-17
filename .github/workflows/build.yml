@@ -62,7 +62,6 @@ jobs:
     needs:
       - test
       - lint
-      - build
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -78,8 +77,6 @@ jobs:
     name: 'build and push app'
     if: github.event_name == 'push' && github.ref == 'refs/head/develop'
     needs:
-      - test
-      - lint
       - build
     runs-on: ubuntu-latest
     steps:
@@ -94,8 +91,6 @@ jobs:
     name: 'build and push api'
     if: github.event_name == 'push' && github.ref == 'refs/head/develop'
     needs:
-      - test
-      - lint
       - build
     runs-on: ubuntu-latest
     steps:
@@ -134,8 +129,6 @@ jobs:
     name: tag rc image
     if: github.event_name == 'push' && github.ref == 'refs/head/main'
     needs:
-      - test
-      - lint
       - build
     runs-on: ubuntu-latest
     steps:
