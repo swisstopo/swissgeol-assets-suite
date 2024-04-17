@@ -129,7 +129,9 @@ jobs:
 
   tag_edge_commit:
     name: 'tag edge commit'
-    needs: build_and_push_api
+    needs:
+      - build_and_push_app
+      - build_and_push_api
     runs-on: ubuntu-latest
     steps:
       - name: Create/update tag
