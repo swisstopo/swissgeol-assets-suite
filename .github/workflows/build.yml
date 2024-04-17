@@ -88,6 +88,12 @@ jobs:
         with:
           path: ~/.npm
           key: "${{ runner.os }}-npm-${{ steps.cache-node-modules.outputs.cache-key }}"
+      - name: Debug 1
+        run: pwd
+      - name: Debug 2
+        run: ls -l
+      - name: Debug 3
+        run: ls -l node_modules/
       - name: Run build
         run: npm run build
 
