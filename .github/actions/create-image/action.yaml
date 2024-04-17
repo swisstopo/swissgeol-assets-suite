@@ -31,8 +31,6 @@ runs:
         labels: |
           org.opencontainers.image.created=${{ env.COMMITED_AT }}
           org.opencontainers.image.maintainer=EBP Schweiz AG
-        # TODO decide how to set versions
-        # org.opencontainers.image.version=${{ inputs.VERSION }}
         flavor: |
           latest=false
         tags: |
