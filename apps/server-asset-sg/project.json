@@ -10,10 +10,10 @@
                 "parallel": false,
                 "commands": [
                     {
-                        "command": "nx run server-asset-sg:gen-prisma-client"
+                        "command": "npx nx run server-asset-sg:gen-prisma-client"
                     },
                     {
-                        "command": "nx run server-asset-sg:build-app"
+                        "command": "npx nx run server-asset-sg:build-app"
                     },
                     {
                         "command": "npx shx cp apps/server-asset-sg/docker/* dist/apps/server-asset-sg"
