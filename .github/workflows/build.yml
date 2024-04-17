@@ -106,8 +106,32 @@ jobs:
           TAG: edge
           DOCKERFILE: ./apps/server-asset-sg/docker/Dockerfile
 
-  release_candidate:
-    name: tag release candidate
+  tag_edge_commit:
+    name: 'tag edge commit'
+    needs: build_and_push_api
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create/update tag
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.git.createRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: 'refs/tags/edge',
+              sha: context.sha
+            }).catch(err => {
+              if (err.status !== 422) throw err;
+              github.rest.git.updateRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: 'tags/edge',
+                sha: context.sha
+              });
+            })
+
+  tag_rc_image:
+    name: tag rc image
     if: github.event_name == 'push' && github.ref == 'refs/head/main'
     needs:
       - test
@@ -126,3 +150,27 @@ jobs:
 
       - name: Push docker image
         run: docker push ${{ vars.BASE_IMAGE_NAME }}-app:release-candidate
+
+  tag_rc_commit:
+    name: 'tag rc commit'
+    needs: tag_rc_image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create/update tag
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.git.createRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: 'refs/tags/release-candidate',
+              sha: context.sha
+            }).catch(err => {
+              if (err.status !== 422) throw err;
+              github.rest.git.updateRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: 'tags/release-candidate',
+                sha: context.sha
+              });
+            })
