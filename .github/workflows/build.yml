@@ -44,6 +44,8 @@ jobs:
         with:
           path: ./node_modules
           key: "${{ runner.os }}-npm-${{ steps.cache-node-modules.outputs.cache-key }}"
+      - name: Reset nx
+        run: npx nx reset
       - name: Run tests
         run: npm run test
 
@@ -62,6 +64,8 @@ jobs:
         with:
           path: ./node_modules
           key: "${{ runner.os }}-npm-${{ steps.cache-node-modules.outputs.cache-key }}"
+      - name: Reset nx
+        run: npx nx reset
       - name: Run lint
         run: npm run lint
 
@@ -88,6 +92,8 @@ jobs:
         with:
           path: ./node_modules
           key: "${{ runner.os }}-npm-${{ steps.cache-node-modules.outputs.cache-key }}"
+      - name: Reset nx
+        run: npx nx reset
       - name: Run build
         run: npm run build
 
