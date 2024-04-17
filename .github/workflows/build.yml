@@ -106,6 +106,8 @@ jobs:
       - build
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
       - name: Create image
         uses: ./.github/actions/create-image
         with:
@@ -120,6 +122,8 @@ jobs:
       - build
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
       - name: Create image
         uses: ./.github/actions/create-image
         with:
