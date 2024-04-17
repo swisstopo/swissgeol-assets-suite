@@ -19,7 +19,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+      - name: Cache node modules
+        uses: actions/cache@v2
+        with:
+          path: ~/.npm
+          key: "${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}"
+          restore-keys: |
+            ${{ runner.os }}-npm-
       - name: Install node dependencies
         run: npm install
 
@@ -33,7 +39,11 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+      - name: Restore cached node modules
+        uses: actions/cache@v2
+        with:
+          path: ~/.npm
+          key: "${{ runner.os }}-npm-${{ steps.cache-node-modules.outputs.cache-key }}"
       - name: Run tests
         run: npm run test
 
@@ -47,7 +57,11 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+      - name: Restore cached node modules
+        uses: actions/cache@v2
+        with:
+          path: ~/.npm
+          key: "${{ runner.os }}-npm-${{ steps.cache-node-modules.outputs.cache-key }}"
       - name: Run lint
         run: npm run lint
 
@@ -69,7 +83,11 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+      - name: Restore cached node modules
+        uses: actions/cache@v2
+        with:
+          path: ~/.npm
+          key: "${{ runner.os }}-npm-${{ steps.cache-node-modules.outputs.cache-key }}"
       - name: Run build
         run: npm run build
 
