@@ -28,10 +28,12 @@ jobs:
             ${{ runner.os }}-npm-
       - name: Install node dependencies
         run: npm ci
+      - name: Run postinstall
+        run: npm run postinstall
       - name: Generate prisma types
         run: |
           cd apps/server-asset-sg/
-          ng gen-prisma-client
+          npx ng gen-prisma-client
 
   test:
     runs-on: ubuntu-latest
