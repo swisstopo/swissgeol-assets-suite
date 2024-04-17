@@ -22,7 +22,7 @@ jobs:
       - name: Cache node modules
         uses: actions/cache@v2
         with:
-          path: ~/.npm
+          path: ./node_modules
           key: "${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}"
           restore-keys: |
             ${{ runner.os }}-npm-
@@ -42,10 +42,8 @@ jobs:
       - name: Restore cached node modules
         uses: actions/cache@v2
         with:
-          path: ~/.npm
+          path: ./node_modules
           key: "${{ runner.os }}-npm-${{ steps.cache-node-modules.outputs.cache-key }}"
-      - name: Install node dependencies
-        run: npm ci
       - name: Run tests
         run: npm run test
 
@@ -62,10 +60,8 @@ jobs:
       - name: Restore cached node modules
         uses: actions/cache@v2
         with:
-          path: ~/.npm
+          path: ./node_modules
           key: "${{ runner.os }}-npm-${{ steps.cache-node-modules.outputs.cache-key }}"
-      - name: Install node dependencies
-        run: npm ci
       - name: Run lint
         run: npm run lint
 
@@ -90,7 +86,7 @@ jobs:
       - name: Restore cached node modules
         uses: actions/cache@v2
         with:
-          path: ~/.npm
+          path: ./node_modules
           key: "${{ runner.os }}-npm-${{ steps.cache-node-modules.outputs.cache-key }}"
       - name: Run build
         run: npm run build
