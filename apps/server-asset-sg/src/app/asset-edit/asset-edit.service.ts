@@ -196,32 +196,10 @@ export class AssetEditService {
         return pipe(
             TE.tryCatch(
                 () =>
-                    this.prismaService.assetXAssetY.findMany({
+                    this.prismaService.assetXAssetY.deleteMany({
                         where: { OR: [{ assetXId: assetId }, { assetYId: assetId }] },
                     }),
                 unknownToUnknownError,
-            ),
-            TE.map(dbSiblingAssets =>
-                dbSiblingAssets.filter(
-                    a =>
-                        !patchAsset.siblingAssetIds.includes(a.assetXId) &&
-                        !patchAsset.siblingAssetIds.includes(a.assetYId),
-                ),
-            ),
-            TE.chain(dbSiblingAssetsToDelete =>
-                pipe(
-                    dbSiblingAssetsToDelete,
-                    A.map(({ assetXId, assetYId }) =>
-                        TE.tryCatch(
-                            () =>
-                                this.prismaService.assetXAssetY.delete({
-                                    where: { assetXId_assetYId: { assetXId, assetYId } },
-                                }),
-                            unknownToUnknownError,
-                        ),
-                    ),
-                    A.sequence(TE.ApplicativeSeq),
-                ),
             ),
             TE.chain(() =>
                 TE.tryCatch(
@@ -430,15 +408,15 @@ export class AssetEditService {
                 const d = new Date();
                 return file
                     ? fileNameWithoutTs +
-                          '_' +
-                          d.getFullYear() +
-                          (d.getMonth() + 1).toString().padStart(2, '0') +
-                          d.getDate().toString().padStart(2, '0') +
-                          d.getHours().toString().padStart(2, '0') +
-                          d.getMinutes().toString().padStart(2, '0') +
-                          d.getSeconds().toString().padStart(2, '0') +
-                          '.' +
-                          fileExtension
+                    '_' +
+                    d.getFullYear() +
+                    (d.getMonth() + 1).toString().padStart(2, '0') +
+                    d.getDate().toString().padStart(2, '0') +
+                    d.getHours().toString().padStart(2, '0') +
+                    d.getMinutes().toString().padStart(2, '0') +
+                    d.getSeconds().toString().padStart(2, '0') +
+                    '.' +
+                    fileExtension
                     : fileName;
             }),
             TE.bindTo('_fileName'),
