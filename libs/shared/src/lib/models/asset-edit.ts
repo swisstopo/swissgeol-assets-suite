@@ -1,5 +1,6 @@
 import { struct } from 'fp-ts/Eq';
 import { Eq as eqNumber } from 'fp-ts/number';
+import { Eq as eqString } from 'fp-ts/string';
 import * as C from 'io-ts/Codec';
 
 import { CT } from '@asset-sg/core';
@@ -29,11 +30,18 @@ export const ContactEdit = C.struct({
 });
 export interface ContactEdit extends C.TypeOf<typeof ContactEdit> {}
 
+export const AssetLanguageEdit = C.struct({
+    languageItemCode: C.string,
+});
+export interface AssetLanguageEdit extends C.TypeOf<typeof AssetLanguageEdit> {}
+export const eqAssetLanguageEdit = struct({
+    languageItemCode: eqString,
+});
+
 export const AssetContactEdit = C.struct({
     role: AssetContactRole,
     contactId: C.number,
 });
-
 export interface AssetContactEdit extends C.TypeOf<typeof AssetContactEdit> {}
 export const eqAssetContactEdit = struct({
     role: eqAssetContactRole,
@@ -55,7 +63,6 @@ export const BaseAssetEditDetail = {
     internalUse: AssetUsage,
     assetKindItemCode: C.string,
     assetFormatItemCode: C.string,
-    languageItemCode: C.string,
     isNatRel: C.boolean,
     sgsId: C.nullable(C.number),
     geolDataInfo: C.nullable(C.string),
@@ -63,6 +70,7 @@ export const BaseAssetEditDetail = {
     geolAuxDataInfo: C.nullable(C.string),
     municipality: C.nullable(C.string),
     ids: C.array(C.struct({ idId: C.number, id: C.string, description: C.string })),
+    assetLanguages: C.array(AssetLanguageEdit),
     assetContacts: C.array(AssetContactEdit),
     manCatLabelRefs: C.array(C.string),
     assetFormatCompositions: C.array(C.string),

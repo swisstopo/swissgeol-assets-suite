@@ -30,12 +30,21 @@ const makeSearchAssets = (
     return pipe(
         assetQueryResults,
         NEA.map((a): SearchAsset => {
-            const { createDate, manCatLabelRefs, internalUse, publicUse, assetContacts, ...rest } = a;
+            const {
+                createDate,
+                manCatLabelRefs,
+                internalUse,
+                publicUse,
+                assetLanguages,
+                assetContacts,
+                ...rest
+            } = a;
             return {
                 ...rest,
                 createDate: dateIdFromDate(createDate),
                 manCatLabelItemCodes: manCatLabelRefs.map(m => m.manCatLabelItemCode),
                 usageCode: makeUsageCode(publicUse.isAvailable, internalUse.isAvailable),
+                languages: assetLanguages.map(a => ({ code: a.languageItemCode })),
                 contacts: assetContacts.map(c => ({ role: c.role, id: c.contactId })),
                 score: 1,
                 studies: pipe(
@@ -86,7 +95,8 @@ const makeSearchAssetResultNonEmpty = (assets: NEA.NonEmptyArray<SearchAsset>) =
                 languageItemCodes: makeBuckets(
                     pipe(
                         assets,
-                        A.map(a => a.languageItemCode),
+                        A.map(a => a.languages.map((l) => l.code)),
+                        A.flatten,
                     ),
                 ),
                 usageCodes: makeBuckets(
@@ -152,10 +162,10 @@ export const searchAssetQuery = makeSearchAssetQuery({
         createDate: true,
         assetKindItemCode: true,
         assetFormatItemCode: true,
-        languageItemCode: true,
         internalUse: { select: { isAvailable: true } },
         publicUse: { select: { isAvailable: true } },
         manCatLabelRefs: { select: { manCatLabelItemCode: true } },
+        assetLanguages: { select: { languageItemCode: true } },
         assetContacts: { select: { role: true, contactId: true } },
     },
 });

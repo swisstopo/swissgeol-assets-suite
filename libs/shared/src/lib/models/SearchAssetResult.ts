@@ -13,10 +13,10 @@ export const SearchAsset = C.struct({
     createDate: DateId,
     assetKindItemCode: C.string,
     assetFormatItemCode: C.string,
-    languageItemCode: C.string,
     manCatLabelItemCodes: C.array(C.string),
     score: C.number,
     studies: StudyDTOs,
+    languages: C.array(C.struct({ code: C.string })),
     contacts: C.array(C.struct({ role: C.string, id: C.number })),
     usageCode: UsageCode,
 });

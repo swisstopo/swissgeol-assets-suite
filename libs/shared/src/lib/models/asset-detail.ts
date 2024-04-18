@@ -40,12 +40,31 @@ export const BaseAssetDetail = {
     usageCode: UsageCode,
     assetKindItemCode: C.string,
     assetFormatItemCode: C.string,
-    languageItemCode: C.string,
     ids: C.array(
         C.struct({
             id: C.string,
             description: C.string,
         }),
+    ),
+    assetLanguages: C.array(
+        C.struct({
+            languageItem: C.struct({
+                languageItemCode: C.string,
+                geolCode: C.string,
+                name: C.string,
+                nameDe: C.string,
+                nameFr: C.string,
+                nameRm: C.string,
+                nameIt: C.string,
+                nameEn: C.string,
+                description: C.string,
+                descriptionDe: C.string,
+                descriptionFr: C.string,
+                descriptionRm: C.string,
+                descriptionIt: C.string,
+                descriptionEn: C.string,
+            }),
+        })
     ),
     assetContacts: C.array(
         C.struct({
