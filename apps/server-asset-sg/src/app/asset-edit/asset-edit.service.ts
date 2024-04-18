@@ -1,5 +1,3 @@
-import { basename } from 'node:path';
-
 import { Injectable } from '@nestjs/common';
 import { Contact } from '@prisma/client';
 import * as A from 'fp-ts/Array';
@@ -58,7 +56,6 @@ export class AssetEditService {
                             processor: true,
                             assetKindItemCode: true,
                             assetFormatItemCode: true,
-                            languageItemCode: true,
                             internalUse: true,
                             publicUse: true,
                             isNatRel: true,
@@ -68,6 +65,7 @@ export class AssetEditService {
                             geolAuxDataInfo: true,
                             municipality: true,
                             ids: true,
+                            assetLanguages: { select: { languageItemCode: true } },
                             assetContacts: { select: { role: true, contactId: true } },
                             manCatLabelRefs: { select: { manCatLabelItemCode: true } },
                             assetFormatCompositions: { select: { assetFormatItemCode: true } },
@@ -113,7 +111,6 @@ export class AssetEditService {
                             receiptDate: DateIdFromDate.encode(patchAsset.receiptDate),
                             assetKindItem: { connect: { assetKindItemCode: patchAsset.assetKindItemCode } },
                             assetFormatItem: { connect: { assetFormatItemCode: patchAsset.assetFormatItemCode } },
-                            languageItem: { connect: { languageItemCode: patchAsset.languageItemCode } },
                             isExtract: false,
                             isNatRel: patchAsset.isNatRel,
                             lastProcessedDate: new Date(),
@@ -125,6 +122,9 @@ export class AssetEditService {
                                     })),
                                     skipDuplicates: true,
                                 },
+                            },
+                            assetLanguages: {
+                                createMany: { data: patchAsset.assetLanguages, skipDuplicates: true },
                             },
                             assetContacts: {
                                 createMany: { data: patchAsset.assetContacts, skipDuplicates: true },
@@ -223,7 +223,6 @@ export class AssetEditService {
                                 receiptDate: DateIdFromDate.encode(patchAsset.receiptDate),
                                 assetKindItemCode: patchAsset.assetKindItemCode,
                                 assetFormatItemCode: patchAsset.assetFormatItemCode,
-                                languageItemCode: patchAsset.languageItemCode,
                                 isNatRel: patchAsset.isNatRel,
                                 assetMainId: O.toUndefined(patchAsset.assetMainId),
                                 lastProcessedDate: new Date(),
@@ -236,6 +235,10 @@ export class AssetEditService {
                                         })),
                                         skipDuplicates: true,
                                     },
+                                },
+                                assetLanguages: {
+                                    deleteMany: {},
+                                    createMany: { data: patchAsset.assetLanguages, skipDuplicates: true },
                                 },
                                 assetContacts: {
                                     deleteMany: {},
@@ -485,13 +488,16 @@ const createElasticSearchAsset = (asset: AssetEditDetailFromPostgres, contacts: 
     sgsId: asset.sgsId,
     createDate: asset.createDate,
     assetKindItemCode: asset.assetKindItemCode,
-    languageItemCode: asset.languageItemCode,
     usageCode: asset.publicUse.isAvailable ? 'public' : asset.internalUse.isAvailable ? 'internal' : 'useOnRequest',
     authorIds: pipe(
         asset.assetContacts,
         A.filter(c => c.role === 'author'),
         A.map(c => c.contactId),
     ),
+
+    // TODO Replace this as soon as ES supports multi-language assets (DVA, 2024-04-18).
+    languageItemCode: asset.assetLanguages[0]?.languageItemCode ?? 'unknown',
+
     contactNames: pipe(
         asset.assetContacts,
         A.map(c =>

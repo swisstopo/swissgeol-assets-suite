@@ -1,4 +1,5 @@
 import { pipe } from 'fp-ts/function';
+import * as C from 'io-ts/Codec';
 import * as D from 'io-ts/Decoder';
 
 import { DT } from '@asset-sg/core';
@@ -23,12 +24,31 @@ export const AssetDetailFromPostgres = pipe(
         ),
         assetKindItemCode: D.string,
         assetFormatItemCode: D.string,
-        languageItemCode: D.string,
         ids: D.array(
             D.struct({
                 id: D.string,
                 description: D.string,
             }),
+        ),
+        assetLanguages: D.array(
+            D.struct({
+                languageItem: D.struct({
+                    languageItemCode: C.string,
+                    geolCode: C.string,
+                    name: C.string,
+                    nameDe: C.string,
+                    nameFr: C.string,
+                    nameRm: C.string,
+                    nameIt: C.string,
+                    nameEn: C.string,
+                    description: C.string,
+                    descriptionDe: C.string,
+                    descriptionFr: C.string,
+                    descriptionRm: C.string,
+                    descriptionIt: C.string,
+                    descriptionEn: C.string,
+                }),
+            })
         ),
         assetContacts: D.array(
             D.struct({

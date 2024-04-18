@@ -241,10 +241,10 @@ export class AppService {
                             authorIds: { terms: { field: 'authorIds', size: 1000 } },
                             minCreateDate: { min: { field: 'createDate' } },
                             maxCreateDate: { max: { field: 'createDate' } },
-                            assetKindItemCodes: { terms: { field: 'assetKindItemCode' } },
-                            manCatLabelItemCodes: { terms: { field: 'manCatLabelItemCodes' } },
-                            languageItemCodes: { terms: { field: 'languageItemCode' } },
-                            usageCodes: { terms: { field: 'usageCode' } },
+                            assetKindItemCodes: { terms: { field: 'assetKindItemCode.keyword' } },
+                            manCatLabelItemCodes: { terms: { field: 'manCatLabelItemCodes.keyword' } },
+                            languageItemCodes: { terms: { field: 'languageItemCode.keyword' } },
+                            usageCodes: { terms: { field: 'usageCode.keyword' } },
                         },
                         fields: ['assetId'],
                         _source: false,
@@ -273,7 +273,7 @@ export class AppService {
 	                            a.create_date as "createDate",
                                 a.asset_kind_item_code as "assetKindItemCode",
                                 a.asset_format_item_code as "assetFormatItemCode",
-                                a.language_item_code as "languageItemCode",
+                                l.language_item_code as "languageItemCode",
                                 mclr.man_cat_label_item_code as "manCatLabelItemCode",
                                 ac.contact_id as "contactId",
                                 ac.role as "contactRole",
@@ -288,7 +288,10 @@ export class AppService {
 							on  ius.internal_use_id = a.internal_use_id							    
 							inner join
 								public_use pus
-							on  pus.public_use_id = a.public_use_id							    
+							on  pus.public_use_id = a.public_use_id
+                            left join
+                                public.asset_language l
+                                on l.asset_id = a.asset_id			    
                             left join
 	                            all_study s
                             on  s.asset_id = a.asset_id
@@ -438,7 +441,6 @@ export class AppService {
                             lastProcessedDate: true,
                             assetKindItemCode: true,
                             assetFormatItemCode: true,
-                            languageItemCode: true,
                             internalUse: { select: { isAvailable: true } },
                             publicUse: { select: { isAvailable: true } },
                             ids: { select: { id: true, description: true } },
@@ -447,6 +449,28 @@ export class AppService {
                                     role: true,
                                     contact: { select: { name: true, locality: true, contactKindItemCode: true } },
                                 },
+                            },
+                            assetLanguages: {
+                                select: {
+                                    languageItem: {
+                                        select: {
+                                            languageItemCode: true,
+                                            geolCode: true,
+                                            name: true,
+                                            nameDe: true,
+                                            nameFr: true,
+                                            nameRm: true,
+                                            nameIt: true,
+                                            nameEn: true,
+                                            description: true,
+                                            descriptionDe: true,
+                                            descriptionFr: true,
+                                            descriptionRm: true,
+                                            descriptionIt: true,
+                                            descriptionEn: true,
+                                        }
+                                    }
+                                }
                             },
                             manCatLabelRefs: { select: { manCatLabelItemCode: true } },
                             assetFormatCompositions: { select: { assetFormatItemCode: true } },
@@ -477,12 +501,12 @@ export class AppService {
 const DBResultRaw = D.struct({
     assetId: D.number,
     titlePublic: D.string,
+    languageItemCode: DT.optionFromNullable(D.string),
     contactId: DT.optionFromNullable(D.number),
     contactRole: DT.optionFromNullable(D.string),
     createDate: DateIdFromDate,
     assetKindItemCode: D.string,
     assetFormatItemCode: D.string,
-    languageItemCode: D.string,
     manCatLabelItemCode: DT.optionFromNullable(D.string),
     internalUse: D.boolean,
     publicUse: D.boolean,
@@ -500,15 +524,16 @@ type DBResult = {
     createDate: DateId;
     assetKindItemCode: string;
     assetFormatItemCode: string;
-    languageItemCode: string;
     manCatLabelItemCodes: Array<string>;
     usageCode: UsageCode;
+    languages: Array<{ code: string }>;
     contacts: Array<{ role: string; id: number }>;
     studies: Array<{ studyId: string; geomText: string }>;
 };
 
 const eqStudyByStudyId = contramap((x: { studyId: string; geomText: string }) => x.studyId)(S.Eq);
 const eqContactByContactId = contramap((x: { contactId: number; contactRole: string }) => x.contactId)(N.Eq);
+const eqLanguageByLanguageItemCode = contramap((x: { languageItemCode: string }) => x.languageItemCode)(S.Eq);
 
 const dbResultRawToDBResult = (dbResultRawList: NEA.NonEmptyArray<DBResultRaw>): DBResult => {
     const {
@@ -517,7 +542,6 @@ const dbResultRawToDBResult = (dbResultRawList: NEA.NonEmptyArray<DBResultRaw>):
         createDate,
         assetFormatItemCode,
         assetKindItemCode,
-        languageItemCode,
         internalUse,
         publicUse,
     } = NEA.head(dbResultRawList);
@@ -527,7 +551,13 @@ const dbResultRawToDBResult = (dbResultRawList: NEA.NonEmptyArray<DBResultRaw>):
         createDate,
         assetFormatItemCode,
         assetKindItemCode,
-        languageItemCode,
+        languages: pipe(
+            dbResultRawList,
+            NEA.map(x => sequenceS(O.Apply)({ languageItemCode: x.languageItemCode })),
+            A.compact,
+            A.uniq(eqLanguageByLanguageItemCode),
+            A.map(a => ({ code: a.languageItemCode })),
+        ),
         contacts: pipe(
             dbResultRawList,
             NEA.map(x => sequenceS(O.Apply)({ contactId: x.contactId, contactRole: x.contactRole })),
