@@ -3,7 +3,7 @@ import { AbstractControl, FormBuilder, FormControl, ValidatorFn, Validators } fr
 
 import {
     AssetContactEdit,
-    AssetFile,
+    AssetFile, AssetLanguageEdit,
     DateId,
     LinkedAsset,
     StatusAssetUseCode,
@@ -27,7 +27,7 @@ const makeAssetEditorGeneralFormGroup = (formBuilder: FormBuilder) =>
         }),
         assetKindItemCode: new FormControl<string>('', { nonNullable: true, validators: Validators.required }),
         assetFormatItemCode: new FormControl<string>('', { nonNullable: true, validators: Validators.required }),
-        languageItemCode: new FormControl<string>('', { nonNullable: true, validators: Validators.required }),
+        assetLanguages: new FormControl<AssetLanguageEdit[]>([], { nonNullable: true }),
         manCatLabelRefs: new FormControl<string[]>(['other'], { nonNullable: true }),
         ids: new FormControl<IdVM[]>([], { nonNullable: true }),
         assetFiles: new FormControl<(AssetFile & { willBeDeleted: boolean })[]>([], { nonNullable: true }),
