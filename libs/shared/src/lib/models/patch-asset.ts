@@ -2,7 +2,7 @@ import * as C from 'io-ts/Codec';
 
 import { CT } from '@asset-sg/core';
 
-import { AssetContactEdit } from './asset-edit';
+import { AssetContactEdit, AssetLanguageEdit } from './asset-edit';
 import { AssetUsage } from './asset-usage';
 import { DateId } from './DateStruct';
 
@@ -15,10 +15,10 @@ export const PatchAsset = C.struct({
     internalUse: AssetUsage,
     assetKindItemCode: C.string,
     assetFormatItemCode: C.string,
-    languageItemCode: C.string,
     isNatRel: C.boolean,
     manCatLabelRefs: C.array(C.string),
     typeNatRels: C.array(C.string),
+    assetLanguages: C.array(AssetLanguageEdit),
     assetContacts: C.array(AssetContactEdit),
     ids: C.array(
         C.struct({
