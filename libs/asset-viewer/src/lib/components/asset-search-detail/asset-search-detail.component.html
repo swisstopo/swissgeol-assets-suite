@@ -115,7 +115,13 @@
                     </tr>
                     <tr>
                         <th translate="search.language"></th>
-                        <td>{{ rdAssetDetail.value.languageItem | valueItemName }}</td>
+                        <td>
+                            <ul class="languages">
+                                <li
+                                    *ngFor="let language of rdAssetDetail.value.languages"
+                                >{{ language | valueItemName }}</li>
+                            </ul>
+                        </td>
                     </tr>
                     <tr>
                         <th translate="search.format"></th>

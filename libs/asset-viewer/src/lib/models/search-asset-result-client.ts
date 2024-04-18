@@ -14,7 +14,9 @@ export const SearchAssetClient = D.struct({
     createDate: DateId,
     assetKindItemCode: D.string,
     assetFormatItemCode: D.string,
-    languageItemCode: D.string,
+    languages: D.array(D.struct({
+        code: D.string,
+    })),
     manCatLabelItemCodes: D.array(D.string),
     usageCode: UsageCode,
     score: D.number,

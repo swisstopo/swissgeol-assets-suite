@@ -17,6 +17,7 @@ import {
 } from 'rxjs';
 
 import { fromAppShared } from '@asset-sg/client-shared';
+import { eqAssetLanguageEdit } from '@asset-sg/shared';
 
 import { eqIdVM } from '../../models';
 import { AssetEditorFormGroup, AssetEditorGeneralFormGroup } from '../asset-editor-form-group';
@@ -262,4 +263,6 @@ export class AssetEditorTabGeneralComponent implements OnInit {
         );
         this._form.markAsDirty();
     }
+    
+    public eqAssetLanguageEdit = eqAssetLanguageEdit
 }
