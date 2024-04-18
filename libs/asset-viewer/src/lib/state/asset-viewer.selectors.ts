@@ -272,7 +272,7 @@ export type RDStudiesVM = RD.RemoteData<ApiError | SearchAssetResultEmptyError, 
 const makeAssetDetailVM = (referenceData: ReferenceData, assetDetail: AssetDetail, locale: string) => {
     const {
         assetFormatItemCode,
-        languageItemCode,
+        assetLanguages,
         assetKindItemCode,
         assetContacts,
         manCatLabelRefs,
@@ -290,7 +290,7 @@ const makeAssetDetailVM = (referenceData: ReferenceData, assetDetail: AssetDetai
         ...rest,
         assetKindItem: referenceData.assetKindItems[assetKindItemCode],
         assetFormatItem: referenceData.assetFormatItems[assetFormatItemCode],
-        languageItem: referenceData.languageItems[languageItemCode],
+        languages: assetLanguages.map(({ languageItem: { languageItemCode: code, ...restL } }) => ({ code, ...restL })),
         contacts: assetContacts.map(contact => makeAssetDetailContactVM(referenceData, contact)),
         manCatLabels: manCatLabelRefs.map(manCatLabelItemCode => referenceData.manCatLabelItems[manCatLabelItemCode]),
         assetFormatCompositions: assetFormatCompositions.map(
@@ -403,7 +403,7 @@ const matchFromOption = <T>(a: O.Option<T>, predicate: (b: T) => boolean): boole
 const matchLanguageItemCode = (refinement: BaseClientAssetSearchRefinement, asset: SearchAssetVM): boolean =>
     pipe(
         refinement.languageItemCodes,
-        O.map(cs => cs.some(languageCode => languageCode === asset.languageItem.code)),
+        O.map(cs => cs.some(languageCode => undefined !== asset.languageItems.find(({ code }) => code === languageCode))),
         O.getOrElse(() => true),
     );
 
@@ -498,13 +498,13 @@ const doesAssetMatchRefinement =
         );
 
 const _makeSearchAssetVM = (referenceData: ReferenceData) => (asset: SearchAssetClient) => {
-    const { assetKindItemCode, assetFormatItemCode, contacts, languageItemCode, ...rest } = asset;
+    const { assetKindItemCode, assetFormatItemCode, contacts, languages, ...rest } = asset;
     return {
         ...rest,
         assetFormatItem: referenceData.assetFormatItems[assetFormatItemCode],
         assetKindItem: referenceData.assetKindItems[assetKindItemCode],
         manCatLabelItems: asset.manCatLabelItemCodes.map(code => referenceData.manCatLabelItems[code]),
-        languageItem: referenceData.languageItems[languageItemCode],
+        languageItems: languages.map(({ code }) => referenceData.languageItems[code]),
         authors: contacts
             .filter(c => c.role === 'author')
             .map(c => ({ role: c.role, contact: referenceData.contacts[c.id.toString()] })),

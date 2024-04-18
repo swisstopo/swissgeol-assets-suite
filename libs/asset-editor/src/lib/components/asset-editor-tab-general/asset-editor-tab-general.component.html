@@ -66,11 +66,16 @@
                 </mat-form-field>
                 <mat-form-field class="mb-2">
                     <mat-label translate>edit.tabs.general.language</mat-label>
-                    <mat-select formControlName="languageItemCode">
+                    <mat-select
+                        multiple
+                        formControlName="assetLanguages"
+                        [compareWith]="eqAssetLanguageEdit.equals"
+                    >
                         <mat-option
                             class="ellipsis"
                             *ngFor="let language of vm.languageItemArray"
-                            [value]="language.code">
+                            [value]="{ languageItemCode: language.code }"
+                        >
                             {{ language | valueItemName }}
                         </mat-option>
                     </mat-select>
