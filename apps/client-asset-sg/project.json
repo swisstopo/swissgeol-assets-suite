@@ -84,8 +84,7 @@
       },
       "defaultConfiguration": "development",
       "options": {
-        "proxyConfig": "apps/client-asset-sg/proxy.conf.json",
-        "port": 3000
+        "proxyConfig": "apps/client-asset-sg/proxy.conf.json"
       }
     },
     "extract-i18n": {
