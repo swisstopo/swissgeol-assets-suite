@@ -3,6 +3,7 @@ import { Client } from '@elastic/elasticsearch';
 import { PrismaClient } from '@prisma/client';
 import * as A from 'fp-ts/Array';
 import * as E from 'fp-ts/Either';
+import * as O from 'fp-ts/Option';
 import { Eq, struct } from 'fp-ts/Eq';
 import { flow, pipe } from 'fp-ts/function';
 import * as NEA from 'fp-ts/NonEmptyArray';
@@ -12,8 +13,8 @@ import * as D from 'io-ts/Decoder';
 import * as G from 'io-ts/Guard';
 import { Overwrite } from 'type-zoo';
 
-import { isNotNil } from '../../../../../libs/core/src/';
-import { ElasticSearchAsset } from '../../../../../libs/shared/src/';
+import { isNotNil } from '@asset-sg/core';
+import { ElasticSearchAsset } from '@asset-sg/shared';
 
 export interface DateIdBrand {
     readonly DateId: unique symbol;
@@ -56,7 +57,7 @@ const main = async () => {
             sgsId: D.nullable(D.number),
             createDate: DateIdFromDate,
             assetKindItemCode: D.string,
-            languageItemCode: D.string,
+            languageItemCode: D.nullable(D.string),
             authorId: D.nullable(D.number),
             contactName: D.nullable(D.string),
             manCatLabelItemCode: D.nullable(D.string),
@@ -75,7 +76,7 @@ const main = async () => {
                 a.sgs_id as "sgsId",
                 a.create_date as "createDate",
 				a.asset_kind_item_code as "assetKindItemCode",
-				a.language_item_code as "languageItemCode",
+				l.language_item_code as "languageItemCode",
                 ac.contact_id as "authorId",
                 c.name as "contactName",
 				mclr.man_cat_label_item_code as "manCatLabelItemCode",
@@ -83,6 +84,9 @@ const main = async () => {
                 pu.is_available as "publicUseIsAvailable"
             from
                 public.asset a
+			left join
+				public.asset_language l
+				on l.asset_id = a.asset_id
             left join
                 public.asset_contact ac
                 on  ac.role = ${'author'}
@@ -124,13 +128,22 @@ const main = async () => {
                             sgsId: NEA.head(a).sgsId,
                             createDate: NEA.head(a).createDate,
                             assetKindItemCode: NEA.head(a).assetKindItemCode,
-                            languageItemCode: NEA.head(a).languageItemCode,
                             usageCode,
                             authorIds: pipe(
                                 a,
                                 A.map(at => at.authorId),
                                 A.filter(isNotNil),
                                 A.uniq(EqNumber),
+                            ),
+                            languageItemCode: pipe(
+                                a,
+                                A.map(at => at.languageItemCode),
+                                A.filter(isNotNil),
+                                A.uniq(EqString),
+
+                                // TODO Remove these as soon as ES supports multi-language assets (DVA, 2024-04-18).
+                                A.findFirst(() => true),
+                                O.getOrElse(() => 'unknown')
                             ),
                             contactNames: pipe(
                                 a,

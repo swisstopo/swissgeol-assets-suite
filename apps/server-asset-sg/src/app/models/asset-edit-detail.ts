@@ -2,7 +2,7 @@ import { pipe } from 'fp-ts/function';
 import * as D from 'io-ts/Decoder';
 
 import { DT } from '@asset-sg/core';
-import { AssetContactEdit, DateIdFromDate, LinkedAsset, StatusAssetUseCode } from '@asset-sg/shared';
+import { AssetContactEdit, AssetLanguageEdit, DateIdFromDate, LinkedAsset, StatusAssetUseCode } from '@asset-sg/shared';
 
 import { PostgresAllStudies } from '../postgres-studies/postgres-studies';
 
@@ -27,7 +27,6 @@ export const AssetEditDetailFromPostgres = pipe(
         }),
         assetKindItemCode: D.string,
         assetFormatItemCode: D.string,
-        languageItemCode: D.string,
         isNatRel: D.boolean,
         sgsId: D.nullable(D.number),
         geolDataInfo: D.nullable(D.string),
@@ -41,6 +40,7 @@ export const AssetEditDetailFromPostgres = pipe(
                 description: D.string,
             }),
         ),
+        assetLanguages: D.array(AssetLanguageEdit),
         assetContacts: D.array(AssetContactEdit),
         manCatLabelRefs: D.array(
             pipe(

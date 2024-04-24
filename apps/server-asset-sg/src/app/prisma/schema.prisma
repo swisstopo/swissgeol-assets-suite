@@ -135,8 +135,6 @@ model Asset {
     assetKindItemCode   String          @map("asset_kind_item_code")
     assetKindItem       AssetKindItem   @relation(fields: [assetKindItemCode], references: [assetKindItemCode])
     createDate          DateTime        @map("create_date")
-    languageItemCode    String          @map("language_item_code")
-    languageItem        LanguageItem    @relation(fields: [languageItemCode], references: [languageItemCode])
     assetFormatItemCode String          @map("asset_format_item_code")
     assetFormatItem     AssetFormatItem @relation(fields: [assetFormatItemCode], references: [assetFormatItemCode])
     authorBiblio        String?         @map("author_biblio_id")
@@ -155,6 +153,7 @@ model Asset {
     assetFormatCompositions AssetFormatComposition[]
     assetKindCompositions   AssetKindComposition[]
     assetPublications       AssetPublication[]
+    assetLanguages          AssetLanguage[]
     autoCats                AutoCat[]
     ids                     Id[]
     legalDocs               LegalDoc[]
@@ -629,9 +628,20 @@ model LanguageItem {
     descriptionIt    String @map("description_it")
     descriptionEn    String @map("description_en")
 
-    assets Asset[]
+    assets AssetLanguage[]
 
     @@map("language_item")
+    @@schema("public")
+}
+
+model AssetLanguage {
+    assetId Int   @map("asset_id")
+    asset   Asset @relation(fields: [assetId], references: [assetId])
+    languageItemCode    String          @map("language_item_code")
+    languageItem        LanguageItem    @relation(fields: [languageItemCode], references: [languageItemCode])
+
+    @@id([assetId, languageItemCode])
+    @@map("asset_language")
     @@schema("public")
 }
 
