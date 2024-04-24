@@ -31,40 +31,6 @@ export const deAppTranslations = {
         drawingModeOff: 'Der Zeichenmodus ist eingeschaltet. Klicken Sie, um den Zeichenmodus auszuschalten',
         dragHandleLabel: 'Ziehgriff',
     },
-    auth: {
-        signInHeading: 'Anmeldung in SwissGeol Asset',
-        email: 'E-Mail',
-        password: 'Passwort',
-        signIn: 'Anmelden',
-        forgotPassword: 'Passwort vergessen?',
-        invalidCredentials: 'Ungültige Anmeldedaten',
-        error: {
-            required: 'Dieses Feld ist erforderlich',
-            email: 'Bitte geben Sie eine gültige E-Mail-Adresse ein',
-        },
-        recovery: {
-            enterEmail:
-                'Geben Sie Ihre E-Mail-Adresse ein, und ein Link zum Zurücksetzen des Passworts wird Ihnen per E-Mail zugeschickt.',
-            backToLogin: 'Zurück zur Anmeldung',
-            tooManyRequests: 'Aus Sicherheitsgründen können Sie dies nur einmal alle 60 Sekunden anfordern.',
-            recoverySuccess:
-                'Bitte klicken Sie auf den Link, den Sie per E-Mail erhalten haben, um Ihr Passwort zurückzusetzen.',
-        },
-        reset: {
-            welcome: 'Neues Passwort erstellen',
-            enterPassword: 'Bitte geben Sie ein Passwort ein.',
-            unauthorised: 'Nicht autorisiert',
-            invalidEmailLink: 'E-Mail-Link ist ungültig oder abgelaufen.',
-        },
-        set: {
-            welcome: 'Willkommen bei SwissGeol Asset',
-            enterPassword: 'Bitte geben Sie ein Passwort ein, um die Registrierung abzuschliessen.',
-        },
-    },
-    userManagement: {
-        createNewUser: 'Neuen Benutzer erstellen',
-        confirmDelete: 'Möchten Sie den folgenden Benutzer wirklich löschen?',
-    },
     search: {
         textSearchFieldPlaceholder: 'Suche nach Original- oder Öffentlichem Titel und Autor oder Einlieferer',
         searchInstructionsHeading: 'Asset-Suche',

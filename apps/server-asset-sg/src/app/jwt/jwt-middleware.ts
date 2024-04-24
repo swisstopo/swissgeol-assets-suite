@@ -5,7 +5,6 @@ import { Cache } from 'cache-manager';
 import { NextFunction, Request, Response } from 'express';
 import * as E from 'fp-ts/Either';
 import { pipe } from 'fp-ts/function';
-import * as O from 'fp-ts/Option';
 import * as TE from 'fp-ts/TaskEither';
 import * as jwt from 'jsonwebtoken';
 import { Jwt, JwtPayload } from 'jsonwebtoken';
