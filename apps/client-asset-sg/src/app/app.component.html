@@ -1,5 +1,5 @@
 <asset-sg-app-bar>
-  <ng-template [cdkPortalOutlet]="appPortalService.appBarPortalContent$ | push"></ng-template>
+  <ng-template  *ngIf="!router.url.includes('/error')" [cdkPortalOutlet]="appPortalService.appBarPortalContent$ | push"></ng-template>
 </asset-sg-app-bar>
 <asset-sg-menu-bar *ngIf="!router.url.includes('/error')"/>
 <div class="router-outlet">
