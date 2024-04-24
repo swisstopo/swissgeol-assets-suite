@@ -1,11 +1,13 @@
 import { HttpErrorResponse, HttpEvent, HttpHandler, HttpInterceptor, HttpRequest } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { OAuthService } from 'angular-oauth2-oidc';
-import { Observable, throwError } from 'rxjs';
+import { catchError, EMPTY, Observable, tap, throwError } from 'rxjs';
+import { Router } from '@angular/router';
 
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
     private _oauthService = inject(OAuthService);
+    private _router: Router = inject(Router);
 
     intercept(req: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
         const token = sessionStorage.getItem('access_token');
@@ -22,11 +24,16 @@ export class AuthInterceptor implements HttpInterceptor {
                 redirect_uri: window.location.origin,
                 response_type: this._oauthService.responseType,
             });
-            return throwError(new HttpErrorResponse({ status: 401, statusText: 'Unauthorized' }));
-        } else if (!token) {
-            return throwError(new HttpErrorResponse({ status: 401, statusText: 'No Token' }));
+            return EMPTY;
+        }  else if (!token) {
+          return EMPTY;
         } else {
-            return next.handle(req);
+            return next.handle(req).pipe(
+              catchError((error: HttpErrorResponse) => {
+                this._router.navigate(['de/error'], { state: { errorMessage: error.error.error } });
+                return EMPTY;
+              })
+            );
         }
     }
 }

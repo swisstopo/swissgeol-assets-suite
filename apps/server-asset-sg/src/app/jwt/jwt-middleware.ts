@@ -45,7 +45,7 @@ export class JwtMiddleware implements NestMiddleware {
             (req as AuthenticatedRequest).jwtPayload = result.right.jwtPayload as JwtPayload;
             next();
         } else {
-          _res.status(500).json({ error: result.left.message });
+          _res.status(403).json({ error: result.left.message });
         }
     }
 
