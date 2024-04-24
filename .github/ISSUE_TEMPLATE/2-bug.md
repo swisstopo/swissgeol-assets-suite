@@ -7,11 +7,11 @@ assignees: ''
 
 ---
 
-**Beschreibe den Bug**
-Eine klare und präzise Beschreibung des Problems, insbesondere .
+**Beschreibung**
+Eine klare und präzise Beschreibung des Problems.
 
 **Schritte zum Reproduzieren**
-1. Gehe zur Seite '...'
+1. Gehe zur Seite '....'
 2. Klicke auf '....'
 3. Scrolle zu '....'
 4. Ein Fehler erscheint

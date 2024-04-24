@@ -7,11 +7,15 @@ assignees: ''
 
 ---
 
-**Beschreibe die Problematik**
+**Beschreibung**
+
 Eine klare und präzise Beschreibung der Ausgangssituation, der Problematik sowie bereits bekannter Lösungsansätze.
 
+
+
 **Abgrenzung**
-Was gehört nicht zu diesem Issue?
+
+Nicht beachtet in dieser Aufgabe wird die Suche nach der Frage.
 
 **Acceptance Criteria**
 
