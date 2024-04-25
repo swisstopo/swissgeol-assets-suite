@@ -2,6 +2,9 @@
 export default {
     displayName: 'server-asset-sg',
     preset: '../../jest.preset.js',
+    setupFilesAfterEnv: [
+        './jest.setup.ts',
+    ],
     globals: {
         'ts-jest': {
             tsconfig: '<rootDir>/tsconfig.spec.json',

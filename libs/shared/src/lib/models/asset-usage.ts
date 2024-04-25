@@ -15,3 +15,4 @@ export const AssetUsage = C.struct({
     statusAssetUseItemCode: StatusAssetUseCode,
     startAvailabilityDate: CT.optionFromNullable(DateId),
 });
+export type AssetUsage = C.TypeOf<typeof AssetUsage>;

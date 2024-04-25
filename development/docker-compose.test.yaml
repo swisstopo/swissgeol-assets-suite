@@ -1,0 +1,38 @@
+version: '3.7'
+
+services:
+  db:
+    container_name: swissgeol-assets-postgres-test
+    image: postgis-gotrue
+    restart: unless-stopped
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: postgres
+    volumes:
+      - ./init/db:/docker-entrypoint-initdb.d
+      - ./volumes/test.db/data/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: "pg_isready -U ${DB_USER} -d postgres -h db"
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  elasticsearch:
+    container_name: swissgeol-assets-elasticsearch-test
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.12.1
+    restart: unless-stopped
+    entrypoint: ["/bin/tini", "--"]
+    command: ["sh", "-c", "/init/init.sh & /usr/local/bin/docker-entrypoint.sh"]
+    ports:
+      - 9200:9200
+    environment:
+      ES_JAVA_OPTS: -Xms512m -Xmx512m
+      xpack.security.enabled: false
+      discovery.type: single-node
+      cluster.routing.allocation.disk.threshold_enabled: false
+    volumes:
+      - ./init/elasticsearch/:/init/:ro
+      - ./volumes/test.elasticsearch/data:/usr/share/elasticsearch/data
