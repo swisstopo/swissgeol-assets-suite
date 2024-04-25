@@ -21,12 +21,12 @@ import * as C from 'io-ts/Codec';
 
 import { AuthInterceptor, AuthModule } from '@asset-sg/auth';
 import {
-    AnchorComponent,
-    ButtonComponent,
-    CURRENT_LANG,
-    TranslateTsLoader,
-    currentLangFactory,
-    icons,
+  AnchorComponent,
+  ButtonComponent,
+  CURRENT_LANG,
+  TranslateTsLoader,
+  currentLangFactory,
+  icons,
 } from '@asset-sg/client-shared';
 import { storeLogger } from '@asset-sg/core';
 
@@ -36,112 +36,112 @@ import { adminGuard, editorGuard } from './app-guards';
 import { assetsPageMatcher } from './app-matchers';
 import { AppComponent } from './app.component';
 import { AppBarComponent, MenuBarComponent, NotFoundComponent, RedirectToLangComponent } from './components';
+import { ErrorComponent } from './components/error/error.component';
 import { appTranslations } from './i18n';
 import { AppSharedStateEffects } from './state';
 import { appSharedStateReducer } from './state/app-shared.reducer';
-import { ErrorComponent } from './components/error/error.component';
 
 registerLocaleData(locale_deCH, 'de-CH');
 
 @NgModule({
-    declarations: [
-        AppComponent,
-        RedirectToLangComponent,
-        NotFoundComponent,
-        AppBarComponent,
-        MenuBarComponent,
-        ErrorComponent,
-    ],
-    imports: [
-        BrowserModule,
-        BrowserAnimationsModule,
-        HttpClientModule,
-        RouterModule.forRoot([
-            {
-                path: ':lang/a',
-                loadChildren: () => import('@asset-sg/auth').then(m => m.AuthModule),
-            },
-            {
-                path: ':lang/profile',
-                loadChildren: () => import('@asset-sg/profile').then(m => m.ProfileModule),
-            },
-            {
-                path: ':lang/admin',
-                loadChildren: () => import('@asset-sg/admin').then(m => m.AdminModule),
-                canActivate: [adminGuard],
-            },
-            {
-                path: ':lang/asset-admin',
-                loadChildren: () => import('@asset-sg/asset-editor').then(m => m.AssetEditorModule),
-                canActivate: [editorGuard],
-            },
-            {
-                path: ':lang/error',
-                component: ErrorComponent,
-            },
-            {
-                matcher: assetsPageMatcher,
-                loadChildren: () => import('@asset-sg/asset-viewer').then(m => m.AssetViewerModule),
-            },
-            {
-                path: 'not-found',
-                component: NotFoundComponent,
-            },
-            {
-                path: '**',
-                component: RedirectToLangComponent,
-            },
-        ]),
-        TranslateModule.forRoot({
-            loader: { provide: TranslateLoader, useFactory: () => new TranslateTsLoader(appTranslations) },
-        }),
-        StoreRouterConnectingModule.forRoot({ serializer: FullRouterStateSerializer, stateKey: 'router' }),
-        StoreModule.forRoot(
-            { router: routerReducer, shared: appSharedStateReducer },
-            {
-                metaReducers: environment.ngrxStoreLoggerEnabled ? [storeLogger()] : [],
-                runtimeChecks: {
-                    strictStateImmutability: false,
-                },
-            },
-        ),
-        EffectsModule.forRoot([AppSharedStateEffects]),
-        ForModule,
-        LetModule,
-        PushModule,
+  declarations: [
+    AppComponent,
+    RedirectToLangComponent,
+    NotFoundComponent,
+    AppBarComponent,
+    MenuBarComponent,
+    ErrorComponent,
+  ],
+  imports: [
+    BrowserModule,
+    BrowserAnimationsModule,
+    HttpClientModule,
+    RouterModule.forRoot([
+      {
+        path: ':lang/a',
+        loadChildren: () => import('@asset-sg/auth').then(m => m.AuthModule),
+      },
+      {
+        path: ':lang/profile',
+        loadChildren: () => import('@asset-sg/profile').then(m => m.ProfileModule),
+      },
+      {
+        path: ':lang/admin',
+        loadChildren: () => import('@asset-sg/admin').then(m => m.AdminModule),
+        canActivate: [adminGuard],
+      },
+      {
+        path: ':lang/asset-admin',
+        loadChildren: () => import('@asset-sg/asset-editor').then(m => m.AssetEditorModule),
+        canActivate: [editorGuard],
+      },
+      {
+        path: ':lang/error',
+        component: ErrorComponent,
+      },
+      {
+        matcher: assetsPageMatcher,
+        loadChildren: () => import('@asset-sg/asset-viewer').then(m => m.AssetViewerModule),
+      },
+      {
+        path: 'not-found',
+        component: NotFoundComponent,
+      },
+      {
+        path: '**',
+        component: RedirectToLangComponent,
+      },
+    ]),
+    TranslateModule.forRoot({
+      loader: { provide: TranslateLoader, useFactory: () => new TranslateTsLoader(appTranslations) },
+    }),
+    StoreRouterConnectingModule.forRoot({ serializer: FullRouterStateSerializer, stateKey: 'router' }),
+    StoreModule.forRoot(
+      { router: routerReducer, shared: appSharedStateReducer },
+      {
+        metaReducers: environment.ngrxStoreLoggerEnabled ? [storeLogger()] : [],
+        runtimeChecks: {
+          strictStateImmutability: false,
+        },
+      },
+    ),
+    EffectsModule.forRoot([AppSharedStateEffects]),
+    ForModule,
+    LetModule,
+    PushModule,
 
-        SvgIconComponent,
+    SvgIconComponent,
 
-        AnchorComponent,
-        ButtonComponent,
-        DialogModule,
-        A11yModule,
-        AuthModule,
-    ],
-    providers: [
-        provideSvgIcons(icons),
-        { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },
-        { provide: MAT_FORM_FIELD_DEFAULT_OPTIONS, useValue: { appearance: 'fill', floatLabel: 'auto' } },
-        { provide: CURRENT_LANG, useFactory: currentLangFactory },
-    ],
-    bootstrap: [AppComponent],
+    AnchorComponent,
+    ButtonComponent,
+    DialogModule,
+    A11yModule,
+    AuthModule,
+  ],
+  providers: [
+    provideSvgIcons(icons),
+    { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },
+    { provide: MAT_FORM_FIELD_DEFAULT_OPTIONS, useValue: { appearance: 'fill', floatLabel: 'auto' } },
+    { provide: CURRENT_LANG, useFactory: currentLangFactory },
+  ],
+  bootstrap: [AppComponent],
 })
 export class AppModule {
-    private _translateService = inject(TranslateService);
+  private _translateService = inject(TranslateService);
 
-    constructor() {
-        this._translateService.setDefaultLang('de');
-    }
+  constructor() {
+    this._translateService.setDefaultLang('de');
+  }
 }
 
 export interface Encoder<O, A> {
-    readonly encode: (a: A) => O;
+  readonly encode: (a: A) => O;
 }
 
 function optionFromNullable<O, A>(encoder: Encoder<O, A>): Encoder<O | null, O.Option<A>> {
-    return {
-        encode: O.fold(() => null, encoder.encode),
-    };
+  return {
+    encode: O.fold(() => null, encoder.encode),
+  };
 }
 
 const foooobar = optionFromNullable(C.string);

@@ -33,40 +33,6 @@ export const itAppTranslations: AppTranslations = {
         drawingModeOff: 'IT Zeichenmodus aus',
         dragHandleLabel: 'IT Ziehgriff',
     },
-    auth: {
-        signInHeading: 'IT Anmeldung in SwissGeol Asset',
-        email: 'IT E-Mail',
-        password: 'IT Passwort',
-        signIn: 'IT Anmelden',
-        forgotPassword: 'IT Passwort vergessen?',
-        invalidCredentials: 'IT Ungültige Anmeldedaten',
-        error: {
-            required: 'IT Dieses Feld ist erforderlich',
-            email: 'IT Bitte geben Sie eine gültige E-Mail-Adresse ein',
-        },
-        recovery: {
-            enterEmail:
-                'IT Geben Sie Ihre E-Mail-Adresse ein, und ein Link zum Zurücksetzen des Passworts wird Ihnen per E-Mail zugeschickt.',
-            backToLogin: 'IT Zurück zur Anmeldung',
-            tooManyRequests: 'IT Aus Sicherheitsgründen können Sie dies nur einmal alle 60 Sekunden anfordern.',
-            recoverySuccess:
-                'IT Bitte klicken Sie auf den Link, den Sie per E-Mail erhalten haben, um Ihr Passwort zurückzusetzen.',
-        },
-        reset: {
-            welcome: 'IT Neues Passwort erstellen',
-            enterPassword: 'IT Bitte geben Sie ein Passwort ein.',
-            unauthorised: 'IT Nicht autorisiert',
-            invalidEmailLink: 'IT E-Mail-Link ist ungültig oder abgelaufen.',
-        },
-        set: {
-            welcome: 'IT Willkommen bei SwissGeol Asset',
-            enterPassword: 'IT Bitte geben Sie ein Passwort ein, um die Registrierung abzuschliessen.',
-        },
-    },
-    userManagement: {
-        createNewUser: 'IT Neuen Benutzer erstellen',
-        confirmDelete: 'IT Möchten Sie den folgenden Benutzer wirklich löschen?',
-    },
     search: {
         textSearchFieldPlaceholder: 'IT Suche nach Original- oder  Öffentlichem Titel und Autor oder Einlieferer',
         searchInstructionsHeading: 'IT Asset-Suche',

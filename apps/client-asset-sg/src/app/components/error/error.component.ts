@@ -1,11 +1,12 @@
 import { Component, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+
 import { AuthService } from '@asset-sg/auth';
 
 @Component({
-    selector: 'asset-sg-error',
-    templateUrl: './error.component.html',
-    styleUrls: ['./error.component.scss'],
+  selector: 'asset-sg-error',
+  templateUrl: './error.component.html',
+  styleUrls: ['./error.component.scss'],
 })
 export class ErrorComponent {
   errorMessage: string;

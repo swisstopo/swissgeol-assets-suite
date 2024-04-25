@@ -33,38 +33,6 @@ export const enAppTranslations: AppTranslations = {
         drawingModeOff: 'Drawing mode is on. Click to turn off drawing mode',
         dragHandleLabel: 'Drag handle',
     },
-    auth: {
-        signInHeading: 'Sign in to Swissgeol Asset',
-        email: 'E-Mail',
-        password: 'Password',
-        signIn: 'Sign in',
-        forgotPassword: 'Forgot password?',
-        invalidCredentials: 'Invalid credentials',
-        error: {
-            required: 'This field is required',
-            email: 'Please enter a valid email address',
-        },
-        recovery: {
-            enterEmail: 'Enter your email and a password reset link will be emailed to you.',
-            backToLogin: 'Back to login',
-            tooManyRequests: 'For security purposes, you can only request this once every 60 seconds',
-            recoverySuccess: 'Please click on the link email to you to reset your password.',
-        },
-        reset: {
-            welcome: 'Create a new password',
-            enterPassword: 'Please set enter a new password',
-            unauthorised: 'Unauthorised',
-            invalidEmailLink: 'Email link is invalid or expired.',
-        },
-        set: {
-            welcome: 'Welcome to Swissgeol Asset',
-            enterPassword: 'Please set a password to complete the registration.',
-        },
-    },
-    userManagement: {
-        createNewUser: 'Create new user',
-        confirmDelete: 'Are you sure you want to delete the following user?',
-    },
     search: {
         textSearchFieldPlaceholder: 'Search by original or public title and author or consignor',
         searchInstructionsHeading: 'Asset-Search',
