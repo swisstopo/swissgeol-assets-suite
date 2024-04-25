@@ -33,3 +33,14 @@ export const setupDB = async (prisma: PrismaClient): Promise<void> => {
     await prisma.languageItem.createMany({ data: languageItems });
     await prisma.statusWorkItem.createMany({ data: statusWorkItems });
 };
+
+export const clearPrismaAssets = async (prisma: PrismaClient): Promise<void> => {
+    await prisma.manCatLabelRef.deleteMany();
+    await prisma.assetContact.deleteMany();
+    await prisma.id.deleteMany();
+    await prisma.typeNatRel.deleteMany();
+    await prisma.statusWork.deleteMany();
+    await prisma.asset.deleteMany();
+    await prisma.internalUse.deleteMany();
+    await prisma.publicUse.deleteMany();
+}

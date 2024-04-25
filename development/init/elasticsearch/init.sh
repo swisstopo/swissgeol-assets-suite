@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/bash
 
 # Elasticsearch URL
 ELASTICSEARCH_URL="http://localhost:9200"

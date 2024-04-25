@@ -1,6 +1,6 @@
 import * as Option from 'fp-ts/Option'
 
-import { setupDB } from '../../../../../test/setup-db';
+import { clearPrismaAssets, setupDB } from '../../../../../test/setup-db';
 import { fakeAssetPatch, fakeUser } from '../asset-edit/asset-edit.fake';
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -16,14 +16,7 @@ describe(AssetRepo, () => {
     });
 
     beforeEach(async () => {
-        await prisma.manCatLabelRef.deleteMany();
-        await prisma.assetContact.deleteMany();
-        await prisma.id.deleteMany();
-        await prisma.typeNatRel.deleteMany();
-        await prisma.statusWork.deleteMany();
-        await prisma.asset.deleteMany();
-        await prisma.internalUse.deleteMany();
-        await prisma.publicUse.deleteMany();
+        await clearPrismaAssets(prisma);
     })
 
     describe('find', () => {
