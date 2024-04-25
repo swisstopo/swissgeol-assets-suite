@@ -39,11 +39,19 @@ import { AppBarComponent, MenuBarComponent, NotFoundComponent, RedirectToLangCom
 import { appTranslations } from './i18n';
 import { AppSharedStateEffects } from './state';
 import { appSharedStateReducer } from './state/app-shared.reducer';
+import { ErrorComponent } from './components/error/error.component';
 
 registerLocaleData(locale_deCH, 'de-CH');
 
 @NgModule({
-    declarations: [AppComponent, RedirectToLangComponent, NotFoundComponent, AppBarComponent, MenuBarComponent],
+    declarations: [
+        AppComponent,
+        RedirectToLangComponent,
+        NotFoundComponent,
+        AppBarComponent,
+        MenuBarComponent,
+        ErrorComponent,
+    ],
     imports: [
         BrowserModule,
         BrowserAnimationsModule,
@@ -66,6 +74,10 @@ registerLocaleData(locale_deCH, 'de-CH');
                 path: ':lang/asset-admin',
                 loadChildren: () => import('@asset-sg/asset-editor').then(m => m.AssetEditorModule),
                 canActivate: [editorGuard],
+            },
+            {
+                path: ':lang/error',
+                component: ErrorComponent,
             },
             {
                 matcher: assetsPageMatcher,

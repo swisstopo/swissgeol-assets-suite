@@ -10,6 +10,7 @@ import { AuthService } from '@asset-sg/auth';
 import { AppPortalService, appSharedStateActions, setCssCustomProperties } from '@asset-sg/client-shared';
 
 import { AppState } from './state/app-state';
+import { Router } from '@angular/router';
 
 const fullHdWidth = 1920;
 
@@ -24,6 +25,7 @@ export class AppComponent {
     private _httpClient = inject(HttpClient);
     public appPortalService = inject(AppPortalService);
     private store = inject(Store<AppState>);
+    public readonly router: Router = inject(Router)
 
     constructor(private readonly _authService: AuthService) {
         this._httpClient
