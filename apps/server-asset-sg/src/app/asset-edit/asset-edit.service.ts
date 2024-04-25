@@ -1,7 +1,4 @@
-import { basename } from 'node:path';
-
 import { Injectable } from '@nestjs/common';
-import { Contact } from '@prisma/client';
 import * as A from 'fp-ts/Array';
 import { pipe } from 'fp-ts/function';
 import * as O from 'fp-ts/Option';
@@ -9,14 +6,7 @@ import * as TE from 'fp-ts/TaskEither';
 import * as C from 'io-ts/Codec';
 
 import { decodeError, isNotNil, sequenceProps, unknownToUnknownError } from '@asset-sg/core';
-import {
-    BaseAssetEditDetail,
-    DateIdFromDate,
-    ElasticSearchAsset,
-    PatchAsset,
-    User,
-    dateFromDateId,
-} from '@asset-sg/shared';
+import { BaseAssetEditDetail, DateIdFromDate, PatchAsset, User, dateFromDateId } from '@asset-sg/shared';
 
 import { notFoundError } from '../errors';
 import { deleteFile } from '../file/delete-file';
@@ -29,8 +19,7 @@ import {
     updateStudies,
 } from '../postgres-studies/postgres-studies';
 import { PrismaService } from '../prisma/prisma.service';
-import { createElasticSearchClient } from '../search/elastic-search-client';
-import { searchAssetsByTitle } from '../search/find-assets-by-title';
+import { AssetSearchService } from '../search/asset-search-service';
 
 export const AssetEditDetail = C.struct({
     ...BaseAssetEditDetail,
@@ -40,7 +29,10 @@ export type AssetEditDetail = C.TypeOf<typeof AssetEditDetail>;
 
 @Injectable()
 export class AssetEditService {
-    constructor(private readonly prismaService: PrismaService) {}
+    constructor(
+        private readonly prismaService: PrismaService,
+        private readonly assetSearchService: AssetSearchService,
+    ) {}
 
     private _getAsset(assetId: number) {
         return pipe(
@@ -95,10 +87,6 @@ export class AssetEditService {
     }
     public getAsset(assetId: number) {
         return pipe(this._getAsset(assetId), TE.map(AssetEditDetail.encode));
-    }
-
-    public searchForAssetByTitle(title: string) {
-        return pipe(searchAssetsByTitle(title));
     }
 
     public createAsset(user: User, patchAsset: PatchAsset) {
@@ -173,22 +161,10 @@ export class AssetEditService {
                 unknownToUnknownError,
             ),
             TE.chain(({ assetId }) => this._getAsset(assetId)),
-            TE.bindTo('asset'),
-            TE.bindW('contacts', () => TE.tryCatch(() => this.prismaService.contact.findMany(), unknownToUnknownError)),
-            TE.bindW('elasticSearchResult', ({ asset, contacts }) =>
-                TE.tryCatch(
-                    () =>
-                        createElasticSearchClient().bulk({
-                            refresh: true,
-                            operations: [
-                                { index: { _index: 'swissgeol_asset_asset', _id: asset.assetId } },
-                                createElasticSearchAsset(asset, contacts),
-                            ],
-                        }),
-                    unknownToUnknownError,
-                ),
-            ),
-            TE.map(({ asset }) => AssetEditDetail.encode(asset)),
+            TE.tap((asset) => (
+                TE.tryCatch(() => this.assetSearchService.register(asset), unknownToUnknownError)
+            )),
+            TE.map((asset) => AssetEditDetail.encode(asset)),
         );
     }
 
@@ -356,22 +332,10 @@ export class AssetEditService {
             ),
             TE.chain(() => createStudies(this.prismaService, assetId, patchAsset.newStudies)),
             TE.chain(() => this._getAsset(assetId)),
-            TE.bindTo('asset'),
-            TE.bindW('contacts', () => TE.tryCatch(() => this.prismaService.contact.findMany(), unknownToUnknownError)),
-            TE.bindW('elasticSearchResult', ({ asset, contacts }) =>
-                TE.tryCatch(
-                    () =>
-                        createElasticSearchClient().bulk({
-                            refresh: true,
-                            operations: [
-                                { index: { _index: 'swissgeol_asset_asset', _id: asset.assetId } },
-                                createElasticSearchAsset(asset, contacts),
-                            ],
-                        }),
-                    unknownToUnknownError,
-                ),
-            ),
-            TE.map(({ asset }) => AssetEditDetail.encode(asset)),
+            TE.tap((asset) => (
+                TE.tryCatch(() => this.assetSearchService.register(asset), unknownToUnknownError)
+            )),
+            TE.map((asset) => AssetEditDetail.encode(asset)),
         );
     }
 
@@ -477,31 +441,3 @@ export class AssetEditService {
         );
     }
 }
-
-const createElasticSearchAsset = (asset: AssetEditDetailFromPostgres, contacts: Contact[]): ElasticSearchAsset => ({
-    assetId: asset.assetId,
-    titlePublic: asset.titlePublic,
-    titleOriginal: asset.titleOriginal,
-    sgsId: asset.sgsId,
-    createDate: asset.createDate,
-    assetKindItemCode: asset.assetKindItemCode,
-    languageItemCode: asset.languageItemCode,
-    usageCode: asset.publicUse.isAvailable ? 'public' : asset.internalUse.isAvailable ? 'internal' : 'useOnRequest',
-    authorIds: pipe(
-        asset.assetContacts,
-        A.filter(c => c.role === 'author'),
-        A.map(c => c.contactId),
-    ),
-    contactNames: pipe(
-        asset.assetContacts,
-        A.map(c =>
-            pipe(
-                contacts,
-                A.findFirst(contact => contact.contactId === c.contactId),
-            ),
-        ),
-        A.compact,
-        A.map(contact => contact.name),
-    ),
-    manCatLabelItemCodes: asset.manCatLabelRefs,
-});

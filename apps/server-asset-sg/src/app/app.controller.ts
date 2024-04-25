@@ -3,14 +3,19 @@ import { Request, Response } from 'express';
 import * as E from 'fp-ts/Either';
 import * as D from 'io-ts/Decoder';
 
-import { DT } from '@asset-sg/core';
+import { DT, unknownToError } from '@asset-sg/core';
 
 import { AppService } from './app.service';
 import { isNotFoundError } from './errors';
+import * as TE from 'fp-ts/TaskEither';
+import { AssetSearchService } from './search/asset-search-service';
 
 @Controller()
 export class AppController {
-    constructor(private readonly appService: AppService) {}
+    constructor(
+        private readonly appService: AppService,
+        private readonly assetSearchService: AssetSearchService,
+    ) {}
 
     @Get('all-study')
     getAllStudies() {
@@ -19,12 +24,15 @@ export class AppController {
 
     @Get('search-asset')
     async searchAsset(@Query('searchText') searchText: string) {
-        const e = await this.appService.searchAssets(searchText)();
-        if (E.isLeft(e)) {
-            console.error(e.left);
-            throw new HttpException(e.left.message, 500);
+        try {
+            return this.assetSearchService.search(searchText, {
+                scope: ['titlePublic', 'titleOriginal', 'contactNames', 'sgsId'],
+            })
+        } catch (e) {
+            const error = unknownToError(e);
+            console.error(error);
+            throw new HttpException(error.message, 500);
         }
-        return e.right;
     }
 
     @Get('asset')
@@ -43,7 +51,7 @@ export class AppController {
         // );
         // console.log(JSON.stringify(pipe(AssetSearchParams.decode(req.query), E.mapLeft(D.draw)), null, 2));
         // return 'adsf;';
-        const e = await this.appService.searchAssets2(req.query)();
+        const e = await this.appService.searchAssets(req.query)();
         if (E.isLeft(e)) {
             console.error(e.left);
             throw new HttpException(e.left.message, 500);
@@ -98,7 +106,6 @@ export class AppController {
 
         const e = await this.appService.getFile(maybeFileId.right)();
         if (E.isLeft(e)) {
-            console.log(JSON.stringify(e.left));
             throw new HttpException(e.left.message, 500);
         }
         const result = e.right;

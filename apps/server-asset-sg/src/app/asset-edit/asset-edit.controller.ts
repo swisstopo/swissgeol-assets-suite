@@ -19,32 +19,32 @@ import { pipe } from 'fp-ts/function';
 import * as TE from 'fp-ts/TaskEither';
 import * as D from 'io-ts/Decoder';
 
-import { DT, decodeError } from '@asset-sg/core';
-import { PatchAsset, isEditor } from '@asset-sg/shared';
+import { DT, decodeError, unknownToError } from '@asset-sg/core';
+import { AssetByTitle, PatchAsset, isEditor } from '@asset-sg/shared';
 
 import { isNotFoundError, permissionDeniedError } from '../errors';
 import { AuthenticatedRequest } from '../models/request';
+import { AssetSearchService } from '../search/asset-search-service';
 import { UserService } from '../user/user.service';
 
 import { AssetEditService } from './asset-edit.service';
 
+
 @Controller('asset-edit')
 export class AssetEditController {
-    constructor(private readonly assetEditService: AssetEditService, private readonly userService: UserService) {}
+    constructor(
+        private readonly assetEditService: AssetEditService,
+        private readonly assetSearchService: AssetSearchService,
+        private readonly userService: UserService,
+    ) {}
 
     @Get('search')
-    async searchForAssetByTitle(@Query('title') title: string) {
-        const maybeTitle = D.string.decode(title);
-        if (E.isLeft(maybeTitle)) {
-            throw new HttpException(D.draw(maybeTitle.left), 400);
+    async searchForAssetByTitle(@Query('title') title: string): Promise<AssetByTitle[]> {
+        try {
+            return await this.assetSearchService.searchByTitle(title);
+        } catch (e) {
+            throw new HttpException(unknownToError(e).message, 500);
         }
-
-        const e = await this.assetEditService.searchForAssetByTitle(title)();
-        if (E.isLeft(e)) {
-            console.error(e.left);
-            throw new HttpException(e.left.message, 500);
-        }
-        return e.right;
     }
 
     @Get(':assetId')
