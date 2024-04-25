@@ -1,7 +1,7 @@
 import { HttpErrorResponse, HttpEvent, HttpHandler, HttpInterceptor, HttpRequest } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { OAuthService } from 'angular-oauth2-oidc';
-import { catchError, EMPTY, Observable, tap, throwError } from 'rxjs';
+import { catchError, EMPTY, Observable } from 'rxjs';
 import { Router } from '@angular/router';
 
 @Injectable()
