@@ -84,6 +84,7 @@
         "@angular/cli": "~15.0.0",
         "@angular/compiler-cli": "15.1.0",
         "@angular/language-service": "15.1.0",
+        "@faker-js/faker": "^8.4.1",
         "@nestjs/schematics": "^9.0.0",
         "@nestjs/testing": "^9.0.0",
         "@nrwl/cypress": "15.5.2",
