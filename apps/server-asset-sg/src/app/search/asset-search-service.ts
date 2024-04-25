@@ -1,5 +1,5 @@
 import { Client as ElasticsearchClient } from '@elastic/elasticsearch';
-import { QueryDslQueryContainer } from '@elastic/elasticsearch/lib/api/types';
+import { BulkOperationContainer, QueryDslQueryContainer } from '@elastic/elasticsearch/lib/api/types';
 import { Injectable } from '@nestjs/common';
 
 import {
@@ -8,12 +8,15 @@ import {
     ElasticSearchAsset,
     SearchAssetAggregations,
     SearchAssetResult,
-    UsageCode, dateIdFromDate, makeUsageCode,
+    UsageCode,
+    dateIdFromDate,
+    makeUsageCode,
 } from '@asset-sg/shared';
 
 import { AssetEditDetail } from '../asset-edit/asset-edit.service';
 import { AssetEditDetailFromPostgres } from '../models/asset-edit-detail';
 import { PrismaService } from '../prisma/prisma.service';
+import { AssetRepo } from '../repos/asset.repo';
 
 const INDEX = 'swissgeol_asset_asset';
 export { INDEX as ASSET_ELASTIC_INDEX };
@@ -33,24 +36,86 @@ export class AssetSearchService {
     constructor(
         private readonly elastic: ElasticsearchClient,
         private readonly prisma: PrismaService,
+        private readonly assetRepo: AssetRepo,
     ) {
     }
 
-    async register(asset: AssetEditDetail): Promise<void> {
-        const elasticAsset = await this.mapAssetToElastic(asset);
+    async register(oneOrMore: AssetEditDetail | AssetEditDetail[]): Promise<void> {
+        const assets = Array.isArray(oneOrMore) ? oneOrMore : [oneOrMore];
+        const elasticAssets = await Promise.all(assets.map((asset) => this.mapAssetToElastic(asset)))
+        const operations = elasticAssets.reduce((ops, elasticAsset) => {
+            ops.push(
+                { index: { _index: INDEX, _id: `${elasticAsset.assetId}` } },
+                elasticAsset,
+            )
+            return ops;
+        }, [] as Array<BulkOperationContainer | ElasticSearchAsset>);
         await this.elastic.bulk({
             index: INDEX,
             refresh: true,
-            operations: [
-                { index: { _index: INDEX, _id: asset.assetId } },
-                elasticAsset,
-            ]
+            operations,
         })
+    }
+
+    async syncWithDatabase(onProgress?: (percentage: number) => (void | Promise<void>)): Promise<void> {
+        // Delete all assets stored in elasticsearch.
+        await this.elastic.deleteByQuery({
+            index: INDEX,
+            query: { match_all: {} },
+            refresh: true,
+        })
+
+        const total = await this.prisma.asset.count();
+
+        let offset = 0;
+        for (;;) {
+            const records = await this.assetRepo.list({ limit: 1_00, offset });
+            if (records.length === 0) {
+                break;
+            }
+            await this.register(records);
+            offset += records.length;
+            if (onProgress != null) {
+                await onProgress(offset / total);
+            }
+        }
     }
 
     async search(query: string, options: SearchOptions): Promise<SearchAssetResult> {
         const elasticResult = await this.searchElastic(query, options);
         return await this.loadAssetsByElasticResult(elasticResult);
+    }
+
+    async searchByTitle(title: string): Promise<AssetByTitle[]> {
+        interface SearchHit {
+            _score: number;
+            fields: {
+                assetId: [number]
+                titlePublic: [string]
+            };
+        }
+
+        const response = await this.elastic.search({
+            index: INDEX,
+            size: 10_000,
+            query: {
+                bool: {
+                    must: {
+                        query_string: {
+                            query: `*${title}*`,
+                            fields: ['titlePublic'],
+                        },
+                    },
+                },
+            },
+            fields: ['assetId', 'titlePublic'],
+            _source: false,
+        });
+        return (response.hits.hits as unknown as SearchHit[]).map((hit) => ({
+            score: hit._score,
+            assetId: hit.fields.assetId[0],
+            titlePublic: hit.fields.titlePublic[0],
+        }));
     }
 
     private async searchElastic(
@@ -61,18 +126,27 @@ export class AssetSearchService {
         if (assetIds != null) {
             filters.push({ terms: { assetId: assetIds } });
         }
+
         const response = await this.elastic.search({
             index: INDEX,
             size: 10_000,
             query: {
                 bool: {
-                    must: {
-                        multi_match: {
-                            query,
-                            fields: scope,
-                            fuzziness: 'AUTO',
+                    should: [
+                        {
+                            multi_match: {
+                                query,
+                                fields: scope,
+                                fuzziness: 'AUTO',
+                            },
                         },
-                    },
+                        {
+                            query_string: {
+                                query: `*${query}*`,
+                                fields: scope,
+                            },
+                        },
+                    ],
                     filter: filters,
                 },
             },
@@ -80,10 +154,10 @@ export class AssetSearchService {
                 authorIds: { terms: { field: 'authorIds' } },
                 minCreateDate: { min: { field: 'createDate' } },
                 maxCreateDate: { max: { field: 'createDate' } },
-                assetKindItemCodes: { terms: { field: 'assetKindItemCode.keyword' } },
-                languageItemCodes: { terms: { field: 'languageItemCode.keyword' } },
-                usageCodes: { terms: { field: 'usageCode.keyword' } },
-                manCatLabelItemCodes: { terms: { field: 'manCatLabelItemCodes.keyword' } },
+                assetKindItemCodes: { terms: { field: 'assetKindItemCode' } },
+                languageItemCodes: { terms: { field: 'languageItemCode' } },
+                usageCodes: { terms: { field: 'usageCode' } },
+                manCatLabelItemCodes: { terms: { field: 'manCatLabelItemCodes' } },
             },
             fields: ['assetId'],
             _source: false,
@@ -237,38 +311,6 @@ export class AssetSearchService {
                 };
             }),
         };
-    }
-
-    async searchByTitle(title: string): Promise<AssetByTitle[]> {
-        interface SearchHit {
-            _score: number;
-            fields: {
-                assetId: [number]
-                titlePublic: [string]
-            };
-        }
-
-        const response = await this.elastic.search({
-            index: INDEX,
-            size: 10_000,
-            query: {
-                bool: {
-                    must: {
-                        query_string: {
-                            query: title,
-                            fields: ['titlePublic'],
-                        },
-                    },
-                },
-            },
-            fields: ['assetId', 'titlePublic'],
-            _source: false,
-        });
-        return (response.hits.hits as unknown as SearchHit[]).map((hit) => ({
-            score: hit._score,
-            assetId: hit.fields.assetId[0],
-            titlePublic: hit.fields.titlePublic[0],
-        }));
     }
 
     private async mapAssetToElastic(asset: AssetEditDetailFromPostgres): Promise<ElasticSearchAsset> {

@@ -216,8 +216,13 @@ export const enAppTranslations: AppTranslations = {
         closeManageAsset: 'Close manage asset',
         questionDiscardChanges: 'Do you want to discard your changes?',
         adminInstructionsEditHeading: 'Manage asset',
-        adminInstructionsEdit: 'Search for an Asset via the Assets menu, in order to manage it.',
+        adminInstructionsEdit: 'Search for an asset via the assets menu, in order to manage it.',
         adminInstructionsCreateHeading: 'New asset',
         adminInstructionsCreate: 'Create new asset',
+        adminInstructionsSyncElasticAssetsHeading: 'Synchronize assets with Elasticsearch',
+        adminInstructionsSyncElasticAssets:
+            'Equalizes the state of Elasticsearch with the local database.'
+            + ' This ensures that the search includes all existing assets.',
+        adminInstructionsSyncElasticAssetsStart: 'Start synchronization',
     },
 };

@@ -6,7 +6,6 @@ import { PrismaService } from '../prisma/prisma.service';
 
 import { AssetRepo } from './asset.repo';
 
-
 describe(AssetRepo, () => {
     const prisma = new PrismaService()
     const repo = new AssetRepo(prisma);
@@ -40,6 +39,66 @@ describe(AssetRepo, () => {
             // Then
             expect(actual).not.toBeNull();
             expect(actual).toEqual(expected);
+        })
+    })
+
+
+    describe('list', () => {
+        it('returns an empty list when no records exist', async () => {
+            // When
+            const assets = await repo.list({ limit: 100 });
+
+            // Then
+            expect(assets).toEqual([]);
+        })
+
+        it('returns the specified amount of records', async () => {
+            // Given
+            const user = fakeUser();
+            const record1 = await repo.create({ patch: fakeAssetPatch(), user });
+            const record2 = await repo.create({ patch: fakeAssetPatch(), user });
+            const record3 = await repo.create({ patch: fakeAssetPatch(), user });
+            await repo.create({ patch: fakeAssetPatch(), user });
+            await repo.create({ patch: fakeAssetPatch(), user });
+
+            // When
+            const assets = await repo.list({ limit: 3 });
+
+            // Then
+            expect(assets.length).toEqual(3);
+            expect(assets).toEqual([record1, record2, record3]);
+        })
+
+        it('returns the records appearing after the specified offset', async () => {
+            // Given
+            const user = fakeUser();
+            await repo.create({ patch: fakeAssetPatch(), user });
+            await repo.create({ patch: fakeAssetPatch(), user });
+            const record1 = await repo.create({ patch: fakeAssetPatch(), user });
+            const record2 = await repo.create({ patch: fakeAssetPatch(), user });
+            const record3 = await repo.create({ patch: fakeAssetPatch(), user });
+
+            // When
+            const assets = await repo.list({ offset: 2, limit: 100 });
+
+            // Then
+            expect(assets.length).toEqual(3);
+            expect(assets).toEqual([record1, record2, record3]);
+        })
+
+        it('returns an empty list when offset is larger than the total amount of records', async () => {
+            // Given
+            const user = fakeUser();
+            await repo.create({ patch: fakeAssetPatch(), user });
+            await repo.create({ patch: fakeAssetPatch(), user });
+            await repo.create({ patch: fakeAssetPatch(), user });
+            await repo.create({ patch: fakeAssetPatch(), user });
+
+            // When
+            const assets = await repo.list({ offset: 5, limit: 10 });
+
+            // Then
+            expect(assets).toEqual([]);
         })
     })
 

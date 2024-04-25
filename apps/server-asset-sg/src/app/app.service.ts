@@ -7,7 +7,6 @@ import * as NEA from 'fp-ts/NonEmptyArray';
 import * as N from 'fp-ts/number';
 import * as O from 'fp-ts/Option';
 import * as RR from 'fp-ts/ReadonlyRecord';
-import * as R from 'fp-ts/Record';
 import * as S from 'fp-ts/string';
 import * as TE from 'fp-ts/TaskEither';
 import * as C from 'io-ts/Codec';
@@ -380,29 +379,4 @@ const dbResultRawToDBResult = (dbResultRawList: NEA.NonEmptyArray<DBResultRaw>):
         ),
         usageCode: makeUsageCode(publicUse, internalUse),
     };
-};
-
-const dbResultsRawListToDBResultList = (dbResultRawList: DBResultRawList): Array<DBResult> =>
-    pipe(
-        dbResultRawList,
-        NEA.groupBy(x => String(x.assetId)),
-        R.map(dbResultRawToDBResult),
-        R.toArray,
-        A.map(([, dbResult]) => dbResult),
-    );
-const DBResultList = pipe(DBResultRawList, D.map(dbResultsRawListToDBResultList));
-type DBResultList = D.TypeOf<typeof DBResultList>;
-
-const normaliseSearchString = (searchString: string) => {
-    const replaceForSearchStringNormalisation: [RegExp, string][] = [
-        [/title(_*)public:/i, 'titlePublic:'],
-        [/title(_*)original:/i, 'titleOriginal:'],
-        [/contact(_*)name(s*):/i, 'contactNames:'],
-        [/sgs(_*)id:/i, 'sgsId:'],
-    ];
-
-    return replaceForSearchStringNormalisation.reduce(
-        (acc, [regex, replacement]) => acc.replace(regex, replacement),
-        searchString,
-    );
 };

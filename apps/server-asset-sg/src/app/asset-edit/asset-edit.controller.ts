@@ -17,22 +17,23 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import * as E from 'fp-ts/Either';
 import { pipe } from 'fp-ts/function';
 import * as TE from 'fp-ts/TaskEither';
-import * as D from 'io-ts/Decoder';
 
 import { DT, decodeError, unknownToError } from '@asset-sg/core';
 import { AssetByTitle, PatchAsset, isEditor } from '@asset-sg/shared';
 
-import { isNotFoundError, permissionDeniedError } from '../errors';
+import { permissionDeniedError } from '../errors';
 import { AuthenticatedRequest } from '../models/request';
+import { AssetRepo } from '../repos/asset.repo';
 import { AssetSearchService } from '../search/asset-search-service';
 import { UserService } from '../user/user.service';
 
-import { AssetEditService } from './asset-edit.service';
+import { AssetEditDetail, AssetEditService } from './asset-edit.service';
 
 
 @Controller('asset-edit')
 export class AssetEditController {
     constructor(
+        private readonly assetRepo: AssetRepo,
         private readonly assetEditService: AssetEditService,
         private readonly assetSearchService: AssetSearchService,
         private readonly userService: UserService,
@@ -48,21 +49,17 @@ export class AssetEditController {
     }
 
     @Get(':assetId')
-    async getAsset(@Param('assetId') assetId: string) {
-        const maybeAssetId = DT.IntFromString.decode(assetId);
-        if (E.isLeft(maybeAssetId)) {
-            throw new HttpException(D.draw(maybeAssetId.left), 400);
+    async getAsset(@Param('assetId') assetId: string): Promise<unknown> {
+        const id = parseInt(assetId);
+        if (isNaN(id)) {
+            throw new HttpException('Resource not found', 404);
         }
-
-        const e = await this.assetEditService.getAsset(maybeAssetId.right)();
-        if (E.isLeft(e)) {
-            console.error(e.left);
-            if (isNotFoundError(e.left)) {
-                throw new HttpException('Resource not found', 400);
-            }
-            throw new HttpException(e.left.message, 500);
+        console.log(id);
+        const asset = await this.assetRepo.find(id);
+        if (asset === null) {
+            throw new HttpException('Resource not found', 404);
         }
-        return e.right;
+        return AssetEditDetail.encode(asset)
     }
 
     @Put()

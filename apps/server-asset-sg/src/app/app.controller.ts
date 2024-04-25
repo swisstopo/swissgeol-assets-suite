@@ -1,21 +1,33 @@
-import { Controller, Get, HttpException, Param, Query, Req, Res } from '@nestjs/common';
+import * as fs from 'fs/promises';
+
+import { Controller, Get, HttpException, OnApplicationBootstrap, Param, Post, Query, Req, Res } from '@nestjs/common';
 import { Request, Response } from 'express';
 import * as E from 'fp-ts/Either';
 import * as D from 'io-ts/Decoder';
 
 import { DT, unknownToError } from '@asset-sg/core';
+import { isAdmin } from '@asset-sg/shared';
 
 import { AppService } from './app.service';
 import { isNotFoundError } from './errors';
-import * as TE from 'fp-ts/TaskEither';
+import { AuthenticatedRequest } from './models/request';
 import { AssetSearchService } from './search/asset-search-service';
+import { UserService } from './user/user.service';
 
 @Controller()
-export class AppController {
+export class AppController implements OnApplicationBootstrap {
     constructor(
         private readonly appService: AppService,
+        private readonly userService: UserService,
         private readonly assetSearchService: AssetSearchService,
     ) {}
+
+    async onApplicationBootstrap() {
+        const syncFileExists = await fs.access(assetSyncFile).then(() => true).catch(() =>  false);
+        if (syncFileExists) {
+            void fs.rm(assetSyncFile);
+        }
+    }
 
     @Get('all-study')
     getAllStudies() {
@@ -57,6 +69,62 @@ export class AppController {
             throw new HttpException(e.left.message, 500);
         }
         return e.right;
+    }
+
+    @Get('/assets/sync')
+    async getAssetSyncProgress(
+        @Req() req: AuthenticatedRequest,
+        @Res() res: Response,
+    ): Promise<{ progress: number } | void> {
+        const userResult = await this.userService.getUser(req.jwtPayload.sub || '')()
+        if (E.isLeft(userResult)) {
+            throw new HttpException(userResult.left.message, 500);
+        }
+        const user = userResult.right;
+        if (!isAdmin(user)) {
+            throw new HttpException('Operation not permitted', 403);
+        }
+        try {
+            const data = await fs.readFile(assetSyncFile, { encoding: 'utf-8' });
+            const state: AssetSyncState = JSON.parse(data);
+            res.status(200).json({ progress: state.progress }).end();
+        } catch (e) {
+            if ((e as { code?: string }).code === 'ENOENT') {
+                res.status(204).end();
+                return;
+            }
+            throw new HttpException(`${e}`, 500);
+        }
+    }
+
+    @Post('/assets/sync')
+    async startAssetSync(@Req() req: AuthenticatedRequest, @Res() res: Response): Promise<void> {
+        const userResult = await this.userService.getUser(req.jwtPayload.sub || '')()
+        if (E.isLeft(userResult)) {
+            throw new HttpException(userResult.left.message, 500);
+        }
+        const user = userResult.right;
+        if (!isAdmin(user)) {
+            throw new HttpException('Operation not permitted', 403);
+        }
+        const isSyncRunning = await fs.access(assetSyncFile).then(() => true).catch(() =>  false);
+        if (isSyncRunning) {
+            res.status(204).end();
+            return;
+        }
+
+        const writeProgress = (progress: number): Promise<void> => {
+            const state: AssetSyncState = { progress: parseFloat(progress.toFixed(3)) };
+            const data = JSON.stringify(state);
+            return fs.writeFile(assetSyncFile, data, { encoding: 'utf-8' });
+        }
+
+        await writeProgress(0);
+        setTimeout(async () => {
+            await this.assetSearchService.syncWithDatabase(writeProgress);
+            await fs.rm(assetSyncFile);
+        });
+        res.status(204).end();
     }
 
     // @Post('find-assets-by-polygon')
@@ -119,4 +187,10 @@ export class AppController {
 
         e.right.stream.pipe(res);
     }
+}
+
+const assetSyncFile = './asset-sync-progress.tmp.json';
+
+interface AssetSyncState {
+    progress: number
 }

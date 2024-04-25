@@ -1,24 +1,16 @@
 import { Injectable } from '@nestjs/common';
-import * as A from 'fp-ts/Array';
 import { pipe } from 'fp-ts/function';
-import * as O from 'fp-ts/Option';
 import * as TE from 'fp-ts/TaskEither';
 import * as C from 'io-ts/Codec';
 
-import { decodeError, isNotNil, sequenceProps, unknownToUnknownError } from '@asset-sg/core';
-import { BaseAssetEditDetail, DateIdFromDate, PatchAsset, User, dateFromDateId } from '@asset-sg/shared';
+import { isNotNull, unknownToUnknownError } from '@asset-sg/core';
+import { BaseAssetEditDetail, PatchAsset, User } from '@asset-sg/shared';
 
 import { notFoundError } from '../errors';
 import { deleteFile } from '../file/delete-file';
 import { putFile } from '../file/put-file';
-import { AssetEditDetailFromPostgres } from '../models/asset-edit-detail';
-import {
-    createStudies,
-    deleteStudies,
-    postgresStudiesByAssetId,
-    updateStudies,
-} from '../postgres-studies/postgres-studies';
 import { PrismaService } from '../prisma/prisma.service';
+import { AssetRepo } from '../repos/asset.repo';
 import { AssetSearchService } from '../search/asset-search-service';
 
 export const AssetEditDetail = C.struct({
@@ -30,137 +22,19 @@ export type AssetEditDetail = C.TypeOf<typeof AssetEditDetail>;
 @Injectable()
 export class AssetEditService {
     constructor(
+        private readonly assetRepo: AssetRepo,
         private readonly prismaService: PrismaService,
         private readonly assetSearchService: AssetSearchService,
     ) {}
 
-    private _getAsset(assetId: number) {
+    public createAsset(user: User, patch: PatchAsset) {
         return pipe(
             TE.tryCatch(
-                () =>
-                    this.prismaService.asset.findUnique({
-                        where: { assetId },
-                        select: {
-                            assetId: true,
-                            titlePublic: true,
-                            titleOriginal: true,
-                            createDate: true,
-                            receiptDate: true,
-                            lastProcessedDate: true,
-                            processor: true,
-                            assetKindItemCode: true,
-                            assetFormatItemCode: true,
-                            languageItemCode: true,
-                            internalUse: true,
-                            publicUse: true,
-                            isNatRel: true,
-                            sgsId: true,
-                            geolDataInfo: true,
-                            geolContactDataInfo: true,
-                            geolAuxDataInfo: true,
-                            municipality: true,
-                            ids: true,
-                            assetContacts: { select: { role: true, contactId: true } },
-                            manCatLabelRefs: { select: { manCatLabelItemCode: true } },
-                            assetFormatCompositions: { select: { assetFormatItemCode: true } },
-                            typeNatRels: { select: { natRelItemCode: true } },
-                            assetMain: { select: { assetId: true, titlePublic: true } },
-                            subordinateAssets: { select: { assetId: true, titlePublic: true } },
-                            siblingXAssets: { select: { assetY: { select: { assetId: true, titlePublic: true } } } },
-                            siblingYAssets: { select: { assetX: { select: { assetId: true, titlePublic: true } } } },
-                            statusWorks: { select: { statusWorkItemCode: true, statusWorkDate: true } },
-                            assetFiles: { select: { file: true } },
-                        },
-                    }),
+                () => this.assetRepo.create({ user, patch }),
                 unknownToUnknownError,
             ),
-            TE.chainW(TE.fromPredicate(isNotNil, notFoundError)),
-            TE.chainW(a =>
-                pipe(
-                    postgresStudiesByAssetId(this.prismaService, a.assetId),
-                    TE.mapLeft(unknownToUnknownError),
-                    TE.map(studies => ({ ...a, studies })),
-                ),
-            ),
-            TE.chainW(a => pipe(TE.fromEither(AssetEditDetailFromPostgres.decode(a)), TE.mapLeft(decodeError))),
-        );
-    }
-    public getAsset(assetId: number) {
-        return pipe(this._getAsset(assetId), TE.map(AssetEditDetail.encode));
-    }
-
-    public createAsset(user: User, patchAsset: PatchAsset) {
-        return pipe(
-            TE.tryCatch(
-                () =>
-                    this.prismaService.asset.create({
-                        data: {
-                            titlePublic: patchAsset.titlePublic,
-                            titleOriginal: patchAsset.titleOriginal,
-                            createDate: DateIdFromDate.encode(patchAsset.createDate),
-                            receiptDate: DateIdFromDate.encode(patchAsset.receiptDate),
-                            assetKindItem: { connect: { assetKindItemCode: patchAsset.assetKindItemCode } },
-                            assetFormatItem: { connect: { assetFormatItemCode: patchAsset.assetFormatItemCode } },
-                            languageItem: { connect: { languageItemCode: patchAsset.languageItemCode } },
-                            isExtract: false,
-                            isNatRel: patchAsset.isNatRel,
-                            lastProcessedDate: new Date(),
-                            processor: user.email,
-                            manCatLabelRefs: {
-                                createMany: {
-                                    data: patchAsset.manCatLabelRefs.map(manCatLabelItemCode => ({
-                                        manCatLabelItemCode,
-                                    })),
-                                    skipDuplicates: true,
-                                },
-                            },
-                            assetContacts: {
-                                createMany: { data: patchAsset.assetContacts, skipDuplicates: true },
-                            },
-                            ids: {
-                                createMany: {
-                                    data: pipe(patchAsset.ids.map(({ id, description }) => ({ id, description }))),
-                                },
-                            },
-                            typeNatRels: {
-                                createMany: {
-                                    data: patchAsset.typeNatRels.map(natRelItemCode => ({ natRelItemCode })),
-                                    skipDuplicates: true,
-                                },
-                            },
-                            internalUse: {
-                                create: {
-                                    isAvailable: patchAsset.internalUse.isAvailable,
-                                    statusAssetUseItemCode: patchAsset.internalUse.statusAssetUseItemCode,
-                                    startAvailabilityDate: pipe(
-                                        patchAsset.internalUse.startAvailabilityDate,
-                                        O.map(dateFromDateId),
-                                        O.toNullable,
-                                    ),
-                                },
-                            },
-                            publicUse: {
-                                create: {
-                                    isAvailable: patchAsset.publicUse.isAvailable,
-                                    statusAssetUseItemCode: patchAsset.publicUse.statusAssetUseItemCode,
-                                    startAvailabilityDate: pipe(
-                                        patchAsset.publicUse.startAvailabilityDate,
-                                        O.map(dateFromDateId),
-                                        O.toNullable,
-                                    ),
-                                },
-                            },
-                            statusWorks: {
-                                create: {
-                                    statusWorkDate: new Date(),
-                                    statusWorkItemCode: 'initiateAsset',
-                                },
-                            },
-                        },
-                    }),
-                unknownToUnknownError,
-            ),
-            TE.chain(({ assetId }) => this._getAsset(assetId)),
+            TE.chain(({ assetId }) => TE.tryCatch(() => this.assetRepo.find(assetId), unknownToUnknownError)),
+            TE.chainW(TE.fromPredicate(isNotNull, notFoundError)),
             TE.tap((asset) => (
                 TE.tryCatch(() => this.assetSearchService.register(asset), unknownToUnknownError)
             )),
@@ -168,170 +42,10 @@ export class AssetEditService {
         );
     }
 
-    public updateAsset(user: User, assetId: number, patchAsset: PatchAsset) {
+    public updateAsset(user: User, assetId: number, patch: PatchAsset) {
         return pipe(
-            TE.tryCatch(
-                () =>
-                    this.prismaService.assetXAssetY.deleteMany({
-                        where: { OR: [{ assetXId: assetId }, { assetYId: assetId }] },
-                    }),
-                unknownToUnknownError,
-            ),
-            TE.chain(() =>
-                TE.tryCatch(
-                    () =>
-                        this.prismaService.assetXAssetY.createMany({
-                            data: patchAsset.siblingAssetIds.map(assetYId => ({ assetXId: assetId, assetYId })),
-                            skipDuplicates: true,
-                        }),
-                    unknownToUnknownError,
-                ),
-            ),
-            TE.chain(() =>
-                TE.tryCatch(
-                    () =>
-                        this.prismaService.asset.update({
-                            where: { assetId },
-                            data: {
-                                titlePublic: patchAsset.titlePublic,
-                                titleOriginal: patchAsset.titleOriginal,
-                                createDate: DateIdFromDate.encode(patchAsset.createDate),
-                                receiptDate: DateIdFromDate.encode(patchAsset.receiptDate),
-                                assetKindItemCode: patchAsset.assetKindItemCode,
-                                assetFormatItemCode: patchAsset.assetFormatItemCode,
-                                languageItemCode: patchAsset.languageItemCode,
-                                isNatRel: patchAsset.isNatRel,
-                                assetMainId: O.toUndefined(patchAsset.assetMainId),
-                                lastProcessedDate: new Date(),
-                                processor: user.email,
-                                manCatLabelRefs: {
-                                    deleteMany: {},
-                                    createMany: {
-                                        data: patchAsset.manCatLabelRefs.map(manCatLabelItemCode => ({
-                                            manCatLabelItemCode,
-                                        })),
-                                        skipDuplicates: true,
-                                    },
-                                },
-                                assetContacts: {
-                                    deleteMany: {},
-                                    createMany: { data: patchAsset.assetContacts, skipDuplicates: true },
-                                },
-                                ids: {
-                                    deleteMany: {
-                                        NOT: pipe(
-                                            patchAsset.ids,
-                                            A.map(id => id.idId),
-                                            A.compact,
-                                            A.map(idId => ({ idId })),
-                                        ),
-                                    },
-                                    upsert: [
-                                        ...pipe(
-                                            patchAsset.ids,
-                                            A.map(id => sequenceProps(id, 'idId')),
-                                            A.compact,
-                                            A.map(id => ({ where: { idId: id.idId }, create: id, update: id })),
-                                        ),
-                                        ...pipe(
-                                            patchAsset.ids,
-                                            A.filter(id => O.isNone(id.idId)),
-                                            A.map(id => ({
-                                                where: { idId: -1 },
-                                                create: { id: id.id, description: id.description },
-                                                update: {},
-                                            })),
-                                        ),
-                                    ],
-                                },
-                                typeNatRels: {
-                                    deleteMany: {},
-                                    createMany: {
-                                        data: patchAsset.typeNatRels.map(natRelItemCode => ({ natRelItemCode })),
-                                        skipDuplicates: true,
-                                    },
-                                },
-                            },
-                        }),
-                    unknownToUnknownError,
-                ),
-            ),
-            TE.chain(() =>
-                TE.tryCatch(
-                    () =>
-                        this.prismaService.asset.update({
-                            where: { assetId },
-                            data: {
-                                internalUse: {
-                                    update: {
-                                        isAvailable: patchAsset.internalUse.isAvailable,
-                                        statusAssetUseItemCode: patchAsset.internalUse.statusAssetUseItemCode,
-                                        startAvailabilityDate: pipe(
-                                            patchAsset.internalUse.startAvailabilityDate,
-                                            O.map(dateFromDateId),
-                                            O.toNullable,
-                                        ),
-                                    },
-                                },
-                                publicUse: {
-                                    update: {
-                                        isAvailable: patchAsset.publicUse.isAvailable,
-                                        statusAssetUseItemCode: patchAsset.publicUse.statusAssetUseItemCode,
-                                        startAvailabilityDate: pipe(
-                                            patchAsset.publicUse.startAvailabilityDate,
-                                            O.map(dateFromDateId),
-                                            O.toNullable,
-                                        ),
-                                    },
-                                },
-                            },
-                        }),
-                    unknownToUnknownError,
-                ),
-            ),
-            TE.chainW(() =>
-                pipe(
-                    patchAsset.newStatusWorkItemCode,
-                    O.map(workstatusItemCode =>
-                        TE.tryCatch(
-                            () =>
-                                this.prismaService.asset.update({
-                                    where: { assetId },
-                                    data: {
-                                        statusWorks: {
-                                            create: {
-                                                statusWorkDate: new Date(),
-                                                statusWorkItemCode: workstatusItemCode,
-                                            },
-                                        },
-                                    },
-                                }),
-                            unknownToUnknownError,
-                        ),
-                    ),
-                    O.getOrElseW(() => TE.right(undefined)),
-                ),
-            ),
-            TE.chain(() =>
-                TE.tryCatch(
-                    () =>
-                        this.prismaService.assetXAssetY.createMany({
-                            data: patchAsset.siblingAssetIds.map(assetYId => ({ assetXId: assetId, assetYId })),
-                            skipDuplicates: true,
-                        }),
-                    unknownToUnknownError,
-                ),
-            ),
-            TE.chain(() => updateStudies(this.prismaService, patchAsset.studies)),
-            TE.chain(() =>
-                deleteStudies(
-                    this.prismaService,
-                    assetId,
-                    patchAsset.studies.map(s => s.studyId),
-                ),
-            ),
-            TE.chain(() => createStudies(this.prismaService, assetId, patchAsset.newStudies)),
-            TE.chain(() => this._getAsset(assetId)),
+            TE.tryCatch(() => this.assetRepo.update(assetId, { user, patch }), unknownToUnknownError),
+            TE.chainW(TE.fromPredicate(isNotNull, notFoundError)),
             TE.tap((asset) => (
                 TE.tryCatch(() => this.assetSearchService.register(asset), unknownToUnknownError)
             )),

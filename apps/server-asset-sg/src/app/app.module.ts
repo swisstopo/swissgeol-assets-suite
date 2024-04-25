@@ -15,6 +15,7 @@ import { JwtMiddleware } from './jwt/jwt-middleware';
 import { OAuthController } from './oauth-config/oauth-config.controller';
 import { OcrController } from './ocr/ocr.controller';
 import { PrismaService } from './prisma/prisma.service';
+import { AssetRepo } from './repos/asset.repo';
 import { AssetSearchService } from './search/asset-search-service';
 import { provideElasticsearch } from './search/elasticsearch';
 import { UserController } from './user/user.controller';
@@ -39,6 +40,7 @@ import { UserService } from './user/user.service';
         UserService,
         AssetEditService,
         ContactEditService,
+        AssetRepo,
         AssetSearchService,
     ],
 })

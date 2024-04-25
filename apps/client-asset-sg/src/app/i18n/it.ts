@@ -221,5 +221,10 @@ export const itAppTranslations: AppTranslations = {
         adminInstructionsEdit: 'IT Suche nach einem Asset über das Menü Assets, um dieses zu verwalten.',
         adminInstructionsCreateHeading: 'IT Neues Asset',
         adminInstructionsCreate: 'IT Neues Asset erstellen',
+        adminInstructionsSyncElasticAssetsHeading: 'IT Assets mit Elasticsearch synchronisieren',
+        adminInstructionsSyncElasticAssets:
+            'IT Gleicht den Zustand von Elasticsearch mit der Datenbank ab.'
+            + 'IT Damit wird sichergestellt, dass die Suche alle vorhandenen Assets miteinbezieht.',
+        adminInstructionsSyncElasticAssetsStart: 'IT Synchronisation starten',
     },
 };

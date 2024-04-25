@@ -84,7 +84,7 @@ npm run start
 |:-------------------------|:-------------------------------------------------|:-------------------------|:-------------------------|
 | Assets (client)          | [localhost:4200](http://localhost:4200/)         | `admin@swissgeol.assets` | `swissgeol_assets`       |
 | Assets REST API (server) | [localhost:3333/api/](http://localhost:3333/api) | n/a                      | n/a                      |
-| postgresSQL (docker)     | localhost:5432                                   | .env `$DB_USER`          | .env `$DB_PASSWORD`      |
+| postgreSQL (docker)      | localhost:5432                                   | .env `$DB_USER`          | .env `$DB_PASSWORD`      |
 | Elasticsearch (docker)   | [localhost:9200](http://localhost:9200)          | n/a                      | n/a                      |
 | Kibana (docker)          | [localhost:5601](http://localhost:5601)          | n/a                      | n/a                      |
 | pgAdmin (docker)         | [localhost:5051](http://localhost:5051/)         | .env `$PGADMIN_EMAIL`    | .env `$PGADMIN_PASSWORD` |
@@ -92,8 +92,62 @@ npm run start
 | smtp4dev (docker)        | [localhost:5000](http://localhost:5000/)         | n/a                      | n/a                      |
 | oidc-server (docker)     | [localhost:4011](http://localhost:4011/)         | n/a                      | n/a                      |
 
-# Configuration
-## Asset Server Configuration
+### Importing Example Data
+You can dump data from a remote environment into a local file so you can initialize your development database with it.
+To do so, use the following commands.
+Be aware that you need to manually insert the `{DB_*}` values beforehand.
+```bash
+cd development
+docker compose exec db sh -c 'pg_dump --dbname=postgresql://{DB_USERNAME}:{DB_PASSWORD}@{DB_HOST}:5432/{DB_DATABASE} --data-only --exclude-table asset_user -n public > /dump.sql'
+```
+> The export will output warnings related to circular foreign-key constraints.
+> These can be safely ignored.
+
+> The export will only contain the database's data, not its structure.
+> Data related to the authentication process is also excluded,
+> so we don't run into conflicts when using a different eIAM provider.
+
+To import the dumped data, run the following commands.
+Ensure to start your database service beforehand.
+```bash
+# Reset the database:
+npm run prisma -- migrate reset -f
+npm run prisma -- migrate deploy
+
+# Import example data:
+cd development
+docker compose exec db sh -c 'psql --dbname=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:5432/${POSTGRES_DB} -f /dump.sql'
+```
+> You will need to manually sync the data to Elasticsearch via the admin panel in the web UI.
+
+## Testing
+> Tests execute automatically on every push to the Git repository.
+
+The local tests require a running instance of both _postgreSQL_ and _Elasticsearch_.
+Make sure that your local development environment is fully shutdown and then run the test services:
+```bash
+cd development
+docker compose down
+docker compose -f docker-compose.test.yml up
+```
+Then run all tests:
+```bash
+npm run test
+```
+It is also possible to run only specific tests:
+```bash
+# Run only the server tests:
+nx run server-asset-sg:test
+
+# Run only a specific test suite:
+nx run server-asset-sg:test -t 'AssetRepo'
+
+# Run only a specific, nested test suite:
+nx run server-asset-sg:test -t 'AssetRepo create'
+```
+
+## Configuration
+### Asset Server Configuration
 The file `apps/server-asset-sg/.env.local` configures secrets for the SwissGeol Asset server.
 An empty template for the file can be found in [`apps/server-asset-sg/.env.template`](apps/server-asset-sg/.env.template).
 
@@ -113,7 +167,7 @@ An empty template for the file can be found in [`apps/server-asset-sg/.env.templ
 | OCR_CALLBACK_URL     |                                                                                            | Leave empty.                                               |
 
 
-## Development Services Configuration
+### Development Services Configuration
 The file `development/.env` configures secrets for the services used in local development.
 An empty template for the file can be found in [`development/.env.template`](development/.env.template).
 

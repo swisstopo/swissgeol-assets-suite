@@ -16,7 +16,7 @@ import {
 } from '../postgres-studies/postgres-studies';
 import { PrismaService } from '../prisma/prisma.service';
 
-import { Repo } from './base/repo';
+import { Repo, RepoListOptions } from './base/repo';
 
 @Injectable()
 export class AssetRepo implements Repo<AssetEditDetail, number, AssetData> {
@@ -33,6 +33,15 @@ export class AssetRepo implements Repo<AssetEditDetail, number, AssetData> {
             return null;
         }
         return this.loadDetail(asset);
+    }
+
+    async list({ limit, offset = 0 }: RepoListOptions): Promise<AssetEditDetail[]> {
+        const assets = await this.prismaService.asset.findMany({
+            select: selectPrismaAsset,
+            take: limit,
+            skip: offset,
+        })
+        return await Promise.all(assets.map((it) => this.loadDetail(it)));
     }
 
     async create(data: AssetData): Promise<AssetEditDetail> {
@@ -130,10 +139,11 @@ export class AssetRepo implements Repo<AssetEditDetail, number, AssetData> {
                     },
                     ids: {
                         deleteMany: {
-                            NOT: data.patch.ids
-                                .map((it) => O.toNullable(it.idId))
-                                .filter(isNotNull)
-                                .map((idId) => ({ idId })),
+                            idId: {
+                                notIn: data.patch.ids
+                                    .map((it) => O.toNullable(it.idId))
+                                    .filter(isNotNull),
+                            }
                         },
                         upsert: [
                             ...data.patch.ids

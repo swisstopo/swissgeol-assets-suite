@@ -8,6 +8,7 @@ import {
     makeUsageCode,
 } from '@asset-sg/shared';
 
+import indexMapping from '../../../../../development/init/elasticsearch/mappings/swissgeol_asset_asset.json';
 import { clearPrismaAssets, setupDB } from '../../../../../test/setup-db';
 import { fakeAssetPatch, fakeUser } from '../asset-edit/asset-edit.fake';
 import { AssetEditDetail } from '../asset-edit/asset-edit.service';
@@ -21,9 +22,18 @@ describe(AssetSearchService, () => {
     const elastic = openElasticsearchClient()
     const prisma = new PrismaService()
     const assetRepo = new AssetRepo(prisma);
-    const service = new AssetSearchService(elastic, prisma);
+    const service = new AssetSearchService(elastic, prisma, assetRepo);
 
     beforeAll(async () => {
+        const existsIndex = await elastic.indices.exists({ index: ASSET_ELASTIC_INDEX });
+        if (!existsIndex) {
+            await elastic.indices.create({ index: ASSET_ELASTIC_INDEX });
+            await elastic.indices.putMapping({
+                index: ASSET_ELASTIC_INDEX,
+                ...indexMapping,
+            });
+        }
+        
         await setupDB(prisma);
     })
 

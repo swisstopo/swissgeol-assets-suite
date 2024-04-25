@@ -4,6 +4,7 @@ import { statusAssetUseItems } from './data/status-asset-use-item';
 import { assetFormatItems } from './data/asset-format-item';
 import { languageItems } from './data/language-items';
 import { statusWorkItems } from './data/status-work-item';
+import { manCatLabelItems } from './data/man-cat-label-item';
 
 const clearDB = async (prisma: PrismaClient, dbName: string): Promise<void> => {
     const tables = await prisma.$queryRawUnsafe(`
@@ -27,11 +28,12 @@ export const setupDB = async (prisma: PrismaClient): Promise<void> => {
     await clearDB(prisma, 'auth');
     await clearDB(prisma, 'public');
 
-    await prisma.statusAssetUseItem.createMany({ data: statusAssetUseItems });
-    await prisma.assetKindItem.createMany({ data: assetKindItems });
-    await prisma.assetFormatItem.createMany({ data: assetFormatItems })
-    await prisma.languageItem.createMany({ data: languageItems });
-    await prisma.statusWorkItem.createMany({ data: statusWorkItems });
+    await prisma.statusAssetUseItem.createMany({ data: statusAssetUseItems, skipDuplicates: true });
+    await prisma.assetKindItem.createMany({ data: assetKindItems, skipDuplicates: true });
+    await prisma.assetFormatItem.createMany({ data: assetFormatItems, skipDuplicates: true })
+    await prisma.languageItem.createMany({ data: languageItems, skipDuplicates: true });
+    await prisma.statusWorkItem.createMany({ data: statusWorkItems, skipDuplicates: true })
+    await prisma.manCatLabelItem.createMany({ data: manCatLabelItems, skipDuplicates: true });
 };
 
 export const clearPrismaAssets = async (prisma: PrismaClient): Promise<void> => {

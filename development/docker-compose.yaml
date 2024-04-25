@@ -1,5 +1,3 @@
-version: '3.7'
-
 services:
     storage:
         container_name: swissgeol-assets-storage
@@ -27,6 +25,7 @@ services:
             POSTGRES_DB: postgres
         volumes:
             - ./init/db:/docker-entrypoint-initdb.d
+            - ./init/dump.sql:/dump.sql
             - ./volumes/db/data/postgres:/var/lib/postgresql/data
         healthcheck:
             test: "pg_isready -U ${DB_USER} -d postgres -h db"

@@ -38,6 +38,30 @@ jobs:
   test:
     runs-on: ubuntu-latest
     needs: install
+    env:
+      DB_USERNAME: postgres-test
+      DB_PASSWORD: postgres-test
+      DB_DATABASE: postgres-test
+      DATABASE_URL: postgres://postgres-test:postgres-test@localhost:5432/postgres-test?schema=public
+    services:
+      db:
+        image: postgis/postgis
+        ports:
+          - '5432:5432'
+        env:
+          POSTGRES_USER: ${{ env.DB_USERNAME }}
+          POSTGRES_PASSWORD: ${{ env.DB_PASSWORD }}
+          POSTGRES_DB: ${{ env.DB_DATABASE }}
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+      elasticsearch:
+        image: docker.elastic.co/elasticsearch/elasticsearch:8.12.1
+        ports:
+          - '9200:9200'
+        env:
+          ES_JAVA_OPTS: -Xms512m -Xmx512m
+          xpack.security.enabled: false
+          discovery.type: single-node
+          cluster.routing.allocation.disk.threshold_enabled: false
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -50,6 +74,10 @@ jobs:
         with:
           path: ./node_modules
           key: "${{ runner.os }}-npm-${{ steps.cache-node-modules.outputs.cache-key }}"
+      - name: Migrate database
+        run: |
+          cd apps/server-asset-sg/
+          npx prisma migrate deploy --schema src/app/prisma/schema.prisma
       - name: Run tests
         run: npm run test
 

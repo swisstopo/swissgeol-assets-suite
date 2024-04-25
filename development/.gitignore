@@ -2,3 +2,6 @@
 
 volumes
 .env
+
+# DB dump for local development
+init/dump.sql
