@@ -15,6 +15,8 @@ import { JwtMiddleware } from './jwt/jwt-middleware';
 import { OAuthController } from './oauth-config/oauth-config.controller';
 import { OcrController } from './ocr/ocr.controller';
 import { PrismaService } from './prisma/prisma.service';
+import { AssetSearchService } from './search/asset-search-service';
+import { provideElasticsearch } from './search/elasticsearch';
 import { UserController } from './user/user.controller';
 import { UserService } from './user/user.service';
 
@@ -29,7 +31,16 @@ import { UserService } from './user/user.service';
         OcrController,
         OAuthController,
     ],
-    providers: [AppService, AdminService, PrismaService, UserService, AssetEditService, ContactEditService],
+    providers: [
+        provideElasticsearch,
+        AppService,
+        AdminService,
+        PrismaService,
+        UserService,
+        AssetEditService,
+        ContactEditService,
+        AssetSearchService,
+    ],
 })
 export class AppModule implements NestModule {
     configure(consumer: MiddlewareConsumer) {
