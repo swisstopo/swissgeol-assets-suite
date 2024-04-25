@@ -33,41 +33,6 @@ export const frAppTranslations: AppTranslations = {
         drawingModeOff: 'Mode de dessin désactivé',
         dragHandleLabel: 'Poignée de tirage',
     },
-    auth: {
-        signInHeading: 'Inscription à assets.swissgeol',
-        email: 'E-Mail',
-        password: 'Mot de passe',
-        signIn: 'Inscrire',
-        forgotPassword: 'Oublié le mot de passe ?',
-        invalidCredentials: 'Données de connexion non valables',
-        error: {
-            required: 'Ce champ est obligatoire',
-            email: 'Bitte geben Sie eine gültige E-Mail-Adresse ein',
-        },
-        recovery: {
-            enterEmail:
-                'Saisissez votre adresse e-mail et un lien pour réinitialiser votre mot de passe vous sera envoyé par e-mail.',
-            backToLogin: "Retour à l'inscription",
-            tooManyRequests:
-                "Pour des raisons de sécurité, vous ne pouvez en faire la demande qu'une fois toutes les 60 secondes.",
-            recoverySuccess:
-                'Veuillez cliquer sur le lien que vous avez reçu par e-mail pour réinitialiser votre mot de passe.',
-        },
-        reset: {
-            welcome: 'Créer un nouveau mot de passe',
-            enterPassword: 'Veuillez saisir un mot de passe.',
-            unauthorised: 'Non autorisé',
-            invalidEmailLink: "Le lien e-mail n'est pas valide ou a expiré.",
-        },
-        set: {
-            welcome: 'Bienvenue sur asset.swissgeol',
-            enterPassword: "Veuillez saisir un mot de passe pour terminer l'enregistrement.",
-        },
-    },
-    userManagement: {
-        createNewUser: 'Créer un nouvel utilisateur',
-        confirmDelete: " Voulez-vous vraiment supprimer l'utilisateur suivant ?",
-    },
     search: {
         textSearchFieldPlaceholder: 'Recherche par titre original ou public et auteur ou déposant',
         searchInstructionsHeading: "Recherche d'assets",

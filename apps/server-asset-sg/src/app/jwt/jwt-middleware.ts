@@ -23,11 +23,11 @@ export class JwtMiddleware implements NestMiddleware {
         await this.cacheManager.set('jwk', E.isRight(jwk) ? jwk.right : [], 60 * 1000);
 
         const token = this.extractTokenFromHeaderE(req);
-
-        // Decode token, get JWK, convert JWK to PEM, and verify token
+        // Decode token, check groups permission, get JWK, convert JWK to PEM, and verify token
         const result = pipe(
             token,
             E.chain(this.decodeTokenE),
+            E.chain(this.isAuthorizedByGroupE),
             E.chain(decoded =>
                 pipe(
                     jwk,
@@ -44,7 +44,7 @@ export class JwtMiddleware implements NestMiddleware {
             (req as AuthenticatedRequest).jwtPayload = result.right.jwtPayload as JwtPayload;
             next();
         } else {
-            throw result.left;
+          _res.status(403).json({ error: result.left.message });
         }
     }
 
@@ -81,6 +81,16 @@ export class JwtMiddleware implements NestMiddleware {
         );
     }
 
+  private isAuthorizedByGroupE(jwt: Jwt): E.Either<Error, Jwt> {
+      const authorizedGroups = process.env.OAUTH_AUTHORIZED_GROUPS?.split(',').map(group => group.trim().toLowerCase())
+      if (!authorizedGroups) {
+        return E.left(new Error('An internal server error occurred. Please try again.'));
+      }
+      const userGroups = (jwt.payload as JwtPayload)['cognito:groups'].map(((group: string) => group.trim().toLowerCase())) as string[];
+      const isUserAuthorized = userGroups.some(group => authorizedGroups.includes(group));
+      return isUserAuthorized ? E.right(jwt) : E.left(new Error('You are not authorized to access this resource'));
+  }
+
     private getJwkTE(): TE.TaskEither<Error, JwksKey[]> {
         return pipe(
             TE.tryCatch(
@@ -90,6 +100,8 @@ export class JwtMiddleware implements NestMiddleware {
             TE.map(response => response.data.keys),
         );
     }
+
+
 
     private getSigningKeyE(decoded: Jwt, jwks: JwksKey[]): E.Either<Error, JwksKey> {
         return pipe(
