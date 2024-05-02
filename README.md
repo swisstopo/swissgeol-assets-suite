@@ -43,7 +43,7 @@ npm run postinstall
 Generate prisma-client for database-access:
 ```bash
 cd apps/server-asset-sg/
-ng gen-prisma-client
+npm run prisma -- generate
 ```
 
 Build postgis-gotrue docker image:
