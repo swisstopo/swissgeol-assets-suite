@@ -22,16 +22,16 @@ export interface LineString {
 }
 export const linestringToPositions = (p: LineString) => p.coords.map(toPosition);
 
-export interface Polygon {
+export interface StudyPolygon {
     _tag: 'Polygon';
     coords: LV95[];
 }
-export const polygonToPositions = (p: Polygon) => p.coords.map(toPosition);
+export const polygonToPositions = (p: StudyPolygon) => p.coords.map(toPosition);
 
 export const Geom = makeADT('_tag')({
     Point: ofType<Point>(),
     LineString: ofType<LineString>(),
-    Polygon: ofType<Polygon>(),
+    Polygon: ofType<StudyPolygon>(),
 });
 export type Geom = ADTType<typeof Geom>;
 export const eqGeom: Eq<Geom> = {
@@ -56,7 +56,7 @@ export const eqGeom: Eq<Geom> = {
 export const GeomWithCoords = Geom.exclude(['Point']);
 export type GeomWithCoords = ADTType<typeof GeomWithCoords>;
 
-export const getStudyWithPolygon = (s: Study): O.Option<Study & { geom: Polygon }> =>
+export const getStudyWithPolygon = (s: Study): O.Option<Study & { geom: StudyPolygon }> =>
     pipe(
         s.geom,
         O.fromPredicate(Geom.is.Polygon),

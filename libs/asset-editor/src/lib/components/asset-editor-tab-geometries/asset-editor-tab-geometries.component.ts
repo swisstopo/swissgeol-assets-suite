@@ -81,7 +81,7 @@ import { OO, sequenceProps } from '@asset-sg/core';
 import {
     Geom,
     Point as GeomPoint,
-    Polygon as GeomPolygon,
+    StudyPolygon as GeomPolygon,
     GeomWithCoords,
     LV95,
     LV95X,
