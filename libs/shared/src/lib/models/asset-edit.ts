@@ -74,3 +74,9 @@ export const BaseAssetEditDetail = {
     statusWorks: C.array(StatusWork),
     assetFiles: C.array(AssetFile),
 };
+
+export const AssetEditDetail = C.struct({
+  ...BaseAssetEditDetail,
+  studies: C.array(C.struct({ assetId: C.number, studyId: C.string, geomText: C.string })),
+});
+export type AssetEditDetail = C.TypeOf<typeof AssetEditDetail>;
