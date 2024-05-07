@@ -82,7 +82,7 @@ export class AppService {
                                             SearchAssetResult.matchStrict({
                                                 SearchAssetResultNonEmpty: (result) => (
                                                     TE.tryCatch(
-                                                        () => this.assetSearchService.search(searchText, {
+                                                        () => this.assetSearchService.searchOld(searchText, {
                                                             scope: ['titlePublic', 'titleOriginal', 'contactNames'],
                                                             assetIds: result.assets.map(asset => asset.assetId),
                                                         }),
@@ -209,7 +209,7 @@ export class AppService {
     //          where asset_id=${assetId}}`,
     //     );
     // }
-    
+
     getReferenceData() {
         const qt = <A, K extends keyof A>(f: Lazy<Promise<A[]>>, key: K, newKey: string) =>
             pipe(

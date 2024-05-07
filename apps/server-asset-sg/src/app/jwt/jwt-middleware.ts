@@ -8,15 +8,39 @@ import { pipe } from 'fp-ts/function';
 import * as TE from 'fp-ts/TaskEither';
 import * as jwt from 'jsonwebtoken';
 import { Jwt, JwtPayload } from 'jsonwebtoken';
-import * as jwkToPem from 'jwk-to-pem';
+import jwkToPem from 'jwk-to-pem';
 
 import { AuthenticatedRequest } from '../models/request';
+import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class JwtMiddleware implements NestMiddleware {
-    constructor(@Inject(CACHE_MANAGER) private cacheManager: Cache) {}
+    constructor(
+      @Inject(CACHE_MANAGER) private cacheManager: Cache,
+      private readonly prisma: PrismaService,
+    ) {}
 
-    async use(req: Request, _res: Response, next: NextFunction) {
+    async use(req: Request, res: Response, next: NextFunction) {
+        if (process.env.NODE_ENV === 'development') {
+          const authentication = req.header('Authorization');
+          if (authentication != null && authentication.startsWith('Impersonate ')) {
+            const email = authentication.split(' ', 2)[1];
+            const user = await this.prisma.assetUser.findFirst({
+              where: { email: { equals: email, mode: 'insensitive' } },
+              select: {
+                id: true,
+              }
+            });
+            if (user == null) {
+              res.status(401).json({ error: `no such user: ${email}` });
+              return;
+            }
+            (req as AuthenticatedRequest).accessToken = 'impersonated';
+            (req as AuthenticatedRequest).jwtPayload = { sub: user.id };
+            return next();
+          }
+        }
+
         // Get JWK from cache if exists, otherwise fetch from issuer and set to cache for 1 minute
         const cachedJwk = await this.getJwkFromCache()();
         const jwk = E.isRight(cachedJwk) ? cachedJwk : await this.getJwkTE()();
@@ -44,7 +68,7 @@ export class JwtMiddleware implements NestMiddleware {
             (req as AuthenticatedRequest).jwtPayload = result.right.jwtPayload as JwtPayload;
             next();
         } else {
-          _res.status(403).json({ error: result.left.message });
+          res.status(403).json({ error: result.left.message });
         }
     }
 
@@ -100,8 +124,6 @@ export class JwtMiddleware implements NestMiddleware {
             TE.map(response => response.data.keys),
         );
     }
-
-
 
     private getSigningKeyE(decoded: Jwt, jwks: JwksKey[]): E.Either<Error, JwksKey> {
         return pipe(
