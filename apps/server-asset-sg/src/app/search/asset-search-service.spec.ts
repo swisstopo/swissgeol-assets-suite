@@ -33,7 +33,7 @@ describe(AssetSearchService, () => {
                 ...indexMapping,
             });
         }
-        
+
         await setupDB(prisma);
     })
 
@@ -140,7 +140,7 @@ describe(AssetSearchService, () => {
             }));
 
             // When
-            const result = await service.search(uniqueString, {
+            const result = await service.searchOld(uniqueString, {
                 scope: [property],
             });
 
@@ -153,7 +153,7 @@ describe(AssetSearchService, () => {
 
         it('should return an empty result when no assets exist', async () => {
             // When
-            const result = await service.search('', {
+            const result = await service.searchOld('', {
                 scope: ['titlePublic', 'titleOriginal', 'contactNames'],
             });
 

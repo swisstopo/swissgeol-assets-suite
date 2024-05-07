@@ -53,3 +53,5 @@ __pycache__
 .env.staging
 .env.prod
 
+# NX cache
+.nx/

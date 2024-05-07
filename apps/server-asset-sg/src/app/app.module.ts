@@ -20,6 +20,7 @@ import { AssetSearchService } from './search/asset-search-service';
 import { provideElasticsearch } from './search/elasticsearch';
 import { UserController } from './user/user.controller';
 import { UserService } from './user/user.service';
+import { AssetSearchController } from './assets-search/asset-search.controller';
 
 @Module({
     imports: [HttpModule, ScheduleModule.forRoot(), CacheModule.register()],
@@ -28,6 +29,7 @@ import { UserService } from './user/user.service';
         AdminController,
         UserController,
         AssetEditController,
+        AssetSearchController,
         ContactEditController,
         OcrController,
         OAuthController,

@@ -23,7 +23,7 @@ export class AssetRepo implements Repo<AssetEditDetail, number, AssetData> {
     constructor(
         private readonly prismaService: PrismaService,
     ) {}
-    
+
     async find(id: number): Promise<AssetEditDetail | null> {
         const asset = await this.prismaService.asset.findUnique({
             where: { assetId: id },
@@ -35,9 +35,12 @@ export class AssetRepo implements Repo<AssetEditDetail, number, AssetData> {
         return this.loadDetail(asset);
     }
 
-    async list({ limit, offset = 0 }: RepoListOptions): Promise<AssetEditDetail[]> {
+    async list({ limit, offset = 0, ids }: RepoListOptions<number>): Promise<AssetEditDetail[]> {
         const assets = await this.prismaService.asset.findMany({
             select: selectPrismaAsset,
+            where: ids == null ? undefined : {
+              assetId: { in: ids }
+            },
             take: limit,
             skip: offset,
         })
@@ -150,7 +153,7 @@ export class AssetRepo implements Repo<AssetEditDetail, number, AssetData> {
                                 .map((it) => ({ ...it, idId: O.toNullable(it.idId) }))
                                 .filter((it): it is PatchAsset['ids'][0] & { idId: number } => it.idId !== null)
                                 .map((it) => ({ where: { idId: it.idId }, create: it, update: it })),
-                            
+
                             ...data.patch.ids
                                 .filter((it) => O.isNone(it.idId))
                                 .map((it) => ({

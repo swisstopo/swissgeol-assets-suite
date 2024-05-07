@@ -37,7 +37,7 @@ export class AppController implements OnApplicationBootstrap {
     @Get('search-asset')
     async searchAsset(@Query('searchText') searchText: string) {
         try {
-            return this.assetSearchService.search(searchText, {
+            return this.assetSearchService.searchOld(searchText, {
                 scope: ['titlePublic', 'titleOriginal', 'contactNames', 'sgsId'],
             })
         } catch (e) {
@@ -76,14 +76,7 @@ export class AppController implements OnApplicationBootstrap {
         @Req() req: AuthenticatedRequest,
         @Res() res: Response,
     ): Promise<{ progress: number } | void> {
-        const userResult = await this.userService.getUser(req.jwtPayload.sub || '')()
-        if (E.isLeft(userResult)) {
-            throw new HttpException(userResult.left.message, 500);
-        }
-        const user = userResult.right;
-        if (!isAdmin(user)) {
-            throw new HttpException('Operation not permitted', 403);
-        }
+
         try {
             const data = await fs.readFile(assetSyncFile, { encoding: 'utf-8' });
             const state: AssetSyncState = JSON.parse(data);
