@@ -58,6 +58,15 @@ export class AssetSearchService {
   }
 
   async syncWithDatabase(onProgress?: (percentage: number) => (void | Promise<void>)): Promise<void> {
+    // Write all Prisma assets into the sync index.
+    const total = await this.prisma.asset.count();
+    if (total === 0) {
+      if (onProgress != null) {
+        onProgress(1);
+      }
+      return
+    }
+
     // Initialize a temporary sync index.
     const SYNC_INDEX = `sync-${INDEX}-${getDateTimeString()}`;
     const existsSyncIndex = await this.elastic.indices.exists({ index: SYNC_INDEX });
@@ -71,18 +80,16 @@ export class AssetSearchService {
       ...indexMapping,
     });
 
-    // Write all Prisma assets into the sync index.
-    const total = await this.prisma.asset.count();
     let offset = 0;
     for (; ;) {
-      const records = await this.assetRepo.list({ limit: 1_00, offset });
+      const records = await this.assetRepo.list({ limit: 1000, offset });
       if (records.length === 0) {
         break;
       }
       await this.registerWithOptions(records, { index: SYNC_INDEX });
       offset += records.length;
       if (onProgress != null) {
-        await onProgress(offset / total);
+        await onProgress(Math.min(offset / total, 1));
       }
     }
 
@@ -101,6 +108,9 @@ export class AssetSearchService {
       source: { index: SYNC_INDEX },
       dest: { index: INDEX },
     });
+
+    // Refresh the asset index so its contents are searchable.
+    await this.elastic.indices.refresh({ index: INDEX });
 
     // Delete the sync index.
     await this.elastic.indices.delete({ index: SYNC_INDEX });
@@ -534,7 +544,7 @@ export class AssetSearchService {
       languageItemCode: asset.languageItemCode,
       usageCode: makeUsageCode(asset.publicUse.isAvailable, asset.internalUse.isAvailable),
       authorIds: asset.assetContacts.filter((it) => it.role === 'author').map((it) => it.contactId),
-      contactNames: contacts.map((it) => it.name), // TODO
+      contactNames: contacts.map((it) => it.name),
       manCatLabelItemCodes: asset.manCatLabelRefs,
     };
   }

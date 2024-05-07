@@ -295,7 +295,10 @@ export class AssetRepo implements Repo<AssetEditDetail, number, AssetData> {
     }
 }
 
-interface AssetData {
+/**
+ * The data required to create or update an {@link AssetEditDetail}.
+ */
+export interface AssetData {
     patch: PatchAsset,
     user: User
 }
