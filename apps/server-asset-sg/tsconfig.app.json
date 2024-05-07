@@ -6,6 +6,8 @@
         "types": ["node"],
         "emitDecoratorMetadata": true,
         "allowSyntheticDefaultImports": true,
+        "resolveJsonModule": true,
+        "esModuleInterop": true,
         "strict": true,
         "target": "es2015"
     },

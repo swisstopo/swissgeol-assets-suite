@@ -30,6 +30,9 @@
     "manCatLabelItemCodes": {
       "type": "keyword"
     },
+    "geometryCodes": {
+      "type": "keyword"
+    },
     "sgsId": {
       "type": "keyword"
     },
