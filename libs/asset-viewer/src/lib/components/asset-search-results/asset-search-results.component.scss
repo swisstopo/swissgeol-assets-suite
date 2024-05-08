@@ -2,76 +2,33 @@
 @use '../../styles/drawer-panel-mixins' as drawerPanel;
 
 :host {
-    @include drawerPanel.drawer-panel-width;
-    padding: 0 1rem 1rem 0;
-    position: relative;
-    display: flex;
-    flex-direction: column;
+  @include drawerPanel.drawer-panel-width;
+  padding: 0 1rem 1rem 0;
+  position: relative;
+  display: flex;
+  flex-direction: column;
 }
 
 @include drawerPanel.draw-panel-header;
 @include drawerPanel.draw-panel-header-underline;
 
 .search-results {
-    overflow-y: scroll;
-    overflow-x: hidden;
+  overflow-y: scroll;
+  overflow-x: hidden;
 }
 
 .asset-result {
-    background-color: variables.$white;
-    padding: 0.25rem 1rem 0.75rem 1rem;
-    margin-bottom: 0.75rem;
-    display: grid;
-    grid-template-areas: 'status actions' 'body body';
-    grid-template-columns: 1fr 1fr;
+  background-color: variables.$white;
+  padding: 0.25rem 1rem 0.75rem 1rem;
+  margin-bottom: 0.75rem;
+
 }
 
-.asset-body {
-    padding-top: 0.875rem;
-    grid-area: body;
-    & > * {
-        margin: 0.125rem 0;
-    }
-}
-
-[asset-sg-reset].asset-title-public {
-    color: variables.$cyan-09;
-    font-weight: variables.$font-bold;
-    margin-bottom: 0.75rem;
-    display: inline-block;
-    text-align: left;
-    &.active {
-        color: variables.$dark-red;
-    }
-}
-
-.asset-status {
-    grid-area: status;
-    height: 2.5rem;
-    justify-self: left;
-    display: grid;
-    place-items: center;
-}
-
-.asset-actions {
-    grid-area: actions;
-    justify-self: right;
-    margin-right: -0.75rem;
-}
-
-.asset-edit,
-.asset-favourite {
-    height: 2.5rem;
-    width: 2.5rem;
-    color: variables.$cyan-09;
-}
-
-.asset-man-cat-label-item-author--last,
-.asset-author--last {
-    margin-bottom: 0.25rem;
-}
-
-.asset-kind-format {
-    font-weight: variables.$font-bold;
-    margin-bottom: 0.25rem;
+.loading-spinner {
+  position: absolute;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  background-color: variables.$grey-03;
 }

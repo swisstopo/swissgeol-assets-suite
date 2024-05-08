@@ -1,114 +1,152 @@
 <div class="header" translate="search.searchControl"></div>
 
 <div class="scrollable-area">
-    <div class="search-control-wrapper">
-        <a
-            asset-sg-primary
-            translate
-            [routerLink]="[]"
-            [queryParams]="{ searchParams: undefined, assetId: undefined }"
-            queryParamsHandling="merge"
-            >search.resetSearch</a
-        >
-        <button
-            asset-sg-primary
-            *ngIf="(_searchPolygon$ | push)._tag === 'Some'"
-            (click)="removePolygon$.emit()"
-            translate>
-            search.removePolygon
-        </button>
+  <div class="search-control-wrapper">
+    <button
+      asset-sg-primary
+      translate
+      (click)="resetSearch()"
+    >search.resetSearch
+    </button
+    >
+    <button
+      asset-sg-primary
+      *ngIf="(assetSearchQuery$ | push).polygon"
+      (click)="removePolygon()"
+      translate>
+      search.removePolygon
+    </button>
+  </div>
+  <div class="refine-header" translate="search.refineSearch"></div>
+  <h4 translate>search.usage</h4>
+  <div class="filter-group">
+    <div *ngFor="let usageCode of usageCodes">
+      <button [disabled]="usageCode.count === 0" (click)="updateUsageCodes(usageCode)"
+              class="filter-button"
+              [ngClass]="{'active': usageCode.isActive, 'disabled': !usageCode.isAvailable}">{{ 'search.usageCode.' + usageCode.value | translate }}
+        ({{ usageCode.count }})
+      </button>
     </div>
-    <div class="refine-header" translate="search.refineSearch"></div>
-    <form [formGroup]="formGroup">
-        <ng-container *rxLet="formErrorMessages$; let formErrorMessages">
-            <h4 translate>search.usage</h4>
-            <div class="tags-listbox" #usageListboxWrapper></div>
-            <h4 translate>search.geometry</h4>
-            <div class="tags-listbox" #geomListboxWrapper></div>
-            <h4 translate>search.language</h4>
-            <div class="tags-listbox" #languageListboxWrapper></div>
-            <h4 translate>search.kind</h4>
-            <div class="tags-listbox" #assetKindListboxWrapper></div>
-            <h4 translate>search.topic</h4>
-            <div class="tags-listbox" #manCatLabelsListboxWrapper></div>
-            <h4 translate>search.author</h4>
-            <mat-form-field>
-                <mat-label translate>search.author</mat-label>
-                <input
-                    #authorInput
-                    matInput
-                    type="text"
-                    formControlName="author"
-                    placeholder="Autor wählen"
-                    cdkMonitorElementFocus
-                    [matAutocomplete]="authorBucketsAutoComplete" />
-                <button
-                    class="input-clear-button"
-                    asset-sg-icon-button
-                    matSuffix
-                    cdkMonitorElementFocus
-                    (click)="formGroup.controls['author'].setValue(null)">
-                    <svg-icon key="close"></svg-icon>
-                </button>
-                <mat-autocomplete
-                    #authorBucketsAutoComplete="matAutocomplete"
-                    [displayWith]="authorAutocompleteDisplayFn">
-                    <mat-option
-                        *rxFor="let author of authorsFiltered$"
-                        [value]="author"
-                        [class.mat-selected]="author.name === authorInput.value">
-                        {{ author.name }}
-                    </mat-option>
-                </mat-autocomplete>
-                <mat-error *ngIf="formErrorMessages.author._tag === 'Some'">{{
-                    formErrorMessages.author.value
-                }}</mat-error>
-            </mat-form-field>
-            <h4 translate>search.documentDate</h4>
-            <ng-container *rxLet="createDateRange$; let createDateRange">
-                <mat-form-field [class.with-error]="formErrorMessages.createDateFrom._tag === 'Some'">
-                    <mat-label>Datum von</mat-label>
-                    <input
-                        matInput
-                        cdkMonitorElementFocus
-                        type="text"
-                        formControlName="createDateFrom"
-                        [placeholder]="'datePlaceholder' | translate"
-                        [min]="createDateRange.min"
-                        [max]="createDateRange.max"
-                        [matDatepicker]="createDateFromPicker" />
-                    <mat-datepicker-toggle matSuffix [for]="createDateFromPicker" cdkMonitorSubtreeFocus>
-                        <asset-sg-datepicker-toggle-icon matDatepickerToggleIcon></asset-sg-datepicker-toggle-icon>
-                    </mat-datepicker-toggle>
-                    <mat-datepicker
-                        #createDateFromPicker
-                        [startAt]="formGroup.controls['createDateFrom'].value || createDateRange.min"></mat-datepicker>
-                    <mat-error *ngIf="formErrorMessages.createDateFrom._tag === 'Some'">{{
-                        formErrorMessages.createDateFrom.value
-                    }}</mat-error>
-                </mat-form-field>
-                <mat-form-field [class.with-error]="formErrorMessages.createDateTo._tag === 'Some'">
-                    <mat-label>Datum bis</mat-label>
-                    <input
-                        matInput
-                        cdkMonitorElementFocus
-                        type="text"
-                        formControlName="createDateTo"
-                        [placeholder]="'datePlaceholder' | translate"
-                        [min]="createDateRange.min"
-                        [max]="createDateRange.max"
-                        [matDatepicker]="createDateToPicker" />
-                    <mat-datepicker-toggle matSuffix [for]="createDateToPicker" cdkMonitorSubtreeFocus>
-                        <asset-sg-datepicker-toggle-icon matDatepickerToggleIcon></asset-sg-datepicker-toggle-icon>
-                    </mat-datepicker-toggle>
-                    <mat-datepicker
-                        #createDateToPicker
-                        [startAt]="formGroup.controls['createDateTo'].value || createDateRange.max"></mat-datepicker>
-                    <mat-error *ngIf="formErrorMessages.createDateTo._tag === 'Some'">{{
-                        formErrorMessages.createDateTo.value
-                    }}</mat-error>
-                </mat-form-field>
-            </ng-container>
-        </ng-container>
-    </form>
+  </div>
+  <h4 translate>search.geometry</h4>
+  <div class="filter-group">
+    <div *ngFor="let geomCode of availableGeomteryCodes">
+      <button [disabled]="geomCode.count === 0" (click)="updateGeometryCodes(geomCode)"
+              class="filter-button"
+              [ngClass]="{'active': geomCode.isActive, 'disabled': !geomCode.isAvailable}">{{ 'search.geometryCode.' + geomCode.value | translate }}
+        ({{ geomCode.count }})
+      </button>
+    </div>
+  </div>
+  <h4 translate>search.language</h4>
+  <div class="filter-group">
+    <div *ngFor="let language of availableLanguages">
+      <button [disabled]="!language.isAvailable"
+              (click)="updateLanguages(language)"
+              class="filter-button"
+              [ngClass]="{'active': language.isActive, 'disabled': !language.isAvailable}">{{ language.displayName }}
+        ({{ language.count }})
+      </button>
+    </div>
+  </div>
+  <h4 translate>search.kind</h4>
+  <div class="filter-group">
+    <div *ngFor="let assetKindItem of availableAssetKindItems">
+      <button [disabled]="!assetKindItem.isAvailable"
+              (click)="updateAssetKindItems(assetKindItem)"
+              class="filter-button"
+              [ngClass]="{'active': assetKindItem.isActive, 'disabled': !assetKindItem.isAvailable}">{{ assetKindItem.displayName }}
+        ({{ assetKindItem.count }})
+      </button>
+    </div>
+  </div>
+  <h4 translate>search.topic</h4>
+  <div class="filter-group">
+    <div *ngFor="let manCatLabel of availableManCatLabels">
+      <button [disabled]="!manCatLabel.isAvailable"
+              (click)="updateManCatLabel(manCatLabel)"
+              class="filter-button"
+              [ngClass]="{'active': manCatLabel.isActive, 'disabled': !manCatLabel.isAvailable}">{{ manCatLabel.displayName }}
+        ({{ manCatLabel.count }})
+      </button>
+    </div>
+  </div>
+  <h4 translate>search.author</h4>
+  <form>
+    <mat-form-field>
+      <mat-label translate>search.author</mat-label>
+      <input type="text"
+             placeholder="Autor wählen"
+             matInput
+             [formControl]="authorAutoCompleteControl"
+             [matAutocomplete]="auto">
+      <button
+        class="input-clear-button"
+        asset-sg-icon-button
+        matSuffix
+        cdkMonitorElementFocus
+        (click)="resetAuthorSearch()">
+        <svg-icon key="close"></svg-icon>
+      </button>
+      <mat-autocomplete #auto="matAutocomplete">
+        <mat-option *ngFor="let author of filteredAuthors" [value]="author.name"
+                    (onSelectionChange)="updateAuthor($event, author.contactId)"> {{ author.name }}
+          ({{ author.count }})
+        </mat-option>
+      </mat-autocomplete>
+    </mat-form-field>
+  </form>
+  <h4 translate>search.documentDate</h4>
+  <mat-form-field>
+    <mat-label>Datum von</mat-label>
+    <input
+      matInput
+      cdkMonitorElementFocus
+      type="text"
+      [placeholder]="'datePlaceholder' | translate"
+      [formControl]="minDateControl"
+      [min]="createDateRange?.min"
+      [max]="createDateRange?.max"
+      [matDatepicker]="createDateFromPicker" />
+    <mat-datepicker-toggle matPrefix [for]="createDateFromPicker" cdkMonitorSubtreeFocus>
+      <asset-sg-datepicker-toggle-icon matDatepickerToggleIcon></asset-sg-datepicker-toggle-icon>
+    </mat-datepicker-toggle>
+    <mat-datepicker
+      #createDateFromPicker
+      [startAt]="createDateRange?.min ?? null "></mat-datepicker>
+    <button
+      class="input-clear-button"
+      asset-sg-icon-button
+      matSuffix
+      cdkMonitorElementFocus
+      (click)="resetMinDateRangeSearch()">
+      <svg-icon key="close"></svg-icon>
+    </button>
+  </mat-form-field>
+  <mat-form-field>
+    <mat-label>Datum bis</mat-label>
+    <input
+      matInput
+      cdkMonitorElementFocus
+      type="text"
+      [formControl]="maxDateControl"
+      [placeholder]="'datePlaceholder' | translate"
+      [min]="createDateRange?.min"
+      [max]="createDateRange?.max"
+      [matDatepicker]="createDateToPicker" />
+    <mat-datepicker-toggle matPrefix [for]="createDateToPicker" cdkMonitorSubtreeFocus>
+      <asset-sg-datepicker-toggle-icon matDatepickerToggleIcon></asset-sg-datepicker-toggle-icon>
+    </mat-datepicker-toggle>
+    <mat-datepicker
+      #createDateToPicker
+      [startAt]="createDateRange?.max ?? null"></mat-datepicker>
+    <button
+      class="input-clear-button"
+      asset-sg-icon-button
+      matSuffix
+      cdkMonitorElementFocus
+      (click)="resetMaxDateRangeSearch()">
+      <svg-icon key="close"></svg-icon>
+    </button>
+  </mat-form-field>
 </div>

@@ -1,21 +1,33 @@
 import { HttpClient } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
+import { Component, inject } from '@angular/core';
+import { Store } from '@ngrx/store';
 import { map } from 'rxjs';
 
-import { ApiError } from '@asset-sg/client-shared';
-import { ORD } from '@asset-sg/core';
+import { AppState } from '@asset-sg/client-shared';
 import { AssetFile } from '@asset-sg/shared';
 
-import { AssetDetailVM } from '../../state/asset-viewer.selectors';
+import * as actions from '../../state/asset-search/asset-search.actions';
+import { LoadingState } from '../../state/asset-search/asset-search.reducer';
+import {
+  selectAssetDetailLoadingState,
+  selectCurrentAssetDetailVM,
+} from '../../state/asset-search/asset-search.selector';
 
 @Component({
   selector: 'asset-sg-asset-search-detail',
   templateUrl: './asset-search-detail.component.html',
   styleUrls: ['./asset-search-detail.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AssetSearchDetailComponent {
-  @Input() public rdAssetDetail$?: ORD.ObservableRemoteData<ApiError, AssetDetailVM>;
+  private _store = inject(Store<AppState>);
+  public readonly assetDetail$ = this._store.select(selectCurrentAssetDetailVM);
+  public loadingState = this._store.select(selectAssetDetailLoadingState);
+
+  public resetAssetDetail() {
+    this._store.dispatch(actions.resetAssetDetail());
+  }
+
+  protected readonly LoadingState = LoadingState;
 
   constructor(private httpClient: HttpClient) {
   }
@@ -38,7 +50,7 @@ export class AssetSearchDetailComponent {
       anchor.remove();
       setTimeout(() => {
         window.URL.revokeObjectURL(url);
-      })
-    })
+      });
+    });
   }
 }

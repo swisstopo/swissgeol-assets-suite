@@ -14,49 +14,49 @@ import { AppState } from '../../state/app-state';
 
 @UntilDestroy()
 @Component({
-    selector: 'asset-sg-menu-bar',
-    templateUrl: './menu-bar.component.html',
-    styleUrls: ['./menu-bar.component.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush,
-    host: {
-        role: 'navigation',
-    },
+  selector: 'asset-sg-menu-bar',
+  templateUrl: './menu-bar.component.html',
+  styleUrls: ['./menu-bar.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  host: {
+    role: 'navigation',
+  },
 })
 export class MenuBarComponent {
-    private _router = inject(Router);
-    public _translateService = inject(TranslateService);
-    private _store = inject(Store<AppState>);
+  private _router = inject(Router);
+  public _translateService = inject(TranslateService);
+  private _store = inject(Store<AppState>);
 
-    private userProfile$ = inject(Store<AppState>).select(fromAppShared.selectRDUserProfile);
-    public isAdmin$ = this.userProfile$.pipe(map(user => RD.isSuccess(user) && isAdmin(user.value)));
-    public isEditor$ = this.userProfile$.pipe(map(user => RD.isSuccess(user) && isEditor(user.value)));
+  private userProfile$ = inject(Store<AppState>).select(fromAppShared.selectRDUserProfile);
+  public isAdmin$ = this.userProfile$.pipe(map(user => RD.isSuccess(user) && isAdmin(user.value)));
+  public isEditor$ = this.userProfile$.pipe(map(user => RD.isSuccess(user) && isEditor(user.value)));
 
-    public isAssetsActive$ = this.createIsRouteActive$(url => Boolean(url.match(/^\/\w\w$/)));
-    public isEditActive$ = this.isSegmentActive('asset-admin');
-    public isFavouritesActive$ = this.isSegmentActive('favourites');
-    public isAdminActive$ = this.isSegmentActive('admin');
-    public isProfileActive$ = this.isSegmentActive('profile');
+  public isAssetsActive$ = this.createIsRouteActive$(url => Boolean(url.match(/^\/\w\w$/)));
+  public isEditActive$ = this.isSegmentActive('asset-admin');
+  public isFavouritesActive$ = this.isSegmentActive('favourites');
+  public isAdminActive$ = this.isSegmentActive('admin');
+  public isProfileActive$ = this.isSegmentActive('profile');
 
-    private createIsRouteActive$(fn: (url: string) => boolean) {
-        const o$ = this._router.events.pipe(
-            filter(event => event instanceof NavigationEnd),
-            map(() => {
-                const { url } = queryString.parseUrl(this._router.url);
-                return fn(url);
-            }),
-            shareReplay({ bufferSize: 1, refCount: true }),
-        );
-        o$.pipe(untilDestroyed(this)).subscribe();
-        return o$;
-    }
+  private createIsRouteActive$(fn: (url: string) => boolean) {
+    const o$ = this._router.events.pipe(
+      filter(event => event instanceof NavigationEnd),
+      map(() => {
+        const { url } = queryString.parseUrl(this._router.url);
+        return fn(url);
+      }),
+      shareReplay({ bufferSize: 1, refCount: true }),
+    );
+    o$.pipe(untilDestroyed(this)).subscribe();
+    return o$;
+  }
 
-    private isSegmentActive(segment: string) {
-        return this.createIsRouteActive$(url => {
-            return Boolean(url.match(`^/\\w\\w/${segment}`));
-        });
-    }
+  private isSegmentActive(segment: string) {
+    return this.createIsRouteActive$(url => {
+      return Boolean(url.match(`^/\\w\\w/${segment}`));
+    });
+  }
 
-    public openAssetDrawer() {
-        this._store.dispatch(appSharedStateActions.openPanel());
-    }
+  public openAssetDrawer() {
+    this._store.dispatch(appSharedStateActions.triggerSearch());
+  }
 }

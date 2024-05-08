@@ -1,25 +1,27 @@
-[{
-  "ClientId": "assets",
-  "Description": "swisstopo assets",
-  "RequireClientSecret": false,
-  "AlwaysIncludeUserClaimsInIdToken": true,
-  "AllowedGrantTypes": [
-    "authorization_code"
-  ],
-  "AllowAccessTokensViaBrowser": true,
-  "RedirectUris": [
+[
+  {
+    "ClientId": "assets",
+    "Description": "swisstopo assets",
+    "RequireClientSecret": false,
+    "AlwaysIncludeUserClaimsInIdToken": true,
+    "AllowedGrantTypes": [
+      "authorization_code"
+    ],
+    "AllowAccessTokensViaBrowser": true,
+    "RedirectUris": [
       "http://localhost:4200"
-  ],
-  "PostLogoutRedirectUris" : [
+    ],
+    "PostLogoutRedirectUris": [
       "http://localhost:4200"
-  ],
-  "AllowedScopes": [
+    ],
+    "AllowedScopes": [
       "openid",
       "profile",
       "email",
       "cognito"
-  ],
-  "AccessTokenType": "JWT",
-  "IdentityTokenLifetime": 3600,
-  "AccessTokenLifetime": 3600
-}]
+    ],
+    "AccessTokenType": "JWT",
+    "IdentityTokenLifetime": 36000,
+    "AccessTokenLifetime": 36000
+  }
+]
