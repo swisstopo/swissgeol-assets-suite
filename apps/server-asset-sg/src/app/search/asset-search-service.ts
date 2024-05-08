@@ -403,7 +403,7 @@ export class AssetSearchService {
         minCreateDate: { min: { field: 'createDate' } },
         maxCreateDate: { max: { field: 'createDate' } },
         assetKindItemCodes: { terms: { field: 'assetKindItemCode' } },
-        languageItemCodes: { terms: { field: 'languageItemCode' } },
+        languageItemCodes: { terms: { field: 'languageItemCodes' } },
         usageCodes: { terms: { field: 'usageCode' } },
         manCatLabelItemCodes: { terms: { field: 'manCatLabelItemCodes' } },
       },
@@ -502,7 +502,7 @@ export class AssetSearchService {
         createDate: true,
         assetKindItemCode: true,
         assetFormatItemCode: true,
-        languageItemCode: true,
+        assetLanguages: true,
         internalUse: {
           select: {
             isAvailable: true,
@@ -548,7 +548,7 @@ export class AssetSearchService {
           createDate: dateIdFromDate(entity.createDate),
           assetFormatItemCode: entity.assetFormatItemCode,
           assetKindItemCode: entity.assetKindItemCode,
-          languageItemCode: entity.languageItemCode,
+          languages: entity.assetLanguages.map((it) => ({ code: it.languageItemCode })),
           contacts: entity.assetContacts.map((contact) => ({
             id: contact.contactId,
             role: contact.role,
@@ -589,7 +589,7 @@ export class AssetSearchService {
       sgsId: asset.sgsId,
       createDate: asset.createDate,
       assetKindItemCode: asset.assetKindItemCode,
-      languageItemCode: asset.languageItemCode,
+      languageItemCodes: asset.assetLanguages.map((it) => it.languageItemCode),
       usageCode: makeUsageCode(asset.publicUse.isAvailable, asset.internalUse.isAvailable),
       authorIds: asset.assetContacts.filter((it) => it.role === 'author').map((it) => it.contactId),
       contactNames: contacts.map((it) => it.name),
@@ -661,7 +661,7 @@ const mapQueryToElasticDsl = (query: AssetSearchQuery): QueryDslQueryContainer =
     filters.push(makeArrayFilter('usageCode', query.usageCodes));
   }
   if (query.languageItemCodes != null) {
-    filters.push(makeArrayFilter('languageItemCode', query.languageItemCodes));
+    filters.push(makeArrayFilter('languageItemCodes', query.languageItemCodes));
   }
   if (query.geomCodes != null) {
     filters.push(makeArrayFilterOrNone('geometryCodes', query.geomCodes));

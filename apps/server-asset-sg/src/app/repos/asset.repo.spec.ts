@@ -32,10 +32,10 @@ describe(AssetRepo, () => {
             const user = fakeUser();
             const patch = fakeAssetPatch();
             const expected = await repo.create({ patch, user });
-            
+
             // When
             const actual = await repo.find(expected.assetId);
-            
+
             // Then
             expect(actual).not.toBeNull();
             expect(actual).toEqual(expected);
@@ -122,7 +122,6 @@ describe(AssetRepo, () => {
             expect(record.internalUse).toEqual(patch.internalUse);
             expect(record.assetKindItemCode).toEqual(patch.assetKindItemCode);
             expect(record.assetFormatItemCode).toEqual(patch.assetFormatItemCode);
-            expect(record.languageItemCode).toEqual(patch.languageItemCode);
             expect(record.isNatRel).toEqual(patch.isNatRel);
             expect(record.sgsId).toBeNull();
             expect(record.geolDataInfo).toEqual(null);
@@ -131,6 +130,7 @@ describe(AssetRepo, () => {
             expect(record.municipality).toBeNull();
             expect(record.ids).toEqual(patch.ids);
             expect(record.assetContacts).toEqual(patch.assetContacts);
+            expect(record.assetLanguages).toEqual(patch.assetLanguages);
             expect(record.manCatLabelRefs).toEqual(patch.manCatLabelRefs);
             expect(record.assetFormatCompositions).toEqual([]);
             expect(record.typeNatRels).toEqual(patch.typeNatRels);
@@ -179,7 +179,6 @@ describe(AssetRepo, () => {
             expect(updated.internalUse).toEqual(patch.internalUse);
             expect(updated.assetKindItemCode).toEqual(patch.assetKindItemCode);
             expect(updated.assetFormatItemCode).toEqual(patch.assetFormatItemCode);
-            expect(updated.languageItemCode).toEqual(patch.languageItemCode);
             expect(updated.isNatRel).toEqual(patch.isNatRel);
             expect(updated.sgsId).toBeNull();
             expect(updated.geolDataInfo).toEqual(null);
@@ -188,6 +187,7 @@ describe(AssetRepo, () => {
             expect(updated.municipality).toBeNull();
             expect(updated.ids).toEqual(patch.ids);
             expect(updated.assetContacts).toEqual(patch.assetContacts);
+            expect(updated.assetLanguages).toEqual(patch.assetLanguages);
             expect(updated.manCatLabelRefs).toEqual(patch.manCatLabelRefs);
             expect(updated.assetFormatCompositions).toEqual([]);
             expect(updated.typeNatRels).toEqual(patch.typeNatRels);
