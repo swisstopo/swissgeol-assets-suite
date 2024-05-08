@@ -57,7 +57,6 @@ export class AssetRepo implements Repo<AssetEditDetail, number, AssetData> {
                 receiptDate: DateIdFromDate.encode(data.patch.receiptDate),
                 assetKindItem: { connect: { assetKindItemCode: data.patch.assetKindItemCode } },
                 assetFormatItem: { connect: { assetFormatItemCode: data.patch.assetFormatItemCode } },
-                languageItem: { connect: { languageItemCode: data.patch.languageItemCode } },
                 isExtract: false,
                 isNatRel: data.patch.isNatRel,
                 lastProcessedDate: new Date(),
@@ -72,6 +71,9 @@ export class AssetRepo implements Repo<AssetEditDetail, number, AssetData> {
                 },
                 assetContacts: {
                     createMany: { data: data.patch.assetContacts, skipDuplicates: true },
+                },
+                assetLanguages: {
+                  createMany: { data: data.patch.assetLanguages, skipDuplicates: true },
                 },
                 ids: {
                     createMany: {
@@ -122,7 +124,6 @@ export class AssetRepo implements Repo<AssetEditDetail, number, AssetData> {
                     receiptDate: DateIdFromDate.encode(data.patch.receiptDate),
                     assetKindItemCode: data.patch.assetKindItemCode,
                     assetFormatItemCode: data.patch.assetFormatItemCode,
-                    languageItemCode: data.patch.languageItemCode,
                     isNatRel: data.patch.isNatRel,
                     assetMainId: O.toUndefined(data.patch.assetMainId),
                     lastProcessedDate: new Date(),
@@ -139,6 +140,10 @@ export class AssetRepo implements Repo<AssetEditDetail, number, AssetData> {
                     assetContacts: {
                         deleteMany: {},
                         createMany: { data: data.patch.assetContacts, skipDuplicates: true },
+                    },
+                    assetLanguages: {
+                      deleteMany: {},
+                      createMany: { data: data.patch.assetLanguages, skipDuplicates: true },
                     },
                     ids: {
                         deleteMany: {
@@ -245,6 +250,11 @@ export class AssetRepo implements Repo<AssetEditDetail, number, AssetData> {
                 where: { assetId: id },
             });
 
+          // Delete the record's `assetLanguage` records.
+          await this.prismaService.assetLanguage.deleteMany({
+            where: { assetId: id },
+          });
+
             // Delete the record's `id` records.
             await this.prismaService.id.deleteMany({
                 where: { assetId: id },
@@ -322,7 +332,6 @@ const selectPrismaAsset = selectOnAsset({
     processor: true,
     assetKindItemCode: true,
     assetFormatItemCode: true,
-    languageItemCode: true,
     internalUse: true,
     publicUse: true,
     isNatRel: true,
@@ -333,6 +342,7 @@ const selectPrismaAsset = selectOnAsset({
     municipality: true,
     ids: true,
     assetContacts: { select: { role: true, contactId: true } },
+    assetLanguages: { select: { languageItemCode: true } },
     manCatLabelRefs: { select: { manCatLabelItemCode: true } },
     assetFormatCompositions: { select: { assetFormatItemCode: true } },
     typeNatRels: { select: { natRelItemCode: true } },

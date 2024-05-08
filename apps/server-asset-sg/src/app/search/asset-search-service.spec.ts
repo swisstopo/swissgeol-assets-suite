@@ -67,7 +67,7 @@ describe(AssetSearchService, () => {
     expect(hit.sgsId).toEqual(asset.sgsId);
     expect(hit.createDate).toEqual(asset.createDate);
     expect(hit.assetKindItemCode).toEqual(asset.assetKindItemCode);
-    expect(hit.languageItemCode).toEqual(asset.languageItemCode);
+    expect(hit.languageItemCodes).toEqual(asset.assetLanguages.map((it) => it.languageItemCode));
     expect(hit.usageCode).toEqual(makeUsageCode(asset.publicUse.isAvailable, asset.internalUse.isAvailable))
     expect(hit.authorIds).toEqual([]);
     expect(hit.contactNames).toEqual([]);
@@ -197,14 +197,14 @@ describe(AssetSearchService, () => {
       assertSingleResult(result, asset);
     })
 
-    it('finds assets by languageItemCode', async () => {
+    it('finds assets by languageItemCodes', async () => {
       // Given
       const code1 = languageItems[0].languageItemCode;
       const code2 = languageItems[1].languageItemCode;
       const code3 = languageItems[2].languageItemCode;
-      const asset = await create({ patch: { ...fakeAssetPatch(), languageItemCode: code1 }, user: fakeUser() });
-      await create({ patch: { ...fakeAssetPatch(), languageItemCode: code2 }, user: fakeUser() });
-      await create({ patch: { ...fakeAssetPatch(), languageItemCode: code3 }, user: fakeUser() });
+      const asset = await create({ patch: { ...fakeAssetPatch(), assetLanguages: [{ languageItemCode: code1 }] }, user: fakeUser() });
+      await create({ patch: { ...fakeAssetPatch(), assetLanguages: [{ languageItemCode: code2 }] }, user: fakeUser() });
+      await create({ patch: { ...fakeAssetPatch(), assetLanguages: [{ languageItemCode: code3 }] }, user: fakeUser() });
 
       // When
       const result = await service.search({ languageItemCodes: [code1] });
@@ -301,10 +301,10 @@ describe(AssetSearchService, () => {
         value: asset.assetKindItemCode,
         count: 1,
       }]);
-      expect(stats.languageItemCodes).toEqual([{
-        value: asset.languageItemCode,
+      expect(stats.languageItemCodes).toEqual(asset.assetLanguages.map((it) => ({
+        value: it.languageItemCode,
         count: 1,
-      },]);
+      })));
       expect(stats.usageCodes).toEqual([{
         value: makeUsageCode(asset.publicUse.isAvailable, asset.internalUse.isAvailable),
         count: 1,
@@ -358,19 +358,22 @@ describe(AssetSearchService, () => {
 
     const makeBucket = (
       expectedAssets: AssetEditDetail[],
-      extract: (asset: AssetEditDetail) => string | number,
+      extract: (asset: AssetEditDetail) => string | number | string[] | number[],
     ): Bucket[] => {
       return expectedAssets.reduce((buckets, asset) => {
-        const key = extract(asset);
-        const bucket = buckets.find((it) => it.key === key);
-        if (bucket == null) {
-          buckets.push({ key, count: 1 });
-        } else {
-          bucket.count += 1;
+        const keyOrKeys = extract(asset);
+        const keys = Array.isArray(keyOrKeys) ? keyOrKeys : [keyOrKeys];
+        for (const key of keys) {
+          const bucket = buckets.find((it) => it.key === key);
+          if (bucket == null) {
+            buckets.push({ key, count: 1 });
+          } else {
+            bucket.count += 1;
+          }
         }
         return buckets;
       }, [] as Bucket[]);
-    };
+    }
 
     const compareBuckets = (a: Bucket, b: Bucket): number => a.key.toString().localeCompare(b.key.toString());
 
@@ -457,7 +460,9 @@ describe(AssetSearchService, () => {
         expect(actualAsset.createDate).toEqual(expectedAsset.createDate);
         expect(actualAsset.assetFormatItemCode).toEqual(expectedAsset.assetFormatItemCode);
         expect(actualAsset.assetKindItemCode).toEqual(expectedAsset.assetKindItemCode);
-        expect(actualAsset.languageItemCode).toEqual(expectedAsset.languageItemCode);
+        expect(actualAsset.languages).toEqual(
+          expectedAsset.assetLanguages.map((it) => ({ code: it.languageItemCode })),
+        );
         expect(actualAsset.contacts).toEqual([]);
         expect(actualAsset.studies).toEqual([]);
         expect(actualAsset.manCatLabelItemCodes).toEqual([]);
@@ -481,7 +486,9 @@ describe(AssetSearchService, () => {
       expect(aggs.buckets.assetKindItemCodes.sort(compareBuckets))
         .toEqual(expectedAssetKindItemCodes.sort(compareBuckets));
 
-      const expectedLanguageItemCodes = makeBucket(expectedAssets, (asset) => asset.languageItemCode);
+      const expectedLanguageItemCodes = makeBucket(expectedAssets, (asset) => (
+        asset.assetLanguages.map((it) => it.languageItemCode)
+      ));
       expect(aggs.buckets.languageItemCodes.sort(compareBuckets))
         .toEqual(expectedLanguageItemCodes.sort(compareBuckets));
 

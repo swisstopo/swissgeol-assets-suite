@@ -10,6 +10,7 @@ import * as jwt from 'jsonwebtoken';
 import { Jwt, JwtPayload } from 'jsonwebtoken';
 import jwkToPem from 'jwk-to-pem';
 
+import { environment } from '../../environments/environment';
 import { AuthenticatedRequest } from '../models/request';
 import { PrismaService } from '../prisma/prisma.service';
 

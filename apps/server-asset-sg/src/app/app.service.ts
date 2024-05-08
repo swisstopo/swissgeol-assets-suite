@@ -268,7 +268,11 @@ export class AppService {
                             lastProcessedDate: true,
                             assetKindItemCode: true,
                             assetFormatItemCode: true,
-                            languageItemCode: true,
+                            assetLanguages: {
+                              select: {
+                                languageItem: true,
+                              }
+                            },
                             internalUse: { select: { isAvailable: true } },
                             publicUse: { select: { isAvailable: true } },
                             ids: { select: { id: true, description: true } },

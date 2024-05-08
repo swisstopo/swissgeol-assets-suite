@@ -24,7 +24,7 @@
     "createDateId": {
       "type": "integer"
     },
-    "languageItemCode": {
+    "languageItemCodes": {
       "type": "keyword"
     },
     "manCatLabelItemCodes": {

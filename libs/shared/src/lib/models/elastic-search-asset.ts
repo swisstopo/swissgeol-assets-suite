@@ -10,7 +10,7 @@ export interface ElasticSearchAsset {
     sgsId: number | null
     createDate: DateId
     assetKindItemCode: string
-    languageItemCode: string
+    languageItemCodes: string[]
     usageCode: ElasticSearchUsageCode
     authorIds: number[]
     contactNames: string[]
