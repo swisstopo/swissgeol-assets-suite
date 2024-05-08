@@ -22,7 +22,7 @@ import {
   ValueCount,
   dateFromDateId,
   dateIdFromDate,
-  makeUsageCode,
+  makeUsageCode, GeometryCode,
 } from '@asset-sg/shared';
 
 import indexMapping from '../../../../../development/init/elasticsearch/mappings/swissgeol_asset_asset.json';
@@ -534,6 +534,18 @@ export class AssetSearchService {
         contactId: { in: asset.assetContacts.map((it) => it.contactId) },
       },
     });
+    const geometryCodes = asset.studies.map((study) => study.geomText.split('(', 2)[0]).map((prefix) => {
+      switch (prefix) {
+        case 'POINT':
+          return GeometryCode.Point;
+        case 'POLYGON':
+          return GeometryCode.Polygon;
+        case 'LINESTRING':
+          return GeometryCode.LineString;
+        default:
+          throw new Error(`unknown geomText prefix: ${prefix}`)
+      }
+    })
     return {
       assetId: asset.assetId,
       titlePublic: asset.titlePublic,
@@ -546,6 +558,7 @@ export class AssetSearchService {
       authorIds: asset.assetContacts.filter((it) => it.role === 'author').map((it) => it.contactId),
       contactNames: contacts.map((it) => it.name),
       manCatLabelItemCodes: asset.manCatLabelRefs,
+      geometryCodes: [...new Set(geometryCodes)],
     };
   }
 }
