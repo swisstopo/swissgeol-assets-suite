@@ -5,7 +5,6 @@ import { UsageCode } from '../usage';
 export interface AssetSearchResult {
   page: PageStats
   data: AssetEditDetail[]
-  stats: AssetSearchStats | null
 }
 
 export interface PageStats {
@@ -15,12 +14,13 @@ export interface PageStats {
 }
 
 export interface AssetSearchStats {
+  total: number
   authorIds: ValueCount<number>[]
   assetKindItemCodes: ValueCount<string>[]
   languageItemCodes: ValueCount<string>[]
   usageCodes: ValueCount<UsageCode>[]
   manCatLabelItemCodes: ValueCount<string>[]
-  createDate: DateRange,
+  createDate: DateRange | null,
 }
 
 export interface ValueCount<T> {

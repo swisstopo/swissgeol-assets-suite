@@ -2,6 +2,7 @@ import { faker } from '@faker-js/faker';
 
 import {
   AssetSearchResult,
+  AssetSearchStats,
   ElasticSearchAsset,
   PageStats,
   PatchAsset,
@@ -9,8 +10,7 @@ import {
   SearchAssetAggregations,
   SearchAssetResultNonEmpty,
   UsageCode,
-  dateFromDateId,
-  dateIdFromDate, makeUsageCode,
+  dateFromDateId, dateIdFromDate, makeUsageCode,
 } from '@asset-sg/shared';
 
 import indexMapping from '../../../../../development/init/elasticsearch/mappings/swissgeol_asset_asset.json';
@@ -54,6 +54,11 @@ describe(AssetSearchService, () => {
     });
   });
 
+  const create = async (data: AssetData): Promise<AssetEditDetail> => {
+    const asset = await assetRepo.create(data);
+    await service.register(asset);
+    return asset;
+  }
 
   const assertHit = (hit: ElasticSearchAsset, asset: AssetEditDetail): void => {
     expect(hit.assetId).toEqual(asset.assetId);
@@ -91,43 +96,10 @@ describe(AssetSearchService, () => {
   });
 
   describe('search', () => {
-    const create = async (data: AssetData): Promise<AssetEditDetail> => {
-      const asset = await assetRepo.create(data);
-      await service.register(asset);
-      return asset;
-    }
-
     const assertSingleResult = (result: AssetSearchResult, asset: AssetEditDetail): void => {
       expect(result.page).toEqual({ total: 1, size: 1, offset: 0 } as PageStats);
       expect(result.data).toHaveLength(1);
       expect(result.data[0]).toEqual(asset);
-
-      expect(result.stats).not.toBeNull();
-      expect(result.stats.assetKindItemCodes).toEqual([{
-        value: asset.assetKindItemCode,
-        count: 1,
-      }]);
-      expect(result.stats.languageItemCodes).toEqual([{
-        value: asset.languageItemCode,
-        count: 1,
-      },]);
-      expect(result.stats.usageCodes).toEqual([{
-        value: makeUsageCode(asset.publicUse.isAvailable, asset.internalUse.isAvailable),
-        count: 1,
-      }]);
-      expect(result.stats.createDate).toEqual({
-        min: dateFromDateId(asset.createDate),
-        max: dateFromDateId(asset.createDate),
-      });
-      expect(result.stats.authorIds).toEqual(
-        asset.assetContacts
-          .filter((it) => it.role === 'author')
-          .map((it) => ({ value: it.contactId, count: 1 })),
-      );
-      expect(result.stats.manCatLabelItemCodes).toEqual(
-        asset.manCatLabelRefs
-          .map((it) => ({ value: it, count: 1 })),
-      );
     }
 
     const testSearchInProperty = <T extends string | number>(
@@ -319,6 +291,62 @@ describe(AssetSearchService, () => {
 
       // Then
       assertSingleResult(result, asset);
+    })
+  })
+
+  describe('aggregate', () => {
+    const assertSingleStats = (stats: AssetSearchStats, asset: AssetEditDetail): void => {
+      expect(stats).not.toBeNull();
+      expect(stats.assetKindItemCodes).toEqual([{
+        value: asset.assetKindItemCode,
+        count: 1,
+      }]);
+      expect(stats.languageItemCodes).toEqual([{
+        value: asset.languageItemCode,
+        count: 1,
+      },]);
+      expect(stats.usageCodes).toEqual([{
+        value: makeUsageCode(asset.publicUse.isAvailable, asset.internalUse.isAvailable),
+        count: 1,
+      }]);
+      expect(stats.createDate).toEqual({
+        min: dateFromDateId(asset.createDate),
+        max: dateFromDateId(asset.createDate),
+      });
+      expect(stats.authorIds).toEqual(
+        asset.assetContacts
+          .filter((it) => it.role === 'author')
+          .map((it) => ({ value: it.contactId, count: 1 })),
+      );
+      expect(stats.manCatLabelItemCodes).toEqual(
+        asset.manCatLabelRefs
+          .map((it) => ({ value: it, count: 1 })),
+      );
+    }
+
+    it('returns empty stats when no assets are present', async () => {
+      // When
+      const result = await service.aggregate({});
+
+      // Then
+      expect(result.total).toEqual(0);
+      expect(result.authorIds).toHaveLength(0);
+      expect(result.assetKindItemCodes).toHaveLength(0);
+      expect(result.languageItemCodes).toHaveLength(0);
+      expect(result.usageCodes).toHaveLength(0);
+      expect(result.manCatLabelItemCodes).toHaveLength(0);
+      expect(result.createDate).toBeNull();
+    })
+
+    it('aggregates stats for a single asset', async () => {
+      // Given
+      const asset = await create({ patch: fakeAssetPatch(), user: fakeUser() });
+
+      // When
+      const result = await service.aggregate({});
+
+      // Then
+      assertSingleStats(result, asset);
     })
   })
 

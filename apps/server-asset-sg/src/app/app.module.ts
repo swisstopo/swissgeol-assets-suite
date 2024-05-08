@@ -9,6 +9,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AssetEditController } from './asset-edit/asset-edit.controller';
 import { AssetEditService } from './asset-edit/asset-edit.service';
+import { AssetSearchController } from './assets-search/asset-search.controller';
 import { ContactEditController } from './contact-edit/contact-edit.controller';
 import { ContactEditService } from './contact-edit/contact-edit.service';
 import { JwtMiddleware } from './jwt/jwt-middleware';
@@ -20,7 +21,6 @@ import { AssetSearchService } from './search/asset-search-service';
 import { provideElasticsearch } from './search/elasticsearch';
 import { UserController } from './user/user.controller';
 import { UserService } from './user/user.service';
-import { AssetSearchController } from './assets-search/asset-search.controller';
 
 @Module({
     imports: [HttpModule, ScheduleModule.forRoot(), CacheModule.register()],

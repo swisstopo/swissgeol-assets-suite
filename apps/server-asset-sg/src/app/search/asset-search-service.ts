@@ -16,13 +16,13 @@ import {
   AssetSearchStats,
   DateId,
   ElasticSearchAsset,
+  GeometryCode,
+  Polygon,
   SearchAssetAggregations,
   SearchAssetResult,
   UsageCode,
   ValueCount,
-  dateFromDateId,
-  dateIdFromDate,
-  makeUsageCode, GeometryCode,
+  dateFromDateId, dateIdFromDate, makeUsageCode,
 } from '@asset-sg/shared';
 
 import indexMapping from '../../../../../development/init/elasticsearch/mappings/swissgeol_asset_asset.json';
@@ -103,6 +103,9 @@ export class AssetSearchService {
       ...indexMapping,
     });
 
+    // Refresh the sync index so we can reindex its contents.
+    await this.elastic.indices.refresh({ index: SYNC_INDEX });
+
     // Copy the sync index's contents into the empty asset index.
     await this.elastic.reindex({
       source: { index: SYNC_INDEX },
@@ -141,13 +144,21 @@ export class AssetSearchService {
     return await this.loadAssetsByElasticResult(elasticResult);
   }
 
+  /**
+   * Searches for assets using a {@link AssetSearchQuery}.
+   *
+   * @param query The query to match with.
+   * @param limit The maximum amount of assets to load. Defaults to `100`.
+   * @param offset The amount of assets being skipped before loading the assets.
+   */
   async search(query: AssetSearchQuery, { limit = 100, offset = 0 }: PageOptions = {}): Promise<AssetSearchResult> {
-    const queriedAssetIds = await this.searchAssetIdsByQuery(query);
-    const ids = await this.filterAssetIdsByPolygon(query, queriedAssetIds);
-    const [data, stats] = await Promise.all([
-      this.assetRepo.list({ ids, limit, offset }),
-      this.aggregateAssetIds(ids),
-    ]);
+    // Apply the query to find all matching ids.
+    const ids = await this.searchIds(query);
+
+    // Load the matched assets from the database.
+    const data = await this.assetRepo.list({ ids, limit, offset });
+
+    // Return the matched data in a paginated format.
     return {
       page: {
         offset,
@@ -155,8 +166,29 @@ export class AssetSearchService {
         total: ids.length,
       },
       data,
-      stats,
     };
+  }
+
+  /**
+   * Aggregates the stats over all assets matching a specific {@link AssetSearchQuery}.
+   *
+   * @param query The query to match with.
+   */
+  async aggregate(query: AssetSearchQuery): Promise<AssetSearchStats> {
+    const ids = await this.searchIds(query);
+    const stats = await this.aggregateAssetIds(ids);
+    if (stats !== null) {
+      return stats
+    }
+    return {
+      total: 0,
+      assetKindItemCodes: [],
+      authorIds: [],
+      createDate: null,
+      languageItemCodes: [],
+      manCatLabelItemCodes: [],
+      usageCodes: []
+    }
   }
 
   async searchByTitle(title: string): Promise<AssetByTitle[]> {
@@ -191,6 +223,17 @@ export class AssetSearchService {
     }));
   }
 
+  private async searchIds(query: AssetSearchQuery): Promise<number[]> {
+    // Apply the query on Elasticsearch.
+    const queriedAssetIds = await this.searchAssetIdsByQuery(query);
+
+    // Polygon searches need to be applied on the database.
+    // With no polygon being present, we can just use the ids returned by Elasticsearch.
+    return query.polygon == null
+      ? queriedAssetIds
+      : await this.filterAssetIdsByPolygon(query.polygon, queriedAssetIds);
+  }
+
   private async searchAssetIdsByQuery(query: AssetSearchQuery): Promise<number[]> {
     const elasticQuery = mapQueryToElasticDsl(query);
     const matchedAssetIds: number[] = [];
@@ -199,9 +242,11 @@ export class AssetSearchService {
         index: INDEX,
         query: elasticQuery,
         fields: ['assetId'],
+        size: 1000,
         sort: {
           assetId: 'desc',
         },
+        track_total_hits: true,
         _source: false,
         search_after: matchedAssetIds.length === 0
           ? undefined
@@ -215,37 +260,25 @@ export class AssetSearchService {
     }
   }
 
-  private async filterAssetIdsByPolygon(query: AssetSearchQuery, assetIds: number[]): Promise<number[]> {
+  private async filterAssetIdsByPolygon(polygon: Polygon, assetIds: number[]): Promise<number[]> {
     if (assetIds.length === 0) {
       return [];
+    }
+    if (polygon.length === 0) {
+      return assetIds;
     }
     const conditions: Prisma.Sql[] = [
       Prisma.sql`a.asset_id IN (${Prisma.join(assetIds, ',')})`,
     ];
-    if (query.polygon != null && query.polygon.length !== 0) {
-      const sqlPolygonParams = query.polygon.map(({ x, y }) => `${y} ${x}`).join(',');
-      const sqlPolygon = `polygon((${sqlPolygonParams}))`;
-      conditions.push(Prisma.sql`
-          ST_CONTAINS(
-            ST_GEOMFROMTEXT(${sqlPolygon}, 2056),
-            ST_CENTROID(s.geom)
-          )
-        `);
-    }
 
-    // TODO Copy `geomCodes` into Elasticsearch so we only have to round-trip
-    //      to Postgres if we have to do a polygon search.
-    if (query.geomCodes != null) {
-      const geomCodeConditions: Prisma.Sql[] = [];
-      for (const geomCode of query.geomCodes) {
-        const condition = geomCode === 'None'
-          ? Prisma.sql`s.id IS NULL`
-          : Prisma.sql`STARTS_WITH(s.geom_text, ${geomCode.toUpperCase()})`;
-        geomCodeConditions.push(condition);
-      }
-      conditions.push(Prisma.join(geomCodeConditions, ' OR '));
-    }
-
+    const sqlPolygonParams = polygon.map(({ x, y }) => `${y} ${x}`).join(',');
+    const sqlPolygon = `polygon((${sqlPolygonParams}))`;
+    conditions.push(Prisma.sql`
+        ST_CONTAINS(
+          ST_GEOMFROMTEXT(${sqlPolygon}, 2056),
+          ST_CENTROID(s.geom)
+        )
+    `);
     const matchedAssets = await this.prisma.$queryRaw<Array<{ assetId: number }>>`
           SELECT DISTINCT
             a.asset_id as "assetId"
@@ -301,6 +334,7 @@ export class AssetSearchService {
           assetId: assetIds,
         },
       },
+      track_total_hits: true,
       aggs: {
         authorIds: { terms: { field: 'authorIds' } },
         minCreateDate: { min: { field: 'createDate' } },
@@ -312,12 +346,14 @@ export class AssetSearchService {
       },
     });
 
+    const total = (response.hits.total as SearchTotalHits).value;
     const { aggregations: aggs } = response as unknown as Result;
     const mapBucket = <T>(bucket: AggregationBucket<T>): ValueCount<T> => ({
       value: bucket.key,
       count: bucket.doc_count,
     });
     return {
+      total,
       assetKindItemCodes: aggs.assetKindItemCodes.buckets.map(mapBucket),
       authorIds: aggs.authorIds.buckets.map(mapBucket),
       languageItemCodes: aggs.languageItemCodes.buckets.map(mapBucket),
@@ -610,16 +646,19 @@ const mapQueryToElasticDsl = (query: AssetSearchQuery): QueryDslQueryContainer =
     });
   }
   if (query.manCatLabelItemCodes != null) {
-    filters.push(makeArrayQuery('manCatLabelItemCodes', query.manCatLabelItemCodes));
+    filters.push(makeArrayFilter('manCatLabelItemCodes', query.manCatLabelItemCodes));
   }
   if (query.assetKindItemCodes != null) {
-    filters.push(makeArrayQuery('assetKindItemCode', query.assetKindItemCodes));
+    filters.push(makeArrayFilter('assetKindItemCode', query.assetKindItemCodes));
   }
   if (query.usageCodes != null) {
-    filters.push(makeArrayQuery('usageCode', query.usageCodes));
+    filters.push(makeArrayFilter('usageCode', query.usageCodes));
   }
   if (query.languageItemCodes != null) {
-    filters.push(makeArrayQuery('languageItemCode', query.languageItemCodes));
+    filters.push(makeArrayFilter('languageItemCode', query.languageItemCodes));
+  }
+  if (query.geomCodes != null) {
+    filters.push(makeArrayFilterOrNone('geometryCodes', query.geomCodes));
   }
 
   return {
@@ -630,8 +669,59 @@ const mapQueryToElasticDsl = (query: AssetSearchQuery): QueryDslQueryContainer =
   };
 };
 
-const makeArrayQuery = <T extends number | string>(
-  field: keyof ElasticSearchAsset | `${keyof ElasticSearchAsset}.keyword`,
+/**
+ * Create an Elasticsearch filter using the same rules as {@link makeArrayFilter},
+ * but also allows the pseudo-value `'None'`, which matches all documents
+ * for which the specified field is missing.
+ *
+ * @param field The field to match.
+ * @param query The set of allowed values, including `'None'`.
+ */
+const makeArrayFilterOrNone = <T extends string | number>(
+  field: keyof ElasticSearchAsset,
+  query: (T | 'None')[],
+): QueryDslQueryContainer => {
+  // Create the set of allowed values and remove 'None' from it.
+  // This allows us to pass the query to `makeArrayFilter`.
+  const terms = new Set(query);
+  const isNoneAllowed = terms.delete('None');
+
+  // The set of conditions of which one will have to match for the filter to be successful (OR).
+  const conditions: QueryDslQueryContainer[] = []
+
+  // If the query contains 'None', we allow documents which don't contain the specified field.
+  if (isNoneAllowed) {
+    conditions.push(makeArrayFilter(field, []));
+  }
+
+  // If there are other valid terms besides 'None',
+  // or 'None' is not specified, then we also filter by the other terms.
+  // Note that this means that an empty query is equal to a query containing only `'None'`.
+  if (terms.size > 0 || !isNoneAllowed) {
+    conditions.push(makeArrayFilter(field, [...terms] as T[]));
+  }
+
+  // If there is only one condition, then we don't need to nest it.
+  if (conditions.length === 1) {
+    return conditions[0];
+  }
+
+  // Join multiple conditions using OR.
+  return { bool: { should: conditions }}
+}
+
+/**
+ * Create an Elasticsearch filter that matches all documents which contain a specific field
+ * that contains any of a given set of values (the _query_).
+ *
+ * When the query is empty, only documents for which the field does not exist are matched.
+ * A field does also count as "not existing" when it is set to `null` or an empty array.
+ *
+ * @param field The field to match.
+ * @param query The set of allowed values.
+ */
+const makeArrayFilter = <T extends string | number>(
+  field: keyof ElasticSearchAsset,
   query: T[],
 ): QueryDslQueryContainer => {
   if (query.length === 0) {

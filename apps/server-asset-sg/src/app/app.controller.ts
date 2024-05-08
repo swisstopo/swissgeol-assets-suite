@@ -117,7 +117,7 @@ export class AppController implements OnApplicationBootstrap {
             await this.assetSearchService.syncWithDatabase(writeProgress);
             await fs.rm(assetSyncFile);
         });
-        res.status(204).end();
+        res.status(201).end();
     }
 
     // @Post('find-assets-by-polygon')

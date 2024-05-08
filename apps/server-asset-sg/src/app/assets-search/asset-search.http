@@ -12,7 +12,14 @@ Content-Type: application/json
 Authorization: Impersonate {{user}}
 
 {
-  "languageItemCodes": ["FR"]
+  "languageItemCodes": ["DE"]
 }
 
+### Show assets search stats
+POST {{host}}/api/assets/search/stats
+Content-Type: application/json
+Authorization: Impersonate {{user}}
+
+{
+}
 

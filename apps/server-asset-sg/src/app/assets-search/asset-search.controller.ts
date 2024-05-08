@@ -1,9 +1,15 @@
 import { Body, Controller, Post, Query, ValidationPipe } from '@nestjs/common';
+import { plainToInstance } from 'class-transformer';
 
-import { AssetEditDetail, AssetSearchQueryDTO, AssetSearchResult, AssetSearchResultDTO } from '@asset-sg/shared';
+import {
+  AssetEditDetail,
+  AssetSearchQueryDTO,
+  AssetSearchResult,
+  AssetSearchResultDTO, AssetSearchStats,
+  AssetSearchStatsDTO,
+} from '@asset-sg/shared';
 
 import { AssetSearchService } from '../search/asset-search-service';
-import { plainToInstance } from 'class-transformer';
 
 @Controller('/assets/search')
 export class AssetSearchController {
@@ -29,5 +35,14 @@ export class AssetSearchController {
       ...result,
       data: result.data.map(AssetEditDetail.encode) as unknown as AssetEditDetail[],
     });
+  }
+
+  @Post('/stats')
+  async showStats(
+    @Body(new ValidationPipe({ transform: true, whitelist: true, forbidNonWhitelisted: true }))
+    query: AssetSearchQueryDTO,
+  ): Promise<AssetSearchStats> {
+    const stats = await this.assetSearchService.aggregate(query);
+    return plainToInstance(AssetSearchStatsDTO, stats);
   }
 }

@@ -1,11 +1,11 @@
 import { Type } from 'class-transformer';
-import { IsArray, IsEnum, IsNumber, IsOptional, IsString, ValidateNested } from 'class-validator';
+import { IsEnum, IsNumber, IsOptional, IsString, ValidateNested } from 'class-validator';
 
 
 import { PartialDateRangeDTO } from '../date-range.dto';
+import { UsageCode } from '../usage';
 
 import { AssetSearchQuery, GeometryCode, Polygon } from './asset-search-query';
-import { UsageCode } from '../usage';
 
 export class AssetSearchQueryDTO implements AssetSearchQuery {
   @IsString()
