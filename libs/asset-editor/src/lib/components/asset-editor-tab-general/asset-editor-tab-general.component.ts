@@ -1,6 +1,6 @@
 import { FocusMonitor } from '@angular/cdk/a11y';
 import { ChangeDetectionStrategy, Component, ElementRef, Input, OnInit, ViewChild, inject } from '@angular/core';
-import { FormBuilder, FormControl, FormGroupDirective, Validators } from '@angular/forms';
+import { FormBuilder, FormControl, FormGroupDirective } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { RxState } from '@rx-angular/state';
 import * as O from 'fp-ts/Option';
@@ -117,13 +117,11 @@ export class AssetEditorTabGeneralComponent implements OnInit {
             if (!this._state.get().userInsertMode && !this.idForm.controls['id'].value) {
                 this.idForm.controls['description'].reset(undefined, { emitEvent: false });
                 this.idForm.controls['description'].disable({ emitEvent: false });
-            } else {
-                if (this.idForm.controls['description'].disabled) {
-                    this.idForm.controls['description'].enable({ emitEvent: false });
-                    this.idForm.controls['description'].markAsTouched();
-                    if (this._idFormDescription) {
-                        this._focusMonitor.focusVia(this._idFormDescription?.nativeElement, 'program');
-                    }
+            } else if (this.idForm.controls['description'].disabled) {
+                this.idForm.controls['description'].enable({ emitEvent: false });
+                this.idForm.controls['description'].markAsTouched();
+                if (this._idFormDescription) {
+                    this._focusMonitor.focusVia(this._idFormDescription?.nativeElement, 'program');
                 }
             }
 
@@ -144,15 +142,14 @@ export class AssetEditorTabGeneralComponent implements OnInit {
                         this._form.controls['ids'].setValue(ids, { emitEvent: false });
                         this._form.markAsDirty();
                     }
-                } else {
-                    if (ids.length > 0) {
-                        this._form.controls.ids.setValue(
-                            ids.filter((_, i) => i !== this._state.get().currentlyEditedIdIndex),
-                            { emitEvent: false },
-                        );
-                        this._form.markAsDirty();
-                    }
+                } else if (ids.length > 0) {
+                    this._form.controls.ids.setValue(
+                        ids.filter((_, i) => i !== this._state.get().currentlyEditedIdIndex),
+                        { emitEvent: false },
+                    );
+                    this._form.markAsDirty();
                 }
+
             }
         });
     }
@@ -208,13 +205,12 @@ export class AssetEditorTabGeneralComponent implements OnInit {
     }
 
     public _saveIdFormClicked() {
-        const currentlyEditedIdIndex = this._state.get().currentlyEditedIdIndex;
-        if (currentlyEditedIdIndex !== -1) {
-            this._form.controls.ids.setValue(
-                this._form.controls.ids.value.map((v, i) =>
-                    i === currentlyEditedIdIndex ? { ...this.idForm.getRawValue(), idId: O.none } : v,
-                ),
-            );
+        const i = this._state.get().currentlyEditedIdIndex;
+        this._state.set({ userInsertMode: false, currentlyEditedIdIndex: -1 });
+        if (i >= 0) {
+            const newIds = [...this._form.controls.ids.value];
+            newIds[i] = { ...this.idForm.getRawValue(), idId: O.none }
+            this._form.controls.ids.setValue(newIds);
             this._form.markAsDirty();
         } else {
             this._form.controls.ids.setValue([
@@ -224,7 +220,6 @@ export class AssetEditorTabGeneralComponent implements OnInit {
             this._form.markAsDirty();
         }
         this.idForm.reset();
-        this._state.set({ userInsertMode: false, currentlyEditedIdIndex: -1 });
     }
 
     public _deleteIdClicked(index: number) {
@@ -240,7 +235,6 @@ export class AssetEditorTabGeneralComponent implements OnInit {
 
     public _fileInvalid$ = new BehaviorSubject<boolean>(false);
     public _fileInputChange(inputElement: HTMLInputElement) {
-        // console.log('adsf', inputElement.files);
         const files = inputElement.files;
         if (files && files.length > 0) {
             if (Array.from(files).some(f => f.size > 250 * 1024 * 1024)) {

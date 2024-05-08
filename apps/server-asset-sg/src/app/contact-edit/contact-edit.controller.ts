@@ -30,9 +30,9 @@ export class ContactEditController {
 
         if (E.isLeft(e)) {
             console.error(e.left);
-            if (e.left._tag === 'decodeError') {
-                throw new HttpException(e.left.message, 400);
-            }
+            // if (e.left._type === 'decodeError') {
+            //     throw new HttpException(e.left.message, 400);
+            // }
             throw new HttpException(e.left.message, 500);
         }
         return e.right;
@@ -58,9 +58,9 @@ export class ContactEditController {
 
         if (E.isLeft(e)) {
             console.error(e.left);
-            if (e.left._tag === 'decodeError') {
-                throw new HttpException(e.left.message, 400);
-            }
+            // if (e.left._tag === 'decodeError') {
+            //     throw new HttpException(e.left.message, 400);
+            // }
             throw new HttpException(e.left.message, 500);
         }
         return e.right;

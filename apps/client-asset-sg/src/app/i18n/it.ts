@@ -1,7 +1,7 @@
 import { AppTranslations } from './i18n';
 
 export const itAppTranslations: AppTranslations = {
-    logoSwissConfederation: 'Logo Confederazione Svizzera',
+    logoSwissGeol: 'Logo Swissgeol Assets',
     ok: 'OK',
     submit: 'IT Absenden',
     cancel: 'IT Abbrechen',
@@ -32,40 +32,6 @@ export const itAppTranslations: AppTranslations = {
         drawingModeOn: 'IT Zeichenmodus ein',
         drawingModeOff: 'IT Zeichenmodus aus',
         dragHandleLabel: 'IT Ziehgriff',
-    },
-    auth: {
-        signInHeading: 'IT Anmeldung in SwissGeol Asset',
-        email: 'IT E-Mail',
-        password: 'IT Passwort',
-        signIn: 'IT Anmelden',
-        forgotPassword: 'IT Passwort vergessen?',
-        invalidCredentials: 'IT Ungültige Anmeldedaten',
-        error: {
-            required: 'IT Dieses Feld ist erforderlich',
-            email: 'IT Bitte geben Sie eine gültige E-Mail-Adresse ein',
-        },
-        recovery: {
-            enterEmail:
-                'IT Geben Sie Ihre E-Mail-Adresse ein, und ein Link zum Zurücksetzen des Passworts wird Ihnen per E-Mail zugeschickt.',
-            backToLogin: 'IT Zurück zur Anmeldung',
-            tooManyRequests: 'IT Aus Sicherheitsgründen können Sie dies nur einmal alle 60 Sekunden anfordern.',
-            recoverySuccess:
-                'IT Bitte klicken Sie auf den Link, den Sie per E-Mail erhalten haben, um Ihr Passwort zurückzusetzen.',
-        },
-        reset: {
-            welcome: 'IT Neues Passwort erstellen',
-            enterPassword: 'IT Bitte geben Sie ein Passwort ein.',
-            unauthorised: 'IT Nicht autorisiert',
-            invalidEmailLink: 'IT E-Mail-Link ist ungültig oder abgelaufen.',
-        },
-        set: {
-            welcome: 'IT Willkommen bei SwissGeol Asset',
-            enterPassword: 'IT Bitte geben Sie ein Passwort ein, um die Registrierung abzuschliessen.',
-        },
-    },
-    userManagement: {
-        createNewUser: 'IT Neuen Benutzer erstellen',
-        confirmDelete: 'IT Möchten Sie den folgenden Benutzer wirklich löschen?',
     },
     search: {
         textSearchFieldPlaceholder: 'IT Suche nach Original- oder  Öffentlichem Titel und Autor oder Einlieferer',
@@ -255,5 +221,10 @@ export const itAppTranslations: AppTranslations = {
         adminInstructionsEdit: 'IT Suche nach einem Asset über das Menü Assets, um dieses zu verwalten.',
         adminInstructionsCreateHeading: 'IT Neues Asset',
         adminInstructionsCreate: 'IT Neues Asset erstellen',
+        adminInstructionsSyncElasticAssetsHeading: 'IT Assets mit Elasticsearch synchronisieren',
+        adminInstructionsSyncElasticAssets:
+            'IT Gleicht den Zustand von Elasticsearch mit der Datenbank ab.'
+            + 'IT Damit wird sichergestellt, dass die Suche alle vorhandenen Assets miteinbezieht.',
+        adminInstructionsSyncElasticAssetsStart: 'IT Synchronisation starten',
     },
 };

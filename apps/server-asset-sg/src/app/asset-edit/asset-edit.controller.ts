@@ -17,52 +17,49 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import * as E from 'fp-ts/Either';
 import { pipe } from 'fp-ts/function';
 import * as TE from 'fp-ts/TaskEither';
-import * as D from 'io-ts/Decoder';
 
-import { DT, decodeError } from '@asset-sg/core';
-import { PatchAsset, isEditor } from '@asset-sg/shared';
+import { DT, decodeError, unknownToError } from '@asset-sg/core';
+import { AssetByTitle, PatchAsset, isEditor } from '@asset-sg/shared';
 
-import { isNotFoundError, permissionDeniedError } from '../errors';
+import { permissionDeniedError } from '../errors';
 import { AuthenticatedRequest } from '../models/request';
+import { AssetRepo } from '../repos/asset.repo';
+import { AssetSearchService } from '../search/asset-search-service';
 import { UserService } from '../user/user.service';
 
-import { AssetEditService } from './asset-edit.service';
+import { AssetEditDetail, AssetEditService } from './asset-edit.service';
+
 
 @Controller('asset-edit')
 export class AssetEditController {
-    constructor(private readonly assetEditService: AssetEditService, private readonly userService: UserService) {}
+    constructor(
+        private readonly assetRepo: AssetRepo,
+        private readonly assetEditService: AssetEditService,
+        private readonly assetSearchService: AssetSearchService,
+        private readonly userService: UserService,
+    ) {}
 
     @Get('search')
-    async searchForAssetByTitle(@Query('title') title: string) {
-        const maybeTitle = D.string.decode(title);
-        if (E.isLeft(maybeTitle)) {
-            throw new HttpException(D.draw(maybeTitle.left), 400);
+    async searchForAssetByTitle(@Query('title') title: string): Promise<AssetByTitle[]> {
+        try {
+            return await this.assetSearchService.searchByTitle(title);
+        } catch (e) {
+            throw new HttpException(unknownToError(e).message, 500);
         }
-
-        const e = await this.assetEditService.searchForAssetByTitle(title)();
-        if (E.isLeft(e)) {
-            console.error(e.left);
-            throw new HttpException(e.left.message, 500);
-        }
-        return e.right;
     }
 
     @Get(':assetId')
-    async getAsset(@Param('assetId') assetId: string) {
-        const maybeAssetId = DT.IntFromString.decode(assetId);
-        if (E.isLeft(maybeAssetId)) {
-            throw new HttpException(D.draw(maybeAssetId.left), 400);
+    async getAsset(@Param('assetId') assetId: string): Promise<unknown> {
+        const id = parseInt(assetId);
+        if (isNaN(id)) {
+            throw new HttpException('Resource not found', 404);
         }
-
-        const e = await this.assetEditService.getAsset(maybeAssetId.right)();
-        if (E.isLeft(e)) {
-            console.error(e.left);
-            if (isNotFoundError(e.left)) {
-                throw new HttpException('Resource not found', 400);
-            }
-            throw new HttpException(e.left.message, 500);
+        console.log(id);
+        const asset = await this.assetRepo.find(id);
+        if (asset === null) {
+            throw new HttpException('Resource not found', 404);
         }
-        return e.right;
+        return AssetEditDetail.encode(asset)
     }
 
     @Put()
@@ -79,9 +76,9 @@ export class AssetEditController {
         )();
         if (E.isLeft(e)) {
             console.error(e.left);
-            if (e.left._tag === 'decodeError') {
-                throw new HttpException(e.left.message, 400);
-            }
+            // if (e.left._tag === 'decodeError') {
+            //     throw new HttpException(e.left.message, 400);
+            // }
             throw new HttpException(e.left.message, 500);
         }
         return e.right;
@@ -113,9 +110,9 @@ export class AssetEditController {
         )();
         if (E.isLeft(e)) {
             console.error(e.left);
-            if (e.left._tag === 'decodeError') {
-                throw new HttpException(e.left.message, 400);
-            }
+            // if (e.left._tag === 'decodeError') {
+            //     throw new HttpException(e.left.message, 400);
+            // }
             throw new HttpException(e.left.message, 500);
         }
         return e.right;
@@ -140,9 +137,9 @@ export class AssetEditController {
         )();
         if (E.isLeft(e)) {
             console.error(e.left);
-            if (e.left._tag === 'decodeError') {
-                throw new HttpException(e.left.message, 400);
-            }
+            // if (e.left._tag === 'decodeError') {
+            //     throw new HttpException(e.left.message, 400);
+            // }
             throw new HttpException(e.left.message, 500);
         }
         return e.right;
@@ -163,9 +160,9 @@ export class AssetEditController {
         )();
         if (E.isLeft(e)) {
             console.error(e.left);
-            if (e.left._tag === 'decodeError') {
-                throw new HttpException(e.left.message, 400);
-            }
+            // if (e.left._tag === 'decodeError') {
+            //     throw new HttpException(e.left.message, 400);
+            // }
             throw new HttpException(e.left.message, 500);
         }
         return e.right;

@@ -1,4 +1,4 @@
-FROM node:16-alpine as ui-builder
+FROM node:20-alpine as app-builder
 
 WORKDIR /app
 COPY . .
@@ -11,10 +11,9 @@ RUN npx nx build client-asset-sg
 
 # final image build
 FROM nginx:mainline-alpine
-LABEL maintainer=support@lambda-it.ch
 
 WORKDIR /usr/share/nginx/html
-COPY --from=ui-builder /app/dist/apps/client-asset-sg .
+COPY --from=app-builder /app/dist/apps/client-asset-sg .
 
 # this nginx base image will parse the template and will move it to 
 # /etc/nginx/conf.d/default.conf before it starts nginx process

@@ -4,9 +4,12 @@
     "license": "MIT",
     "scripts": {
         "ng": "nx",
-        "start": "concurrently \"nx serve server-asset-sg\" \"nx serve client-asset-sg --disableHostCheck=true\"",
-        "build": "nx build",
-        "postinstall": "node ./decorate-angular-cli.js"
+        "start": "concurrently \"npx nx serve server-asset-sg\" \"npx nx serve client-asset-sg --disableHostCheck=true\"",
+        "build": "concurrently \"npx nx build server-asset-sg\" \"npx nx build client-asset-sg\"",
+        "test": "npx nx run-many --target=test --all",
+        "lint": "npx nx run-many --target=lint --all",
+        "postinstall": "node ./decorate-angular-cli.js",
+        "prisma": "dotenv -e apps/server-asset-sg/.env.local -- npx prisma"
     },
     "private": true,
     "dependencies": {
@@ -21,12 +24,13 @@
         "@angular/platform-browser": "15.1.0",
         "@angular/platform-browser-dynamic": "15.1.0",
         "@angular/router": "15.1.0",
-        "@aws-sdk/client-s3": "^3.241.0",
+        "@aws-sdk/client-s3": "^3.537.0",
         "@devexperts/remote-data-ts": "^2.1.1",
         "@elastic/elasticsearch": "^8.5.0",
         "@kobalte/core": "^0.4.0",
         "@morphic-ts/adt": "^3.0.0",
         "@nestjs/axios": "^2.0.0",
+        "@nestjs/cache-manager": "^2.2.2",
         "@nestjs/common": "^9.0.0",
         "@nestjs/core": "^9.0.0",
         "@nestjs/platform-express": "^9.0.0",
@@ -45,12 +49,15 @@
         "@turf/boolean-within": "^6.5.0",
         "@turf/helpers": "^6.5.0",
         "@turf/midpoint": "^6.5.0",
+        "angular-oauth2-oidc": "^17.0.1",
         "bezier-easing": "^2.1.0",
+        "cache-manager": "^5.4.0",
         "csv-parse": "^5.3.3",
         "cuid": "^3.0.0",
         "fp-ts": "^2.13.1",
         "io-ts": "^2.2.20",
         "jsonwebtoken": "^9.0.0",
+        "jwk-to-pem": "^2.0.5",
         "monocle-ts": "^2.3.13",
         "newtype-ts": "^0.3.5",
         "ngx-window-token": "^6.0.0",
@@ -71,13 +78,14 @@
         "zone.js": "~0.11.4"
     },
     "devDependencies": {
-        "@angular-devkit/build-angular": "15.1.1",
+        "@angular-devkit/build-angular": "15.2.10",
         "@angular-eslint/eslint-plugin": "~15.0.0",
         "@angular-eslint/eslint-plugin-template": "~15.0.0",
         "@angular-eslint/template-parser": "~15.0.0",
         "@angular/cli": "~15.0.0",
         "@angular/compiler-cli": "15.1.0",
         "@angular/language-service": "15.1.0",
+        "@faker-js/faker": "^8.4.1",
         "@nestjs/schematics": "^9.0.0",
         "@nestjs/testing": "^9.0.0",
         "@nrwl/cypress": "15.5.2",
@@ -91,6 +99,7 @@
         "@nrwl/workspace": "15.5.2",
         "@types/jest": "28.1.1",
         "@types/jsonwebtoken": "^9.0.1",
+        "@types/jwk-to-pem": "^2.0.3",
         "@types/multer": "^1.4.7",
         "@types/node": "18.7.1",
         "@types/validator": "^13.7.10",
@@ -100,6 +109,7 @@
         "@vitest/ui": "^0.25.8",
         "concurrently": "^7.6.0",
         "cypress": "^11.0.0",
+        "dotenv-cli": "^7.4.1",
         "eslint": "~8.15.0",
         "eslint-config-prettier": "^8.6.0",
         "eslint-plugin-cypress": "^2.10.3",
@@ -120,10 +130,13 @@
         "ts-node": "10.9.1",
         "type-zoo": "^3.4.1",
         "typescript": "~4.8.2",
-        "vite": "^4.0.1",
+        "vite": "^4.5.2",
         "vite-plugin-dts": "~1.7.1",
         "vite-plugin-eslint": "^1.8.1",
         "vite-tsconfig-paths": "^4.0.2",
         "vitest": "^0.25.8"
+    },
+    "prisma": {
+        "schema": "apps/server-asset-sg/src/app/prisma/schema.prisma"
     }
 }

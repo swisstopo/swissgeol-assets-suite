@@ -5,7 +5,7 @@ import { ReplaySubject, forkJoin, map } from 'rxjs';
 
 import { ApiError } from '@asset-sg/client-shared';
 import { ORD } from '@asset-sg/core';
-import { User, UserWithoutId, Users, byEmail } from '@asset-sg/shared';
+import { User, Users, byEmail } from '@asset-sg/shared';
 
 type AdminPageState = Loading | StateApiError | ReadMode | EditMode | CreateMode;
 
@@ -31,7 +31,6 @@ export class AdminPageStateMachine {
             rdUserId$: ORD.ObservableRemoteData<ApiError, string>;
             getUsers: () => ORD.ObservableRemoteData<ApiError, Users>;
             updateUser: (user: User) => ORD.ObservableRemoteData<ApiError, void>;
-            createUser: (user: Omit<User, 'id'>) => ORD.ObservableRemoteData<ApiError, void>;
             deleteUser: (id: string) => ORD.ObservableRemoteData<ApiError, void>;
         },
     ) {
@@ -88,22 +87,6 @@ export class AdminPageStateMachine {
         if (AdminPageState.is.editMode(this._state)) {
             this._state = AdminPageState.as.editMode({ ...this._state, showProgressBar: true });
             this.modifyAndReload(this.effects.updateUser(user), this._state._userId);
-        }
-    }
-
-    public createUser() {
-        if (AdminPageState.is.readMode(this._state)) {
-            this._state = AdminPageState.of.createMode({
-                ...this._state,
-                usersVM: this._state.usersVM.map(u => ({ ...u, expanded: false, disableEdit: true })),
-            });
-        }
-    }
-
-    public saveCreatedUser(user: UserWithoutId) {
-        if (AdminPageState.is.createMode(this._state)) {
-            this._state = AdminPageState.as.createMode({ ...this._state, showProgressBar: true });
-            this.modifyAndReload(this.effects.createUser(user), this._state._userId);
         }
     }
 

@@ -1,7 +1,7 @@
 <ng-container *rxLet="_referenceDataVM$ | push; let vm">
     <form [formGroup]="_form" class="flex flex-row max-h-full">
         <div class="flex flex-column form-column mr-8">
-            <div class="flex flex-column bg-white mb-4 py-4 px-6">
+            <div class="flex flex-column bg-white mb-4 py-4 px-6 overflow-y-scroll">
                 <div class="font-bold mb-4" translate>edit.tabs.general.title</div>
                 <mat-form-field class="mb-2">
                     <mat-label translate>edit.tabs.general.publicTitle</mat-label>
@@ -89,7 +89,7 @@
             </div>
         </div>
         <div class="flex flex-column form-column mr-8">
-            <div class="flex flex-column bg-white mb-4 py-4 px-6">
+            <div class="flex flex-column bg-white mb-4 py-4 px-6 overflow-y-scroll">
                 <div class="font-bold mb-4" translate>edit.tabs.general.topic</div>
                 <asset-sg-multiselect
                     formControlName="manCatLabelRefs"
