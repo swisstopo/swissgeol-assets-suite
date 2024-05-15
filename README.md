@@ -98,7 +98,7 @@ To do so, use the following commands.
 Be aware that you need to manually insert the `{DB_*}` values beforehand.
 ```bash
 cd development
-docker compose exec db sh -c 'pg_dump --dbname=postgresql://{DB_USERNAME}:{DB_PASSWORD}@{DB_HOST}:5432/{DB_DATABASE} --data-only --exclude-table asset_user -n public > /dump.sql'
+docker compose exec db sh -c 'pg_dump --dbname=postgresql://{DB_USERNAME}:{DB_PASSWORD}@{DB_HOST}:5432/{DB_DATABASE} --data-only --exclude-table asset_user _prisma_migrations -n public > /dump.sql'
 ```
 > The export will output warnings related to circular foreign-key constraints.
 > These can be safely ignored.

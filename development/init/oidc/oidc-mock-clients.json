@@ -1,14 +1,10 @@
 [{
-  "ClientId": "assets-client",
-  "Description": "Client for Authorization Code flow with PKCE",
+  "ClientId": "assets",
+  "Description": "swisstopo assets",
   "RequireClientSecret": false,
   "AlwaysIncludeUserClaimsInIdToken": true,
   "AllowedGrantTypes": [
     "authorization_code"
-  ],
-  "AllowedResponseTypes": [
-    "code",
-    "id_token"
   ],
   "AllowAccessTokensViaBrowser": true,
   "RedirectUris": [
@@ -20,10 +16,10 @@
   "AllowedScopes": [
       "openid",
       "profile",
-      "local_groups_scope"
+      "email",
+      "cognito"
   ],
   "AccessTokenType": "JWT",
   "IdentityTokenLifetime": 3600,
   "AccessTokenLifetime": 3600
-}
-]
+}]
