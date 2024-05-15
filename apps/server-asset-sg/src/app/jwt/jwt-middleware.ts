@@ -117,9 +117,12 @@ export class JwtMiddleware implements NestMiddleware {
   }
 
     private getJwkTE(): TE.TaskEither<Error, JwksKey[]> {
+      const jwksPath = environment.production
+        ? '/.well-known/jwks.json'
+        : '/.well-known/openid-configuration/jwks';
         return pipe(
             TE.tryCatch(
-                () => axios.get(`${process.env.OAUTH_ISSUER}/.well-known/jwks.json`),
+                () => axios.get(`${process.env.OAUTH_ISSUER}${jwksPath}`),
                 reason => new Error(`${reason}`),
             ),
             TE.map(response => response.data.keys),

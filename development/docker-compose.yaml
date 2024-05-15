@@ -119,24 +119,25 @@ services:
         environment:
             - ServerOptions__HostName=smtp4dev
 
-    oidc-server:
+    oidc:
         container_name: swissgeol-assets-oidc
-        image: soluto/oidc-server-mock
+        image: ghcr.io/soluto/oidc-server-mock
         restart: unless-stopped
         ports:
-            - "4011:80"
+            - "4011:8080"
         environment:
             CLIENTS_CONFIGURATION_PATH: /tmp/config/clients-config.json
             USERS_CONFIGURATION_PATH: /tmp/config/users-config.json
-            IDENTITY_RESOURCES_INLINE: |
-                [
-                    {
-                        "Name": "local_groups_scope",
-                        "ClaimTypes": [
-                            "local_groups_claim"
-                        ]
-                    }
-                ]
+            API_SCOPES_INLINE: |
+              [
+                  {
+                      "Name": "cognito",
+                      "UserClaims": [
+                          "cognito:groups",
+                          "username"
+                      ]
+                  }
+              ]
             SERVER_OPTIONS_INLINE: |
                 {
                     "IssuerUri": "http://localhost:4011",
@@ -147,8 +148,13 @@ services:
                     "Authentication": {
                         "CookieSameSiteMode": "Lax",
                         "CheckSessionCookieSameSiteMode": "Lax"
+                    },
+                    "KeyManagement": {
+                      "Enabled": true,
+                      "KeyPath": "/tmp/data/keys"
                     }
                 }
         volumes:
             - ./init/oidc/oidc-mock-clients.json:/tmp/config/clients-config.json:ro
-            - ./init/oidc/oidc-mock-users.json:/tmp/config/users-config.json:ro            
+            - ./init/oidc/oidc-mock-users.json:/tmp/config/users-config.json:ro
+            - ./volumes/oidc/keys:/tmp/data/keys
