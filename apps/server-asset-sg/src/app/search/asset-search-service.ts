@@ -616,10 +616,16 @@ const mapQueryToElasticDsl = (query: AssetSearchQuery): QueryDslQueryContainer =
           },
           {
             query_string: {
-              query: `*${query.text}*`,
+              query: `*${escapeElasticQuery(query.text)}*`,
               fields: scope,
             },
           },
+          {
+            query_string: {
+              query: query.text,
+              fields: scope,
+            }
+          }
         ],
       },
     });
@@ -754,4 +760,8 @@ const getDateTimeString = (): string => {
 interface PageOptions {
   limit?: number;
   offset?: number;
+}
+
+const escapeElasticQuery = (query: string): string => {
+  return query.replace(/(&&|\|\||!|\(|\)|\{|}|\[|]|\^|"|~|\*|\?|:|\\)/, '\\$1')
 }
