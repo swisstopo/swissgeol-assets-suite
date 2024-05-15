@@ -227,7 +227,9 @@ jobs:
 
   tag_rc_commit:
     name: 'tag rc commit'
-    needs: tag_rc_image
+    needs:
+      - tag_rc_image_app
+      - tag_rc_image_api
     runs-on: ubuntu-latest
     steps:
       - name: Create/update tag
