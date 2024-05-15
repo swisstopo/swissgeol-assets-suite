@@ -31,9 +31,7 @@ jobs:
       - name: Run postinstall
         run: npm run postinstall
       - name: Generate prisma types
-        run: |
-          cd apps/server-asset-sg/
-          npx ng gen-prisma-client
+        run: npm run prisma -- generate
 
   test:
     runs-on: ubuntu-latest
@@ -75,9 +73,7 @@ jobs:
           path: ./node_modules
           key: "${{ runner.os }}-npm-${{ steps.cache-node-modules.outputs.cache-key }}"
       - name: Migrate database
-        run: |
-          cd apps/server-asset-sg/
-          npx prisma migrate deploy --schema src/app/prisma/schema.prisma
+        run: npm run prisma -- migrate deploy
       - name: Run tests
         run: npm run test
 
