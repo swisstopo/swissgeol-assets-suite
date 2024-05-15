@@ -1,0 +1,89 @@
+### Create asset
+POST {{host}}/api/assets
+Authorization: Impersonate {{user}}
+Content-Type: application/json
+
+{
+  "title": "My Title",
+  "originalTitle": null,
+  "municipality": null,
+  "kindCode": "package",
+  "formatCode": "binary",
+  "languageCodes": [],
+  "manCatLabelCodes": [],
+  "natRelCodes": [],
+  "isNatRel": false,
+  "links": {
+    "parent": null,
+    "siblings": [
+      44382
+    ]
+  },
+  "identifiers": [],
+  "statuses": [],
+  "studies": [],
+  "contactAssignments": [],
+  "createdAt": "2024-02-01",
+  "receivedAt": "2024-02-01",
+  "infoGeol": {
+    "main": null,
+    "contact": null,
+    "auxiliary": null
+  },
+  "sgsId": null,
+  "usage": {
+    "public": {
+      "isAvailable": true,
+      "statusCode": "tobechecked"
+    },
+    "internal": {
+      "isAvailable": true,
+      "statusCode": "approved"
+    }
+  }
+}
+
+### Update asset
+PUT {{host}}/api/assets/44383
+Authorization: Impersonate {{user}}
+Content-Type: application/json
+
+{
+  "title": "My Title",
+  "originalTitle": null,
+  "municipality": null,
+  "kindCode": "package",
+  "formatCode": "binary",
+  "languageCodes": [],
+  "manCatLabelCodes": [],
+  "natRelCodes": [],
+  "isNatRel": false,
+  "links": {
+    "parent": 44382,
+    "siblings": [
+      44382, 44384
+    ]
+  },
+  "identifiers": [],
+  "statuses": [],
+  "studies": [],
+  "contactAssignments": [],
+  "createdAt": "2024-02-01",
+  "receivedAt": "2024-02-01",
+  "infoGeol": {
+    "main": null,
+    "contact": null,
+    "auxiliary": null
+  },
+  "sgsId": null,
+  "usage": {
+    "public": {
+      "isAvailable": true,
+      "statusCode": "tobechecked"
+    },
+    "internal": {
+      "isAvailable": true,
+      "statusCode": "approved"
+    }
+  }
+}

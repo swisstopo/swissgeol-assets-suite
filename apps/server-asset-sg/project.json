@@ -1,7 +1,7 @@
 {
   "name": "server-asset-sg",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "apps/server-asset-sg/src",
+  "sourceRoot": "apps/server-asset-sg",
   "projectType": "application",
   "targets": {
     "build": {
@@ -10,7 +10,7 @@
         "parallel": false,
         "commands": [
           {
-            "command": "npx nx run server-asset-sg:gen-prisma-client"
+            "command": "npm run prisma -- generate"
           },
           {
             "command": "npx nx run server-asset-sg:build-app:production"
@@ -22,10 +22,10 @@
             "command": "npx shx mkdir dist/apps/server-asset-sg/prisma"
           },
           {
-            "command": "npx shx cp ./apps/server-asset-sg/src/app/prisma/schema.prisma dist/apps/server-asset-sg/prisma/"
+            "command": "npx shx cp ./apps/server-asset-sg/prisma/schema.prisma dist/apps/server-asset-sg/prisma/"
           },
           {
-            "command": "npx shx cp -R ./apps/server-asset-sg/src/app/prisma/migrations dist/apps/server-asset-sg/prisma/"
+            "command": "npx shx cp -R ./apps/server-asset-sg/prisma/migrations dist/apps/server-asset-sg/prisma/"
           },
           {
             "command": "npx shx sed -i \"s/(\\.\\.\\/)*node_modules/\\.\\/node_modules/g\" dist/apps/server-asset-sg/prisma/schema.prisma"
@@ -45,7 +45,7 @@
         "main": "apps/server-asset-sg/src/main.ts",
         "tsConfig": "apps/server-asset-sg/tsconfig.app.json",
         "assets": [
-          "apps/server-asset-sg/src/assets"
+          "apps/server-asset-sg/static"
         ],
         "externalDependencies": "all",
         "generatePackageJson": true
@@ -57,8 +57,8 @@
           "inspect": false,
           "fileReplacements": [
             {
-              "replace": "apps/server-asset-sg/src/environments/environment.ts",
-              "with": "apps/server-asset-sg/src/environments/environment.prod.ts"
+              "replace": "apps/server-asset-sg/environments/environment.ts",
+              "with": "apps/server-asset-sg/environments/environment.prod.ts"
             }
           ]
         }
@@ -95,14 +95,6 @@
         "jestConfig": "apps/server-asset-sg/jest.config.ts",
         "passWithNoTests": true,
         "codeCoverage": true
-      }
-    },
-    "gen-prisma-client": {
-      "executor": "nx:run-commands",
-      "outputs": [],
-      "options": {
-        "command": "npx prisma generate --schema ./src/app/prisma/schema.prisma",
-        "cwd": "apps/server-asset-sg"
       }
     }
   },

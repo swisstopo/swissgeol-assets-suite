@@ -4,16 +4,16 @@ import { DateId } from './DateStruct';
 export type ElasticSearchUsageCode = 'public' | 'internal' | 'useOnRequest';
 
 export interface ElasticSearchAsset {
-    assetId: number
-    titlePublic: string
-    titleOriginal: string
-    sgsId: number | null
-    createDate: DateId
-    assetKindItemCode: string
-    languageItemCodes: string[]
-    usageCode: ElasticSearchUsageCode
-    authorIds: number[]
-    contactNames: string[]
-    manCatLabelItemCodes: string[]
-    geometryCodes: GeometryCode[]
+    assetId: number;
+    titlePublic: string;
+    titleOriginal: string | null;
+    sgsId: number | null;
+    createDate: DateId;
+    assetKindItemCode: string;
+    languageItemCodes: string[];
+    usageCode: ElasticSearchUsageCode;
+    authorIds: number[];
+    contactNames: string[];
+    manCatLabelItemCodes: string[];
+    geometryCodes: GeometryCode[];
 }
