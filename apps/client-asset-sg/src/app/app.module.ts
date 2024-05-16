@@ -16,8 +16,6 @@ import { TranslateLoader, TranslateModule, TranslateService } from '@ngx-transla
 import { ForModule } from '@rx-angular/template/for';
 import { LetModule } from '@rx-angular/template/let';
 import { PushModule } from '@rx-angular/template/push';
-import * as O from 'fp-ts/Option';
-import * as C from 'io-ts/Codec';
 
 import { AuthInterceptor, AuthModule } from '@asset-sg/auth';
 import {
@@ -28,6 +26,7 @@ import {
   currentLangFactory,
   icons,
 } from '@asset-sg/client-shared';
+import { AlertModule } from '@asset-sg/client-shared';
 import { storeLogger } from '@asset-sg/core';
 
 import { environment } from '../environments/environment';
@@ -36,7 +35,6 @@ import { adminGuard, editorGuard } from './app-guards';
 import { assetsPageMatcher } from './app-matchers';
 import { AppComponent } from './app.component';
 import { AppBarComponent, MenuBarComponent, NotFoundComponent, RedirectToLangComponent } from './components';
-import { ErrorComponent } from './components/error/error.component';
 import { appTranslations } from './i18n';
 import { AppSharedStateEffects } from './state';
 import { appSharedStateReducer } from './state/app-shared.reducer';
@@ -50,7 +48,6 @@ registerLocaleData(locale_deCH, 'de-CH');
     NotFoundComponent,
     AppBarComponent,
     MenuBarComponent,
-    ErrorComponent,
   ],
   imports: [
     BrowserModule,
@@ -74,10 +71,6 @@ registerLocaleData(locale_deCH, 'de-CH');
         path: ':lang/asset-admin',
         loadChildren: () => import('@asset-sg/asset-editor').then(m => m.AssetEditorModule),
         canActivate: [editorGuard],
-      },
-      {
-        path: ':lang/error',
-        component: ErrorComponent,
       },
       {
         matcher: assetsPageMatcher,
@@ -117,6 +110,7 @@ registerLocaleData(locale_deCH, 'de-CH');
     DialogModule,
     A11yModule,
     AuthModule,
+    AlertModule,
   ],
   providers: [
     provideSvgIcons(icons),
@@ -137,11 +131,3 @@ export class AppModule {
 export interface Encoder<O, A> {
   readonly encode: (a: A) => O;
 }
-
-function optionFromNullable<O, A>(encoder: Encoder<O, A>): Encoder<O | null, O.Option<A>> {
-  return {
-    encode: O.fold(() => null, encoder.encode),
-  };
-}
-
-const foooobar = optionFromNullable(C.string);

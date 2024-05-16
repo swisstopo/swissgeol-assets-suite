@@ -43,3 +43,17 @@ asset-sg-menu-bar {
         --viewport-width: min(calc(100vw - #{$menu-bar-width}), calc(1920px - #{$menu-bar-width}));
     }
 }
+
+.alerts {
+  position: fixed;
+  width: min(30rem, 95vw);
+
+  bottom: 2rem;
+  left: 0;
+  right: 0;
+  margin-left: auto;
+  margin-right: auto;
+
+  /// angular-cdk-overlay is at 1000, so we go to 1500.
+  z-index: 1500;
+}
