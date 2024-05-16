@@ -1,0 +1,118 @@
+@use '@angular/material' as mat;
+@use '../../../../../../../apps/client-asset-sg/src/theme' as *;
+
+// This value might need to be changed depending on other style variables.
+// It is necessary to use a fixed value here to allow all animations to work correctly.
+$height: 57px;
+
+:host {
+  display: flex;
+  position: relative;
+  flex-direction: row;
+  width: 100%;
+  padding: 1rem;
+  align-items: center;
+  gap: 0.75rem;
+  overflow: hidden;
+  cursor: pointer;
+
+  animation: 300ms ease-in slide-in;
+  transform-origin: bottom;
+}
+
+:host.is-removed {
+  animation: 250ms ease-out slide-out;
+  max-height: 0;
+  padding-block: 0;
+}
+
+p {
+  margin: 0;
+  flex: 1 1 auto;
+  word-wrap: normal;
+}
+
+progress {
+  position: absolute;
+  top: 0;
+  left: 0;
+
+  border: 0;
+  height: 0.5rem;
+  width: 100%;
+}
+
+svg-icon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  min-height: 20px;
+}
+
+svg-icon.close {
+  transition: ease-in-out 250ms transform;
+}
+
+:host:hover > svg-icon.close {
+  transform: rotate(90deg);
+}
+
+@mixin colored($palette, $main-weight, $light-weight) {
+  color: mat.get-contrast-color-from-palette($palette, $main-weight);
+  background-color: mat.get-color-from-palette($palette, $main-weight);
+
+  progress {
+    background-color: mat.get-color-from-palette($palette, $light-weight);
+  }
+
+  progress::-webkit-progress-bar, progress::-moz-progress-bar {
+    background-color: mat.get-color-from-palette($palette, $main-weight);
+  }
+}
+
+:host.is-success {
+  @include colored($asset-sg-primary, 600, 400);
+}
+
+:host.is-notice {
+  @include colored($asset-sg-accent, 500, 300);
+}
+
+:host.is-warning {
+  @include colored($asset-sg-warn, 200, 100);
+}
+
+:host.is-error {
+  @include colored($asset-sg-warn, 500, 300);
+}
+
+@keyframes slide-in {
+  from {
+    max-height: 0;
+    transform: scaleY(0);
+    opacity: 0;
+  }
+  to {
+    max-height: $height;
+    transform: scaleY(100%);
+    opacity: 1;
+  }
+}
+
+@keyframes slide-out {
+  from {
+    max-height: $height;
+    padding-block: 0;
+    transform: scaleY(100%);
+    opacity: 1;
+  }
+  to {
+    max-height: 0;
+    padding-block: 0;
+    transform: scaleY(0);
+    opacity: 0;
+  }
+}

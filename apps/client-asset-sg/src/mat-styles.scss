@@ -1,27 +1,13 @@
 @use 'app/styles/variables';
 @use 'app/styles/mixins' as mixins;
 @use '@angular/material' as mat;
-@use 'sass:map';
+
+@import 'theme';
 
 @include mat.core();
 
-$asset-sg-palette: map.set(mat.$indigo-palette, 500, variables.$cyan-03);
+@include mat.all-component-themes($asset-sg-theme);
 
-$asset-sg-primary: mat.define-palette($asset-sg-palette);
-$asset-sg-accent: mat.define-palette(mat.$pink-palette, A200, A100, A400);
-$asset-sg-warn: mat.define-palette(mat.$red-palette);
-
-$asset-sg-theme: mat.define-light-theme(
-    (
-        color: (
-            primary: $asset-sg-primary,
-            accent: $asset-sg-accent,
-            warn: $asset-sg-warn,
-        ),
-    )
-);
-
-@include mat.select-theme($asset-sg-theme);
 .mat-mdc-select-value {
     color: variables.$grey-09;
 }
@@ -112,7 +98,6 @@ mat-option.mat-mdc-option {
     }
 }
 
-@include mat.legacy-autocomplete-theme($asset-sg-theme);
 .mat-autocomplete-panel .mat-option.mat-selected:not(.mat-active):not(:hover):not(.mat-option-disabled) {
     color: inherit;
     background-color: variables.$grey-01;
@@ -137,7 +122,6 @@ mat-option.mat-option {
     }
 }
 
-@include mat.form-field-theme($asset-sg-theme);
 .mat-mdc-form-field {
     &:hover,
     &.mat-focused {
@@ -230,7 +214,6 @@ mat-option.mat-option {
     }
 }
 
-@include mat.datepicker-theme($asset-sg-theme);
 button.mat-icon-button {
     border-radius: 0;
     background-color: white;
@@ -266,8 +249,6 @@ mat-datepicker-content.mat-datepicker-content .mat-calendar {
     height: 24.5rem;
 }
 
-@include mat.progress-bar-theme($asset-sg-theme);
-@include mat.radio-theme($asset-sg-theme);
 .mat-mdc-radio-button.mat-accent {
     --mdc-radio-selected-focus-icon-color: #{variables.$dark-red};
     --mdc-radio-selected-hover-icon-color: #{variables.$dark-red};
@@ -276,7 +257,6 @@ mat-datepicker-content.mat-datepicker-content .mat-calendar {
     --mat-mdc-radio-checked-ripple-color: #{variables.$dark-red};
 }
 
-@include mat.menu-theme($asset-sg-theme);
 .mat-mdc-menu-item:hover:not([disabled]),
 .mat-mdc-menu-item.cdk-program-focused:not([disabled]),
 .mat-mdc-menu-item.cdk-keyboard-focused:not([disabled]),
