@@ -32,7 +32,7 @@ export class AssetSearchDetailComponent {
   constructor(private httpClient: HttpClient) {
   }
 
-  downloadFile(file: Omit<AssetFile, 'fileSize'>, isDownload: boolean = true): void {
+  downloadFile(file: Omit<AssetFile, 'fileSize'>, isDownload = true): void {
     this.httpClient.get(`/api/file/${file.fileId}`, { responseType: 'blob' }).subscribe((blob) => {
       const url = URL.createObjectURL(blob);
       const anchor = document.createElement('a');

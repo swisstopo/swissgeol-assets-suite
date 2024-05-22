@@ -60,7 +60,7 @@ registerLocaleData(locale_deCH, 'de-CH');
     RouterModule.forRoot([
       {
         path: ':lang/auth',
-        loadChildren: () => import('@asset-sg/auth').then(m => m.AuthModule),
+        loadChildren: () => AuthModule,
       },
       {
         path: ':lang/profile',

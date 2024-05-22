@@ -27,12 +27,13 @@ import {
   makeUsageCode,
 } from '@asset-sg/shared';
 
+// eslint-disable-next-line @nx/enforce-module-boundaries
 import indexMapping from '../../../../../../development/init/elasticsearch/mappings/swissgeol_asset_asset.json';
-import { PrismaService } from '../../../core/prisma.service';
-import { AssetEditDetailFromPostgres } from '../../../models/asset-edit-detail';
 
+import { PrismaService } from '@/core/prisma.service';
 import { AssetEditRepo } from '@/features/asset-old/asset-edit.repo';
 import { AssetEditDetail } from '@/features/asset-old/asset-edit.service';
+import { AssetEditDetailFromPostgres } from '@/models/asset-edit-detail';
 
 const INDEX = 'swissgeol_asset_asset';
 export { INDEX as ASSET_ELASTIC_INDEX };

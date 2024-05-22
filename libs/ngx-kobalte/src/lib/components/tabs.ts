@@ -33,7 +33,7 @@ export function KobalteTabs(element: HTMLElement, props: KobalteTabsProps, tabs$
                     tabs().map(tabProps => h(Tabs.Trigger, { value: tabProps.value, ...tabProps.triggerProps })),
                 ),
                 () => h(tabs().map(tabProps => h(Tabs.Content, { value: tabProps.value, ...tabProps.contentProps }))),
-            ]),
+            ])(),
         element,
     );
 }

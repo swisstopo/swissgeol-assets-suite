@@ -8,27 +8,34 @@
       "executor": "nx:run-commands",
       "options": {
         "parallel": false,
+        "tsConfig": "apps/server-asset-sg/tsconfig.app.json",
         "commands": [
           {
-            "command": "npm run prisma -- generate"
+            "command": "npm run prisma -- generate",
+            "forwardAllArgs": false
           },
           {
             "command": "npx nx run server-asset-sg:build-app:production"
           },
           {
-            "command": "npx shx cp apps/server-asset-sg/docker/* dist/apps/server-asset-sg"
+            "command": "npx shx cp apps/server-asset-sg/docker/* dist/apps/server-asset-sg",
+            "forwardAllArgs": false
           },
           {
-            "command": "npx shx mkdir dist/apps/server-asset-sg/prisma"
+            "command": "npx shx mkdir dist/apps/server-asset-sg/prisma",
+            "forwardAllArgs": false
           },
           {
-            "command": "npx shx cp ./apps/server-asset-sg/prisma/schema.prisma dist/apps/server-asset-sg/prisma/"
+            "command": "npx shx cp ./apps/server-asset-sg/prisma/schema.prisma dist/apps/server-asset-sg/prisma/",
+            "forwardAllArgs": false
           },
           {
-            "command": "npx shx cp -R ./apps/server-asset-sg/prisma/migrations dist/apps/server-asset-sg/prisma/"
+            "command": "npx shx cp -R ./apps/server-asset-sg/prisma/migrations dist/apps/server-asset-sg/prisma/",
+            "forwardAllArgs": false
           },
           {
-            "command": "npx shx sed -i \"s/(\\.\\.\\/)*node_modules/\\.\\/node_modules/g\" dist/apps/server-asset-sg/prisma/schema.prisma"
+            "command": "npx shx sed -i \"s/(\\.\\.\\/)*node_modules/\\.\\/node_modules/g\" dist/apps/server-asset-sg/prisma/schema.prisma",
+            "forwardAllArgs": false
           }
         ]
       }
@@ -48,7 +55,8 @@
           "apps/server-asset-sg/static"
         ],
         "externalDependencies": "all",
-        "generatePackageJson": true
+        "generatePackageJson": true,
+        "webpackConfig": "apps/server-asset-sg/webpack.config.js"
       },
       "configurations": {
         "production": {
@@ -65,7 +73,7 @@
       }
     },
     "serve": {
-      "executor": "@nrwl/js:node",
+      "executor": "@nx/js:node",
       "options": {
         "buildTarget": "server-asset-sg:build-app"
       },
@@ -76,24 +84,18 @@
       }
     },
     "lint": {
-      "executor": "@nrwl/linter:eslint",
+      "executor": "@nx/eslint:lint",
       "outputs": [
         "{options.outputFile}"
-      ],
-      "options": {
-        "lintFilePatterns": [
-          "apps/server-asset-sg/**/*.ts"
-        ]
-      }
+      ]
     },
     "test": {
-      "executor": "@nrwl/jest:jest",
+      "executor": "@nx/jest:jest",
       "outputs": [
         "{workspaceRoot}/coverage/{projectRoot}"
       ],
       "options": {
         "jestConfig": "apps/server-asset-sg/jest.config.ts",
-        "passWithNoTests": true,
         "codeCoverage": true
       }
     }
