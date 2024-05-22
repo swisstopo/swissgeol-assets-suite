@@ -18,6 +18,7 @@ import { LetModule } from '@rx-angular/template/let';
 import { PushModule } from '@rx-angular/template/push';
 
 import { AuthInterceptor, AuthModule } from '@asset-sg/auth';
+import { ErrorService } from '@asset-sg/auth';
 import {
   AnchorComponent,
   ButtonComponent,
@@ -114,6 +115,7 @@ registerLocaleData(locale_deCH, 'de-CH');
   ],
   providers: [
     provideSvgIcons(icons),
+    ErrorService,
     { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },
     { provide: MAT_FORM_FIELD_DEFAULT_OPTIONS, useValue: { appearance: 'fill', floatLabel: 'auto' } },
     { provide: CURRENT_LANG, useFactory: currentLangFactory },

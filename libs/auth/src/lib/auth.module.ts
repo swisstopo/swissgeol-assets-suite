@@ -15,6 +15,8 @@ import { OAuthModule } from 'angular-oauth2-oidc';
 
 import { AnchorComponent, ButtonComponent, icons } from '@asset-sg/client-shared';
 
+import { ErrorService } from './services/error.service';
+
 
 @NgModule({
     imports: [
@@ -44,6 +46,9 @@ import { AnchorComponent, ButtonComponent, icons } from '@asset-sg/client-shared
         }),
     ],
     exports: [OAuthModule],
-    providers: [provideSvgIcons(icons)],
+    providers: [
+      provideSvgIcons(icons),
+      ErrorService,
+    ],
 })
 export class AuthModule {}
