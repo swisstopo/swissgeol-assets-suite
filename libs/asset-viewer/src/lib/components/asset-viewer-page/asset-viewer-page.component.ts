@@ -1,16 +1,16 @@
 import { ENTER } from '@angular/cdk/keycodes';
 import { TemplatePortal } from '@angular/cdk/portal';
 import {
-    ApplicationRef,
-    ChangeDetectionStrategy,
-    ChangeDetectorRef,
-    Component,
-    ElementRef,
-    NgZone,
-    TemplateRef,
-    ViewChild,
-    ViewContainerRef,
-    inject,
+  ApplicationRef,
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  ElementRef,
+  NgZone,
+  OnDestroy,
+  TemplateRef,
+  ViewChild,
+  ViewContainerRef, inject,
 } from '@angular/core';
 import { Router } from '@angular/router';
 import * as RD from '@devexperts/remote-data-ts';
@@ -59,7 +59,7 @@ import * as fromAssetViewer from '../../state/asset-viewer.selectors';
     hostDirectives: [LifecycleHooksDirective],
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class AssetViewerPageComponent {
+export class AssetViewerPageComponent implements OnDestroy {
     @ViewChild('templateAppBarPortalContent') templateAppBarPortalContent!: TemplateRef<unknown>;
     @ViewChild('templateDrawerPortalContent') templateDrawerPortalContent!: TemplateRef<unknown>;
     @ViewChild('searchInput') searchInput!: ElementRef<HTMLInputElement>;
@@ -178,6 +178,10 @@ export class AssetViewerPageComponent {
         )
             .pipe(untilDestroyed(this))
             .subscribe(this._store);
+    }
+
+    ngOnDestroy() {
+      this._appPortalService.setAppBarPortalContent(null);
     }
 
     public handleMapInitialised() {

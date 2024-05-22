@@ -1,4 +1,4 @@
-/* eslint-disable @nrwl/nx/enforce-module-boundaries */
+/* eslint-disable @nx/enforce-module-boundaries */
 import { ListObjectsCommand, ListObjectsCommandOutput, S3Client } from '@aws-sdk/client-s3';
 import * as A from 'fp-ts/Array';
 import * as E from 'fp-ts/Either';

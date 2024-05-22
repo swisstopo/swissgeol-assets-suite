@@ -8,7 +8,7 @@
                     <button
                         asset-sg-icon-button
                         (click)="removeLink('parent', _form.controls.assetMain.value.assetId)"
-                        [ariaLabel]="'edit.tabs.contacts.unlinkContact' | translate">
+                        [attr.aria-label]="'edit.tabs.contacts.unlinkContact' | translate">
                         <svg-icon key="delete"></svg-icon>
                     </button>
                 </div>
@@ -30,7 +30,7 @@
                     <button
                         asset-sg-icon-button
                         (click)="removeLink('sibling', linkedAsset.assetId)"
-                        [ariaLabel]="'edit.tabs.contacts.unlinkContact' | translate">
+                        [attr.aria-label]="'edit.tabs.contacts.unlinkContact' | translate">
                         <svg-icon key="delete"></svg-icon>
                     </button>
                 </div>

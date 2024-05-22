@@ -6,10 +6,11 @@
     "prefix": "asset-sg",
     "targets": {
         "build": {
-            "executor": "@nrwl/angular:ng-packagr-lite",
+            "executor": "@nx/angular:ng-packagr-lite",
             "outputs": ["{workspaceRoot}/dist/{projectRoot}"],
             "options": {
-                "project": "libs/asset-editor/ng-package.json"
+                "project": "libs/asset-editor/ng-package.json",
+                "tsConfig": "libs/asset-editor/tsconfig.lib.json"
             },
             "configurations": {
                 "production": {
@@ -22,19 +23,15 @@
             "defaultConfiguration": "production"
         },
         "test": {
-            "executor": "@nrwl/jest:jest",
+            "executor": "@nx/jest:jest",
             "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
             "options": {
-                "jestConfig": "libs/asset-editor/jest.config.ts",
-                "passWithNoTests": true
+                "jestConfig": "libs/asset-editor/jest.config.ts"
             }
         },
         "lint": {
-            "executor": "@nrwl/linter:eslint",
-            "outputs": ["{options.outputFile}"],
-            "options": {
-                "lintFilePatterns": ["libs/asset-editor/**/*.ts", "libs/asset-editor/**/*.html"]
-            }
+            "executor": "@nx/eslint:lint",
+            "outputs": ["{options.outputFile}"]
         }
     },
     "tags": []

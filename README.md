@@ -34,11 +34,6 @@ Install node modules:
 npm run install
 ```
 
-Decorate the Angular CLI with the Nx CLI:
-```bash
-npm run postinstall
-```
-
 #### 4. Build Local Services
 Generate prisma-client for database-access:
 ```bash

@@ -5,10 +5,13 @@
     "projectType": "library",
     "targets": {
         "build": {
-            "executor": "@nrwl/vite:build",
+            "executor": "@nx/vite:build",
             "outputs": ["{options.outputPath}"],
             "options": {
-                "outputPath": "dist/libs/ngx-kobalte"
+                "configFile": "libs/ngx-kobalte/vite.config.ts",
+                "tsConfig": "libs/ngx-kobalte/tsconfig.lib.json",
+                "outputPath": "dist/libs/ngx-kobalte",
+                "emptyOutDir": true
             }
         },
         "publish": {
@@ -19,19 +22,16 @@
             "dependsOn": ["build"]
         },
         "test": {
-            "executor": "@nrwl/vite:test",
-            "outputs": ["coverage/libs/ngx-kobalte"],
+            "executor": "@nx/vite:test",
+            "outputs": ["{workspaceRoot}/coverage/libs/ngx-kobalte"],
             "options": {
                 "passWithNoTests": true,
                 "reportsDirectory": "../../coverage/libs/ngx-kobalte"
             }
         },
         "lint": {
-            "executor": "@nrwl/linter:eslint",
-            "outputs": ["{options.outputFile}"],
-            "options": {
-                "lintFilePatterns": ["libs/ngx-kobalte/**/*.ts"]
-            }
+            "executor": "@nx/eslint:lint",
+            "outputs": ["{options.outputFile}"]
         }
     },
     "tags": []
