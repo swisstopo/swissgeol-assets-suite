@@ -390,10 +390,16 @@ export class AssetSearchService {
             },
             {
               query_string: {
-                query: `*${query}*`,
+                query: `*${escapeElasticQuery(query)}*`,
                 fields: scope,
               },
             },
+            {
+              query_string: {
+                query: query,
+                fields: scope,
+              }
+            }
           ],
           filter: filters,
         },
