@@ -8,6 +8,7 @@ import { debounceTime, fromEvent, map, startWith } from 'rxjs';
 import { assert } from 'tsafe';
 
 import { AuthService } from '@asset-sg/auth';
+import { ErrorService } from '@asset-sg/auth';
 import { AppPortalService, appSharedStateActions, setCssCustomProperties } from '@asset-sg/client-shared';
 
 import { AppState } from './state/app-state';
@@ -25,7 +26,10 @@ export class AppComponent {
   private _httpClient = inject(HttpClient);
   public appPortalService = inject(AppPortalService);
   private store = inject(Store<AppState>);
-  public readonly router: Router = inject(Router);
+
+  readonly router: Router = inject(Router);
+  readonly errorService = inject(ErrorService);
+  readonly authService = inject(AuthService);
 
   constructor(private readonly _authService: AuthService) {
     this._httpClient

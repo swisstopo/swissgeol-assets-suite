@@ -1,4 +1,6 @@
 @use 'styles/variables';
+@use '@angular/material' as mat;
+@use '../theme' as *;
 
 $app-bar-height: 88px;
 $menu-bar-width: 80px;
@@ -42,6 +44,20 @@ asset-sg-menu-bar {
         box-shadow: 0 0 60px 0 rgb(0 0 0 / 60%);
         --viewport-width: min(calc(100vw - #{$menu-bar-width}), calc(1920px - #{$menu-bar-width}));
     }
+}
+
+.error {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  grid-column: 1 / -1;
+  padding: 40px;
+  align-items: center;
+  font-size: 24px;
+  font-weight: bolder;
+
+  color: mat.get-contrast-color-from-palette($asset-sg-warn, 500);
+  background-color: mat.get-color-from-palette($asset-sg-warn, 600);
 }
 
 .alerts {

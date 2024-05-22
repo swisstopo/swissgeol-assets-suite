@@ -7,11 +7,14 @@ import { EMPTY, Observable, catchError } from 'rxjs';
 
 import { AlertType, showAlert } from '@asset-sg/client-shared';
 
+import { ErrorService } from './error.service';
+
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
   private _oauthService = inject(OAuthService);
   private _router: Router = inject(Router);
   private readonly store = inject(Store);
+  private readonly errorService = inject(ErrorService);
 
   intercept(req: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
     const token = sessionStorage.getItem('access_token');
@@ -34,7 +37,9 @@ export class AuthInterceptor implements HttpInterceptor {
     } else {
       return next.handle(req).pipe(
         catchError((error: HttpErrorResponse) => {
-          if (error.status === 401 || error.status === 403) {
+          if (error.status === 403) {
+            this.errorService.updateMessage(error.error.error);
+          } else if (error.status === 401) {
             this.store.dispatch(showAlert({
               alert: {
                 id: `auth-error-${error.status}`,
@@ -44,7 +49,6 @@ export class AuthInterceptor implements HttpInterceptor {
               },
             }));
           } else {
-            console.log(error);
             this.store.dispatch(showAlert({
               alert: {
                 id: `request-error-${error.status}-${error.url}`,
