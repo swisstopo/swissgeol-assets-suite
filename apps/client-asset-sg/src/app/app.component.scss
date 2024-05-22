@@ -56,8 +56,7 @@ asset-sg-menu-bar {
   font-size: 24px;
   font-weight: bolder;
 
-  color: mat.get-contrast-color-from-palette($asset-sg-warn, 500);
-  background-color: mat.get-color-from-palette($asset-sg-warn, 600);
+  color: mat.get-color-from-palette($asset-sg-warn, 600);
 }
 
 .alerts {
