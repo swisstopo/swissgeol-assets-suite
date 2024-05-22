@@ -7,7 +7,7 @@ COPY . .
 
 RUN npm install
 RUN ./node_modules/.bin/prisma generate
-RUN npx nx build server-asset-sg
+RUN npx nx build server-asset-sg --configuration=production
 
 # final image build
 FROM node:20-alpine
