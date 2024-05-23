@@ -22,7 +22,9 @@ import {
   SearchAssetResult,
   UsageCode,
   ValueCount,
-  dateFromDateId, dateIdFromDate, makeUsageCode,
+  dateFromDateId,
+  dateIdFromDate,
+  makeUsageCode,
 } from '@asset-sg/shared';
 
 import indexMapping from '../../../../../development/init/elasticsearch/mappings/swissgeol_asset_asset.json';
@@ -64,7 +66,7 @@ export class AssetSearchService {
       if (onProgress != null) {
         onProgress(1);
       }
-      return
+      return;
     }
 
     // Initialize a temporary sync index.
@@ -178,7 +180,7 @@ export class AssetSearchService {
     const ids = await this.searchIds(query);
     const stats = await this.aggregateAssetIds(ids);
     if (stats !== null) {
-      return stats
+      return stats;
     }
     return {
       total: 0,
@@ -187,8 +189,8 @@ export class AssetSearchService {
       createDate: null,
       languageItemCodes: [],
       manCatLabelItemCodes: [],
-      usageCodes: []
-    }
+      usageCodes: [],
+    };
   }
 
   async searchByTitle(title: string): Promise<AssetByTitle[]> {
@@ -382,24 +384,11 @@ export class AssetSearchService {
         bool: {
           should: [
             {
-              multi_match: {
-                query,
-                fields: scope,
-                fuzziness: 'AUTO',
-              },
-            },
-            {
-              query_string: {
-                query: `*${escapeElasticQuery(query)}*`,
-                fields: scope,
-              },
-            },
-            {
               query_string: {
                 query: query,
                 fields: scope,
-              }
-            }
+              },
+            },
           ],
           filter: filters,
         },
@@ -492,9 +481,9 @@ export class AssetSearchService {
   }
 
   private async loadAssetsByElasticResult({
-    scoresByAssetId,
-    aggs,
-  }: ElasticSearchResult): Promise<SearchAssetResult> {
+                                            scoresByAssetId,
+                                            aggs,
+                                          }: ElasticSearchResult): Promise<SearchAssetResult> {
     if (scoresByAssetId.size === 0) {
       return { _tag: 'SearchAssetResultEmpty' };
     }
@@ -585,9 +574,9 @@ export class AssetSearchService {
         case 'LINESTRING':
           return GeometryCode.LineString;
         default:
-          throw new Error(`unknown geomText prefix: ${prefix}`)
+          throw new Error(`unknown geomText prefix: ${prefix}`);
       }
-    })
+    });
     return {
       assetId: asset.assetId,
       titlePublic: asset.titlePublic,
@@ -612,27 +601,28 @@ const mapQueryToElasticDsl = (query: AssetSearchQuery): QueryDslQueryContainer =
   if (query.text != null && query.text.length > 0) {
     queries.push({
       bool: {
-        should: [
-          {
-            multi_match: {
-              query: query.text,
-              fields: scope,
-              fuzziness: 'AUTO',
-            },
-          },
-          {
-            query_string: {
-              query: `*${escapeElasticQuery(query.text)}*`,
-              fields: scope,
-            },
-          },
-          {
+        should: query.text.includes(':')
+          ? {
             query_string: {
               query: query.text,
               fields: scope,
-            }
+            },
           }
-        ],
+          : [
+            {
+              multi_match: {
+                query: query.text,
+                fields: scope,
+                fuzziness: 'AUTO',
+              },
+            },
+            {
+              query_string: {
+                query: `*${escapeElasticQuery(query.text)}*`,
+                fields: scope,
+              },
+            },
+          ],
       },
     });
   }
@@ -699,7 +689,7 @@ const makeArrayFilterOrNone = <T extends string | number>(
   const isNoneAllowed = terms.delete('None');
 
   // The set of conditions of which one will have to match for the filter to be successful (OR).
-  const conditions: QueryDslQueryContainer[] = []
+  const conditions: QueryDslQueryContainer[] = [];
 
   // If the query contains 'None', we allow documents which don't contain the specified field.
   if (isNoneAllowed) {
@@ -719,8 +709,8 @@ const makeArrayFilterOrNone = <T extends string | number>(
   }
 
   // Join multiple conditions using OR.
-  return { bool: { should: conditions }}
-}
+  return { bool: { should: conditions } };
+};
 
 /**
  * Create an Elasticsearch filter that matches all documents which contain a specific field
@@ -750,18 +740,18 @@ const getDateTimeString = (): string => {
   const now = new Date();
   const padZero = (value: number): string | number => {
     if (value >= 10) {
-      return value
+      return value;
     }
-    return `0${value}`
-  }
+    return `0${value}`;
+  };
   return ''
     + now.getUTCFullYear()
     + padZero(now.getUTCMonth())
     + padZero(now.getUTCDate())
     + padZero(now.getUTCHours())
     + padZero(now.getUTCMinutes())
-    + padZero(now.getUTCSeconds())
-}
+    + padZero(now.getUTCSeconds());
+};
 
 interface PageOptions {
   limit?: number;
@@ -769,5 +759,5 @@ interface PageOptions {
 }
 
 const escapeElasticQuery = (query: string): string => {
-  return query.replace(/(&&|\|\||!|\(|\)|\{|}|\[|]|\^|"|~|\*|\?|:|\\)/, '\\$1')
-}
+  return query.replace(/(&&|\|\||!|\(|\)|\{|}|\[|]|\^|"|~|\*|\?|:|\\)/, '\\$1');
+};
