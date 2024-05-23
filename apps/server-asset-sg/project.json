@@ -1,94 +1,110 @@
 {
-    "name": "server-asset-sg",
-    "$schema": "../../node_modules/nx/schemas/project-schema.json",
-    "sourceRoot": "apps/server-asset-sg/src",
-    "projectType": "application",
-    "targets": {
-        "build": {
-            "executor": "nx:run-commands",
-            "options": {
-                "parallel": false,
-                "commands": [
-                    {
-                        "command": "npx nx run server-asset-sg:gen-prisma-client"
-                    },
-                    {
-                        "command": "npx nx run server-asset-sg:build-app:production"
-                    },
-                    {
-                        "command": "npx shx cp apps/server-asset-sg/docker/* dist/apps/server-asset-sg"
-                    },
-                    {
-                        "command": "npx shx cp ./apps/server-asset-sg/src/app/prisma/schema.prisma dist/apps/server-asset-sg"
-                    },
-                    {
-                        "command": "npx shx sed -i \"s/(\\.\\.\\/)*node_modules/\\.\\/node_modules/g\" dist/apps/server-asset-sg/schema.prisma"
-                    }
-                ]
-            }
-        },
-        "build-app": {
-            "executor": "@nrwl/webpack:webpack",
-            "outputs": ["{options.outputPath}"],
-            "options": {
-                "target": "node",
-                "compiler": "tsc",
-                "outputPath": "dist/apps/server-asset-sg",
-                "main": "apps/server-asset-sg/src/main.ts",
-                "tsConfig": "apps/server-asset-sg/tsconfig.app.json",
-                "assets": ["apps/server-asset-sg/src/assets"],
-                "externalDependencies": "all",
-                "generatePackageJson": true
-            },
-            "configurations": {
-                "production": {
-                    "optimization": true,
-                    "extractLicenses": true,
-                    "inspect": false,
-                    "fileReplacements": [
-                        {
-                            "replace": "apps/server-asset-sg/src/environments/environment.ts",
-                            "with": "apps/server-asset-sg/src/environments/environment.prod.ts"
-                        }
-                    ]
-                }
-            }
-        },
-        "serve": {
-            "executor": "@nrwl/js:node",
-            "options": {
-                "buildTarget": "server-asset-sg:build-app"
-            },
-            "configurations": {
-                "production": {
-                    "buildTarget": "server-asset-sg:build-app:production"
-                }
-            }
-        },
-        "lint": {
-            "executor": "@nrwl/linter:eslint",
-            "outputs": ["{options.outputFile}"],
-            "options": {
-                "lintFilePatterns": ["apps/server-asset-sg/**/*.ts"]
-            }
-        },
-        "test": {
-            "executor": "@nrwl/jest:jest",
-            "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
-            "options": {
-                "jestConfig": "apps/server-asset-sg/jest.config.ts",
-                "passWithNoTests": true,
-                "codeCoverage": true
-            }
-        },
-        "gen-prisma-client": {
-            "executor": "nx:run-commands",
-            "outputs": [],
-            "options": {
-                "command": "npx prisma generate --schema ./src/app/prisma/schema.prisma",
-                "cwd": "apps/server-asset-sg"
-            }
-        }
+  "name": "server-asset-sg",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/server-asset-sg/src",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "parallel": false,
+        "commands": [
+          {
+            "command": "npx nx run server-asset-sg:gen-prisma-client"
+          },
+          {
+            "command": "npx nx run server-asset-sg:build-app:production"
+          },
+          {
+            "command": "npx shx cp apps/server-asset-sg/docker/* dist/apps/server-asset-sg"
+          },
+          {
+            "command": "npx shx mkdir dist/apps/server-asset-sg/prisma"
+          },
+          {
+            "command": "npx shx cp ./apps/server-asset-sg/src/app/prisma/schema.prisma dist/apps/server-asset-sg/prisma/"
+          },
+          {
+            "command": "npx shx cp -R ./apps/server-asset-sg/src/app/prisma/migrations dist/apps/server-asset-sg/prisma/"
+          },
+          {
+            "command": "npx shx sed -i \"s/(\\.\\.\\/)*node_modules/\\.\\/node_modules/g\" dist/apps/server-asset-sg/prisma/schema.prisma"
+          }
+        ]
+      }
     },
-    "tags": []
+    "build-app": {
+      "executor": "@nrwl/webpack:webpack",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "target": "node",
+        "compiler": "tsc",
+        "outputPath": "dist/apps/server-asset-sg",
+        "main": "apps/server-asset-sg/src/main.ts",
+        "tsConfig": "apps/server-asset-sg/tsconfig.app.json",
+        "assets": [
+          "apps/server-asset-sg/src/assets"
+        ],
+        "externalDependencies": "all",
+        "generatePackageJson": true
+      },
+      "configurations": {
+        "production": {
+          "optimization": true,
+          "extractLicenses": true,
+          "inspect": false,
+          "fileReplacements": [
+            {
+              "replace": "apps/server-asset-sg/src/environments/environment.ts",
+              "with": "apps/server-asset-sg/src/environments/environment.prod.ts"
+            }
+          ]
+        }
+      }
+    },
+    "serve": {
+      "executor": "@nrwl/js:node",
+      "options": {
+        "buildTarget": "server-asset-sg:build-app"
+      },
+      "configurations": {
+        "production": {
+          "buildTarget": "server-asset-sg:build-app:production"
+        }
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "apps/server-asset-sg/**/*.ts"
+        ]
+      }
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": [
+        "{workspaceRoot}/coverage/{projectRoot}"
+      ],
+      "options": {
+        "jestConfig": "apps/server-asset-sg/jest.config.ts",
+        "passWithNoTests": true,
+        "codeCoverage": true
+      }
+    },
+    "gen-prisma-client": {
+      "executor": "nx:run-commands",
+      "outputs": [],
+      "options": {
+        "command": "npx prisma generate --schema ./src/app/prisma/schema.prisma",
+        "cwd": "apps/server-asset-sg"
+      }
+    }
+  },
+  "tags": []
 }
