@@ -385,7 +385,7 @@ export class AssetSearchService {
           should: [
             {
               query_string: {
-                query: query,
+                query: normalizeFieldQuery(query),
                 fields: scope,
               },
             },
@@ -604,7 +604,7 @@ const mapQueryToElasticDsl = (query: AssetSearchQuery): QueryDslQueryContainer =
         should: query.text.includes(':')
           ? {
             query_string: {
-              query: query.text,
+              query: normalizeFieldQuery(query.text),
               fields: scope,
             },
           }
@@ -761,3 +761,11 @@ interface PageOptions {
 const escapeElasticQuery = (query: string): string => {
   return query.replace(/(&&|\|\||!|\(|\)|\{|}|\[|]|\^|"|~|\*|\?|:|\\)/, '\\$1');
 };
+
+const normalizeFieldQuery = (query: string): string => (
+  query
+    .replace(/title(_*)public:/i, 'titlePublic:')
+    .replace(/title(_*)original:/i, 'titleOriginal:')
+    .replace(/contact(_*)ame:/i, 'contactNames:')
+    .replace(/sgs(_*)id:/i, 'sgsId:')
+);
