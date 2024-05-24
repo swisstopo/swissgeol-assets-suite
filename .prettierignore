@@ -1,6 +1,9 @@
 # Add files here to ignore them from prettier formatting
 
-/dist
+/.angular
+/.husky
+/.nx
 /coverage
-
-/.nx/cache
+/dist
+/node_modules
+/tmp

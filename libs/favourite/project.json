@@ -4,6 +4,7 @@
     "projectType": "library",
     "sourceRoot": "libs/favourite/src",
     "prefix": "asset-sg",
+    "tags": [],
     "targets": {
         "build": {
             "executor": "@nx/angular:ng-packagr-lite",
@@ -33,6 +34,5 @@
             "executor": "@nx/eslint:lint",
             "outputs": ["{options.outputFile}"]
         }
-    },
-    "tags": []
+    }
 }

@@ -4,6 +4,7 @@
     "projectType": "application",
     "sourceRoot": "apps/client-asset-sg/src",
     "prefix": "asset-sg",
+    "tags": [],
     "targets": {
         "build": {
             "executor": "@angular-devkit/build-angular:browser",
@@ -95,6 +96,5 @@
                 "jestConfig": "apps/client-asset-sg/jest.config.ts"
             }
         }
-    },
-    "tags": []
+    }
 }
