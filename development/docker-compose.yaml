@@ -15,7 +15,7 @@ services:
 
   db:
     container_name: swissgeol-assets-postgres
-    image: postgis-gotrue
+    image: postgis/postgis
     restart: unless-stopped
     ports:
       - 5432:5432
@@ -48,37 +48,6 @@ services:
       PGADMIN_LISTEN_PORT: 5050
     volumes:
       - ./volumes/pgadmin/data:/var/lib/pgadmin
-
-  gotrue:
-    container_name: swissgeol-assets-gotrue
-    image: supabase/gotrue@sha256:794d7df376329df93c0d9ed9237868363de5c858301147e08e6620fb67d1a2c6
-    depends_on:
-      db:
-        condition: service_healthy
-    restart: unless-stopped
-    ports:
-      - 8866:9999
-      - 9100:9100
-    environment:
-      GOTRUE_API_HOST: 0.0.0.0
-      PORT: 9999
-      GOTRUE_SITE_URL: "http://localhost:4200"
-      GOTRUE_JWT_SECRET: ${GOTRUE_JWT_SECRET}
-      GOTRUE_COOKIE_KEY: asset-sg
-      GOTRUE_DB_DRIVER: postgres
-      DB_NAMESPACE: auth
-      DATABASE_URL: postgres://${DB_USER}:${DB_PASSWORD}@db:5432/postgres?search_path=auth
-      GOTRUE_DISABLE_SIGNUP: false
-      GOTRUE_SMTP_ADMIN_EMAIL: admin@go.true
-      GOTRUE_SMTP_HOST: smtp4dev
-      GOTRUE_SMTP_PORT: 25
-      GOTRUE_SMTP_SENDER_NAME: swissgeol-assets
-      GOTRUE_MAILER_URLPATHS_INVITE: http://localhost:4200/auth/verify
-      GOTRUE_MAILER_URLPATHS_CONFIRMATION: /auth/v1/verify
-      GOTRUE_MAILER_URLPATHS_RECOVERY: http://localhost:4200/auth/verify
-      GOTRUE_MAILER_URLPATHS_EMAIL_CHANGE: /auth/v1/verify
-      GOTRUE_MAILER_TEMPLATES_INVITE: http://localhost:4200/assets/email-templates/invite.html
-      GOTRUE_MAILER_TEMPLATES_RECOVERY: http://localhost:4200/assets/email-templates/recover.html
 
   elasticsearch:
     container_name: swissgeol-assets-elasticsearch

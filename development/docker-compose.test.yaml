@@ -1,7 +1,7 @@
 services:
   db:
     container_name: swissgeol-assets-postgres-test
-    image: postgis-gotrue
+    image: postgis/postgis
     restart: unless-stopped
     ports:
       - 5432:5432
