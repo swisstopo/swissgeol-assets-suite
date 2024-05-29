@@ -1,119 +1,14 @@
 generator client {
   provider        = "prisma-client-js"
   output          = "../../../node_modules/.prisma/client"
-  previewFeatures = ["multiSchema", "views"]
+  previewFeatures = ["views"]
 }
 
 datasource db {
   provider          = "postgresql"
   url               = env("DATABASE_URL")
   shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
-  schemas           = ["public", "auth"]
 }
-
-// start gotrue schema
-model audit_log_entries {
-  instance_id String?   @db.Uuid
-  id          String    @id @db.Uuid
-  payload     Json?     @db.Json
-  created_at  DateTime? @db.Timestamptz(6)
-  ip_address  String    @default("") @db.VarChar(64)
-
-  @@index([instance_id], map: "audit_logs_instance_id_idx")
-  @@schema("auth")
-}
-
-model identities {
-  id              String
-  user_id         String    @db.Uuid
-  identity_data   Json
-  provider        String
-  last_sign_in_at DateTime? @db.Timestamptz(6)
-  created_at      DateTime? @db.Timestamptz(6)
-  updated_at      DateTime? @db.Timestamptz(6)
-  users           users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-
-  @@id([provider, id])
-  @@index([user_id])
-  @@schema("auth")
-}
-
-model instances {
-  id              String    @id @db.Uuid
-  uuid            String?   @db.Uuid
-  raw_base_config String?
-  created_at      DateTime? @db.Timestamptz(6)
-  updated_at      DateTime? @db.Timestamptz(6)
-
-  @@schema("auth")
-}
-
-model refresh_tokens {
-  instance_id          String?          @db.Uuid
-  id                   BigInt           @id @default(autoincrement())
-  token                String?          @unique(map: "refresh_tokens_token_unique") @db.VarChar(255)
-  user_id              String?          @db.VarChar(255)
-  revoked              Boolean?
-  created_at           DateTime?        @db.Timestamptz(6)
-  updated_at           DateTime?        @db.Timestamptz(6)
-  parent               String?          @db.VarChar(255)
-  refresh_tokens       refresh_tokens?  @relation("refresh_tokensTorefresh_tokens", fields: [parent], references: [token], onDelete: NoAction, onUpdate: NoAction)
-  other_refresh_tokens refresh_tokens[] @relation("refresh_tokensTorefresh_tokens")
-
-  @@index([instance_id])
-  @@index([instance_id, user_id])
-  @@index([parent])
-  @@index([token])
-  @@schema("auth")
-}
-
-model schema_migrations {
-  version String @unique(map: "schema_migrations_version_idx") @db.VarChar(14)
-
-  @@schema("auth")
-}
-
-model users {
-  instance_id                 String?      @db.Uuid
-  id                          String       @id @db.Uuid
-  aud                         String?      @db.VarChar(255)
-  role                        String?      @db.VarChar(255)
-  email                       String?      @unique @db.VarChar(255)
-  encrypted_password          String?      @db.VarChar(255)
-  email_confirmed_at          DateTime?    @db.Timestamptz(6)
-  invited_at                  DateTime?    @db.Timestamptz(6)
-  confirmation_token          String?      @db.VarChar(255)
-  confirmation_sent_at        DateTime?    @db.Timestamptz(6)
-  recovery_token              String?      @db.VarChar(255)
-  recovery_sent_at            DateTime?    @db.Timestamptz(6)
-  email_change_token_new      String?      @db.VarChar(255)
-  email_change                String?      @db.VarChar(255)
-  email_change_sent_at        DateTime?    @db.Timestamptz(6)
-  last_sign_in_at             DateTime?    @db.Timestamptz(6)
-  raw_app_meta_data           Json?
-  raw_user_meta_data          Json?
-  is_super_admin              Boolean?
-  created_at                  DateTime?    @db.Timestamptz(6)
-  updated_at                  DateTime?    @db.Timestamptz(6)
-  phone                       String?      @unique @db.VarChar(15)
-  phone_confirmed_at          DateTime?    @db.Timestamptz(6)
-  phone_change                String?      @default("") @db.VarChar(15)
-  phone_change_token          String?      @default("") @db.VarChar(255)
-  phone_change_sent_at        DateTime?    @db.Timestamptz(6)
-  confirmed_at                DateTime?    @db.Timestamptz(6)
-  // confirmed_at                DateTime?    @default(dbgenerated("LEAST(email_confirmed_at, phone_confirmed_at)")) @db.Timestamptz(6)
-  email_change_token_current  String?      @default("") @db.VarChar(255)
-  email_change_confirm_status Int?         @default(0) @db.SmallInt
-  banned_until                DateTime?    @db.Timestamptz(6)
-  reauthentication_token      String?      @default("") @db.VarChar(255)
-  reauthentication_sent_at    DateTime?    @db.Timestamptz(6)
-  identities                  identities[]
-
-  @@index([instance_id])
-  @@schema("auth")
-}
-
-// end gotrue schema
 
 model Asset {
   assetId             Int             @id @default(autoincrement()) @map("asset_id")
@@ -173,7 +68,6 @@ model Asset {
   allStudies            AllStudy[]
 
   @@map("asset")
-  @@schema("public")
 }
 
 model Id {
@@ -184,7 +78,6 @@ model Id {
   description String @map("description")
 
   @@map("id")
-  @@schema("public")
 }
 
 model AssetXAssetY {
@@ -196,7 +89,6 @@ model AssetXAssetY {
 
   @@id([assetXId, assetYId])
   @@map("asset_x_asset_y")
-  @@schema("public")
 }
 
 model InternalUse {
@@ -209,7 +101,6 @@ model InternalUse {
   Asset Asset[]
 
   @@map("internal_use")
-  @@schema("public")
 }
 
 model PublicUse {
@@ -222,7 +113,6 @@ model PublicUse {
   Asset Asset[]
 
   @@map("public_use")
-  @@schema("public")
 }
 
 model AssetFile {
@@ -233,7 +123,6 @@ model AssetFile {
 
   @@id([assetId, fileId])
   @@map("asset_file")
-  @@schema("public")
 }
 
 enum OcrState {
@@ -243,8 +132,6 @@ enum OcrState {
   processing
   error
   success
-
-  @@schema("public")
 }
 
 model File {
@@ -259,7 +146,6 @@ model File {
 
   @@unique([fileName])
   @@map("file")
-  @@schema("public")
 }
 
 model AssetObjectInfo {
@@ -274,7 +160,6 @@ model AssetObjectInfo {
   pathToImage           String            @map("path_to_image")
 
   @@map("asset_object_info")
-  @@schema("public")
 }
 
 model ManCatLabelRef {
@@ -285,7 +170,6 @@ model ManCatLabelRef {
 
   @@unique([assetId, manCatLabelItemCode])
   @@map("man_cat_label_ref")
-  @@schema("public")
 }
 
 model AssetFormatComposition {
@@ -296,7 +180,6 @@ model AssetFormatComposition {
   assetFormatItem          AssetFormatItem @relation(fields: [assetFormatItemCode], references: [assetFormatItemCode])
 
   @@map("asset_format_composition")
-  @@schema("public")
 }
 
 model AssetKindComposition {
@@ -307,7 +190,6 @@ model AssetKindComposition {
   assetKindItem          AssetKindItem @relation(fields: [assetKindItemCode], references: [assetKindItemCode])
 
   @@map("asset_kind_composition")
-  @@schema("public")
 }
 
 model StatusWork {
@@ -320,7 +202,6 @@ model StatusWork {
   processor          String?        @map("processor")
 
   @@map("status_work")
-  @@schema("public")
 }
 
 model AutoCat {
@@ -332,7 +213,6 @@ model AutoCat {
   autoCatLabelScore    Int              @map("auto_cat_label_score")
 
   @@map("auto_cat")
-  @@schema("public")
 }
 
 model TypeNatRel {
@@ -343,7 +223,6 @@ model TypeNatRel {
   natRelItem     NatRelItem @relation(fields: [natRelItemCode], references: [natRelItemCode])
 
   @@map("type_nat_rel")
-  @@schema("public")
 }
 
 model LegalDoc {
@@ -355,7 +234,6 @@ model LegalDoc {
   legalDocItem     LegalDocItem @relation(fields: [legalDocItemCode], references: [legalDocItemCode])
 
   @@map("legal_doc")
-  @@schema("public")
 }
 
 model Contact {
@@ -375,7 +253,6 @@ model Contact {
   assetContacts AssetContact[]
 
   @@map("contact")
-  @@schema("public")
 }
 
 model AssetContact {
@@ -387,7 +264,6 @@ model AssetContact {
 
   @@id([assetId, contactId, role])
   @@map("asset_contact")
-  @@schema("public")
 }
 
 model Publication {
@@ -401,7 +277,6 @@ model Publication {
   assetPublications AssetPublication[]
 
   @@map("publication")
-  @@schema("public")
 }
 
 model AssetPublication {
@@ -412,7 +287,6 @@ model AssetPublication {
 
   @@id([assetId, publicationId])
   @@map("asset_publication")
-  @@schema("public")
 }
 
 model InternalProject {
@@ -424,7 +298,6 @@ model InternalProject {
   assetInternalProjects AssetInternalProject[]
 
   @@map("internal_project")
-  @@schema("public")
 }
 
 model AssetInternalProject {
@@ -435,7 +308,6 @@ model AssetInternalProject {
 
   @@id([assetId, internalProjectId])
   @@map("asset_internal_project")
-  @@schema("public")
 }
 
 model StudyArea {
@@ -448,7 +320,6 @@ model StudyArea {
 
   @@index([geom], type: Gist)
   @@map("study_area")
-  @@schema("public")
 }
 
 model StudyLocation {
@@ -461,7 +332,6 @@ model StudyLocation {
 
   @@index([geom], type: Gist)
   @@map("study_location")
-  @@schema("public")
 }
 
 model StudyTrace {
@@ -474,7 +344,6 @@ model StudyTrace {
 
   @@index([geom], type: Gist)
   @@map("study_trace")
-  @@schema("public")
 }
 
 model AssetFormatItem {
@@ -497,7 +366,6 @@ model AssetFormatItem {
   assetFormatCompositions AssetFormatComposition[]
 
   @@map("asset_format_item")
-  @@schema("public")
 }
 
 model AssetKindItem {
@@ -520,7 +388,6 @@ model AssetKindItem {
   assetKindCompositions AssetKindComposition[]
 
   @@map("asset_kind_item")
-  @@schema("public")
 }
 
 model AutoCatLabelItem {
@@ -542,7 +409,6 @@ model AutoCatLabelItem {
   autoCats AutoCat[]
 
   @@map("auto_cat_label_item")
-  @@schema("public")
 }
 
 model AutoObjectCatItem {
@@ -564,7 +430,6 @@ model AutoObjectCatItem {
   assetObjectInfos AssetObjectInfo[]
 
   @@map("auto_object_cat_item")
-  @@schema("public")
 }
 
 model ContactKindItem {
@@ -586,7 +451,6 @@ model ContactKindItem {
   contacts Contact[]
 
   @@map("contact_kind_item")
-  @@schema("public")
 }
 
 model GeomQualityItem {
@@ -610,7 +474,6 @@ model GeomQualityItem {
   studyTraces    StudyTrace[]
 
   @@map("geom_quality_item")
-  @@schema("public")
 }
 
 model LanguageItem {
@@ -632,7 +495,6 @@ model LanguageItem {
   assets AssetLanguage[]
 
   @@map("language_item")
-  @@schema("public")
 }
 
 model AssetLanguage {
@@ -643,7 +505,6 @@ model AssetLanguage {
 
   @@id([assetId, languageItemCode])
   @@map("asset_language")
-  @@schema("public")
 }
 
 model ManCatLabelItem {
@@ -665,7 +526,6 @@ model ManCatLabelItem {
   manCatLabelRefs ManCatLabelRef[]
 
   @@map("man_cat_label_item")
-  @@schema("public")
 }
 
 model NatRelItem {
@@ -687,7 +547,6 @@ model NatRelItem {
   typeNatRels TypeNatRel[]
 
   @@map("nat_rel_item")
-  @@schema("public")
 }
 
 model LegalDocItem {
@@ -709,7 +568,6 @@ model LegalDocItem {
   legalDocs LegalDoc[]
 
   @@map("legal_doc_item")
-  @@schema("public")
 }
 
 model PubChannelItem {
@@ -731,7 +589,6 @@ model PubChannelItem {
   publications Publication[]
 
   @@map("pub_channel_item")
-  @@schema("public")
 }
 
 model StatusAssetUseItem {
@@ -754,7 +611,6 @@ model StatusAssetUseItem {
   internalUses InternalUse[]
 
   @@map("status_asset_use_item")
-  @@schema("public")
 }
 
 model StatusWorkItem {
@@ -776,7 +632,6 @@ model StatusWorkItem {
   statusWorks StatusWork[]
 
   @@map("status_work_item")
-  @@schema("public")
 }
 
 model AssetUser {
@@ -788,7 +643,6 @@ model AssetUser {
   AssetUserFavourite AssetUserFavourite[]
 
   @@map("asset_user")
-  @@schema("public")
 }
 
 model AssetUserFavourite {
@@ -802,7 +656,6 @@ model AssetUserFavourite {
 
   @@id([assetUserId, assetId])
   @@map("asset_user_favourite")
-  @@schema("public")
 }
 
 view AllStudy {
@@ -816,5 +669,4 @@ view AllStudy {
   geomText         String                   @map("geom_text")
 
   @@map("all_study")
-  @@schema("public")
 }
