@@ -79,7 +79,7 @@ const SearchAssetResultNonEmpty = C.struct({
 export interface SearchAssetResultNonEmpty extends C.TypeOf<typeof SearchAssetResultNonEmpty> {}
 
 const SearchAssetResultEmpty = C.struct({ _tag: C.literal('SearchAssetResultEmpty') });
-interface SearchAssetResultEmpty extends C.TypeOf<typeof SearchAssetResultEmpty> {}
+export interface SearchAssetResultEmpty extends C.TypeOf<typeof SearchAssetResultEmpty> {}
 
 export const SearchAssetResultCodec = C.sum('_tag')({ SearchAssetResultEmpty, SearchAssetResultNonEmpty });
 

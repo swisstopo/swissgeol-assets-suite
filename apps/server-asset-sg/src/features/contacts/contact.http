@@ -1,0 +1,36 @@
+### Create contact
+POST {{host}}/api/contacts
+Authorization: Impersonate {{user}}
+Content-Type: application/json
+
+{
+  "name": "Some Guy",
+  "street": "Oberwälchliwäg",
+  "houseNumber": "42b",
+  "plz": "c4259",
+  "locality": "Indemwald",
+  "country": "Schweiz",
+  "telephone": "+41 76 923 23 32",
+  "email": "mailme@here.ch",
+  "website": "onlinethings.io",
+  "contactKindItemCode": "unknown"
+}
+
+### Update contact
+PUT {{host}}/api/contacts/1862
+Authorization: Impersonate {{user}}
+Content-Type: application/json
+
+{
+  "name": "Another One",
+  "street": "Unterhunzigerstrasse",
+  "houseNumber": "93",
+  "plz": "9022",
+  "locality": "Strohheim",
+  "country": "Deutschland",
+  "telephone": "+41 79 232 42 83",
+  "email": "noreply@noclue.de",
+  "website": "nogohere.co.uk",
+  "contactKindItemCode": "private"
+}
+

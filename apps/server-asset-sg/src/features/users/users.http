@@ -1,0 +1,19 @@
+@user-id = 379a20e6-6a5d-4390-93ca-d408613e854d
+
+### Show current user
+GET {{host}}/api/users/current
+Authorization: Impersonate {{user}}
+
+### List users
+GET {{host}}/api/users
+Authorization: Impersonate {{user}}
+
+### Update user
+PUT {{host}}/api/users/{{user-id}}
+Authorization: Impersonate {{user}}
+Content-Type: application/json
+
+{
+  "role": "admin",
+  "lang": "de"
+}

@@ -1,18 +1,21 @@
 import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 
-import { AppModule } from './app/app.module';
+import { AppModule } from './app.module';
 
 export * from 'fp-ts';
 export * from '@prisma/client';
 
-async function bootstrap() {
+const API_PREFIX = 'api';
+const API_PORT = process.env.PORT || 3333;
+
+async function bootstrap(): Promise<void> {
     const app = await NestFactory.create(AppModule);
-    const globalPrefix = 'api';
-    app.setGlobalPrefix(globalPrefix);
-    const port = process.env.PORT || 3333;
-    await app.listen(port);
-    Logger.log(`🚀 Application is running on: http://localhost:${port}/${globalPrefix}`);
+    app.setGlobalPrefix(API_PREFIX);
+    await app.listen(API_PORT);
+    Logger.log(`🚀 application is running on: http://localhost:${API_PORT}/${API_PREFIX}`);
 }
 
-bootstrap();
+bootstrap().catch((err: unknown) => {
+  console.error(`${err}`)
+});

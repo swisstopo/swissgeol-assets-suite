@@ -24,7 +24,7 @@
             "@asset-sg/favourite": ["libs/favourite/src/index.ts"],
             "@asset-sg/profile": ["libs/profile/src/index.ts"],
             "@asset-sg/shared": ["libs/shared/src/index.ts"],
-            "ngx-kobalte": ["libs/ngx-kobalte/src/index.ts"]
+            "ngx-kobalte": ["libs/ngx-kobalte/src/index.ts"],
         }
     },
     "exclude": ["node_modules", "tmp"]
