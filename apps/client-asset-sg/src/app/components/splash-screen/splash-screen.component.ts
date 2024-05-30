@@ -1,4 +1,5 @@
 import { Component, inject } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
 import { Observable, map, startWith } from 'rxjs';
 
 import { AuthService, AuthState } from '@asset-sg/auth';
@@ -11,13 +12,8 @@ import { CURRENT_LANG } from '@asset-sg/client-shared';
 })
 export class SplashScreenComponent {
   readonly authService = inject(AuthService);
-  private readonly currentLang$ = inject(CURRENT_LANG);
-
-  constructor() {
-    this.languages$.subscribe(lang => {
-      console.log(lang);
-    });
-  }
+  readonly currentLang$ = inject(CURRENT_LANG);
+  private readonly translateService = inject(TranslateService);
 
   get host(): string {
     return window.location.host;
@@ -35,5 +31,10 @@ export class SplashScreenComponent {
     );
   }
 
+  selectLanguage(language: string): void {
+    this.translateService.use(language);
+  }
+
   protected readonly AuthState = AuthState;
+  protected readonly console = console;
 }

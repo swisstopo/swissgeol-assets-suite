@@ -69,12 +69,12 @@ ul.languages {
   gap: 1rem;
   list-style: none;
 
-  a {
+  button {
     color: black;
     text-decoration: none;
   }
 
-  li.is-active > a {
+  li.is-active > button {
     text-decoration: underline;
     color:  mat.get-color-from-palette($asset-sg-primary, 600);
   }
