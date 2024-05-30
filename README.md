@@ -104,7 +104,7 @@ docker compose exec db sh -c 'pg_dump --dbname=postgresql://{DB_USERNAME}:{DB_PA
 > These can be safely ignored.
 
 > The export will only contain the database's data, not its structure.
-> Data related to the authentication process is also excluded,sc
+> Data related to the authentication process is also excluded,
 > so we don't run into conflicts when using a different eIAM provider.
 
 To import the dumped data, run the following commands.
