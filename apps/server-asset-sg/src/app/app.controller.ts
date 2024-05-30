@@ -6,7 +6,7 @@ import * as E from 'fp-ts/Either';
 import * as D from 'io-ts/Decoder';
 
 import { DT, unknownToError } from '@asset-sg/core';
-import { isAdmin } from '@asset-sg/shared';
+import { isMasterEditor } from '@asset-sg/shared';
 
 import { AppService } from './app.service';
 import { isNotFoundError } from './errors';
@@ -76,7 +76,14 @@ export class AppController implements OnApplicationBootstrap {
         @Req() req: AuthenticatedRequest,
         @Res() res: Response,
     ): Promise<{ progress: number } | void> {
-
+        const userResult = await this.userService.getUser(req.jwtPayload.sub || '')()
+        if (E.isLeft(userResult)) {
+          throw new HttpException(userResult.left.message, 500);
+        }
+        const user = userResult.right;
+        if (!isMasterEditor(user)) {
+          throw new HttpException('Operation not permitted', 403);
+        }
         try {
             const data = await fs.readFile(assetSyncFile, { encoding: 'utf-8' });
             const state: AssetSyncState = JSON.parse(data);
@@ -97,7 +104,7 @@ export class AppController implements OnApplicationBootstrap {
             throw new HttpException(userResult.left.message, 500);
         }
         const user = userResult.right;
-        if (!isAdmin(user)) {
+        if (!isMasterEditor(user)) {
             throw new HttpException('Operation not permitted', 403);
         }
         const isSyncRunning = await fs.access(assetSyncFile).then(() => true).catch(() =>  false);
