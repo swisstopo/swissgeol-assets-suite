@@ -138,7 +138,7 @@
         "ts-node": "10.9.1",
         "type-zoo": "^3.4.1",
         "typescript": "~4.8.2",
-        "vite": "^4.5.2",
+        "vite": "^4.5.3",
         "vite-plugin-dts": "~1.7.1",
         "vite-plugin-eslint": "^1.8.1",
         "vite-tsconfig-paths": "^4.0.2",
