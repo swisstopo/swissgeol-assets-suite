@@ -2,31 +2,29 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import * as RD from '@devexperts/remote-data-ts';
 import { OAuthService } from 'angular-oauth2-oidc';
-import * as D from 'io-ts/Decoder';
-import { map, startWith } from 'rxjs';
+import { BehaviorSubject, Observable, map, startWith } from 'rxjs';
 import urlJoin from 'url-join';
 
 import { ApiError, httpErrorResponseOrUnknownError } from '@asset-sg/client-shared';
-import { OE, ORD, decode, decodeError } from '@asset-sg/core';
+import { OE, ORD, decode } from '@asset-sg/core';
 import { User } from '@asset-sg/shared';
-
-
-
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
     private _httpClient = inject(HttpClient);
 
-    private _oauthService = inject(OAuthService);
+    private oauthService = inject(OAuthService);
 
-    public async configureOAuth(
+    private state = new BehaviorSubject(AuthState.Ongoing);
+
+    public configureOAuth(
         issuer: string,
         clientId: string,
         scope: string,
         showDebugInformation: boolean,
         tokenEndpoint: string,
-    ) {
-        this._oauthService.configure({
+    ): void {
+        this.oauthService.configure({
             issuer,
             redirectUri: window.location.origin,
             postLogoutRedirectUri: window.location.origin,
@@ -37,8 +35,28 @@ export class AuthService {
             strictDiscoveryDocumentValidation: false,
             tokenEndpoint,
         });
-        await this._oauthService.loadDiscoveryDocumentAndLogin();
-        this._oauthService.setupAutomaticSilentRefresh();
+    }
+
+    async signIn(): Promise<void> {
+        try {
+            if (this.state.value === AuthState.Ongoing) {
+                await this.oauthService.loadDiscoveryDocumentAndLogin();
+                this.oauthService.setupAutomaticSilentRefresh();
+            } else {
+                this.state.next(AuthState.Ongoing);
+                this.oauthService.initLoginFlow();
+            }
+        } catch (e) {
+            this.state.next(AuthState.Aborted);
+        }
+    }
+
+    get state$(): Observable<AuthState> {
+        return this.state.asObservable();
+    }
+
+    setState(state: AuthState): void {
+        this.state.next(state);
     }
 
     getUserProfile(): ORD.ObservableRemoteData<ApiError, User> {
@@ -46,15 +64,14 @@ export class AuthService {
     }
 
     isLoggedIn(): boolean {
-        return this._oauthService.hasValidAccessToken();
+        return this.oauthService.hasValidAccessToken();
     }
 
-
     logOut(): void {
-        this._oauthService.logOut({
-            client_id: this._oauthService.clientId,
+        this.oauthService.logOut({
+            client_id: this.oauthService.clientId,
             redirect_uri: window.location.origin,
-            response_type: this._oauthService.responseType,
+            response_type: this.oauthService.responseType,
         });
     }
 
@@ -64,6 +81,12 @@ export class AuthService {
             .pipe(map(decode(User)), OE.catchErrorW(httpErrorResponseOrUnknownError));
     }
 
-
     buildAuthUrl = (path: string) => urlJoin(`/auth`, path);
+}
+
+export enum AuthState {
+    Ongoing,
+    Aborted,
+    Forbidden,
+    Success,
 }

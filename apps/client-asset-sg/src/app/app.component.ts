@@ -4,11 +4,10 @@ import { Router } from '@angular/router';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { Store } from '@ngrx/store';
 import { WINDOW } from 'ngx-window-token';
-import { debounceTime, fromEvent, map, startWith } from 'rxjs';
+import { debounceTime, fromEvent, startWith } from 'rxjs';
 import { assert } from 'tsafe';
 
-import { AuthService } from '@asset-sg/auth';
-import { ErrorService } from '@asset-sg/auth';
+import { AuthService, AuthState, ErrorService } from '@asset-sg/auth';
 import { AppPortalService, appSharedStateActions, setCssCustomProperties } from '@asset-sg/client-shared';
 
 import { AppState } from './state/app-state';
@@ -25,29 +24,24 @@ export class AppComponent {
   private _wndw = inject(WINDOW);
   private _httpClient = inject(HttpClient);
   public appPortalService = inject(AppPortalService);
-  private store = inject(Store<AppState>);
 
   readonly router: Router = inject(Router);
   readonly errorService = inject(ErrorService);
   readonly authService = inject(AuthService);
+  private readonly store = inject(Store<AppState>);
 
-  constructor(private readonly _authService: AuthService) {
+  constructor() {
     this._httpClient
-      .get('api/oauth-config/config')
-      .pipe(
-        map((response: any) => {
-          return response;
-        }),
-      )
-      .subscribe(async oAuthConfig => {
-        await this._authService.configureOAuth(
-          oAuthConfig.oauth_issuer,
-          oAuthConfig.oauth_clientId,
-          oAuthConfig.oauth_scope,
-          oAuthConfig.oauth_showDebugInformation,
-          oAuthConfig.oauth_tokenEndpoint,
+      .get<Record<string, unknown>>('api/oauth-config/config')
+      .subscribe(async (oAuthConfig) => {
+        this.authService.configureOAuth(
+          oAuthConfig['oauth_issuer'] as string,
+          oAuthConfig['oauth_clientId'] as string,
+          oAuthConfig['oauth_scope'] as string,
+          oAuthConfig['oauth_showDebugInformation'] as boolean,
+          oAuthConfig['oauth_tokenEndpoint'] as string,
         );
-
+        await this.authService.signIn();
         this.store.dispatch(appSharedStateActions.loadUserProfile());
         this.store.dispatch(appSharedStateActions.loadReferenceData());
       });
@@ -70,4 +64,6 @@ export class AppComponent {
         setCssCustomProperties(wndw.document.documentElement, ['font-size', fontSize]);
       });
   }
+
+  protected readonly AuthState = AuthState;
 }

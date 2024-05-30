@@ -2,9 +2,12 @@ import { AppTranslations } from './i18n';
 
 export const rmAppTranslations: AppTranslations = {
     logoSwissGeol: 'Logo Swissgeol Assets',
+    welcomeTo: 'RM Willkommen bei',
+    accessForbidden: 'RM Sie haben keinen Zugriff auf diese Applikation.',
     ok: 'OK',
     submit: 'RM Absenden',
     cancel: 'RM Abbrechen',
+    login: 'Login',
     logout: 'RM Abmelden',
     yes: 'Sì',
     no: 'No',
@@ -223,8 +226,8 @@ export const rmAppTranslations: AppTranslations = {
         adminInstructionsCreate: 'RM Neues Asset erstellen',
         adminInstructionsSyncElasticAssetsHeading: 'RM Assets mit Elasticsearch synchronisieren',
         adminInstructionsSyncElasticAssets:
-            'RM Gleicht den Zustand von Elasticsearch mit der Datenbank ab.'
-            + 'RM Damit wird sichergestellt, dass die Suche alle vorhandenen Assets miteinbezieht.',
+            'RM Gleicht den Zustand von Elasticsearch mit der Datenbank ab.' +
+            'RM Damit wird sichergestellt, dass die Suche alle vorhandenen Assets miteinbezieht.',
         adminInstructionsSyncElasticAssetsStart: 'RM Synchronisation starten',
     },
 };

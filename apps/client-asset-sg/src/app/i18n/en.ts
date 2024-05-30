@@ -2,9 +2,12 @@ import { AppTranslations } from './i18n';
 
 export const enAppTranslations: AppTranslations = {
     logoSwissGeol: 'Logo Swissgeol Assets',
+    welcomeTo: 'Welcome to',
+    accessForbidden: 'You do not have access to this application.',
     ok: 'OK',
     submit: 'Submit',
     cancel: 'Cancel',
+    login: 'Login',
     logout: 'Logout',
     yes: 'Yes',
     no: 'No',
@@ -221,8 +224,8 @@ export const enAppTranslations: AppTranslations = {
         adminInstructionsCreate: 'Create new asset',
         adminInstructionsSyncElasticAssetsHeading: 'Synchronize assets with Elasticsearch',
         adminInstructionsSyncElasticAssets:
-            'Equalizes the state of Elasticsearch with the local database.'
-            + ' This ensures that the search includes all existing assets.',
+            'Equalizes the state of Elasticsearch with the local database.' +
+            ' This ensures that the search includes all existing assets.',
         adminInstructionsSyncElasticAssetsStart: 'Start synchronization',
     },
 };

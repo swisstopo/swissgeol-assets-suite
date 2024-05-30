@@ -30,7 +30,8 @@
 }
 
 :host[asset-sg-primary],
-:host[asset-sg-secondary] {
+:host[asset-sg-secondary],
+:host[asset-sg-warn] {
     @extend %reset;
 
     display: inline-flex;

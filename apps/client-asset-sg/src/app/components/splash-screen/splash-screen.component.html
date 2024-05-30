@@ -1,0 +1,47 @@
+<div class="card">
+  <img
+    class="logo"
+    src="../../../assets/swissgeol_assets.svg"
+    alt="{{ 'logoSwissGeol' | translate }}"
+    height="100"
+    width="361"
+  />
+  <div class="text">
+    <p class="welcome">
+      {{ 'welcomeTo' | translate }} {{ host }}
+    </p>
+    <p class="system">
+      Asset Data Management System
+    </p>
+  </div>
+  <ng-container [ngSwitch]="authService.state$ | async">
+    <ng-container *ngSwitchCase="AuthState.Ongoing">
+      <mat-progress-spinner mode="indeterminate" />
+    </ng-container>
+    <ng-container *ngSwitchCase="AuthState.Aborted">
+      <button asset-sg-primary (click)="authService.signIn()">
+        {{ 'login' | translate }}
+      </button>
+    </ng-container>
+    <ng-container *ngSwitchCase="AuthState.Forbidden">
+      <div class="alert">
+        <p>
+          {{ 'accessForbidden' | translate }}
+        </p>
+        <button asset-sg-primary (click)="authService.logOut()">
+          {{ 'logout' | translate }}
+        </button>
+      </div>
+    </ng-container>
+  </ng-container>
+  <ul class="languages">
+    <li *ngFor="let language of (languages$ | async)" [class.is-active]="language.isActive">
+      <!-- We link to `/:lang/profile` here as the router does not let us to `/:lang`. -->
+      <!-- The user is not impacted by this, as after signing in, he gets redirected to `/` anyways. -->
+      <a [routerLink]="[language.name, 'profile']" queryParamsHandling="merge">
+        {{language.name.toUpperCase()}}
+      </a>
+    </li>
+  </ul>
+</div>
+
