@@ -42,6 +42,7 @@ export class AuthService {
             if (this.state.value === AuthState.Ongoing) {
                 await this.oauthService.loadDiscoveryDocumentAndLogin();
                 this.oauthService.setupAutomaticSilentRefresh();
+                this.state.next(AuthState.Success);
             } else {
                 this.state.next(AuthState.Ongoing);
                 this.oauthService.initLoginFlow();
