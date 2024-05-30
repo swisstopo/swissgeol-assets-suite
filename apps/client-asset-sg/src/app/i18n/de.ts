@@ -1,8 +1,11 @@
 export const deAppTranslations = {
     logoSwissGeol: 'Logo Swissgeol Assets',
+    welcomeTo: 'Willkommen bei',
+    accessForbidden: 'Sie haben keinen Zugriff auf diese Applikation.',
     ok: 'OK',
     submit: 'Absenden',
     cancel: 'Abbrechen',
+    login: 'Anmelden',
     logout: 'Abmelden',
     yes: 'Ja',
     no: 'Nein',
@@ -220,8 +223,8 @@ export const deAppTranslations = {
         adminInstructionsCreate: 'Neues Asset erstellen',
         adminInstructionsSyncElasticAssetsHeading: 'Assets mit Elasticsearch synchronisieren',
         adminInstructionsSyncElasticAssets:
-            'Gleicht den Zustand von Elasticsearch mit der Datenbank ab.'
-            + ' Damit wird sichergestellt, dass die Suche alle vorhandenen Assets miteinbezieht.',
+            'Gleicht den Zustand von Elasticsearch mit der Datenbank ab.' +
+            ' Damit wird sichergestellt, dass die Suche alle vorhandenen Assets miteinbezieht.',
         adminInstructionsSyncElasticAssetsStart: 'Synchronisation starten',
     },
 };

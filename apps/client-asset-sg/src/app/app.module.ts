@@ -1,10 +1,11 @@
 import { A11yModule } from '@angular/cdk/a11y';
 import { DialogModule } from '@angular/cdk/dialog';
-import { registerLocaleData } from '@angular/common';
+import { CommonModule, NgOptimizedImage, registerLocaleData } from '@angular/common';
 import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
 import locale_deCH from '@angular/common/locales/de-CH';
 import { NgModule, inject } from '@angular/core';
 import { MAT_FORM_FIELD_DEFAULT_OPTIONS } from '@angular/material/form-field';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { RouterModule } from '@angular/router';
@@ -17,9 +18,9 @@ import { ForModule } from '@rx-angular/template/for';
 import { LetModule } from '@rx-angular/template/let';
 import { PushModule } from '@rx-angular/template/push';
 
-import { AuthInterceptor, AuthModule } from '@asset-sg/auth';
-import { ErrorService } from '@asset-sg/auth';
+import { AuthInterceptor, AuthModule, ErrorService } from '@asset-sg/auth';
 import {
+  AlertModule,
   AnchorComponent,
   ButtonComponent,
   CURRENT_LANG,
@@ -27,7 +28,6 @@ import {
   currentLangFactory,
   icons,
 } from '@asset-sg/client-shared';
-import { AlertModule } from '@asset-sg/client-shared';
 import { storeLogger } from '@asset-sg/core';
 
 import { environment } from '../environments/environment';
@@ -36,6 +36,7 @@ import { adminGuard, editorGuard } from './app-guards';
 import { assetsPageMatcher } from './app-matchers';
 import { AppComponent } from './app.component';
 import { AppBarComponent, MenuBarComponent, NotFoundComponent, RedirectToLangComponent } from './components';
+import { SplashScreenComponent } from './components/splash-screen/splash-screen.component';
 import { appTranslations } from './i18n';
 import { AppSharedStateEffects } from './state';
 import { appSharedStateReducer } from './state/app-shared.reducer';
@@ -49,14 +50,16 @@ registerLocaleData(locale_deCH, 'de-CH');
     NotFoundComponent,
     AppBarComponent,
     MenuBarComponent,
+    SplashScreenComponent,
   ],
   imports: [
+    CommonModule,
     BrowserModule,
     BrowserAnimationsModule,
     HttpClientModule,
     RouterModule.forRoot([
       {
-        path: ':lang/a',
+        path: ':lang/auth',
         loadChildren: () => import('@asset-sg/auth').then(m => m.AuthModule),
       },
       {
@@ -112,6 +115,8 @@ registerLocaleData(locale_deCH, 'de-CH');
     A11yModule,
     AuthModule,
     AlertModule,
+    NgOptimizedImage,
+    MatProgressSpinnerModule,
   ],
   providers: [
     provideSvgIcons(icons),

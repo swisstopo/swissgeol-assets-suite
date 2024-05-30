@@ -1,4 +1,4 @@
-<ng-container *ngIf="errorService.onMessage | async as error; else content">
+<ng-container *ngIf="errorService.onMessage | async as error; else splashScreen">
   <asset-sg-app-bar />
   <div class="error">
     <span>{{error}}</span>
@@ -7,6 +7,12 @@
     </button>
   </div>
 </ng-container>
+
+<ng-template #splashScreen>
+  <ng-container *ngIf="(authService.state$ | async) != AuthState.Success else content">
+    <app-splash-screen />
+  </ng-container>
+</ng-template>
 
 <ng-template #content>
   <asset-sg-app-bar>

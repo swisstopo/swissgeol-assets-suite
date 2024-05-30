@@ -73,7 +73,7 @@
       },
       {
         "Type": "cognito:groups",
-        "Value": "[\"assets.swissgeol\"]",
+        "Value": "[\"assets.swissgeol2\"]",
         "ValueType": "json"
       },
       {

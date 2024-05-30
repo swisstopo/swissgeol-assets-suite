@@ -1,20 +1,18 @@
 import { HttpErrorResponse, HttpEvent, HttpHandler, HttpInterceptor, HttpRequest } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Router } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { OAuthService } from 'angular-oauth2-oidc';
 import { EMPTY, Observable, catchError } from 'rxjs';
 
 import { AlertType, showAlert } from '@asset-sg/client-shared';
 
-import { ErrorService } from './error.service';
+import { AuthService, AuthState } from './auth.service';
 
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
   private _oauthService = inject(OAuthService);
-  private _router: Router = inject(Router);
   private readonly store = inject(Store);
-  private readonly errorService = inject(ErrorService);
+  private readonly authService = inject(AuthService);
 
   intercept(req: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
     const token = sessionStorage.getItem('access_token');
@@ -37,26 +35,33 @@ export class AuthInterceptor implements HttpInterceptor {
     } else {
       return next.handle(req).pipe(
         catchError((error: HttpErrorResponse) => {
-          if (error.status === 403) {
-            this.errorService.updateMessage(error.error.error);
-          } else if (error.status === 401) {
-            this.store.dispatch(showAlert({
-              alert: {
-                id: `auth-error-${error.status}`,
-                text: error.error.error,
-                type: AlertType.Error,
-                isPersistent: true,
-              },
-            }));
-          } else {
-            this.store.dispatch(showAlert({
-              alert: {
-                id: `request-error-${error.status}-${error.url}`,
-                text: error.error.message,
-                type: AlertType.Error,
-                isPersistent: true,
-              },
-            }));
+          switch (error.status) {
+            case 403:
+              this.authService.setState(AuthState.Forbidden);
+              break;
+            case 401:
+              this.store.dispatch(
+                showAlert({
+                  alert: {
+                    id: `auth-error-${error.status}`,
+                    text: error.error.error,
+                    type: AlertType.Error,
+                    isPersistent: true,
+                  },
+                }),
+              );
+              break;
+            default:
+              this.store.dispatch(
+                showAlert({
+                  alert: {
+                    id: `request-error-${error.status}-${error.url}`,
+                    text: error.error.message,
+                    type: AlertType.Error,
+                    isPersistent: true,
+                  },
+                }),
+              );
           }
           return EMPTY;
         }),

@@ -1,0 +1,75 @@
+<div class="card">
+  <img
+    class="logo"
+    src="../../../assets/swissgeol_assets.svg"
+    alt="{{ 'logoSwissGeol' | translate }}"
+    height="100"
+    width="361"
+  />
+  <div class="text">
+    <p class="welcome">
+      {{ 'welcomeTo' | translate }} {{ host }}
+    </p>
+    <p class="system">
+      Asset Data Management System
+    </p>
+  </div>
+  <ng-container [ngSwitch]="authService.state$ | async">
+    <ng-container *ngSwitchCase="AuthState.Ongoing">
+      <mat-progress-spinner mode="indeterminate" />
+    </ng-container>
+    <ng-container *ngSwitchCase="AuthState.Aborted">
+      <button asset-sg-primary (click)="authService.signIn()">
+        {{ 'login' | translate }}
+      </button>
+    </ng-container>
+    <ng-container *ngSwitchCase="AuthState.Forbidden">
+      <div class="alert">
+        <p>
+          {{ 'accessForbidden' | translate }}
+        </p>
+        <button asset-sg-primary (click)="authService.logOut()">
+          {{ 'logout' | translate }}
+        </button>
+      </div>
+    </ng-container>
+  </ng-container>
+  <ul class="languages" *ngIf="currentLang$ | async as currentLang">
+    <!--
+      For some reason, when creating these elements with *ngFor, their `(click)` listeners don't work.
+      This is most likely a problem with Angular itself, and might be fixed in newer versions.
+      For now, we just create the elements one-by-one.
+
+      Ideally, these wouldn't even be buttons, but rather anchors linking to the correct language.
+      This is currently not possible as the routing does not allow unauthenticated redirections to `/:lang` itself.
+
+      Daniel von Atzigen, 2024-05-30
+    -->
+    <li [class.is-active]="currentLang === 'de'">
+      <button role="button" (click)="selectLanguage('de')">
+        DE
+      </button>
+    </li>
+    <li [class.is-active]="currentLang === 'fr'">
+      <button role="button" (click)="selectLanguage('fr')">
+        FR
+      </button>
+    </li>
+    <li [class.is-active]="currentLang === 'it'">
+      <button role="button" (click)="selectLanguage('it')">
+        IT
+      </button>
+    </li>
+    <li [class.is-active]="currentLang === 'rm'">
+      <button role="button" (click)="selectLanguage('rm')">
+        RM
+      </button>
+    </li>
+    <li [class.is-active]="currentLang === 'en'">
+      <button role="button" (click)="selectLanguage('en')">
+        EM
+      </button>
+    </li>
+  </ul>
+</div>
+
