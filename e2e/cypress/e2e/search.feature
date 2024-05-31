@@ -6,4 +6,4 @@ Feature: search
   Scenario: Save for test information
     When A user types information into the search field
     And The user clicks enter
-    Then The user should see a test information in resutls
+    Then The user should see a test information in results

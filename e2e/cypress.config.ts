@@ -42,7 +42,7 @@ export default defineConfig({
      * (Don't worry, the cypress.env.json fill will not be committed as it is added to the .gitignore file)
      */
     assetsBaseUrl: 'http://localhost:4200/de', //keep this naming pattern as username and password will be replaced in the pipeline
-    basic_auth_username: 'admin', //keep this naming pattern as username and password will be replaced in the pipeline
-    basic_auth_password: 'admin' //keep this naming pattern as username and password will be replaced in the pipeline
+    basicAuthUsername: 'admin', //keep this naming pattern as username and password will be replaced in the pipeline
+    basicAuthPassword: 'admin' //keep this naming pattern as username and password will be replaced in the pipeline
   }
 });

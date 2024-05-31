@@ -12,15 +12,22 @@ page [Organizing Tests](https://docs.cypress.io/guides/core-concepts/writing-and
 
 To start the tests locally please follow the steps below:
 
-1. Copy file cypress.env.json.example and rename to cypress.env.json
-2. Add username and password env variables to cypress.env.json (copy from cypress.config.ts)
-3. Add user credentials to cypress.env.json
+install dependencies
 
+```bash
+npm install
+```
 
-`cypress run --browser [browser of your choice e.g. firefox]`
+Add or change  user credentials in cypress.config.ts
 
-or if you prefer to use the cypress gui you can use `cypress open`.
+to run cypress in terminal:
 
-## Further information
+```bash
+cypress run --browser [browser of your choice e.g. firefox]
+```
 
-As stated in chapter "Running tests" you can override the values using the cypress.env.json file.
+or if you prefer to use the cypress gui:
+
+```bash
+cypress open
+```
