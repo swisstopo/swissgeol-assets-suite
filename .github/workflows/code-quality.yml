@@ -1,10 +1,11 @@
-name: build
+name: Code Quality
 
 on:
-  push:
+  pull_request:
+    types: [opened, synchronize, reopened]
     branches:
       - "**"
-  workflow_dispatch:
+      - "!main"
 
 env:
   NODE_VERSION: "20.x"
@@ -105,6 +106,14 @@ jobs:
       - name: Run prettier
         run: npx prettier --check .
 
+  dependency-review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Review Dependencies
+        uses: actions/dependency-review-action@v3
+
   # It would be cleaner and probably more performant to replace this build step
   # with either a non-emitting build or a simple type check.
   # We only have `build` available for now,
@@ -114,9 +123,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
     needs:
-      - install
       - test
       - lint
+      - dependency-review
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -133,127 +142,3 @@ jobs:
         run: npx nx reset
       - name: Run build
         run: npm run build
-
-  build_and_push_app:
-    name: "build and push app"
-    if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
-    needs:
-      - build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: Create image
-        uses: ./.github/actions/create-image
-        with:
-          IMAGE_NAME: ${{ vars.BASE_IMAGE_NAME }}-app
-          TAG: edge
-          DOCKERFILE: ./apps/client-asset-sg/docker/Dockerfile
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  build_and_push_api:
-    name: "build and push api"
-    if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
-    needs:
-      - build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: Create image
-        uses: ./.github/actions/create-image
-        with:
-          IMAGE_NAME: ${{ vars.BASE_IMAGE_NAME }}-api
-          TAG: edge
-          DOCKERFILE: ./apps/server-asset-sg/docker/Dockerfile
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  tag_edge_commit:
-    name: "tag edge commit"
-    needs:
-      - build_and_push_app
-      - build_and_push_api
-    runs-on: ubuntu-latest
-    steps:
-      - name: Create/update tag
-        uses: actions/github-script@v7
-        with:
-          script: |
-            github.rest.git.createRef({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              ref: 'refs/tags/edge',
-              sha: context.sha
-            }).catch(err => {
-              if (err.status !== 422) throw err;
-              github.rest.git.updateRef({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                ref: 'tags/edge',
-                sha: context.sha
-              });
-            })
-
-  tag_rc_image_app:
-    name: tag rc image app
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs:
-      - build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Login to GitHub Packages
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
-
-      - name: Pull docker image
-        run: docker pull ${{ vars.BASE_IMAGE_NAME }}-app:edge
-
-      - name: Tag docker image
-        run: docker tag ${{ vars.BASE_IMAGE_NAME }}-app:edge ${{ vars.BASE_IMAGE_NAME }}-app:release-candidate
-
-      - name: Push docker image
-        run: docker push ${{ vars.BASE_IMAGE_NAME }}-app:release-candidate
-
-  tag_rc_image_api:
-    name: tag rc image api
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs:
-      - build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Login to GitHub Packages
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
-
-      - name: Pull docker image
-        run: docker pull ${{ vars.BASE_IMAGE_NAME }}-api:edge
-
-      - name: Tag docker image
-        run: docker tag ${{ vars.BASE_IMAGE_NAME }}-api:edge ${{ vars.BASE_IMAGE_NAME }}-api:release-candidate
-
-      - name: Push docker image
-        run: docker push ${{ vars.BASE_IMAGE_NAME }}-api:release-candidate
-
-  tag_rc_commit:
-    name: "tag rc commit"
-    needs:
-      - tag_rc_image_app
-      - tag_rc_image_api
-    runs-on: ubuntu-latest
-    steps:
-      - name: Create/update tag
-        uses: actions/github-script@v7
-        with:
-          script: |
-            github.rest.git.createRef({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              ref: 'refs/tags/release-candidate',
-              sha: context.sha
-            }).catch(err => {
-              if (err.status !== 422) throw err;
-              github.rest.git.updateRef({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                ref: 'tags/release-candidate',
-                sha: context.sha
-              });
-            })
