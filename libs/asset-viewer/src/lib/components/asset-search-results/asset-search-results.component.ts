@@ -1,6 +1,6 @@
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output, inject } from '@angular/core';
 import { AssetEditDetail } from '@asset-sg/shared';
 import { Store } from '@ngrx/store';
+import { ChangeDetectionStrategy, Component, EventEmitter, inject, Input, OnInit, Output } from '@angular/core';
 import * as O from 'fp-ts/Option';
 import { Observable } from 'rxjs';
 
@@ -11,6 +11,11 @@ import {
   selectSearchLoadingState,
 } from '../../state/asset-search/asset-search.selector';
 
+import { Store } from '@ngrx/store';
+import { AppStateWithAssetViewer } from '../../state/asset-viewer.reducer';
+import * as fromAssetViewer from '../../state/asset-viewer.selectors';
+import * as actions from '../../state/asset-viewer.actions';
+
 @Component({
   selector: 'asset-sg-asset-search-results',
   templateUrl: './asset-search-results.component.html',
@@ -18,11 +23,12 @@ import {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AssetSearchResultsComponent {
-  @Input() public currentAssetId$!: Observable<O.Option<number>>;
+    @Input() public currentAssetId$!: Observable<O.Option<number>>;
   @Output() closeSearchResultsClicked = new EventEmitter<void>();
-  @Output() assetMouseOver = new EventEmitter<O.Option<number>>();
+  @Output() assetMouseOver$ = new EventEmitter<O.Option<number>>();
 
-  public _store = inject(Store<AppStateWithAssetSearch>);
+    private _store = inject(Store<AppStateWithAssetViewer>);
+    public isResultsOpen$ = this._store.select(fromAssetViewer.selectIsResultsOpen);
   public assets$: Observable<AssetEditDetail[]> = this._store.select(selectAssetSearchResultData);
   public loadingState = this._store.select(selectSearchLoadingState);
   public pageStats$ = this._store.select(selectAssetSearchPageData);
@@ -31,9 +37,18 @@ export class AssetSearchResultsComponent {
     this.assetMouseOver.emit(O.some(assetId));
   }
 
-  public onAssetMouseOut() {
-    this.assetMouseOver.emit(O.none);
-  }
+
 
   protected readonly LoadingState = LoadingState;
+    public onAssetMouseOut() {
+        this.assetMouseOver$.emit(O.none);
+    }
+
+    public toggleResultsOpen(isCurrentlyOpen: boolean) {
+        if (isCurrentlyOpen) {
+            this._store.dispatch(actions.closeResults());
+        } else {
+            this._store.dispatch(actions.openResults());
+        }
+    }
 }

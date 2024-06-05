@@ -81,6 +81,8 @@ export const enAppTranslations: AppTranslations = {
     downloadFile: 'Download {{fileName}}',
     assetsUnderMouseCursor: '{{ assetsCount }} assets found under the mouse cursor. Please select one:',
     removePolygon: 'Remove polygon',
+    hideTable: 'Hide table',
+    showTable: 'Show table',
   },
   contactRoles: {
     author: 'Author',

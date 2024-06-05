@@ -1,7 +1,5 @@
-import { ChangeDetectionStrategy, Component, HostBinding, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
-import { appSharedStateActions, fromAppShared } from '@asset-sg/client-shared';
-import { isAdmin, isEditor } from '@asset-sg/shared';
 import * as RD from '@devexperts/remote-data-ts';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { Store } from '@ngrx/store';
@@ -9,14 +7,21 @@ import { TranslateService } from '@ngx-translate/core';
 import queryString from 'query-string';
 import { filter, map, shareReplay } from 'rxjs';
 
+import { fromAppShared } from '@asset-sg/client-shared';
+import { isAdmin, isEditor } from '@asset-sg/shared';
+
 import { AppState } from '../../state/app-state';
+import * as assetViewerActions from 'libs/asset-viewer/src/lib/state/asset-viewer.actions';
 
 @UntilDestroy()
 @Component({
-  selector: 'asset-sg-menu-bar',
-  templateUrl: './menu-bar.component.html',
-  styleUrls: ['./menu-bar.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush,
+    selector: 'asset-sg-menu-bar',
+    templateUrl: './menu-bar.component.html',
+    styleUrls: ['./menu-bar.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    host: {
+        role: 'navigation',
+    },
 })
 export class MenuBarComponent {
   private _router = inject(Router);
@@ -52,12 +57,7 @@ export class MenuBarComponent {
     });
   }
 
-  public openAssetDrawer() {
-    this._store.dispatch(appSharedStateActions.triggerSearch());
-  }
-
-  @HostBinding('role')
-  get hostRole(): string {
-    return 'navigation';
-  }
+    public openAssetDrawer() {
+        this._store.dispatch(assetViewerActions.toggleRefine());
+    }
 }

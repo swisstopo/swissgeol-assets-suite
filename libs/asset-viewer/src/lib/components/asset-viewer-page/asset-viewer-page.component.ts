@@ -11,6 +11,7 @@ import {
   ViewChild,
   ViewContainerRef,
   inject,
+  OnDestroy
 } from '@angular/core';
 import { Router } from '@angular/router';
 import {
@@ -60,10 +61,9 @@ import {
   styleUrls: ['./asset-viewer-page.component.scss'],
   hostDirectives: [LifecycleHooksDirective],
 })
-export class AssetViewerPageComponent implements AfterViewInit {
-  @ViewChild('templateAppBarPortalContent') templateAppBarPortalContent!: TemplateRef<unknown>;
-  @ViewChild('templateDrawerPortalContent') templateDrawerPortalContent!: TemplateRef<unknown>;
-  @ViewChild('searchInput') searchInput!: ElementRef<HTMLInputElement>;
+export class AssetViewerPageComponent implements OnDestroy {
+    @ViewChild('templateAppBarPortalContent') templateAppBarPortalContent!: TemplateRef<unknown>;
+    @ViewChild('searchInput') searchInput!: ElementRef<HTMLInputElement>;
 
   private _lc = inject(LifecycleHooks);
   private _appPortalService = inject(AppPortalService);
@@ -81,6 +81,7 @@ export class AssetViewerPageComponent implements AfterViewInit {
     map(O.fromNullable)
   );
   public removePolygon$ = new Subject<void>();
+  public isFiltersOpen$ = this._store.select(fromAssetViewer.selectIsFiltersOpen);
 
   public _searchTextKeyDown$ = new Subject<KeyboardEvent>();
   private _searchTextChanged$ = this._searchTextKeyDown$.pipe(
@@ -112,9 +113,7 @@ export class AssetViewerPageComponent implements AfterViewInit {
             this._appPortalService.setAppBarPortalContent(
               new TemplatePortal(this.templateAppBarPortalContent, this._viewContainerRef)
             );
-            this._appPortalService.setDrawerPortalContent(
-              new TemplatePortal(this.templateDrawerPortalContent, this._viewContainerRef)
-            );
+            this._appPortalService.setDrawerPortalContent(null);
             setTimeout(() => {
               this._cd.detectChanges();
               resolve();
@@ -181,11 +180,15 @@ export class AssetViewerPageComponent implements AfterViewInit {
       .subscribe(this._store);
   }
 
-  public handleMapInitialised() {
-    this._appRef.isStable.pipe(filter(isTruthy), take(1), delay(0), untilDestroyed(this)).subscribe(() => {
-      this._ngZone.run(() => {
-        this._store.dispatch(actions.mapInitialised());
-      });
-    });
-  }
+    ngOnDestroy() {
+        this._appPortalService.setAppBarPortalContent(null);
+    }
+
+    public handleMapInitialised() {
+        this._appRef.isStable.pipe(filter(isTruthy), take(1), delay(0), untilDestroyed(this)).subscribe(() => {
+            this._ngZone.run(() => {
+                this._store.dispatch(actions.mapInitialised());
+            });
+        });
+    }
 }

@@ -21,43 +21,18 @@
   />
 </ng-template>
 
-<ng-template #templateDrawerPortalContent>
-  <asset-sg-drawer *rxLet="drawerState$ | push; let drawerState">
-    <asset-sg-drawer-panel
-      widthPercentageOfViewPanel="0.2"
-      [display]="drawerState.showRefineOrStartSearch === 'show-refine'"
-    >
-      <asset-sg-asset-search-refine
-        [style.visibility]="drawerState.showRefineOrStartSearch === 'show-refine' ? 'visible' : 'hidden'"
-      />
-    </asset-sg-drawer-panel>
-    <asset-sg-drawer-panel widthPercentageOfViewPanel="0.2" [display]="drawerState.showResults">
-      <asset-sg-asset-search-results
-        [style.visibility]="drawerState.showResults ? 'visible' : 'hidden'"
-        (closeSearchResultsClicked)="closeSearchResultsClicked$.next($event)"
-        (assetMouseOver)="highlightAssetStudies$.next($event)"
-        [currentAssetId$]="currentAssetId$"
-      />
-    </asset-sg-drawer-panel>
-    <asset-sg-drawer-panel
-      widthPercentageOfViewPanel="0.2"
-      [display]="drawerState.showRefineOrStartSearch === 'show-start-search'"
-    >
-      <div class="flex flex-column pl-2">
-        <button
-          asset-sg-icon-button
-          class="self-end mt-4 mr-4"
-          [attr.aria-label]="'search.closeInstructions' | translate"
-          (click)="closeInstructions$.next()"
-        >
-          <svg-icon key="close"></svg-icon>
-        </button>
-        <h3 translate class="mt-0">search.searchInstructionsHeading</h3>
-        <p translate class="m-0 mr-4">search.searchInstructions</p>
-      </div>
-    </asset-sg-drawer-panel>
-    <asset-sg-drawer-panel widthPercentageOfViewPanel="0.3" [display]="drawerState.showDetails">
-      <asset-sg-asset-search-detail [style.visibility]="drawerState.showDetails ? 'visible' : 'hidden'" />
-    </asset-sg-drawer-panel>
-  </asset-sg-drawer>
-</ng-template>
+<asset-sg-asset-search-refine
+    *ngIf="isFiltersOpen$ | push"
+    class="mat-elevation-z4"
+    [style.visibility]="'visible'"
+/>
+
+<asset-sg-asset-search-results
+    class="mat-elevation-z2"
+    [rdAssets$]="rdSearchAssets$"
+    (assetMouseOver)="highlightAssetStudies$.next($event)"
+    [currentAssetId$]="currentAssetId$"/>
+
+<asset-sg-asset-search-detail *ngIf="(rdCurrentAssetDetail$ | push)._tag === 'RemoteSuccess'"
+                              class="mat-elevation-z4"
+                              [rdAssetDetail$]="rdCurrentAssetDetail$"/>

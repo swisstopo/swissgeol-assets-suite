@@ -81,6 +81,8 @@ export const rmAppTranslations: AppTranslations = {
     downloadFile: 'RM {{fileName}} herunterladen',
     assetsUnderMouseCursor: 'RM {{ assetsCount }} Assets unter dem Mauszeiger gefunden. Bitte wählen Sie eines aus:',
     removePolygon: 'RM Polygon aufheben',
+    hideTable: 'RM Tabelle verbergen',
+    showTable: 'RM Tabelle anzeigen',
   },
   contactRoles: {
     author: 'RM Autor',

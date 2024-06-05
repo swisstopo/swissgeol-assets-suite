@@ -290,7 +290,7 @@ export class MapComponent {
           vectorLayerGeoms.setOpacity(1);
           vectorLayerAllStudies.setOpacity(1);
           if (studiesFromSearch.length > 0) {
-            zoomToStudies(this._windowService, olMap, studiesFromSearch, 0.6);
+            zoomToStudies(this._windowService, olMap, studiesFromSearch, 1);
           }
         } else {
           vectorSourceAssetGeoms.clear();
@@ -302,7 +302,7 @@ export class MapComponent {
               geom: wktToGeoJSON(study.geomText),
             };
           });
-          zoomToStudies(this._windowService, olMap, studiesWithGeometry, 0.3);
+          zoomToStudies(this._windowService, olMap, studiesWithGeometry, 1);
           const studiesWithFeature = createFeaturesFromStudies(studiesWithGeometry, {
             point: featureStyles.bigPointStyleAsset,
             polygon: featureStyles.polygonStyleAsset,

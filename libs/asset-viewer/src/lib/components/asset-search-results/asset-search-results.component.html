@@ -3,17 +3,18 @@
 </div>
 <ng-template #results>
   <ng-container *rxLet="assets$ | push">
+    <ng-container *rxLet="isResultsOpen$; let isResultsOpen">
     <div class="header">
       <div>
         {{ "search.searchResults" | translate }}:
         <asset-sg-animate-number [nextValue]="(pageStats$ | async)?.total ?? 0" />
       </div>
-      <button asset-sg-icon-button style="width: unset" (click)="closeSearchResultsClicked.emit()">
-        <span> Ausblenden </span>
+      <button asset-sg-icon-button style="width: unset" (click)="toggleResultsOpen(isResultsOpen)">
+        <span translate> {{isResultsOpen ? 'Tabelle verbergen' : 'Tabelle anzeigen'}} </span>
         <svg-icon key="close-nav"></svg-icon>
       </button>
     </div>
-
+      <ng-container *ngIf="isResultsOpen">
     <div class="search-results">
       <div
         class="asset-result"
@@ -24,5 +25,7 @@
         <asset-sg-asset-search-result [asset]="asset"></asset-sg-asset-search-result>
       </div>
     </div>
+    </ng-container>
+    </ng-container>
   </ng-container>
 </ng-template>

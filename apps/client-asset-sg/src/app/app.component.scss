@@ -35,15 +35,14 @@ asset-sg-menu-bar {
 }
 
 @media screen and (min-width: 1194px) {
-  :host {
-    max-width: 1920px;
-    margin: 0 auto;
-    grid-template-areas: "app-bar app-bar" "menu-bar router-outlet";
-    grid-template-rows: $app-bar-height calc(100vh - $app-bar-height);
-    grid-template-columns: $menu-bar-width 1fr;
-    box-shadow: 0 0 60px 0 rgb(0 0 0 / 60%);
-    --viewport-width: min(calc(100vw - #{$menu-bar-width}), calc(1920px - #{$menu-bar-width}));
-  }
+    :host {
+        margin: 0 auto;
+        grid-template-areas: 'app-bar app-bar' 'menu-bar router-outlet';
+        grid-template-rows: $app-bar-height calc(100vh - $app-bar-height);
+        grid-template-columns: $menu-bar-width 1fr;
+        box-shadow: 0 0 60px 0 rgb(0 0 0 / 60%);
+        --viewport-width: min(calc(100vw - #{$menu-bar-width}), calc(1920px - #{$menu-bar-width}));
+    }
 }
 
 .error {
