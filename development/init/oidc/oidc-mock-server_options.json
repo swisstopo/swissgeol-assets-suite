@@ -1,0 +1,15 @@
+{
+  "IssuerUri": "http://localhost:4011",
+  "AccessTokenJwtType": "JWT",
+  "Discovery": {
+    "ShowKeySet": true
+  },
+  "Authentication": {
+    "CookieSameSiteMode": "Lax",
+    "CheckSessionCookieSameSiteMode": "Lax"
+  },
+  "KeyManagement": {
+    "Enabled": true,
+    "KeyPath": "/tmp/data/keys"
+  }
+}
