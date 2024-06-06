@@ -1,0 +1,6 @@
+[
+  {
+    "Name": "cognito",
+    "UserClaims": ["cognito:groups", "username"]
+  }
+]
