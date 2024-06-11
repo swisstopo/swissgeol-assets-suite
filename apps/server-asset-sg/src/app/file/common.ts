@@ -13,6 +13,7 @@ const AssetS3Config = D.struct({
             accessKeyId: D.string,
             secretAccessKey: D.string,
         }),
+        forcePathStyle: D.boolean,
     }),
     bucketName: D.string,
     assetFolder: D.string,
@@ -26,6 +27,9 @@ const maybeAssetS3Config = AssetS3Config.decode({
             accessKeyId: process.env.S3_ACCESS_KEY_ID,
             secretAccessKey: process.env.S3_SECRET_ACCESS_KEY,
         },
+
+        // Disables the client automatically appending the hostname to the bucket name.
+        forcePathStyle: true,
     },
     bucketName: process.env.S3_BUCKET_NAME,
     assetFolder: process.env.S3_ASSET_FOLDER,

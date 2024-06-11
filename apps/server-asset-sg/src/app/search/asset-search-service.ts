@@ -155,7 +155,7 @@ export class AssetSearchService {
                 minCreateDate: { min: { field: 'createDate' } },
                 maxCreateDate: { max: { field: 'createDate' } },
                 assetKindItemCodes: { terms: { field: 'assetKindItemCode' } },
-                languageItemCodes: { terms: { field: 'languageItemCode' } },
+                languageItemCodes: { terms: { field: 'languageItemCode.keyword' } },
                 usageCodes: { terms: { field: 'usageCode' } },
                 manCatLabelItemCodes: { terms: { field: 'manCatLabelItemCodes' } },
             },

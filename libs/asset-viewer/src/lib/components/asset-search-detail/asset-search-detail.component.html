@@ -7,8 +7,10 @@
         asset-sg-icon-button
         class="close-button"
         [attr.alt]="'search.closeAssetDetails' | translate"
-        ><svg-icon key="close"></svg-icon
-    ></a>
+    >
+        <svg-icon key="close"></svg-icon
+        >
+    </a>
 </div>
 
 <div class="asset-detail-scroll-container">
@@ -16,7 +18,8 @@
         <ng-container *rxLet="rdAssetDetail$ | push; let rdAssetDetail">
             <ng-container *ngIf="rdAssetDetail._tag === 'RemoteSuccess'">
                 <div class="flex flex-row justify-between mb-4">
-                    <div class="text-dark-red break-word font-bold mt-2.5" [innerHTML]="rdAssetDetail.value.titlePublic"></div>
+                    <div class="text-dark-red break-word font-bold mt-2.5"
+                         [innerHTML]="rdAssetDetail.value.titlePublic"></div>
                     <a
                         *ngIf="null | isEditor"
                         asset-sg-icon-button
@@ -48,23 +51,21 @@
                             <ul [class.single-entry]="rdAssetDetail.value.assetFiles.length === 1">
                                 <li *rxFor="let assetFile of rdAssetDetail.value.assetFiles" class="link">
                                     <span class="filename"> {{ assetFile.fileName }} ({{ assetFile.fileSize }}) </span>
-                                    <a
+                                    <button
                                         asset-sg-icon-button
-                                        [href]="'/api/file/' + assetFile.fileId"
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        [title]="
-                                            'search.openFileInNewTab' | translate : { fileName: assetFile.fileName }
-                                        ">
-                                        <svg-icon key="ext-link"></svg-icon> </a
-                                    ><a
+                                        [title]="'search.openFileInNewTab' | translate : { fileName: assetFile.fileName }"
+                                        (click)="downloadFile(assetFile, false)"
+                                    >
+                                        <svg-icon key="ext-link"></svg-icon>
+                                    </button
+                                    >
+                                    <button
                                         asset-sg-icon-button
-                                        [href]="'/api/file/' + assetFile.fileId"
-                                        rel="noopener noreferrer"
                                         [title]="'search.downloadFile' | translate : { fileName: assetFile.fileName }"
-                                        download>
+                                        (click)="downloadFile(assetFile)"
+                                    >
                                         <svg-icon key="download"></svg-icon>
-                                    </a>
+                                    </button>
                                 </li>
                             </ul>
                         </td>
@@ -125,7 +126,8 @@
                         <th translate="search.content"></th>
                         <td>
                             <ng-container *ngIf="rdAssetDetail.value.assetFormatCompositions.length === 0"
-                                >&ndash;</ng-container
+                            >&ndash;
+                            </ng-container
                             >
                             <ng-container
                                 *rxFor="
@@ -149,7 +151,8 @@
                         <th translate="search.reference"></th>
                         <td>
                             <ng-container *ngIf="rdAssetDetail.value.referenceAssets.length === 0"
-                                >&ndash;</ng-container
+                            >&ndash;
+                            </ng-container
                             >
                             <ul [class.single-entry]="rdAssetDetail.value.referenceAssets.length === 1">
                                 <li *rxFor="let referenceAsset of rdAssetDetail.value.referenceAssets">
