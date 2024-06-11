@@ -5,7 +5,20 @@ on:
     branches:
       - "main"
 
+  workflow_dispatch:
+    inputs:
+      base:
+        type: string
+        description: |
+          The tag of the commit that will be published as release-candidate.
+          Make sure that you also select that tag as the workflow's run location.
+        required: false
+        default: "edge"
+
 permissions: write-all
+
+env:
+  BASE: ${{ github.event.inputs.base || 'edge' }}
 
 jobs:
   tag_rc_image_app:
@@ -16,10 +29,10 @@ jobs:
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
 
       - name: Pull docker image
-        run: docker pull ${{ vars.BASE_IMAGE_NAME }}-app:edge
+        run: docker pull ${{ vars.BASE_IMAGE_NAME }}-app:${{ env.BASE }}
 
       - name: Tag docker image
-        run: docker tag ${{ vars.BASE_IMAGE_NAME }}-app:edge ${{ vars.BASE_IMAGE_NAME }}-app:release-candidate
+        run: docker tag ${{ vars.BASE_IMAGE_NAME }}-app:${{ env.BASE }} ${{ vars.BASE_IMAGE_NAME }}-app:release-candidate
 
       - name: Push docker image
         run: docker push ${{ vars.BASE_IMAGE_NAME }}-app:release-candidate
@@ -32,10 +45,10 @@ jobs:
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
 
       - name: Pull docker image
-        run: docker pull ${{ vars.BASE_IMAGE_NAME }}-api:edge
+        run: docker pull ${{ vars.BASE_IMAGE_NAME }}-api:${{ env.BASE }}
 
       - name: Tag docker image
-        run: docker tag ${{ vars.BASE_IMAGE_NAME }}-api:edge ${{ vars.BASE_IMAGE_NAME }}-api:release-candidate
+        run: docker tag ${{ vars.BASE_IMAGE_NAME }}-api:${{ env.BASE }} ${{ vars.BASE_IMAGE_NAME }}-api:release-candidate
 
       - name: Push docker image
         run: docker push ${{ vars.BASE_IMAGE_NAME }}-api:release-candidate
@@ -49,14 +62,14 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      - name: Get edge commit
-        id: get_edge_commit
+      - name: Get base commit
+        id: get_base_commit
         run: |
           git fetch --tags
-          EDGE_COMMIT=$(git rev-list -n 1 edge)
-          echo "sha=$EDGE_COMMIT" >> "$GITHUB_OUTPUT"
+          BASE_COMMIT=$(git rev-list -n 1 $BASE)
+          echo "sha=$BASE_COMMIT" >> "$GITHUB_OUTPUT"
       - name: tag release-candidate
         uses: ./.github/actions/tag-commit
         with:
           TAG_NAME: release-candidate
-          SHA: ${{ steps.get_edge_commit.outputs.sha }}
+          SHA: ${{ steps.get_base_commit.outputs.sha }}
