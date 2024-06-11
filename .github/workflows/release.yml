@@ -93,8 +93,8 @@ jobs:
           IMAGE_NAME: ${{ vars.BASE_IMAGE_NAME }}-app
           TAG: latest
           OTHER_TAGS: |
-            type=raw,value=edge
-            type=raw,value=release-candidate
+            type=raw,value=${{ env.IS_EDGE == 'true' && 'edge' || '' }}
+            type=raw,value=${{ env.IS_RC == 'true' && 'release-candidate' || '' }}
           VERSION: ${{ needs.determine_version.outputs.version }}
           DOCKERFILE: ./apps/client-asset-sg/docker/Dockerfile
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

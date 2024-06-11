@@ -63,3 +63,5 @@ runs:
         tags: ${{ steps.meta-data.outputs.tags }}
         labels: ${{ steps.meta-data.outputs.labels }}
         no-cache: true
+        build-args: |
+          APP_VERSION=${{ inputs.VERSION }}

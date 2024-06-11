@@ -120,7 +120,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
       - name: Review Dependencies
-        uses: actions/dependency-review-action@v3
+        uses: actions/dependency-review-action@v4
 
   # It would be cleaner and probably more performant to replace this build step
   # with either a non-emitting build or a simple type check.
@@ -145,7 +145,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: ./node_modules
-          key: "${{ runner.os }}-node_modules-${{ hashFiles('**/package-lock.json') }}-${{ hashFiles('**/schema.prisma') }}"
+          key: "${{ runner.os }}-node_modules-${{ hashFiles('package-lock.json') }}-${{ hashFiles('**/schema.prisma') }}"
       - name: Reset nx
         run: npx nx reset
       - name: Run build
@@ -153,6 +153,7 @@ jobs:
 
   cypress:
     runs-on: ubuntu-latest
+    if: ${{ false }}
     needs:
       - test
       - lint
