@@ -32,3 +32,4 @@ export const closePanel = createAction('[App Shared State] Close Panel');
 export const logout = createAction('[App Shared State] Logout');
 
 export const setLang = createAction('[App Shared State] Set Lang', props<{ lang: Lang }>());
+export const toggleSearchFilter = createAction('[App Shared State] Toggle Search Filter');

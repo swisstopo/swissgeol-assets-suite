@@ -1,20 +1,21 @@
-import { AssetEditDetail } from '@asset-sg/shared';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output, inject } from '@angular/core';
 import { Store } from '@ngrx/store';
-import { ChangeDetectionStrategy, Component, EventEmitter, inject, Input, OnInit, Output } from '@angular/core';
 import * as O from 'fp-ts/Option';
 import { Observable } from 'rxjs';
 
 import { AppStateWithAssetSearch, LoadingState } from '../../state/asset-search/asset-search.reducer';
-import {
-  selectAssetSearchPageData,
-  selectAssetSearchResultData,
-  selectSearchLoadingState,
-} from '../../state/asset-search/asset-search.selector';
+
 
 import { Store } from '@ngrx/store';
 import { AppStateWithAssetViewer } from '../../state/asset-viewer.reducer';
 import * as fromAssetViewer from '../../state/asset-viewer.selectors';
 import * as actions from '../../state/asset-viewer.actions';
+import { AssetEditDetail } from '@asset-sg/shared';
+import {
+    selectAssetSearchPageData,
+    selectAssetSearchResultData,
+    selectSearchLoadingState,
+} from '../../state/asset-search/asset-search.selector';
 
 @Component({
   selector: 'asset-sg-asset-search-results',
@@ -34,7 +35,7 @@ export class AssetSearchResultsComponent {
   public pageStats$ = this._store.select(selectAssetSearchPageData);
 
   public onAssetMouseOver(assetId: number) {
-    this.assetMouseOver.emit(O.some(assetId));
+    this.assetMouseOver$.emit(O.some(assetId));
   }
 
 

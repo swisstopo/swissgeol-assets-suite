@@ -7,11 +7,10 @@ import { TranslateService } from '@ngx-translate/core';
 import queryString from 'query-string';
 import { filter, map, shareReplay } from 'rxjs';
 
-import { fromAppShared } from '@asset-sg/client-shared';
+import { appSharedStateActions, fromAppShared } from '@asset-sg/client-shared';
 import { isAdmin, isEditor } from '@asset-sg/shared';
 
 import { AppState } from '../../state/app-state';
-import * as assetViewerActions from 'libs/asset-viewer/src/lib/state/asset-viewer.actions';
 
 @UntilDestroy()
 @Component({
@@ -58,6 +57,6 @@ export class MenuBarComponent {
   }
 
     public openAssetDrawer() {
-        this._store.dispatch(assetViewerActions.toggleRefine());
+        this._store.dispatch(appSharedStateActions.toggleSearchFilter());
     }
 }
