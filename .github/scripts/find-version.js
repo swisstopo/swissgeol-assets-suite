@@ -42,16 +42,16 @@ const findOutdatedVersions = (tags, recentTag) => {
   }
   const versions = findAllVersions(tags);
   return versions.filter((version) => (
-      // Select all pre-releases that appear before the most recent one.
-      version.preRelease != null && compareVersions(recentVersion, version) > 0
+    // Select all pre-releases that appear before the most recent one.
+    version.preRelease != null && compareVersions(recentVersion, version) > 0
   ))
 }
 
 const findAllVersions = (tags) => {
   return tags
-      .map(parseVersion)
-      .filter((it) => it != null)
-      .sort((a, b) => compareVersions(a, b) * -1);
+    .map(parseVersion)
+    .filter((it) => it != null)
+    .sort((a, b) => compareVersions(a, b) * -1);
 }
 
 const SEMANTIC_VERSION_PATTERN = /^\d+\.\d+\.\d+(?:-dev\d+)?$/;
