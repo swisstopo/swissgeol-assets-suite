@@ -1,14 +1,12 @@
 import { Then, When } from '@badeball/cypress-cucumber-preprocessor';
 
 Then(/^The user should see the sync progress$/, () => {
-  cy.get('asset-sg-animate-number:contains("0")', {timeout: 3000}).should('not.exist');
-  cy.get('.asset-body').should('exist');
-  cy.get('.search-results div:contains("CypressTestAsset")').should('exist');
+  cy.get('.progress').should('exist').and('be.visible');
 });
 When(/^The user clicks start sync button$/, () => {
-  cy.get('.search-input').type('{enter}');
+  cy.get('button:contains("Synchronisation starten")').click();
 });
-When(/^A user clicks administration menu button$/, (searchText: string) => {
-  cy.get('.search-input').type(searchText);
+When(/^A user clicks administration menu button$/, () => {
+  cy.get('span:contains("Verwaltung")').not(':contains("Benutzer Verwaltung")').click();
   cy.wait(1000);
 });

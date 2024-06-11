@@ -8,4 +8,4 @@ Feature: search
   Scenario: Search for test asset
     When A user types CypressTestAsset into the search field
     And The user clicks enter
-    Then The user should see a test information in results
+    Then The user should see the asset in results
