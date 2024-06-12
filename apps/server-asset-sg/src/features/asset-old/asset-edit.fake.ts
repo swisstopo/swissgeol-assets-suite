@@ -3,8 +3,11 @@ import * as O from 'fp-ts/Option';
 
 import { AssetUsage, Contact, PatchAsset, User, UserRoleEnum, dateIdFromDate } from '@asset-sg/shared';
 
+// eslint-disable-next-line @nx/enforce-module-boundaries
 import { fakeAssetFormatItemCode } from '../../../../../test/data/asset-format-item';
+// eslint-disable-next-line @nx/enforce-module-boundaries
 import { fakeAssetKindItemCode } from '../../../../../test/data/asset-kind-item';
+// eslint-disable-next-line @nx/enforce-module-boundaries
 import { fakeContactKindItem } from '../../../../../test/data/contact-kind-item';
 
 import { AssetEditDetail } from './asset-edit.service';

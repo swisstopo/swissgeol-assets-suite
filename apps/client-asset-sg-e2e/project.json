@@ -3,9 +3,11 @@
     "$schema": "../../node_modules/nx/schemas/project-schema.json",
     "sourceRoot": "apps/client-asset-sg-e2e/src",
     "projectType": "application",
+    "tags": [],
+    "implicitDependencies": ["client-asset-sg"],
     "targets": {
         "e2e": {
-            "executor": "@nrwl/cypress:cypress",
+            "executor": "@nx/cypress:cypress",
             "options": {
                 "cypressConfig": "apps/client-asset-sg-e2e/cypress.config.ts",
                 "devServerTarget": "client-asset-sg:serve:development",
@@ -18,13 +20,8 @@
             }
         },
         "lint": {
-            "executor": "@nrwl/linter:eslint",
-            "outputs": ["{options.outputFile}"],
-            "options": {
-                "lintFilePatterns": ["apps/client-asset-sg-e2e/**/*.{js,ts}"]
-            }
+            "executor": "@nx/eslint:lint",
+            "outputs": ["{options.outputFile}"]
         }
-    },
-    "tags": [],
-    "implicitDependencies": ["client-asset-sg"]
+    }
 }

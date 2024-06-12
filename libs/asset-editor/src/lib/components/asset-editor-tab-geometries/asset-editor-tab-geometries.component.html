@@ -21,7 +21,7 @@
                     </mat-form-field>
                     <button
                         asset-sg-icon-button
-                        [ariaLabel]="'edit.tabs.geometries.geometryMenu.buttonLabel' | translate"
+                        [attr.aria-label]="'edit.tabs.geometries.geometryMenu.buttonLabel' | translate"
                         [matMenuTriggerFor]="geometryActionMenu"
                         class="basis-10 shrink-0 grow-0 ml-2 mt-3"
                         [disabled]="studies.length === 0 || mode !== 'edit-geometry'">
@@ -34,7 +34,7 @@
                         </button>
                         <button
                             mat-menu-item
-                            *ngIf="(_selectedStudy$ | push) != null"
+                            *ngIf="_selectedStudy$ | push"
                             (click)="deleteSelectedGeometry()">
                             <svg-icon key="delete" matMenuItemIcon class="mr-3 text-cyan-09"></svg-icon>
                             <span class="ml-2" translate>edit.tabs.geometries.geometryMenu.remove</span>
@@ -201,7 +201,7 @@
                             </mat-form-field>
                             <button
                                 [ngClass]="{ invisible: context.disabled || !context.showCoordMenu }"
-                                [ariaLabel]="
+                                [attr.aria-label]="
                                     'edit.tabs.geometries.vertextMenu.buttonLabel'
                                         | translate : { index: context.index }
                                 "

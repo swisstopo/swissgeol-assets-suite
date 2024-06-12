@@ -1,16 +1,23 @@
+ARG APP_VERSION
+
 FROM node:20-alpine as app-builder
+
+ENV APP_VERSION=${APP_VERSION}
+ENV CYPRESS_INSTALL_BINARY=0
+
+RUN apk add python3 make gcc g++
 
 WORKDIR /app
 COPY . .
 
-ENV CYPRESS_INSTALL_BINARY=0
-RUN apk add python3 make gcc g++
-
 RUN npm install
+RUN npm pkg set version=${APP_VERSION}
 RUN npx nx build client-asset-sg --configuration=production
 
 # final image build
 FROM nginx:mainline-alpine
+
+ENV APP_VERSION=${APP_VERSION}
 
 WORKDIR /usr/share/nginx/html
 COPY --from=app-builder /app/dist/apps/client-asset-sg .

@@ -22,5 +22,5 @@ export function KobalteListbox(
     const value = fromWithStartWith(value$, []);
     const _props = { ...propsRest, value };
     const children = fromWithStartWith(children$, []);
-    render(() => h(Listbox.Root, _props, () => children().map(childProps => h(Listbox.Item, childProps))), element);
+    render(() => h(Listbox.Root, _props, () => children().map(childProps => h(Listbox.Item, childProps)))(), element);
 }

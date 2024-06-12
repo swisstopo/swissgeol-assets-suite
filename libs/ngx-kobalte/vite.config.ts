@@ -1,22 +1,22 @@
 /// <reference types="vitest" />
 import { join } from 'path';
 
+import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { defineConfig } from 'vite';
 import dts from 'vite-plugin-dts';
 import solidPlugin from 'vite-plugin-solid';
-import viteTsConfigPaths from 'vite-tsconfig-paths';
 
 export default defineConfig({
+    root: __dirname,
     plugins: [
         dts({
-            tsConfigFilePath: join(__dirname, 'tsconfig.lib.json'),
-            // Faster builds by skipping tests. Set this to false to enable type checking.
-            skipDiagnostics: true,
+          tsconfigPath: join(__dirname, 'tsconfig.lib.json'),
+          beforeWriteFile(filePath, content) {
+            return { filePath: filePath.split('/libs/ngx-kobalte/src').join(''), content }
+          }
         }),
 
-        viteTsConfigPaths({
-            root: '../../',
-        }),
+        // nxViteTsPaths(),
 
         solidPlugin(),
     ],
@@ -33,6 +33,9 @@ export default defineConfig({
     // Configuration for building your library.
     // See: https://vitejs.dev/guide/build.html#library-mode
     build: {
+        outDir: '../../dist/libs/ngx-kobalte',
+        reportCompressedSize: true,
+        commonjsOptions: { transformMixedEsModules: true },
         lib: {
             // Could also be a dictionary or array of multiple entry points.
             entry: 'src/index.ts',
@@ -42,13 +45,14 @@ export default defineConfig({
             // Don't forgot to update your package.json as well.
             formats: ['es', 'cjs'],
         },
-        rollupOptions: {
-            // External packages that should not be bundled into your library.
-            external: [],
-        },
     },
 
     test: {
+        reporters: ['default'],
+        coverage: {
+            reportsDirectory: '../../coverage/libs/ngx-kobalte',
+            provider: 'v8',
+        },
         globals: true,
         cache: {
             dir: '../../node_modules/.vitest',
