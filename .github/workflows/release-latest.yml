@@ -3,8 +3,7 @@ name: Release Latest (temporary)
 on:
   workflow_dispatch:
 
-  pull_request:
-    types: [ opened, synchronize, reopened ]
+  push:
     branches:
       - 'release'
 
