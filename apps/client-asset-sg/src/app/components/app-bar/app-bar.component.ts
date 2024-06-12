@@ -9,6 +9,8 @@ import * as O from 'fp-ts/Option';
 import queryString from 'query-string';
 import { EMPTY, Observable, Subject, debounceTime, filter, map, startWith, switchMap } from 'rxjs';
 
+import packageInfo from 'package.json';
+
 @UntilDestroy()
 @Component({
   selector: 'asset-sg-app-bar',
@@ -24,6 +26,8 @@ export class AppBarComponent implements OnInit {
   @ViewChild('searchInput', { read: ElementRef, static: true }) searchInput!: ElementRef<HTMLInputElement>;
 
   public searchTextKeyDown$ = new Subject<KeyboardEvent>();
+
+  public version = packageInfo.version;
 
   public _currentLang$ = this._router.events.pipe(
     filter((e): e is NavigationEnd => e instanceof NavigationEnd),

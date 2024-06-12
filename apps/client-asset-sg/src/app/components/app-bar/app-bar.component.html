@@ -2,6 +2,8 @@
   <img class="logo" src="../../../assets/swissgeol_assets.svg" alt="{{ 'logoSwissGeol' | translate }}" />
 </a>
 <ng-content />
+<div class="spacer"></div>
+<span class="version">{{ version }}</span>
 <div class="language-links" *rxLet="links$ | push; let l">
   <a
     asset-sg-reset

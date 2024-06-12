@@ -1,6 +1,6 @@
 {
   "name": "asset-sg",
-  "version": "0.0.0",
+  "version": "local.dev",
   "license": "MIT",
   "scripts": {
     "ng": "nx",
