@@ -134,15 +134,8 @@ export class AssetSearchService {
                 bool: {
                     should: [
                         {
-                            multi_match: {
-                                query,
-                                fields: scope,
-                                fuzziness: 'AUTO',
-                            },
-                        },
-                        {
                             query_string: {
-                                query: `*${query}*`,
+                                query: normalizeFieldQuery(query),
                                 fields: scope,
                             },
                         },
@@ -337,3 +330,11 @@ export class AssetSearchService {
         }
     }
 }
+
+const normalizeFieldQuery = (query: string): string => (
+    query
+        .replace(/title(_*)public:/i, 'titlePublic:')
+        .replace(/title(_*)original:/i, 'titleOriginal:')
+        .replace(/contact(_*)ame:/i, 'contactNames:')
+        .replace(/sgs(_*)id:/i, 'sgsId:')
+);
