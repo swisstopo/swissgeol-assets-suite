@@ -9,7 +9,7 @@
 </ng-container>
 
 <ng-template #splashScreen>
-  <ng-container *ngIf="(authService.state$ | async) != AuthState.Success else content">
+  <ng-container *ngIf="(authService.state$ | async) !== AuthState.Success else content">
     <app-splash-screen />
   </ng-container>
 </ng-template>

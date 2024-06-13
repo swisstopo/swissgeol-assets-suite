@@ -14,10 +14,10 @@ import {
 import { FormGroupDirective } from '@angular/forms';
 import { MatSelectChange } from '@angular/material/select';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { createId } from '@paralleldrive/cuid2';
 import { RxState } from '@rx-angular/state';
 import { point } from '@turf/helpers';
 import midpoint from '@turf/midpoint';
-import * as cuid from 'cuid';
 import { sequenceS } from 'fp-ts/Apply';
 import * as A from 'fp-ts/Array';
 import { contramap } from 'fp-ts/Eq';
@@ -644,7 +644,7 @@ export class AssetEditorTabGeometriesComponent implements OnInit {
                 }
             }
             if (e.value === 'Polygon') {
-                const study = { studyId: 'study_area_new_' + cuid(), geom: Geom.as.Polygon({ coords: [] }) };
+                const study = { studyId: 'study_area_new_' + createId(), geom: Geom.as.Polygon({ coords: [] }) };
                 const newStudies = [...this._state.get().studies, study];
                 this._state.set(
                     flow(updateNewGeometryType('Polygon'), updateMode('create-new-geometry'), s => ({
@@ -673,7 +673,7 @@ export class AssetEditorTabGeometriesComponent implements OnInit {
                     .subscribe();
             }
             if (e.value === 'LineString') {
-                const study = { studyId: 'study_trace_new_' + cuid(), geom: Geom.as.LineString({ coords: [] }) };
+                const study = { studyId: 'study_trace_new_' + createId(), geom: Geom.as.LineString({ coords: [] }) };
                 const newStudies = [...this._state.get().studies, study];
                 this._state.set(
                     flow(updateNewGeometryType('Linestring'), updateMode('create-new-geometry'), s => ({
@@ -1508,7 +1508,7 @@ const createNewPointStudy = (olMap: Map | undefined): O.Option<Study> =>
         O.fromNullable,
         O.chain(map => O.fromNullable(map.getView().getCenter())),
         O.map(coordinateToLv95RoundedToMillimeter),
-        O.map(coord => ({ studyId: 'study_location_new_' + cuid(), geom: Geom.as.Point({ coord }) })),
+        O.map(coord => ({ studyId: 'study_location_new_' + createId(), geom: Geom.as.Point({ coord }) })),
     );
 
 const coordinateToLv95RoundedToMillimeter = (c: Coordinate): LV95 =>

@@ -33,7 +33,7 @@
                                         <button
                                             asset-sg-icon-button
                                             (click)="showContact(assetContact.contactId)"
-                                            [ariaLabel]="'edit.tabs.contacts.viewDetails' | translate"
+                                            [attr.aria-label]="'edit.tabs.contacts.viewDetails' | translate"
                                             [disabled]="
                                                 (_disableAll$ | push) ||
                                                 (uiMode !== 'view' && uiMode !== 'viewContactDetails') ||
@@ -45,7 +45,7 @@
                                         <button
                                             asset-sg-icon-button
                                             (click)="unlinkContact(assetContact.contactId)"
-                                            [ariaLabel]="'edit.tabs.contacts.unlinkContact' | translate"
+                                            [attr.aria-label]="'edit.tabs.contacts.unlinkContact' | translate"
                                             [disabled]="
                                                 (_disableAll$ | push) ||
                                                 (uiMode !== 'view' && uiMode !== 'viewContactDetails')

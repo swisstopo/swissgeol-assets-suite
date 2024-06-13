@@ -17,7 +17,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { ForModule } from '@rx-angular/template/for';
 import { LetModule } from '@rx-angular/template/let';
 import { PushModule } from '@rx-angular/template/push';
-import de from 'date-fns/locale/de';
+import { de } from 'date-fns/locale/de';
 
 import {
   AnchorComponent,

@@ -15,7 +15,7 @@ import { pipe } from 'fp-ts/function';
 import * as O from 'fp-ts/Option';
 import * as TE from 'fp-ts/TaskEither';
 
-// eslint-disable-next-line @nrwl/nx/enforce-module-boundaries
+// eslint-disable-next-line @nx/enforce-module-boundaries
 import { unknownToError } from '../../../../../../libs/core/src/';
 
 import { queryFiles } from './seed-files';
