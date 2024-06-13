@@ -1,5 +1,5 @@
-@use '../../../styles/variables';
-@use '../../../styles/drawer-panel-mixins' as drawerPanel;
+@use "../../../styles/variables";
+@use "../../../styles/drawer-panel-mixins" as drawerPanel;
 
 .asset-header {
   display: flex;
@@ -40,7 +40,6 @@
     color: variables.$dark-red;
   }
 }
-
 
 .asset-favourite {
   height: 2.5rem;

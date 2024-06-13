@@ -42,18 +42,14 @@
     },
     "build-app": {
       "executor": "@nrwl/webpack:webpack",
-      "outputs": [
-        "{options.outputPath}"
-      ],
+      "outputs": ["{options.outputPath}"],
       "options": {
         "target": "node",
         "compiler": "tsc",
         "outputPath": "dist/apps/server-asset-sg",
         "main": "apps/server-asset-sg/src/main.ts",
         "tsConfig": "apps/server-asset-sg/tsconfig.app.json",
-        "assets": [
-          "apps/server-asset-sg/static"
-        ],
+        "assets": ["apps/server-asset-sg/static"],
         "externalDependencies": "all",
         "generatePackageJson": true,
         "webpackConfig": "apps/server-asset-sg/webpack.config.js"
@@ -85,15 +81,14 @@
     },
     "lint": {
       "executor": "@nx/eslint:lint",
-      "outputs": [
-        "{options.outputFile}"
-      ]
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "eslintConfig": "apps/server-asset-sg/eslint.config.js"
+      }
     },
     "test": {
       "executor": "@nx/jest:jest",
-      "outputs": [
-        "{workspaceRoot}/coverage/{projectRoot}"
-      ],
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
       "options": {
         "jestConfig": "apps/server-asset-sg/jest.config.ts",
         "codeCoverage": true

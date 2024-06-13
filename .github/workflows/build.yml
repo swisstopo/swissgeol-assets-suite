@@ -3,11 +3,11 @@ name: build
 on:
   push:
     branches:
-      - '**'
+      - "**"
   workflow_dispatch:
 
 env:
-  NODE_VERSION: '20.x'
+  NODE_VERSION: "20.x"
 
 jobs:
   install:
@@ -19,13 +19,23 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
+      - name: Get npm cache directory
+        id: npm-cache-dir
+        run: echo "dir=$(npm config get cache)" >> ${GITHUB_OUTPUT}
+      - name: Cache npm
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.npm-cache-dir.outputs.dir }}
+          key: "${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}"
+          restore-keys: |
+            ${{ runner.os }}-npm-
       - name: Cache node modules
         uses: actions/cache@v4
         with:
           path: ./node_modules
-          key: "${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}"
+          key: "${{ runner.os }}-node_modules-${{ hashFiles('**/package-lock.json') }}-${{ hashFiles('**/schema.prisma') }}"
           restore-keys: |
-            ${{ runner.os }}-npm-
+            ${{ runner.os }}-node_modules-
       - name: Install node dependencies
         run: npm ci
       - name: Generate prisma types
@@ -43,7 +53,7 @@ jobs:
       db:
         image: postgis/postgis
         ports:
-          - '5432:5432'
+          - "5432:5432"
         env:
           POSTGRES_USER: ${{ env.DB_USERNAME }}
           POSTGRES_PASSWORD: ${{ env.DB_PASSWORD }}
@@ -52,7 +62,7 @@ jobs:
       elasticsearch:
         image: docker.elastic.co/elasticsearch/elasticsearch:8.12.1
         ports:
-          - '9200:9200'
+          - "9200:9200"
         env:
           ES_JAVA_OPTS: -Xms512m -Xmx512m
           xpack.security.enabled: false
@@ -66,10 +76,10 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
       - name: Restore cached node modules
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           path: ./node_modules
-          key: "${{ runner.os }}-npm-${{ steps.cache-node-modules.outputs.cache-key }}"
+          key: "${{ runner.os }}-node_modules-${{ hashFiles('**/package-lock.json') }}-${{ hashFiles('**/schema.prisma') }}"
       - name: Migrate database
         run: npm run prisma -- migrate deploy
       - name: Run tests
@@ -86,12 +96,14 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
       - name: Restore cached node modules
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           path: ./node_modules
-          key: "${{ runner.os }}-npm-${{ steps.cache-node-modules.outputs.cache-key }}"
+          key: "${{ runner.os }}-node_modules-${{ hashFiles('**/package-lock.json') }}-${{ hashFiles('**/schema.prisma') }}"
       - name: Run lint
         run: npm run lint
+      - name: Run prettier
+        run: npx prettier --check .
 
   # It would be cleaner and probably more performant to replace this build step
   # with either a non-emitting build or a simple type check.
@@ -102,6 +114,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     needs:
+      - install
       - test
       - lint
     steps:
@@ -112,17 +125,17 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
       - name: Restore cached node modules
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           path: ./node_modules
-          key: "${{ runner.os }}-npm-${{ steps.cache-node-modules.outputs.cache-key }}"
+          key: "${{ runner.os }}-node_modules-${{ hashFiles('**/package-lock.json') }}-${{ hashFiles('**/schema.prisma') }}"
       - name: Reset nx
         run: npx nx reset
       - name: Run build
         run: npm run build
 
   build_and_push_app:
-    name: 'build and push app'
+    name: "build and push app"
     if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
     needs:
       - build
@@ -139,7 +152,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   build_and_push_api:
-    name: 'build and push api'
+    name: "build and push api"
     if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
     needs:
       - build
@@ -156,7 +169,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   tag_edge_commit:
-    name: 'tag edge commit'
+    name: "tag edge commit"
     needs:
       - build_and_push_app
       - build_and_push_api
@@ -220,7 +233,7 @@ jobs:
         run: docker push ${{ vars.BASE_IMAGE_NAME }}-api:release-candidate
 
   tag_rc_commit:
-    name: 'tag rc commit'
+    name: "tag rc commit"
     needs:
       - tag_rc_image_app
       - tag_rc_image_api

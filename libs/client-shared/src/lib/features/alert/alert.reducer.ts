@@ -8,12 +8,12 @@ export const alertFeature = 'alert';
 export type AlertState = Record<AlertId, AlertEntry>;
 
 export interface AlertEntry {
-  alert: Alert,
-  metadata: AlertMetadata,
+  alert: Alert;
+  metadata: AlertMetadata;
 }
 
 export interface AlertMetadata {
-  createdAt: Date
+  createdAt: Date;
 }
 
 const initialState: AlertState = {};
@@ -29,11 +29,11 @@ export const alertReducer = createReducer(
       newState[alert.id] = entry;
       return newState;
     }
-    return { ...state, [alert.id]: entry }
+    return { ...state, [alert.id]: entry };
   }),
   on(hideAlert, (state, { id }) => {
     const newState = { ...state };
     delete newState[id];
     return newState;
-  }),
+  })
 );

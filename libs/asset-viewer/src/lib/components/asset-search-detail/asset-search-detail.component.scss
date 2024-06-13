@@ -1,6 +1,6 @@
-@use '../../styles/variables';
-@use '../../styles/mixins';
-@use '../../styles/drawer-panel-mixins' as drawerPanel;
+@use "../../styles/variables";
+@use "../../styles/mixins";
+@use "../../styles/drawer-panel-mixins" as drawerPanel;
 
 :host {
   @include drawerPanel.drawer-panel-width;
@@ -175,6 +175,6 @@ ul.languages {
 
   // Insert commas between every two languages.
   & > li:not(:last-child)::after {
-    content: ',\00a0';
+    content: ",\00a0";
   }
 }

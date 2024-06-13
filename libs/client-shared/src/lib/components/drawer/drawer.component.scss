@@ -1,20 +1,20 @@
-@use '../../styles/variables';
+@use "../../styles/variables";
 
 $animationDuration: 0.15s;
 
 :host {
-    height: 100%;
-    background-color: variables.$grey-01;
-    box-shadow: 4px 0px 4px #00000029;
-    overflow: hidden;
-    display: flex;
-    transform-origin: 0 0;
-    transition: width $animationDuration linear;
-    --width-percentage-of-viewport: 0;
+  height: 100%;
+  background-color: variables.$grey-01;
+  box-shadow: 4px 0px 4px #00000029;
+  overflow: hidden;
+  display: flex;
+  transform-origin: 0 0;
+  transition: width $animationDuration linear;
+  --width-percentage-of-viewport: 0;
 }
 
 ::ng-deep {
-    .asset-sg-drawer-drawerpanel {
-        height: 100%;
-    }
+  .asset-sg-drawer-drawerpanel {
+    height: 100%;
+  }
 }

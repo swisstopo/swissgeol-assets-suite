@@ -1,21 +1,19 @@
-import { Body, Controller, Post, Query, ValidationPipe } from '@nestjs/common';
-import { plainToInstance } from 'class-transformer';
-
 import {
   AssetEditDetail,
   AssetSearchQueryDTO,
   AssetSearchResult,
-  AssetSearchResultDTO, AssetSearchStats,
+  AssetSearchResultDTO,
+  AssetSearchStats,
   AssetSearchStatsDTO,
 } from '@asset-sg/shared';
+import { Body, Controller, Post, Query, ValidationPipe } from '@nestjs/common';
+import { plainToInstance } from 'class-transformer';
 
 import { AssetSearchService } from '@/features/assets/search/asset-search.service';
 
 @Controller('/assets/search')
 export class AssetSearchController {
-  constructor(
-    private readonly assetSearchService: AssetSearchService,
-  ) {}
+  constructor(private readonly assetSearchService: AssetSearchService) {}
 
   @Post('/')
   async search(
@@ -26,7 +24,7 @@ export class AssetSearchController {
     limit?: number,
 
     @Query('offset')
-    offset?: number,
+    offset?: number
   ): Promise<AssetSearchResult> {
     limit = limit == null ? limit : Number(limit);
     offset = offset == null ? offset : Number(offset);
@@ -40,7 +38,7 @@ export class AssetSearchController {
   @Post('/stats')
   async showStats(
     @Body(new ValidationPipe({ transform: true, whitelist: true, forbidNonWhitelisted: true }))
-    query: AssetSearchQueryDTO,
+    query: AssetSearchQueryDTO
   ): Promise<AssetSearchStats> {
     const stats = await this.assetSearchService.aggregate(query);
     return plainToInstance(AssetSearchStatsDTO, stats);

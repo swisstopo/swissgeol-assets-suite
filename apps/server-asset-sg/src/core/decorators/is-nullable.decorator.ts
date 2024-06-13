@@ -7,7 +7,7 @@ import { ValidationArguments } from 'class-validator/types/validation/Validation
  * @param property The validated property.
  */
 export const messageNullableInt = ({ property }: ValidationArguments): string =>
-    `${property} must be an integer number or null`;
+  `${property} must be an integer number or null`;
 
 /**
  * Creates a validation failure message that indicates that the given property
@@ -15,7 +15,7 @@ export const messageNullableInt = ({ property }: ValidationArguments): string =>
  * @param property The validated property.
  */
 export const messageNullableString = ({ property }: ValidationArguments): string =>
-    `${property} must be a string or null`;
+  `${property} must be a string or null`;
 
 /**
  * Validates if a given value is `null`, and if so,
@@ -28,5 +28,5 @@ export const messageNullableString = ({ property }: ValidationArguments): string
  * ```
  */
 export function IsNullable(validationOptions?: ValidationOptions) {
-    return ValidateIf((_object, value) => value !== null, validationOptions);
+  return ValidateIf((_object, value) => value !== null, validationOptions);
 }

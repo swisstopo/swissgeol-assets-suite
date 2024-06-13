@@ -1,38 +1,41 @@
 {
-    "name": "client-shared",
-    "$schema": "../../node_modules/nx/schemas/project-schema.json",
-    "projectType": "library",
-    "sourceRoot": "libs/client-shared/src",
-    "prefix": "asset-sg",
-    "targets": {
-        "build": {
-            "executor": "@nx/angular:ng-packagr-lite",
-            "outputs": ["{workspaceRoot}/dist/{projectRoot}"],
-            "options": {
-                "project": "libs/client-shared/ng-package.json",
-                "tsConfig": "libs/client-shared/tsconfig.lib.json"
-            },
-            "configurations": {
-                "production": {
-                    "tsConfig": "libs/client-shared/tsconfig.lib.prod.json"
-                },
-                "development": {
-                    "tsConfig": "libs/client-shared/tsconfig.lib.json"
-                }
-            },
-            "defaultConfiguration": "production"
+  "name": "client-shared",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "sourceRoot": "libs/client-shared/src",
+  "prefix": "asset-sg",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@nx/angular:ng-packagr-lite",
+      "outputs": ["{workspaceRoot}/dist/{projectRoot}"],
+      "options": {
+        "project": "libs/client-shared/ng-package.json",
+        "tsConfig": "libs/client-shared/tsconfig.lib.json"
+      },
+      "configurations": {
+        "production": {
+          "tsConfig": "libs/client-shared/tsconfig.lib.prod.json"
         },
-        "test": {
-            "executor": "@nx/jest:jest",
-            "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
-            "options": {
-                "jestConfig": "libs/client-shared/jest.config.ts"
-            }
-        },
-        "lint": {
-            "executor": "@nx/eslint:lint",
-            "outputs": ["{options.outputFile}"]
+        "development": {
+          "tsConfig": "libs/client-shared/tsconfig.lib.json"
         }
+      },
+      "defaultConfiguration": "production"
     },
-    "tags": []
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "libs/client-shared/jest.config.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "eslintConfig": "libs/client-shared/eslint.config.js"
+      }
+    }
+  }
 }

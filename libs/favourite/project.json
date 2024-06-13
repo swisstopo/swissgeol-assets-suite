@@ -1,38 +1,41 @@
 {
-    "name": "favourite",
-    "$schema": "../../node_modules/nx/schemas/project-schema.json",
-    "projectType": "library",
-    "sourceRoot": "libs/favourite/src",
-    "prefix": "asset-sg",
-    "targets": {
-        "build": {
-            "executor": "@nx/angular:ng-packagr-lite",
-            "outputs": ["{workspaceRoot}/dist/{projectRoot}"],
-            "options": {
-                "project": "libs/favourite/ng-package.json",
-                "tsConfig": "libs/favourite/tsconfig.lib.json"
-            },
-            "configurations": {
-                "production": {
-                    "tsConfig": "libs/favourite/tsconfig.lib.prod.json"
-                },
-                "development": {
-                    "tsConfig": "libs/favourite/tsconfig.lib.json"
-                }
-            },
-            "defaultConfiguration": "production"
+  "name": "favourite",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "sourceRoot": "libs/favourite/src",
+  "prefix": "asset-sg",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@nx/angular:ng-packagr-lite",
+      "outputs": ["{workspaceRoot}/dist/{projectRoot}"],
+      "options": {
+        "project": "libs/favourite/ng-package.json",
+        "tsConfig": "libs/favourite/tsconfig.lib.json"
+      },
+      "configurations": {
+        "production": {
+          "tsConfig": "libs/favourite/tsconfig.lib.prod.json"
         },
-        "test": {
-            "executor": "@nx/jest:jest",
-            "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
-            "options": {
-                "jestConfig": "libs/favourite/jest.config.ts"
-            }
-        },
-        "lint": {
-            "executor": "@nx/eslint:lint",
-            "outputs": ["{options.outputFile}"]
+        "development": {
+          "tsConfig": "libs/favourite/tsconfig.lib.json"
         }
+      },
+      "defaultConfiguration": "production"
     },
-    "tags": []
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "libs/favourite/jest.config.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "eslintConfig": "libs/favourite/eslint.config.js"
+      }
+    }
+  }
 }

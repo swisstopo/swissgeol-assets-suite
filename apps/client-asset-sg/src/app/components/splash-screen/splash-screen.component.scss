@@ -1,7 +1,6 @@
-
-@use '@angular/material' as mat;
-@use '../../../theme' as *;
-@use '../../styles/variables';
+@use "@angular/material" as mat;
+@use "../../../theme" as *;
+@use "../../styles/variables";
 
 :host {
   position: fixed;
@@ -25,9 +24,7 @@
   gap: 1.5rem;
   background-color: white;
   border-radius: 2px;
-  box-shadow:
-    rgba(0, 0, 0, 0.17) 0 1px 3px,
-    rgba(0, 0, 0, 0.17) 0 1px 2px;
+  box-shadow: rgba(0, 0, 0, 0.17) 0 1px 3px, rgba(0, 0, 0, 0.17) 0 1px 2px;
 }
 
 .card > .text {
@@ -36,7 +33,6 @@
   gap: 0.25rem;
 
   p.welcome {
-
   }
 
   p.system {
@@ -76,6 +72,6 @@ ul.languages {
 
   li.is-active > button {
     text-decoration: underline;
-    color:  mat.get-color-from-palette($asset-sg-primary, 600);
+    color: mat.get-color-from-palette($asset-sg-primary, 600);
   }
 }

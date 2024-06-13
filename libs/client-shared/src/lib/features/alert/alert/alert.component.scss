@@ -1,5 +1,5 @@
-@use '@angular/material' as mat;
-@use '../../../../../../../apps/client-asset-sg/src/theme' as *;
+@use "@angular/material" as mat;
+@use "../../../../../../../apps/client-asset-sg/src/theme" as *;
 
 // This value might need to be changed depending on other style variables.
 // It is necessary to use a fixed value here to allow all animations to work correctly.
@@ -68,7 +68,8 @@ svg-icon.close {
     background-color: mat.get-color-from-palette($palette, $light-weight);
   }
 
-  progress::-webkit-progress-bar, progress::-moz-progress-bar {
+  progress::-webkit-progress-bar,
+  progress::-moz-progress-bar {
     background-color: mat.get-color-from-palette($palette, $main-weight);
   }
 }

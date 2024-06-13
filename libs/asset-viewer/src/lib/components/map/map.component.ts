@@ -1,14 +1,25 @@
 import { DOCUMENT } from '@angular/common';
+import { Component, ElementRef, EventEmitter, Input, Output, ViewChild, ViewContainerRef, inject } from '@angular/core';
 import {
-  Component,
-  ElementRef,
-  EventEmitter,
-  Input,
-  Output,
-  ViewChild,
-  ViewContainerRef,
-  inject,
-} from '@angular/core';
+  LifecycleHooks,
+  LifecycleHooksDirective,
+  WGStoLV95,
+  WindowService,
+  ZoomControlsComponent,
+  createFeaturesFromStudies,
+  decorateFeature,
+  featureStyles,
+  fitToSwitzerland,
+  isoWGSLat,
+  isoWGSLng,
+  lv95ToWGS,
+  olCoordsFromLV95Array,
+  olZoomControls,
+  toLonLat,
+  zoomToStudies,
+} from '@asset-sg/client-shared';
+import { OO, ORD, makePairs } from '@asset-sg/core';
+import { AssetEditDetail, LV95, eqLV95Array } from '@asset-sg/shared';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { concatLatestFrom } from '@ngrx/effects';
 import { Store } from '@ngrx/store';
@@ -47,27 +58,6 @@ import {
   withLatestFrom,
 } from 'rxjs';
 
-import {
-  LifecycleHooks,
-  LifecycleHooksDirective,
-  WGStoLV95,
-  WindowService,
-  ZoomControlsComponent,
-  createFeaturesFromStudies,
-  decorateFeature,
-  featureStyles,
-  fitToSwitzerland,
-  isoWGSLat,
-  isoWGSLng,
-  lv95ToWGS,
-  olCoordsFromLV95Array,
-  olZoomControls,
-  toLonLat,
-  zoomToStudies,
-} from '@asset-sg/client-shared';
-import { OO, ORD, makePairs } from '@asset-sg/core';
-import { AssetEditDetail, LV95, eqLV95Array } from '@asset-sg/shared';
-
 import { AllStudyDTO } from '../../models';
 import { AllStudyService } from '../../services/all-study.service';
 import {
@@ -105,7 +95,7 @@ const initialMapState: MapState = {
 })
 export class MapComponent {
   @ViewChild('map', { static: true }) mapDiv!: ElementRef<HTMLDivElement>;
-  @Output('polygonChanged') public polygonChanged$ = new EventEmitter<LV95[]>();
+  @Output() public polygonChanged = new EventEmitter<LV95[]>();
 
   private _lc = inject(LifecycleHooks);
   private _dcmnt = inject(DOCUMENT);
@@ -117,15 +107,15 @@ export class MapComponent {
 
   public _isMapInitialised$ = this.state.select('isMapInitialised');
 
-  @Output('mapInitialised')
-  public isMapInitialised$ = this.state.$.pipe(
-    map(s => s.isMapInitialised),
+  @Output()
+  public mapInitialized = this.state.$.pipe(
+    map((s) => s.isMapInitialised),
     distinctUntilChanged(),
-    shareReplay({ bufferSize: 1, refCount: true }),
+    shareReplay({ bufferSize: 1, refCount: true })
   );
 
-  @Output('assetClicked')
-  public assetClicked$ = new EventEmitter<number[]>();
+  @Output()
+  public assetClicked = new EventEmitter<number[]>();
 
   @Input()
   public set searchPolygon$(value: Observable<O.Option<LV95[]>>) {
@@ -185,7 +175,7 @@ export class MapComponent {
     }) as unknown as VectorSource<Point>;
     const heatmapLayer = new Heatmap({
       source,
-      weight: feature => feature.get('features').length,
+      weight: (feature) => feature.get('features').length,
       maxZoom: 12,
       blur: 20,
       radius: 5,
@@ -221,17 +211,17 @@ export class MapComponent {
     });
 
     fromEventPattern(
-      h => olMap.getView().on('change:resolution', h),
-      h => olMap.getView().un('change:resolution', h),
+      (h) => olMap.getView().on('change:resolution', h),
+      (h) => olMap.getView().un('change:resolution', h)
     )
       .pipe(
         map(() => olMap.getView().getZoom()),
         distinctUntilChanged(),
-        untilDestroyed(this),
+        untilDestroyed(this)
       )
-      .subscribe(zoom => {
+      .subscribe((zoom) => {
         if (zoom == null) return;
-        vectorSourceAllStudies.forEachFeature(f => {
+        vectorSourceAllStudies.forEachFeature((f) => {
           const style = f.getStyle();
           if (style instanceof Style) {
             const image = style.getImage();
@@ -255,27 +245,27 @@ export class MapComponent {
     };
 
     const mapInitialised$ = fromEventPattern(
-      h => olMap.once('loadend', h),
-      h => olMap.un('loadend', h),
+      (h) => olMap.once('loadend', h),
+      (h) => olMap.un('loadend', h)
     ).pipe(
       switchMap(() => this._allStudyService.getAllStudies()),
       ORD.fromFilteredSuccess,
       map(A.map(addPointGeometry)),
       withLatestFrom(this.state.select('studiesFromSearch')),
       switchMap(([allStudies, studiesFromSearch]) => {
-        const makeHeatmapFeatures = () => allStudies.map(s => new Feature({ geometry: s.geometry }));
+        const makeHeatmapFeatures = () => allStudies.map((s) => new Feature({ geometry: s.geometry }));
         clearVectorSourceThenAddFeatures(heatmapClusterSource, makeHeatmapFeatures);
         return this._windowService.delayRequestAnimationFrame(300, () => {
           const makeVectorFeatures = () =>
-            allStudies.map(s =>
+            allStudies.map((s) =>
               decorateFeature(new Feature({ geometry: s.geometry }), {
                 id: s.studyId,
                 style: s.isPoint ? featureStyles.pointStyle : featureStyles.rhombusStyle,
-              }),
+              })
             );
           clearVectorSourceThenAddFeatures(vectorSourceAllStudies, makeVectorFeatures);
           if (studiesFromSearch.length > 0) {
-            studiesFromSearch.forEach(s => {
+            studiesFromSearch.forEach((s) => {
               const f = vectorSourceAllStudies.getFeatureById(s.studyId);
               f?.set('previousStyle', f?.getStyle());
               f?.setStyle(featureStyles.undefinedStyle);
@@ -283,11 +273,11 @@ export class MapComponent {
           }
         });
       }),
-      take(1),
+      take(1)
     );
     this.state.connect(mapInitialised$, () => ({ isMapInitialised: true }));
 
-    this.state.connect('polygon', this.polygonChanged$.pipe(map(O.some)));
+    this.state.connect('polygon', this.polygonChanged.pipe(map(O.some)));
 
     const draw = new Draw({ source: vectorSourcePolygonSelection, type: 'Polygon' });
 
@@ -306,7 +296,7 @@ export class MapComponent {
           vectorSourceAssetGeoms.clear();
           vectorLayerGeoms.setOpacity(0.5);
           vectorLayerAllStudies.setOpacity(0.5);
-          const studiesWithGeometry = currentAssetDetail.studies.map(study => {
+          const studiesWithGeometry = currentAssetDetail.studies.map((study) => {
             return {
               ...study,
               geom: wktToGeoJSON(study.geomText),
@@ -318,7 +308,7 @@ export class MapComponent {
             polygon: featureStyles.polygonStyleAsset,
             lineString: featureStyles.lineStringStyleAsset,
           });
-          vectorSourceAssetGeoms.addFeatures(studiesWithFeature.map(s => s.olGeometry));
+          vectorSourceAssetGeoms.addFeatures(studiesWithFeature.map((s) => s.olGeometry));
         }
       });
 
@@ -328,21 +318,25 @@ export class MapComponent {
 
     // For some reason, the 'currentAssetDetail' property in the state does not get updated when the value is set to undefiend, thus, i have a separate subscription listening directly to the selector from the store
     // This should be removed in order not to have to much code dublication
-    this.currentAssetDetail$.pipe(untilDestroyed(this),
-      concatLatestFrom(() => this.state.select('studiesFromSearch'))).subscribe(([currentAssetDetail, studiesFromSearch]) => {
-      if (currentAssetDetail === undefined) {
-        this.state.set('currentAssetDetail', (oldState) => (oldState.currentAssetDetail = undefined));
-        vectorSourceAssetGeoms.clear();
-        vectorLayerGeoms.setOpacity(1);
-        vectorLayerAllStudies.setOpacity(1);
-        zoomToStudies(this._windowService, olMap, studiesFromSearch, 0.6);
-      }
-    });
+    this.currentAssetDetail$
+      .pipe(
+        untilDestroyed(this),
+        concatLatestFrom(() => this.state.select('studiesFromSearch'))
+      )
+      .subscribe(([currentAssetDetail, studiesFromSearch]) => {
+        if (currentAssetDetail === undefined) {
+          this.state.set('currentAssetDetail', (oldState) => (oldState.currentAssetDetail = undefined));
+          vectorSourceAssetGeoms.clear();
+          vectorLayerGeoms.setOpacity(1);
+          vectorLayerAllStudies.setOpacity(1);
+          zoomToStudies(this._windowService, olMap, studiesFromSearch, 0.6);
+        }
+      });
 
     this.state
       .select('studiesFromSearch')
       .pipe(untilDestroyed(this))
-      .subscribe(studiesFromSearch => {
+      .subscribe((studiesFromSearch) => {
         if (studiesFromSearch.length === 0) {
           vectorSourcePolygonSelection.clear();
         }
@@ -355,20 +349,20 @@ export class MapComponent {
             lineString: featureStyles.lineStringStyle,
           });
           studiesWithFeature
-            .map(s => vectorSourceAllStudies.getFeatureById(s.studyId))
-            .forEach(f => {
+            .map((s) => vectorSourceAllStudies.getFeatureById(s.studyId))
+            .forEach((f) => {
               f?.set('previousStyle', f?.getStyle());
               f?.setStyle(featureStyles.undefinedStyle);
             });
-          vectorSourceGeoms.addFeatures(studiesWithFeature.map(s => s.olGeometry));
+          vectorSourceGeoms.addFeatures(studiesWithFeature.map((s) => s.olGeometry));
         } else {
-          vectorSourceAllStudies.forEachFeature(f => {
+          vectorSourceAllStudies.forEachFeature((f) => {
             if (f.get('previousStyle')) {
               f.setStyle(f.get('previousStyle'));
               f.set('previousStyle', undefined);
             }
           });
-          vectorSourceGeoms.forEachFeature(f => vectorSourceGeoms.removeFeature(f));
+          vectorSourceGeoms.forEachFeature((f) => vectorSourceGeoms.removeFeature(f));
         }
       });
 
@@ -376,10 +370,10 @@ export class MapComponent {
 
     merge(
       fromEventPattern<DrawEvent>(
-        h => draw.on('drawstart', h),
-        h => draw.un('drawstart', h),
+        (h) => draw.on('drawstart', h),
+        (h) => draw.un('drawstart', h)
       ),
-      polygon$.pipe(filter(O.isNone)),
+      polygon$.pipe(filter(O.isNone))
     )
       .pipe(untilDestroyed(this))
       .subscribe(() => {
@@ -387,24 +381,24 @@ export class MapComponent {
       });
 
     const drawEnd$ = fromEventPattern<DrawEvent>(
-      h => draw.on('drawend', h),
-      h => draw.un('drawend', h),
+      (h) => draw.on('drawend', h),
+      (h) => draw.un('drawend', h)
     ).pipe(share());
 
     const featureToLV95Polygon = (f: Feature<Geometry>) =>
       pipe(
         f.getGeometry(),
         O.fromNullable,
-        O.chain(geometry => (geometry.getType() === 'Polygon' ? O.some(geometry as Polygon) : O.none)),
-        O.map(g => pipe(g.getFlatCoordinates(), makePairs, A.map(toLonLat), A.map(WGStoLV95))),
+        O.chain((geometry) => (geometry.getType() === 'Polygon' ? O.some(geometry as Polygon) : O.none)),
+        O.map((g) => pipe(g.getFlatCoordinates(), makePairs, A.map(toLonLat), A.map(WGStoLV95)))
       );
 
-    polygon$.pipe(OO.fromFilteredSome, untilDestroyed(this)).subscribe(polygon => {
+    polygon$.pipe(OO.fromFilteredSome, untilDestroyed(this)).subscribe((polygon) => {
       const polygonFromMap = pipe(
         vectorSourcePolygonSelection.getFeatures(),
         NEA.fromArray,
         O.map(NEA.head),
-        O.chain(featureToLV95Polygon),
+        O.chain(featureToLV95Polygon)
       );
 
       if (!O.getEq(eqLV95Array).equals(O.some(polygon), polygonFromMap)) {
@@ -412,34 +406,29 @@ export class MapComponent {
         vectorSourcePolygonSelection.addFeature(
           new Feature({
             geometry: new Polygon([olCoordsFromLV95Array(polygon)]),
-          }),
+          })
         );
       }
     });
 
     drawEnd$
       .pipe(
-        map(e =>
-          pipe(
-            (e.feature.getGeometry() as Polygon).getFlatCoordinates(),
-            makePairs,
-            A.map(toLonLat),
-            A.map(WGStoLV95),
-          ),
+        map((e) =>
+          pipe((e.feature.getGeometry() as Polygon).getFlatCoordinates(), makePairs, A.map(toLonLat), A.map(WGStoLV95))
         ),
-        untilDestroyed(this),
+        untilDestroyed(this)
       )
-      .subscribe(polygon => {
+      .subscribe((polygon) => {
         zoomControlsInstance.setDrawingMode(false);
         setTimeout(() => {
-          this.polygonChanged$.emit(polygon);
+          this.polygonChanged.emit(polygon);
         });
       });
 
     this.state
       .select('drawingMode')
       .pipe(untilDestroyed(this))
-      .subscribe(drawMode => {
+      .subscribe((drawMode) => {
         if (drawMode) {
           olMap.addInteraction(draw);
         } else {
@@ -448,8 +437,8 @@ export class MapComponent {
       });
 
     fromEventPattern<MapBrowserEvent<PointerEvent>>(
-      h => olMap.on('click', h),
-      h => olMap.un('click', h),
+      (h) => olMap.on('click', h),
+      (h) => olMap.un('click', h)
     )
       .pipe(
         withLatestFrom(this.state.select('drawingMode')),
@@ -460,45 +449,45 @@ export class MapComponent {
           const clickedFeatureIds: string[] = [];
           olMap.forEachFeatureAtPixel(
             event.pixel,
-            feature => {
+            (feature) => {
               const id = feature.getId();
               id && clickedFeatureIds.push(String(id));
             },
             {
-              layerFilter: layer => layer === vectorLayerGeoms,
-            },
+              layerFilter: (layer) => layer === vectorLayerGeoms,
+            }
           );
           return pipe(
             studies,
-            A.filter(s => clickedFeatureIds.includes(s.studyId)),
-            A.map(s => s.assetId),
+            A.filter((s) => clickedFeatureIds.includes(s.studyId)),
+            A.map((s) => s.assetId)
           );
         }),
-        untilDestroyed(this),
+        untilDestroyed(this)
       )
-      .subscribe(this.assetClicked$);
+      .subscribe(this.assetClicked);
 
     this.state
       .select(['highlightAssetStudies', 'studiesFromSearch'], ({ studiesFromSearch, highlightAssetStudies }) =>
         pipe(
           highlightAssetStudies,
-          O.map(assetId =>
+          O.map((assetId) =>
             pipe(
               studiesFromSearch,
-              A.filter(s => s.assetId === assetId),
-            ),
-          ),
-        ),
+              A.filter((s) => s.assetId === assetId)
+            )
+          )
+        )
       )
       .pipe(untilDestroyed(this))
-      .subscribe(studies => {
+      .subscribe((studies) => {
         if (O.isSome(studies)) {
           const studiesWithFeature = createFeaturesFromStudies(studies.value, {
             point: featureStyles.bigPointStyleAssetSelected,
             polygon: featureStyles.polygonStyleAssetSelected,
             lineString: featureStyles.lineStringStyleAssetSelected,
           });
-          vectorSourcePickerMouseOver.addFeatures(studiesWithFeature.map(s => s.olGeometry));
+          vectorSourcePickerMouseOver.addFeatures(studiesWithFeature.map((s) => s.olGeometry));
         } else {
           vectorSourcePickerMouseOver.clear();
         }

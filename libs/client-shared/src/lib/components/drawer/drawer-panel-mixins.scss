@@ -1,25 +1,25 @@
-@use '../../styles/variables';
+@use "../../styles/variables";
 
 @mixin drawer-panel-width {
-    min-width: calc(var(--viewport-width) * var(--width-percentage-of-viewport));
-    width: calc(var(--viewport-width) * var(--width-percentage-of-viewport));
+  min-width: calc(var(--viewport-width) * var(--width-percentage-of-viewport));
+  width: calc(var(--viewport-width) * var(--width-percentage-of-viewport));
 }
 
 @mixin draw-panel-header {
-    .header {
-        font-size: 0.875rem;
-        font-weight: variables.$font-bold;
-        flex: 0 0 3rem;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: 0.75rem;
-        margin-right: 15px;
-    }
+  .header {
+    font-size: 0.875rem;
+    font-weight: variables.$font-bold;
+    flex: 0 0 3rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+    margin-right: 15px;
+  }
 }
 
 @mixin draw-panel-header-underline {
-    .header {
-        border-bottom: 2px solid variables.$grey-03;
-    }
+  .header {
+    border-bottom: 2px solid variables.$grey-03;
+  }
 }

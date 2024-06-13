@@ -1,15 +1,18 @@
-import { Prisma } from '@prisma/client'
+import { Prisma } from '@prisma/client';
 
 import {
-  Asset, AssetInfo,
+  Asset,
+  AssetInfo,
   AssetUsage,
   ContactAssignmentRole,
   LinkedAsset,
-  Study, StudyId, StudyType,
+  Study,
+  StudyId,
+  StudyType,
   UsageStatusCode,
-} from '@/features/assets/asset.model'
-import { LocalDate } from '@/utils/data/local-date'
-import { satisfy } from '@/utils/define'
+} from '@/features/assets/asset.model';
+import { LocalDate } from '@/utils/data/local-date';
+import { satisfy } from '@/utils/define';
 
 type SelectedAssetInfo = Prisma.AssetGetPayload<{ select: typeof assetInfoSelection }>;
 type SelectedAsset = Prisma.AssetGetPayload<{ select: typeof assetSelection }>;
@@ -201,12 +204,10 @@ const parseLinkedAsset = (data: SelectedLinkedAsset): LinkedAsset => ({
 const parseUsage = (data: SelectedUsage): AssetUsage => ({
   isAvailable: data.isAvailable,
   statusCode: data.statusAssetUseItemCode as UsageStatusCode,
-  availableAt: data.startAvailabilityDate == null
-    ? null
-    : LocalDate.fromDate(data.startAvailabilityDate),
+  availableAt: data.startAvailabilityDate == null ? null : LocalDate.fromDate(data.startAvailabilityDate),
 });
 
-const parseStudyId = (studyId: string): { type: StudyType, id: StudyId } => {
+const parseStudyId = (studyId: string): { type: StudyType; id: StudyId } => {
   if (!studyId.startsWith('study_')) {
     throw new Error('expected studyId to start with `study_`');
   }

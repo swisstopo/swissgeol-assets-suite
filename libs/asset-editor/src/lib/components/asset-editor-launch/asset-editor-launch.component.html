@@ -1,29 +1,21 @@
 <div class="flex h-full bg-grey-03"></div>
 <ng-template #templateDrawerPortalContent>
-    <asset-sg-drawer>
-        <asset-sg-drawer-panel widthPercentageOfViewPanel="0.3" [display]="true">
-            <div class="flex flex-column pl-2 pt-4 drawer-panel">
-                <h3 translate>edit.adminInstructionsEditHeading</h3>
-                <p translate class="m-0">edit.adminInstructionsEdit</p>
-                <h3 translate class="mt-8">edit.adminInstructionsCreateHeading</h3>
-                <a asset-sg-primary routerLink="new" class="self-start" translate>edit.adminInstructionsCreate</a>
-                <h3 translate class="mt-8">edit.adminInstructionsSyncElasticAssetsHeading</h3>
-                <div class="asset-sync" [class.active]="syncProgress !== null">
-                    <button
-                        type="button"
-                        asset-sg-primary
-                        class="self-start"
-                        translate
-                        (click)="synchronizeElastic()"
-                    >
-                        edit.adminInstructionsSyncElasticAssetsStart
-                    </button>
-                    <div class="progress">
-                        {{ syncProgress }}%
-                    </div>
-                </div>
-                <p translate class="mt-2">edit.adminInstructionsSyncElasticAssets</p>
-            </div>
-        </asset-sg-drawer-panel>
-    </asset-sg-drawer>
+  <asset-sg-drawer>
+    <asset-sg-drawer-panel widthPercentageOfViewPanel="0.3" [display]="true">
+      <div class="flex flex-column pl-2 pt-4 drawer-panel">
+        <h3 translate>edit.adminInstructionsEditHeading</h3>
+        <p translate class="m-0">edit.adminInstructionsEdit</p>
+        <h3 translate class="mt-8">edit.adminInstructionsCreateHeading</h3>
+        <a asset-sg-primary routerLink="new" class="self-start" translate>edit.adminInstructionsCreate</a>
+        <h3 translate class="mt-8">edit.adminInstructionsSyncElasticAssetsHeading</h3>
+        <div class="asset-sync" [class.active]="syncProgress !== null">
+          <button type="button" asset-sg-primary class="self-start" translate (click)="synchronizeElastic()">
+            edit.adminInstructionsSyncElasticAssetsStart
+          </button>
+          <div class="progress">{{ syncProgress }}%</div>
+        </div>
+        <p translate class="mt-2">edit.adminInstructionsSyncElasticAssets</p>
+      </div>
+    </asset-sg-drawer-panel>
+  </asset-sg-drawer>
 </ng-template>

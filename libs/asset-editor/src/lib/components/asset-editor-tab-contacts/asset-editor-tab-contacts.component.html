@@ -1,220 +1,192 @@
 <ng-container *rxLet="_uiMode$; let uiMode">
-    <ng-container *rxLet="_assetContacts$; let assetContacts">
-        <ng-container *rxLet="_currentContactId$; let currentContactId">
-            <div class="flex flex-row max-h-full">
-                <div class="flex flex-column form-column mb-12 mr-8">
-                    <div class="flex flex-column bg-white py-4 px-6 max-h-full">
-                        <div class="font-bold mb-4" translate>edit.tabs.contacts.tabName</div>
-                        <div *ngIf="assetContacts.length === 0" translate>edit.tabs.contacts.noContacts</div>
-                        <div class="max-h-full overflow-y-scroll overflow-x-hidden -mr-5">
-                            <ul class="p-0 my-0 mb-5">
-                                <li
-                                    *ngFor="let assetContact of assetContacts"
-                                    class="mb-1 bg-grey-00 py-4 pl-4 pr-2 contact">
-                                    <div
-                                        class="font-semibold"
-                                        [ngClass]="{
-                                            'text-dark-red':
-                                                currentContactId._tag === 'Some' &&
-                                                currentContactId.value === assetContact.contactId
-                                        }">
-                                        {{ 'contactRoles.' + assetContact.role | translate }}
-                                    </div>
-                                    <div
-                                        class="ellipsis"
-                                        [ngClass]="{
-                                            'text-dark-red':
-                                                currentContactId._tag === 'Some' &&
-                                                currentContactId.value === assetContact.contactId
-                                        }">
-                                        {{ assetContact.contact.name }}
-                                    </div>
-                                    <div>
-                                        <button
-                                            asset-sg-icon-button
-                                            (click)="showContact(assetContact.contactId)"
-                                            [attr.aria-label]="'edit.tabs.contacts.viewDetails' | translate"
-                                            [disabled]="
-                                                (_disableAll$ | push) ||
-                                                (uiMode !== 'view' && uiMode !== 'viewContactDetails') ||
-                                                (currentContactId._tag === 'Some' &&
-                                                    currentContactId.value === assetContact.contactId)
-                                            ">
-                                            <svg-icon key="view-extended"></svg-icon>
-                                        </button>
-                                        <button
-                                            asset-sg-icon-button
-                                            (click)="unlinkContact(assetContact.contactId)"
-                                            [attr.aria-label]="'edit.tabs.contacts.unlinkContact' | translate"
-                                            [disabled]="
-                                                (_disableAll$ | push) ||
-                                                (uiMode !== 'view' && uiMode !== 'viewContactDetails')
-                                            ">
-                                            <svg-icon key="delete"></svg-icon>
-                                        </button>
-                                    </div>
-                                </li>
-                            </ul>
-                        </div>
-                        <button
-                            asset-sg-primary
-                            class="shrink-0 self-start"
-                            (click)="linkContact()"
-                            translate
-                            [disabled]="
-                                (_disableAll$ | push) || (uiMode !== 'view' && uiMode !== 'viewContactDetails')
-                            ">
-                            edit.tabs.contacts.linkContact
-                        </button>
-                    </div>
-                </div>
-                <ng-container *ngIf="uiMode !== 'view'">
-                    <ng-container *ngIf="getForm(uiMode); let form">
-                        <form *ngIf="form" [formGroup]="form">
-                            <div class="flex flex-column form-column mb-12 max-h-full ">
-                                <div class="flex flex-column bg-white py-4 px-6 overflow-y-scroll">
-                                    <mat-form-field
-                                        class="mb-2"
-                                        *ngIf="uiMode === 'linkExisting' || uiMode === 'linkNew'">
-                                        <mat-label translate>edit.tabs.contacts.role</mat-label>
-                                        <mat-select formControlName="role">
-                                            <mat-option value="author" class="ellipsis">{{
-                                                'contactRoles.author' | translate
-                                            }}</mat-option>
-                                            <mat-option value="initiator" class="ellipsis">{{
-                                                'contactRoles.initiator' | translate
-                                            }}</mat-option>
-                                            <mat-option value="supplier" class="ellipsis">{{
-                                                'contactRoles.supplier' | translate
-                                            }}</mat-option>
-                                        </mat-select>
-                                        <mat-error *ngIf="$any(form).controls['role'].hasError('required')" translate
-                                            >required</mat-error
-                                        >
-                                    </mat-form-field>
-                                    <ng-container *ngIf="uiMode === 'linkExisting'">
-                                        <mat-form-field class="mb-2">
-                                            <mat-label translate>edit.tabs.contacts.contact</mat-label>
-                                            <mat-select formControlName="contactId">
-                                                <mat-option
-                                                    *rxFor="let contact of _availableContacts$ | push"
-                                                    [value]="contact.id"
-                                                    class="ellipsis">
-                                                    {{ contact.name }}
-                                                </mat-option>
-                                            </mat-select>
-                                            <mat-error
-                                                *ngIf="$any(form).controls['contactId'].hasError('required')"
-                                                translate
-                                                >required</mat-error
-                                            >
-                                        </mat-form-field>
-                                        <div class="button-area">
-                                            <button asset-sg-primary (click)="link()" translate>
-                                                edit.tabs.contacts.link
-                                            </button>
-                                            <button asset-sg-secondary translate (click)="cancelLink()">cancel</button>
-                                            <button asset-sg-secondary translate (click)="createNewContact()">
-                                                edit.tabs.contacts.createNewContact
-                                            </button>
-                                        </div>
-                                    </ng-container>
-                                    <ng-container
-                                        *ngIf="
-                                            uiMode === 'linkNew' ||
-                                            uiMode === 'viewContactDetails' ||
-                                            uiMode === 'editContactDetails'
-                                        ">
-                                        <div *ngIf="uiMode === 'linkNew'" class="font-bold mb-4 mt-2" translate>
-                                            edit.tabs.contacts.newContact
-                                        </div>
-                                        <mat-form-field class="mb-2">
-                                            <mat-label translate>edit.tabs.contacts.contactKind</mat-label>
-                                            <mat-select formControlName="contactKindItemCode">
-                                                <mat-option
-                                                    *rxFor="let contactKind of _contactKinds$ | push"
-                                                    [value]="contactKind.code"
-                                                    class="ellipsis">
-                                                    {{ contactKind.name }}
-                                                </mat-option>
-                                            </mat-select>
-                                        </mat-form-field>
-                                        <mat-form-field class="mb-2">
-                                            <mat-label translate>edit.tabs.contacts.name</mat-label>
-                                            <input matInput formControlName="name" />
-                                            <mat-error
-                                                *ngIf="$any(form).controls['name'].hasError('required')"
-                                                translate
-                                                >required</mat-error
-                                            >
-                                        </mat-form-field>
-                                        <div class="flex gap-6">
-                                            <mat-form-field class="grow mb-2">
-                                                <mat-label translate>edit.tabs.contacts.street</mat-label>
-                                                <input matInput formControlName="street" />
-                                            </mat-form-field>
-                                            <mat-form-field class="basis-32 mb-2">
-                                                <mat-label translate>edit.tabs.contacts.number</mat-label>
-                                                <input matInput formControlName="houseNumber" />
-                                            </mat-form-field>
-                                        </div>
-                                        <div class="flex gap-6">
-                                            <mat-form-field class="basis-32 mb-2">
-                                                <mat-label translate>edit.tabs.contacts.postCode</mat-label>
-                                                <input matInput formControlName="plz" />
-                                            </mat-form-field>
-                                            <mat-form-field class="grow mb-2">
-                                                <mat-label translate>edit.tabs.contacts.locality</mat-label>
-                                                <input matInput formControlName="locality" />
-                                            </mat-form-field>
-                                        </div>
-                                        <div class="flex gap-6">
-                                            <mat-form-field class="mb-2">
-                                                <mat-label translate>edit.tabs.contacts.country</mat-label>
-                                                <input matInput formControlName="country" />
-                                            </mat-form-field>
-                                            <mat-form-field class="mb-2">
-                                                <mat-label translate>edit.tabs.contacts.phone</mat-label>
-                                                <input matInput formControlName="telephone" />
-                                            </mat-form-field>
-                                        </div>
-                                        <mat-form-field class="mb-2">
-                                            <mat-label translate>edit.tabs.contacts.email</mat-label>
-                                            <input matInput formControlName="email" />
-                                        </mat-form-field>
-                                        <mat-form-field class="mb-2">
-                                            <mat-label translate>edit.tabs.contacts.website</mat-label>
-                                            <input matInput formControlName="website" />
-                                        </mat-form-field>
-                                        <div *ngIf="uiMode === 'linkNew'" class="button-area">
-                                            <button asset-sg-primary translate (click)="submitNewContact()">
-                                                edit.tabs.contacts.create
-                                            </button>
-                                            <button asset-sg-secondary translate (click)="cancelLink()">cancel</button>
-                                        </div>
-                                        <div *ngIf="uiMode === 'viewContactDetails'" class="button-area">
-                                            <button asset-sg-primary translate (click)="editCurrentContact()">
-                                                edit.tabs.contacts.editContact
-                                            </button>
-                                            <button asset-sg-secondary translate (click)="closeCurrentContact()">
-                                                close
-                                            </button>
-                                        </div>
-                                        <div *ngIf="uiMode === 'editContactDetails'" class="button-area">
-                                            <button asset-sg-primary translate (click)="saveCurrentContact()">
-                                                save
-                                            </button>
-                                            <button asset-sg-secondary translate (click)="cancelEditCurrentContact()">
-                                                cancel
-                                            </button>
-                                        </div>
-                                    </ng-container>
-                                </div>
-                            </div>
-                        </form>
-                    </ng-container>
-                </ng-container>
+  <ng-container *rxLet="_assetContacts$; let assetContacts">
+    <ng-container *rxLet="_currentContactId$; let currentContactId">
+      <div class="flex flex-row max-h-full">
+        <div class="flex flex-column form-column mb-12 mr-8">
+          <div class="flex flex-column bg-white py-4 px-6 max-h-full">
+            <div class="font-bold mb-4" translate>edit.tabs.contacts.tabName</div>
+            <div *ngIf="assetContacts.length === 0" translate>edit.tabs.contacts.noContacts</div>
+            <div class="max-h-full overflow-y-scroll overflow-x-hidden -mr-5">
+              <ul class="p-0 my-0 mb-5">
+                <li *ngFor="let assetContact of assetContacts" class="mb-1 bg-grey-00 py-4 pl-4 pr-2 contact">
+                  <div
+                    class="font-semibold"
+                    [ngClass]="{
+                      'text-dark-red':
+                        currentContactId._tag === 'Some' && currentContactId.value === assetContact.contactId
+                    }"
+                  >
+                    {{ "contactRoles." + assetContact.role | translate }}
+                  </div>
+                  <div
+                    class="ellipsis"
+                    [ngClass]="{
+                      'text-dark-red':
+                        currentContactId._tag === 'Some' && currentContactId.value === assetContact.contactId
+                    }"
+                  >
+                    {{ assetContact.contact.name }}
+                  </div>
+                  <div>
+                    <button
+                      asset-sg-icon-button
+                      (click)="showContact(assetContact.contactId)"
+                      [attr.aria-label]="'edit.tabs.contacts.viewDetails' | translate"
+                      [disabled]="
+                        (_disableAll$ | push) ||
+                        (uiMode !== 'view' && uiMode !== 'viewContactDetails') ||
+                        (currentContactId._tag === 'Some' && currentContactId.value === assetContact.contactId)
+                      "
+                    >
+                      <svg-icon key="view-extended"></svg-icon>
+                    </button>
+                    <button
+                      asset-sg-icon-button
+                      (click)="unlinkContact(assetContact.contactId)"
+                      [attr.aria-label]="'edit.tabs.contacts.unlinkContact' | translate"
+                      [disabled]="(_disableAll$ | push) || (uiMode !== 'view' && uiMode !== 'viewContactDetails')"
+                    >
+                      <svg-icon key="delete"></svg-icon>
+                    </button>
+                  </div>
+                </li>
+              </ul>
             </div>
+            <button
+              asset-sg-primary
+              class="shrink-0 self-start"
+              (click)="linkContact()"
+              translate
+              [disabled]="(_disableAll$ | push) || (uiMode !== 'view' && uiMode !== 'viewContactDetails')"
+            >
+              edit.tabs.contacts.linkContact
+            </button>
+          </div>
+        </div>
+        <ng-container *ngIf="uiMode !== 'view'">
+          <ng-container *ngIf="getForm(uiMode); let form">
+            <form *ngIf="form" [formGroup]="form">
+              <div class="flex flex-column form-column mb-12 max-h-full">
+                <div class="flex flex-column bg-white py-4 px-6 overflow-y-scroll">
+                  <mat-form-field class="mb-2" *ngIf="uiMode === 'linkExisting' || uiMode === 'linkNew'">
+                    <mat-label translate>edit.tabs.contacts.role</mat-label>
+                    <mat-select formControlName="role">
+                      <mat-option value="author" class="ellipsis">{{ "contactRoles.author" | translate }}</mat-option>
+                      <mat-option value="initiator" class="ellipsis">{{
+                        "contactRoles.initiator" | translate
+                      }}</mat-option>
+                      <mat-option value="supplier" class="ellipsis">{{
+                        "contactRoles.supplier" | translate
+                      }}</mat-option>
+                    </mat-select>
+                    <mat-error *ngIf="$any(form).controls['role'].hasError('required')" translate>required</mat-error>
+                  </mat-form-field>
+                  <ng-container *ngIf="uiMode === 'linkExisting'">
+                    <mat-form-field class="mb-2">
+                      <mat-label translate>edit.tabs.contacts.contact</mat-label>
+                      <mat-select formControlName="contactId">
+                        <mat-option
+                          *rxFor="let contact of _availableContacts$ | push"
+                          [value]="contact.id"
+                          class="ellipsis"
+                        >
+                          {{ contact.name }}
+                        </mat-option>
+                      </mat-select>
+                      <mat-error *ngIf="$any(form).controls['contactId'].hasError('required')" translate
+                        >required</mat-error
+                      >
+                    </mat-form-field>
+                    <div class="button-area">
+                      <button asset-sg-primary (click)="link()" translate>edit.tabs.contacts.link</button>
+                      <button asset-sg-secondary translate (click)="cancelLink()">cancel</button>
+                      <button asset-sg-secondary translate (click)="createNewContact()">
+                        edit.tabs.contacts.createNewContact
+                      </button>
+                    </div>
+                  </ng-container>
+                  <ng-container
+                    *ngIf="uiMode === 'linkNew' || uiMode === 'viewContactDetails' || uiMode === 'editContactDetails'"
+                  >
+                    <div *ngIf="uiMode === 'linkNew'" class="font-bold mb-4 mt-2" translate>
+                      edit.tabs.contacts.newContact
+                    </div>
+                    <mat-form-field class="mb-2">
+                      <mat-label translate>edit.tabs.contacts.contactKind</mat-label>
+                      <mat-select formControlName="contactKindItemCode">
+                        <mat-option
+                          *rxFor="let contactKind of _contactKinds$ | push"
+                          [value]="contactKind.code"
+                          class="ellipsis"
+                        >
+                          {{ contactKind.name }}
+                        </mat-option>
+                      </mat-select>
+                    </mat-form-field>
+                    <mat-form-field class="mb-2">
+                      <mat-label translate>edit.tabs.contacts.name</mat-label>
+                      <input matInput formControlName="name" />
+                      <mat-error *ngIf="$any(form).controls['name'].hasError('required')" translate>required</mat-error>
+                    </mat-form-field>
+                    <div class="flex gap-6">
+                      <mat-form-field class="grow mb-2">
+                        <mat-label translate>edit.tabs.contacts.street</mat-label>
+                        <input matInput formControlName="street" />
+                      </mat-form-field>
+                      <mat-form-field class="basis-32 mb-2">
+                        <mat-label translate>edit.tabs.contacts.number</mat-label>
+                        <input matInput formControlName="houseNumber" />
+                      </mat-form-field>
+                    </div>
+                    <div class="flex gap-6">
+                      <mat-form-field class="basis-32 mb-2">
+                        <mat-label translate>edit.tabs.contacts.postCode</mat-label>
+                        <input matInput formControlName="plz" />
+                      </mat-form-field>
+                      <mat-form-field class="grow mb-2">
+                        <mat-label translate>edit.tabs.contacts.locality</mat-label>
+                        <input matInput formControlName="locality" />
+                      </mat-form-field>
+                    </div>
+                    <div class="flex gap-6">
+                      <mat-form-field class="mb-2">
+                        <mat-label translate>edit.tabs.contacts.country</mat-label>
+                        <input matInput formControlName="country" />
+                      </mat-form-field>
+                      <mat-form-field class="mb-2">
+                        <mat-label translate>edit.tabs.contacts.phone</mat-label>
+                        <input matInput formControlName="telephone" />
+                      </mat-form-field>
+                    </div>
+                    <mat-form-field class="mb-2">
+                      <mat-label translate>edit.tabs.contacts.email</mat-label>
+                      <input matInput formControlName="email" />
+                    </mat-form-field>
+                    <mat-form-field class="mb-2">
+                      <mat-label translate>edit.tabs.contacts.website</mat-label>
+                      <input matInput formControlName="website" />
+                    </mat-form-field>
+                    <div *ngIf="uiMode === 'linkNew'" class="button-area">
+                      <button asset-sg-primary translate (click)="submitNewContact()">edit.tabs.contacts.create</button>
+                      <button asset-sg-secondary translate (click)="cancelLink()">cancel</button>
+                    </div>
+                    <div *ngIf="uiMode === 'viewContactDetails'" class="button-area">
+                      <button asset-sg-primary translate (click)="editCurrentContact()">
+                        edit.tabs.contacts.editContact
+                      </button>
+                      <button asset-sg-secondary translate (click)="closeCurrentContact()">close</button>
+                    </div>
+                    <div *ngIf="uiMode === 'editContactDetails'" class="button-area">
+                      <button asset-sg-primary translate (click)="saveCurrentContact()">save</button>
+                      <button asset-sg-secondary translate (click)="cancelEditCurrentContact()">cancel</button>
+                    </div>
+                  </ng-container>
+                </div>
+              </div>
+            </form>
+          </ng-container>
         </ng-container>
+      </div>
     </ng-container>
+  </ng-container>
 </ng-container>

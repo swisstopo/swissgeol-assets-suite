@@ -7,9 +7,9 @@ import { Alert, AlertType } from '../alert.model';
 import { AlertMetadata, AlertState } from '../alert.reducer';
 
 @Component({
-    selector: 'li[app-alert]',
-    templateUrl: './alert.component.html',
-    styleUrls: ['./alert.component.scss'],
+  selector: 'li[app-alert]',
+  templateUrl: './alert.component.html',
+  styleUrls: ['./alert.component.scss'],
 })
 export class AlertComponent implements OnInit, OnDestroy {
   @Input()
@@ -20,7 +20,7 @@ export class AlertComponent implements OnInit, OnDestroy {
 
   progress: number | null = null;
 
-  private isRemoved = false
+  private isRemoved = false;
 
   private countdownSubscription: Subscription | null = null;
 
@@ -42,7 +42,7 @@ export class AlertComponent implements OnInit, OnDestroy {
     return {
       [`is-${this.alert.type}`]: true,
       ['is-removed']: this.isRemoved,
-    }
+    };
   }
 
   @HostListener('click')
@@ -53,13 +53,13 @@ export class AlertComponent implements OnInit, OnDestroy {
   get icon(): string {
     switch (this.alert.type) {
       case AlertType.Success:
-        return 'checkmark'
+        return 'checkmark';
       case AlertType.Notice:
-        return 'info'
+        return 'info';
       case AlertType.Warning:
-        return 'warn'
+        return 'warn';
       case AlertType.Error:
-        return 'failure'
+        return 'failure';
     }
   }
 

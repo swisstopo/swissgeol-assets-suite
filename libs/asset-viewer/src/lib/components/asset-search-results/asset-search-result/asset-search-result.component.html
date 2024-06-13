@@ -2,23 +2,22 @@
   <div class="asset-header">
     <div class="asset-status">
       <ng-container *ngIf="asset.publicUse.isAvailable; else internalUse">
-        <svg-icon
-          [attr.aria-hidden]="false"
-          key="success-filled"
-          [attr.alt]="'search.usageCode.public' | translate" />
+        <svg-icon [attr.aria-hidden]="false" key="success-filled" [attr.alt]="'search.usageCode.public' | translate" />
       </ng-container>
       <ng-template #internalUse>
         <ng-container *ngIf="asset.internalUse.isAvailable; else onRequest">
           <svg-icon
             [attr.aria-hidden]="false"
             key="warning-filled"
-            [attr.alt]="'search.usageCode.internal' | translate" />
+            [attr.alt]="'search.usageCode.internal' | translate"
+          />
         </ng-container>
         <ng-template #onRequest>
           <svg-icon
             [attr.aria-hidden]="false"
             key="error-filled"
-            [attr.alt]="'search.usageCode.useOnRequest' | translate" />
+            [attr.alt]="'search.usageCode.useOnRequest' | translate"
+          />
         </ng-template>
       </ng-template>
     </div>
@@ -36,31 +35,31 @@
       (click)="searchForAsset(asset.assetId)"
       queryParamsHandling="merge"
       class="asset-title-public break-word"
-      [innerHTML]="asset.titlePublic"></a>
+      [innerHTML]="asset.titlePublic"
+    ></a>
     <ng-container *ngIf="assetKindItem$ | async as assetKindItem">
       <div class="asset-kind-format" *ngIf="assetFormatItem$ | async as assetFormatItem">
         {{ assetKindItem | valueItemName }} &ndash;
-        {{ assetFormatItem  | valueItemName }}
+        {{ assetFormatItem | valueItemName }}
       </div>
     </ng-container>
     <ng-container *ngIf="manCatLabelRefs$ | async as manCatLabelRefs">
       <div
         *ngFor="let manCatLabelItem of manCatLabelRefs; let last = last"
-        [class.asset-man-cat-label-item-author--last]="last">
+        [class.asset-man-cat-label-item-author--last]="last"
+      >
         {{ manCatLabelItem | valueItemName }}
       </div>
     </ng-container>
     <ng-container *ngIf="contacts$ | async as contacts">
-      <div
-        *ngFor="let contact of contacts; let last = last"
-        [class.asset-author--last]="last">
-        <strong>{{ 'contactRoles.' + contact.role | translate }}:</strong>
+      <div *ngFor="let contact of contacts; let last = last" [class.asset-author--last]="last">
+        <strong>{{ "contactRoles." + contact.role | translate }}:</strong>
         {{ contact.name }}
       </div>
     </ng-container>
 
     <div>
-      <strong>{{ 'search.createdDate' | translate }}:</strong>
+      <strong>{{ "search.createdDate" | translate }}:</strong>
       {{ asset.createDate | assetSgDate }}
     </div>
   </div>

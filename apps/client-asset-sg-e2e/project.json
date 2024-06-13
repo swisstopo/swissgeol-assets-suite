@@ -1,27 +1,30 @@
 {
-    "name": "client-asset-sg-e2e",
-    "$schema": "../../node_modules/nx/schemas/project-schema.json",
-    "sourceRoot": "apps/client-asset-sg-e2e/src",
-    "projectType": "application",
-    "targets": {
-        "e2e": {
-            "executor": "@nx/cypress:cypress",
-            "options": {
-                "cypressConfig": "apps/client-asset-sg-e2e/cypress.config.ts",
-                "devServerTarget": "client-asset-sg:serve:development",
-                "testingType": "e2e"
-            },
-            "configurations": {
-                "production": {
-                    "devServerTarget": "client-asset-sg:serve:production"
-                }
-            }
-        },
-        "lint": {
-            "executor": "@nx/eslint:lint",
-            "outputs": ["{options.outputFile}"]
+  "name": "client-asset-sg-e2e",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/client-asset-sg-e2e/src",
+  "projectType": "application",
+  "tags": [],
+  "implicitDependencies": ["client-asset-sg"],
+  "targets": {
+    "e2e": {
+      "executor": "@nx/cypress:cypress",
+      "options": {
+        "cypressConfig": "apps/client-asset-sg-e2e/cypress.config.ts",
+        "devServerTarget": "client-asset-sg:serve:development",
+        "testingType": "e2e"
+      },
+      "configurations": {
+        "production": {
+          "devServerTarget": "client-asset-sg:serve:production"
         }
+      }
     },
-    "tags": [],
-    "implicitDependencies": ["client-asset-sg"]
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "eslintConfig": "apps/client-asset-sg-e2e/eslint.config.js"
+      }
+    }
+  }
 }

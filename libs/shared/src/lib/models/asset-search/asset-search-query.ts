@@ -20,5 +20,4 @@ export enum GeometryCode {
   LineString = 'LineString',
 }
 
-
 export type Polygon = LV95[];

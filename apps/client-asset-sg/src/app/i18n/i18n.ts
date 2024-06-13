@@ -9,9 +9,9 @@ import { rmAppTranslations } from './rm';
 export type AppTranslations = typeof deAppTranslations;
 
 export const appTranslations: TranslationsStruct<AppTranslations> = {
-    de: deAppTranslations,
-    en: enAppTranslations,
-    fr: frAppTranslations,
-    it: itAppTranslations,
-    rm: rmAppTranslations,
+  de: deAppTranslations,
+  en: enAppTranslations,
+  fr: frAppTranslations,
+  it: itAppTranslations,
+  rm: rmAppTranslations,
 };

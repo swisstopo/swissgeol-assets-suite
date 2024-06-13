@@ -7,22 +7,16 @@ import { Role, User, UserData, UserId } from '@/features/users/user.model';
 import { satisfy } from '@/utils/define';
 import { handlePrismaMutationError } from '@/utils/prisma';
 
-
 @Injectable()
 export class UserRepo implements Repo<User, UserId, UserData & { oidcId: string }, UserData> {
-  constructor(
-    private readonly prisma: PrismaService,
-  ) {
-  }
+  constructor(private readonly prisma: PrismaService) {}
 
   async find(id: UserId): Promise<User | null> {
     const entry = await this.prisma.assetUser.findFirst({
       where: { id },
       select: userSelection,
     });
-    return entry == null
-      ? null
-      : parse(entry);
+    return entry == null ? null : parse(entry);
   }
 
   async findByEmail(email: string): Promise<User | null> {
@@ -30,16 +24,17 @@ export class UserRepo implements Repo<User, UserId, UserData & { oidcId: string 
       where: { email: { equals: email, mode: 'insensitive' } },
       select: userSelection,
     });
-    return entry == null
-      ? null
-      : parse(entry);
+    return entry == null ? null : parse(entry);
   }
 
   async list({ limit, offset, ids }: RepoListOptions<UserId> = {}): Promise<User[]> {
     const entries = await this.prisma.assetUser.findMany({
-      where: ids == null ? undefined : {
-        id: { in: ids },
-      },
+      where:
+        ids == null
+          ? undefined
+          : {
+              id: { in: ids },
+            },
       select: userSelection,
       take: limit,
       skip: offset,
@@ -47,7 +42,7 @@ export class UserRepo implements Repo<User, UserId, UserData & { oidcId: string 
     return entries.map(parse);
   }
 
-  async create(data: UserData & { oidcId: string, email: string }): Promise<User> {
+  async create(data: UserData & { oidcId: string; email: string }): Promise<User> {
     const entry = await this.prisma.assetUser.create({
       data: {
         id: data.oidcId,

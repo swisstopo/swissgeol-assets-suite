@@ -14,52 +14,52 @@ import { Data, Model } from '@/utils/data/model';
 // it's always skipped.
 
 export interface AssetInfo extends Model<AssetId> {
-    title: string;
-    originalTitle: string | null;
+  title: string;
+  originalTitle: string | null;
 
-    kindCode: string;
-    formatCode: string;
-    identifiers: AssetIdentifier[];
-    languageCodes: string[];
-    contactAssignments: ContactAssignment[];
-    manCatLabelCodes: string[];
-    natRelCodes: string[];
-    links: AssetLinks;
-    files: FileReference[];
+  kindCode: string;
+  formatCode: string;
+  identifiers: AssetIdentifier[];
+  languageCodes: string[];
+  contactAssignments: ContactAssignment[];
+  manCatLabelCodes: string[];
+  natRelCodes: string[];
+  links: AssetLinks;
+  files: FileReference[];
 
-    createdAt: LocalDate;
-    receivedAt: LocalDate;
-    lastProcessedAt: Date;
+  createdAt: LocalDate;
+  receivedAt: LocalDate;
+  lastProcessedAt: Date;
 }
 
 export interface AssetLinks {
-    parent: LinkedAsset | null;
-    children: LinkedAsset[];
-    siblings: LinkedAsset[];
+  parent: LinkedAsset | null;
+  children: LinkedAsset[];
+  siblings: LinkedAsset[];
 }
 
 export interface AssetLinksData {
-    parent: AssetId | null;
-    siblings: AssetId[];
+  parent: AssetId | null;
+  siblings: AssetId[];
 }
 
 // Detailed data about an asset.
 // These are the parts of `Asset` that were previously only part of `AssetEdit`.
 // They are only visible on the asset edit page.
 export interface AssetDetails {
-    sgsId: number | null;
-    municipality: string | null;
-    processor: string | null;
-    isNatRel: boolean;
-    infoGeol: InfoGeol;
-    usage: AssetUsages;
-    statuses: WorkStatus[];
-    studies: Study[];
+  sgsId: number | null;
+  municipality: string | null;
+  processor: string | null;
+  isNatRel: boolean;
+  infoGeol: InfoGeol;
+  usage: AssetUsages;
+  statuses: WorkStatus[];
+  studies: Study[];
 }
 
 export interface AssetUsages {
-    public: AssetUsage;
-    internal: AssetUsage;
+  public: AssetUsage;
+  internal: AssetUsage;
 }
 
 export type Asset = AssetInfo & AssetDetails;
@@ -67,21 +67,21 @@ export type Asset = AssetInfo & AssetDetails;
 type NonDataKeys = 'processor' | 'identifiers' | 'studies' | 'statuses' | 'links' | 'lastProcessedAt' | 'files';
 
 export interface AssetData extends Omit<Data<Asset>, NonDataKeys> {
-    links: AssetLinksData;
-    identifiers: (AssetIdentifier | AssetIdentifierData)[];
-    statuses: (WorkStatus | WorkStatusData)[];
-    studies: (Study | StudyData)[];
+  links: AssetLinksData;
+  identifiers: (AssetIdentifier | AssetIdentifierData)[];
+  statuses: (WorkStatus | WorkStatusData)[];
+  studies: (Study | StudyData)[];
 }
 
 interface InfoGeol {
-    main: string | null;
-    contact: string | null;
-    auxiliary: string | null;
+  main: string | null;
+  contact: string | null;
+  auxiliary: string | null;
 }
 
 export interface AssetIdentifier extends Model<AssetIdentifierId> {
-    name: string;
-    description: string;
+  name: string;
+  description: string;
 }
 
 export type AssetIdentifierId = number;
@@ -90,56 +90,56 @@ export type AssetIdentifierData = Data<AssetIdentifier>;
 export type AssetId = number;
 
 export interface AssetUsage {
-    isAvailable: boolean;
-    statusCode: UsageStatusCode;
-    availableAt: LocalDate | null;
+  isAvailable: boolean;
+  statusCode: UsageStatusCode;
+  availableAt: LocalDate | null;
 }
 
 export enum UsageStatusCode {
-    ToBeChecked = 'tobechecked',
-    UnderClarification = 'underclarification',
-    Approved = 'approved',
+  ToBeChecked = 'tobechecked',
+  UnderClarification = 'underclarification',
+  Approved = 'approved',
 }
 
 export interface ContactAssignment {
-    contactId: number;
-    role: ContactAssignmentRole;
+  contactId: number;
+  role: ContactAssignmentRole;
 }
 
 export enum ContactAssignmentRole {
-    Author = 'author',
-    Initiator = 'initiator',
-    Supplier = 'supplier',
+  Author = 'author',
+  Initiator = 'initiator',
+  Supplier = 'supplier',
 }
 
 export interface LinkedAsset {
-    id: AssetId;
-    title: string;
+  id: AssetId;
+  title: string;
 }
 
 export interface WorkStatus extends Model<number> {
-    itemCode: WorkStatusCode;
-    createdAt: Date;
+  itemCode: WorkStatusCode;
+  createdAt: Date;
 }
 
 export type WorkStatusCode = string;
 export type WorkStatusData = Data<WorkStatus>;
 
 export interface FileReference {
-    id: number;
-    name: string;
-    size: number;
+  id: number;
+  name: string;
+  size: number;
 }
 
 export enum UsageCode {
-    Public = 'public',
-    Internal = 'internal',
-    UseOnRequest = 'useOnRequest',
+  Public = 'public',
+  Internal = 'internal',
+  UseOnRequest = 'useOnRequest',
 }
 
 export interface Study extends Model<StudyId> {
-    geom: string;
-    type: StudyType;
+  geom: string;
+  type: StudyType;
 }
 
 export type StudyData = Data<Study>;
@@ -147,181 +147,181 @@ export type StudyData = Data<Study>;
 export type StudyId = number;
 
 export enum StudyType {
-    Area = 'area',
-    Location = 'location',
-    Trace = 'trace',
+  Area = 'area',
+  Location = 'location',
+  Trace = 'trace',
 }
 
 export class AssetUsageBoundary implements AssetUsage {
-    @IsBoolean()
-    isAvailable!: boolean;
+  @IsBoolean()
+  isAvailable!: boolean;
 
-    @IsEnum(UsageStatusCode)
-    statusCode!: UsageStatusCode;
+  @IsEnum(UsageStatusCode)
+  statusCode!: UsageStatusCode;
 
-    @IsNullable()
-    @ValidateNested()
-    @Type(() => String)
-    @Transform(({ value }) => LocalDate.parse(value))
-    availableAt!: LocalDate | null;
+  @IsNullable()
+  @ValidateNested()
+  @Type(() => String)
+  @Transform(({ value }) => LocalDate.parse(value))
+  availableAt!: LocalDate | null;
 }
 
 export class AssetUsagesBoundary implements AssetUsages {
-    @IsObject()
-    @ValidateNested()
-    @Type(() => AssetUsageBoundary)
-    public!: AssetUsageBoundary;
+  @IsObject()
+  @ValidateNested()
+  @Type(() => AssetUsageBoundary)
+  public!: AssetUsageBoundary;
 
-    @IsObject()
-    @ValidateNested()
-    @Type(() => AssetUsageBoundary)
-    internal!: AssetUsageBoundary;
+  @IsObject()
+  @ValidateNested()
+  @Type(() => AssetUsageBoundary)
+  internal!: AssetUsageBoundary;
 }
 
 export class InfoGeolBoundary implements InfoGeol {
-    @IsString({ message: messageNullableString })
-    @IsNullable()
-    main!: string | null;
+  @IsString({ message: messageNullableString })
+  @IsNullable()
+  main!: string | null;
 
-    @IsString({ message: messageNullableString })
-    @IsNullable()
-    contact!: string | null;
+  @IsString({ message: messageNullableString })
+  @IsNullable()
+  contact!: string | null;
 
-    @IsString({ message: messageNullableString })
-    @IsNullable()
-    auxiliary!: string | null;
+  @IsString({ message: messageNullableString })
+  @IsNullable()
+  auxiliary!: string | null;
 }
 
 export class ContactAssignmentBoundary implements ContactAssignment {
-    @IsInt()
-    contactId!: number;
+  @IsInt()
+  contactId!: number;
 
-    @IsEnum(ContactAssignmentRole)
-    role!: ContactAssignmentRole;
+  @IsEnum(ContactAssignmentRole)
+  role!: ContactAssignmentRole;
 }
 
 export class StudyDataBoundary implements StudyData {
-    @IsInt({ message: messageNullableInt })
-    @IsNullable()
-    id?: number | undefined;
+  @IsInt({ message: messageNullableInt })
+  @IsNullable()
+  id?: number | undefined;
 
-    @IsString()
-    geom!: string;
+  @IsString()
+  geom!: string;
 
-    @IsEnum(StudyType)
-    type!: StudyType;
+  @IsEnum(StudyType)
+  type!: StudyType;
 }
 
 export class WorkStatusBoundary implements WorkStatusData {
-    @IsInt({ message: messageNullableInt })
-    @IsNullable()
-    id?: number | undefined;
+  @IsInt({ message: messageNullableInt })
+  @IsNullable()
+  id?: number | undefined;
 
-    @IsDate()
-    @Type(() => Date)
-    createdAt!: Date;
+  @IsDate()
+  @Type(() => Date)
+  createdAt!: Date;
 
-    @IsString()
-    itemCode!: string;
+  @IsString()
+  itemCode!: string;
 }
 
 export class AssetIdentifierBoundary implements AssetIdentifierData {
-    @IsInt({ message: messageNullableInt })
-    @IsNullable()
-    id?: number | undefined;
+  @IsInt({ message: messageNullableInt })
+  @IsNullable()
+  id?: number | undefined;
 
-    @IsString()
-    name!: string;
+  @IsString()
+  name!: string;
 
-    @IsString()
-    description!: string;
+  @IsString()
+  description!: string;
 }
 
 export class AssetLinksDataBoundary implements AssetLinksData {
-    @IsInt({ message: messageNullableInt })
-    @IsNullable()
-    parent!: number | null;
+  @IsInt({ message: messageNullableInt })
+  @IsNullable()
+  parent!: number | null;
 
-    @IsInt({ each: true })
-    siblings!: number[];
+  @IsInt({ each: true })
+  siblings!: number[];
 }
 
 export class AssetDataBoundary implements AssetData {
-    @IsObject()
-    @ValidateNested()
-    @Type(() => AssetLinksDataBoundary)
-    links!: AssetLinksDataBoundary;
+  @IsObject()
+  @ValidateNested()
+  @Type(() => AssetLinksDataBoundary)
+  links!: AssetLinksDataBoundary;
 
-    @IsArray()
-    @ValidateNested({ each: true })
-    @Type(() => AssetIdentifierBoundary)
-    identifiers!: AssetIdentifierBoundary[];
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => AssetIdentifierBoundary)
+  identifiers!: AssetIdentifierBoundary[];
 
-    @IsArray()
-    @ValidateNested({ each: true })
-    @Type(() => WorkStatusBoundary)
-    statuses!: WorkStatusBoundary[];
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => WorkStatusBoundary)
+  statuses!: WorkStatusBoundary[];
 
-    @IsArray()
-    @ValidateNested({ each: true })
-    @Type(() => StudyDataBoundary)
-    studies!: StudyDataBoundary[];
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => StudyDataBoundary)
+  studies!: StudyDataBoundary[];
 
-    @IsString()
-    title!: string;
+  @IsString()
+  title!: string;
 
-    @IsString({ message: messageNullableString })
-    @IsNullable()
-    originalTitle!: string | null;
+  @IsString({ message: messageNullableString })
+  @IsNullable()
+  originalTitle!: string | null;
 
-    @IsString()
-    kindCode!: string;
+  @IsString()
+  kindCode!: string;
 
-    @IsString()
-    formatCode!: string;
+  @IsString()
+  formatCode!: string;
 
-    @IsString({ each: true })
-    languageCodes!: string[];
+  @IsString({ each: true })
+  languageCodes!: string[];
 
-    @IsArray()
-    @ValidateNested({ each: true })
-    @Type(() => ContactAssignmentBoundary)
-    contactAssignments!: ContactAssignmentBoundary[];
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => ContactAssignmentBoundary)
+  contactAssignments!: ContactAssignmentBoundary[];
 
-    @IsString({ each: true })
-    manCatLabelCodes!: string[];
+  @IsString({ each: true })
+  manCatLabelCodes!: string[];
 
-    @IsString({ each: true })
-    natRelCodes!: string[];
+  @IsString({ each: true })
+  natRelCodes!: string[];
 
-    @ValidateNested()
-    @Type(() => String)
-    @Transform(({ value }) => LocalDate.tryParse(value))
-    createdAt!: LocalDate;
+  @ValidateNested()
+  @Type(() => String)
+  @Transform(({ value }) => LocalDate.tryParse(value))
+  createdAt!: LocalDate;
 
-    @ValidateNested()
-    @Type(() => String)
-    @Transform(({ value }) => LocalDate.tryParse(value))
-    receivedAt!: LocalDate;
+  @ValidateNested()
+  @Type(() => String)
+  @Transform(({ value }) => LocalDate.tryParse(value))
+  receivedAt!: LocalDate;
 
-    @IsInt({ message: messageNullableInt })
-    @IsNullable()
-    sgsId!: number | null;
+  @IsInt({ message: messageNullableInt })
+  @IsNullable()
+  sgsId!: number | null;
 
-    @IsString({ message: messageNullableString })
-    @IsNullable()
-    municipality!: string | null;
+  @IsString({ message: messageNullableString })
+  @IsNullable()
+  municipality!: string | null;
 
-    @IsBoolean()
-    isNatRel!: boolean;
+  @IsBoolean()
+  isNatRel!: boolean;
 
-    @IsObject()
-    @ValidateNested()
-    @Type(() => InfoGeolBoundary)
-    infoGeol!: InfoGeolBoundary;
+  @IsObject()
+  @ValidateNested()
+  @Type(() => InfoGeolBoundary)
+  infoGeol!: InfoGeolBoundary;
 
-    @IsObject()
-    @ValidateNested()
-    @Type(() => AssetUsagesBoundary)
-    usage!: AssetUsagesBoundary;
+  @IsObject()
+  @ValidateNested()
+  @Type(() => AssetUsagesBoundary)
+  usage!: AssetUsagesBoundary;
 }

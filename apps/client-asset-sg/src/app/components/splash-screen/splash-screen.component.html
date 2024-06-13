@@ -7,12 +7,8 @@
     width="361"
   />
   <div class="text">
-    <p class="welcome">
-      {{ 'welcomeTo' | translate }} {{ host }}
-    </p>
-    <p class="system">
-      Asset Data Management System
-    </p>
+    <p class="welcome">{{ "welcomeTo" | translate }} {{ host }}</p>
+    <p class="system">Asset Data Management System</p>
   </div>
   <ng-container [ngSwitch]="authService.state$ | async">
     <ng-container *ngSwitchCase="AuthState.Ongoing">
@@ -20,16 +16,16 @@
     </ng-container>
     <ng-container *ngSwitchCase="AuthState.Aborted">
       <button asset-sg-primary (click)="authService.signIn()">
-        {{ 'login' | translate }}
+        {{ "login" | translate }}
       </button>
     </ng-container>
     <ng-container *ngSwitchCase="AuthState.Forbidden">
       <div class="alert">
         <p>
-          {{ 'accessForbidden' | translate }}
+          {{ "accessForbidden" | translate }}
         </p>
         <button asset-sg-primary (click)="authService.logOut()">
-          {{ 'logout' | translate }}
+          {{ "logout" | translate }}
         </button>
       </div>
     </ng-container>
@@ -46,30 +42,19 @@
       Daniel von Atzigen, 2024-05-30
     -->
     <li [class.is-active]="currentLang === 'de'">
-      <button role="button" (click)="selectLanguage('de')">
-        DE
-      </button>
+      <button role="button" (click)="selectLanguage('de')">DE</button>
     </li>
     <li [class.is-active]="currentLang === 'fr'">
-      <button role="button" (click)="selectLanguage('fr')">
-        FR
-      </button>
+      <button role="button" (click)="selectLanguage('fr')">FR</button>
     </li>
     <li [class.is-active]="currentLang === 'it'">
-      <button role="button" (click)="selectLanguage('it')">
-        IT
-      </button>
+      <button role="button" (click)="selectLanguage('it')">IT</button>
     </li>
     <li [class.is-active]="currentLang === 'rm'">
-      <button role="button" (click)="selectLanguage('rm')">
-        RM
-      </button>
+      <button role="button" (click)="selectLanguage('rm')">RM</button>
     </li>
     <li [class.is-active]="currentLang === 'en'">
-      <button role="button" (click)="selectLanguage('en')">
-        EM
-      </button>
+      <button role="button" (click)="selectLanguage('en')">EM</button>
     </li>
   </ul>
 </div>
-

@@ -1,8 +1,8 @@
 [
   {
-    "SubjectId":"379a20e6-6a5d-4390-93ca-d408613e854d",
-    "Username":"admin",
-    "Password":"admin",
+    "SubjectId": "379a20e6-6a5d-4390-93ca-d408613e854d",
+    "Username": "admin",
+    "Password": "admin",
     "Claims": [
       {
         "Type": "name",
@@ -42,9 +42,9 @@
     ]
   },
   {
-    "SubjectId":"e06ad465-3adc-4ad7-bee5-ff0605a4b928",
-    "Username":"viewer",
-    "Password":"viewer",
+    "SubjectId": "e06ad465-3adc-4ad7-bee5-ff0605a4b928",
+    "Username": "viewer",
+    "Password": "viewer",
     "Claims": [
       {
         "Type": "name",

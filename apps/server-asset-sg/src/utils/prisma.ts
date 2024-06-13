@@ -11,4 +11,4 @@ export const handlePrismaMutationError = (error: unknown): null | never => {
     return null;
   }
   throw error;
-}
+};

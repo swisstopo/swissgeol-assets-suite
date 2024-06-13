@@ -6,23 +6,23 @@ import * as O from 'fp-ts/Option';
 import { Ord as OrdString } from 'fp-ts/string';
 
 export const addPostInitMigration = async () => {
-    const filesAndDirs = await fs.readdir('./migrations', { withFileTypes: true });
-    const newDirAfterInit = pipe(
-        filesAndDirs,
-        A.filter(f => f.isDirectory()),
-        A.map(f => f.name),
-        A.filter(f => f.endsWith('_init')),
-        A.sort(OrdString),
-        A.head,
-        O.map(f => `./migrations/${Number(f.substring(0, 14)) + 1}_post-init`),
-    );
+  const filesAndDirs = await fs.readdir('./migrations', { withFileTypes: true });
+  const newDirAfterInit = pipe(
+    filesAndDirs,
+    A.filter((f) => f.isDirectory()),
+    A.map((f) => f.name),
+    A.filter((f) => f.endsWith('_init')),
+    A.sort(OrdString),
+    A.head,
+    O.map((f) => `./migrations/${Number(f.substring(0, 14)) + 1}_post-init`)
+  );
 
-    if (O.isNone(newDirAfterInit)) {
-        throw new Error('No migration directory found');
-    } else {
-        await fs.mkdir(newDirAfterInit.value);
-        await fs.writeFile(`${newDirAfterInit.value}/migration.sql`, postInitSql);
-    }
+  if (O.isNone(newDirAfterInit)) {
+    throw new Error('No migration directory found');
+  } else {
+    await fs.mkdir(newDirAfterInit.value);
+    await fs.writeFile(`${newDirAfterInit.value}/migration.sql`, postInitSql);
+  }
 };
 
 const postInitSql = `
@@ -77,5 +77,5 @@ insert into auth.schema_migrations(version) values('20220614074223');
 `;
 
 (async function main() {
-    await addPostInitMigration();
+  await addPostInitMigration();
 })();

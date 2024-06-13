@@ -1,38 +1,41 @@
 {
-    "name": "asset-editor",
-    "$schema": "../../node_modules/nx/schemas/project-schema.json",
-    "projectType": "library",
-    "sourceRoot": "libs/asset-editor/src",
-    "prefix": "asset-sg",
-    "targets": {
-        "build": {
-            "executor": "@nx/angular:ng-packagr-lite",
-            "outputs": ["{workspaceRoot}/dist/{projectRoot}"],
-            "options": {
-                "project": "libs/asset-editor/ng-package.json",
-                "tsConfig": "libs/asset-editor/tsconfig.lib.json"
-            },
-            "configurations": {
-                "production": {
-                    "tsConfig": "libs/asset-editor/tsconfig.lib.prod.json"
-                },
-                "development": {
-                    "tsConfig": "libs/asset-editor/tsconfig.lib.json"
-                }
-            },
-            "defaultConfiguration": "production"
+  "name": "asset-editor",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "sourceRoot": "libs/asset-editor/src",
+  "prefix": "asset-sg",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@nx/angular:ng-packagr-lite",
+      "outputs": ["{workspaceRoot}/dist/{projectRoot}"],
+      "options": {
+        "project": "libs/asset-editor/ng-package.json",
+        "tsConfig": "libs/asset-editor/tsconfig.lib.json"
+      },
+      "configurations": {
+        "production": {
+          "tsConfig": "libs/asset-editor/tsconfig.lib.prod.json"
         },
-        "test": {
-            "executor": "@nx/jest:jest",
-            "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
-            "options": {
-                "jestConfig": "libs/asset-editor/jest.config.ts"
-            }
-        },
-        "lint": {
-            "executor": "@nx/eslint:lint",
-            "outputs": ["{options.outputFile}"]
+        "development": {
+          "tsConfig": "libs/asset-editor/tsconfig.lib.json"
         }
+      },
+      "defaultConfiguration": "production"
     },
-    "tags": []
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "libs/asset-editor/jest.config.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "eslintConfig": "libs/asset-editor/eslint.config.js"
+      }
+    }
+  }
 }

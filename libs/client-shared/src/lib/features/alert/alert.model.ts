@@ -1,4 +1,3 @@
-
 export type AlertId = string;
 
 /**
@@ -11,23 +10,23 @@ export interface Alert {
    * This ensures that a message is only displayed once,
    * even when the events that are triggering it overlap.
    */
-  id: AlertId
+  id: AlertId;
 
   /**
    * The alert's type, influencing its appearance.
    */
-  type: AlertType
+  type: AlertType;
 
   /**
    * The display text.
    */
-  text: string
+  text: string;
 
   /**
    * Whether the alert stays until manually closed by the user,
    * or automatically disappears after a fixed amount of time.
    */
-  isPersistent?: boolean,
+  isPersistent?: boolean;
 }
 
 /**
