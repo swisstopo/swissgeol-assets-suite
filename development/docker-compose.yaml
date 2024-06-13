@@ -128,33 +128,11 @@ services:
     environment:
       CLIENTS_CONFIGURATION_PATH: /tmp/config/clients-config.json
       USERS_CONFIGURATION_PATH: /tmp/config/users-config.json
-      API_SCOPES_INLINE: |
-        [
-            {
-                "Name": "cognito",
-                "UserClaims": [
-                    "cognito:groups",
-                    "username"
-                ]
-            }
-        ]
-      SERVER_OPTIONS_INLINE: |
-        {
-            "IssuerUri": "http://localhost:4011",
-            "AccessTokenJwtType": "JWT",
-            "Discovery": {
-                "ShowKeySet": true
-            },
-            "Authentication": {
-                "CookieSameSiteMode": "Lax",
-                "CheckSessionCookieSameSiteMode": "Lax"
-            },
-            "KeyManagement": {
-              "Enabled": true,
-              "KeyPath": "/tmp/data/keys"
-            }
-        }
+      API_SCOPES_PATH: /tmp/config/scopes-config.json
+      SERVER_OPTIONS_PATH: /tmp/config/server_options-config.json
     volumes:
       - ./init/oidc/oidc-mock-clients.json:/tmp/config/clients-config.json:ro
       - ./init/oidc/oidc-mock-users.json:/tmp/config/users-config.json:ro
+      - ./init/oidc/oidc-mock-scopes.json:/tmp/config/scopes-config.json:ro
+      - ./init/oidc/oidc-mock-server_options.json:/tmp/config/server_options-config.json:ro
       - ./volumes/oidc/keys:/tmp/data/keys
