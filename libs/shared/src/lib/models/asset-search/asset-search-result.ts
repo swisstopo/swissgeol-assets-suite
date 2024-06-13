@@ -1,16 +1,18 @@
-import { AssetEditDetail } from "../asset-edit"
+import { AssetEditDetail } from '../asset-edit';
 import { DateRange } from '../date-range';
 import { UsageCode } from '../usage';
 
+import { GeometryCode } from './asset-search-query';
+
 export interface AssetSearchResult {
-  page: PageStats
-  data: AssetEditDetail[]
+  page: PageStats;
+  data: AssetEditDetail[];
 }
 
 export interface PageStats {
-  size: number
-  offset: number
-  total: number
+  size: number;
+  offset: number;
+  total: number;
 }
 
 export interface AssetSearchStats {
@@ -18,12 +20,13 @@ export interface AssetSearchStats {
   authorIds: ValueCount<number>[]
   assetKindItemCodes: ValueCount<string>[]
   languageItemCodes: ValueCount<string>[]
+  geometryCodes: ValueCount<GeometryCode | 'None'>[]
   usageCodes: ValueCount<UsageCode>[]
   manCatLabelItemCodes: ValueCount<string>[]
   createDate: DateRange | null,
 }
 
 export interface ValueCount<T> {
-  value: T
-  count: number
+  value: T;
+  count: number;
 }

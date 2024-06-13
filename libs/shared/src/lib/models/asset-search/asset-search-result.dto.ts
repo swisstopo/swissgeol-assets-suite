@@ -4,6 +4,7 @@ import { AssetEditDetail } from '../asset-edit';
 import { DateRangeDTO } from '../date-range.dto';
 import { UsageCode } from '../usage';
 
+import { GeometryCode } from './asset-search-query';
 import { AssetSearchResult, AssetSearchStats, PageStats, ValueCount } from './asset-search-result';
 
 export class AssetSearchResultDTO implements AssetSearchResult {
@@ -12,10 +13,11 @@ export class AssetSearchResultDTO implements AssetSearchResult {
 }
 
 export class AssetSearchStatsDTO implements AssetSearchStats {
-  total!: number
+  total!: number;
   authorIds!: ValueCount<number>[];
   assetKindItemCodes!: ValueCount<string>[];
   languageItemCodes!: ValueCount<string>[];
+  geometryCodes!: ValueCount<GeometryCode>[];
   usageCodes!: ValueCount<UsageCode>[];
   manCatLabelItemCodes!: ValueCount<string>[];
 

@@ -1,82 +1,26 @@
-<ng-container *rxLet="rdAssets$ | push; let rdAssets">
-    <ng-container *rxLet="currentAssetId$ | push; let currentAssetId">
-        <div class="header">
-            <div>
-                {{ 'search.searchResults' | translate }}:
-                <asset-sg-animate-number [nextValue]="rdAssets._tag === 'RemoteSuccess' ? rdAssets.value.length : 0" />
-            </div>
-            <button asset-sg-icon-button style="width: unset" (click)="closeSearchResultsClicked.emit()">
-                <span> Ausblenden </span>
-                <svg-icon key="close-nav"></svg-icon>
-            </button>
-        </div>
-        <ng-container *ngIf="rdAssets._tag === 'RemoteSuccess'">
-            <div class="search-results">
-                <div
-                    class="asset-result"
-                    *rxFor="let asset of rdAssets.value; trackBy: 'assetId'"
-                    [routerLink]="['.']"
-                    [queryParams]="{ assetId: asset.assetId }"
-                    queryParamsHandling="merge"
-                    (mouseover)="onAssetMouseOver(asset.assetId)"
-                    (mouseout)="onAssetMouseOut()">
-                    <div class="asset-status">
-                        <ng-container [ngSwitch]="asset.usageCode">
-                            <svg-icon
-                                [attr.aria-hidden]="false"
-                                *ngSwitchCase="'public'"
-                                key="success-filled"
-                                [attr.alt]="'search.usageCode.public' | translate" />
-                            <svg-icon
-                                [attr.aria-hidden]="false"
-                                *ngSwitchCase="'internal'"
-                                key="warning-filled"
-                                [attr.alt]="'search.usageCode.internal' | translate" />
-                            <svg-icon
-                                [attr.aria-hidden]="false"
-                                *ngSwitchCase="'useOnRequest'"
-                                key="error-filled"
-                                [attr.alt]="'search.usageCode.useOnRequest' | translate" />
-                        </ng-container>
-                    </div>
-                    <div class="asset-actions">
-                        <button asset-sg-reset class="asset-favourite">
-                            <svg-icon key="favourite" />
-                        </button>
-                    </div>
-                    <div class="asset-body">
-                        <a
-                            asset-sg-reset
-                            [routerLink]="['.']"
-                            [queryParams]="{ assetId: asset.assetId }"
-                            queryParamsHandling="merge"
-                            class="asset-title-public break-word"
-                            [class.active]="currentAssetId._tag === 'Some' && asset.assetId === currentAssetId.value"
-                            [innerHTML]="asset.titlePublic"></a>
-                        <div class="asset-kind-format">
-                            {{ asset.assetKindItem | valueItemName }} &ndash;
-                            {{ asset.assetFormatItem | valueItemName }}
-                        </div>
-                        <div
-                            *ngFor="let manCatLabelItem of asset.manCatLabelItems; let last = last"
-                            class="asset-man-cat-label-item"
-                            [class.asset-man-cat-label-item-author--last]="last">
-                            {{ manCatLabelItem | valueItemName }}
-                        </div>
-                        <div
-                            *ngFor="let contact of asset.contacts; let last = last"
-                            class="asset-author"
-                            [class.asset-author--last]="last">
-                            <strong>{{ 'contactRoles.' + contact.role | translate }}:</strong>
-                            {{ contact.contact.name }}
-                        </div>
-                        <div class="asset-createdate">
-                            <strong>{{ 'search.createdDate' | translate }}:</strong>
-                            {{ asset.createDate | assetSgDate }}
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </ng-container>
-    </ng-container>
-</ng-container>
+<div *ngIf="(loadingState | async) === LoadingState.Loading; else results" class="loading-spinner">
+  <mat-progress-spinner mode="indeterminate" />
+</div>
+<ng-template #results>
+  <ng-container *rxLet="assets$ | push">
+    <div class="header">
+      <div>
+        {{ 'search.searchResults' | translate }}:
+        <asset-sg-animate-number [nextValue]="(pageStats$ | async)?.total ?? 0" />
+      </div>
+      <button asset-sg-icon-button style="width: unset" (click)="closeSearchResultsClicked.emit()">
+        <span> Ausblenden </span>
+        <svg-icon key="close-nav"></svg-icon>
+      </button>
+    </div>
+
+    <div class="search-results">
+      <div class="asset-result"
+           *rxFor="let asset of assets$ | async; trackBy: 'assetId'"
+           (mouseover)="onAssetMouseOver(asset.assetId)"
+           (mouseout)="onAssetMouseOut()">
+        <asset-sg-asset-search-result [asset]="asset"></asset-sg-asset-search-result>
+      </div>
+    </div>
+  </ng-container>
+</ng-template>

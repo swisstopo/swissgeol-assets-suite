@@ -1,29 +1,40 @@
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output, inject } from '@angular/core';
+import { Store } from '@ngrx/store';
 import * as O from 'fp-ts/Option';
 import { Observable } from 'rxjs';
 
-import { ObservableRemoteDataSearchAsset } from '../../models';
-import { SearchAssetVM } from '../../state/asset-viewer.selectors';
+import { AssetEditDetail } from '@asset-sg/shared';
+
+import { AppStateWithAssetSearch, LoadingState } from '../../state/asset-search/asset-search.reducer';
+import {
+  selectAssetSearchPageData,
+  selectAssetSearchResultData,
+  selectSearchLoadingState,
+} from '../../state/asset-search/asset-search.selector';
 
 @Component({
-    selector: 'asset-sg-asset-search-results',
-    templateUrl: './asset-search-results.component.html',
-    styleUrls: ['./asset-search-results.component.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush,
+  selector: 'asset-sg-asset-search-results',
+  templateUrl: './asset-search-results.component.html',
+  styleUrls: ['./asset-search-results.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AssetSearchResultsComponent {
-    @Input() rdAssets$?: ObservableRemoteDataSearchAsset<SearchAssetVM[]>;
-    @Input() public currentAssetId$!: Observable<O.Option<number>>;
-    @Output('closeSearchResultsClicked') closeSearchResultsClicked = new EventEmitter<void>();
-    @Output('assetMouseOver') assetMouseOver$ = new EventEmitter<O.Option<number>>();
+  @Input() public currentAssetId$!: Observable<O.Option<number>>;
+  @Output('closeSearchResultsClicked') closeSearchResultsClicked = new EventEmitter<void>();
+  @Output('assetMouseOver') assetMouseOver$ = new EventEmitter<O.Option<number>>();
 
-    public shownAssetId$!: Observable<number | null>;
+  public _store = inject(Store<AppStateWithAssetSearch>);
+  public assets$: Observable<AssetEditDetail[]> = this._store.select(selectAssetSearchResultData);
+  public loadingState = this._store.select(selectSearchLoadingState);
+  public pageStats$ = this._store.select(selectAssetSearchPageData);
 
-    public onAssetMouseOver(assetId: number) {
-        this.assetMouseOver$.emit(O.some(assetId));
-    }
+  public onAssetMouseOver(assetId: number) {
+    this.assetMouseOver$.emit(O.some(assetId));
+  }
 
-    public onAssetMouseOut() {
-        this.assetMouseOver$.emit(O.none);
-    }
+  public onAssetMouseOut() {
+    this.assetMouseOver$.emit(O.none);
+  }
+
+  protected readonly LoadingState = LoadingState;
 }

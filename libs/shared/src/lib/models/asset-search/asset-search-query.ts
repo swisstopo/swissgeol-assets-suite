@@ -3,15 +3,15 @@ import { LV95 } from '../lv95';
 import { UsageCode } from '../usage';
 
 export interface AssetSearchQuery {
-  text?: string
-  polygon?: Polygon
-  authorId?: number
-  createDate?: Partial<DateRange>
-  manCatLabelItemCodes?: string[]
-  assetKindItemCodes?: string[]
-  usageCodes?: UsageCode[]
-  geomCodes?: Array<GeometryCode | 'None'>
-  languageItemCodes?: string[]
+  text?: string;
+  polygon?: Polygon;
+  authorId?: number;
+  createDate?: Partial<DateRange>;
+  manCatLabelItemCodes?: string[];
+  assetKindItemCodes?: string[];
+  usageCodes?: UsageCode[];
+  geomCodes?: Array<GeometryCode | 'None'>;
+  languageItemCodes?: string[];
 }
 
 export enum GeometryCode {

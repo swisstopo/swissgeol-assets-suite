@@ -3,164 +3,178 @@
 @use '../../styles/drawer-panel-mixins' as drawerPanel;
 
 :host {
-    @include drawerPanel.drawer-panel-width;
-    padding-bottom: 1rem;
-    position: relative;
-    display: flex;
-    flex-direction: column;
+  @include drawerPanel.drawer-panel-width;
+  padding-bottom: 1rem;
+  position: relative;
+  display: flex;
+  flex-direction: column;
 }
 
 @include drawerPanel.draw-panel-header;
 
+.loading-spinner {
+  position: absolute;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  background-color: variables.$grey-03;
+}
+
 .asset-detail-scroll-container {
-    overflow-y: scroll;
-    overflow-x: hidden;
-    margin-top: -0.75rem;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  margin-top: -0.75rem;
 }
 
 .close-button {
-    justify-content: flex-end;
+  justify-content: flex-end;
 }
 
 .asset-detail {
-    background-color: variables.$white;
-    min-height: calc(100% - 3rem);
-    padding: 0.75rem 1rem 0.75rem 1rem;
+  background-color: variables.$white;
+  min-height: calc(100% - 3rem);
+  padding: 0.75rem 1rem 0.75rem 1rem;
 }
 
 .asset-status {
-    display: inline-flex;
-    margin-bottom: 0.5rem;
-    svg-icon {
-        margin-right: 0.5rem;
-    }
-    span {
-        line-height: 1.5;
-    }
+  display: inline-flex;
+  margin-bottom: 0.5rem;
+
+  svg-icon {
+    margin-right: 0.5rem;
+  }
+
+  span {
+    line-height: 1.5;
+  }
 }
 
 table.asset-details {
-    table-layout: fixed;
-    border-collapse: collapse;
-    width: 100%;
-    min-width: 100%;
-    max-width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 100%;
+  max-width: 100%;
 
-    tr:first-child {
-        th:nth-child(1) {
-            $width: 10rem;
-            width: $width;
-            min-width: $width;
-            max-width: $width;
-        }
+  tr:first-child {
+    th:nth-child(1) {
+      $width: 10rem;
+      width: $width;
+      min-width: $width;
+      max-width: $width;
     }
-    th {
-        overflow-wrap: break-word;
-        vertical-align: top;
-        font-weight: unset;
-        text-align: left;
-        padding-right: 0.5rem;
+  }
 
-        &.icon-height {
-            line-height: 2.5rem;
-        }
+  th {
+    overflow-wrap: break-word;
+    vertical-align: top;
+    font-weight: unset;
+    text-align: left;
+    padding-right: 0.5rem;
+
+    &.icon-height {
+      line-height: 2.5rem;
     }
+  }
 }
 
 td,
 th {
-    padding: 0.125rem 0;
-    vertical-align: unset;
-    overflow-wrap: break-word;
+  padding: 0.125rem 0;
+  vertical-align: unset;
+  overflow-wrap: break-word;
 }
 
 td .line {
-    & + span.line {
-        padding-top: 0.125rem;
-    }
+  & + span.line {
+    padding-top: 0.125rem;
+  }
 }
 
 .title-original {
-    padding-bottom: 1rem;
+  padding-bottom: 1rem;
 }
 
 .creation-date {
-    padding-bottom: 1rem;
+  padding-bottom: 1rem;
 }
 
 table.status-works {
-    table-layout: fixed;
-    border-collapse: separate;
-    border-spacing: 0rem 0.125rem;
-    width: 100%;
-    min-width: 100%;
-    max-width: 100%;
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 0rem 0.125rem;
+  width: 100%;
+  min-width: 100%;
+  max-width: 100%;
 
-    tr:first-child {
-        th:nth-child(1) {
-            $width: 7rem;
-            width: $width;
-            min-width: $width;
-            max-width: $width;
-        }
+  tr:first-child {
+    th:nth-child(1) {
+      $width: 7rem;
+      width: $width;
+      min-width: $width;
+      max-width: $width;
     }
-    th {
-        overflow-wrap: break-word;
-        vertical-align: unset;
-        font-weight: unset;
-        text-align: unset;
-    }
+  }
+
+  th {
+    overflow-wrap: break-word;
+    vertical-align: unset;
+    font-weight: unset;
+    text-align: unset;
+  }
 }
 
 a[asset-sg-reset] {
-    display: inline-block;
-    text-align: left;
-    color: variables.$cyan-09;
+  display: inline-block;
+  text-align: left;
+  color: variables.$cyan-09;
 }
 
 ul {
-    padding: 0;
-    margin: 0;
-    &.single-entry {
-        list-style-type: none;
-    }
+  padding: 0;
+  margin: 0;
+
+  &.single-entry {
+    list-style-type: none;
+  }
 }
 
 li > * {
-    vertical-align: top;
+  vertical-align: top;
 }
 
 li::marker {
-    color: variables.$grey-06;
+  color: variables.$grey-06;
 }
 
 li.link {
-    display: inline-flex;
-    align-items: center;
-    max-width: 100%;
-    overflow: visible;
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  overflow: visible;
 
-    .filename {
-        width: calc(100% - 5.5rem);
-        word-wrap: break-word;
-    }
+  .filename {
+    width: calc(100% - 5.5rem);
+    word-wrap: break-word;
+  }
 
-    a {
-        flex: 0 0 2.5rem;
-    }
+  a {
+    flex: 0 0 2.5rem;
+  }
 
-    a:first-of-type {
-        margin-left: 0.5rem;
-    }
+  a:first-of-type {
+    margin-left: 0.5rem;
+  }
 }
 
 // A list of languages to which an asset is mapped.
 ul.languages {
-    display: flex;
-    list-style: none;
+  display: flex;
+  list-style: none;
 
-    // Insert commas between every two languages.
-    & > li:not(:last-child)::after {
-        content: ',\00a0';
-    }
+  // Insert commas between every two languages.
+  & > li:not(:last-child)::after {
+    content: ',\00a0';
+  }
 }

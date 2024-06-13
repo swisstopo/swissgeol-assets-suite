@@ -1,90 +1,49 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import * as RD from '@devexperts/remote-data-ts';
+import { Store } from '@ngrx/store';
+import { plainToInstance } from 'class-transformer';
 import * as E from 'fp-ts/Either';
-import { flow } from 'fp-ts/function';
-import * as O from 'fp-ts/Option';
-import queryString from 'query-string';
-import { map, startWith } from 'rxjs';
+import { Observable, map, tap } from 'rxjs';
 
-import { ApiError, httpErrorResponseError } from '@asset-sg/client-shared';
-import { OE, ORD, decodeError } from '@asset-sg/core';
-import { AssetSearchParamsOld, LV95, ReferenceData } from '@asset-sg/shared';
-
-import { AssetDetail, SearchAssetResultClient, SearchAssetResultClientDecoder } from '../models';
-import { AssetSearchParamsToQueryString } from '../models/asset-search-params';
+import { AppState } from '@asset-sg/client-shared';
+import {
+  AssetEditDetail,
+  AssetSearchQuery,
+  AssetSearchResult,
+  AssetSearchResultDTO,
+  AssetSearchStats,
+  AssetSearchStatsDTO,
+} from '@asset-sg/shared';
 
 @Injectable({ providedIn: 'root' })
 export class AssetSearchService {
-    constructor(private _httpClient: HttpClient) {}
+  constructor(private _httpClient: HttpClient, private store: Store<AppState>) {
+  }
 
-    public search(searchText: string): ORD.ObservableRemoteData<ApiError, SearchAssetResultClient> {
-        const qs = queryString.stringify(
-            AssetSearchParamsOld.encode({
-                searchText,
-            }),
-            { skipNull: true },
-        );
-        return this._httpClient
-            .get('/api/search-asset?' + qs)
-            .pipe(
-                map(flow(SearchAssetResultClientDecoder.decode, E.mapLeft(decodeError))),
-                OE.catchErrorW(httpErrorResponseError),
-                map(RD.fromEither),
-                startWith(RD.pending),
-            );
-    }
+  public search(searchQuery: AssetSearchQuery): Observable<AssetSearchResult> {
+    return this._httpClient
+      .post('/api/assets/search?limit=10000', searchQuery)
+      .pipe(
+        map((res) => plainToInstance(AssetSearchResultDTO, res)),
+        tap((result) => {
+          result.data = result.data.map((asset) => (AssetEditDetail.decode(asset) as E.Right<AssetEditDetail>).right);
+        }),
+      );
+  }
 
-    public searchByPolygon(polygon: LV95[]): ORD.ObservableRemoteData<ApiError, SearchAssetResultClient> {
-        const qs = AssetSearchParamsToQueryString.encode({ filterKind: 'polygon', polygon, searchText: O.none });
-        return this._httpClient
-            .get('/api/asset/?' + qs)
-            .pipe(
-                map(flow(SearchAssetResultClientDecoder.decode, E.mapLeft(decodeError))),
-                OE.catchErrorW(httpErrorResponseError),
-                map(RD.fromEither),
-                startWith(RD.pending),
-            );
-    }
+  public loadAssetDetailData(assetId: number): Observable<AssetEditDetail> {
+    return this._httpClient
+      .get(`/api/asset-edit/${assetId}`)
+      .pipe(
+        map((res) => (AssetEditDetail.decode(res) as E.Right<AssetEditDetail>).right),
+      );
+  }
 
-    public searchByPolygonRefineBySearchText(
-        polygon: LV95[],
-        searchText: string,
-    ): ORD.ObservableRemoteData<ApiError, SearchAssetResultClient> {
-        const qs = AssetSearchParamsToQueryString.encode({
-            filterKind: 'polygon',
-            polygon,
-            searchText: O.some(searchText),
-        });
-        return this._httpClient
-            .get('/api/asset/?' + qs)
-            .pipe(
-                map(flow(SearchAssetResultClientDecoder.decode, E.mapLeft(decodeError))),
-                OE.catchErrorW(httpErrorResponseError),
-                map(RD.fromEither),
-                startWith(RD.pending),
-            );
-    }
-
-    public loadReferenceData(): ORD.ObservableRemoteData<ApiError, ReferenceData> {
-        return this._httpClient
-            .get('/api/reference-data')
-            .pipe(
-                map(flow(ReferenceData.decode, E.mapLeft(decodeError))),
-                OE.catchErrorW(httpErrorResponseError),
-                map(RD.fromEither),
-                startWith(RD.pending),
-            );
-    }
-
-    public loadAssetDetailData(assetId: number): ORD.ObservableRemoteData<ApiError, AssetDetail> {
-        return this._httpClient
-            .get(`/api/asset-detail/${assetId}`)
-            .pipe(
-                map(flow(AssetDetail.decode, E.mapLeft(decodeError))),
-                OE.catchErrorW(httpErrorResponseError),
-                map(RD.fromEither),
-                startWith(RD.pending),
-            );
-    }
+  public updateSearchResultStats(searchQuery: AssetSearchQuery): Observable<AssetSearchStats> {
+    return this._httpClient
+      .post('/api/assets/search/stats', searchQuery)
+      .pipe(
+        map((res) => plainToInstance(AssetSearchStatsDTO, res)),
+      );
+  }
 }
