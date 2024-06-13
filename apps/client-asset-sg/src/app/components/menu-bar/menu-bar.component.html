@@ -9,7 +9,7 @@
     <span translate>menuBar.assets</span>
   </button>
   <ng-template #notAssetsActive>
-    <a [routerLink]="[_translateService.currentLang]" asset-sg-reset class="menu-bar-item">
+    <a [routerLink]="[_translateService.currentLang]" asset-sg-reset class="menu-bar-item" (click)="openAssetDrawer()">
       <svg-icon key="assets" />
       <span translate>menuBar.assets</span>
     </a>

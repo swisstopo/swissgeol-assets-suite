@@ -1,10 +1,11 @@
 import { Portal } from '@angular/cdk/portal';
 import { Injectable } from '@angular/core';
-import { Subject } from 'rxjs';
+import { BehaviorSubject, Subject } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class AppPortalService {
-  private _appBarPortalContent$ = new Subject<Portal<unknown> | null>();
+  private _appBarPortalContent$ = new BehaviorSubject<Portal<unknown> | null>(null);
+
   public setAppBarPortalContent(portal: Portal<unknown> | null) {
     this._appBarPortalContent$.next(portal);
   }

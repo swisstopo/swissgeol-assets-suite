@@ -131,6 +131,9 @@ export class AssetViewerPageComponent implements AfterViewInit {
         untilDestroyed(this)
       )
       .subscribe((searchQuery) => {
+        if (this.searchInput == null) {
+          return;
+        }
         if (searchQuery.text || '' !== this.searchInput.nativeElement.value || '') {
           this.searchInput.nativeElement.value = searchQuery.text || '';
         }
