@@ -4,22 +4,11 @@
     "Description": "swisstopo assets",
     "RequireClientSecret": false,
     "AlwaysIncludeUserClaimsInIdToken": true,
-    "AllowedGrantTypes": [
-      "authorization_code"
-    ],
+    "AllowedGrantTypes": ["authorization_code"],
     "AllowAccessTokensViaBrowser": true,
-    "RedirectUris": [
-      "http://localhost:4200"
-    ],
-    "PostLogoutRedirectUris": [
-      "http://localhost:4200"
-    ],
-    "AllowedScopes": [
-      "openid",
-      "profile",
-      "email",
-      "cognito"
-    ],
+    "RedirectUris": ["http://localhost:4200"],
+    "PostLogoutRedirectUris": ["http://localhost:4200"],
+    "AllowedScopes": ["openid", "profile", "email", "cognito"],
     "AccessTokenType": "JWT",
     "IdentityTokenLifetime": 36000,
     "AccessTokenLifetime": 36000

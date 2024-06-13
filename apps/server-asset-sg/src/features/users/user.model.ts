@@ -3,13 +3,13 @@ import { IsEnum, IsString } from 'class-validator';
 import { Data, Model } from '@/utils/data/model';
 
 export interface User extends Model<UserId> {
-  email: string
-  role: Role
-  lang: string
+  email: string;
+  role: Role;
+  lang: string;
 }
 
 export type UserId = string;
-export type UserData = Omit<Data<User>, 'email'>
+export type UserData = Omit<Data<User>, 'email'>;
 
 export enum Role {
   Admin = 'admin',

@@ -1,4 +1,4 @@
-import { IsInt, Max, Min } from 'class-validator'
+import { IsInt, Max, Min } from 'class-validator';
 
 export class LocalDate {
   static now(): LocalDate {
@@ -56,11 +56,13 @@ export class LocalDate {
   readonly year: number;
 
   @IsInt()
-  @Min(1) @Max(12)
+  @Min(1)
+  @Max(12)
   readonly month: number;
 
   @IsInt()
-  @Min(1) @Max(31)
+  @Min(1)
+  @Max(31)
   readonly day: number;
 
   private constructor(date: Date) {

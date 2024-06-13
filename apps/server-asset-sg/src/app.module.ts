@@ -28,38 +28,38 @@ import { UserRepo } from '@/features/users/user.repo';
 import { UsersController } from '@/features/users/users.controller';
 
 @Module({
-    controllers: [
-        AppController,
-        UsersController,
-        FavoritesController,
-        AssetSyncController,
-        AssetSearchController,
-        AssetsController,
-        AssetController,
-        ContactsController,
-        OcrController,
-    ],
-    imports: [HttpModule, ScheduleModule.forRoot(), CacheModule.register()],
-    providers: [
-        provideElasticsearch,
-        PrismaService,
-        AssetRepo,
-        AssetInfoRepo,
-        AssetService,
-        AssetEditRepo,
-        ContactRepo,
-        FavoriteRepo,
-        UserRepo,
-        AssetEditService,
-        AssetSearchService,
-        {
-            provide: APP_GUARD,
-            useClass: RoleGuard,
-        },
-    ],
+  controllers: [
+    AppController,
+    UsersController,
+    FavoritesController,
+    AssetSyncController,
+    AssetSearchController,
+    AssetsController,
+    AssetController,
+    ContactsController,
+    OcrController,
+  ],
+  imports: [HttpModule, ScheduleModule.forRoot(), CacheModule.register()],
+  providers: [
+    provideElasticsearch,
+    PrismaService,
+    AssetRepo,
+    AssetInfoRepo,
+    AssetService,
+    AssetEditRepo,
+    ContactRepo,
+    FavoriteRepo,
+    UserRepo,
+    AssetEditService,
+    AssetSearchService,
+    {
+      provide: APP_GUARD,
+      useClass: RoleGuard,
+    },
+  ],
 })
 export class AppModule implements NestModule {
-    configure(consumer: MiddlewareConsumer) {
-        consumer.apply(JwtMiddleware).exclude('/oauth-config/config', 'ocr/(.*)').forRoutes('*');
-    }
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(JwtMiddleware).exclude('/oauth-config/config', 'ocr/(.*)').forRoutes('*');
+  }
 }

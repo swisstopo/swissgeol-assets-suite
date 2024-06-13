@@ -3,11 +3,11 @@ name: build
 on:
   push:
     branches:
-      - '**'
+      - "**"
   workflow_dispatch:
 
 env:
-  NODE_VERSION: '20.x'
+  NODE_VERSION: "20.x"
 
 jobs:
   install:
@@ -53,7 +53,7 @@ jobs:
       db:
         image: postgis/postgis
         ports:
-          - '5432:5432'
+          - "5432:5432"
         env:
           POSTGRES_USER: ${{ env.DB_USERNAME }}
           POSTGRES_PASSWORD: ${{ env.DB_PASSWORD }}
@@ -62,7 +62,7 @@ jobs:
       elasticsearch:
         image: docker.elastic.co/elasticsearch/elasticsearch:8.12.1
         ports:
-          - '9200:9200'
+          - "9200:9200"
         env:
           ES_JAVA_OPTS: -Xms512m -Xmx512m
           xpack.security.enabled: false
@@ -135,7 +135,7 @@ jobs:
         run: npm run build
 
   build_and_push_app:
-    name: 'build and push app'
+    name: "build and push app"
     if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
     needs:
       - build
@@ -152,7 +152,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   build_and_push_api:
-    name: 'build and push api'
+    name: "build and push api"
     if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
     needs:
       - build
@@ -169,7 +169,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   tag_edge_commit:
-    name: 'tag edge commit'
+    name: "tag edge commit"
     needs:
       - build_and_push_app
       - build_and_push_api
@@ -233,7 +233,7 @@ jobs:
         run: docker push ${{ vars.BASE_IMAGE_NAME }}-api:release-candidate
 
   tag_rc_commit:
-    name: 'tag rc commit'
+    name: "tag rc commit"
     needs:
       - tag_rc_image_app
       - tag_rc_image_api

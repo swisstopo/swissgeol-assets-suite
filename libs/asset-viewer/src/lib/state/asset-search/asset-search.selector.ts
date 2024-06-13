@@ -1,10 +1,4 @@
 import { formatNumber } from '@angular/common';
-import * as RD from '@devexperts/remote-data-ts';
-import { createSelector } from '@ngrx/store';
-import * as A from 'fp-ts/Array';
-import { pipe } from 'fp-ts/function';
-import * as O from 'fp-ts/Option';
-
 import { fromAppShared } from '@asset-sg/client-shared';
 import {
   AssetEditDetail,
@@ -23,57 +17,66 @@ import {
   ordStatusWorkByDate,
   usageCodes,
 } from '@asset-sg/shared';
-
+import * as RD from '@devexperts/remote-data-ts';
+import { createSelector } from '@ngrx/store';
+import * as A from 'fp-ts/Array';
+import { pipe } from 'fp-ts/function';
+import * as O from 'fp-ts/Option';
 
 import { AssetDetail } from '../../models';
 
 import { AppStateWithAssetSearch, LoadingState } from './asset-search.reducer';
 
-
 const assetSearchFeature = (state: AppStateWithAssetSearch) => state.assetSearch;
 
-export const selectIsMapInitialised = createSelector(assetSearchFeature, state => state.isMapInitialised);
+export const selectIsMapInitialised = createSelector(assetSearchFeature, (state) => state.isMapInitialised);
 
-export const selectIsRefineAndResultsOpen = createSelector(assetSearchFeature, state => state.isRefineAndResultsOpen);
+export const selectIsRefineAndResultsOpen = createSelector(assetSearchFeature, (state) => state.isRefineAndResultsOpen);
 
+export const selectAssetSearchState = createSelector(assetSearchFeature, (state) => state);
 
-export const selectAssetSearchState = createSelector(assetSearchFeature, state => state);
+export const selectSearchLoadingState = createSelector(assetSearchFeature, (state) => state.loadingState);
 
-export const selectSearchLoadingState = createSelector(assetSearchFeature, state => state.loadingState);
+export const selectAssetDetailLoadingState = createSelector(
+  assetSearchFeature,
+  (state) => state.assetDetailLoadingState
+);
 
-export const selectAssetDetailLoadingState = createSelector(assetSearchFeature, state => state.assetDetailLoadingState);
+export const selectAssetSearchQuery = createSelector(assetSearchFeature, (state) => state.query);
 
-export const selectAssetSearchQuery = createSelector(assetSearchFeature, state => state.query);
+export const selectAssetSearchResultData = createSelector(assetSearchFeature, (state) => state.results.data);
 
-export const selectAssetSearchResultData = createSelector(assetSearchFeature, state => state.results.data);
+export const selectAssetSearchPageData = createSelector(assetSearchFeature, (state) => state.results.page);
 
-export const selectAssetSearchPageData = createSelector(assetSearchFeature, state => state.results.page);
+export const selectAssetSearchPolygon = createSelector(assetSearchFeature, (state) => state.query.polygon);
 
-export const selectAssetSearchPolygon = createSelector(assetSearchFeature, state => state.query.polygon);
-
-export const selectStudies = createSelector(
-  selectAssetSearchResultData,
-  (assetEditDetails): StudyVM[] =>
-    assetEditDetails.flatMap(assetEditDetail => assetEditDetail.studies.map(study => {
+export const selectStudies = createSelector(selectAssetSearchResultData, (assetEditDetails): StudyVM[] =>
+  assetEditDetails.flatMap((assetEditDetail) =>
+    assetEditDetail.studies.map((study) => {
       return {
         assetId: study.assetId,
         studyId: study.studyId,
         geom: wktToGeoJSON(study.geomText),
       };
-    })),
+    })
+  )
 );
 
-export const selectAssetsSearchStats = createSelector(assetSearchFeature, state => state.stats);
+export const selectAssetsSearchStats = createSelector(assetSearchFeature, (state) => state.stats);
 
-export const selectCurrentAssetDetail = createSelector(assetSearchFeature, state => state.currentAsset,
-);
+export const selectCurrentAssetDetail = createSelector(assetSearchFeature, (state) => state.currentAsset);
 
-export const selectCurrentAssetDetailVM = createSelector(fromAppShared.selectRDReferenceData, fromAppShared.selectLocale, selectCurrentAssetDetail, (referenceData, locale, currentAssetDetail) => {
-  if (RD.isSuccess(referenceData) && !!currentAssetDetail) {
-    return makeAssetDetailVMNew(referenceData.value, currentAssetDetail, locale);
+export const selectCurrentAssetDetailVM = createSelector(
+  fromAppShared.selectRDReferenceData,
+  fromAppShared.selectLocale,
+  selectCurrentAssetDetail,
+  (referenceData, locale, currentAssetDetail) => {
+    if (RD.isSuccess(referenceData) && !!currentAssetDetail) {
+      return makeAssetDetailVMNew(referenceData.value, currentAssetDetail, locale);
+    }
+    return null as ReturnType<typeof makeAssetDetailVMNew> | null;
   }
-  return null as ReturnType<typeof makeAssetDetailVMNew> | null;
-});
+);
 
 export const selectDrawerState = createSelector(
   selectIsMapInitialised,
@@ -84,149 +87,179 @@ export const selectDrawerState = createSelector(
   (isMapInitialised, isRefineAndResultsOpen, isPanelOpen, currentAssetDetail, loadingState): DrawerState =>
     !isMapInitialised
       ? {
-        showRefineOrStartSearch: 'neither',
-        showResults: false,
-        showDetails: false,
-      }
+          showRefineOrStartSearch: 'neither',
+          showResults: false,
+          showDetails: false,
+        }
       : {
-        showRefineOrStartSearch:
-          !isPanelOpen || !isRefineAndResultsOpen
-            ? 'neither'
-            : 'show-refine',
-        showResults: isPanelOpen && isRefineAndResultsOpen && loadingState !== LoadingState.Initial,
-        showDetails: !!currentAssetDetail,
-      },
+          showRefineOrStartSearch: !isPanelOpen || !isRefineAndResultsOpen ? 'neither' : 'show-refine',
+          showResults: isPanelOpen && isRefineAndResultsOpen && loadingState !== LoadingState.Initial,
+          showDetails: !!currentAssetDetail,
+        }
 );
 
-export const selectContact = (contacts: {
-  role: string,
-  contactId: number
-}[] | undefined) => createSelector(fromAppShared.selectRDReferenceData, (referenceData): FullContact[] | null => {
-  if (RD.isSuccess(referenceData) && contacts) {
-    return contacts.map(contact => {
-      return {
-        ...referenceData.value.contacts[contact.contactId],
-        role: contact.role,
-      };
-    });
-  }
-  return null;
-});
+export const selectContact = (
+  contacts:
+    | {
+        role: string;
+        contactId: number;
+      }[]
+    | undefined
+) =>
+  createSelector(fromAppShared.selectRDReferenceData, (referenceData): FullContact[] | null => {
+    if (RD.isSuccess(referenceData) && contacts) {
+      return contacts.map((contact) => {
+        return {
+          ...referenceData.value.contacts[contact.contactId],
+          role: contact.role,
+        };
+      });
+    }
+    return null;
+  });
 
-export const selectAssetKindItem = (assetKindItemCode?: string) => createSelector(fromAppShared.selectRDReferenceData, (referenceData): ValueItem | null => {
-  if (RD.isSuccess(referenceData) && assetKindItemCode) {
-    return referenceData.value.assetKindItems[assetKindItemCode];
-  }
-  return null;
-});
+export const selectAssetKindItem = (assetKindItemCode?: string) =>
+  createSelector(fromAppShared.selectRDReferenceData, (referenceData): ValueItem | null => {
+    if (RD.isSuccess(referenceData) && assetKindItemCode) {
+      return referenceData.value.assetKindItems[assetKindItemCode];
+    }
+    return null;
+  });
 
-export const selectAssetFormatItem = (assetFormatItemCode?: string) => createSelector(fromAppShared.selectRDReferenceData, (referenceData): ValueItem | null => {
-  if (RD.isSuccess(referenceData) && assetFormatItemCode) {
-    return referenceData.value.assetFormatItems[assetFormatItemCode];
-  }
-  return null;
-});
+export const selectAssetFormatItem = (assetFormatItemCode?: string) =>
+  createSelector(fromAppShared.selectRDReferenceData, (referenceData): ValueItem | null => {
+    if (RD.isSuccess(referenceData) && assetFormatItemCode) {
+      return referenceData.value.assetFormatItems[assetFormatItemCode];
+    }
+    return null;
+  });
 
-export const selectManCatLabelItem = (manCatLabelRefs?: string[]) => createSelector(fromAppShared.selectRDReferenceData, (referenceData): ValueItem[] | null => {
-  if (RD.isSuccess(referenceData) && manCatLabelRefs) {
-    return manCatLabelRefs.map((manCatLabelRef) => {
-      return referenceData.value.manCatLabelItems[manCatLabelRef];
-    });
-  }
-  return null;
-});
+export const selectManCatLabelItem = (manCatLabelRefs?: string[]) =>
+  createSelector(fromAppShared.selectRDReferenceData, (referenceData): ValueItem[] | null => {
+    if (RD.isSuccess(referenceData) && manCatLabelRefs) {
+      return manCatLabelRefs.map((manCatLabelRef) => {
+        return referenceData.value.manCatLabelItems[manCatLabelRef];
+      });
+    }
+    return null;
+  });
 
-export const selectAvailableAuthors = createSelector(fromAppShared.selectRDReferenceData, selectAssetsSearchStats, (referenceData, stats): AvailableAuthor[] | null => {
-  if (RD.isSuccess(referenceData)) {
-    return stats.authorIds.map(authorId => {
-      return {
-        contactId: authorId.value,
-        count: authorId.count,
-        name: referenceData.value.contacts[authorId.value].name,
-      };
-    });
+export const selectAvailableAuthors = createSelector(
+  fromAppShared.selectRDReferenceData,
+  selectAssetsSearchStats,
+  (referenceData, stats): AvailableAuthor[] | null => {
+    if (RD.isSuccess(referenceData)) {
+      return stats.authorIds.map((authorId) => {
+        return {
+          contactId: authorId.value,
+          count: authorId.count,
+          name: referenceData.value.contacts[authorId.value].name,
+        };
+      });
+    }
+    return null;
   }
-  return null;
-});
+);
 
 export const selectCreateDate = createSelector(selectAssetsSearchStats, (stats): DateRange | null => stats.createDate);
 
-
-export const selectUsageCodeData = createSelector(selectAssetsSearchStats, selectAssetSearchQuery, (stats, query): AvailableValueCount<UsageCode>[] => {
-  return usageCodes.map(usageCode => {
-    const count = stats.usageCodes.find(item => item.value === usageCode)?.count ?? 0;
-    return {
-      value: usageCode,
-      count,
-      isAvailable: count > 0,
-      isActive: count > 0 && (query.usageCodes?.includes(usageCode) ?? true),
-    };
-  });
-});
-
-export const selectAvailableAssetKindItems = createSelector(fromAppShared.selectRDReferenceData, selectAssetsSearchStats, selectAssetSearchQuery, (referenceData, stats, query): AvailableItem[] | null => {
-  if (RD.isSuccess(referenceData)) {
-    const assetKindItems: ValueItem[] = Object.values(referenceData.value.assetKindItems);
-    return assetKindItems.flatMap((assetKindItem): AvailableItem => {
-      const count = stats.assetKindItemCodes.find(item => item.value === assetKindItem.code)?.count ?? 0;
+export const selectUsageCodeData = createSelector(
+  selectAssetsSearchStats,
+  selectAssetSearchQuery,
+  (stats, query): AvailableValueCount<UsageCode>[] => {
+    return usageCodes.map((usageCode) => {
+      const count = stats.usageCodes.find((item) => item.value === usageCode)?.count ?? 0;
       return {
-        item: assetKindItem,
+        value: usageCode,
         count,
         isAvailable: count > 0,
-        isActive: count > 0 && (query.assetKindItemCodes?.includes(assetKindItem.code) ?? true),
+        isActive: count > 0 && (query.usageCodes?.includes(usageCode) ?? true),
       };
     });
   }
-  return null;
-});
+);
 
-export const selectAvailableLanguages = createSelector(fromAppShared.selectRDReferenceData, selectAssetsSearchStats, selectAssetSearchQuery, (referenceData, stats, query): AvailableItem[] | null => {
-  if (RD.isSuccess(referenceData)) {
-    const languageItems: ValueItem[] = Object.values(referenceData.value.languageItems);
-    return languageItems.map(languageItem => {
-      const count = stats.languageItemCodes.find(item => item.value === languageItem.code)?.count ?? 0;
+export const selectAvailableAssetKindItems = createSelector(
+  fromAppShared.selectRDReferenceData,
+  selectAssetsSearchStats,
+  selectAssetSearchQuery,
+  (referenceData, stats, query): AvailableItem[] | null => {
+    if (RD.isSuccess(referenceData)) {
+      const assetKindItems: ValueItem[] = Object.values(referenceData.value.assetKindItems);
+      return assetKindItems.flatMap((assetKindItem): AvailableItem => {
+        const count = stats.assetKindItemCodes.find((item) => item.value === assetKindItem.code)?.count ?? 0;
+        return {
+          item: assetKindItem,
+          count,
+          isAvailable: count > 0,
+          isActive: count > 0 && (query.assetKindItemCodes?.includes(assetKindItem.code) ?? true),
+        };
+      });
+    }
+    return null;
+  }
+);
+
+export const selectAvailableLanguages = createSelector(
+  fromAppShared.selectRDReferenceData,
+  selectAssetsSearchStats,
+  selectAssetSearchQuery,
+  (referenceData, stats, query): AvailableItem[] | null => {
+    if (RD.isSuccess(referenceData)) {
+      const languageItems: ValueItem[] = Object.values(referenceData.value.languageItems);
+      return languageItems.map((languageItem) => {
+        const count = stats.languageItemCodes.find((item) => item.value === languageItem.code)?.count ?? 0;
+        return {
+          item: languageItem,
+          count,
+          isAvailable: count > 0,
+          isActive: count > 0 && (query.languageItemCodes?.includes(languageItem.code) ?? true),
+        };
+      });
+    }
+    return null;
+  }
+);
+
+export const selectAvailableGeometries = createSelector(
+  selectAssetsSearchStats,
+  selectAssetSearchQuery,
+  (stats, query): AvailableValueCount<GeometryCode | 'None'>[] | null => {
+    const geometries: Array<GeometryCode | 'None'> = Object.values(GeometryCode);
+    geometries.push('None');
+    const availableGeometries = geometries.map((geometry) => {
+      const count = stats.geometryCodes.find((item) => item.value === geometry)?.count ?? 0;
       return {
-        item: languageItem,
-        count,
+        value: geometry,
+        count: count,
         isAvailable: count > 0,
-        isActive: count > 0 && (query.languageItemCodes?.includes(languageItem.code) ?? true),
+        isActive: count > 0 && (query.geomCodes?.includes(geometry) ?? true),
       };
     });
+    return availableGeometries;
   }
-  return null;
-});
+);
 
-export const selectAvailableGeometries = createSelector(selectAssetsSearchStats, selectAssetSearchQuery, (stats, query): AvailableValueCount<GeometryCode | 'None'>[] | null => {
-  const geometries: Array<GeometryCode | 'None'> = Object.values(GeometryCode);
-  geometries.push('None');
-  const availableGeometries = geometries.map(geometry => {
-    const count = stats.geometryCodes.find(item => item.value === geometry)?.count ?? 0;
-    return {
-      value: geometry,
-      count: count,
-      isAvailable: count > 0,
-      isActive: count > 0 && (query.geomCodes?.includes(geometry) ?? true),
-    };
-  });
-  return availableGeometries;
-});
-
-export const selectAvailableManCatLabels = createSelector(fromAppShared.selectRDReferenceData, selectAssetsSearchStats, selectAssetSearchQuery, (referenceData, stats, query): AvailableItem[] | null => {
-  if (RD.isSuccess(referenceData)) {
-    const manCatLabels: ValueItem[] = Object.values(referenceData.value.manCatLabelItems);
-    return manCatLabels.map(manCatLabel => {
-      const count = stats.manCatLabelItemCodes.find(item => item.value === manCatLabel.code)?.count ?? 0;
-      return {
-        item: manCatLabel,
-        count,
-        isAvailable: count > 0,
-        isActive: count > 0 && (query.manCatLabelItemCodes?.includes(manCatLabel.code) ?? true),
-      };
-    });
+export const selectAvailableManCatLabels = createSelector(
+  fromAppShared.selectRDReferenceData,
+  selectAssetsSearchStats,
+  selectAssetSearchQuery,
+  (referenceData, stats, query): AvailableItem[] | null => {
+    if (RD.isSuccess(referenceData)) {
+      const manCatLabels: ValueItem[] = Object.values(referenceData.value.manCatLabelItems);
+      return manCatLabels.map((manCatLabel) => {
+        const count = stats.manCatLabelItemCodes.find((item) => item.value === manCatLabel.code)?.count ?? 0;
+        return {
+          item: manCatLabel,
+          count,
+          isAvailable: count > 0,
+          isActive: count > 0 && (query.manCatLabelItemCodes?.includes(manCatLabel.code) ?? true),
+        };
+      });
+    }
+    return null;
   }
-  return null;
-});
-
+);
 
 export interface AvailableAuthor {
   contactId: number;
@@ -282,20 +315,22 @@ const makeAssetDetailVMNew = (referenceData: ReferenceData, assetDetail: AssetEd
     ...rest,
     assetKindItem: referenceData.assetKindItems[assetKindItemCode],
     assetFormatItem: referenceData.assetFormatItems[assetFormatItemCode],
-    assetContacts: assetContacts.map((contact) => {
-      return { role: contact.role, contact: referenceData.contacts[contact.contactId] };
-    }).map(contact => makeAssetDetailContactVM(referenceData, contact)),
+    assetContacts: assetContacts
+      .map((contact) => {
+        return { role: contact.role, contact: referenceData.contacts[contact.contactId] };
+      })
+      .map((contact) => makeAssetDetailContactVM(referenceData, contact)),
     languages: assetLanguages,
-    manCatLabels: manCatLabelRefs.map(manCatLabelItemCode => referenceData.manCatLabelItems[manCatLabelItemCode]),
+    manCatLabels: manCatLabelRefs.map((manCatLabelItemCode) => referenceData.manCatLabelItems[manCatLabelItemCode]),
     assetFormatCompositions: assetFormatCompositions.map(
-      assetFormatItemCode => referenceData.assetFormatItems[assetFormatItemCode],
+      (assetFormatItemCode) => referenceData.assetFormatItems[assetFormatItemCode]
     ),
-    typeNatRels: typeNatRels.map(natRelItemCode => referenceData.natRelItems[natRelItemCode]),
+    typeNatRels: typeNatRels.map((natRelItemCode) => referenceData.natRelItems[natRelItemCode]),
     referenceAssets: [
       ...pipe(
         assetMain,
-        O.map(a => [a]),
-        O.getOrElseW(() => []),
+        O.map((a) => [a]),
+        O.getOrElseW(() => [])
       ),
       ...subordinateAssets,
       ...siblingXAssets,
@@ -304,12 +339,12 @@ const makeAssetDetailVMNew = (referenceData: ReferenceData, assetDetail: AssetEd
     statusWorks: pipe(
       statusWorks,
       A.sort(ordStatusWorkByDate),
-      A.map(a => {
+      A.map((a) => {
         const { statusWorkItemCode, ...rest } = a;
         return { ...rest, statusWork: referenceData.statusWorkItems[statusWorkItemCode] };
-      }),
+      })
     ),
-    assetFiles: assetFiles.map(assetFile => {
+    assetFiles: assetFiles.map((assetFile) => {
       const _fileSize = assetFile.fileSize / 1024n / 1024n;
       const fileSize =
         _fileSize < 1 ? `< 1MB` : `${formatNumber(Number(bigIntRoundToMB(assetFile.fileSize)), locale)}MB`;
@@ -374,7 +409,7 @@ function getCoordinatesFromWKT(wkt: string): LV95[] {
     return [];
   }
   const coordinateStrings = match[1].split(',');
-  return coordinateStrings.map(coordStr => {
+  return coordinateStrings.map((coordStr) => {
     const [y, x] = coordStr.trim().split(' ').map(Number);
     return { x, y } as LV95;
   });

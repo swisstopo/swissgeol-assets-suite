@@ -1,7 +1,6 @@
+import { AssetUsage, Contact, PatchAsset, User, UserRoleEnum, dateIdFromDate } from '@asset-sg/shared';
 import { fakerDE_CH as faker } from '@faker-js/faker';
 import * as O from 'fp-ts/Option';
-
-import { AssetUsage, Contact, PatchAsset, User, UserRoleEnum, dateIdFromDate } from '@asset-sg/shared';
 
 // eslint-disable-next-line @nx/enforce-module-boundaries
 import { fakeAssetFormatItemCode } from '../../../../../test/data/asset-format-item';
@@ -23,26 +22,27 @@ export const fakeAssetUsage = (): AssetUsage => ({
   statusAssetUseItemCode: faker.helpers.arrayElement(['tobechecked', 'underclarification', 'approved']),
 });
 
-export const fakeUser = () => define<User>({
-  email: faker.internet.email(),
-  id: faker.string.uuid(),
-  lang: faker.helpers.fromRegExp(/[a-z]{2}/),
-  role: faker.helpers.arrayElement(Object.values(UserRoleEnum)),
-});
+export const fakeUser = () =>
+  define<User>({
+    email: faker.internet.email(),
+    id: faker.string.uuid(),
+    lang: faker.helpers.fromRegExp(/[a-z]{2}/),
+    role: faker.helpers.arrayElement(Object.values(UserRoleEnum)),
+  });
 
-export const fakeContact = () => define<Omit<Contact, 'id'>>({
-  contactKindItemCode: fakeContactKindItem(),
-  name: faker.company.name(),
-  street: faker.location.street(),
-  houseNumber: faker.location.buildingNumber(),
-  plz: faker.location.zipCode(),
-  locality: faker.location.city(),
-  country: faker.location.country(),
-  telephone: faker.phone.number(),
-  email: faker.internet.email(),
-  website: faker.internet.domainName(),
-});
-
+export const fakeContact = () =>
+  define<Omit<Contact, 'id'>>({
+    contactKindItemCode: fakeContactKindItem(),
+    name: faker.company.name(),
+    street: faker.location.street(),
+    houseNumber: faker.location.buildingNumber(),
+    plz: faker.location.zipCode(),
+    locality: faker.location.city(),
+    country: faker.location.country(),
+    telephone: faker.phone.number(),
+    email: faker.internet.email(),
+    website: faker.internet.domainName(),
+  });
 
 export const fakeAssetPatch = (): PatchAsset => ({
   assetContacts: [],

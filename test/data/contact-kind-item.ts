@@ -1,9 +1,7 @@
 import { faker } from '@faker-js/faker';
 
-export const fakeContactKindItem = (): string => faker.helpers.arrayElement(
-  contactKindItems.map((item) => item.contactKindItemCode),
-);
-
+export const fakeContactKindItem = (): string =>
+  faker.helpers.arrayElement(contactKindItems.map((item) => item.contactKindItemCode));
 
 export const contactKindItems = [
   {

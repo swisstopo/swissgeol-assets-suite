@@ -9,6 +9,8 @@ import {
   ViewChild,
   inject,
 } from '@angular/core';
+import { DragHandleOffset, getCssCustomPropertyNumberValue } from '@asset-sg/client-shared';
+import { AssetEditDetail } from '@asset-sg/shared';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { Store } from '@ngrx/store';
 import { RxState } from '@rx-angular/state';
@@ -27,9 +29,6 @@ import {
   startWith,
   switchMap,
 } from 'rxjs';
-
-import { DragHandleOffset, getCssCustomPropertyNumberValue } from '@asset-sg/client-shared';
-import { AssetEditDetail } from '@asset-sg/shared';
 
 import * as actions from '../../state/asset-search/asset-search.actions';
 
@@ -75,7 +74,7 @@ export class AssetPickerComponent extends RxState<AssetPickerState> {
     this.connect('currentAssetId', currentAssetId$);
   }
 
-  @Output('assetMouseOver') assetMouseOver$ = new EventEmitter<O.Option<number>>();
+  @Output() assetMouseOver = new EventEmitter<O.Option<number>>();
 
   constructor() {
     super();
@@ -100,16 +99,11 @@ export class AssetPickerComponent extends RxState<AssetPickerState> {
             const { hostRect, pickerContainerRect, fontSizePx, transformX, transformY } =
               prevDragHandleOffset == null
                 ? {
-                  hostRect: this._host.nativeElement.getBoundingClientRect(),
-                  pickerContainerRect: this._pickerContainer.nativeElement.getBoundingClientRect(),
-                  fontSizePx:
-                    getCssCustomPropertyNumberValue(
-                      this._wndw,
-                      this._host.nativeElement,
-                      'font-size',
-                    ) * 16,
-                  ...getTransformXY(),
-                }
+                    hostRect: this._host.nativeElement.getBoundingClientRect(),
+                    pickerContainerRect: this._pickerContainer.nativeElement.getBoundingClientRect(),
+                    fontSizePx: getCssCustomPropertyNumberValue(this._wndw, this._host.nativeElement, 'font-size') * 16,
+                    ...getTransformXY(),
+                  }
                 : acc;
             return { dragHandleOffset, fontSizePx, hostRect, pickerContainerRect, transformX, transformY };
           },
@@ -120,9 +114,9 @@ export class AssetPickerComponent extends RxState<AssetPickerState> {
             pickerContainerRect: null as DOMRect | null,
             transformX: 0,
             transformY: 0,
-          },
+          }
         ),
-        untilDestroyed(this),
+        untilDestroyed(this)
       )
       .subscribe(({ dragHandleOffset, hostRect, pickerContainerRect, fontSizePx, transformX, transformY }) => {
         this._ngZone.runOutsideAngular(() => {
@@ -135,14 +129,14 @@ export class AssetPickerComponent extends RxState<AssetPickerState> {
                 pickerContainerRect.left + dragHandleOffset.offsetX <= hostRect.left + fontSizePx
                   ? hostRect.left - pickerContainerRect.left + transformX + fontSizePx + 1
                   : pickerContainerRect.right + dragHandleOffset.offsetX >= hostRect.right
-                    ? hostRect.right - pickerContainerRect.right + transformX
-                    : dragHandleOffset.offsetX + transformX;
+                  ? hostRect.right - pickerContainerRect.right + transformX
+                  : dragHandleOffset.offsetX + transformX;
               const offsetY =
                 pickerContainerRect.top + dragHandleOffset.offsetY <= hostRect.top
                   ? hostRect.top - pickerContainerRect.top + transformY
                   : pickerContainerRect.bottom + dragHandleOffset.offsetY >= hostRect.bottom
-                    ? hostRect.bottom - pickerContainerRect.bottom + transformY
-                    : dragHandleOffset.offsetY + transformY;
+                  ? hostRect.bottom - pickerContainerRect.bottom + transformY
+                  : dragHandleOffset.offsetY + transformY;
               this._pickerContainer.nativeElement.style.transform = `translate3d(${offsetX}px, ${offsetY}px, 0)`;
             }
           }
@@ -153,15 +147,15 @@ export class AssetPickerComponent extends RxState<AssetPickerState> {
       'show',
       merge(
         this.assets$.pipe(
-          filter(as => as.length > 0),
-          map(() => true),
+          filter((as) => as.length > 0),
+          map(() => true)
         ),
         this.currentAssetId$.pipe(
           filter(O.isSome),
-          map(() => false),
+          map(() => false)
         ),
-        this.closePicker$.pipe(map(() => false)),
-      ),
+        this.closePicker$.pipe(map(() => false))
+      )
     );
 
     this.closePicker$.pipe(untilDestroyed(this)).subscribe(() => this.onAssetMouseOut());
@@ -173,10 +167,10 @@ export class AssetPickerComponent extends RxState<AssetPickerState> {
   }
 
   public onAssetMouseOver(assetId: number) {
-    this.assetMouseOver$.emit(O.some(assetId));
+    this.assetMouseOver.emit(O.some(assetId));
   }
 
   public onAssetMouseOut() {
-    this.assetMouseOver$.emit(O.none);
+    this.assetMouseOver.emit(O.none);
   }
 }

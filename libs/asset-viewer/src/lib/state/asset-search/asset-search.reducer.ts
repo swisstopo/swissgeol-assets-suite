@@ -1,7 +1,6 @@
-import { createReducer, on } from '@ngrx/store';
-
 import { AppState, appSharedStateActions } from '@asset-sg/client-shared';
 import { AssetEditDetail, AssetSearchQuery, AssetSearchResult, AssetSearchStats } from '@asset-sg/shared';
+import { createReducer, on } from '@ngrx/store';
 
 import * as actions from './asset-search.actions';
 
@@ -22,7 +21,6 @@ export interface AssetSearchState {
   isMapInitialised: boolean;
   isRefineAndResultsOpen: boolean;
 }
-
 
 export interface AppStateWithAssetSearch extends AppState {
   assetSearch: AssetSearchState;
@@ -75,7 +73,7 @@ export const assetSearchReducer = createReducer(
         ...state.query,
         ...filterConfiguration,
       },
-    }),
+    })
   ),
   on(
     actions.updateSearchResults,
@@ -83,14 +81,14 @@ export const assetSearchReducer = createReducer(
       ...state,
       results: searchResults,
       loadingState: LoadingState.Loaded,
-    }),
+    })
   ),
   on(
     actions.updateStats,
     (state, { searchStats }): AssetSearchState => ({
       ...state,
       stats: searchStats,
-    }),
+    })
   ),
   on(
     actions.removePolygon,
@@ -100,28 +98,28 @@ export const assetSearchReducer = createReducer(
         ...state.query,
         polygon: undefined,
       },
-    }),
+    })
   ),
   on(
     actions.resetSearch,
     (): AssetSearchState => ({
       ...initialState,
       isMapInitialised: true,
-    }),
+    })
   ),
   on(
     actions.searchForAssetDetail,
     (state): AssetSearchState => ({
       ...state,
       assetDetailLoadingState: LoadingState.Loading,
-    }),
+    })
   ),
   on(
     actions.setLoadingState,
     (state): AssetSearchState => ({
       ...state,
       loadingState: LoadingState.Loading,
-    }),
+    })
   ),
   on(
     actions.updateAssetDetail,
@@ -129,7 +127,7 @@ export const assetSearchReducer = createReducer(
       ...state,
       currentAsset: assetDetail,
       assetDetailLoadingState: LoadingState.Loaded,
-    }),
+    })
   ),
   on(
     actions.resetAssetDetail,
@@ -137,9 +135,9 @@ export const assetSearchReducer = createReducer(
       ...state,
       currentAsset: initialState.currentAsset,
       assetDetailLoadingState: initialState.assetDetailLoadingState,
-    }),
+    })
   ),
   on(actions.mapInitialised, (state): AssetSearchState => ({ ...state, isMapInitialised: true })),
   on(appSharedStateActions.openPanel, (state): AssetSearchState => ({ ...state, isRefineAndResultsOpen: true })),
-  on(actions.closeRefineAndResults, (state): AssetSearchState => ({ ...state, isRefineAndResultsOpen: false })),
+  on(actions.closeRefineAndResults, (state): AssetSearchState => ({ ...state, isRefineAndResultsOpen: false }))
 );

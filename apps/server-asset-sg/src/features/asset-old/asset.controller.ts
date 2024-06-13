@@ -1,9 +1,8 @@
+import { DT, unknownToError } from '@asset-sg/core';
 import { Controller, Get, HttpException, Param, Query, Req, Res } from '@nestjs/common';
 import { Request, Response } from 'express';
 import * as E from 'fp-ts/Either';
 import * as D from 'io-ts/Decoder';
-
-import { DT, unknownToError } from '@asset-sg/core';
 
 import { AssetService } from '@/features/asset-old/asset.service';
 import { AssetSearchService } from '@/features/assets/search/asset-search.service';
@@ -11,11 +10,7 @@ import { isNotFoundError } from '@/utils/errors';
 
 @Controller('/')
 export class AssetController {
-  constructor(
-    private readonly assetService: AssetService,
-    private readonly assetSearchService: AssetSearchService,
-  ) {
-  }
+  constructor(private readonly assetService: AssetService, private readonly assetSearchService: AssetSearchService) {}
 
   @Get('/asset')
   // async findAssetsByPolygon(@Query() polygon: [number, number][]) {
@@ -86,7 +81,6 @@ export class AssetController {
     }
     return e.right;
   }
-
 
   @Get('/file/:fileId')
   async getFile(@Res() res: Response, @Param('fileId') fileId: string) {

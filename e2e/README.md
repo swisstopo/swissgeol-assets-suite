@@ -18,7 +18,7 @@ install dependencies
 npm install
 ```
 
-Add or change  user credentials in cypress.config.ts
+Add or change user credentials in cypress.config.ts
 
 to run cypress in terminal:
 

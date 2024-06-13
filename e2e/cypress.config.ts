@@ -1,17 +1,20 @@
-import {defineConfig} from 'cypress';
-import {addCucumberPreprocessorPlugin} from '@badeball/cypress-cucumber-preprocessor';
+import { defineConfig } from 'cypress';
+import { addCucumberPreprocessorPlugin } from '@badeball/cypress-cucumber-preprocessor';
 import createEsbuildPlugin from '@badeball/cypress-cucumber-preprocessor/esbuild';
 import * as createBundler from '@bahmutov/cypress-esbuild-preprocessor';
 
 //processor config example from https://github.com/badeball/cypress-cucumber-preprocessor/blob/master/examples/esbuild-ts/cypress.config.ts
-async function setupNodeEvents(on: Cypress.PluginEvents, config: Cypress.PluginConfigOptions): Promise<Cypress.PluginConfigOptions> {
+async function setupNodeEvents(
+  on: Cypress.PluginEvents,
+  config: Cypress.PluginConfigOptions
+): Promise<Cypress.PluginConfigOptions> {
   // This is required for the preprocessor to be able to generate JSON reports after each run, and more,
   await addCucumberPreprocessorPlugin(on, config);
 
   on(
     'file:preprocessor',
     createBundler({
-      plugins: [createEsbuildPlugin(config)]
+      plugins: [createEsbuildPlugin(config)],
     })
   );
 
@@ -19,19 +22,19 @@ async function setupNodeEvents(on: Cypress.PluginEvents, config: Cypress.PluginC
 }
 
 export default defineConfig({
-  projectId: "y2e1a9",
+  projectId: 'y2e1a9',
   viewportWidth: 1920,
   viewportHeight: 1280,
   e2e: {
     specPattern: '**/*.feature',
     chromeWebSecurity: false,
-    setupNodeEvents
+    setupNodeEvents,
   },
   reporter: 'junit',
   reporterOptions: {
     mochaFile: 'cypress/results/assets-test-output-[hash].xml',
     toConsole: true,
-    attachments: true
+    attachments: true,
   },
   video: false,
   env: {
@@ -43,6 +46,6 @@ export default defineConfig({
      */
     assetsBaseUrl: 'http://localhost:4200/de', //keep this naming pattern as username and password will be replaced in the pipeline
     basicAuthUsername: 'admin', //keep this naming pattern as username and password will be replaced in the pipeline
-    basicAuthPassword: 'admin' //keep this naming pattern as username and password will be replaced in the pipeline
-  }
+    basicAuthPassword: 'admin', //keep this naming pattern as username and password will be replaced in the pipeline
+  },
 });

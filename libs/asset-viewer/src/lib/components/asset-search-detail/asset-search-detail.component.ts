@@ -1,10 +1,8 @@
 import { HttpClient } from '@angular/common/http';
 import { Component, inject } from '@angular/core';
-import { Store } from '@ngrx/store';
-import { map } from 'rxjs';
-
 import { AppState } from '@asset-sg/client-shared';
 import { AssetFile } from '@asset-sg/shared';
+import { Store } from '@ngrx/store';
 
 import * as actions from '../../state/asset-search/asset-search.actions';
 import { LoadingState } from '../../state/asset-search/asset-search.reducer';
@@ -29,8 +27,7 @@ export class AssetSearchDetailComponent {
 
   protected readonly LoadingState = LoadingState;
 
-  constructor(private httpClient: HttpClient) {
-  }
+  constructor(private httpClient: HttpClient) {}
 
   downloadFile(file: Omit<AssetFile, 'fileSize'>, isDownload = true): void {
     this.httpClient.get(`/api/file/${file.fileId}`, { responseType: 'blob' }).subscribe((blob) => {

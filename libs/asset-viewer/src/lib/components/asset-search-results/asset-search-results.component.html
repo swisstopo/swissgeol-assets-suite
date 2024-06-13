@@ -5,7 +5,7 @@
   <ng-container *rxLet="assets$ | push">
     <div class="header">
       <div>
-        {{ 'search.searchResults' | translate }}:
+        {{ "search.searchResults" | translate }}:
         <asset-sg-animate-number [nextValue]="(pageStats$ | async)?.total ?? 0" />
       </div>
       <button asset-sg-icon-button style="width: unset" (click)="closeSearchResultsClicked.emit()">
@@ -15,10 +15,12 @@
     </div>
 
     <div class="search-results">
-      <div class="asset-result"
-           *rxFor="let asset of assets$ | async; trackBy: 'assetId'"
-           (mouseover)="onAssetMouseOver(asset.assetId)"
-           (mouseout)="onAssetMouseOut()">
+      <div
+        class="asset-result"
+        *rxFor="let asset of assets$ | async; trackBy: 'assetId'"
+        (mouseover)="onAssetMouseOver(asset.assetId)"
+        (mouseout)="onAssetMouseOut()"
+      >
         <asset-sg-asset-search-result [asset]="asset"></asset-sg-asset-search-result>
       </div>
     </div>

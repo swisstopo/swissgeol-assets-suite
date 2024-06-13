@@ -10,10 +10,7 @@ import { handlePrismaMutationError } from '@/utils/prisma';
 
 @Injectable()
 export class FavoriteRepo implements ReadRepo<Favorite, Favorite>, CreateRepo<Favorite>, DeleteRepo<Favorite> {
-  constructor(
-    private readonly prisma: PrismaService,
-  ) {
-  }
+  constructor(private readonly prisma: PrismaService) {}
 
   async find(favorite: Favorite): Promise<Favorite | null> {
     const entry = await this.prisma.assetUserFavourite.findUnique({
@@ -27,9 +24,12 @@ export class FavoriteRepo implements ReadRepo<Favorite, Favorite>, CreateRepo<Fa
 
   async list({ limit, offset, ids }: RepoListOptions<Favorite> = {}): Promise<Favorite[]> {
     const entries = await this.prisma.assetUserFavourite.findMany({
-      where: ids == null ? undefined : {
-        OR: ids.map(mapFavoriteToId),
-      },
+      where:
+        ids == null
+          ? undefined
+          : {
+              OR: ids.map(mapFavoriteToId),
+            },
       select: favoriteSelection,
       take: limit,
       skip: offset,
@@ -96,4 +96,4 @@ const parse = (data: SelectedFavorite): Favorite => ({
 const mapFavoriteToId = (favorite: Favorite): Prisma.AssetUserFavouriteAssetUserIdAssetIdCompoundUniqueInput => ({
   assetUserId: favorite.userId,
   assetId: favorite.assetId,
-})
+});

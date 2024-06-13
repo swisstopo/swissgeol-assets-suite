@@ -3,4 +3,5 @@ interface Config {
   basicAuthUsername: string;
   basicAuthPassword: string;
 }
-export const {assetsBaseUrl, basicAuthUsername, basicAuthPassword}: Config = Cypress.env() as Config;
+export const { assetsBaseUrl, basicAuthUsername, basicAuthPassword }: Config =
+  Cypress.env() as Config;

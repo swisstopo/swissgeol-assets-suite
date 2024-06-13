@@ -51,9 +51,8 @@ jobs:
           docker push ${{ vars.BASE_IMAGE_NAME }}-api:${{ inputs.VERSION }}
           docker push ${{ vars.BASE_IMAGE_NAME }}-api:latest
 
-
   tag_commit:
-    name: 'tag commit'
+    name: "tag commit"
     needs:
       - release_app
       - release_api
@@ -98,7 +97,7 @@ jobs:
             })
 
   create_release:
-    name: 'create release'
+    name: "create release"
     needs:
       - release_app
       - release_api
@@ -109,7 +108,7 @@ jobs:
       - name: Create release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: '${{ inputs.VERSION }}'
-          name: 'swissgeol-assets v${{ inputs.VERSION }}'
+          tag_name: "${{ inputs.VERSION }}"
+          name: "swissgeol-assets v${{ inputs.VERSION }}"
           generate_release_notes: true
           make_latest: true

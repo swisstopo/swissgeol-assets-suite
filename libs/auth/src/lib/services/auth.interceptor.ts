@@ -1,10 +1,9 @@
 import { HttpErrorResponse, HttpEvent, HttpHandler, HttpInterceptor, HttpRequest } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
+import { AlertType, showAlert } from '@asset-sg/client-shared';
 import { Store } from '@ngrx/store';
 import { OAuthService } from 'angular-oauth2-oidc';
 import { EMPTY, Observable, catchError, from, switchMap } from 'rxjs';
-
-import { AlertType, showAlert } from '@asset-sg/client-shared';
 
 import { AuthService, AuthState } from './auth.service';
 
@@ -33,13 +32,9 @@ export class AuthInterceptor implements HttpInterceptor {
     } else if (!token) {
       return EMPTY;
     } else {
-      return next.handle(req).pipe(
-        catchError((error: HttpErrorResponse) => (
-          from(this.handleError(error)).pipe(
-            switchMap(() => EMPTY)
-          )
-        )),
-      );
+      return next
+        .handle(req)
+        .pipe(catchError((error: HttpErrorResponse) => from(this.handleError(error)).pipe(switchMap(() => EMPTY))));
     }
   }
 
@@ -57,15 +52,16 @@ export class AuthInterceptor implements HttpInterceptor {
               type: AlertType.Error,
               isPersistent: true,
             },
-          }),
+          })
         );
         break;
       default: {
         // In some requests, the error is returned as Blob,
         // which we then need to manually parse to JSON.
-        const text = error.error instanceof Blob
-          ? JSON.parse(await error.error.text()).message
-          : error.error.message ?? error.message;
+        const text =
+          error.error instanceof Blob
+            ? JSON.parse(await error.error.text()).message
+            : error.error.message ?? error.message;
         this.store.dispatch(
           showAlert({
             alert: {
@@ -74,7 +70,7 @@ export class AuthInterceptor implements HttpInterceptor {
               type: AlertType.Error,
               isPersistent: true,
             },
-          }),
+          })
         );
       }
     }

@@ -1,8 +1,7 @@
 import { Component, Input, OnInit, inject } from '@angular/core';
+import { AssetEditDetail, ValueItem } from '@asset-sg/shared';
 import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
-
-import { AssetEditDetail, ValueItem } from '@asset-sg/shared';
 
 import * as actions from '../../../state/asset-search/asset-search.actions';
 import { AppStateWithAssetSearch } from '../../../state/asset-search/asset-search.reducer';
@@ -28,7 +27,6 @@ export class AssetSearchResultComponent implements OnInit {
   public assetFormatItem$!: Observable<ValueItem | null>;
   public manCatLabelRefs$!: Observable<ValueItem[] | null>;
 
-
   public ngOnInit() {
     this.contacts$ = this._store.select(selectContact(this.asset.assetContacts));
     this.assetKindItem$ = this._store.select(selectAssetKindItem(this.asset.assetKindItemCode));
@@ -40,7 +38,3 @@ export class AssetSearchResultComponent implements OnInit {
     this._store.dispatch(actions.searchForAssetDetail({ assetId }));
   }
 }
-
-
-
-

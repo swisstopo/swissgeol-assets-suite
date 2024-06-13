@@ -9,26 +9,24 @@ import { handlePrismaMutationError } from '@/utils/prisma';
 
 @Injectable()
 export class ContactRepo implements Repo<Contact, ContactId, ContactData> {
-  constructor(
-    private readonly prisma: PrismaService,
-  ) {
-  }
+  constructor(private readonly prisma: PrismaService) {}
 
   async find(id: number): Promise<Contact | null> {
     const entry = await this.prisma.contact.findFirst({
       where: { contactId: id },
       select: contactSelection,
     });
-    return entry == null
-      ? null
-      : parse(entry);
+    return entry == null ? null : parse(entry);
   }
 
   async list({ limit, offset, ids }: RepoListOptions<number>): Promise<Contact[]> {
     const entries = await this.prisma.contact.findMany({
-      where: ids == null ? undefined : {
-        contactId: { in: ids },
-      },
+      where:
+        ids == null
+          ? undefined
+          : {
+              contactId: { in: ids },
+            },
       select: contactSelection,
       take: limit,
       skip: offset,
@@ -40,7 +38,7 @@ export class ContactRepo implements Repo<Contact, ContactId, ContactData> {
     const entry = await this.prisma.contact.create({
       data: mapDataToPrisma(data),
       select: contactSelection,
-    })
+    });
     return parse(entry);
   }
 
@@ -65,7 +63,6 @@ export class ContactRepo implements Repo<Contact, ContactId, ContactData> {
       return handlePrismaMutationError(e) ?? false;
     }
   }
-
 }
 
 const contactSelection = satisfy<Prisma.ContactSelect>()({
@@ -109,4 +106,4 @@ const mapDataToPrisma = (data: ContactData): Prisma.ContactUncheckedCreateInput 
   email: data.email,
   website: data.website,
   contactKindItemCode: data.contactKindItemCode,
-})
+});

@@ -1,3 +1,4 @@
+const templateParser = require('@angular-eslint/template-parser');
 const { FlatCompat } = require('@eslint/eslintrc');
 const js = require('@eslint/js');
 const nxEslintPlugin = require('@nx/eslint-plugin');
@@ -38,6 +39,9 @@ module.exports = [
     .map((config) => ({
       ...config,
       files: ['**/*.html'],
+      languageOptions: {
+        parser: templateParser,
+      },
       rules: {
         ...config.rules,
 
@@ -81,6 +85,15 @@ module.exports = [
         },
       ],
       'sort-imports': 'off',
+
+      '@typescript-eslint/no-unused-vars': [
+        'warn',
+        {
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+          caughtErrorsIgnorePattern: '^_',
+        },
+      ],
     },
   },
 ];

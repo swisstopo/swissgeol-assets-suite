@@ -10,15 +10,6 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDateFnsModule } from '@angular/material-date-fns-adapter';
 import { RouterModule } from '@angular/router';
-import { SvgIconComponent } from '@ngneat/svg-icon';
-import { EffectsModule } from '@ngrx/effects';
-import { StoreModule } from '@ngrx/store';
-import { TranslateModule } from '@ngx-translate/core';
-import { ForModule } from '@rx-angular/template/for';
-import { LetModule } from '@rx-angular/template/let';
-import { PushModule } from '@rx-angular/template/push';
-import { de } from 'date-fns/locale/de';
-
 import {
   AnchorComponent,
   AnimateNumberComponent,
@@ -33,14 +24,20 @@ import {
   ValueItemNamePipe,
   ZoomControlsComponent,
 } from '@asset-sg/client-shared';
+import { SvgIconComponent } from '@ngneat/svg-icon';
+import { EffectsModule } from '@ngrx/effects';
+import { StoreModule } from '@ngrx/store';
+import { TranslateModule } from '@ngx-translate/core';
+import { ForModule } from '@rx-angular/template/for';
+import { LetModule } from '@rx-angular/template/let';
+import { PushModule } from '@rx-angular/template/push';
+import { de } from 'date-fns/locale/de';
 
 import { AssetPickerComponent } from './components/asset-picker';
 import { AssetSearchDetailComponent } from './components/asset-search-detail';
 import { AssetSearchRefineComponent } from './components/asset-search-refine';
 import { AssetSearchResultsComponent } from './components/asset-search-results';
-import {
-  AssetSearchResultComponent,
-} from './components/asset-search-results/asset-search-result/asset-search-result.component';
+import { AssetSearchResultComponent } from './components/asset-search-results/asset-search-result/asset-search-result.component';
 import { AssetViewerPageComponent } from './components/asset-viewer-page';
 import { MapComponent } from './components/map';
 import { AssetSearchEffects } from './state/asset-search/asset-search.effects';
@@ -115,5 +112,4 @@ import { assetSearchReducer } from './state/asset-search/asset-search.reducer';
     },
   ],
 })
-export class AssetViewerModule {
-}
+export class AssetViewerModule {}

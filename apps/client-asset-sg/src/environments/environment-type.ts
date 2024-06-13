@@ -1,3 +1,3 @@
 export interface CompileTimeEnvironment {
-    ngrxStoreLoggerEnabled: boolean;
+  ngrxStoreLoggerEnabled: boolean;
 }

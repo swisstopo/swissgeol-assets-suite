@@ -16,14 +16,14 @@ export interface PageStats {
 }
 
 export interface AssetSearchStats {
-  total: number
-  authorIds: ValueCount<number>[]
-  assetKindItemCodes: ValueCount<string>[]
-  languageItemCodes: ValueCount<string>[]
-  geometryCodes: ValueCount<GeometryCode | 'None'>[]
-  usageCodes: ValueCount<UsageCode>[]
-  manCatLabelItemCodes: ValueCount<string>[]
-  createDate: DateRange | null,
+  total: number;
+  authorIds: ValueCount<number>[];
+  assetKindItemCodes: ValueCount<string>[];
+  languageItemCodes: ValueCount<string>[];
+  geometryCodes: ValueCount<GeometryCode | 'None'>[];
+  usageCodes: ValueCount<UsageCode>[];
+  manCatLabelItemCodes: ValueCount<string>[];
+  createDate: DateRange | null;
 }
 
 export interface ValueCount<T> {

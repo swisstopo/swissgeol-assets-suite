@@ -7,6 +7,6 @@ export const isoWGSLng = iso<WGSLng>();
 export const isoWGSLat = iso<WGSLat>();
 
 export interface WGS {
-    lng: WGSLng;
-    lat: WGSLat;
+  lng: WGSLng;
+  lat: WGSLat;
 }

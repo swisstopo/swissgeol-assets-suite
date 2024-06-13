@@ -1,6 +1,6 @@
-@use '../../styles/variables';
-@use '../../styles/mixins';
-@use '../../styles/drawer-panel-mixins' as drawerPanel;
+@use "../../styles/variables";
+@use "../../styles/mixins";
+@use "../../styles/drawer-panel-mixins" as drawerPanel;
 
 :host {
   @include drawerPanel.drawer-panel-width;
@@ -47,7 +47,6 @@
   margin-bottom: 0.75rem;
 }
 
-
 .filter-group {
   display: flex;
   gap: 0.5rem;
@@ -65,7 +64,7 @@
 
     &.active {
       background-color: #b9271a;
-      color: #fff
+      color: #fff;
     }
 
     &.disabled {
@@ -92,4 +91,3 @@ h4 {
   margin: 0;
   line-height: 2.5rem;
 }
-

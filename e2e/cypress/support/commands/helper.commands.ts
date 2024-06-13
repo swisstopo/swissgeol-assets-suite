@@ -12,7 +12,7 @@ import { assetsBaseUrl } from '../config/config';
   cy.get('eiam-buttonp[name="continueBtn"]').click();
 });
 */
-export const bearerAuth = token => ({ bearer: token });
+export const bearerAuth = (token) => ({ bearer: token });
 
 Cypress.Commands.add('login', (username: string, password: string) => {
   cy.visit(assetsBaseUrl);
@@ -22,14 +22,20 @@ Cypress.Commands.add('login', (username: string, password: string) => {
 });
 
 Cypress.Commands.add('login', (username: string, password: string) => {
-  cy.session(['login', username, password], () => {
+  cy.session(
+    ['login', username, password],
+    () => {
       cy.visit(assetsBaseUrl);
       cy.intercept('http://localhost:4011/connect/token').as('token');
-      cy.origin('http://localhost:4011', { args: { username, password } }, ({ username, password }) => {
-        cy.get('#Input_Username').type(username);
-        cy.get('#Input_Password').type(password);
-        cy.contains('button', 'Login').click({ force: true });
-      });
+      cy.origin(
+        'http://localhost:4011',
+        { args: { username, password } },
+        ({ username, password }) => {
+          cy.get('#Input_Username').type(username);
+          cy.get('#Input_Password').type(password);
+          cy.contains('button', 'Login').click({ force: true });
+        }
+      );
       cy.wait('@token')
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         .then((interception) => interception.response.body.access_token)
@@ -39,18 +45,18 @@ Cypress.Commands.add('login', (username: string, password: string) => {
     {
       validate() {
         cy.window()
-          .then(win => win.localStorage.getItem('access_token'))
+          .then((win) => win.localStorage.getItem('access_token'))
           .as('access_token');
-        cy.get('@access_token').then(token =>
+        cy.get('@access_token').then((token) =>
           cy.request({
             method: 'GET',
             url: '/api/user',
             auth: bearerAuth(token),
-          }),
+          })
         );
       },
       cacheAcrossSpecs: true,
-    },
+    }
   );
 });
 

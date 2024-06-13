@@ -13,6 +13,20 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSelectModule } from '@angular/material/select';
 import { CanDeactivateFn, RouterModule } from '@angular/router';
+import {
+  AnchorComponent,
+  ButtonComponent,
+  DatePipe,
+  DateTimePipe,
+  DatepickerToggleIconComponent,
+  DrawerComponent,
+  DrawerPanelComponent,
+  IsNotMasterEditorPipe,
+  MatDateIdModule,
+  ValueItemDescriptionPipe,
+  ValueItemNamePipe,
+  ViewChildMarker,
+} from '@asset-sg/client-shared';
 import { SvgIconComponent } from '@ngneat/svg-icon';
 import { EffectsModule } from '@ngrx/effects';
 import { StoreModule } from '@ngrx/store';
@@ -21,21 +35,6 @@ import { ForModule } from '@rx-angular/template/for';
 import { LetModule } from '@rx-angular/template/let';
 import { PushModule } from '@rx-angular/template/push';
 import { de } from 'date-fns/locale/de';
-
-import {
-    AnchorComponent,
-    ButtonComponent,
-    DatePipe,
-    DateTimePipe,
-    DatepickerToggleIconComponent,
-    DrawerComponent,
-    DrawerPanelComponent,
-    IsNotMasterEditorPipe,
-    MatDateIdModule,
-    ValueItemDescriptionPipe,
-    ValueItemNamePipe,
-    ViewChildMarker,
-} from '@asset-sg/client-shared';
 
 import { AssetEditorLaunchComponent } from './components/asset-editor-launch';
 import { AssetEditorPageComponent } from './components/asset-editor-page';
@@ -51,101 +50,101 @@ import { Lv95xWithoutPrefixPipe, Lv95yWithoutPrefixPipe } from './components/lv9
 import { AssetEditorEffects } from './state/asset-editor.effects';
 import { assetEditorReducer } from './state/asset-editor.reducer';
 
-export const canLeaveEdit: CanDeactivateFn<AssetEditorPageComponent> = c => c.canLeave();
+export const canLeaveEdit: CanDeactivateFn<AssetEditorPageComponent> = (c) => c.canLeave();
 
 @NgModule({
-    declarations: [
-        AssetEditorLaunchComponent,
-        AssetEditorPageComponent,
-        AssetEditorTabAdministrationComponent,
-        AssetEditorTabContactsComponent,
-        AssetEditorTabGeneralComponent,
-        AssetEditorTabGeometriesComponent,
-        AssetEditorTabPageComponent,
-        AssetEditorTabReferencesComponent,
-        AssetEditorTabUsageComponent,
-        Lv95xWithoutPrefixPipe,
-        Lv95yWithoutPrefixPipe,
-        ReplaceBrPipe,
-    ],
-    imports: [
-        CommonModule,
-        RouterModule.forChild([
-            {
-                path: '',
-                pathMatch: 'full',
-                component: AssetEditorLaunchComponent,
-            },
-            {
-                path: ':assetId',
-                children: [
-                    {
-                        path: '',
-                        pathMatch: 'full',
-                        redirectTo: 'general',
-                    },
-                    {
-                        path: ':tab',
-                        component: AssetEditorPageComponent,
-                        canDeactivate: [canLeaveEdit],
-                    },
-                ],
-            },
-        ]),
-        TranslateModule.forChild(),
-        StoreModule.forFeature('assetEditor', assetEditorReducer),
-        EffectsModule.forFeature([AssetEditorEffects]),
-        FormsModule,
-        ReactiveFormsModule,
-        A11yModule,
+  declarations: [
+    AssetEditorLaunchComponent,
+    AssetEditorPageComponent,
+    AssetEditorTabAdministrationComponent,
+    AssetEditorTabContactsComponent,
+    AssetEditorTabGeneralComponent,
+    AssetEditorTabGeometriesComponent,
+    AssetEditorTabPageComponent,
+    AssetEditorTabReferencesComponent,
+    AssetEditorTabUsageComponent,
+    Lv95xWithoutPrefixPipe,
+    Lv95yWithoutPrefixPipe,
+    ReplaceBrPipe,
+  ],
+  imports: [
+    CommonModule,
+    RouterModule.forChild([
+      {
+        path: '',
+        pathMatch: 'full',
+        component: AssetEditorLaunchComponent,
+      },
+      {
+        path: ':assetId',
+        children: [
+          {
+            path: '',
+            pathMatch: 'full',
+            redirectTo: 'general',
+          },
+          {
+            path: ':tab',
+            component: AssetEditorPageComponent,
+            canDeactivate: [canLeaveEdit],
+          },
+        ],
+      },
+    ]),
+    TranslateModule.forChild(),
+    StoreModule.forFeature('assetEditor', assetEditorReducer),
+    EffectsModule.forFeature([AssetEditorEffects]),
+    FormsModule,
+    ReactiveFormsModule,
+    A11yModule,
 
-        LetModule,
-        PushModule,
-        ForModule,
-        SvgIconComponent,
-        DialogModule,
-        A11yModule,
-        AssetMultiselectComponent,
+    LetModule,
+    PushModule,
+    ForModule,
+    SvgIconComponent,
+    DialogModule,
+    A11yModule,
+    AssetMultiselectComponent,
 
-        ValueItemNamePipe,
-        ValueItemDescriptionPipe,
-        DatePipe,
-        DateTimePipe,
+    ValueItemNamePipe,
+    ValueItemDescriptionPipe,
+    DatePipe,
+    DateTimePipe,
 
-        ViewChildMarker,
-        ButtonComponent,
-        AnchorComponent,
-        DrawerComponent,
-        DrawerPanelComponent,
-        DatepickerToggleIconComponent,
-        IsNotMasterEditorPipe,
+    ViewChildMarker,
+    ButtonComponent,
+    AnchorComponent,
+    DrawerComponent,
+    DrawerPanelComponent,
+    DatepickerToggleIconComponent,
+    IsNotMasterEditorPipe,
 
-        MatAutocompleteModule,
-        MatCheckboxModule,
-        MatInputModule,
-        MatDateIdModule,
-        MatDatepickerModule,
-        MatFormFieldModule,
-        MatMenuModule,
-        MatProgressBarModule,
-        MatSelectModule,
-    ],
-    providers: [
-        { provide: MAT_DATE_LOCALE, useValue: de },
-        {
-            provide: MAT_DATE_FORMATS,
-            useValue: {
-                parse: {
-                    dateInput: 'yyyy-MM-dd',
-                },
-                display: {
-                    dateInput: 'yyyy-MM-dd',
-                    monthYearLabel: 'LLL uuuu',
-                    dateA11yLabel: 'PP',
-                    monthYearA11yLabel: 'LLLL uuuu',
-                },
-            },
+    MatAutocompleteModule,
+    MatCheckboxModule,
+    MatInputModule,
+    MatDateIdModule,
+    MatDatepickerModule,
+    MatFormFieldModule,
+    MatMenuModule,
+    MatProgressBarModule,
+    MatSelectModule,
+  ],
+  providers: [
+    { provide: MAT_DATE_LOCALE, useValue: de },
+    {
+      provide: MAT_DATE_FORMATS,
+      useValue: {
+        parse: {
+          dateInput: 'yyyy-MM-dd',
         },
-    ],
+        display: {
+          dateInput: 'yyyy-MM-dd',
+          monthYearLabel: 'LLL uuuu',
+          dateA11yLabel: 'PP',
+          monthYearA11yLabel: 'LLLL uuuu',
+        },
+      },
+    },
+  ],
 })
 export class AssetEditorModule {}

@@ -9,59 +9,59 @@ import { Role } from '@/features/users/user.model';
 
 @Controller('/assets/sync')
 export class AssetSyncController implements OnApplicationBootstrap {
-    constructor(private readonly assetSearchService: AssetSearchService) {}
+  constructor(private readonly assetSearchService: AssetSearchService) {}
 
-    async onApplicationBootstrap() {
-        const syncFileExists = await fs
-            .access(assetSyncFile)
-            .then(() => true)
-            .catch(() => false);
-        if (syncFileExists) {
-            void fs.rm(assetSyncFile);
-        }
+  async onApplicationBootstrap() {
+    const syncFileExists = await fs
+      .access(assetSyncFile)
+      .then(() => true)
+      .catch(() => false);
+    if (syncFileExists) {
+      void fs.rm(assetSyncFile);
+    }
+  }
+
+  @Get('/')
+  @RequireRole(Role.MasterEditor)
+  async show(@Res() res: Response): Promise<{ progress: number } | void> {
+    try {
+      const data = await fs.readFile(assetSyncFile, { encoding: 'utf-8' });
+      const state: AssetSyncState = JSON.parse(data);
+      res.status(200).json({ progress: state.progress }).end();
+    } catch (e) {
+      if ((e as { code?: string }).code === 'ENOENT') {
+        res.status(204).end();
+        return;
+      }
+      throw new HttpException(`${e}`, 500);
+    }
+  }
+
+  @Post('/')
+  @RequireRole(Role.MasterEditor)
+  async start(@Res() res: Response): Promise<void> {
+    const isSyncRunning = await fs
+      .access(assetSyncFile)
+      .then(() => true)
+      .catch(() => false);
+    if (isSyncRunning) {
+      res.status(204).end();
+      return;
     }
 
-    @Get('/')
-    @RequireRole(Role.MasterEditor)
-    async show(@Res() res: Response): Promise<{ progress: number } | void> {
-        try {
-            const data = await fs.readFile(assetSyncFile, { encoding: 'utf-8' });
-            const state: AssetSyncState = JSON.parse(data);
-            res.status(200).json({ progress: state.progress }).end();
-        } catch (e) {
-            if ((e as { code?: string }).code === 'ENOENT') {
-                res.status(204).end();
-                return;
-            }
-            throw new HttpException(`${e}`, 500);
-        }
-    }
+    const writeProgress = (progress: number): Promise<void> => {
+      const state: AssetSyncState = { progress: parseFloat(progress.toFixed(3)) };
+      const data = JSON.stringify(state);
+      return fs.writeFile(assetSyncFile, data, { encoding: 'utf-8' });
+    };
 
-    @Post('/')
-    @RequireRole(Role.MasterEditor)
-    async start(@Res() res: Response): Promise<void> {
-        const isSyncRunning = await fs
-            .access(assetSyncFile)
-            .then(() => true)
-            .catch(() => false);
-        if (isSyncRunning) {
-            res.status(204).end();
-            return;
-        }
-
-        const writeProgress = (progress: number): Promise<void> => {
-            const state: AssetSyncState = { progress: parseFloat(progress.toFixed(3)) };
-            const data = JSON.stringify(state);
-            return fs.writeFile(assetSyncFile, data, { encoding: 'utf-8' });
-        };
-
-        await writeProgress(0);
-        setTimeout(async () => {
-            await this.assetSearchService.syncWithDatabase(writeProgress);
-            await fs.rm(assetSyncFile);
-        });
-        res.status(201).end();
-    }
+    await writeProgress(0);
+    setTimeout(async () => {
+      await this.assetSearchService.syncWithDatabase(writeProgress);
+      await fs.rm(assetSyncFile);
+    });
+    res.status(201).end();
+  }
 }
 
 /**
@@ -72,5 +72,5 @@ export class AssetSyncController implements OnApplicationBootstrap {
 const assetSyncFile = './asset-sync-progress.tmp.json';
 
 interface AssetSyncState {
-    progress: number;
+  progress: number;
 }

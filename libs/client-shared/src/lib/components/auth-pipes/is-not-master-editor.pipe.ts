@@ -5,12 +5,12 @@ import { fromAppShared } from '../../state';
 import { BaseAuthPipe } from './base-auth-pipe';
 
 @Pipe({
-    standalone: true,
-    name: 'isNotMasterEditor',
-    pure: false,
+  standalone: true,
+  name: 'isNotMasterEditor',
+  pure: false,
 })
 export class IsNotMasterEditorPipe extends BaseAuthPipe implements PipeTransform {
-    constructor() {
-        super(true, store => store.select(fromAppShared.selectIsNotMasterEditor));
-    }
+  constructor() {
+    super(true, (store) => store.select(fromAppShared.selectIsNotMasterEditor));
+  }
 }

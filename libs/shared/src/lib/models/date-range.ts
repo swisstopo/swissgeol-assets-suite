@@ -1,4 +1,4 @@
 export interface DateRange {
-  min: Date
-  max: Date
+  min: Date;
+  max: Date;
 }

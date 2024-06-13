@@ -9,15 +9,6 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { RouterModule } from '@angular/router';
-import { SvgIconComponent, provideSvgIcons } from '@ngneat/svg-icon';
-import { EffectsModule } from '@ngrx/effects';
-import { FullRouterStateSerializer, StoreRouterConnectingModule, routerReducer } from '@ngrx/router-store';
-import { StoreModule } from '@ngrx/store';
-import { TranslateLoader, TranslateModule, TranslateService } from '@ngx-translate/core';
-import { ForModule } from '@rx-angular/template/for';
-import { LetModule } from '@rx-angular/template/let';
-import { PushModule } from '@rx-angular/template/push';
-
 import { AuthInterceptor, AuthModule, ErrorService } from '@asset-sg/auth';
 import {
   AlertModule,
@@ -29,6 +20,14 @@ import {
   icons,
 } from '@asset-sg/client-shared';
 import { storeLogger } from '@asset-sg/core';
+import { SvgIconComponent, provideSvgIcons } from '@ngneat/svg-icon';
+import { EffectsModule } from '@ngrx/effects';
+import { FullRouterStateSerializer, StoreRouterConnectingModule, routerReducer } from '@ngrx/router-store';
+import { StoreModule } from '@ngrx/store';
+import { TranslateLoader, TranslateModule, TranslateService } from '@ngx-translate/core';
+import { ForModule } from '@rx-angular/template/for';
+import { LetModule } from '@rx-angular/template/let';
+import { PushModule } from '@rx-angular/template/push';
 
 import { environment } from '../environments/environment';
 
@@ -64,21 +63,21 @@ registerLocaleData(locale_deCH, 'de-CH');
       },
       {
         path: ':lang/profile',
-        loadChildren: () => import('@asset-sg/profile').then(m => m.ProfileModule),
+        loadChildren: () => import('@asset-sg/profile').then((m) => m.ProfileModule),
       },
       {
         path: ':lang/admin',
-        loadChildren: () => import('@asset-sg/admin').then(m => m.AdminModule),
+        loadChildren: () => import('@asset-sg/admin').then((m) => m.AdminModule),
         canActivate: [adminGuard],
       },
       {
         path: ':lang/asset-admin',
-        loadChildren: () => import('@asset-sg/asset-editor').then(m => m.AssetEditorModule),
+        loadChildren: () => import('@asset-sg/asset-editor').then((m) => m.AssetEditorModule),
         canActivate: [editorGuard],
       },
       {
         matcher: assetsPageMatcher,
-        loadChildren: () => import('@asset-sg/asset-viewer').then(m => m.AssetViewerModule),
+        loadChildren: () => import('@asset-sg/asset-viewer').then((m) => m.AssetViewerModule),
       },
       {
         path: 'not-found',
@@ -100,7 +99,7 @@ registerLocaleData(locale_deCH, 'de-CH');
         runtimeChecks: {
           strictStateImmutability: false,
         },
-      },
+      }
     ),
     EffectsModule.forRoot([AppSharedStateEffects]),
     ForModule,
