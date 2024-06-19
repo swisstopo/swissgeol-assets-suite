@@ -166,6 +166,10 @@ li.link {
   a:first-of-type {
     margin-left: 0.5rem;
   }
+
+  mat-progress-spinner {
+    margin: calc(calc(2.5rem - 24px) / 2);
+  }
 }
 
 // A list of languages to which an asset is mapped.

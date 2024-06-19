@@ -21,6 +21,8 @@ export class AssetSearchDetailComponent {
   public readonly assetDetail$ = this._store.select(selectCurrentAssetDetailVM);
   public loadingState = this._store.select(selectAssetDetailLoadingState);
 
+  public readonly activeFileDownloads = new Map<number, { isDownload: boolean }>();
+
   public resetAssetDetail() {
     this._store.dispatch(actions.resetAssetDetail());
   }
@@ -29,25 +31,36 @@ export class AssetSearchDetailComponent {
 
   constructor(private httpClient: HttpClient) {}
 
-  downloadFile(file: Omit<AssetFile, 'fileSize'>, isDownload = true): void {
-    this.httpClient.get(`/api/file/${file.fileId}`, { responseType: 'blob' }).subscribe((blob) => {
-      const url = URL.createObjectURL(blob);
-      const anchor = document.createElement('a');
+  isActiveFileDownload(file: Omit<AssetFile, 'fileSize'>, isDownload = true): boolean {
+    const download = this.activeFileDownloads.get(file.fileId);
+    return download != null && download.isDownload == isDownload;
+  }
 
-      anchor.setAttribute('style', 'display: none');
-      anchor.href = url;
-      anchor.rel = 'noopener noreferrer';
-      if (isDownload) {
-        anchor.download = file.fileName;
-      } else {
-        anchor.target = '_blank';
-      }
-      document.body.appendChild(anchor);
-      anchor.click();
-      anchor.remove();
-      setTimeout(() => {
-        window.URL.revokeObjectURL(url);
-      });
+  downloadFile(file: Omit<AssetFile, 'fileSize'>, isDownload = true): void {
+    this.activeFileDownloads.set(file.fileId, { isDownload });
+    this.httpClient.get(`/api/file/${file.fileId}`, { responseType: 'blob' }).subscribe({
+      next: (blob) => {
+        const url = URL.createObjectURL(blob);
+        const anchor = document.createElement('a');
+
+        anchor.setAttribute('style', 'display: none');
+        anchor.href = url;
+        anchor.rel = 'noopener noreferrer';
+        if (isDownload) {
+          anchor.download = file.fileName;
+        } else {
+          anchor.target = '_blank';
+        }
+        document.body.appendChild(anchor);
+        anchor.click();
+        anchor.remove();
+        setTimeout(() => {
+          window.URL.revokeObjectURL(url);
+        });
+      },
+      complete: () => {
+        this.activeFileDownloads.delete(file.fileId);
+      },
     });
   }
 }
