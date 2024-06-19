@@ -29,12 +29,9 @@
     background-color: variables.$white;
     padding: 0.25rem 1rem 0.75rem 1rem;
     margin: 0.75rem;
-    display: grid;
-    grid-template-areas: 'status actions' 'body body';
-    grid-template-columns: 1fr 1fr;
     width: 334px;
     height: 312px;
-    overflow-y: auto
+    overflow-y: auto;
 }
 
 .asset-body {
