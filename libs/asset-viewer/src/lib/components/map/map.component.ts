@@ -111,7 +111,7 @@ export class MapComponent {
     public mapInitialized = this.state.$.pipe(
         map((s) => s.isMapInitialised),
         distinctUntilChanged(),
-        shareReplay({ bufferSize: 1, refCount: true }),
+        shareReplay({ bufferSize: 1, refCount: true })
     );
 
     @Output()
@@ -212,12 +212,12 @@ export class MapComponent {
 
         fromEventPattern(
             (h) => olMap.getView().on('change:resolution', h),
-            (h) => olMap.getView().un('change:resolution', h),
+            (h) => olMap.getView().un('change:resolution', h)
         )
             .pipe(
                 map(() => olMap.getView().getZoom()),
                 distinctUntilChanged(),
-                untilDestroyed(this),
+                untilDestroyed(this)
             )
             .subscribe((zoom) => {
                 if (zoom == null) return;
@@ -246,7 +246,7 @@ export class MapComponent {
 
         const mapInitialised$ = fromEventPattern(
             (h) => olMap.once('loadend', h),
-            (h) => olMap.un('loadend', h),
+            (h) => olMap.un('loadend', h)
         ).pipe(
             switchMap(() => this._allStudyService.getAllStudies()),
             ORD.fromFilteredSuccess,
@@ -261,7 +261,7 @@ export class MapComponent {
                             decorateFeature(new Feature({ geometry: s.geometry }), {
                                 id: s.studyId,
                                 style: s.isPoint ? featureStyles.pointStyle : featureStyles.rhombusStyle,
-                            }),
+                            })
                         );
                     clearVectorSourceThenAddFeatures(vectorSourceAllStudies, makeVectorFeatures);
                     if (studiesFromSearch.length > 0) {
@@ -273,7 +273,7 @@ export class MapComponent {
                     }
                 });
             }),
-            take(1),
+            take(1)
         );
         this.state.connect(mapInitialised$, () => ({ isMapInitialised: true }));
 
@@ -321,7 +321,7 @@ export class MapComponent {
         this.currentAssetDetail$
             .pipe(
                 untilDestroyed(this),
-                concatLatestFrom(() => this.state.select('studiesFromSearch')),
+                concatLatestFrom(() => this.state.select('studiesFromSearch'))
             )
             .subscribe(([currentAssetDetail, studiesFromSearch]) => {
                 if (currentAssetDetail === undefined) {
@@ -329,7 +329,7 @@ export class MapComponent {
                     vectorSourceAssetGeoms.clear();
                     vectorLayerGeoms.setOpacity(1);
                     vectorLayerAllStudies.setOpacity(1);
-                    zoomToStudies(this._windowService, olMap, studiesFromSearch, 0.6);
+                    zoomToStudies(this._windowService, olMap, studiesFromSearch, 1);
                 }
             });
 
@@ -342,7 +342,7 @@ export class MapComponent {
                 }
                 if (studiesFromSearch.length > 0) {
                     vectorSourceGeoms.clear();
-                    zoomToStudies(this._windowService, olMap, studiesFromSearch, 0.6);
+                    zoomToStudies(this._windowService, olMap, studiesFromSearch, 1);
                     const studiesWithFeature = createFeaturesFromStudies(studiesFromSearch, {
                         point: featureStyles.bigPointStyle,
                         polygon: featureStyles.polygonStyle,
@@ -371,9 +371,9 @@ export class MapComponent {
         merge(
             fromEventPattern<DrawEvent>(
                 (h) => draw.on('drawstart', h),
-                (h) => draw.un('drawstart', h),
+                (h) => draw.un('drawstart', h)
             ),
-            polygon$.pipe(filter(O.isNone)),
+            polygon$.pipe(filter(O.isNone))
         )
             .pipe(untilDestroyed(this))
             .subscribe(() => {
@@ -382,7 +382,7 @@ export class MapComponent {
 
         const drawEnd$ = fromEventPattern<DrawEvent>(
             (h) => draw.on('drawend', h),
-            (h) => draw.un('drawend', h),
+            (h) => draw.un('drawend', h)
         ).pipe(share());
 
         const featureToLV95Polygon = (f: Feature<Geometry>) =>
@@ -390,7 +390,7 @@ export class MapComponent {
                 f.getGeometry(),
                 O.fromNullable,
                 O.chain((geometry) => (geometry.getType() === 'Polygon' ? O.some(geometry as Polygon) : O.none)),
-                O.map((g) => pipe(g.getFlatCoordinates(), makePairs, A.map(toLonLat), A.map(WGStoLV95))),
+                O.map((g) => pipe(g.getFlatCoordinates(), makePairs, A.map(toLonLat), A.map(WGStoLV95)))
             );
 
         polygon$.pipe(OO.fromFilteredSome, untilDestroyed(this)).subscribe((polygon) => {
@@ -398,7 +398,7 @@ export class MapComponent {
                 vectorSourcePolygonSelection.getFeatures(),
                 NEA.fromArray,
                 O.map(NEA.head),
-                O.chain(featureToLV95Polygon),
+                O.chain(featureToLV95Polygon)
             );
 
             if (!O.getEq(eqLV95Array).equals(O.some(polygon), polygonFromMap)) {
@@ -406,7 +406,7 @@ export class MapComponent {
                 vectorSourcePolygonSelection.addFeature(
                     new Feature({
                         geometry: new Polygon([olCoordsFromLV95Array(polygon)]),
-                    }),
+                    })
                 );
             }
         });
@@ -414,9 +414,14 @@ export class MapComponent {
         drawEnd$
             .pipe(
                 map((e) =>
-                    pipe((e.feature.getGeometry() as Polygon).getFlatCoordinates(), makePairs, A.map(toLonLat), A.map(WGStoLV95)),
+                    pipe(
+                        (e.feature.getGeometry() as Polygon).getFlatCoordinates(),
+                        makePairs,
+                        A.map(toLonLat),
+                        A.map(WGStoLV95)
+                    )
                 ),
-                untilDestroyed(this),
+                untilDestroyed(this)
             )
             .subscribe((polygon) => {
                 zoomControlsInstance.setDrawingMode(false);
@@ -438,7 +443,7 @@ export class MapComponent {
 
         fromEventPattern<MapBrowserEvent<PointerEvent>>(
             (h) => olMap.on('click', h),
-            (h) => olMap.un('click', h),
+            (h) => olMap.un('click', h)
         )
             .pipe(
                 withLatestFrom(this.state.select('drawingMode')),
@@ -455,15 +460,15 @@ export class MapComponent {
                         },
                         {
                             layerFilter: (layer) => layer === vectorLayerGeoms,
-                        },
+                        }
                     );
                     return pipe(
                         studies,
                         A.filter((s) => clickedFeatureIds.includes(s.studyId)),
-                        A.map((s) => s.assetId),
+                        A.map((s) => s.assetId)
                     );
                 }),
-                untilDestroyed(this),
+                untilDestroyed(this)
             )
             .subscribe(this.assetClicked);
 
@@ -474,10 +479,10 @@ export class MapComponent {
                     O.map((assetId) =>
                         pipe(
                             studiesFromSearch,
-                            A.filter((s) => s.assetId === assetId),
-                        ),
-                    ),
-                ),
+                            A.filter((s) => s.assetId === assetId)
+                        )
+                    )
+                )
             )
             .pipe(untilDestroyed(this))
             .subscribe((studies) => {
