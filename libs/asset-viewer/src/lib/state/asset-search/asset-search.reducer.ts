@@ -5,10 +5,8 @@ import { createReducer, on } from '@ngrx/store';
 import * as actions from './asset-search.actions';
 
 export enum LoadingState {
-  Initial = 'initial',
   Loading = 'loading',
   Loaded = 'loaded',
-  Error = 'error',
 }
 
 export interface AssetSearchState {
@@ -60,8 +58,8 @@ const initialState: AssetSearchState = {
   isMapInitialised: false,
   isFiltersOpen: true,
   isResultsOpen: false,
-  loadingState: LoadingState.Initial,
-  assetDetailLoadingState: LoadingState.Initial,
+  loadingState: LoadingState.Loading,
+  assetDetailLoadingState: LoadingState.Loading,
   currentAsset: undefined,
 };
 

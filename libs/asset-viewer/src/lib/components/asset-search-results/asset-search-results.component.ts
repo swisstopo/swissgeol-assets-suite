@@ -1,14 +1,12 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, inject, Output } from '@angular/core';
-import { AssetEditDetail } from '@asset-sg/shared';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Store } from '@ngrx/store';
 import * as O from 'fp-ts/Option';
-import { Observable } from 'rxjs';
 import * as actions from '../../state/asset-search/asset-search.actions';
 import { AppStateWithAssetSearch, LoadingState } from '../../state/asset-search/asset-search.reducer';
-
 import {
+  selectAssetEditDetailVM,
   selectAssetSearchPageData,
-  selectAssetSearchResultData,
   selectIsResultsOpen,
   selectSearchLoadingState,
 } from '../../state/asset-search/asset-search.selector';
@@ -23,9 +21,21 @@ export class AssetSearchResultsComponent {
   @Output() closeSearchResultsClicked = new EventEmitter<void>();
   @Output() assetMouseOver = new EventEmitter<O.Option<number>>();
 
+  protected readonly COLUMNS = [
+    'favourites',
+    'titlePublic',
+    'assetFormat',
+    'manCatLabel',
+    'authors',
+    'initiators',
+    'createDate',
+  ];
+
   private _store = inject(Store<AppStateWithAssetSearch>);
+  private _router = inject(Router);
+  private _route = inject(ActivatedRoute);
   public isResultsOpen$ = this._store.select(selectIsResultsOpen);
-  public assets$: Observable<AssetEditDetail[]> = this._store.select(selectAssetSearchResultData);
+  public assets$ = this._store.select(selectAssetEditDetailVM);
   public loadingState = this._store.select(selectSearchLoadingState);
   public pageStats$ = this._store.select(selectAssetSearchPageData);
 
@@ -37,6 +47,10 @@ export class AssetSearchResultsComponent {
 
   public onAssetMouseOut() {
     this.assetMouseOver.emit(O.none);
+  }
+
+  public searchForAsset(assetId: number) {
+    this._store.dispatch(actions.searchForAssetDetail({ assetId }));
   }
 
   public toggleResultsOpen(isCurrentlyOpen: boolean) {

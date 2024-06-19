@@ -1,8 +1,10 @@
 import { formatNumber } from '@angular/common';
 import { fromAppShared, TranslatedValue, Translation } from '@asset-sg/client-shared';
 import {
+  AssetContactRole,
   AssetEditDetail,
   Contact,
+  DateIdBrand,
   DateRange,
   GeometryCode,
   LineString,
@@ -80,51 +82,39 @@ export const selectCurrentAssetDetailVM = createSelector(
   }
 );
 
-export const selectContact = (
-  contacts:
-    | {
-        role: string;
-        contactId: number;
-      }[]
-    | undefined
-) =>
-  createSelector(fromAppShared.selectRDReferenceData, (referenceData): FullContact[] | null => {
-    if (RD.isSuccess(referenceData) && contacts) {
-      return contacts.map((contact) => {
-        return {
+export const selectAssetEditDetailVM = createSelector(
+  fromAppShared.selectRDReferenceData,
+  selectAssetSearchResultData,
+  (referenceData, assets): AssetEditDetailVM[] => {
+    if (!RD.isSuccess(referenceData) || !assets) {
+      return [];
+    }
+    return assets.map((asset) => {
+      const manCatLabelItems: ValueItem[] = asset.manCatLabelRefs.map(
+        (manCatLabelItemCode) => referenceData.value.manCatLabelItems[manCatLabelItemCode]
+      );
+      const assetFormatItem: ValueItem = referenceData.value.assetFormatItems[asset.assetFormatItemCode];
+      const assetKindItem: ValueItem = referenceData.value.assetKindItems[asset.assetKindItemCode];
+      const contacts = asset.assetContacts.reduce((contacts, contact) => {
+        contacts[contact.role] ??= [];
+        contacts[contact.role].push({
           ...referenceData.value.contacts[contact.contactId],
           role: contact.role,
-        };
-      });
-    }
-    return null;
-  });
-
-export const selectAssetKindItem = (assetKindItemCode?: string) =>
-  createSelector(fromAppShared.selectRDReferenceData, (referenceData): ValueItem | null => {
-    if (RD.isSuccess(referenceData) && assetKindItemCode) {
-      return referenceData.value.assetKindItems[assetKindItemCode];
-    }
-    return null;
-  });
-
-export const selectAssetFormatItem = (assetFormatItemCode?: string) =>
-  createSelector(fromAppShared.selectRDReferenceData, (referenceData): ValueItem | null => {
-    if (RD.isSuccess(referenceData) && assetFormatItemCode) {
-      return referenceData.value.assetFormatItems[assetFormatItemCode];
-    }
-    return null;
-  });
-
-export const selectManCatLabelItem = (manCatLabelRefs?: string[]) =>
-  createSelector(fromAppShared.selectRDReferenceData, (referenceData): ValueItem[] | null => {
-    if (RD.isSuccess(referenceData) && manCatLabelRefs) {
-      return manCatLabelRefs.map((manCatLabelRef) => {
-        return referenceData.value.manCatLabelItems[manCatLabelRef];
-      });
-    }
-    return null;
-  });
+        });
+        return contacts;
+      }, {} as AssetEditDetailVM['contacts']);
+      return {
+        assetId: asset.assetId,
+        titlePublic: asset.titlePublic,
+        createDate: asset.createDate,
+        assetKindItem,
+        assetFormatItem,
+        contacts,
+        manCatLabelItems,
+      };
+    });
+  }
+);
 
 export const selectAvailableAuthors = createSelector(
   fromAppShared.selectRDReferenceData,
@@ -252,7 +242,7 @@ export interface AvailableAuthor {
 }
 
 export interface FullContact extends Contact {
-  role?: string;
+  role?: AssetContactRole;
 }
 
 export interface Filter<T extends string = string> {
@@ -289,6 +279,16 @@ export const makeTranslatedValueFromItemName = (item: ValueItem): TranslatedValu
 
 export interface StudyVM extends Study {
   assetId: number;
+}
+
+export interface AssetEditDetailVM {
+  assetId: number;
+  titlePublic: string;
+  createDate: number & DateIdBrand;
+  assetKindItem: ValueItem;
+  assetFormatItem: ValueItem;
+  contacts: Record<AssetContactRole, FullContact[]>;
+  manCatLabelItems: ValueItem[];
 }
 
 const makeAssetDetailVMNew = (referenceData: ReferenceData, assetDetail: AssetEditDetail, locale: string) => {

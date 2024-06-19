@@ -2,7 +2,6 @@ import { AfterViewInit, Component, inject, OnDestroy, OnInit } from '@angular/co
 import { FormControl } from '@angular/forms';
 import { MatOptionSelectionChange } from '@angular/material/core';
 import { Router } from '@angular/router';
-import { fromAppShared } from '@asset-sg/client-shared';
 import { AssetSearchQuery, DateRange } from '@asset-sg/shared';
 import { Store } from '@ngrx/store';
 import { map, startWith, Subscription } from 'rxjs';
@@ -15,6 +14,7 @@ import {
   selectAvailableAuthors,
   selectCreateDate,
   selectGeometryFilters,
+  selectIsFiltersOpen,
   selectLanguageFilters,
   selectManCatLabelFilters,
   selectUsageCodeFilters,
@@ -36,12 +36,13 @@ export class AssetSearchRefineComponent implements OnInit, OnDestroy, AfterViewI
   public createDateRange: DateRange | null = null;
   public availableAuthors: AvailableAuthor[] = [];
   public filteredAuthors: AvailableAuthor[] = [];
-  public isPanelOpen = false;
+  public isFiltersOpen = false;
 
   public assetSearchQuery!: AssetSearchQuery;
 
   private readonly createDateRange$ = this.store.select(selectCreateDate);
   private readonly availableAuthors$ = this.store.select(selectAvailableAuthors);
+  private readonly isFiltersOpen$ = this.store.select(selectIsFiltersOpen);
 
   readonly usageCodeFilters$ = this.store.select(selectUsageCodeFilters);
   readonly geometryCodeFilters$ = this.store.select(selectGeometryFilters);
@@ -49,7 +50,6 @@ export class AssetSearchRefineComponent implements OnInit, OnDestroy, AfterViewI
   readonly languageFilters$ = this.store.select(selectLanguageFilters);
   readonly assetKindFilters$ = this.store.select(selectAssetKindFilters);
 
-  private readonly isPanelOpen$ = this.store.select(fromAppShared.selectIsPanelOpen);
   private readonly subscriptions: Subscription = new Subscription();
 
   public ngOnInit() {
@@ -88,7 +88,7 @@ export class AssetSearchRefineComponent implements OnInit, OnDestroy, AfterViewI
   }
 
   public updateSearch(filterConfiguration: Partial<AssetSearchQuery>) {
-    if (this.isPanelOpen) {
+    if (this.isFiltersOpen) {
       this.store.dispatch(actions.searchByFilterConfiguration({ filterConfiguration }));
     }
   }
@@ -120,7 +120,7 @@ export class AssetSearchRefineComponent implements OnInit, OnDestroy, AfterViewI
   }
 
   private initSubscriptions() {
-    this.subscriptions.add(this.isPanelOpen$.subscribe((isOpen) => (this.isPanelOpen = isOpen)));
+    this.subscriptions.add(this.isFiltersOpen$.subscribe((isOpen) => (this.isFiltersOpen = isOpen)));
 
     this.subscriptions.add(
       this.store.select(selectAssetSearchQuery).subscribe((query) => {

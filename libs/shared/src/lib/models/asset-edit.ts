@@ -4,7 +4,7 @@ import { Eq as eqNumber } from 'fp-ts/number';
 import { Eq as eqString } from 'fp-ts/string';
 import * as C from 'io-ts/Codec';
 
-import { AssetContactRole, LinkedAsset, StatusWork, eqAssetContactRole } from './asset-detail';
+import { AssetContactRole, eqAssetContactRole, LinkedAsset, StatusWork } from './asset-detail';
 import { AssetUsage } from './asset-usage';
 import { DateId } from './DateStruct';
 
