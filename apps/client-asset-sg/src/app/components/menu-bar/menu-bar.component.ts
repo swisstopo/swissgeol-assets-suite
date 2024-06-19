@@ -1,5 +1,7 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, HostBinding, inject } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
+import { appSharedStateActions, fromAppShared } from '@asset-sg/client-shared';
+import { isAdmin, isEditor } from '@asset-sg/shared';
 import * as RD from '@devexperts/remote-data-ts';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { Store } from '@ngrx/store';
@@ -7,22 +9,17 @@ import { TranslateService } from '@ngx-translate/core';
 import queryString from 'query-string';
 import { filter, map, shareReplay } from 'rxjs';
 
-import { appSharedStateActions, fromAppShared } from '@asset-sg/client-shared';
-import { isAdmin, isEditor } from '@asset-sg/shared';
-
 import { AppState } from '../../state/app-state';
 
 @UntilDestroy()
 @Component({
-    selector: 'asset-sg-menu-bar',
-    templateUrl: './menu-bar.component.html',
-    styleUrls: ['./menu-bar.component.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush,
-    host: {
-        role: 'navigation',
-    },
+  selector: 'asset-sg-menu-bar',
+  templateUrl: './menu-bar.component.html',
+  styleUrls: ['./menu-bar.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MenuBarComponent {
+  @HostBinding('attr.role') role = 'navigation';
   private _router = inject(Router);
   public _translateService = inject(TranslateService);
   private _store = inject(Store<AppState>);
@@ -56,7 +53,7 @@ export class MenuBarComponent {
     });
   }
 
-    public openAssetDrawer() {
-        this._store.dispatch(appSharedStateActions.toggleSearchFilter());
-    }
+  public openAssetDrawer() {
+    this._store.dispatch(appSharedStateActions.toggleSearchFilter());
+  }
 }
