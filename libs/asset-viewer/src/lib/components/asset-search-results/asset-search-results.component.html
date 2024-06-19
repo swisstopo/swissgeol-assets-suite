@@ -1,31 +1,31 @@
-<div *ngIf="(loadingState | async) === LoadingState.Loading; else results" class="loading-spinner">
-  <mat-progress-spinner mode="indeterminate" />
-</div>
-<ng-template #results>
-  <ng-container *rxLet="assets$ | push">
+<ng-container *rxLet="assets$ | push">
     <ng-container *rxLet="isResultsOpen$; let isResultsOpen">
-    <div class="header">
-      <div>
-        {{ "search.searchResults" | translate }}:
-        <asset-sg-animate-number [nextValue]="(pageStats$ | async)?.total ?? 0" />
-      </div>
-      <button asset-sg-icon-button style="width: unset" (click)="toggleResultsOpen(isResultsOpen)">
-        <span translate> {{isResultsOpen ? 'Tabelle verbergen' : 'Tabelle anzeigen'}} </span>
-        <svg-icon key="close-nav"></svg-icon>
-      </button>
-    </div>
-      <ng-container *ngIf="isResultsOpen">
-    <div class="search-results">
-      <div
-        class="asset-result"
-        *rxFor="let asset of assets$ | async; trackBy: 'assetId'"
-        (mouseover)="onAssetMouseOver(asset.assetId)"
-        (mouseout)="onAssetMouseOut()"
-      >
-        <asset-sg-asset-search-result [asset]="asset"></asset-sg-asset-search-result>
-      </div>
-    </div>
+        <div class="header">
+            <div>
+                {{ "search.searchResults" | translate }}:
+                <asset-sg-animate-number [nextValue]="(pageStats$ | async)?.total ?? 0" />
+            </div>
+            <button asset-sg-icon-button style="width: unset" (click)="toggleResultsOpen(isResultsOpen)">
+                <span> {{ (isResultsOpen ? 'search.hideTable' : 'search.showTable') | translate }} </span>
+                <svg-icon key="close-nav"></svg-icon>
+            </button>
+        </div>
+        <ng-container *ngIf="isResultsOpen">
+            <div class="search-results">
+                <div *ngIf="(loadingState | async) === LoadingState.Loading; else results" class="loading-spinner">
+                    <mat-progress-spinner mode="indeterminate" />
+                </div>
+                <ng-template #results>
+                    <div
+                        class="asset-result"
+                        *rxFor="let asset of assets$ | async; trackBy: 'assetId'"
+                        (mouseover)="onAssetMouseOver(asset.assetId)"
+                        (mouseout)="onAssetMouseOut()"
+                    >
+                        <asset-sg-asset-search-result [asset]="asset"></asset-sg-asset-search-result>
+                    </div>
+                </ng-template>
+            </div>
+        </ng-container>
     </ng-container>
-    </ng-container>
-  </ng-container>
-</ng-template>
+</ng-container>

@@ -75,6 +75,7 @@ export const assetSearchReducer = createReducer(
                 ...state.query,
                 ...filterConfiguration,
             },
+            isResultsOpen: true,
         }),
     ),
     on(
@@ -83,7 +84,6 @@ export const assetSearchReducer = createReducer(
             ...state,
             results: searchResults,
             loadingState: LoadingState.Loaded,
-            isResultsOpen: true,
         }),
     ),
     on(
