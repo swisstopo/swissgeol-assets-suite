@@ -716,12 +716,12 @@ interface PageOptions {
 }
 
 const escapeElasticQuery = (query: string): string => {
-  return query.replace(/(&&|\|\||!|\(|\)|\{|}|\[|]|\^|"|~|\*|\?|:|\\)/, '\\$1');
+  return query.replace(/(&&|\|\||!|\(|\)|\{|}|\[|]|\^|"|~|\*|\?|:|\\)/g, '\\$1');
 };
 
 const normalizeFieldQuery = (query: string): string =>
   query
-    .replace(/title(_*)public:/i, 'titlePublic:')
-    .replace(/title(_*)original:/i, 'titleOriginal:')
-    .replace(/contact(_*)ame:/i, 'contactNames:')
-    .replace(/sgs(_*)id:/i, 'sgsId:');
+    .replace(/title(_*)public:/gi, 'titlePublic:')
+    .replace(/title(_*)original:/gi, 'titleOriginal:')
+    .replace(/contact(_*)ame:/gi, 'contactNames:')
+    .replace(/sgs(_*)id:/gi, 'sgsId:');
