@@ -60,6 +60,7 @@
                     <span class="filename"> {{ assetFile.fileName }} ({{ assetFile.fileSize }}) </span>
                     <button
                       asset-sg-icon-button
+                      *ngIf="!isActiveFileDownload(assetFile, false); else downloadSpinner"
                       [title]="'search.openFileInNewTab' | translate : { fileName: assetFile.fileName }"
                       (click)="downloadFile(assetFile, false)"
                     >
@@ -67,11 +68,16 @@
                     </button>
                     <button
                       asset-sg-icon-button
+                      *ngIf="!isActiveFileDownload(assetFile); else downloadSpinner"
                       [title]="'search.downloadFile' | translate : { fileName: assetFile.fileName }"
                       (click)="downloadFile(assetFile)"
                     >
                       <svg-icon key="download"></svg-icon>
                     </button>
+
+                    <ng-template #downloadSpinner>
+                      <mat-progress-spinner mode="indeterminate" [diameter]="24" />
+                    </ng-template>
                   </li>
                 </ul>
               </td>
