@@ -655,8 +655,8 @@ const mapQueryToElasticDsl = (query: AssetSearchQuery): QueryDslQueryContainer =
   if (query.languageItemCodes != null) {
     filters.push(makeArrayFilter('languageItemCodes', query.languageItemCodes));
   }
-  if (query.geomCodes != null) {
-    filters.push(makeArrayFilter('geometryCodes', query.geomCodes));
+  if (query.geometryCodes != null) {
+    filters.push(makeArrayFilter('geometryCodes', query.geometryCodes));
   }
 
   return {

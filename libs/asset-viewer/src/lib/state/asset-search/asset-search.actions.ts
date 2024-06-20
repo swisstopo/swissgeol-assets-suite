@@ -24,7 +24,7 @@ export const updateSearchResults = createAction(
 export const clearSearchText = createAction('[Asset Search] Clear search text');
 export const resetSearch = createAction('[Asset Search] Reset Search');
 export const removePolygon = createAction('[Asset Search] Remove polygon');
-export const readParams = createAction('[Asset Search] Read Params');
+export const initializeSearch = createAction('[Asset Search] Initialize search');
 export const setLoadingState = createAction('[Asset Search] Set loading state');
 export const searchForAssetDetail = createAction(
   '[Asset Search] Search for asset detail',

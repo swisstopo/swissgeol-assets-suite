@@ -10,7 +10,7 @@ export interface AssetSearchQuery {
   manCatLabelItemCodes?: string[];
   assetKindItemCodes?: string[];
   usageCodes?: UsageCode[];
-  geomCodes?: Array<GeometryCode | 'None'>;
+  geometryCodes?: Array<GeometryCode | 'None'>;
   languageItemCodes?: string[];
 }
 

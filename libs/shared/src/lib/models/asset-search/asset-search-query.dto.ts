@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsEnum, IsNumber, IsOptional, IsString, ValidateNested } from 'class-validator';
+import { IsIn, IsNumber, IsOptional, IsString, ValidateNested } from 'class-validator';
 
 import { PartialDateRangeDTO } from '../date-range.dto';
 import { UsageCode } from '../usage';
@@ -31,8 +31,8 @@ export class AssetSearchQueryDTO implements AssetSearchQuery {
   usageCodes?: UsageCode[];
 
   @IsOptional()
-  @IsEnum(GeometryCode, { each: true })
-  geomCodes?: Array<GeometryCode | 'None'>;
+  @IsIn([...Object.values(GeometryCode), 'None'], { each: true })
+  geometryCodes?: Array<GeometryCode | 'None'>;
 
   @IsString({ each: true })
   @IsOptional()
