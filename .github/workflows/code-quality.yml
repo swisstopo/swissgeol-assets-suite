@@ -184,7 +184,7 @@ jobs:
           docker compose up -d db oidc elasticsearch
       - name: Start API
         run: |
-          npm run prisma -- reset -f
+          npm run prisma -- migrate reset -f
           npm run start:server &> /dev/null &
       - name: Restore cached e2e node modules
         uses: actions/cache/restore@v4
