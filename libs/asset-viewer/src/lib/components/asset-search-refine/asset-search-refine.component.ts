@@ -2,7 +2,7 @@ import { AfterViewInit, Component, inject, OnDestroy, OnInit } from '@angular/co
 import { FormControl } from '@angular/forms';
 import { MatOptionSelectionChange } from '@angular/material/core';
 import { Router } from '@angular/router';
-import { CURRENT_LANG, fromAppShared } from '@asset-sg/client-shared';
+import { fromAppShared } from '@asset-sg/client-shared';
 import { AssetSearchQuery, DateRange } from '@asset-sg/shared';
 import { Store } from '@ngrx/store';
 import { map, startWith, Subscription } from 'rxjs';
@@ -10,7 +10,6 @@ import { map, startWith, Subscription } from 'rxjs';
 import * as actions from '../../state/asset-search/asset-search.actions';
 import {
   AvailableAuthor,
-  Filter,
   selectAssetKindFilters,
   selectAssetSearchQuery,
   selectAvailableAuthors,
@@ -80,16 +79,6 @@ export class AssetSearchRefineComponent implements OnInit, OnDestroy, AfterViewI
 
   public removePolygon() {
     this.store.dispatch(actions.removePolygon());
-  }
-
-  public toggleFilter<T extends string>(all: Array<Filter<T>>, filter: Filter<T>): void {
-    const activeValues = new Set(all.filter((it) => it.isActive).map((it) => it.value));
-    if (activeValues.has(filter.value)) {
-      activeValues.delete(filter.value);
-    } else {
-      activeValues.add(filter.value);
-    }
-    this.updateSearch({ [filter.queryKey]: [...activeValues] });
   }
 
   public updateAuthor(event: MatOptionSelectionChange, authorId: number) {

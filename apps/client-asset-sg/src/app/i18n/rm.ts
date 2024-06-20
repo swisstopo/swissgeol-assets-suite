@@ -51,7 +51,6 @@ export const rmAppTranslations: AppTranslations = {
     originalTitle: 'RM Originaltitel',
     kind: 'RM Art',
     topic: 'RM Thema',
-    language: 'RM Sprache',
     format: 'RM Format',
     createdDate: 'RM Erstellungsdatum',
     lastProcessedDate: 'RM Letztes Update',
@@ -74,6 +73,10 @@ export const rmAppTranslations: AppTranslations = {
       LineString: 'RM Linie',
       Polygon: 'RM Polygon',
       None: 'RM Keine',
+    },
+    language: 'RM Sprache',
+    languageItem: {
+      None: 'RM keine',
     },
     resetSearch: 'RM Suche zurücksetzen',
     file: 'RM Datei',

@@ -1,23 +1,25 @@
+@use "../../styles/variables";
+
 ul {
   display: flex;
   gap: 0.5rem;
   flex-wrap: wrap;
   margin: 1rem 0 0 0;
   padding: 0 0 1rem 0;
-  border-bottom: 2px solid #dee2e6;
+  border-bottom: 2px solid variables.$grey-03;
   list-style: none;
 }
 
 button {
-  background-color: #dee2e6;
+  background-color: variables.$grey-03;
   color: #212429;
   padding: 0.5rem;
   font-size: 0.875rem;
   text-align: left;
 
   &.active {
-    background-color: #b9271a;
-    color: #fff;
+    background-color: variables.$dark-red;
+    color: variables.$white;
   }
 
   &[disabled] {

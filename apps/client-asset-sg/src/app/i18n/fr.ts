@@ -51,7 +51,6 @@ export const frAppTranslations: AppTranslations = {
     originalTitle: 'Titre original',
     kind: 'Type',
     topic: 'Thème',
-    language: 'Langue',
     format: 'Format',
     createdDate: 'Date de création',
     lastProcessedDate: 'Dernière mise à jour',
@@ -74,6 +73,10 @@ export const frAppTranslations: AppTranslations = {
       LineString: 'Ligne',
       Polygon: 'Polygone',
       None: 'Aucune',
+    },
+    language: 'Langue',
+    languageItem: {
+      None: 'aucune',
     },
     resetSearch: 'Réinitialiser la recherche',
     file: 'Fichier',

@@ -587,6 +587,8 @@ export class AssetSearchService {
             throw new Error(`unknown geomText prefix: ${prefix}`);
         }
       });
+    const languageItemCodes =
+      asset.assetLanguages.length === 0 ? ['None'] : asset.assetLanguages.map((it) => it.languageItemCode);
     return {
       assetId: asset.assetId,
       titlePublic: asset.titlePublic,
@@ -594,7 +596,7 @@ export class AssetSearchService {
       sgsId: asset.sgsId,
       createDate: asset.createDate,
       assetKindItemCode: asset.assetKindItemCode,
-      languageItemCodes: asset.assetLanguages.map((it) => it.languageItemCode),
+      languageItemCodes,
       usageCode: makeUsageCode(asset.publicUse.isAvailable, asset.internalUse.isAvailable),
       authorIds: asset.assetContacts.filter((it) => it.role === 'author').map((it) => it.contactId),
       contactNames: contacts.map((it) => it.name),
