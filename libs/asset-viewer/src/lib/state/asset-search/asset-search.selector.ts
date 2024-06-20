@@ -5,17 +5,17 @@ import {
   Contact,
   DateRange,
   GeometryCode,
-  LV95,
   LineString,
+  LV95,
+  ordStatusWorkByDate,
   Point,
   ReferenceData,
   Study,
   StudyPolygon,
   UsageCode,
+  usageCodes,
   ValueCount,
   ValueItem,
-  ordStatusWorkByDate,
-  usageCodes,
 } from '@asset-sg/shared';
 import * as RD from '@devexperts/remote-data-ts';
 import { createSelector } from '@ngrx/store';
@@ -25,17 +25,17 @@ import * as O from 'fp-ts/Option';
 
 import { AssetDetail } from '../../models';
 
-import { AppStateWithAssetSearch, LoadingState } from './asset-search.reducer';
+import { AppStateWithAssetSearch } from './asset-search.reducer';
 
 const assetSearchFeature = (state: AppStateWithAssetSearch) => state.assetSearch;
-
-export const selectIsMapInitialised = createSelector(assetSearchFeature, (state) => state.isMapInitialised);
-
-export const selectIsRefineAndResultsOpen = createSelector(assetSearchFeature, (state) => state.isRefineAndResultsOpen);
 
 export const selectAssetSearchState = createSelector(assetSearchFeature, (state) => state);
 
 export const selectSearchLoadingState = createSelector(assetSearchFeature, (state) => state.loadingState);
+
+export const selectIsFiltersOpen = createSelector(assetSearchFeature, (state) => state.isFiltersOpen);
+
+export const selectIsResultsOpen = createSelector(assetSearchFeature, (state) => state.isResultsOpen);
 
 export const selectAssetDetailLoadingState = createSelector(
   assetSearchFeature,
@@ -76,26 +76,6 @@ export const selectCurrentAssetDetailVM = createSelector(
     }
     return null as ReturnType<typeof makeAssetDetailVMNew> | null;
   }
-);
-
-export const selectDrawerState = createSelector(
-  selectIsMapInitialised,
-  selectIsRefineAndResultsOpen,
-  fromAppShared.selectIsPanelOpen,
-  selectCurrentAssetDetail,
-  selectSearchLoadingState,
-  (isMapInitialised, isRefineAndResultsOpen, isPanelOpen, currentAssetDetail, loadingState): DrawerState =>
-    !isMapInitialised
-      ? {
-          showRefineOrStartSearch: 'neither',
-          showResults: false,
-          showDetails: false,
-        }
-      : {
-          showRefineOrStartSearch: !isPanelOpen || !isRefineAndResultsOpen ? 'neither' : 'show-refine',
-          showResults: isPanelOpen && isRefineAndResultsOpen && loadingState !== LoadingState.Initial,
-          showDetails: !!currentAssetDetail,
-        }
 );
 
 export const selectContact = (
@@ -282,12 +262,6 @@ export interface AvailableItem {
 export interface AvailableValueCount<T> extends ValueCount<T> {
   isAvailable: boolean;
   isActive: boolean;
-}
-
-export interface DrawerState {
-  showRefineOrStartSearch: 'show-refine' | 'show-start-search' | 'neither';
-  showResults: boolean;
-  showDetails: boolean;
 }
 
 export interface StudyVM extends Study {

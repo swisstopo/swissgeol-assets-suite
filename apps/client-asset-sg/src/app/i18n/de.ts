@@ -80,6 +80,8 @@ export const deAppTranslations = {
     downloadFile: '{{fileName}} herunterladen',
     assetsUnderMouseCursor: '{{ assetsCount }} Assets unter dem Mauszeiger gefunden. Bitte wählen Sie eines aus:',
     removePolygon: 'Polygon aufheben',
+    hideTable: 'Tabelle verbergen',
+    showTable: 'Tabelle anzeigen',
   },
   contactRoles: {
     author: 'Autor',

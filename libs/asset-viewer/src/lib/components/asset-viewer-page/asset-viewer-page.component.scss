@@ -2,6 +2,20 @@
 
 :host {
   position: relative;
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+  display: grid;
+
+  grid-template-areas:
+    "search-filter map search-detail"
+    "search-filter search-results search-detail";
+  grid-template-rows: 1fr auto;
+  grid-template-columns: auto 1fr auto;
+}
+
+asset-sg-map {
+  grid-area: map;
 }
 
 .search-input {
@@ -28,5 +42,29 @@ asset-sg-asset-picker {
   top: 0;
   right: 0;
   height: 100%;
-  width: calc(var(--viewport-width) * 0.6);
+  width: 100%;
+  z-index: 10;
+}
+
+asset-sg-asset-search-refine {
+  background: variables.$grey-01;
+  grid-area: search-filter;
+  overflow-y: auto;
+  padding-left: 16px;
+  width: 368px;
+}
+
+asset-sg-asset-search-results {
+  background: variables.$grey-01;
+  grid-area: search-results;
+  overflow: hidden;
+  width: 100%;
+}
+
+asset-sg-asset-search-detail {
+  background: variables.$grey-01;
+  grid-area: search-detail;
+  overflow-y: auto;
+  padding: 16px;
+  width: 550px;
 }

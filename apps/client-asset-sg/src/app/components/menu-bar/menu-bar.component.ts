@@ -19,6 +19,7 @@ import { AppState } from '../../state/app-state';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MenuBarComponent {
+  @HostBinding('attr.role') role = 'navigation';
   private _router = inject(Router);
   public _translateService = inject(TranslateService);
   private _store = inject(Store<AppState>);
@@ -53,11 +54,6 @@ export class MenuBarComponent {
   }
 
   public openAssetDrawer() {
-    this._store.dispatch(appSharedStateActions.triggerSearch());
-  }
-
-  @HostBinding('role')
-  get hostRole(): string {
-    return 'navigation';
+    this._store.dispatch(appSharedStateActions.toggleSearchFilter());
   }
 }

@@ -1,25 +1,25 @@
 import { DOCUMENT } from '@angular/common';
-import { Component, ElementRef, EventEmitter, Input, Output, ViewChild, ViewContainerRef, inject } from '@angular/core';
+import { Component, ElementRef, EventEmitter, inject, Input, Output, ViewChild, ViewContainerRef } from '@angular/core';
 import {
-  LifecycleHooks,
-  LifecycleHooksDirective,
-  WGStoLV95,
-  WindowService,
-  ZoomControlsComponent,
   createFeaturesFromStudies,
   decorateFeature,
   featureStyles,
   fitToSwitzerland,
   isoWGSLat,
   isoWGSLng,
+  LifecycleHooks,
+  LifecycleHooksDirective,
   lv95ToWGS,
   olCoordsFromLV95Array,
   olZoomControls,
   toLonLat,
+  WGStoLV95,
+  WindowService,
+  ZoomControlsComponent,
   zoomToStudies,
 } from '@asset-sg/client-shared';
-import { OO, ORD, makePairs } from '@asset-sg/core';
-import { AssetEditDetail, LV95, eqLV95Array } from '@asset-sg/shared';
+import { makePairs, OO, ORD } from '@asset-sg/core';
+import { AssetEditDetail, eqLV95Array, LV95 } from '@asset-sg/shared';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { concatLatestFrom } from '@ngrx/effects';
 import { Store } from '@ngrx/store';
@@ -41,7 +41,6 @@ import CircleStyle from 'ol/style/Circle';
 import Style from 'ol/style/Style';
 import View from 'ol/View';
 import {
-  Observable,
   asyncScheduler,
   delay,
   distinctUntilChanged,
@@ -50,6 +49,7 @@ import {
   identity,
   map,
   merge,
+  Observable,
   share,
   shareReplay,
   subscribeOn,
@@ -61,9 +61,9 @@ import {
 import { AllStudyDTO } from '../../models';
 import { AllStudyService } from '../../services/all-study.service';
 import {
-  StudyVM,
   selectCurrentAssetDetail,
   selectStudies,
+  StudyVM,
   wktToGeoJSON,
 } from '../../state/asset-search/asset-search.selector';
 
@@ -290,7 +290,7 @@ export class MapComponent {
           vectorLayerGeoms.setOpacity(1);
           vectorLayerAllStudies.setOpacity(1);
           if (studiesFromSearch.length > 0) {
-            zoomToStudies(this._windowService, olMap, studiesFromSearch, 0.6);
+            zoomToStudies(this._windowService, olMap, studiesFromSearch, 1);
           }
         } else {
           vectorSourceAssetGeoms.clear();
@@ -302,7 +302,7 @@ export class MapComponent {
               geom: wktToGeoJSON(study.geomText),
             };
           });
-          zoomToStudies(this._windowService, olMap, studiesWithGeometry, 0.3);
+          zoomToStudies(this._windowService, olMap, studiesWithGeometry, 1);
           const studiesWithFeature = createFeaturesFromStudies(studiesWithGeometry, {
             point: featureStyles.bigPointStyleAsset,
             polygon: featureStyles.polygonStyleAsset,
@@ -329,7 +329,7 @@ export class MapComponent {
           vectorSourceAssetGeoms.clear();
           vectorLayerGeoms.setOpacity(1);
           vectorLayerAllStudies.setOpacity(1);
-          zoomToStudies(this._windowService, olMap, studiesFromSearch, 0.6);
+          zoomToStudies(this._windowService, olMap, studiesFromSearch, 1);
         }
       });
 
@@ -342,7 +342,7 @@ export class MapComponent {
         }
         if (studiesFromSearch.length > 0) {
           vectorSourceGeoms.clear();
-          zoomToStudies(this._windowService, olMap, studiesFromSearch, 0.6);
+          zoomToStudies(this._windowService, olMap, studiesFromSearch, 1);
           const studiesWithFeature = createFeaturesFromStudies(studiesFromSearch, {
             point: featureStyles.bigPointStyle,
             polygon: featureStyles.polygonStyle,

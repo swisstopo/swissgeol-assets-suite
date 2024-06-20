@@ -1,4 +1,4 @@
-import { AppState, appSharedStateActions } from '@asset-sg/client-shared';
+import { appSharedStateActions, AppState } from '@asset-sg/client-shared';
 import { AssetEditDetail, AssetSearchQuery, AssetSearchResult, AssetSearchStats } from '@asset-sg/shared';
 import { createReducer, on } from '@ngrx/store';
 
@@ -19,7 +19,8 @@ export interface AssetSearchState {
   loadingState: LoadingState;
   assetDetailLoadingState: LoadingState;
   isMapInitialised: boolean;
-  isRefineAndResultsOpen: boolean;
+  isFiltersOpen: boolean;
+  isResultsOpen: boolean;
 }
 
 export interface AppStateWithAssetSearch extends AppState {
@@ -57,7 +58,8 @@ const initialState: AssetSearchState = {
     createDate: null,
   },
   isMapInitialised: false,
-  isRefineAndResultsOpen: false,
+  isFiltersOpen: true,
+  isResultsOpen: false,
   loadingState: LoadingState.Initial,
   assetDetailLoadingState: LoadingState.Initial,
   currentAsset: undefined,
@@ -73,6 +75,7 @@ export const assetSearchReducer = createReducer(
         ...state.query,
         ...filterConfiguration,
       },
+      isResultsOpen: true,
     })
   ),
   on(
@@ -138,6 +141,13 @@ export const assetSearchReducer = createReducer(
     })
   ),
   on(actions.mapInitialised, (state): AssetSearchState => ({ ...state, isMapInitialised: true })),
-  on(appSharedStateActions.openPanel, (state): AssetSearchState => ({ ...state, isRefineAndResultsOpen: true })),
-  on(actions.closeRefineAndResults, (state): AssetSearchState => ({ ...state, isRefineAndResultsOpen: false }))
+  on(appSharedStateActions.openPanel, (state): AssetSearchState => ({ ...state, isFiltersOpen: true })),
+  on(actions.openFilters, (state): AssetSearchState => ({ ...state, isFiltersOpen: true })),
+  on(actions.closeFilters, (state): AssetSearchState => ({ ...state, isFiltersOpen: false })),
+  on(
+    appSharedStateActions.toggleSearchFilter,
+    (state): AssetSearchState => ({ ...state, isFiltersOpen: !state.isFiltersOpen })
+  ),
+  on(actions.openResults, (state): AssetSearchState => ({ ...state, isResultsOpen: true })),
+  on(actions.closeResults, (state): AssetSearchState => ({ ...state, isResultsOpen: false }))
 );

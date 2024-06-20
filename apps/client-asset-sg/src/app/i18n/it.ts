@@ -81,6 +81,8 @@ export const itAppTranslations: AppTranslations = {
     downloadFile: 'IT {{fileName}} herunterladen',
     assetsUnderMouseCursor: 'IT {{ assetsCount }} Assets unter dem Mauszeiger gefunden. Bitte wählen Sie eines aus:',
     removePolygon: 'IT Polygon aufheben',
+    hideTable: 'IT Tabelle verbergen',
+    showTable: 'IT Tabelle anzeigen',
   },
   contactRoles: {
     author: 'IT Autor',

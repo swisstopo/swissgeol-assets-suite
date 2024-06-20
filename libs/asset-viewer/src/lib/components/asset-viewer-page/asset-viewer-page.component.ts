@@ -1,24 +1,24 @@
 import { ENTER } from '@angular/cdk/keycodes';
 import { TemplatePortal } from '@angular/cdk/portal';
 import {
-  AfterViewInit,
   ApplicationRef,
   ChangeDetectorRef,
   Component,
   ElementRef,
+  inject,
   NgZone,
+  OnDestroy,
   TemplateRef,
   ViewChild,
   ViewContainerRef,
-  inject,
 } from '@angular/core';
 import { Router } from '@angular/router';
 import {
   AppPortalService,
+  appSharedStateActions,
   AppState,
   LifecycleHooks,
   LifecycleHooksDirective,
-  appSharedStateActions,
 } from '@asset-sg/client-shared';
 import { isTruthy } from '@asset-sg/core';
 import { AssetEditDetail, LV95 } from '@asset-sg/shared';
@@ -29,16 +29,16 @@ import { flow } from 'fp-ts/function';
 import { Eq as eqNumber } from 'fp-ts/number';
 import * as O from 'fp-ts/Option';
 import {
-  Observable,
-  Subject,
   asyncScheduler,
   delay,
   filter,
   map,
   merge,
+  Observable,
   observeOn,
   partition,
   share,
+  Subject,
   switchMap,
   take,
   withLatestFrom,
@@ -50,7 +50,7 @@ import {
   selectAssetSearchQuery,
   selectAssetSearchResultData,
   selectCurrentAssetDetail,
-  selectDrawerState,
+  selectIsFiltersOpen,
 } from '../../state/asset-search/asset-search.selector';
 
 @UntilDestroy()
@@ -60,9 +60,8 @@ import {
   styleUrls: ['./asset-viewer-page.component.scss'],
   hostDirectives: [LifecycleHooksDirective],
 })
-export class AssetViewerPageComponent implements AfterViewInit {
+export class AssetViewerPageComponent implements OnDestroy {
   @ViewChild('templateAppBarPortalContent') templateAppBarPortalContent!: TemplateRef<unknown>;
-  @ViewChild('templateDrawerPortalContent') templateDrawerPortalContent!: TemplateRef<unknown>;
   @ViewChild('searchInput') searchInput!: ElementRef<HTMLInputElement>;
 
   private _lc = inject(LifecycleHooks);
@@ -74,13 +73,14 @@ export class AssetViewerPageComponent implements AfterViewInit {
   private _ngZone = inject(NgZone);
   private _router = inject(Router);
 
-  public drawerState$ = this._store.select(selectDrawerState);
   public searchPolygon$ = this._store.select(selectAssetSearchPolygon).pipe(map(O.fromNullable));
   public currentAssetId$ = this._store.select(selectCurrentAssetDetail).pipe(
     map((currentAsset) => currentAsset?.assetId),
     map(O.fromNullable)
   );
+  public currentAsset$ = this._store.select(selectCurrentAssetDetail);
   public removePolygon$ = new Subject<void>();
+  public isFiltersOpen$ = this._store.select(selectIsFiltersOpen);
 
   public _searchTextKeyDown$ = new Subject<KeyboardEvent>();
   private _searchTextChanged$ = this._searchTextKeyDown$.pipe(
@@ -112,9 +112,7 @@ export class AssetViewerPageComponent implements AfterViewInit {
             this._appPortalService.setAppBarPortalContent(
               new TemplatePortal(this.templateAppBarPortalContent, this._viewContainerRef)
             );
-            this._appPortalService.setDrawerPortalContent(
-              new TemplatePortal(this.templateDrawerPortalContent, this._viewContainerRef)
-            );
+            this._appPortalService.setDrawerPortalContent(null);
             setTimeout(() => {
               this._cd.detectChanges();
               resolve();
@@ -179,6 +177,10 @@ export class AssetViewerPageComponent implements AfterViewInit {
     )
       .pipe(untilDestroyed(this))
       .subscribe(this._store);
+  }
+
+  ngOnDestroy() {
+    this._appPortalService.setAppBarPortalContent(null);
   }
 
   public handleMapInitialised() {

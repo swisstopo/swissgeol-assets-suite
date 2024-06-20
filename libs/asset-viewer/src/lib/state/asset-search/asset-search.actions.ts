@@ -41,3 +41,8 @@ export const updateAssetDetail = createAction(
 export const resetAssetDetail = createAction('[Asset Search] Reset Asset Detail');
 export const mapInitialised = createAction('[Asset Search] Map Initialised');
 export const closeRefineAndResults = createAction('[Asset Search] Close Refine and Results');
+
+export const openFilters = createAction('[Asset Viewer] Open Filters');
+export const closeFilters = createAction('[Asset Viewer] Close Filters');
+export const openResults = createAction('[Asset Viewer] Open Results');
+export const closeResults = createAction('[Asset Viewer] Close Results');
