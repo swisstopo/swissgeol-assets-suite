@@ -183,10 +183,6 @@ jobs:
           cd development
           docker compose up -d db oidc elasticsearch
           sleep 30
-      - name: Start API
-        run: |
-          npm run prisma -- migrate reset -f
-          npm run start:server &> /dev/null &
       - name: Restore cached e2e node modules
         uses: actions/cache/restore@v4
         with:
@@ -196,6 +192,7 @@ jobs:
         uses: cypress-io/github-action@v6
         with:
           command: |
+            cd e2e
             npx cypress run \
               --record \
               --parallel \
