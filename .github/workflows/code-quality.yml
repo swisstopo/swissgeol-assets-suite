@@ -192,12 +192,12 @@ jobs:
         uses: cypress-io/github-action@v6
         with:
           command: |
-            cd e2e
             npx cypress run \
               --record \
               --parallel \
               --key ${{ secrets.CYPRESS_RECORD_KEY }} \
               --ci-build-id ${{ github.repository }}-${{ github.head_ref || github.ref_name }}-${{ github.sha }}
+              --config-file e2e/cypress.config.ts
           build: npm run build
           start: npm start
           wait-on: "http://localhost:4200"
