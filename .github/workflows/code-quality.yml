@@ -182,6 +182,7 @@ jobs:
         run: |
           cd development
           docker compose up -d db oidc elasticsearch
+          sleep 30
       - name: Start API
         run: |
           npm run prisma -- migrate reset -f
