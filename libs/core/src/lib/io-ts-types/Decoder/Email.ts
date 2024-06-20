@@ -5,7 +5,7 @@ import isEmail from 'validator/lib/isEmail';
 import { NonEmptyString } from './NonEmptyString';
 
 export interface EmailBrand {
-    readonly Email: unique symbol;
+  readonly Email: unique symbol;
 }
 
 export type Email = string & EmailBrand;

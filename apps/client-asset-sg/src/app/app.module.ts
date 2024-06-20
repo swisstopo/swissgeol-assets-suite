@@ -1,26 +1,17 @@
 import { A11yModule } from '@angular/cdk/a11y';
 import { DialogModule } from '@angular/cdk/dialog';
-import { registerLocaleData } from '@angular/common';
+import { CommonModule, NgOptimizedImage, registerLocaleData } from '@angular/common';
 import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
 import locale_deCH from '@angular/common/locales/de-CH';
 import { NgModule, inject } from '@angular/core';
 import { MAT_FORM_FIELD_DEFAULT_OPTIONS } from '@angular/material/form-field';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { RouterModule } from '@angular/router';
-import { SvgIconComponent, provideSvgIcons } from '@ngneat/svg-icon';
-import { EffectsModule } from '@ngrx/effects';
-import { FullRouterStateSerializer, StoreRouterConnectingModule, routerReducer } from '@ngrx/router-store';
-import { StoreModule } from '@ngrx/store';
-import { TranslateLoader, TranslateModule, TranslateService } from '@ngx-translate/core';
-import { ForModule } from '@rx-angular/template/for';
-import { LetModule } from '@rx-angular/template/let';
-import { PushModule } from '@rx-angular/template/push';
-import * as O from 'fp-ts/Option';
-import * as C from 'io-ts/Codec';
-
-import { AuthInterceptor, AuthModule } from '@asset-sg/auth';
+import { AuthInterceptor, AuthModule, ErrorService } from '@asset-sg/auth';
 import {
+  AlertModule,
   AnchorComponent,
   ButtonComponent,
   CURRENT_LANG,
@@ -29,6 +20,14 @@ import {
   icons,
 } from '@asset-sg/client-shared';
 import { storeLogger } from '@asset-sg/core';
+import { SvgIconComponent, provideSvgIcons } from '@ngneat/svg-icon';
+import { EffectsModule } from '@ngrx/effects';
+import { FullRouterStateSerializer, StoreRouterConnectingModule, routerReducer } from '@ngrx/router-store';
+import { StoreModule } from '@ngrx/store';
+import { TranslateLoader, TranslateModule, TranslateService } from '@ngx-translate/core';
+import { ForModule } from '@rx-angular/template/for';
+import { LetModule } from '@rx-angular/template/let';
+import { PushModule } from '@rx-angular/template/push';
 
 import { environment } from '../environments/environment';
 
@@ -36,7 +35,7 @@ import { adminGuard, editorGuard } from './app-guards';
 import { assetsPageMatcher } from './app-matchers';
 import { AppComponent } from './app.component';
 import { AppBarComponent, MenuBarComponent, NotFoundComponent, RedirectToLangComponent } from './components';
-import { ErrorComponent } from './components/error/error.component';
+import { SplashScreenComponent } from './components/splash-screen/splash-screen.component';
 import { appTranslations } from './i18n';
 import { AppSharedStateEffects } from './state';
 import { appSharedStateReducer } from './state/app-shared.reducer';
@@ -50,38 +49,35 @@ registerLocaleData(locale_deCH, 'de-CH');
     NotFoundComponent,
     AppBarComponent,
     MenuBarComponent,
-    ErrorComponent,
+    SplashScreenComponent,
   ],
   imports: [
+    CommonModule,
     BrowserModule,
     BrowserAnimationsModule,
     HttpClientModule,
     RouterModule.forRoot([
       {
-        path: ':lang/a',
-        loadChildren: () => import('@asset-sg/auth').then(m => m.AuthModule),
+        path: ':lang/auth',
+        loadChildren: () => AuthModule,
       },
       {
         path: ':lang/profile',
-        loadChildren: () => import('@asset-sg/profile').then(m => m.ProfileModule),
+        loadChildren: () => import('@asset-sg/profile').then((m) => m.ProfileModule),
       },
       {
         path: ':lang/admin',
-        loadChildren: () => import('@asset-sg/admin').then(m => m.AdminModule),
+        loadChildren: () => import('@asset-sg/admin').then((m) => m.AdminModule),
         canActivate: [adminGuard],
       },
       {
         path: ':lang/asset-admin',
-        loadChildren: () => import('@asset-sg/asset-editor').then(m => m.AssetEditorModule),
+        loadChildren: () => import('@asset-sg/asset-editor').then((m) => m.AssetEditorModule),
         canActivate: [editorGuard],
       },
       {
-        path: ':lang/error',
-        component: ErrorComponent,
-      },
-      {
         matcher: assetsPageMatcher,
-        loadChildren: () => import('@asset-sg/asset-viewer').then(m => m.AssetViewerModule),
+        loadChildren: () => import('@asset-sg/asset-viewer').then((m) => m.AssetViewerModule),
       },
       {
         path: 'not-found',
@@ -103,7 +99,7 @@ registerLocaleData(locale_deCH, 'de-CH');
         runtimeChecks: {
           strictStateImmutability: false,
         },
-      },
+      }
     ),
     EffectsModule.forRoot([AppSharedStateEffects]),
     ForModule,
@@ -117,9 +113,13 @@ registerLocaleData(locale_deCH, 'de-CH');
     DialogModule,
     A11yModule,
     AuthModule,
+    AlertModule,
+    NgOptimizedImage,
+    MatProgressSpinnerModule,
   ],
   providers: [
     provideSvgIcons(icons),
+    ErrorService,
     { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },
     { provide: MAT_FORM_FIELD_DEFAULT_OPTIONS, useValue: { appearance: 'fill', floatLabel: 'auto' } },
     { provide: CURRENT_LANG, useFactory: currentLangFactory },
@@ -137,11 +137,3 @@ export class AppModule {
 export interface Encoder<O, A> {
   readonly encode: (a: A) => O;
 }
-
-function optionFromNullable<O, A>(encoder: Encoder<O, A>): Encoder<O | null, O.Option<A>> {
-  return {
-    encode: O.fold(() => null, encoder.encode),
-  };
-}
-
-const foooobar = optionFromNullable(C.string);

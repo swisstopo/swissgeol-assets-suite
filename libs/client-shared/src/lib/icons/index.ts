@@ -2,6 +2,7 @@ import { actionMenuIcon } from './action-menu';
 import { assetsIcon } from './assets';
 import { calendarIcon } from './calendar';
 import { checkIcon } from './check';
+import { checkmarkIcon } from './checkmark';
 import { closeIcon } from './close';
 import { closeNavIcon } from './close-nav';
 import { deleteIcon } from './delete';
@@ -10,6 +11,7 @@ import { editIcon } from './edit';
 import { errorIcon } from './error';
 import { errorFilledIcon } from './error-filled';
 import { extLinkIcon } from './ext-link';
+import { failureIcon } from './failure';
 import { favouriteIcon } from './favourite';
 import { helpIcon } from './help';
 import { infoIcon } from './info';
@@ -21,39 +23,43 @@ import { successIcon } from './success';
 import { successFilledIcon } from './success-filled';
 import { userManagementIcon } from './user-management';
 import { viewExtendedIcon } from './view-extended';
+import { warnIcon } from './warn';
 import { warningFilledIcon } from './warning-filled';
 import { zoomMinusIcon } from './zoom-minus';
 import { zoomOriginIcon } from './zoom-origin';
 import { zoomPlusIcon } from './zoom-plus';
 
 export const icons = [
-    actionMenuIcon,
-    assetsIcon,
-    calendarIcon,
-    checkIcon,
-    closeIcon,
-    closeNavIcon,
-    deleteIcon,
-    downloadIcon,
-    editIcon,
-    errorIcon,
-    errorFilledIcon,
-    extLinkIcon,
-    favouriteIcon,
-    helpIcon,
-    infoFilledIcon,
-    infoIcon,
-    polygonIcon,
-    profileIcon,
-    settingsIcon,
-    successIcon,
-    successFilledIcon,
-    userManagementIcon,
-    viewExtendedIcon,
-    warningFilledIcon,
-    zoomMinusIcon,
-    zoomOriginIcon,
-    zoomPlusIcon,
+  actionMenuIcon,
+  assetsIcon,
+  calendarIcon,
+  checkIcon,
+  checkmarkIcon,
+  closeIcon,
+  closeNavIcon,
+  deleteIcon,
+  downloadIcon,
+  editIcon,
+  errorIcon,
+  errorFilledIcon,
+  extLinkIcon,
+  failureIcon,
+  favouriteIcon,
+  helpIcon,
+  infoFilledIcon,
+  infoIcon,
+  polygonIcon,
+  profileIcon,
+  settingsIcon,
+  successIcon,
+  successFilledIcon,
+  userManagementIcon,
+  viewExtendedIcon,
+  warningFilledIcon,
+  warnIcon,
+  zoomMinusIcon,
+  zoomOriginIcon,
+  zoomPlusIcon,
 ];
 
 export { icon24x24 } from './icon';

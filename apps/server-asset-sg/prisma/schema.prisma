@@ -1,0 +1,672 @@
+generator client {
+  provider        = "prisma-client-js"
+  output          = "../../../node_modules/.prisma/client"
+  previewFeatures = ["views"]
+}
+
+datasource db {
+  provider          = "postgresql"
+  url               = env("DATABASE_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+}
+
+model Asset {
+  assetId             Int             @id @default(autoincrement()) @map("asset_id")
+  titlePublic         String          @map("title_public")
+  titleOriginal       String?         @map("title_original")
+  isNatRel            Boolean         @map("is_nat_rel")
+  receiptDate         DateTime        @map("receipt_date")
+  municipality        String?         @map("municipality")
+  url                 String?         @map("url")
+  locationAnalog      String?         @map("location_analog")
+  processor           String?         @map("processor")
+  lastProcessedDate   DateTime        @map("last_processed_date")
+  textBody            String?         @map("text_body")
+  sgsId               Int?            @map("sgs_id")
+  geolDataInfo        String?         @map("geol_data_info")
+  geolContactDataInfo String?         @map("geol_contact_data_info")
+  geolAuxDataInfo     String?         @map("geol_aux_data_info")
+  remark              String?         @map("remark")
+  assetKindItemCode   String          @map("asset_kind_item_code")
+  assetKindItem       AssetKindItem   @relation(fields: [assetKindItemCode], references: [assetKindItemCode])
+  createDate          DateTime        @map("create_date")
+  assetFormatItemCode String          @map("asset_format_item_code")
+  assetFormatItem     AssetFormatItem @relation(fields: [assetFormatItemCode], references: [assetFormatItemCode])
+  authorBiblio        String?         @map("author_biblio_id")
+  sourceProject       String?         @map("source_project")
+  description         String?         @map("description")
+  isExtract           Boolean         @map("is_extract")
+  internalUseId       Int             @map("internal_use_id")
+  internalUse         InternalUse     @relation(fields: [internalUseId], references: [internalUseId])
+  publicUseId         Int             @map("public_use_id")
+  publicUse           PublicUse       @relation(fields: [publicUseId], references: [publicUseId])
+  assetMainId         Int?            @map("asset_main_id")
+  assetMain           Asset?          @relation(name: "asset", fields: [assetMainId], references: [assetId])
+
+  assetContacts           AssetContact[]
+  assetFiles              AssetFile[]
+  assetFormatCompositions AssetFormatComposition[]
+  assetKindCompositions   AssetKindComposition[]
+  assetPublications       AssetPublication[]
+  assetLanguages          AssetLanguage[]
+  autoCats                AutoCat[]
+  ids                     Id[]
+  legalDocs               LegalDoc[]
+  manCatLabelRefs         ManCatLabelRef[]
+  statusWorks             StatusWork[]
+  studyAreas              StudyArea[]
+  studyLocations          StudyLocation[]
+  studyTraces             StudyTrace[]
+  typeNatRels             TypeNatRel[]
+
+  siblingXAssets AssetXAssetY[] @relation("sibling_x_asset")
+  siblingYAssets AssetXAssetY[] @relation("sibling_y_asset")
+
+  assetInternalProjects AssetInternalProject[]
+  subordinateAssets     Asset[]                @relation("asset")
+  AssetUserFavourite    AssetUserFavourite[]
+  allStudies            AllStudy[]
+
+  @@map("asset")
+}
+
+model Id {
+  idId        Int    @id @default(autoincrement()) @map("id_id")
+  assetId     Int    @map("asset_id")
+  asset       Asset  @relation(fields: [assetId], references: [assetId])
+  id          String @map("id")
+  description String @map("description")
+
+  @@map("id")
+}
+
+model AssetXAssetY {
+  assetXId Int   @map("asset_x_id")
+  assetX   Asset @relation("sibling_x_asset", fields: [assetXId], references: [assetId])
+
+  assetYId Int   @map("asset_y_id")
+  assetY   Asset @relation("sibling_y_asset", fields: [assetYId], references: [assetId])
+
+  @@id([assetXId, assetYId])
+  @@map("asset_x_asset_y")
+}
+
+model InternalUse {
+  internalUseId          Int                @id @default(autoincrement()) @map("internal_use_id")
+  isAvailable            Boolean            @map("is_available")
+  statusAssetUseItemCode String             @map("status_asset_use_item_code")
+  statusAssetUseItem     StatusAssetUseItem @relation(fields: [statusAssetUseItemCode], references: [statusAssetUseItemCode])
+  startAvailabilityDate  DateTime?          @map("start_availability_date")
+
+  Asset Asset[]
+
+  @@map("internal_use")
+}
+
+model PublicUse {
+  publicUseId            Int                @id @default(autoincrement()) @map("public_use_id")
+  isAvailable            Boolean            @map("is_available")
+  statusAssetUseItemCode String             @map("status_asset_use_item_code")
+  statusAssetUseItem     StatusAssetUseItem @relation(fields: [statusAssetUseItemCode], references: [statusAssetUseItemCode])
+  startAvailabilityDate  DateTime?          @map("start_availability_date")
+
+  Asset Asset[]
+
+  @@map("public_use")
+}
+
+model AssetFile {
+  assetId Int   @map("asset_id")
+  asset   Asset @relation(fields: [assetId], references: [assetId])
+  fileId  Int   @map("file_id")
+  file    File  @relation(fields: [fileId], references: [fileId], onDelete: Cascade)
+
+  @@id([assetId, fileId])
+  @@map("asset_file")
+}
+
+enum OcrState {
+  willNotBeProcessed
+  created
+  waiting
+  processing
+  error
+  success
+}
+
+model File {
+  fileId       Int      @id @default(autoincrement()) @map("file_id")
+  fileName     String   @map("file_name")
+  ocrStatus    OcrState @default(created) @map("ocr_status")
+  fileSize     BigInt   @map("file_size")
+  lastModified DateTime @map("file_date")
+
+  AssetObjectInfo AssetObjectInfo[]
+  AssetFile       AssetFile[]
+
+  @@unique([fileName])
+  @@map("file")
+}
+
+model AssetObjectInfo {
+  assetObjectInfoId     Int               @id @default(autoincrement()) @map("asset_object_info_id")
+  fileId                Int               @map("file_id")
+  file                  File              @relation(fields: [fileId], references: [fileId])
+  autoObjectCatItemCode String            @map("auto_object_cat_item_code")
+  autoObjectCatItem     AutoObjectCatItem @relation(fields: [autoObjectCatItemCode], references: [autoObjectCatItemCode])
+  objectPage            String            @map("object_page")
+  objectBbox            String            @map("object_bbox")
+  objectScore           String            @map("object_score")
+  pathToImage           String            @map("path_to_image")
+
+  @@map("asset_object_info")
+}
+
+model ManCatLabelRef {
+  assetId             Int             @map("asset_id")
+  asset               Asset           @relation(fields: [assetId], references: [assetId])
+  manCatLabelItemCode String          @map("man_cat_label_item_code")
+  manCatLabelItem     ManCatLabelItem @relation(fields: [manCatLabelItemCode], references: [manCatLabelItemCode])
+
+  @@unique([assetId, manCatLabelItemCode])
+  @@map("man_cat_label_ref")
+}
+
+model AssetFormatComposition {
+  assetFormatCompositionId Int             @id @default(autoincrement()) @map("asset_format_composition_id")
+  assetId                  Int             @map("asset_id")
+  asset                    Asset           @relation(fields: [assetId], references: [assetId])
+  assetFormatItemCode      String          @map("asset_format_item_code")
+  assetFormatItem          AssetFormatItem @relation(fields: [assetFormatItemCode], references: [assetFormatItemCode])
+
+  @@map("asset_format_composition")
+}
+
+model AssetKindComposition {
+  assetKindCompositionId Int           @id @default(autoincrement()) @map("asset_kind_composition_id")
+  assetId                Int           @map("asset_id")
+  asset                  Asset         @relation(fields: [assetId], references: [assetId])
+  assetKindItemCode      String        @map("asset_kind_item_code")
+  assetKindItem          AssetKindItem @relation(fields: [assetKindItemCode], references: [assetKindItemCode])
+
+  @@map("asset_kind_composition")
+}
+
+model StatusWork {
+  statusWorkId       Int            @id @default(autoincrement()) @map("status_work_id")
+  assetId            Int            @map("asset_id")
+  asset              Asset          @relation(fields: [assetId], references: [assetId])
+  statusWorkItemCode String         @map("status_work_item_code")
+  statusWorkItem     StatusWorkItem @relation(fields: [statusWorkItemCode], references: [statusWorkItemCode])
+  statusWorkDate     DateTime       @map("status_work_date")
+  processor          String?        @map("processor")
+
+  @@map("status_work")
+}
+
+model AutoCat {
+  autoCatId            Int              @id @default(autoincrement()) @map("auto_cat_id")
+  assetId              Int              @map("asset_id")
+  asset                Asset            @relation(fields: [assetId], references: [assetId])
+  autoCatLabelItemCode String           @map("auto_cat_label_item_code")
+  autoCatLabelItem     AutoCatLabelItem @relation(fields: [autoCatLabelItemCode], references: [autoCatLabelItemCode])
+  autoCatLabelScore    Int              @map("auto_cat_label_score")
+
+  @@map("auto_cat")
+}
+
+model TypeNatRel {
+  typeNatRelId   Int        @id @default(autoincrement()) @map("type_nat_rel_id")
+  assetId        Int        @map("asset_id")
+  asset          Asset      @relation(fields: [assetId], references: [assetId])
+  natRelItemCode String     @map("nat_rel_item_code")
+  natRelItem     NatRelItem @relation(fields: [natRelItemCode], references: [natRelItemCode])
+
+  @@map("type_nat_rel")
+}
+
+model LegalDoc {
+  legalDocId       Int          @id @default(autoincrement()) @map("legal_doc_id")
+  assetId          Int          @map("asset_id")
+  asset            Asset        @relation(fields: [assetId], references: [assetId])
+  title            String       @map("title")
+  legalDocItemCode String       @map("legal_doc_item_code")
+  legalDocItem     LegalDocItem @relation(fields: [legalDocItemCode], references: [legalDocItemCode])
+
+  @@map("legal_doc")
+}
+
+model Contact {
+  contactId           Int             @id @default(autoincrement()) @map("contact_id")
+  contactKindItemCode String          @map("contact_kind_item_code")
+  contactKindItem     ContactKindItem @relation(fields: [contactKindItemCode], references: [contactKindItemCode])
+  name                String          @map("name")
+  street              String?         @map("street")
+  houseNumber         String?         @map("house_number")
+  plz                 String?         @map("plz")
+  locality            String?         @map("locality")
+  country             String?         @map("country")
+  telephone           String?         @map("telephone")
+  email               String?         @map("email")
+  website             String?         @map("website")
+
+  assetContacts AssetContact[]
+
+  @@map("contact")
+}
+
+model AssetContact {
+  assetId   Int     @map("asset_id")
+  asset     Asset   @relation(fields: [assetId], references: [assetId])
+  contactId Int     @map("contact_id")
+  contact   Contact @relation(fields: [contactId], references: [contactId])
+  role      String  @map("role")
+
+  @@id([assetId, contactId, role])
+  @@map("asset_contact")
+}
+
+model Publication {
+  publicationId      Int            @id @default(autoincrement()) @map("publication_id")
+  pubChannelItemCode String         @map("pub_channel_item_code")
+  pubChannelItem     PubChannelItem @relation(fields: [pubChannelItemCode], references: [pubChannelItemCode])
+  publicationDate    DateTime       @map("publication_date")
+  description        String         @map("description")
+  link               String         @map("link")
+
+  assetPublications AssetPublication[]
+
+  @@map("publication")
+}
+
+model AssetPublication {
+  assetId       Int         @map("asset_id")
+  asset         Asset       @relation(fields: [assetId], references: [assetId])
+  publicationId Int         @map("publication_id")
+  publication   Publication @relation(fields: [publicationId], references: [publicationId])
+
+  @@id([assetId, publicationId])
+  @@map("asset_publication")
+}
+
+model InternalProject {
+  internalProjectId Int     @id @default(autoincrement()) @map("internal_project_id")
+  name              String  @map("name")
+  description       String? @map("description")
+  dateDelivered     String  @map("date_delivered")
+
+  assetInternalProjects AssetInternalProject[]
+
+  @@map("internal_project")
+}
+
+model AssetInternalProject {
+  assetId           Int             @map("asset_id")
+  asset             Asset           @relation(fields: [assetId], references: [assetId])
+  internalProjectId Int             @map("internal_project_id")
+  internalProject   InternalProject @relation(fields: [internalProjectId], references: [internalProjectId])
+
+  @@id([assetId, internalProjectId])
+  @@map("asset_internal_project")
+}
+
+model StudyArea {
+  studyAreaId         Int                      @id @default(autoincrement()) @map("study_area_id")
+  assetId             Int                      @map("asset_id")
+  asset               Asset                    @relation(fields: [assetId], references: [assetId])
+  geomQualityItemCode String                   @map("geom_quality_item_code")
+  geomQualityItem     GeomQualityItem          @relation(fields: [geomQualityItemCode], references: [geomQualityItemCode])
+  geom                Unsupported("geometry")?
+
+  @@index([geom], type: Gist)
+  @@map("study_area")
+}
+
+model StudyLocation {
+  studyLocationId     Int                      @id @default(autoincrement()) @map("study_location_id")
+  assetId             Int                      @map("asset_id")
+  asset               Asset                    @relation(fields: [assetId], references: [assetId])
+  geomQualityItemCode String                   @map("geom_quality_item_code")
+  geomQualityItem     GeomQualityItem          @relation(fields: [geomQualityItemCode], references: [geomQualityItemCode])
+  geom                Unsupported("geometry")?
+
+  @@index([geom], type: Gist)
+  @@map("study_location")
+}
+
+model StudyTrace {
+  studyTraceId        Int                      @id @default(autoincrement()) @map("study_trace_id")
+  assetId             Int                      @map("asset_id")
+  asset               Asset                    @relation(fields: [assetId], references: [assetId])
+  geomQualityItemCode String                   @map("geom_quality_item_code")
+  geomQualityItem     GeomQualityItem          @relation(fields: [geomQualityItemCode], references: [geomQualityItemCode])
+  geom                Unsupported("geometry")?
+
+  @@index([geom], type: Gist)
+  @@map("study_trace")
+}
+
+model AssetFormatItem {
+  assetFormatItemCode String @id @map("asset_format_item_code")
+  geolCode            String @map("geol_code")
+  name                String @map("name")
+  nameDe              String @map("name_de")
+  nameFr              String @map("name_fr")
+  nameRm              String @map("name_rm")
+  nameIt              String @map("name_it")
+  nameEn              String @map("name_en")
+  description         String @map("description")
+  descriptionDe       String @map("description_de")
+  descriptionFr       String @map("description_fr")
+  descriptionRm       String @map("description_rm")
+  descriptionIt       String @map("description_it")
+  descriptionEn       String @map("description_en")
+
+  assets                  Asset[]
+  assetFormatCompositions AssetFormatComposition[]
+
+  @@map("asset_format_item")
+}
+
+model AssetKindItem {
+  assetKindItemCode String @id @map("asset_kind_item_code")
+  geolCode          String @map("geol_code")
+  name              String @map("name")
+  nameDe            String @map("name_de")
+  nameFr            String @map("name_fr")
+  nameRm            String @map("name_rm")
+  nameIt            String @map("name_it")
+  nameEn            String @map("name_en")
+  description       String @map("description")
+  descriptionDe     String @map("description_de")
+  descriptionFr     String @map("description_fr")
+  descriptionRm     String @map("description_rm")
+  descriptionIt     String @map("description_it")
+  descriptionEn     String @map("description_en")
+
+  assets                Asset[]
+  assetKindCompositions AssetKindComposition[]
+
+  @@map("asset_kind_item")
+}
+
+model AutoCatLabelItem {
+  autoCatLabelItemCode String @id @map("asset_cat_label_item_code")
+  geolCode             String @map("geol_code")
+  name                 String @map("name")
+  nameDe               String @map("name_de")
+  nameFr               String @map("name_fr")
+  nameRm               String @map("name_rm")
+  nameIt               String @map("name_it")
+  nameEn               String @map("name_en")
+  description          String @map("description")
+  descriptionDe        String @map("description_de")
+  descriptionFr        String @map("description_fr")
+  descriptionRm        String @map("description_rm")
+  descriptionIt        String @map("description_it")
+  descriptionEn        String @map("description_en")
+
+  autoCats AutoCat[]
+
+  @@map("auto_cat_label_item")
+}
+
+model AutoObjectCatItem {
+  autoObjectCatItemCode String @id @map("auto_object_cat_item_code")
+  geolCode              String @map("geol_code")
+  name                  String @map("name")
+  nameDe                String @map("name_de")
+  nameFr                String @map("name_fr")
+  nameRm                String @map("name_rm")
+  nameIt                String @map("name_it")
+  nameEn                String @map("name_en")
+  description           String @map("description")
+  descriptionDe         String @map("description_de")
+  descriptionFr         String @map("description_fr")
+  descriptionRm         String @map("description_rm")
+  descriptionIt         String @map("description_it")
+  descriptionEn         String @map("description_en")
+
+  assetObjectInfos AssetObjectInfo[]
+
+  @@map("auto_object_cat_item")
+}
+
+model ContactKindItem {
+  contactKindItemCode String @id @map("contact_kind_item_code")
+  geolCode            String @map("geol_code")
+  name                String @map("name")
+  nameDe              String @map("name_de")
+  nameFr              String @map("name_fr")
+  nameRm              String @map("name_rm")
+  nameIt              String @map("name_it")
+  nameEn              String @map("name_en")
+  description         String @map("description")
+  descriptionDe       String @map("description_de")
+  descriptionFr       String @map("description_fr")
+  descriptionRm       String @map("description_rm")
+  descriptionIt       String @map("description_it")
+  descriptionEn       String @map("description_en")
+
+  contacts Contact[]
+
+  @@map("contact_kind_item")
+}
+
+model GeomQualityItem {
+  geomQualityItemCode String @id @map("geom_quality_item_code")
+  geolCode            String @map("geol_code")
+  name                String @map("name")
+  nameDe              String @map("name_de")
+  nameFr              String @map("name_fr")
+  nameRm              String @map("name_rm")
+  nameIt              String @map("name_it")
+  nameEn              String @map("name_en")
+  description         String @map("description")
+  descriptionDe       String @map("description_de")
+  descriptionFr       String @map("description_fr")
+  descriptionRm       String @map("description_rm")
+  descriptionIt       String @map("description_it")
+  descriptionEn       String @map("description_en")
+
+  studyAreas     StudyArea[]
+  studyLocations StudyLocation[]
+  studyTraces    StudyTrace[]
+
+  @@map("geom_quality_item")
+}
+
+model LanguageItem {
+  languageItemCode String @id @map("language_item_code")
+  geolCode         String @map("geol_code")
+  name             String @map("name")
+  nameDe           String @map("name_de")
+  nameFr           String @map("name_fr")
+  nameRm           String @map("name_rm")
+  nameIt           String @map("name_it")
+  nameEn           String @map("name_en")
+  description      String @map("description")
+  descriptionDe    String @map("description_de")
+  descriptionFr    String @map("description_fr")
+  descriptionRm    String @map("description_rm")
+  descriptionIt    String @map("description_it")
+  descriptionEn    String @map("description_en")
+
+  assets AssetLanguage[]
+
+  @@map("language_item")
+}
+
+model AssetLanguage {
+  assetId          Int          @map("asset_id")
+  asset            Asset        @relation(fields: [assetId], references: [assetId])
+  languageItemCode String       @map("language_item_code")
+  languageItem     LanguageItem @relation(fields: [languageItemCode], references: [languageItemCode])
+
+  @@id([assetId, languageItemCode])
+  @@map("asset_language")
+}
+
+model ManCatLabelItem {
+  manCatLabelItemCode String @id @map("man_cat_label_item_code")
+  geolCode            String @map("geol_code")
+  name                String @map("name")
+  nameDe              String @map("name_de")
+  nameFr              String @map("name_fr")
+  nameRm              String @map("name_rm")
+  nameIt              String @map("name_it")
+  nameEn              String @map("name_en")
+  description         String @map("description")
+  descriptionDe       String @map("description_de")
+  descriptionFr       String @map("description_fr")
+  descriptionRm       String @map("description_rm")
+  descriptionIt       String @map("description_it")
+  descriptionEn       String @map("description_en")
+
+  manCatLabelRefs ManCatLabelRef[]
+
+  @@map("man_cat_label_item")
+}
+
+model NatRelItem {
+  natRelItemCode String @id @map("nat_rel_item_code")
+  geolCode       String @map("geol_code")
+  name           String @map("name")
+  nameDe         String @map("name_de")
+  nameFr         String @map("name_fr")
+  nameRm         String @map("name_rm")
+  nameIt         String @map("name_it")
+  nameEn         String @map("name_en")
+  description    String @map("description")
+  descriptionDe  String @map("description_de")
+  descriptionFr  String @map("description_fr")
+  descriptionRm  String @map("description_rm")
+  descriptionIt  String @map("description_it")
+  descriptionEn  String @map("description_en")
+
+  typeNatRels TypeNatRel[]
+
+  @@map("nat_rel_item")
+}
+
+model LegalDocItem {
+  legalDocItemCode String @id @map("legal_doc_item_code")
+  geolCode         String @map("geol_code")
+  name             String @map("name")
+  nameDe           String @map("name_de")
+  nameFr           String @map("name_fr")
+  nameRm           String @map("name_rm")
+  nameIt           String @map("name_it")
+  nameEn           String @map("name_en")
+  description      String @map("description")
+  descriptionDe    String @map("description_de")
+  descriptionFr    String @map("description_fr")
+  descriptionRm    String @map("description_rm")
+  descriptionIt    String @map("description_it")
+  descriptionEn    String @map("description_en")
+
+  legalDocs LegalDoc[]
+
+  @@map("legal_doc_item")
+}
+
+model PubChannelItem {
+  pubChannelItemCode String @id @map("pub_channel_item_code")
+  geolCode           String @map("geol_code")
+  name               String @map("name")
+  nameDe             String @map("name_de")
+  nameFr             String @map("name_fr")
+  nameRm             String @map("name_rm")
+  nameIt             String @map("name_it")
+  nameEn             String @map("name_en")
+  description        String @map("description")
+  descriptionDe      String @map("description_de")
+  descriptionFr      String @map("description_fr")
+  descriptionRm      String @map("description_rm")
+  descriptionIt      String @map("description_it")
+  descriptionEn      String @map("description_en")
+
+  publications Publication[]
+
+  @@map("pub_channel_item")
+}
+
+model StatusAssetUseItem {
+  statusAssetUseItemCode String @id @map("status_asset_use_item_code")
+  geolCode               String @map("geol_code")
+  name                   String @map("name")
+  nameDe                 String @map("name_de")
+  nameFr                 String @map("name_fr")
+  nameRm                 String @map("name_rm")
+  nameIt                 String @map("name_it")
+  nameEn                 String @map("name_en")
+  description            String @map("description")
+  descriptionDe          String @map("description_de")
+  descriptionFr          String @map("description_fr")
+  descriptionRm          String @map("description_rm")
+  descriptionIt          String @map("description_it")
+  descriptionEn          String @map("description_en")
+
+  publicUses   PublicUse[]
+  internalUses InternalUse[]
+
+  @@map("status_asset_use_item")
+}
+
+model StatusWorkItem {
+  statusWorkItemCode String @id @map("status_work_item_code")
+  geolCode           String @map("geol_code")
+  name               String @map("name")
+  nameDe             String @map("name_de")
+  nameFr             String @map("name_fr")
+  nameRm             String @map("name_rm")
+  nameIt             String @map("name_it")
+  nameEn             String @map("name_en")
+  description        String @map("description")
+  descriptionDe      String @map("description_de")
+  descriptionFr      String @map("description_fr")
+  descriptionRm      String @map("description_rm")
+  descriptionIt      String @map("description_it")
+  descriptionEn      String @map("description_en")
+
+  statusWorks StatusWork[]
+
+  @@map("status_work_item")
+}
+
+model AssetUser {
+  id                 String               @id @db.Uuid
+  role               String
+  email              String
+  lang               String
+  oidcId             String
+  AssetUserFavourite AssetUserFavourite[]
+
+  @@map("asset_user")
+}
+
+model AssetUserFavourite {
+  assetUserId String    @map("asset_user_id") @db.Uuid
+  AssetUser   AssetUser @relation(fields: [assetUserId], references: [id])
+
+  assetId Int   @map("asset_id")
+  Asset   Asset @relation(fields: [assetId], references: [assetId])
+
+  created_at DateTime @db.Timestamptz(6)
+
+  @@id([assetUserId, assetId])
+  @@map("asset_user_favourite")
+}
+
+view AllStudy {
+  assetId          Int                      @map("asset_id")
+  asset            Asset                    @relation(fields: [assetId], references: [assetId])
+  id               Int
+  studyId          String                   @unique @map("study_id")
+  geom             Unsupported("geometry")?
+  isPoint          Boolean                  @map("is_point")
+  centroidGeomText String                   @map("centroid_geom_text")
+  geomText         String                   @map("geom_text")
+
+  @@map("all_study")
+}

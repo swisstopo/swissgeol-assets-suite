@@ -8,4 +8,4 @@ export type UsageCode = C.TypeOf<typeof UsageCode>;
 export const usageCodes: Array<UsageCode> = ['public', 'internal', 'useOnRequest'];
 
 export const makeUsageCode = (publicUseIsAvailable: boolean, internalUseIsAvailable: boolean): UsageCode =>
-    publicUseIsAvailable ? 'public' : internalUseIsAvailable ? 'internal' : 'useOnRequest';
+  publicUseIsAvailable ? 'public' : internalUseIsAvailable ? 'internal' : 'useOnRequest';

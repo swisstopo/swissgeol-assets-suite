@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "baseUrl": "/",
+    "target": "es2020",
+    "moduleResolution": "Node",
+    "lib": ["es2020", "dom"],
+    "types": ["cypress", "node"],
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "forceConsistentCasingInFileNames": true
+  },
+  "include": ["**/*.ts"]
+}

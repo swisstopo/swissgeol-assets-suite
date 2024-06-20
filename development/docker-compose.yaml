@@ -1,154 +1,107 @@
 services:
-    storage:
-        container_name: swissgeol-assets-storage
-        image: quay.io/minio/minio
-        restart: unless-stopped
-        ports:
-            - 9000:9000
-            - 9001:9001
-        environment:
-            MINIO_ROOT_USER: ${STORAGE_USER}
-            MINIO_ROOT_PASSWORD: ${STORAGE_PASSWORD}
-        volumes:
-            - ./volumes/minio/data:/data
-        command: server --console-address ":9001" /data
+  storage:
+    container_name: swissgeol-assets-storage
+    image: quay.io/minio/minio
+    restart: unless-stopped
+    ports:
+      - 9000:9000
+      - 9001:9001
+    environment:
+      MINIO_ROOT_USER: ${STORAGE_USER}
+      MINIO_ROOT_PASSWORD: ${STORAGE_PASSWORD}
+    volumes:
+      - ./volumes/minio/data:/data
+    command: server --console-address ":9001" /data
 
-    db:
-        container_name: swissgeol-assets-postgres
-        image: postgis-gotrue
-        restart: unless-stopped
-        ports:
-            - 5432:5432
-        environment:
-            POSTGRES_USER: ${DB_USER}
-            POSTGRES_PASSWORD: ${DB_PASSWORD}
-            POSTGRES_DB: postgres
-        volumes:
-            - ./init/db:/docker-entrypoint-initdb.d
-            - ./init/dump.sql:/dump.sql
-            - ./volumes/db/data/postgres:/var/lib/postgresql/data
-        healthcheck:
-            test: "pg_isready -U ${DB_USER} -d postgres -h db"
-            interval: 5s
-            timeout: 5s
-            retries: 10
+  db:
+    container_name: swissgeol-assets-postgres
+    image: postgis/postgis
+    restart: unless-stopped
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: postgres
+    volumes:
+      - ./init/db:/docker-entrypoint-initdb.d
+      - ./init/dump.sql:/dump.sql
+      - ./volumes/db/data/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: "pg_isready -U ${DB_USER} -d postgres -h db"
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
-    pgadmin:
-        container_name: swissgeol-assets-pgadmin
-        image: dpage/pgadmin4
-        depends_on:
-            db:
-                condition: service_healthy
-        restart: unless-stopped
-        ports:
-            - 5051:5050
-        environment:
-            PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
-            PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
-            PGADMIN_LISTEN_PORT: 5050
-        volumes:
-            - ./volumes/pgadmin/data:/var/lib/pgadmin
+  pgadmin:
+    container_name: swissgeol-assets-pgadmin
+    image: dpage/pgadmin4
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    ports:
+      - 5051:5050
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
+      PGADMIN_LISTEN_PORT: 5050
+    volumes:
+      - ./volumes/pgadmin/data:/var/lib/pgadmin
 
-    gotrue:
-        container_name: swissgeol-assets-gotrue
-        image: supabase/gotrue@sha256:794d7df376329df93c0d9ed9237868363de5c858301147e08e6620fb67d1a2c6
-        depends_on:
-            db:
-                condition: service_healthy
-        restart: unless-stopped
-        ports:
-            - 8866:9999
-            - 9100:9100
-        environment:
-            GOTRUE_API_HOST: 0.0.0.0
-            PORT: 9999
-            GOTRUE_SITE_URL: 'http://localhost:4200'
-            GOTRUE_JWT_SECRET: ${GOTRUE_JWT_SECRET}
-            GOTRUE_COOKIE_KEY: asset-sg
-            GOTRUE_DB_DRIVER: postgres
-            DB_NAMESPACE: auth
-            DATABASE_URL: postgres://${DB_USER}:${DB_PASSWORD}@db:5432/postgres?search_path=auth
-            GOTRUE_DISABLE_SIGNUP: false
-            GOTRUE_SMTP_ADMIN_EMAIL: admin@go.true
-            GOTRUE_SMTP_HOST: smtp4dev
-            GOTRUE_SMTP_PORT: 25
-            GOTRUE_SMTP_SENDER_NAME: swissgeol-assets
-            GOTRUE_MAILER_URLPATHS_INVITE: http://localhost:4200/auth/verify
-            GOTRUE_MAILER_URLPATHS_CONFIRMATION: /auth/v1/verify
-            GOTRUE_MAILER_URLPATHS_RECOVERY: http://localhost:4200/auth/verify
-            GOTRUE_MAILER_URLPATHS_EMAIL_CHANGE: /auth/v1/verify
-            GOTRUE_MAILER_TEMPLATES_INVITE: http://localhost:4200/assets/email-templates/invite.html
-            GOTRUE_MAILER_TEMPLATES_RECOVERY: http://localhost:4200/assets/email-templates/recover.html
+  elasticsearch:
+    container_name: swissgeol-assets-elasticsearch
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.12.1
+    restart: unless-stopped
+    entrypoint: ["/bin/tini", "--"]
+    command: ["sh", "-c", "/init/init.sh & /usr/local/bin/docker-entrypoint.sh"]
+    ports:
+      - 9200:9200
+    environment:
+      ES_JAVA_OPTS: -Xms512m -Xmx512m
+      xpack.security.enabled: false
+      discovery.type: single-node
+      cluster.routing.allocation.disk.threshold_enabled: false
+    volumes:
+      - ./init/elasticsearch/:/init/:ro
+      - ./volumes/elasticsearch/data:/usr/share/elasticsearch/data
 
-    elasticsearch:
-        container_name: swissgeol-assets-elasticsearch
-        image: docker.elastic.co/elasticsearch/elasticsearch:8.12.1
-        restart: unless-stopped
-        entrypoint: ["/bin/tini", "--"]
-        command: ["sh", "-c", "/init/init.sh & /usr/local/bin/docker-entrypoint.sh"]
-        ports:
-            - 9200:9200
-        environment:
-            ES_JAVA_OPTS: -Xms512m -Xmx512m
-            xpack.security.enabled: false
-            discovery.type: single-node
-            cluster.routing.allocation.disk.threshold_enabled: false
-        volumes:
-            - ./init/elasticsearch/:/init/:ro
-            - ./volumes/elasticsearch/data:/usr/share/elasticsearch/data
+  kibana:
+    container_name: swissgeol-assets-kibana
+    image: docker.elastic.co/kibana/kibana:8.12.1
+    depends_on:
+      - elasticsearch
+    restart: unless-stopped
+    ports:
+      - 5601:5601
+    environment:
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
 
-    kibana:
-        container_name: swissgeol-assets-kibana
-        image: docker.elastic.co/kibana/kibana:8.12.1
-        depends_on:
-            - elasticsearch
-        restart: unless-stopped
-        ports:
-            - 5601:5601
-        environment:
-            ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+  smtp4dev:
+    container_name: swissgeol-assets-smtp
+    image: rnwood/smtp4dev:v3
+    restart: unless-stopped
+    ports:
+      - "5000:80"
+    volumes:
+      - ./volumes/smtp4dev/data:/smtp4dev
+    environment:
+      - ServerOptions__HostName=smtp4dev
 
-    smtp4dev:
-        container_name: swissgeol-assets-smtp
-        image: rnwood/smtp4dev:v3
-        restart: unless-stopped
-        ports:
-            - '5000:80'
-        volumes:
-            - ./volumes/smtp4dev/data:/smtp4dev
-        environment:
-            - ServerOptions__HostName=smtp4dev
-
-    oidc-server:
-        container_name: swissgeol-assets-oidc
-        image: soluto/oidc-server-mock
-        restart: unless-stopped
-        ports:
-            - "4011:80"
-        environment:
-            CLIENTS_CONFIGURATION_PATH: /tmp/config/clients-config.json
-            USERS_CONFIGURATION_PATH: /tmp/config/users-config.json
-            IDENTITY_RESOURCES_INLINE: |
-                [
-                    {
-                        "Name": "local_groups_scope",
-                        "ClaimTypes": [
-                            "local_groups_claim"
-                        ]
-                    }
-                ]
-            SERVER_OPTIONS_INLINE: |
-                {
-                    "IssuerUri": "http://localhost:4011",
-                    "AccessTokenJwtType": "JWT",
-                    "Discovery": {
-                        "ShowKeySet": true
-                    },
-                    "Authentication": {
-                        "CookieSameSiteMode": "Lax",
-                        "CheckSessionCookieSameSiteMode": "Lax"
-                    }
-                }
-        volumes:
-            - ./init/oidc/oidc-mock-clients.json:/tmp/config/clients-config.json:ro
-            - ./init/oidc/oidc-mock-users.json:/tmp/config/users-config.json:ro            
+  oidc:
+    container_name: swissgeol-assets-oidc
+    image: ghcr.io/soluto/oidc-server-mock
+    restart: unless-stopped
+    ports:
+      - "4011:8080"
+    environment:
+      CLIENTS_CONFIGURATION_PATH: /tmp/config/clients-config.json
+      USERS_CONFIGURATION_PATH: /tmp/config/users-config.json
+      API_SCOPES_PATH: /tmp/config/scopes-config.json
+      SERVER_OPTIONS_PATH: /tmp/config/server_options-config.json
+    volumes:
+      - ./init/oidc/oidc-mock-clients.json:/tmp/config/clients-config.json:ro
+      - ./init/oidc/oidc-mock-users.json:/tmp/config/users-config.json:ro
+      - ./init/oidc/oidc-mock-scopes.json:/tmp/config/scopes-config.json:ro
+      - ./init/oidc/oidc-mock-server_options.json:/tmp/config/server_options-config.json:ro
+      - ./volumes/oidc/keys:/tmp/data/keys

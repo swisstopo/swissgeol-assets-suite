@@ -1,26 +1,25 @@
+import { BaseAssetEditDetail, Studies } from '@asset-sg/shared';
 import { Eq, struct } from 'fp-ts/Eq';
 import { Eq as eqNumber } from 'fp-ts/number';
 import * as O from 'fp-ts/Option';
 import { Eq as eqString } from 'fp-ts/string';
 import * as D from 'io-ts/Decoder';
 
-import { BaseAssetEditDetail, Studies } from '@asset-sg/shared';
-
 export const AssetEditDetail = D.struct({ ...BaseAssetEditDetail, studies: Studies });
-export interface AssetEditDetail extends D.TypeOf<typeof AssetEditDetail> {}
+export type AssetEditDetail = D.TypeOf<typeof AssetEditDetail>;
 
 export interface IdVM {
-    idId: O.Option<number>;
-    id: string;
-    description: string;
+  idId: O.Option<number>;
+  id: string;
+  description: string;
 }
 
 export const eqIdVM: Eq<IdVM> = struct({
-    idId: O.getEq(eqNumber),
-    id: eqString,
-    description: eqString,
+  idId: O.getEq(eqNumber),
+  id: eqString,
+  description: eqString,
 });
 
 export interface AssetEditDetailVM extends Omit<AssetEditDetail, 'ids'> {
-    ids: IdVM[];
+  ids: IdVM[];
 }

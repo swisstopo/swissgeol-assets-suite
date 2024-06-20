@@ -1,9 +1,8 @@
+import { AppSharedState } from '@asset-sg/client-shared';
 import { Store } from '@ngrx/store';
 
-import { AppSharedState } from '@asset-sg/client-shared';
-
 export interface AppState {
-    shared: AppSharedState;
+  shared: AppSharedState;
 }
 
-export interface AppStore extends Store<AppState> {}
+export type AppStore = Store<AppState>;

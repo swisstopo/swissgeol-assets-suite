@@ -1,24 +1,24 @@
-@use '../../styles/variables';
+@use "../../styles/variables";
 
 :host {
-    background-color: variables.$grey-03;
-    position: relative;
+  background-color: variables.$grey-03;
+  position: relative;
 }
 
 [asset-sg-primary].create-new-user-button {
-    margin-top: 1rem;
-    margin-bottom: 1rem;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
 }
 
 .drawer-panel-content {
-    padding: 0rem 1rem 1rem 0;
-    position: relative;
+  padding: 0rem 1rem 1rem 0;
+  position: relative;
 }
 
 mat-progress-bar {
-    position: absolute;
-    top: 1px;
-    width: calc(100% - 1rem);
+  position: absolute;
+  top: 1px;
+  width: calc(100% - 1rem);
 }
 
 .user-list {
@@ -28,5 +28,5 @@ mat-progress-bar {
 
 asset-sg-user-collapsed,
 asset-sg-user-expanded {
-    margin-bottom: 1rem;
+  margin-bottom: 1rem;
 }

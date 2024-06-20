@@ -1,142 +1,143 @@
-@use '../../styles/variables';
+@use "../../styles/variables";
 
 %reset {
-    border: none;
-    padding: 0;
-    cursor: pointer;
-    text-align: center;
-    text-decoration: none;
-    font-family: inherit;
-    background-color: inherit;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-align: center;
+  text-decoration: none;
+  font-family: inherit;
+  background-color: inherit;
 
-    &[aria-disabled='true'] {
-        cursor: default;
-    }
+  &[aria-disabled="true"] {
+    cursor: default;
+  }
 }
 :host[asset-sg-reset] {
-    @extend %reset;
+  @extend %reset;
 }
 
 :host[asset-sg-primary] {
-    color: variables.$white;
-    background-color: variables.$cyan-09;
-    box-shadow: 0px 1px 3px #00000033;
+  color: variables.$white;
+  background-color: variables.$cyan-09;
+  box-shadow: 0px 1px 3px #00000033;
 }
 
 // todo delete secondary?
 :host[asset-sg-secondary] {
-    color: variables.$cyan-09;
-    background-color: transparent;
+  color: variables.$cyan-09;
+  background-color: transparent;
 }
 
 :host[asset-sg-primary],
-:host[asset-sg-secondary] {
-    @extend %reset;
+:host[asset-sg-secondary],
+:host[asset-sg-warn] {
+  @extend %reset;
 
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    height: 2.5rem;
-    padding: 0 1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 2.5rem;
+  padding: 0 1rem;
 
-    border-radius: 4px;
-    font-weight: variables.$font-bold;
-    font-size: 0.875rem;
+  border-radius: 4px;
+  font-weight: variables.$font-bold;
+  font-size: 0.875rem;
 
-    outline: none;
+  outline: none;
 
-    &.cdk-keyboard-focused {
-        outline: 2px solid #4d90fe;
+  &.cdk-keyboard-focused {
+    outline: 2px solid #4d90fe;
+  }
+
+  &[aria-disabled="true"] {
+    color: variables.$grey-08;
+    background-color: variables.$grey-03;
+    cursor: default;
+  }
+
+  &:not([aria-disabled="true"]) {
+    &:hover {
+      box-shadow: 0px 1px 3px #00000033;
+      background-color: #d0f5f9;
+      color: #357183;
     }
-
-    &[aria-disabled='true'] {
-        color: variables.$grey-08;
-        background-color: variables.$grey-03;
-        cursor: default;
+    &:focus {
+      box-shadow: 0px 1px 3px #00000033;
+      background-color: #87d7e6;
+      color: #357183;
     }
-
-    &:not([aria-disabled='true']) {
-        &:hover {
-            box-shadow: 0px 1px 3px #00000033;
-            background-color: #d0f5f9;
-            color: #357183;
-        }
-        &:focus {
-            box-shadow: 0px 1px 3px #00000033;
-            background-color: #87d7e6;
-            color: #357183;
-        }
-        &:active:not(:focus) {
-            box-shadow: none;
-            background-color: variables.$cyan-06;
-            color: variables.$white;
-        }
+    &:active:not(:focus) {
+      box-shadow: none;
+      background-color: variables.$cyan-06;
+      color: variables.$white;
     }
+  }
 }
 
 :host[asset-sg-icon-button] {
-    @extend %reset;
+  @extend %reset;
 
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    height: 2.5rem;
-    width: 2.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 2.5rem;
+  width: 2.5rem;
 
-    outline: none;
+  outline: none;
 
-    background-color: transparent;
-    color: variables.$cyan-09;
-    font-weight: variables.$font-semibold;
-    font-size: 0.875rem;
+  background-color: transparent;
+  color: variables.$cyan-09;
+  font-weight: variables.$font-semibold;
+  font-size: 0.875rem;
 
-    ::ng-deep {
-        span {
-            margin-right: 0.5rem;
-        }
+  ::ng-deep {
+    span {
+      margin-right: 0.5rem;
     }
+  }
 
-    &.cdk-keyboard-focused {
-        outline: 2px solid #4d90fe;
-    }
+  &.cdk-keyboard-focused {
+    outline: 2px solid #4d90fe;
+  }
 
-    &[aria-disabled='true'] {
-        color: variables.$grey-06;
-        cursor: default;
-    }
+  &[aria-disabled="true"] {
+    color: variables.$grey-06;
+    cursor: default;
+  }
 
-    &:not([aria-disabled='true']) {
-        &:hover,
-        &:focus {
-            color: variables.$red;
-        }
-        &:active:not(:focus) {
-            color: variables.$dark-red;
-        }
+  &:not([aria-disabled="true"]) {
+    &:hover,
+    &:focus {
+      color: variables.$red;
     }
+    &:active:not(:focus) {
+      color: variables.$dark-red;
+    }
+  }
 }
 
 :host[asset-sg-link] {
-    color: variables.$cyan-09;
-    font-weight: variables.$font-bold;
-    text-decoration: none;
+  color: variables.$cyan-09;
+  font-weight: variables.$font-bold;
+  text-decoration: none;
 
-    &.cdk-keyboard-focused {
-        outline: 2px solid #4d90fe;
-    }
+  &.cdk-keyboard-focused {
+    outline: 2px solid #4d90fe;
+  }
 
-    &[aria-disabled='true'] {
-        color: variables.$grey-06;
-        cursor: default;
-    }
+  &[aria-disabled="true"] {
+    color: variables.$grey-06;
+    cursor: default;
+  }
 
-    &:not([aria-disabled='true']) {
-        &:hover,
-        &:focus {
-            color: variables.$red;
-        }
-        &:active:not(:focus) {
-            color: variables.$dark-red;
-        }
+  &:not([aria-disabled="true"]) {
+    &:hover,
+    &:focus {
+      color: variables.$red;
     }
+    &:active:not(:focus) {
+      color: variables.$dark-red;
+    }
+  }
 }

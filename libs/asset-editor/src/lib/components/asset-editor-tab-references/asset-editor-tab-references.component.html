@@ -1,73 +1,74 @@
 <div class="flex flex-row max-h-full">
-    <div class="flex flex-column form-column mb-12 mr-8">
-        <div class="flex flex-column bg-white py-4 px-6 max-h-full overflow-y-scroll">
-            <div *ngIf="_form.controls.assetMain.value" class="mb-4">
-                <div class="font-bold mb-4" translate>edit.tabs.references.referenceHeadings.parent</div>
-                <div class="mb-1 bg-grey-00 py-4 pl-4 pr-2 asset">
-                    <div translate class="flex self-center">{{ _form.controls.assetMain.value.titlePublic }}</div>
-                    <button
-                        asset-sg-icon-button
-                        (click)="removeLink('parent', _form.controls.assetMain.value.assetId)"
-                        [ariaLabel]="'edit.tabs.contacts.unlinkContact' | translate">
-                        <svg-icon key="delete"></svg-icon>
-                    </button>
-                </div>
-            </div>
-            <div *ngIf="_form.controls.childAssets.value.length > 0" class="mb-4">
-                <div class="font-bold mb-4" translate>edit.tabs.references.referenceHeadings.subordinate</div>
-                <div
-                    class="mb-1 bg-grey-00 py-4 pl-4 pr-2 asset"
-                    *ngFor="let linkedAsset of _form.controls.childAssets.value">
-                    <div translate class="flex self-center title-public">{{ linkedAsset.titlePublic }}</div>
-                </div>
-            </div>
-            <div *ngIf="_form.controls.siblingAssets.value.length > 0" class="mb-4">
-                <div class="font-bold mb-4" translate>edit.tabs.references.referenceHeadings.sibling</div>
-                <div
-                    class="mb-1 bg-grey-00 py-4 pl-4 pr-2 asset"
-                    *ngFor="let linkedAsset of _form.controls.siblingAssets.value">
-                    <div translate class="flex self-center title-public">{{ linkedAsset.titlePublic }}</div>
-                    <button
-                        asset-sg-icon-button
-                        (click)="removeLink('sibling', linkedAsset.assetId)"
-                        [ariaLabel]="'edit.tabs.contacts.unlinkContact' | translate">
-                        <svg-icon key="delete"></svg-icon>
-                    </button>
-                </div>
-            </div>
-            <form [formGroup]="_newReferenceForm" class="flex flex-column">
-                <div class="font-bold mb-4" translate>edit.tabs.references.referenceHeadings.newReference</div>
-                <mat-form-field>
-                    <mat-label>Typ</mat-label>
-                    <mat-select formControlName="assetReferenceType">
-                        <mat-option *ngIf="!(_addParentDisabled$ | push)" value="parent">{{
-                            'edit.tabs.references.referenceType.parent' | translate
-                        }}</mat-option>
-                        <mat-option value="sibling">{{
-                            'edit.tabs.references.referenceType.sibling' | translate
-                        }}</mat-option>
-                    </mat-select>
-                </mat-form-field>
-                <mat-form-field>
-                    <mat-label translate>edit.tabs.references.assetTitlePublic</mat-label>
-                    <input
-                        #authorInput
-                        matInput
-                        type="text"
-                        [placeholder]="'edit.tabs.references.assetTitlePublicPlaceholder' | translate"
-                        (input)="_authorSearchInput$.next($any($event.target)?.value)"
-                        [matAutocomplete]="assetSearchAutocomplete" />
-                    <mat-autocomplete
-                        #assetSearchAutocomplete="matAutocomplete"
-                        [displayWith]="assetAutocompleteDisplayFn"
-                        (optionSelected)="onAssetSelected($event)">
-                        <mat-option *rxFor="let asset of _assets$" [value]="asset" class="asset-search-option">
-                            {{ asset.titlePublic }}
-                        </mat-option>
-                    </mat-autocomplete>
-                </mat-form-field>
-                <button asset-sg-primary [disabled]="!(_formValid$ | push)" translate (click)="addLink()">add</button>
-            </form>
+  <div class="flex flex-column form-column mb-12 mr-8">
+    <div class="flex flex-column bg-white py-4 px-6 max-h-full overflow-y-scroll">
+      <div *ngIf="_form.controls.assetMain.value" class="mb-4">
+        <div class="font-bold mb-4" translate>edit.tabs.references.referenceHeadings.parent</div>
+        <div class="mb-1 bg-grey-00 py-4 pl-4 pr-2 asset">
+          <div translate class="flex self-center">{{ _form.controls.assetMain.value.titlePublic }}</div>
+          <button
+            asset-sg-icon-button
+            (click)="removeLink('parent', _form.controls.assetMain.value.assetId)"
+            [attr.aria-label]="'edit.tabs.contacts.unlinkContact' | translate"
+          >
+            <svg-icon key="delete"></svg-icon>
+          </button>
         </div>
+      </div>
+      <div *ngIf="_form.controls.childAssets.value.length > 0" class="mb-4">
+        <div class="font-bold mb-4" translate>edit.tabs.references.referenceHeadings.subordinate</div>
+        <div class="mb-1 bg-grey-00 py-4 pl-4 pr-2 asset" *ngFor="let linkedAsset of _form.controls.childAssets.value">
+          <div translate class="flex self-center title-public">{{ linkedAsset.titlePublic }}</div>
+        </div>
+      </div>
+      <div *ngIf="_form.controls.siblingAssets.value.length > 0" class="mb-4">
+        <div class="font-bold mb-4" translate>edit.tabs.references.referenceHeadings.sibling</div>
+        <div
+          class="mb-1 bg-grey-00 py-4 pl-4 pr-2 asset"
+          *ngFor="let linkedAsset of _form.controls.siblingAssets.value"
+        >
+          <div translate class="flex self-center title-public">{{ linkedAsset.titlePublic }}</div>
+          <button
+            asset-sg-icon-button
+            (click)="removeLink('sibling', linkedAsset.assetId)"
+            [attr.aria-label]="'edit.tabs.contacts.unlinkContact' | translate"
+          >
+            <svg-icon key="delete"></svg-icon>
+          </button>
+        </div>
+      </div>
+      <form [formGroup]="_newReferenceForm" class="flex flex-column">
+        <div class="font-bold mb-4" translate>edit.tabs.references.referenceHeadings.newReference</div>
+        <mat-form-field>
+          <mat-label>Typ</mat-label>
+          <mat-select formControlName="assetReferenceType">
+            <mat-option *ngIf="!(_addParentDisabled$ | push)" value="parent">{{
+              "edit.tabs.references.referenceType.parent" | translate
+            }}</mat-option>
+            <mat-option value="sibling">{{ "edit.tabs.references.referenceType.sibling" | translate }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field>
+          <mat-label translate>edit.tabs.references.assetTitlePublic</mat-label>
+          <input
+            #authorInput
+            matInput
+            type="text"
+            [placeholder]="'edit.tabs.references.assetTitlePublicPlaceholder' | translate"
+            (input)="_authorSearchInput$.next($any($event.target)?.value)"
+            [matAutocomplete]="assetSearchAutocomplete"
+          />
+          <mat-autocomplete
+            #assetSearchAutocomplete="matAutocomplete"
+            [displayWith]="assetAutocompleteDisplayFn"
+            (optionSelected)="onAssetSelected($event)"
+          >
+            <mat-option *rxFor="let asset of _assets$" [value]="asset" class="asset-search-option">
+              {{ asset.titlePublic }}
+            </mat-option>
+          </mat-autocomplete>
+        </mat-form-field>
+        <button asset-sg-primary [disabled]="!(_formValid$ | push)" translate (click)="addLink()">add</button>
+      </form>
     </div>
+  </div>
 </div>

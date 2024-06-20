@@ -1,6 +1,6 @@
 <ng-container *ngIf="!!user">
-    <div class="email">{{ user.email }}</div>
-    <button *ngIf="!disableEdit" asset-sg-icon-button (click)="editClicked$.next(user.id)">
-        <svg-icon key="edit"></svg-icon>
-    </button>
+  <div class="email">{{ user.email }}</div>
+  <button *ngIf="!disableEdit" asset-sg-icon-button (click)="editClicked.next(user.id)">
+    <svg-icon key="edit"></svg-icon>
+  </button>
 </ng-container>

@@ -1,14 +1,14 @@
-@use '../../styles/variables';
+@use "../../styles/variables";
 
 :host {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background-color: variables.$white;
-    padding: 0.5rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: variables.$white;
+  padding: 0.5rem 1rem;
 }
 
 .email {
-    color: variables.$cyan-09;
-    font-weight: variables.$font-bold;
+  color: variables.$cyan-09;
+  font-weight: variables.$font-bold;
 }

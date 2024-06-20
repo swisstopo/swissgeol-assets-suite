@@ -1,38 +1,41 @@
 {
-    "name": "ngx-kobalte",
-    "$schema": "../../node_modules/nx/schemas/project-schema.json",
-    "sourceRoot": "libs/ngx-kobalte/src",
-    "projectType": "library",
-    "targets": {
-        "build": {
-            "executor": "@nrwl/vite:build",
-            "outputs": ["{options.outputPath}"],
-            "options": {
-                "outputPath": "dist/libs/ngx-kobalte"
-            }
-        },
-        "publish": {
-            "executor": "nx:run-commands",
-            "options": {
-                "command": "node tools/scripts/publish.mjs ngx-kobalte {args.ver} {args.tag}"
-            },
-            "dependsOn": ["build"]
-        },
-        "test": {
-            "executor": "@nrwl/vite:test",
-            "outputs": ["coverage/libs/ngx-kobalte"],
-            "options": {
-                "passWithNoTests": true,
-                "reportsDirectory": "../../coverage/libs/ngx-kobalte"
-            }
-        },
-        "lint": {
-            "executor": "@nrwl/linter:eslint",
-            "outputs": ["{options.outputFile}"],
-            "options": {
-                "lintFilePatterns": ["libs/ngx-kobalte/**/*.ts"]
-            }
-        }
+  "name": "ngx-kobalte",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/ngx-kobalte/src",
+  "projectType": "library",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@nx/vite:build",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "configFile": "libs/ngx-kobalte/vite.config.ts",
+        "tsConfig": "libs/ngx-kobalte/tsconfig.lib.json",
+        "outputPath": "dist/libs/ngx-kobalte",
+        "emptyOutDir": true
+      }
     },
-    "tags": []
+    "publish": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node tools/scripts/publish.mjs ngx-kobalte {args.ver} {args.tag}"
+      },
+      "dependsOn": ["build"]
+    },
+    "test": {
+      "executor": "@nx/vite:test",
+      "outputs": ["{workspaceRoot}/coverage/libs/ngx-kobalte"],
+      "options": {
+        "passWithNoTests": true,
+        "reportsDirectory": "../../coverage/libs/ngx-kobalte"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "eslintConfig": "libs/ngx-kobalte/eslint.config.js"
+      }
+    }
+  }
 }

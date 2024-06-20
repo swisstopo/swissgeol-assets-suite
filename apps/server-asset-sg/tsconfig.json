@@ -1,13 +1,30 @@
 {
-    "extends": "../../tsconfig.base.json",
-    "files": [],
-    "include": [],
-    "references": [
-        {
-            "path": "./tsconfig.app.json"
-        },
-        {
-            "path": "./tsconfig.spec.json"
-        }
-    ]
+  "extends": "../../tsconfig.base.json",
+  "files": [],
+  "include": [],
+  "references": [
+    {
+      "path": "./tsconfig.app.json"
+    },
+    {
+      "path": "./tsconfig.spec.json"
+    }
+  ],
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"],
+      "@environment": ["environments/environment.ts"],
+      "@asset-sg/admin": ["../../libs/admin/src/index.ts"],
+      "@asset-sg/asset-editor": ["../../libs/asset-editor/src/index.ts"],
+      "@asset-sg/asset-viewer": ["../../libs/asset-viewer/src/index.ts"],
+      "@asset-sg/auth": ["../../libs/auth/src/index.ts"],
+      "@asset-sg/client-shared": ["../../libs/client-shared/src/index.ts"],
+      "@asset-sg/core": ["../../libs/core/src/index.ts"],
+      "@asset-sg/favourite": ["../../libs/favourite/src/index.ts"],
+      "@asset-sg/profile": ["../../libs/profile/src/index.ts"],
+      "@asset-sg/shared": ["../../libs/shared/src/index.ts"],
+      "ngx-kobalte": ["../../libs/ngx-kobalte/src/index.ts"]
+    }
+  }
 }

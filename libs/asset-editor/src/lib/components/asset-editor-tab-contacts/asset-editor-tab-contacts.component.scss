@@ -1,25 +1,25 @@
 :host {
-    display: flex;
-    padding: 0 1rem 1rem 0;
+  display: flex;
+  padding: 0 1rem 1rem 0;
 }
 
 .form-column {
-    width: 34rem;
+  width: 34rem;
 }
 
 .contact {
-    display: grid;
-    grid-template-areas: 'role buttons' 'name buttons';
-    grid-template-columns: auto 5rem;
-    grid-template-rows: auto auto;
+  display: grid;
+  grid-template-areas: "role buttons" "name buttons";
+  grid-template-columns: auto 5rem;
+  grid-template-rows: auto auto;
 
-    :nth-child(1) {
-        grid-area: role;
-    }
-    :nth-child(2) {
-        grid-area: name;
-    }
-    :nth-child(3) {
-        grid-area: buttons;
-    }
+  :nth-child(1) {
+    grid-area: role;
+  }
+  :nth-child(2) {
+    grid-area: name;
+  }
+  :nth-child(3) {
+    grid-area: buttons;
+  }
 }

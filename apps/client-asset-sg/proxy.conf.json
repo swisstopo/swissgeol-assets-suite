@@ -1,13 +1,13 @@
 {
-    "/auth": {
-        "target": "http://localhost:8866",
-        "secure": false,
-        "pathRewrite": {
-            "^/auth": ""
-        }
-    },
-    "/api": {
-        "target": "http://localhost:3333",
-        "secure": false
+  "/auth": {
+    "target": "http://localhost:8866",
+    "secure": false,
+    "pathRewrite": {
+      "^/auth": ""
     }
+  },
+  "/api": {
+    "target": "http://localhost:3333",
+    "secure": false
+  }
 }

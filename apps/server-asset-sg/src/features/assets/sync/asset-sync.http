@@ -1,0 +1,7 @@
+### Show asset sync status
+GET {{host}}/api/assets
+Authorization: Impersonate {{user}}
+
+### Start asset sync
+POST {{host}}/api/assets
+Authorization: Impersonate {{user}}

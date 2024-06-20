@@ -10,7 +10,7 @@ describe('FavouriteService', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [HttpClientTestingModule],
-      providers: [FavouriteService]
+      providers: [FavouriteService],
     });
 
     service = TestBed.inject(FavouriteService);
@@ -28,7 +28,7 @@ describe('FavouriteService', () => {
   it('should retrieve favourites from API via GET', () => {
     const dummyFavourites: Favourite[] = [{}, {}, {}];
 
-    service.getFavourites().subscribe(favourites => {
+    service.getFavourites().subscribe((favourites) => {
       expect(favourites.length).toBe(3);
       expect(favourites).toEqual(dummyFavourites);
     });

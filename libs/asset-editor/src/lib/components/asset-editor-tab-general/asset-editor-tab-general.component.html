@@ -1,253 +1,238 @@
 <ng-container *rxLet="_referenceDataVM$ | push; let vm">
-    <form [formGroup]="_form" class="flex flex-row max-h-full">
-        <div class="flex flex-column form-column mr-8">
-            <div class="flex flex-column bg-white mb-4 py-4 px-6 overflow-y-scroll">
-                <div class="font-bold mb-4" translate>edit.tabs.general.title</div>
-                <mat-form-field class="mb-2">
-                    <mat-label translate>edit.tabs.general.publicTitle</mat-label>
-                    <textarea matInput formControlName="titlePublic"></textarea>
-                    <mat-error *ngIf="_form.controls['titlePublic'].hasError('required')" translate>required</mat-error>
-                </mat-form-field>
-                <mat-form-field class="readonly" *ngIf="_form.controls['sgsId'].value !== null">
-                    <mat-label translate>edit.tabs.general.sgsId</mat-label>
-                    <input matInput formControlName="sgsId" readonly />
-                </mat-form-field>
-                <mat-form-field class="mb-2">
-                    <mat-label translate>edit.tabs.general.originalTitle</mat-label>
-                    <textarea matInput formControlName="titleOriginal"></textarea>
-                    <mat-error *ngIf="_form.controls['titleOriginal'].hasError('required')" translate
-                        >required</mat-error
-                    >
-                </mat-form-field>
-                <div class="font-bold mb-4 mt-2" translate>edit.tabs.general.date</div>
-                <div class="flex gap-6">
-                    <mat-form-field class="mb-2">
-                        <mat-label translate>edit.tabs.general.creationDate</mat-label>
-                        <input
-                            matInput
-                            formControlName="createDate"
-                            [placeholder]="'datePlaceholder' | translate"
-                            [matDatepicker]="createDatePicker" />
-                        <mat-datepicker-toggle matSuffix [for]="createDatePicker" cdkMonitorSubtreeFocus>
-                            <asset-sg-datepicker-toggle-icon matDatepickerToggleIcon></asset-sg-datepicker-toggle-icon>
-                        </mat-datepicker-toggle>
-                        <mat-datepicker #createDatePicker></mat-datepicker>
-                        <mat-error *ngIf="_form.controls['createDate'].hasError('required')" translate
-                            >required</mat-error
-                        >
-                    </mat-form-field>
-                    <mat-form-field class="mb-2">
-                        <mat-label translate>edit.tabs.general.dateReceived</mat-label>
-                        <input
-                            matInput
-                            formControlName="receiptDate"
-                            [placeholder]="'datePlaceholder' | translate"
-                            [matDatepicker]="receiptDatePicker" />
-                        <mat-datepicker-toggle matSuffix [for]="receiptDatePicker" cdkMonitorSubtreeFocus>
-                            <asset-sg-datepicker-toggle-icon matDatepickerToggleIcon></asset-sg-datepicker-toggle-icon>
-                        </mat-datepicker-toggle>
-                        <mat-datepicker #receiptDatePicker></mat-datepicker>
-                        <mat-error *ngIf="_form.controls['receiptDate'].hasError('required')" translate
-                            >required</mat-error
-                        >
-                    </mat-form-field>
-                </div>
-                <div class="font-bold mb-4 mt-2" translate>edit.tabs.general.type</div>
-                <mat-form-field class="mb-2">
-                    <mat-label>Typ</mat-label>
-                    <mat-select formControlName="assetKindItemCode">
-                        <mat-option
-                            class="ellipsis"
-                            *ngFor="let assetKind of vm.assetKindItemArray"
-                            [value]="assetKind.code">
-                            {{ assetKind | valueItemName }}
-                        </mat-option>
-                    </mat-select>
-                </mat-form-field>
-                <mat-form-field class="mb-2">
-                    <mat-label translate>edit.tabs.general.language</mat-label>
-                    <mat-select formControlName="languageItemCode">
-                        <mat-option
-                            class="ellipsis"
-                            *ngFor="let language of vm.languageItemArray"
-                            [value]="language.code">
-                            {{ language | valueItemName }}
-                        </mat-option>
-                    </mat-select>
-                </mat-form-field>
-                <mat-form-field class="mb-2">
-                    <mat-label translate>edit.tabs.general.format</mat-label>
-                    <mat-select formControlName="assetFormatItemCode">
-                        <mat-option
-                            class="ellipsis"
-                            *ngFor="let assetForm of vm.assetFormItemArray"
-                            [value]="assetForm.code">
-                            {{ assetForm | valueItemName }}
-                        </mat-option>
-                    </mat-select>
-                </mat-form-field>
-            </div>
+  <form [formGroup]="_form" class="flex flex-row max-h-full">
+    <div class="flex flex-column form-column mr-8">
+      <div class="flex flex-column bg-white mb-4 py-4 px-6 overflow-y-scroll">
+        <div class="font-bold mb-4" translate>edit.tabs.general.title</div>
+        <mat-form-field class="mb-2">
+          <mat-label translate>edit.tabs.general.publicTitle</mat-label>
+          <textarea matInput formControlName="titlePublic"></textarea>
+          <mat-error *ngIf="_form.controls['titlePublic'].hasError('required')" translate>required</mat-error>
+        </mat-form-field>
+        <mat-form-field class="readonly" *ngIf="_form.controls['sgsId'].value !== null">
+          <mat-label translate>edit.tabs.general.sgsId</mat-label>
+          <input matInput formControlName="sgsId" readonly />
+        </mat-form-field>
+        <mat-form-field class="mb-2">
+          <mat-label translate>edit.tabs.general.originalTitle</mat-label>
+          <textarea matInput formControlName="titleOriginal"></textarea>
+          <mat-error *ngIf="_form.controls['titleOriginal'].hasError('required')" translate>required</mat-error>
+        </mat-form-field>
+        <div class="font-bold mb-4 mt-2" translate>edit.tabs.general.date</div>
+        <div class="flex gap-6">
+          <mat-form-field class="mb-2">
+            <mat-label translate>edit.tabs.general.creationDate</mat-label>
+            <input
+              matInput
+              formControlName="createDate"
+              [placeholder]="'datePlaceholder' | translate"
+              [matDatepicker]="createDatePicker"
+            />
+            <mat-datepicker-toggle matSuffix [for]="createDatePicker" cdkMonitorSubtreeFocus>
+              <asset-sg-datepicker-toggle-icon matDatepickerToggleIcon></asset-sg-datepicker-toggle-icon>
+            </mat-datepicker-toggle>
+            <mat-datepicker #createDatePicker></mat-datepicker>
+            <mat-error *ngIf="_form.controls['createDate'].hasError('required')" translate>required</mat-error>
+          </mat-form-field>
+          <mat-form-field class="mb-2">
+            <mat-label translate>edit.tabs.general.dateReceived</mat-label>
+            <input
+              matInput
+              formControlName="receiptDate"
+              [placeholder]="'datePlaceholder' | translate"
+              [matDatepicker]="receiptDatePicker"
+            />
+            <mat-datepicker-toggle matSuffix [for]="receiptDatePicker" cdkMonitorSubtreeFocus>
+              <asset-sg-datepicker-toggle-icon matDatepickerToggleIcon></asset-sg-datepicker-toggle-icon>
+            </mat-datepicker-toggle>
+            <mat-datepicker #receiptDatePicker></mat-datepicker>
+            <mat-error *ngIf="_form.controls['receiptDate'].hasError('required')" translate>required</mat-error>
+          </mat-form-field>
         </div>
-        <div class="flex flex-column form-column mr-8">
-            <div class="flex flex-column bg-white mb-4 py-4 px-6 overflow-y-scroll">
-                <div class="font-bold mb-4" translate>edit.tabs.general.topic</div>
-                <asset-sg-multiselect
-                    formControlName="manCatLabelRefs"
-                    fallbackCode="other"
-                    singularLabel="{{ 'edit.tabs.general.topic' | translate }}"
-                    pluralLabel="{{ 'edit.tabs.general.topics' | translate }}"
-                    [items]="vm.manCatLabelItems"></asset-sg-multiselect>
-                <ng-container *rxLet="_currentlyEditedIdIndex$ | push; let currentlyEditedIdIndex">
-                    <div class="font-bold mb-4 mt-2" translate>edit.tabs.general.alternativeId</div>
-                    <ul *ngIf="_showList$ | push" class="mt-0 mb-4 p-0">
-                        <ng-container
-                            *ngFor="let id of _form.controls['ids'].value; let index = index; let last = last">
-                            <li
-                                *ngIf="currentlyEditedIdIndex !== index"
-                                class="flex items-center list-none h-10 bg-grey-00 pl-4"
-                                [ngClass]="{ 'mb-2': !last }">
-                                <span class="basis-full"> {{ id.id }} [{{ id.description }}] </span>
-                                <button
-                                    asset-sg-icon-button
-                                    class="basis-10"
-                                    [matMenuTriggerFor]="idListMenu"
-                                    [ngClass]="{ invisible: _showIdForm$ | push }">
-                                    <svg-icon key="action-menu"></svg-icon>
-                                </button>
-                                <mat-menu #idListMenu="matMenu">
-                                    <button mat-menu-item (click)="_editIdClicked(index)">
-                                        <svg-icon key="edit" matMenuItemIcon class="mr-3 text-cyan-09"></svg-icon>
-                                        {{ 'labelEdit' | translate }}
-                                    </button>
-                                    <button mat-menu-item (click)="_deleteIdClicked(index)">
-                                        <svg-icon key="delete" matMenuItemIcon class="mr-3 text-cyan-09"></svg-icon>
-                                        {{ 'delete' | translate }}
-                                    </button>
-                                </mat-menu>
-                            </li>
-                        </ng-container>
-                    </ul>
-                    <form [formGroup]="idForm" class="flex flex-column" *ngIf="_showIdForm$ | push">
-                        <mat-form-field class="mb-2">
-                            <mat-label translate>edit.tabs.general.alternativeId</mat-label>
-                            <input matInput formControlName="id" [required]="_userInsertMode$ | push" />
-                            <mat-error *ngIf="idForm.controls['id'].hasError('required')" translate>required</mat-error>
-                        </mat-form-field>
-                        <mat-form-field class="mb-2">
-                            <mat-label translate>edit.tabs.general.alternativeIdDescription</mat-label>
-                            <input matInput formControlName="description" required="true" #idFormDescription />
-                            <mat-error *ngIf="idForm.controls['description'].hasError('required')" translate
-                                >required</mat-error
-                            >
-                        </mat-form-field>
-                        <div class="self-end" *ngIf="_userInsertMode$ | push">
-                            <button
-                                asset-sg-primary
-                                class="mr-4"
-                                [disabled]="idForm.invalid"
-                                (click)="_saveIdFormClicked()">
-                                {{ (currentlyEditedIdIndex !== -1 ? 'save' : 'add') | translate }}
-                            </button>
-                            <button asset-sg-secondary (click)="_cancelIdFormClicked()">Abbrechen</button>
-                        </div>
-                    </form>
-                    <button
-                        *ngIf="_showCreateNewIdButton$ | push"
-                        asset-sg-secondary
-                        class="mb-2 -mt-2 self-start"
-                        (click)="_insertNewIdClicked()"
-                        translate>
-                        <svg-icon key="zoom-plus" class="mr-4"></svg-icon>
-                        edit.tabs.general.addNewAlternativeId
-                    </button>
-                </ng-container>
+        <div class="font-bold mb-4 mt-2" translate>edit.tabs.general.type</div>
+        <mat-form-field class="mb-2">
+          <mat-label>Typ</mat-label>
+          <mat-select formControlName="assetKindItemCode">
+            <mat-option class="ellipsis" *ngFor="let assetKind of vm.assetKindItemArray" [value]="assetKind.code">
+              {{ assetKind | valueItemName }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field class="mb-2">
+          <mat-label translate>edit.tabs.general.language</mat-label>
+          <mat-select multiple formControlName="assetLanguages" [compareWith]="eqAssetLanguageEdit.equals">
+            <mat-option
+              class="ellipsis"
+              *ngFor="let language of vm.languageItemArray"
+              [value]="{ languageItemCode: language.code }"
+            >
+              {{ language | valueItemName }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field class="mb-2">
+          <mat-label translate>edit.tabs.general.format</mat-label>
+          <mat-select formControlName="assetFormatItemCode">
+            <mat-option class="ellipsis" *ngFor="let assetForm of vm.assetFormItemArray" [value]="assetForm.code">
+              {{ assetForm | valueItemName }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+    </div>
+    <div class="flex flex-column form-column mr-8">
+      <div class="flex flex-column bg-white mb-4 py-4 px-6 overflow-y-scroll">
+        <div class="font-bold mb-4" translate>edit.tabs.general.topic</div>
+        <asset-sg-multiselect
+          formControlName="manCatLabelRefs"
+          fallbackCode="other"
+          singularLabel="{{ 'edit.tabs.general.topic' | translate }}"
+          pluralLabel="{{ 'edit.tabs.general.topics' | translate }}"
+          [items]="vm.manCatLabelItems"
+        ></asset-sg-multiselect>
+        <ng-container *rxLet="_currentlyEditedIdIndex$ | push; let currentlyEditedIdIndex">
+          <div class="font-bold mb-4 mt-2" translate>edit.tabs.general.alternativeId</div>
+          <ul *ngIf="_showList$ | push" class="mt-0 mb-4 p-0">
+            <ng-container *ngFor="let id of _form.controls['ids'].value; let index = index; let last = last">
+              <li
+                *ngIf="currentlyEditedIdIndex !== index"
+                class="flex items-center list-none h-10 bg-grey-00 pl-4"
+                [ngClass]="{ 'mb-2': !last }"
+              >
+                <span class="basis-full"> {{ id.id }} [{{ id.description }}] </span>
+                <button
+                  asset-sg-icon-button
+                  class="basis-10"
+                  [matMenuTriggerFor]="idListMenu"
+                  [ngClass]="{ invisible: _showIdForm$ | push }"
+                >
+                  <svg-icon key="action-menu"></svg-icon>
+                </button>
+                <mat-menu #idListMenu="matMenu">
+                  <button mat-menu-item (click)="_editIdClicked(index)">
+                    <svg-icon key="edit" matMenuItemIcon class="mr-3 text-cyan-09"></svg-icon>
+                    {{ "labelEdit" | translate }}
+                  </button>
+                  <button mat-menu-item (click)="_deleteIdClicked(index)">
+                    <svg-icon key="delete" matMenuItemIcon class="mr-3 text-cyan-09"></svg-icon>
+                    {{ "delete" | translate }}
+                  </button>
+                </mat-menu>
+              </li>
+            </ng-container>
+          </ul>
+          <form [formGroup]="idForm" class="flex flex-column" *ngIf="_showIdForm$ | push">
+            <mat-form-field class="mb-2">
+              <mat-label translate>edit.tabs.general.alternativeId</mat-label>
+              <input matInput formControlName="id" [required]="_userInsertMode$ | push" />
+              <mat-error *ngIf="idForm.controls['id'].hasError('required')" translate>required</mat-error>
+            </mat-form-field>
+            <mat-form-field class="mb-2">
+              <mat-label translate>edit.tabs.general.alternativeIdDescription</mat-label>
+              <input matInput formControlName="description" required="true" #idFormDescription />
+              <mat-error *ngIf="idForm.controls['description'].hasError('required')" translate>required</mat-error>
+            </mat-form-field>
+            <div class="self-end" *ngIf="_userInsertMode$ | push">
+              <button asset-sg-primary class="mr-4" [disabled]="idForm.invalid" (click)="_saveIdFormClicked()">
+                {{ (currentlyEditedIdIndex !== -1 ? "save" : "add") | translate }}
+              </button>
+              <button asset-sg-secondary (click)="_cancelIdFormClicked()">Abbrechen</button>
             </div>
-        </div>
-        <div class="flex flex-column form-column mr-8">
-            <div class="flex flex-column bg-white mb-4 py-4 px-6 max-h-full">
-                <ng-container
-                    *ngIf="_form.controls['assetFiles'].value.length + _form.controls['newFiles'].value.length !== 0">
-                    <div class="font-bold mb-4 mt-2" translate>edit.tabs.general.files</div>
-                    <div class="max-h-full overflow-y-scroll overflow-x-hidden -mr-5">
-                        <ul class="mt-0 mb-4 p-0">
-                            <li
-                                *ngFor="
-                                    let file of _form.controls['assetFiles'].value;
-                                    let index = index;
-                                    let last = last
-                                "
-                                class="list-none bg-grey-00 py-2 pl-4 file-grid no-status mb-2"
-                                [ngClass]="{
-                                    'py-2': !file.willBeDeleted,
-                                    'py-4': file.willBeDeleted,
-                                    'no-status': !file.willBeDeleted
-                                }">
-                                <div class="ellipsis">{{ file.fileName }}</div>
+          </form>
+          <button
+            *ngIf="_showCreateNewIdButton$ | push"
+            asset-sg-secondary
+            class="mb-2 -mt-2 self-start"
+            (click)="_insertNewIdClicked()"
+            translate
+          >
+            <svg-icon key="zoom-plus" class="mr-4"></svg-icon>
+            edit.tabs.general.addNewAlternativeId
+          </button>
+        </ng-container>
+      </div>
+    </div>
+    <div class="flex flex-column form-column mr-8">
+      <div class="flex flex-column bg-white mb-4 py-4 px-6 max-h-full">
+        <ng-container *ngIf="_form.controls['assetFiles'].value.length + _form.controls['newFiles'].value.length !== 0">
+          <div class="font-bold mb-4 mt-2" translate>edit.tabs.general.files</div>
+          <div class="max-h-full overflow-y-scroll overflow-x-hidden -mr-5">
+            <ul class="mt-0 mb-4 p-0">
+              <li
+                *ngFor="let file of _form.controls['assetFiles'].value; let index = index; let last = last"
+                class="list-none bg-grey-00 py-2 pl-4 file-grid no-status mb-2"
+                [ngClass]="{
+                  'py-2': !file.willBeDeleted,
+                  'py-4': file.willBeDeleted,
+                  'no-status': !file.willBeDeleted
+                }"
+              >
+                <div class="ellipsis">{{ file.fileName }}</div>
 
-                                <button
-                                    *ngIf="!file.willBeDeleted; else deleteButtonEmpty"
-                                    asset-sg-icon-button
-                                    class="shrink-0 ml-2"
-                                    [disabled]="_disableAll$ | push"
-                                    (click)="_deleteFile(file.fileId)">
-                                    <svg-icon key="delete"></svg-icon>
-                                </button>
-                                <ng-template #deleteButtonEmpty>
-                                    <span></span>
-                                </ng-template>
-                                <div *ngIf="file.willBeDeleted" class="text-sm text-grey-08" translate>
-                                    edit.tabs.general.willBeDeleted
-                                </div>
-                            </li>
-                            <li
-                                *ngFor="
-                                    let file of _form.controls['newFiles'].value;
-                                    let index = index;
-                                    let last = last
-                                "
-                                class="list-none bg-grey-00 py-4 pl-4 file-grid mb-2">
-                                <div class="ellipsis">{{ file.name }}</div>
-                                <button
-                                    asset-sg-icon-button
-                                    class="shrink-0 ml-2"
-                                    (click)="_removeFileToBeUploaded(index)"
-                                    [disabled]="_disableAll$ | push">
-                                    <svg-icon key="delete"></svg-icon>
-                                </button>
-                                <div class="text-sm text-grey-08" translate>edit.tabs.general.willBeUploaded</div>
-                            </li>
-                        </ul>
-                    </div>
-                </ng-container>
-                <div class="font-bold mb-4 mt-2" translate>edit.tabs.general.addNewFile</div>
-                <label
-                    class="flex flex-column items-center relative border-2 border-dashed p-4 mb-10 mr-1"
-                    [ngClass]="{ 'border-cyan-09': !(_disableAll$ | push), 'border-grey-03': (_disableAll$ | push) }">
-                    <input
-                        type="file"
-                        [disabled]="_disableAll$ | push"
-                        #fileInput
-                        class="absolute inset-0 opacity-0"
-                        (change)="_fileInputChange(fileInput)" />
-                    <span translate>edit.tabs.general.dragFileHere</span>
-                    <span class="m-2" translate>edit.tabs.general.or</span>
-                    <span
-                        class="bg-cyan-09 text-white h-10 flex items-center px-10 rounded cursor-pointer"
-                        [ngClass]="{
-                            'hover:bg-cyan-06': !(_disableAll$ | push),
-                            'bg-grey-03': _disableAll$ | push,
-                            'hover:bg-grey-03': _disableAll$ | push
-                        }"
-                        translate
-                        >edit.tabs.general.selectFile</span
-                    >
-                    <div *ngIf="_fileInvalid$ | push" class="text-red mt-3 flex items-center">
-                        <svg-icon key="error-filled" class="mr-2" />
-                        <span translate>edit.tabs.general.fileSizeToLarge</span>
-                    </div>
-                </label>
-            </div>
-        </div>
-    </form>
-    <div tabindex="0"></div>
+                <button
+                  *ngIf="!file.willBeDeleted; else deleteButtonEmpty"
+                  asset-sg-icon-button
+                  class="shrink-0 ml-2"
+                  [disabled]="_disableAll$ | push"
+                  (click)="_deleteFile(file.fileId)"
+                >
+                  <svg-icon key="delete"></svg-icon>
+                </button>
+                <ng-template #deleteButtonEmpty>
+                  <span></span>
+                </ng-template>
+                <div *ngIf="file.willBeDeleted" class="text-sm text-grey-08" translate>
+                  edit.tabs.general.willBeDeleted
+                </div>
+              </li>
+              <li
+                *ngFor="let file of _form.controls['newFiles'].value; let index = index; let last = last"
+                class="list-none bg-grey-00 py-4 pl-4 file-grid mb-2"
+              >
+                <div class="ellipsis">{{ file.name }}</div>
+                <button
+                  asset-sg-icon-button
+                  class="shrink-0 ml-2"
+                  (click)="_removeFileToBeUploaded(index)"
+                  [disabled]="_disableAll$ | push"
+                >
+                  <svg-icon key="delete"></svg-icon>
+                </button>
+                <div class="text-sm text-grey-08" translate>edit.tabs.general.willBeUploaded</div>
+              </li>
+            </ul>
+          </div>
+        </ng-container>
+        <div class="font-bold mb-4 mt-2" translate>edit.tabs.general.addNewFile</div>
+        <label
+          class="flex flex-column items-center relative border-2 border-dashed p-4 mb-10 mr-1"
+          [ngClass]="{ 'border-cyan-09': !(_disableAll$ | push), 'border-grey-03': (_disableAll$ | push) }"
+        >
+          <input
+            type="file"
+            [disabled]="_disableAll$ | push"
+            #fileInput
+            class="absolute inset-0 opacity-0"
+            (change)="_fileInputChange(fileInput)"
+          />
+          <span translate>edit.tabs.general.dragFileHere</span>
+          <span class="m-2" translate>edit.tabs.general.or</span>
+          <span
+            class="bg-cyan-09 text-white h-10 flex items-center px-10 rounded cursor-pointer"
+            [ngClass]="{
+              'hover:bg-cyan-06': !(_disableAll$ | push),
+              'bg-grey-03': _disableAll$ | push,
+              'hover:bg-grey-03': _disableAll$ | push
+            }"
+            translate
+            >edit.tabs.general.selectFile</span
+          >
+          <div *ngIf="_fileInvalid$ | push" class="text-red mt-3 flex items-center">
+            <svg-icon key="error-filled" class="mr-2" />
+            <span translate>edit.tabs.general.fileSizeToLarge</span>
+          </div>
+        </label>
+      </div>
+    </div>
+  </form>
+  <div tabindex="0"></div>
 </ng-container>

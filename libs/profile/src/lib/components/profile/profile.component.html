@@ -1,15 +1,15 @@
 <ng-template #templateDrawerPortalContent>
-    <asset-sg-drawer>
-        <asset-sg-drawer-panel widthPercentageOfViewPanel="0.3" [display]="true">
-            <ng-container *rxLet="state$ | push; let state">
-                <div class="profile-wrapper">
-                    <mat-progress-bar *ngIf="state.rdUser._tag === 'RemotePending'" mode="indeterminate" />
-                    <ng-container *ngIf="state.rdUser._tag === 'RemoteSuccess'">
-                        <div class="email">{{ state.rdUser.value.email }}</div>
-                        <button asset-sg-primary translate (click)="logoutClicked$.next()">logout</button>
-                    </ng-container>
-                </div>
-            </ng-container>
-        </asset-sg-drawer-panel>
-    </asset-sg-drawer>
+  <asset-sg-drawer>
+    <asset-sg-drawer-panel widthPercentageOfViewPanel="0.3" [display]="true">
+      <ng-container *rxLet="state$ | push; let state">
+        <div class="profile-wrapper">
+          <mat-progress-bar *ngIf="state.rdUser._tag === 'RemotePending'" mode="indeterminate" />
+          <ng-container *ngIf="state.rdUser._tag === 'RemoteSuccess'">
+            <div class="email">{{ state.rdUser.value.email }}</div>
+            <button asset-sg-primary translate (click)="logoutClicked$.next()">logout</button>
+          </ng-container>
+        </div>
+      </ng-container>
+    </asset-sg-drawer-panel>
+  </asset-sg-drawer>
 </ng-template>

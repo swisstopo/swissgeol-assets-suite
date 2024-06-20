@@ -4,28 +4,20 @@
   "projectType": "application",
   "sourceRoot": "apps/client-asset-sg/src",
   "prefix": "asset-sg",
+  "tags": [],
   "targets": {
     "build": {
       "executor": "@angular-devkit/build-angular:browser",
-      "outputs": [
-        "{options.outputPath}"
-      ],
+      "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/apps/client-asset-sg",
         "index": "apps/client-asset-sg/src/index.html",
         "main": "apps/client-asset-sg/src/main.ts",
-        "polyfills": [
-          "zone.js"
-        ],
+        "polyfills": ["zone.js"],
         "tsConfig": "apps/client-asset-sg/tsconfig.app.json",
         "inlineStyleLanguage": "scss",
-        "assets": [
-          "apps/client-asset-sg/src/favicon.ico",
-          "apps/client-asset-sg/src/assets"
-        ],
-        "styles": [
-          "apps/client-asset-sg/src/styles.scss"
-        ],
+        "assets": ["apps/client-asset-sg/src/favicon.ico", "apps/client-asset-sg/src/assets"],
+        "styles": ["apps/client-asset-sg/src/styles.scss"],
         "scripts": []
       },
       "configurations": {
@@ -73,13 +65,13 @@
       "executor": "@angular-devkit/build-angular:dev-server",
       "configurations": {
         "production": {
-          "browserTarget": "client-asset-sg:build:production"
+          "buildTarget": "client-asset-sg:build:production"
         },
         "int": {
-          "browserTarget": "client-asset-sg:build:int"
+          "buildTarget": "client-asset-sg:build:int"
         },
         "development": {
-          "browserTarget": "client-asset-sg:build:development"
+          "buildTarget": "client-asset-sg:build:development"
         }
       },
       "defaultConfiguration": "development",
@@ -90,31 +82,22 @@
     "extract-i18n": {
       "executor": "@angular-devkit/build-angular:extract-i18n",
       "options": {
-        "browserTarget": "client-asset-sg:build"
+        "buildTarget": "client-asset-sg:build"
       }
     },
     "lint": {
-      "executor": "@nrwl/linter:eslint",
-      "outputs": [
-        "{options.outputFile}"
-      ],
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"],
       "options": {
-        "lintFilePatterns": [
-          "apps/client-asset-sg/**/*.ts",
-          "apps/client-asset-sg/**/*.html"
-        ]
+        "eslintConfig": "apps/client-asset-sg/eslint.config.js"
       }
     },
     "test": {
-      "executor": "@nrwl/jest:jest",
-      "outputs": [
-        "{workspaceRoot}/coverage/{projectRoot}"
-      ],
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
       "options": {
-        "jestConfig": "apps/client-asset-sg/jest.config.ts",
-        "passWithNoTests": true
+        "jestConfig": "apps/client-asset-sg/jest.config.ts"
       }
     }
-  },
-  "tags": []
+  }
 }

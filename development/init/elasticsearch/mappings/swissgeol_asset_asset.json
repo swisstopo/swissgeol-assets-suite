@@ -24,10 +24,13 @@
     "createDateId": {
       "type": "integer"
     },
-    "languageItemCode": {
+    "languageItemCodes": {
       "type": "keyword"
     },
     "manCatLabelItemCodes": {
+      "type": "keyword"
+    },
+    "geometryCodes": {
       "type": "keyword"
     },
     "sgsId": {

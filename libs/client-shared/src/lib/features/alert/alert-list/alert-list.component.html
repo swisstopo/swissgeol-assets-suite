@@ -1,0 +1,3 @@
+<ng-container *ngFor="let entry of alerts$ | async; trackBy: getAlertId">
+  <li app-alert [alert]="entry.alert" [metadata]="entry.metadata"></li>
+</ng-container>

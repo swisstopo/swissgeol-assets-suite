@@ -1,0 +1,77 @@
+@use "@angular/material" as mat;
+@use "../../../theme" as *;
+@use "../../styles/variables";
+
+:host {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  background-color: variables.$grey-01;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem;
+  gap: 1.5rem;
+  background-color: white;
+  border-radius: 2px;
+  box-shadow: rgba(0, 0, 0, 0.17) 0 1px 3px, rgba(0, 0, 0, 0.17) 0 1px 2px;
+}
+
+.card > .text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+
+  p.welcome {
+  }
+
+  p.system {
+    font-size: 0.75rem;
+  }
+}
+
+.card > .alert {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1rem;
+  border-radius: 4px;
+  width: 100%;
+
+  color: mat.get-contrast-color-from-palette($asset-sg-warn, 200);
+  background-color: mat.get-color-from-palette($asset-sg-warn, 200);
+}
+
+p {
+  margin: 0;
+  text-align: center;
+}
+
+ul.languages {
+  margin: 0;
+  padding: 0;
+  display: flex;
+  gap: 1rem;
+  list-style: none;
+
+  button {
+    color: black;
+    text-decoration: none;
+  }
+
+  li.is-active > button {
+    text-decoration: underline;
+    color: mat.get-color-from-palette($asset-sg-primary, 600);
+  }
+}

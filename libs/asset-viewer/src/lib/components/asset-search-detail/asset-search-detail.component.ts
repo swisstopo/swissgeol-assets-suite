@@ -1,16 +1,53 @@
-import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Component, inject } from '@angular/core';
+import { AppState } from '@asset-sg/client-shared';
+import { AssetFile } from '@asset-sg/shared';
+import { Store } from '@ngrx/store';
 
-import { ApiError } from '@asset-sg/client-shared';
-import { ORD } from '@asset-sg/core';
-
-import { AssetDetailVM } from '../../state/asset-viewer.selectors';
+import * as actions from '../../state/asset-search/asset-search.actions';
+import { LoadingState } from '../../state/asset-search/asset-search.reducer';
+import {
+  selectAssetDetailLoadingState,
+  selectCurrentAssetDetailVM,
+} from '../../state/asset-search/asset-search.selector';
 
 @Component({
-    selector: 'asset-sg-asset-search-detail',
-    templateUrl: './asset-search-detail.component.html',
-    styleUrls: ['./asset-search-detail.component.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush,
+  selector: 'asset-sg-asset-search-detail',
+  templateUrl: './asset-search-detail.component.html',
+  styleUrls: ['./asset-search-detail.component.scss'],
 })
 export class AssetSearchDetailComponent {
-    @Input() public rdAssetDetail$?: ORD.ObservableRemoteData<ApiError, AssetDetailVM>;
+  private _store = inject(Store<AppState>);
+  public readonly assetDetail$ = this._store.select(selectCurrentAssetDetailVM);
+  public loadingState = this._store.select(selectAssetDetailLoadingState);
+
+  public resetAssetDetail() {
+    this._store.dispatch(actions.resetAssetDetail());
+  }
+
+  protected readonly LoadingState = LoadingState;
+
+  constructor(private httpClient: HttpClient) {}
+
+  downloadFile(file: Omit<AssetFile, 'fileSize'>, isDownload = true): void {
+    this.httpClient.get(`/api/file/${file.fileId}`, { responseType: 'blob' }).subscribe((blob) => {
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+
+      anchor.setAttribute('style', 'display: none');
+      anchor.href = url;
+      anchor.rel = 'noopener noreferrer';
+      if (isDownload) {
+        anchor.download = file.fileName;
+      } else {
+        anchor.target = '_blank';
+      }
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      setTimeout(() => {
+        window.URL.revokeObjectURL(url);
+      });
+    });
+  }
 }

@@ -1,17 +1,17 @@
 [
   {
-    "SubjectId":"10f95aa3-fb95-41eb-b754-5f729a092e30",
-    "Username":"admin@swissgeol.assets",
-    "Password":"swissgeol_assets",
+    "SubjectId": "379a20e6-6a5d-4390-93ca-d408613e854d",
+    "Username": "admin",
+    "Password": "admin",
     "Claims": [
       {
         "Type": "name",
-        "Value": "Admin User",
+        "Value": "Admin",
         "ValueType": "string"
       },
       {
         "Type": "family_name",
-        "Value": "User",
+        "Value": "Admin",
         "ValueType": "string"
       },
       {
@@ -21,7 +21,7 @@
       },
       {
         "Type": "email",
-        "Value": "admin.user@local.dev",
+        "Value": "admin@assets.swissgeol.ch",
         "ValueType": "string"
       },
       {
@@ -30,35 +30,40 @@
         "ValueType": "boolean"
       },
       {
-        "Type": "local_groups_claim",
-        "Value": "[\"boreholes_dev_group\"]",
+        "Type": "cognito:groups",
+        "Value": "[\"assets.swissgeol\"]",
         "ValueType": "json"
+      },
+      {
+        "Type": "username",
+        "Value": "1_admin@assets.swissgeol.ch",
+        "ValueType": "string"
       }
     ]
   },
   {
-    "SubjectId":"sub_editor",
-    "Username":"editor",
-    "Password":"swissforages",
+    "SubjectId": "e06ad465-3adc-4ad7-bee5-ff0605a4b928",
+    "Username": "viewer",
+    "Password": "viewer",
     "Claims": [
       {
         "Type": "name",
-        "Value": "Editor User",
+        "Value": "Viewer",
         "ValueType": "string"
       },
       {
         "Type": "family_name",
-        "Value": "User",
+        "Value": "Viewer",
         "ValueType": "string"
       },
       {
         "Type": "given_name",
-        "Value": "Editor",
+        "Value": "Viewer",
         "ValueType": "string"
       },
       {
         "Type": "email",
-        "Value": "editor.user@local.dev",
+        "Value": "viewer@assets.swissgeol.ch",
         "ValueType": "string"
       },
       {
@@ -67,9 +72,14 @@
         "ValueType": "boolean"
       },
       {
-        "Type": "local_groups_claim",
-        "Value": "[\"boreholes_dev_group\"]",
+        "Type": "cognito:groups",
+        "Value": "[\"assets.swissgeol2\"]",
         "ValueType": "json"
+      },
+      {
+        "Type": "username",
+        "Value": "2_viewer@assets.swissgeol.ch",
+        "ValueType": "string"
       }
     ]
   }

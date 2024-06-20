@@ -1,0 +1,11 @@
+### Show favourites
+GET {{host}}/api/users/current/favorites
+Authorization: Impersonate {{user}}
+
+### Add favourite
+PUT {{host}}/api/users/current/favorites/5
+Authorization: Impersonate {{user}}
+
+### Remove favourite
+DELETE {{host}}/api/users/current/favorites/5
+Authorization: Impersonate {{user}}

@@ -1,21 +1,27 @@
+ARG APP_VERSION
+
 FROM node:20-alpine as app-builder
+
+ENV APP_VERSION=${APP_VERSION}
+ENV CYPRESS_INSTALL_BINARY=0
+
+RUN apk add python3 make gcc g++
 
 WORKDIR /app
 COPY . .
 
-ENV CYPRESS_INSTALL_BINARY=0
-RUN apk add python3 make gcc g++
-
 RUN npm install
-RUN npx nx build client-asset-sg
+RUN npx nx build client-asset-sg --configuration=production
 
 # final image build
 FROM nginx:mainline-alpine
 
+ENV APP_VERSION=${APP_VERSION}
+
 WORKDIR /usr/share/nginx/html
 COPY --from=app-builder /app/dist/apps/client-asset-sg .
 
-# this nginx base image will parse the template and will move it to 
+# this nginx base image will parse the template and will move it to
 # /etc/nginx/conf.d/default.conf before it starts nginx process
 COPY container/nginx.conf /etc/nginx/templates/default.conf.template
 
