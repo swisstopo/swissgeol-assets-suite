@@ -23,7 +23,7 @@
           <div class="flex flex-row justify-between mb-4">
             <div class="text-dark-red break-word font-bold mt-2.5" [innerHTML]="assetDetail.titlePublic"></div>
             <a *ngIf="null | isEditor" asset-sg-icon-button [routerLink]="['asset-admin', assetDetail.assetId]">
-              <svg-icon key="edit"></svg-icon>
+              <svg-icon key="edit" data-testid="edit-asset-button"></svg-icon>
             </a>
           </div>
           <div class="asset-status">
