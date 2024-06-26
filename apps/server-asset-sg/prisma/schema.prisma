@@ -664,7 +664,7 @@ model AssetUserFavourite {
 
 model Workgroup {
   id          Int                 @id @default(autoincrement())
-  name        String
+  name        String              @unique
   created_at  DateTime            @db.Timestamptz(6)
   disabled_at DateTime?           @db.Timestamptz(6)
   users       WorkgroupsOnUsers[]
