@@ -59,6 +59,9 @@ model Asset {
   studyTraces             StudyTrace[]
   typeNatRels             TypeNatRel[]
 
+  workgroup   Workgroup? @relation(fields: [workgroupId], references: [id])
+  workgroupId Int?       @map("workgroup_id")
+
   siblingXAssets AssetXAssetY[] @relation("sibling_x_asset")
   siblingYAssets AssetXAssetY[] @relation("sibling_y_asset")
 
@@ -641,6 +644,8 @@ model AssetUser {
   lang               String
   oidcId             String
   AssetUserFavourite AssetUserFavourite[]
+  workgroups         WorkgroupsOnUsers[]
+  isAdmin            Boolean              @default(false) @map("is_admin")
 
   @@map("asset_user")
 }
@@ -656,6 +661,34 @@ model AssetUserFavourite {
 
   @@id([assetUserId, assetId])
   @@map("asset_user_favourite")
+}
+
+model Workgroup {
+  id          Int                 @id @default(autoincrement())
+  name        String              @unique
+  created_at  DateTime            @db.Timestamptz(6)
+  disabled_at DateTime?           @db.Timestamptz(6)
+  users       WorkgroupsOnUsers[]
+  assets      Asset[]
+
+  @@map("workgroup")
+}
+
+model WorkgroupsOnUsers {
+  workgroup   Workgroup @relation(fields: [workgroupId], references: [id])
+  workgroupId Int       @map("workgroup_id")
+  user        AssetUser @relation(fields: [userId], references: [id])
+  userId      String    @map("user_id") @db.Uuid
+  role        Role
+
+  @@id([workgroupId, userId])
+  @@map("workgroups_on_users")
+}
+
+enum Role {
+  Viewer       @map("viewer")
+  Editor       @map("editor")
+  MasterEditor @map("master-editor")
 }
 
 view AllStudy {
