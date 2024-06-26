@@ -17,9 +17,6 @@
           <li *rxFor="let asset of assets">
             <a
               asset-sg-reset
-              [routerLink]="[]"
-              [queryParams]="{ assetId: asset.assetId }"
-              queryParamsHandling="merge"
               (click)="selectAndClose(asset.assetId)"
               (mouseover)="onAssetMouseOver(asset.assetId)"
               (mouseout)="onAssetMouseOut()"

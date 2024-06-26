@@ -1,9 +1,9 @@
 import {
   Contact,
-  ReferenceData,
   emptyValueItem,
   isEditor,
   isMasterEditor,
+  ReferenceData,
   valueItemRecordToArray,
 } from '@asset-sg/shared';
 import * as RD from '@devexperts/remote-data-ts';
@@ -13,8 +13,6 @@ import { flow, pipe } from 'fp-ts/function';
 import { contramap } from 'fp-ts/lib/Ord';
 import * as R from 'fp-ts/Record';
 import * as S from 'fp-ts/string';
-
-import { ApiError } from '../utils';
 
 import { AppState } from './app-shared-state';
 
@@ -95,9 +93,6 @@ export const selectRDReferenceDataVM = createSelector(
     }))
   )
 );
-export type RDReferenceDataVM = RD.RemoteData<ApiError, ReferenceDataVM>;
-
-export const selectIsPanelOpen = createSelector(appSharedFeature, (state) => state.isPanelOpen);
 
 export const selectLocale = createSelector(appSharedFeature, (state) => (state.lang === 'en' ? 'en-GB' : 'de-CH'));
 

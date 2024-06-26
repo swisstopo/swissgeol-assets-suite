@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { ActivatedRoute, Params, Router } from '@angular/router';
 import { appSharedStateActions, fromAppShared } from '@asset-sg/client-shared';
 import { isDecodeError, isNotNull } from '@asset-sg/core';
@@ -121,7 +121,7 @@ export class AssetSearchEffects {
 
   public updateStatsAfterRemovingPolygonOrTriggeringStartSearch$ = createEffect(() => {
     return this.actions$.pipe(
-      ofType(actions.removePolygon, appSharedStateActions.triggerSearch),
+      ofType(actions.removePolygon),
       map(() => actions.getStats())
     );
   });
@@ -159,10 +159,23 @@ export class AssetSearchEffects {
     );
   });
 
+  public updateUrlWithAssetId = createEffect(
+    () => {
+      return this.actions$.pipe(
+        ofType(actions.searchForAssetDetail),
+        map(({ assetId }) => {
+          const queryParams = this.route.snapshot.queryParams;
+          this.router.navigate([], { queryParams: { ...queryParams, assetId }, queryParamsHandling: 'merge' });
+        })
+      );
+    },
+    { dispatch: false }
+  );
+
   public openPanelOnSuccessfulSearch$ = createEffect(() => {
     return this.actions$.pipe(
-      ofType(actions.searchByFilterConfiguration, appSharedStateActions.triggerSearch),
-      map(() => appSharedStateActions.openPanel())
+      ofType(actions.searchByFilterConfiguration),
+      map(() => actions.openFilters())
     );
   });
 

@@ -1,6 +1,7 @@
 import { ENTER } from '@angular/cdk/keycodes';
 import { TemplatePortal } from '@angular/cdk/portal';
 import {
+  AfterViewInit,
   ApplicationRef,
   ChangeDetectorRef,
   Component,
@@ -60,7 +61,7 @@ import {
   styleUrls: ['./asset-viewer-page.component.scss'],
   hostDirectives: [LifecycleHooksDirective],
 })
-export class AssetViewerPageComponent implements OnDestroy {
+export class AssetViewerPageComponent implements OnDestroy, AfterViewInit {
   @ViewChild('templateAppBarPortalContent') templateAppBarPortalContent!: TemplateRef<unknown>;
   @ViewChild('searchInput') searchInput!: ElementRef<HTMLInputElement>;
 
@@ -153,10 +154,6 @@ export class AssetViewerPageComponent implements OnDestroy {
 
     singleStudyClicked$.pipe(untilDestroyed(this)).subscribe((assetIds) => {
       this._store.dispatch(actions.searchForAssetDetail({ assetId: assetIds[0] }));
-      this._router.navigate([], {
-        queryParams: { assetId: assetIds[0] },
-        queryParamsHandling: 'merge',
-      });
     });
 
     merge(
@@ -180,6 +177,7 @@ export class AssetViewerPageComponent implements OnDestroy {
   }
 
   ngOnDestroy() {
+    this._store.dispatch(actions.closeFilters());
     this._appPortalService.setAppBarPortalContent(null);
   }
 

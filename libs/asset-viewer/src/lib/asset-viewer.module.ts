@@ -9,6 +9,18 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import {
+  MatCell,
+  MatCellDef,
+  MatColumnDef,
+  MatHeaderCell,
+  MatHeaderCellDef,
+  MatHeaderRow,
+  MatHeaderRowDef,
+  MatRow,
+  MatRowDef,
+  MatTable,
+} from '@angular/material/table';
 import { MatDateFnsModule } from '@angular/material-date-fns-adapter';
 import { RouterModule } from '@angular/router';
 import {
@@ -40,7 +52,6 @@ import { AssetSearchDetailComponent } from './components/asset-search-detail';
 import { AssetSearchFilterListComponent } from './components/asset-search-filter-list/asset-search-filter-list.component';
 import { AssetSearchRefineComponent } from './components/asset-search-refine';
 import { AssetSearchResultsComponent } from './components/asset-search-results';
-import { AssetSearchResultComponent } from './components/asset-search-results/asset-search-result/asset-search-result.component';
 import { AssetViewerPageComponent } from './components/asset-viewer-page';
 import { MapComponent } from './components/map';
 import { AssetSearchEffects } from './state/asset-search/asset-search.effects';
@@ -55,7 +66,6 @@ import { assetSearchReducer } from './state/asset-search/asset-search.reducer';
     AssetSearchFilterListComponent,
     AssetSearchResultsComponent,
     AssetPickerComponent,
-    AssetSearchResultComponent,
   ],
   imports: [
     CommonModule,
@@ -97,6 +107,16 @@ import { assetSearchReducer } from './state/asset-search/asset-search.reducer';
     DrawerComponent,
     DrawerPanelComponent,
     DatepickerToggleIconComponent,
+    MatTable,
+    MatColumnDef,
+    MatHeaderCell,
+    MatCell,
+    MatCellDef,
+    MatHeaderCellDef,
+    MatHeaderRow,
+    MatRow,
+    MatHeaderRowDef,
+    MatRowDef,
     SmartTranslatePipe,
     CdkMonitorFocus,
   ],

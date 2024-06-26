@@ -19,71 +19,15 @@
 .search-results {
   overflow-y: scroll;
   overflow-x: hidden;
-
   display: flex;
   flex-wrap: wrap;
   height: 400px;
 }
 
-.asset-result {
-  background-color: variables.$white;
-  padding: 0.25rem 1rem 0.75rem 1rem;
-  margin: 0.75rem;
-  width: 334px;
-  height: 312px;
-  overflow-y: auto;
-}
-
-.asset-body {
-  padding-top: 0.875rem;
-  grid-area: body;
-
-  & > * {
-    margin: 0.125rem 0;
-  }
-}
-
-[asset-sg-reset].asset-title-public {
-  color: variables.$cyan-09;
-  font-weight: variables.$font-bold;
-  margin-bottom: 0.75rem;
-  display: inline-block;
-  text-align: left;
-
-  &.active {
-    color: variables.$dark-red;
-  }
-}
-
-.asset-status {
-  grid-area: status;
-  height: 2.5rem;
-  justify-self: left;
-  display: grid;
-  place-items: center;
-}
-
-.asset-actions {
-  grid-area: actions;
-  justify-self: right;
-  margin-right: -0.75rem;
-}
-
-.asset-edit,
 .asset-favourite {
   height: 2.5rem;
   width: 2.5rem;
   color: variables.$cyan-09;
-}
-
-.asset-man-cat-label-item-author--last,
-.asset-author--last {
-  margin-bottom: 0.25rem;
-}
-
-.asset-kind-format {
-  font-weight: variables.$font-bold;
-  margin-bottom: 0.25rem;
 }
 
 .loading-spinner {
@@ -93,4 +37,39 @@
   display: grid;
   place-items: center;
   background-color: variables.$grey-03;
+}
+
+.mat-mdc-header-row .mat-mdc-cell {
+  background-color: variables.$grey-01;
+}
+
+.mat-mdc-row:hover .mat-mdc-cell {
+  background-color: variables.$grey-01;
+}
+
+.table-container {
+  max-height: 400px;
+  overflow-y: auto;
+  overflow-x: auto;
+  display: block;
+  width: 100%;
+  padding: 0 12px;
+
+  .mat-table {
+    width: max-content;
+    overflow-y: scroll;
+    display: block;
+  }
+
+  .table {
+    margin: 12px 0;
+
+    .table-header {
+      background-color: variables.$grey-03;
+    }
+
+    .mat-column-titlePublic {
+      word-wrap: break-word;
+    }
+  }
 }
