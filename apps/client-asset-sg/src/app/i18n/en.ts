@@ -233,4 +233,38 @@ export const enAppTranslations: AppTranslations = {
       ' This ensures that the search includes all existing assets.',
     adminInstructionsSyncElasticAssetsStart: 'Start synchronization',
   },
+  admin: {
+    users: 'Users',
+    workgroups: 'Workgroups',
+    name: 'Name',
+    role: 'Role',
+    actions: 'Actions',
+    email: 'Email',
+    back: 'Back',
+    languages: {
+      de: 'German',
+      en: 'English',
+      fr: 'French',
+      it: 'Italian',
+      rm: 'Romansh',
+    },
+    userPage: {
+      admin: 'Admin',
+      lang: 'Language',
+      addWorkgroups: 'Add workgroups',
+      more: 'more',
+      userAddError: 'Add at least one user',
+    },
+    workgroupPage: {
+      name: 'Name',
+      isActive: 'Active',
+      activate: 'Activate',
+      deactivate: 'Deactivate',
+      create: 'Create',
+      isDeactivated: 'Deactivated',
+      chooseUsersText: 'Add users to manage',
+
+      addUsers: 'Add users',
+    },
+  },
 };

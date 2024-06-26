@@ -32,6 +32,11 @@ export class UsersController {
     return this.userRepo.list();
   }
 
+  @Get('/:id')
+  show(@Param('id') id: UserId): Promise<User | null> {
+    return this.userRepo.find(id);
+  }
+
   @Put('/:id')
   @RequireRole(Role.Admin)
   async update(

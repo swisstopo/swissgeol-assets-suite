@@ -17,8 +17,11 @@ export type WorkgroupId = number;
 export type WorkgroupData = Data<Workgroup>;
 
 export interface UserOnWorkgroup {
-  userId: UserId;
   role: Role;
+  user: {
+    id: UserId;
+    email: string;
+  };
 }
 
 export type Role = PrismaRole;

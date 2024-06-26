@@ -1,39 +1,54 @@
-<div>
-  @if (selectedUser) {
-  <asset-sg-user-edit [user]="selectedUser" [workgroups]="workgroups"></asset-sg-user-edit>
-  }
+<div class="users">
+  <div class="header">
+    <h1 translate>admin.users</h1>
+  </div>
+  <div>
+    <table mat-table [dataSource]="users" class="mat-elevation-z8">
+      <ng-container matColumnDef="email">
+        <th mat-header-cell *matHeaderCellDef translate>admin.email</th>
+        <td mat-cell *matCellDef="let user">{{ user.email }}</td>
+      </ng-container>
+      <ng-container matColumnDef="isAdmin">
+        <th mat-header-cell *matHeaderCellDef translate>admin.userPage.admin</th>
 
-  <table mat-table [dataSource]="users" class="mat-elevation-z8 table">
-    <ng-container matColumnDef="email">
-      <th mat-header-cell *matHeaderCellDef>Name</th>
-      <td mat-cell *matCellDef="let user">{{ user.email }}</td>
-    </ng-container>
-    <ng-container matColumnDef="workgroups">
-      <th mat-header-cell *matHeaderCellDef>Workgroups</th>
-      <td mat-cell *matCellDef="let user">
-        @for (workgroup of user.workgroups; track workgroup.workgroupId) {
-        <div>{{ workgroup.workgroup.name }}: {{ workgroup.role }}</div>
-        }
-      </td>
-    </ng-container>
-    <ng-container matColumnDef="isAdmin">
-      <th mat-header-cell *matHeaderCellDef>Admin</th>
-
-      <td mat-cell *matCellDef="let user">
-        <mat-checkbox [checked]="user.isAdmin" (change)="update(user, $event)"></mat-checkbox>
-      </td>
-    </ng-container>
-    <ng-container matColumnDef="languages">
-      <th mat-header-cell *matHeaderCellDef>Sprache</th>
-      <td mat-cell *matCellDef="let user">{{ user.lang }}</td>
-    </ng-container>
-    <ng-container matColumnDef="actions">
-      <th mat-header-cell *matHeaderCellDef>Aktionen</th>
-      <td mat-cell *matCellDef="let user">
-        <button mat-button (click)="edit(user)">Editieren</button>
-      </td>
-    </ng-container>
-    <tr mat-header-row *matHeaderRowDef="COLUMNS; sticky: true" class="table-header"></tr>
-    <tr mat-row *matRowDef="let row; columns: COLUMNS"></tr>
-  </table>
+        <td mat-cell *matCellDef="let user">
+          <mat-checkbox [checked]="user.isAdmin" (change)="updateIsAdminStatus(user, $event)"></mat-checkbox>
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="languages">
+        <th mat-header-cell *matHeaderCellDef translate>admin.userPage.lang</th>
+        <td mat-cell *matCellDef="let user">{{ user.lang }}</td>
+      </ng-container>
+      <ng-container matColumnDef="workgroups">
+        <th mat-header-cell *matHeaderCellDef translate>admin.workgroups</th>
+        <td
+          mat-cell
+          *matCellDef="let user"
+          [matTooltip]="formatWorkgroupsTooltip(user.workgroups)"
+          matTooltipClass="workgroups-tooltip"
+          matTooltipPosition="left"
+        >
+          @for (workgroup of user.workgroups.slice(0, workgroupCutoffLength); track workgroup.workgroupId; let last =
+          $last) {
+          <span>{{ workgroup.workgroup.name }}.{{ workgroup.role }}</span>
+          <ng-container *ngIf="!last">,</ng-container>
+          } @if (user.workgroups.length > workgroupCutoffLength) {
+          <span
+            >, +{{ user.workgroups.length - workgroupCutoffLength }} <span translate>admin.userPage.more</span>
+          </span>
+          }
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef translate>admin.actions</th>
+        <td mat-cell *matCellDef="let user">
+          <button [routerLink]="[user.id]">
+            <svg-icon key="edit"></svg-icon>
+          </button>
+        </td>
+      </ng-container>
+      <tr mat-header-row *matHeaderRowDef="COLUMNS; sticky: true" class="table__header"></tr>
+      <tr mat-row *matRowDef="let row; columns: COLUMNS"></tr>
+    </table>
+  </div>
 </div>

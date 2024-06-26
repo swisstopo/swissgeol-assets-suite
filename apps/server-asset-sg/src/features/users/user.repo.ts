@@ -66,7 +66,7 @@ export class UserRepo implements Repo<User, UserId, UserData & { oidcId: string 
           isAdmin: data.isAdmin,
           workgroups: {
             deleteMany: {
-              workgroupId: { notIn: data.workgroups?.map((workgroup) => workgroup.workgroupId) },
+              workgroupId: {},
             },
             createMany: {
               data: data.workgroups?.map((workgroup) => ({
