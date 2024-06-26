@@ -4,15 +4,15 @@ import {
   ChangeDetectionStrategy,
   Component,
   ElementRef,
+  inject,
   QueryList,
   TemplateRef,
   ViewChild,
   ViewChildren,
   ViewContainerRef,
-  inject,
 } from '@angular/core';
-import { LifecycleHooks, LifecycleHooksDirective, fromAppShared } from '@asset-sg/client-shared';
-import { ORD, isNotNil, isTruthy } from '@asset-sg/core';
+import { fromAppShared, LifecycleHooks, LifecycleHooksDirective } from '@asset-sg/client-shared';
+import { isNotNil, isTruthy, ORD } from '@asset-sg/core';
 import { ContactEdit, GeomFromGeomText, PatchAsset, PatchContact } from '@asset-sg/shared';
 import * as RD from '@devexperts/remote-data-ts';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
@@ -22,7 +22,7 @@ import * as A from 'fp-ts/Array';
 import { pipe } from 'fp-ts/function';
 import * as O from 'fp-ts/Option';
 import { KobalteTabs } from 'ngx-kobalte';
-import { BehaviorSubject, Observable, filter, map, of, startWith, switchMap } from 'rxjs';
+import { BehaviorSubject, filter, map, Observable, of, startWith, switchMap } from 'rxjs';
 import { from } from 'solid-js';
 
 import { TabPageBridgeService } from '../../services/tab-page-bridge.service';

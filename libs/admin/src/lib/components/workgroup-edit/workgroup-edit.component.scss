@@ -1,4 +1,59 @@
+@use "../../styles/variables";
+
+.card {
+  margin: 1rem;
+}
+
+.workgroup-edit {
+  padding: 1.5rem;
+}
+
 .form {
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.users-table {
+  .users-table__header {
+    background-color: variables.$grey-03;
+  }
+
+  .mat-column-id {
+    width: auto !important;
+  }
+
+  .mat-column-role {
+    width: 10% !important;
+  }
+
+  .mat-column-actions {
+    width: 5% !important;
+  }
+
+  .mat-mdc-header-row .mat-mdc-cell {
+    background-color: variables.$grey-01;
+  }
+
+  .mat-mdc-row:hover .mat-mdc-cell {
+    background-color: variables.$grey-01;
+  }
+
+  .users-table__title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+
+  .users-table__form-field {
+    padding: 0.5rem 0;
+  }
+
+  .users-table__save {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    margin-top: 1rem;
+  }
 }

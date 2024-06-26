@@ -1,21 +1,18 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { ApiError, httpErrorResponseError } from '@asset-sg/client-shared';
-import { decodeError, OE, ORD } from '@asset-sg/core';
-import { Users } from '@asset-sg/shared';
-import * as RD from '@devexperts/remote-data-ts';
 import { Role } from '@prisma/client';
-import * as E from 'fp-ts/Either';
-import { flow } from 'fp-ts/function';
-import { map, Observable, startWith, tap } from 'rxjs';
+import { Observable } from 'rxjs';
 
+//TODO: Move types to /shared2 lib after merging
 export interface Workgroup {
   id: number;
   name: string;
   assets: { assetId: number }[];
-  users: { userId: number; role: Role }[];
+  users: UserOnWorkgroup[];
   disabled_at: Date | null;
 }
+
+export type WorkgroupData = Omit<Workgroup, 'id'>;
 
 export interface WorkgroupOnUser {
   workgroupId: number;
@@ -25,12 +22,22 @@ export interface WorkgroupOnUser {
   };
 }
 
+export type UserId = string;
+
+export interface UserOnWorkgroup {
+  role: Role;
+  user: {
+    email: string;
+    id: UserId;
+  };
+}
+
 export interface User {
   id: string;
   name: string;
   email: string;
   lang: string;
-  role: 'Viewer' | 'Editor' | 'MasterEditor';
+  role: Role;
   isAdmin: boolean;
   workgroups: WorkgroupOnUser[];
 }
@@ -41,53 +48,36 @@ export interface User {
 export class AdminService {
   private _httpClient = inject(HttpClient);
 
-  public getUsers(): ORD.ObservableRemoteData<ApiError, Users> {
-    return this._httpClient.get('/api/users').pipe(
-      map(flow(Users.decode, E.mapLeft(decodeError))),
-      // TODO need to test instance of HttpErrorResponse here
-      OE.catchErrorW(httpErrorResponseError),
-      map(RD.fromEither),
-      startWith(RD.pending)
-    );
+  public getUsers(): Observable<User[]> {
+    return this._httpClient.get<User[]>('/api/admin/user');
   }
 
-  public getUsersNew(): Observable<User[]> {
-    return this._httpClient.get('/api/users').pipe(map((res) => res as User[]));
+  public getUser(id: string): Observable<User> {
+    return this._httpClient.get<User>(`/api/users/${id}`);
   }
 
   public getWorkgroups(): Observable<Workgroup[]> {
-    return this._httpClient.get('/api/workgroups').pipe(map((res) => res as Workgroup[]));
+    return this._httpClient.get<Workgroup[]>('/api/workgroups');
   }
 
-  public createWorkgroup(workgroup: Omit<Workgroup, 'id'>): Observable<Workgroup> {
-    return this._httpClient.post(`/api/workgroups`, workgroup).pipe(map((res) => res as Workgroup));
+  public getWorkgroup(id: string): Observable<Workgroup> {
+    return this._httpClient.get<Workgroup>(`/api/workgroups/${id}`);
   }
 
-  public updateWorkgroups(id: number, workgroup: Omit<Workgroup, 'id'>): Observable<Workgroup> {
-    return this._httpClient.put(`/api/workgroups/${id}`, workgroup).pipe(map((res) => res as Workgroup));
+  public createWorkgroup(workgroup: WorkgroupData): Observable<Workgroup> {
+    return this._httpClient.post<Workgroup>(`/api/workgroups`, workgroup);
+  }
+
+  public updateWorkgroups(id: number, workgroup: WorkgroupData): Observable<Workgroup> {
+    return this._httpClient.put<Workgroup>(`/api/workgroups/${id}`, workgroup);
   }
 
   public updateUser(user: User): Observable<User> {
-    return this._httpClient
-      .put(`/api/users/${user.id}`, {
-        role: user.role,
-        lang: user.lang,
-        workgroups: user.workgroups,
-        isAdmin: user.isAdmin,
-      })
-      .pipe(map((res) => res as User));
-  }
-
-  public deleteUser(id: string): ORD.ObservableRemoteData<ApiError, void> {
-    console.log('888', id);
-    return this._httpClient.delete(`/api/users/${id}`).pipe(
-      tap((a) => console.log('deleteUser', a)),
-      map(() => E.right(undefined)),
-      // TODO need to test instance of HttpErrorResponse here
-      OE.catchErrorW(httpErrorResponseError),
-      map(RD.fromEither),
-      startWith(RD.pending),
-      tap((a) => console.log('deleteUser', a))
-    );
+    return this._httpClient.put<User>(`/api/users/${user.id}`, {
+      role: user.role,
+      lang: user.lang,
+      workgroups: user.workgroups,
+      isAdmin: user.isAdmin,
+    });
   }
 }

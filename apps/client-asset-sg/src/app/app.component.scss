@@ -29,6 +29,7 @@ asset-sg-menu-bar {
 .router-outlet {
   grid-area: router-outlet;
   display: grid;
+
   router-outlet {
     display: none;
   }

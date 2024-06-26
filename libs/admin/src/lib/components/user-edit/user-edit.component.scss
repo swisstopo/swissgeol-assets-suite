@@ -1,0 +1,58 @@
+@use "../../styles/variables";
+
+.card {
+  margin: 1rem;
+}
+
+.user-edit {
+  padding: 1.5rem;
+  height: 100%;
+  overflow-y: scroll;
+}
+
+.user-data {
+  display: flex;
+  gap: 0.5rem;
+
+  .user-data__group {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+  }
+}
+
+.workgroups {
+  .workgroups__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .mat-column-name {
+    width: auto !important;
+  }
+
+  .mat-column-role {
+    width: 10% !important;
+  }
+
+  .mat-column-actions {
+    width: 5% !important;
+  }
+
+  .workgroups__table__form-field {
+    padding: 0.5rem 0;
+  }
+
+  .workgroups__table__header {
+    background-color: variables.$grey-03;
+  }
+
+  .mat-mdc-header-row .mat-mdc-cell {
+    background-color: variables.$grey-01;
+  }
+
+  .mat-mdc-row:hover .mat-mdc-cell {
+    background-color: variables.$grey-01;
+  }
+}

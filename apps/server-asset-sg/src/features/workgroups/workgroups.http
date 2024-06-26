@@ -19,7 +19,7 @@ Authorization: Impersonate {{user}}
 Content-Type: application/json
 
 {
-  "name": "Testing2",
+  "name": "WORKGROUP",
   "disabled_at": null,
   "assets": [
     {
