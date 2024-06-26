@@ -1,32 +1,59 @@
 @use "../../styles/variables";
 
+::ng-deep .navigation .navigation__link {
+  .mdc-tab__text-label {
+    color: variables.$cyan-09;
+  }
+
+  .mdc-tab__text-label:hover {
+    color: variables.$cyan-09;
+  }
+}
+
 :host {
   background-color: variables.$grey-03;
   position: relative;
+  height: calc(100vh - 88px);
+  width: 100%;
+  padding: 1rem;
 }
 
-[asset-sg-primary].create-new-user-button {
-  margin-top: 1rem;
-  margin-bottom: 1rem;
-}
-
-.drawer-panel-content {
-  padding: 0rem 1rem 1rem 0;
-  position: relative;
-}
-
-mat-progress-bar {
+.loading-bar {
   position: absolute;
-  top: 1px;
-  width: calc(100% - 1rem);
+  inset: 0;
+  z-index: 100;
+  background-color: variables.$grey-03;
 }
 
-.user-list {
-  height: calc(100% - 4.5rem);
-  overflow-y: scroll;
+.admin-page {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  height: 100%;
 }
 
-asset-sg-user-collapsed,
-asset-sg-user-expanded {
-  margin-bottom: 1rem;
+.content {
+  flex-grow: 1;
+  overflow-y: auto;
+}
+
+.navigation {
+  display: flex;
+  gap: 1rem;
+  padding: 0 1rem;
+  font-size: 16px;
+
+  .navigation__link {
+    color: variables.$cyan-09;
+    text-decoration: underline;
+
+    &--active {
+      text-decoration: none;
+      color: black;
+    }
+  }
+
+  .pointer {
+    cursor: pointer;
+  }
 }

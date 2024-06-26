@@ -28,9 +28,11 @@ export type SimpleWorkgroup = Pick<Workgroup, 'id' | 'name'> & {
 };
 
 export interface UserOnWorkgroup {
-  // TODO change this to `id`
-  userId: UserId;
   role: Role;
+  user: {
+    id: UserId;
+    email: string;
+  };
 }
 
 export class WorkgroupDataBoundary implements WorkgroupData {

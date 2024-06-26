@@ -45,7 +45,7 @@ export class WorkgroupRepo implements Repo<Workgroup, WorkgroupId, WorkgroupData
           ? {
               createMany: {
                 data: data.users.map((user) => ({
-                  userId: user.userId,
+                  userId: user.user.id,
                   role: user.role,
                 })),
                 skipDuplicates: true,
@@ -70,11 +70,11 @@ export class WorkgroupRepo implements Repo<Workgroup, WorkgroupId, WorkgroupData
           users: data.users
             ? {
                 deleteMany: {
-                  userId: { notIn: data.users.map((user) => user.userId) },
+                  userId: {},
                 },
                 createMany: {
                   data: data.users.map((user) => ({
-                    userId: user.userId,
+                    userId: user.user.id,
                     role: user.role,
                   })),
                   skipDuplicates: true,
@@ -108,8 +108,13 @@ export const workGroupSelection = satisfy<Prisma.WorkgroupSelect>()({
   disabled_at: true,
   users: {
     select: {
-      userId: true,
       role: true,
+      user: {
+        select: {
+          email: true,
+          id: true,
+        },
+      },
     },
   },
   assets: {

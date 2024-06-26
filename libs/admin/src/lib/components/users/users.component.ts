@@ -1,7 +1,13 @@
 import { Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { MatCheckboxChange } from '@angular/material/checkbox';
+import { Store } from '@ngrx/store';
 import { Subscription } from 'rxjs';
-import { AdminService, User, Workgroup } from '../../services/admin.service';
+import { User, Workgroup, WorkgroupOnUser } from '../../services/admin.service';
+import * as actions from '../../state/admin.actions';
+import { AppStateWithAdmin } from '../../state/admin.reducer';
+import { selectUsers, selectWorkgroups } from '../../state/admin.selector';
+
+const WORKGROUP_CUTOFF_LENGTH = 3;
 
 @Component({
   selector: 'asset-sg-users',
@@ -11,12 +17,14 @@ import { AdminService, User, Workgroup } from '../../services/admin.service';
 export class UsersComponent implements OnInit, OnDestroy {
   public users: User[] = [];
   public workgroups: Workgroup[] = [];
-  public selectedUser?: User;
-  public mode: 'edit' | 'create' | undefined = undefined;
-  protected readonly COLUMNS = ['email', 'workgroups', 'isAdmin', 'languages', 'actions'];
+  public readonly workgroupCutoffLength = WORKGROUP_CUTOFF_LENGTH;
 
-  private _adminService = inject(AdminService);
-  private subscriptions: Subscription = new Subscription();
+  protected readonly COLUMNS = ['email', 'isAdmin', 'languages', 'workgroups', 'actions'];
+
+  private readonly store = inject(Store<AppStateWithAdmin>);
+  private readonly users$ = this.store.select(selectUsers);
+  private readonly workgroups$ = this.store.select(selectWorkgroups);
+  private readonly subscriptions: Subscription = new Subscription();
 
   public ngOnInit(): void {
     this.initSubscriptions();
@@ -26,26 +34,24 @@ export class UsersComponent implements OnInit, OnDestroy {
     this.subscriptions.unsubscribe();
   }
 
-  public update(user: User, event: MatCheckboxChange) {
-    this._adminService.updateUser({ ...user, isAdmin: event.checked }).subscribe();
+  public updateIsAdminStatus(user: User, event: MatCheckboxChange) {
+    this.store.dispatch(actions.updateUser({ user: { ...user, isAdmin: event.checked } }));
   }
 
-  public edit(user: User): void {
-    this.selectedUser = user;
+  public formatWorkgroupsTooltip(workgroups: WorkgroupOnUser[]): string {
+    return workgroups.map((wg) => `${wg.workgroup.name}.${wg.role}`).join(', \n');
   }
 
   private initSubscriptions(): void {
     this.subscriptions.add(
-      this._adminService.getUsersNew().subscribe((users) => {
+      this.users$.subscribe((users) => {
         this.users = users;
       })
     );
     this.subscriptions.add(
-      this._adminService.getWorkgroups().subscribe((workgroups) => {
+      this.workgroups$.subscribe((workgroups) => {
         this.workgroups = workgroups;
       })
     );
   }
-
-  protected readonly console = console;
 }

@@ -1,13 +1,19 @@
-<ng-template #templateDrawerPortalContent>
-  <asset-sg-drawer>
-    <asset-sg-drawer-panel widthPercentageOfViewPanel="0.4" [display]="true">
-      <!--      <h2>Workgroups</h2>-->
-      <div>
-        <h2>Workgroups</h2>
-        <asset-sg-workgroups></asset-sg-workgroups>
-        <h2>Users</h2>
-        <asset-sg-users></asset-sg-users>
-      </div>
-    </asset-sg-drawer-panel>
-  </asset-sg-drawer>
-</ng-template>
+<mat-progress-bar *ngIf="isLoading$ | async" mode="indeterminate" class="loading-bar" />
+<div class="admin-page">
+  @if (!isDetailPage) {
+  <div class="navigation">
+    <a routerLink="users" class="navigation__link" routerLinkActive="navigation__link--active" translate>admin.users</a>
+    <span> | </span>
+    <a routerLink="workgroups" class="navigation__link" routerLinkActive="navigation__link--active" translate
+      >admin.workgroups</a
+    >
+  </div>
+  } @else {
+  <div class="navigation">
+    <a (click)="goBack()" class="navigation__link pointer" translate>admin.back</a>
+  </div>
+  }
+  <div class="content">
+    <router-outlet></router-outlet>
+  </div>
+</div>
