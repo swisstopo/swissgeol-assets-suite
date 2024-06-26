@@ -51,7 +51,6 @@ export const enAppTranslations: AppTranslations = {
     originalTitle: 'Original title',
     kind: 'Kind',
     topic: 'Topic',
-    language: 'Language',
     format: 'Format',
     createdDate: 'Date created',
     lastProcessedDate: 'Last update',
@@ -74,6 +73,10 @@ export const enAppTranslations: AppTranslations = {
       LineString: 'Line',
       Polygon: 'Polygon',
       None: 'None',
+    },
+    language: 'Language',
+    languageItem: {
+      None: 'none',
     },
     resetSearch: 'Reset search',
     file: 'File',

@@ -51,7 +51,6 @@ export const itAppTranslations: AppTranslations = {
     originalTitle: 'IT Originaltitel',
     kind: 'IT Art',
     topic: 'IT Thema',
-    language: 'IT Sprache',
     format: 'IT Format',
     createdDate: 'IT Erstellungsdatum',
     lastProcessedDate: 'IT Letztes Update',
@@ -74,6 +73,10 @@ export const itAppTranslations: AppTranslations = {
       LineString: 'IT Linie',
       Polygon: 'IT Polygon',
       None: 'IT Keine',
+    },
+    language: 'IT Sprache',
+    languageItem: {
+      None: 'IT keine',
     },
     resetSearch: 'IT Suche zurücksetzen',
     file: 'IT Datei',

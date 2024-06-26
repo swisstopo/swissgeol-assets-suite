@@ -36,7 +36,7 @@ const initialState: AssetSearchState = {
     manCatLabelItemCodes: undefined,
     assetKindItemCodes: undefined,
     usageCodes: undefined,
-    geomCodes: undefined,
+    geometryCodes: undefined,
     languageItemCodes: undefined,
   },
   results: {

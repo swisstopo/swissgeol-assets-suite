@@ -1,3 +1,4 @@
+import { CdkMonitorFocus } from '@angular/cdk/a11y';
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
@@ -14,12 +15,13 @@ import {
   AnchorComponent,
   AnimateNumberComponent,
   ButtonComponent,
-  DatePipe,
   DatepickerToggleIconComponent,
+  DatePipe,
   DragHandleComponent,
   DrawerComponent,
   DrawerPanelComponent,
   IsEditorPipe,
+  SmartTranslatePipe,
   ValueItemDescriptionPipe,
   ValueItemNamePipe,
   ZoomControlsComponent,
@@ -27,7 +29,7 @@ import {
 import { SvgIconComponent } from '@ngneat/svg-icon';
 import { EffectsModule } from '@ngrx/effects';
 import { StoreModule } from '@ngrx/store';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslatePipe } from '@ngx-translate/core';
 import { ForModule } from '@rx-angular/template/for';
 import { LetModule } from '@rx-angular/template/let';
 import { PushModule } from '@rx-angular/template/push';
@@ -35,6 +37,7 @@ import { de } from 'date-fns/locale/de';
 
 import { AssetPickerComponent } from './components/asset-picker';
 import { AssetSearchDetailComponent } from './components/asset-search-detail';
+import { AssetSearchFilterListComponent } from './components/asset-search-filter-list/asset-search-filter-list.component';
 import { AssetSearchRefineComponent } from './components/asset-search-refine';
 import { AssetSearchResultsComponent } from './components/asset-search-results';
 import { AssetSearchResultComponent } from './components/asset-search-results/asset-search-result/asset-search-result.component';
@@ -49,6 +52,7 @@ import { assetSearchReducer } from './state/asset-search/asset-search.reducer';
     MapComponent,
     AssetSearchDetailComponent,
     AssetSearchRefineComponent,
+    AssetSearchFilterListComponent,
     AssetSearchResultsComponent,
     AssetPickerComponent,
     AssetSearchResultComponent,
@@ -93,8 +97,11 @@ import { assetSearchReducer } from './state/asset-search/asset-search.reducer';
     DrawerComponent,
     DrawerPanelComponent,
     DatepickerToggleIconComponent,
+    SmartTranslatePipe,
+    CdkMonitorFocus,
   ],
   providers: [
+    TranslatePipe,
     { provide: MAT_DATE_LOCALE, useValue: de },
     {
       provide: MAT_DATE_FORMATS,

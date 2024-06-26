@@ -41,7 +41,7 @@ export class AssetSearchEffects {
   // noinspection JSUnusedGlobalSymbols
   readSearchQueryParams$ = createEffect(() =>
     this.actions$.pipe(
-      ofType(actions.readParams),
+      ofType(actions.initializeSearch),
       concatLatestFrom(() => this.route.queryParams),
       map(([_, params]) => {
         const query: AssetSearchQuery = {};
@@ -55,7 +55,7 @@ export class AssetSearchEffects {
         query.manCatLabelItemCodes = readArrayParam(params, QUERY_PARAM_MAPPING.manCatLabelItemCodes);
         query.assetKindItemCodes = readArrayParam(params, QUERY_PARAM_MAPPING.assetKindItemCodes);
         query.usageCodes = readArrayParam(params, QUERY_PARAM_MAPPING.usageCodes);
-        query.geomCodes = readArrayParam(params, QUERY_PARAM_MAPPING.geomCodes);
+        query.geometryCodes = readArrayParam(params, QUERY_PARAM_MAPPING.geometryCodes);
         query.languageItemCodes = readArrayParam(params, QUERY_PARAM_MAPPING.languageItemCodes);
         return { query, assetId };
       }),
@@ -64,9 +64,16 @@ export class AssetSearchEffects {
     )
   );
 
+  getStatsOnInitialize$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(actions.initializeSearch),
+      map(() => actions.getStats())
+    )
+  );
+
   readAssetIdQueryParam$ = createEffect(() =>
     this.actions$.pipe(
-      ofType(actions.readParams),
+      ofType(actions.initializeSearch),
       concatLatestFrom(() => this.route.queryParams),
       map(([_, params]) => readNumberParam(params, QUERY_PARAM_MAPPING.assetId)),
       filter((assetId): assetId is number => assetId !== undefined),
@@ -95,7 +102,7 @@ export class AssetSearchEffects {
           updateArrayParam(params, QUERY_PARAM_MAPPING.manCatLabelItemCodes, query.manCatLabelItemCodes);
           updateArrayParam(params, QUERY_PARAM_MAPPING.assetKindItemCodes, query.assetKindItemCodes);
           updateArrayParam(params, QUERY_PARAM_MAPPING.usageCodes, query.usageCodes);
-          updateArrayParam(params, QUERY_PARAM_MAPPING.geomCodes, query.geomCodes);
+          updateArrayParam(params, QUERY_PARAM_MAPPING.geometryCodes, query.geometryCodes);
           updateArrayParam(params, QUERY_PARAM_MAPPING.languageItemCodes, query.languageItemCodes);
           this.router.navigate([], {
             queryParams: params,
@@ -207,7 +214,7 @@ const QUERY_PARAM_MAPPING = {
   manCatLabelItemCodes: 'search[manCat]',
   assetKindItemCodes: 'search[kind]',
   usageCodes: 'search[usage]',
-  geomCodes: 'search[geom]',
+  geometryCodes: 'search[geometry]',
   languageItemCodes: 'search[lang]',
   assetId: 'assetId',
 };

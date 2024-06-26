@@ -99,7 +99,7 @@ export class AssetViewerPageComponent implements OnDestroy {
   public highlightAssetStudies$ = new Subject<O.Option<number>>();
 
   public ngAfterViewInit() {
-    this._store.dispatch(actions.readParams());
+    this._store.dispatch(actions.initializeSearch());
     this._appPortalService.setAppBarPortalContent(null);
   }
 

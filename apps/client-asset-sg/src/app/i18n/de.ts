@@ -27,7 +27,7 @@ export const deAppTranslations = {
     userManagement: 'Benutzer Verwaltung',
   },
   map: {
-    zoomIn: 'Hineinoomen',
+    zoomIn: 'Hineinzoomen',
     zoomOut: 'Herauszoomen',
     zoomToOrigin: 'Zur Ursprungsposition zoomen',
     drawingModeOn: 'Der Zeichenmodus ist ausgeschaltet. Klicken Sie, um den Zeichenmodus einzuschalten',
@@ -50,7 +50,6 @@ export const deAppTranslations = {
     originalTitle: 'Originaltitel',
     kind: 'Art',
     topic: 'Thema',
-    language: 'Sprache',
     format: 'Format',
     createdDate: 'Erstellungsdatum',
     lastProcessedDate: 'Letztes Update',
@@ -73,6 +72,10 @@ export const deAppTranslations = {
       LineString: 'Linie',
       Polygon: 'Polygon',
       None: 'Keine',
+    },
+    language: 'Sprache',
+    languageItem: {
+      None: 'keine',
     },
     resetSearch: 'Suche zurücksetzen',
     file: 'Datei',
