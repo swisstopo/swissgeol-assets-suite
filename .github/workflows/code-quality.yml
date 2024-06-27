@@ -197,11 +197,11 @@ jobs:
               --parallel \
               --key ${{ secrets.CYPRESS_RECORD_KEY }} \
               --ci-build-id ${{ github.repository }}-${{ github.head_ref || github.ref_name }}-${{ github.sha }}
-              --config-file e2e/cypress.config.ts
           build: npm run build
           start: npm start
           wait-on: "http://localhost:4200"
           wait-on-timeout: 120
+          working-directory: ./e2e
         env:
           VITE_APP_VERSION: 0.0.99+dev
           TZ: Europe/Zurich
