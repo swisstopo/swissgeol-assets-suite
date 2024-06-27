@@ -98,6 +98,11 @@ export const assetInfoSelection = satisfy<Prisma.AssetSelect>()({
   createDate: true,
   receiptDate: true,
   lastProcessedDate: true,
+  workgroup: {
+    select: {
+      id: true,
+    },
+  },
 });
 
 export const assetSelection = satisfy<Prisma.AssetSelect>()({
@@ -194,6 +199,7 @@ export const parseAssetFromPrisma = (data: SelectedAsset): Asset => ({
       geom: it.geomText,
     } as AssetStudy;
   }),
+  workgroupId: data.workgroup?.id ?? null,
 });
 
 const parseLinkedAsset = (data: SelectedLinkedAsset): LinkedAsset => ({
@@ -211,7 +217,7 @@ const parseStudyId = (studyId: string): { type: StudyType; id: AssetStudyId } =>
   if (!studyId.startsWith('study_')) {
     throw new Error('expected studyId to start with `study_`');
   }
-  const parts = studyId.substring('study_'.length).split('_', 1);
+  const parts = studyId.substring('study_'.length).split('_', 2);
   if (parts.length !== 2) {
     throw new Error(`invalid studyId '${studyId}'`);
   }

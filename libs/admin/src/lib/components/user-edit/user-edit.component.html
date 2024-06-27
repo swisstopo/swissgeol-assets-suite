@@ -1,0 +1,44 @@
+<form [formGroup]="formGroup">
+  <div class="edit-area">
+    <div *ngIf="user" class="header">
+      <div class="email">
+        {{ user.email }}
+      </div>
+    </div>
+    <div class="label-heading label-heading--before-form-field">Sprache</div>
+    <mat-form-field class="lang-form-field">
+      <mat-label>Sprache</mat-label>
+      <mat-select formControlName="lang">
+        <mat-option value="de">DE</mat-option>
+        <mat-option value="en">EN</mat-option>
+        <mat-option value="fr">FR</mat-option>
+        <mat-option value="it">IT</mat-option>
+        <mat-option value="rm">RM</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-checkbox formControlName="isAdmin" color="primary">Admin</mat-checkbox>
+    <div>Workgroups</div>
+
+    <mat-form-field>
+      <mat-select formControlName="asViewer" placeholder="Viewer" multiple>
+        <mat-option *ngFor="let workgroup of workgroups" [value]="workgroup.id">{{ workgroup.name }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field>
+      <mat-select formControlName="asEditor" placeholder="Editor" multiple>
+        <mat-option *ngFor="let workgroup of workgroups" [value]="workgroup.id">{{ workgroup.name }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field>
+      <mat-select formControlName="asMasterEditor" placeholder="Master Editor" multiple>
+        <mat-option *ngFor="let workgroup of workgroups" [value]="workgroup.id">{{ workgroup.name }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <div class="button-area">
+      <button asset-sg-primary #tvSubmit [viewChildMarker]="tvSubmit" translate>ok</button>
+      <button asset-sg-secondary #tvCancel [viewChildMarker]="tvCancel" translate>cancel</button>
+    </div>
+  </div>
+</form>

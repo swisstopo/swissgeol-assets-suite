@@ -284,6 +284,7 @@ export class AssetEditorTabPageComponent {
         newStatusWorkItemCode: O.fromNullable(this._form.getRawValue().administration.newStatusWorkItemCode),
         assetMainId: O.fromNullable(this._form.getRawValue().references.assetMain?.assetId),
         siblingAssetIds: this._form.getRawValue().references.siblingAssets.map((asset) => asset.assetId),
+        workgroupId: 1,
       };
       this._showProgressBar$.next(true);
       if (this._form.getRawValue().general.id === 0) {

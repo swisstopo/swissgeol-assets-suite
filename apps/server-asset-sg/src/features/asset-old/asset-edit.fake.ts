@@ -64,6 +64,7 @@ export const fakeAssetPatch = (): PatchAsset => ({
   titleOriginal: faker.music.songName(),
   titlePublic: faker.commerce.productName(),
   typeNatRels: [],
+  workgroupId: 1,
 });
 
 export const fakeAssetEditDetail = (): AssetEditDetail => ({
@@ -97,4 +98,5 @@ export const fakeAssetEditDetail = (): AssetEditDetail => ({
   studies: [],
   subordinateAssets: [],
   typeNatRels: [],
+  workgroupId: 1,
 });

@@ -1,11 +1,11 @@
 import { PrismaClient } from '@prisma/client';
-import { assetKindItems } from './data/asset-kind-item';
-import { statusAssetUseItems } from './data/status-asset-use-item';
 import { assetFormatItems } from './data/asset-format-item';
-import { languageItems } from './data/language-items';
-import { statusWorkItems } from './data/status-work-item';
-import { manCatLabelItems } from './data/man-cat-label-item';
+import { assetKindItems } from './data/asset-kind-item';
 import { contactKindItems } from './data/contact-kind-item';
+import { languageItems } from './data/language-items';
+import { manCatLabelItems } from './data/man-cat-label-item';
+import { statusAssetUseItems } from './data/status-asset-use-item';
+import { statusWorkItems } from './data/status-work-item';
 
 const clearDB = async (prisma: PrismaClient, dbName: string): Promise<void> => {
   const tables = await prisma.$queryRawUnsafe(`
@@ -26,7 +26,6 @@ const clearDB = async (prisma: PrismaClient, dbName: string): Promise<void> => {
 };
 
 export const setupDB = async (prisma: PrismaClient): Promise<void> => {
-  await clearDB(prisma, 'auth');
   await clearDB(prisma, 'public');
 
   await prisma.statusAssetUseItem.createMany({ data: statusAssetUseItems, skipDuplicates: true });
@@ -36,6 +35,7 @@ export const setupDB = async (prisma: PrismaClient): Promise<void> => {
   await prisma.statusWorkItem.createMany({ data: statusWorkItems, skipDuplicates: true });
   await prisma.manCatLabelItem.createMany({ data: manCatLabelItems, skipDuplicates: true });
   await prisma.contactKindItem.createMany({ data: contactKindItems, skipDuplicates: true });
+  await setupDefaultWorkgroup(prisma);
 };
 
 export const clearPrismaAssets = async (prisma: PrismaClient): Promise<void> => {
@@ -49,4 +49,17 @@ export const clearPrismaAssets = async (prisma: PrismaClient): Promise<void> => 
   await prisma.asset.deleteMany();
   await prisma.internalUse.deleteMany();
   await prisma.publicUse.deleteMany();
+  await prisma.workgroupsOnUsers.deleteMany();
+  await prisma.workgroup.deleteMany({ where: { id: { not: 1 } } });
+};
+
+export const setupDefaultWorkgroup = async (prisma: PrismaClient): Promise<void> => {
+  await prisma.workgroup.create({
+    data: {
+      id: 1,
+      created_at: new Date(),
+      disabled_at: new Date(),
+      name: 'Default',
+    },
+  });
 };

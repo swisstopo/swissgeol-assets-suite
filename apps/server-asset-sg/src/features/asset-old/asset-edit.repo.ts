@@ -1,5 +1,5 @@
 import { decodeError, isNotNull } from '@asset-sg/core';
-import { AssetUsage, DateIdFromDate, PatchAsset, User, dateFromDateId } from '@asset-sg/shared';
+import { AssetUsage, dateFromDateId, DateIdFromDate, PatchAsset, User } from '@asset-sg/shared';
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import * as E from 'fp-ts/Either';
@@ -49,7 +49,7 @@ export class AssetEditRepo implements Repo<AssetEditDetail, number, AssetData> {
 
   async create(data: AssetData): Promise<AssetEditDetail> {
     const asset = await this.prismaService.asset.create({
-      select: selectPrismaAsset,
+      select: { assetId: true },
       data: {
         titlePublic: data.patch.titlePublic,
         titleOriginal: data.patch.titleOriginal,
@@ -98,6 +98,7 @@ export class AssetEditRepo implements Repo<AssetEditDetail, number, AssetData> {
             statusWorkItemCode: 'initiateAsset',
           },
         },
+        workgroup: { connect: { id: data.patch.workgroupId } },
       },
     });
     return (await this.find(asset.assetId)) as AssetEditDetail;
@@ -354,6 +355,7 @@ const selectPrismaAsset = selectOnAsset({
   siblingYAssets: { select: { assetX: { select: { assetId: true, titlePublic: true } } } },
   statusWorks: { select: { statusWorkItemCode: true, statusWorkDate: true } },
   assetFiles: { select: { file: true } },
+  workgroupId: true,
 });
 
 /**
