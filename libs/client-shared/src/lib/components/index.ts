@@ -8,3 +8,4 @@ export * from './drawer';
 export * from './ol-zoom-controls';
 export * from './value-item';
 export * from './view-child-marker';
+export * from './smart-translate.pipe';

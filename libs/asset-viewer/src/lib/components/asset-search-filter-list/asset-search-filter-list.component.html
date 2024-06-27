@@ -1,0 +1,7 @@
+<ul>
+  <li *rxFor="let filter of filters; trackBy: 'value'">
+    <button [disabled]="filter.count === 0" [class.active]="filter.isActive" (click)="toggle(filter)">
+      {{ filter.name | smartTranslate }} ({{ filter.count }})
+    </button>
+  </li>
+</ul>

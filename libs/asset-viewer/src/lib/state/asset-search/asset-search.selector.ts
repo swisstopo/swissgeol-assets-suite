@@ -1,12 +1,14 @@
 import { formatNumber } from '@angular/common';
-import { fromAppShared } from '@asset-sg/client-shared';
+import { fromAppShared, TranslatedValue, Translation } from '@asset-sg/client-shared';
 import {
+  AssetContactRole,
   AssetEditDetail,
   Contact,
+  DateIdBrand,
   DateRange,
   GeometryCode,
-  LV95,
   LineString,
+  LV95,
   Point,
   ReferenceData,
   Study,
@@ -14,8 +16,10 @@ import {
   UsageCode,
   ValueCount,
   ValueItem,
-  ordStatusWorkByDate,
+  AssetSearchQuery,
+  AssetSearchStats,
   usageCodes,
+  ordStatusWorkByDate,
 } from '@asset-sg/shared';
 import * as RD from '@devexperts/remote-data-ts';
 import { createSelector } from '@ngrx/store';
@@ -25,17 +29,17 @@ import * as O from 'fp-ts/Option';
 
 import { AssetDetail } from '../../models';
 
-import { AppStateWithAssetSearch, LoadingState } from './asset-search.reducer';
+import { AppStateWithAssetSearch } from './asset-search.reducer';
 
 const assetSearchFeature = (state: AppStateWithAssetSearch) => state.assetSearch;
-
-export const selectIsMapInitialised = createSelector(assetSearchFeature, (state) => state.isMapInitialised);
-
-export const selectIsRefineAndResultsOpen = createSelector(assetSearchFeature, (state) => state.isRefineAndResultsOpen);
 
 export const selectAssetSearchState = createSelector(assetSearchFeature, (state) => state);
 
 export const selectSearchLoadingState = createSelector(assetSearchFeature, (state) => state.loadingState);
+
+export const selectIsFiltersOpen = createSelector(assetSearchFeature, (state) => state.isFiltersOpen);
+
+export const selectIsResultsOpen = createSelector(assetSearchFeature, (state) => state.isResultsOpen);
 
 export const selectAssetDetailLoadingState = createSelector(
   assetSearchFeature,
@@ -78,71 +82,39 @@ export const selectCurrentAssetDetailVM = createSelector(
   }
 );
 
-export const selectDrawerState = createSelector(
-  selectIsMapInitialised,
-  selectIsRefineAndResultsOpen,
-  fromAppShared.selectIsPanelOpen,
-  selectCurrentAssetDetail,
-  selectSearchLoadingState,
-  (isMapInitialised, isRefineAndResultsOpen, isPanelOpen, currentAssetDetail, loadingState): DrawerState =>
-    !isMapInitialised
-      ? {
-          showRefineOrStartSearch: 'neither',
-          showResults: false,
-          showDetails: false,
-        }
-      : {
-          showRefineOrStartSearch: !isPanelOpen || !isRefineAndResultsOpen ? 'neither' : 'show-refine',
-          showResults: isPanelOpen && isRefineAndResultsOpen && loadingState !== LoadingState.Initial,
-          showDetails: !!currentAssetDetail,
-        }
-);
-
-export const selectContact = (
-  contacts:
-    | {
-        role: string;
-        contactId: number;
-      }[]
-    | undefined
-) =>
-  createSelector(fromAppShared.selectRDReferenceData, (referenceData): FullContact[] | null => {
-    if (RD.isSuccess(referenceData) && contacts) {
-      return contacts.map((contact) => {
-        return {
+export const selectAssetEditDetailVM = createSelector(
+  fromAppShared.selectRDReferenceData,
+  selectAssetSearchResultData,
+  (referenceData, assets): AssetEditDetailVM[] => {
+    if (!RD.isSuccess(referenceData) || !assets) {
+      return [];
+    }
+    return assets.map((asset) => {
+      const manCatLabelItems: ValueItem[] = asset.manCatLabelRefs.map(
+        (manCatLabelItemCode) => referenceData.value.manCatLabelItems[manCatLabelItemCode]
+      );
+      const assetFormatItem: ValueItem = referenceData.value.assetFormatItems[asset.assetFormatItemCode];
+      const assetKindItem: ValueItem = referenceData.value.assetKindItems[asset.assetKindItemCode];
+      const contacts = asset.assetContacts.reduce((contacts, contact) => {
+        contacts[contact.role] ??= [];
+        contacts[contact.role].push({
           ...referenceData.value.contacts[contact.contactId],
           role: contact.role,
-        };
-      });
-    }
-    return null;
-  });
-
-export const selectAssetKindItem = (assetKindItemCode?: string) =>
-  createSelector(fromAppShared.selectRDReferenceData, (referenceData): ValueItem | null => {
-    if (RD.isSuccess(referenceData) && assetKindItemCode) {
-      return referenceData.value.assetKindItems[assetKindItemCode];
-    }
-    return null;
-  });
-
-export const selectAssetFormatItem = (assetFormatItemCode?: string) =>
-  createSelector(fromAppShared.selectRDReferenceData, (referenceData): ValueItem | null => {
-    if (RD.isSuccess(referenceData) && assetFormatItemCode) {
-      return referenceData.value.assetFormatItems[assetFormatItemCode];
-    }
-    return null;
-  });
-
-export const selectManCatLabelItem = (manCatLabelRefs?: string[]) =>
-  createSelector(fromAppShared.selectRDReferenceData, (referenceData): ValueItem[] | null => {
-    if (RD.isSuccess(referenceData) && manCatLabelRefs) {
-      return manCatLabelRefs.map((manCatLabelRef) => {
-        return referenceData.value.manCatLabelItems[manCatLabelRef];
-      });
-    }
-    return null;
-  });
+        });
+        return contacts;
+      }, {} as AssetEditDetailVM['contacts']);
+      return {
+        assetId: asset.assetId,
+        titlePublic: asset.titlePublic,
+        createDate: asset.createDate,
+        assetKindItem,
+        assetFormatItem,
+        contacts,
+        manCatLabelItems,
+      };
+    });
+  }
+);
 
 export const selectAvailableAuthors = createSelector(
   fromAppShared.selectRDReferenceData,
@@ -163,102 +135,104 @@ export const selectAvailableAuthors = createSelector(
 
 export const selectCreateDate = createSelector(selectAssetsSearchStats, (stats): DateRange | null => stats.createDate);
 
-export const selectUsageCodeData = createSelector(
-  selectAssetsSearchStats,
-  selectAssetSearchQuery,
-  (stats, query): AvailableValueCount<UsageCode>[] => {
-    return usageCodes.map((usageCode) => {
-      const count = stats.usageCodes.find((item) => item.value === usageCode)?.count ?? 0;
-      return {
-        value: usageCode,
-        count,
-        isAvailable: count > 0,
-        isActive: count > 0 && (query.usageCodes?.includes(usageCode) ?? true),
-      };
-    });
-  }
-);
+const makeFilters = <T extends string>(
+  configs: Array<FilterConfig<T>>,
+  counts: Array<ValueCount<T>>,
+  activeValues: T[] | undefined,
+  queryKey: keyof AssetSearchQuery
+): Array<Filter<T>> => {
+  return configs.map((filter) => makeFilter(filter, activeValues, counts, queryKey));
+};
 
-export const selectAvailableAssetKindItems = createSelector(
-  fromAppShared.selectRDReferenceData,
-  selectAssetsSearchStats,
-  selectAssetSearchQuery,
-  (referenceData, stats, query): AvailableItem[] | null => {
-    if (RD.isSuccess(referenceData)) {
-      const assetKindItems: ValueItem[] = Object.values(referenceData.value.assetKindItems);
-      return assetKindItems.flatMap((assetKindItem): AvailableItem => {
-        const count = stats.assetKindItemCodes.find((item) => item.value === assetKindItem.code)?.count ?? 0;
-        return {
-          item: assetKindItem,
-          count,
-          isAvailable: count > 0,
-          isActive: count > 0 && (query.assetKindItemCodes?.includes(assetKindItem.code) ?? true),
-        };
-      });
+const makeFilter = <T extends string>(
+  filter: FilterConfig<T>,
+  activeValues: T[] | undefined,
+  counts: Array<ValueCount<T>>,
+  queryKey: keyof AssetSearchQuery
+): Filter<T> => {
+  const count = counts.find((counter) => counter.value === filter.value)?.count ?? 0;
+  return {
+    ...filter,
+    count,
+    queryKey,
+
+    // For filters to be active, they need to have at least one asset that they apply to.
+    // Also, if there are currently no filters selected (e.g. in the default search state),
+    // then we select all available filters.
+    isActive: count > 0 && (activeValues?.includes(filter.value) ?? true),
+  };
+};
+
+export const selectFilters = <T extends string>(
+  queryKey: keyof AssetSearchQuery & keyof AssetSearchStats,
+  getFilters: (referenceData: ReferenceData) => Array<FilterConfig<T>>
+) =>
+  createSelector(
+    fromAppShared.selectRDReferenceData,
+    selectAssetSearchQuery,
+    selectAssetsSearchStats,
+    (referenceData, query, stats): Array<Filter<T>> => {
+      if (!RD.isSuccess(referenceData)) {
+        return [];
+      }
+      return makeFilters(
+        getFilters(referenceData.value),
+
+        // Note that reading these attributes by key is insecure,
+        // since both the query and the stats have attributes that don't match the types required here.
+        // However, being able to use keys here (instead of functions or anything else)
+        // makes using this selector a lot easier.
+        // Passing invalid keys here is a programmer mistake anyway (which should be caught in testing at the latest),
+        // so leaving it like this should be okay.
+        stats[queryKey] as Array<ValueCount<T>>,
+        query[queryKey] as T[] | undefined,
+
+        queryKey
+      );
     }
-    return null;
-  }
+  );
+
+export const selectUsageCodeFilters = selectFilters<UsageCode>('usageCodes', () =>
+  usageCodes.map((code) => ({
+    name: { key: `search.usageCode.${code}` },
+    value: code,
+  }))
 );
 
-export const selectAvailableLanguages = createSelector(
-  fromAppShared.selectRDReferenceData,
-  selectAssetsSearchStats,
-  selectAssetSearchQuery,
-  (referenceData, stats, query): AvailableItem[] | null => {
-    if (RD.isSuccess(referenceData)) {
-      const languageItems: ValueItem[] = Object.values(referenceData.value.languageItems);
-      return languageItems.map((languageItem) => {
-        const count = stats.languageItemCodes.find((item) => item.value === languageItem.code)?.count ?? 0;
-        return {
-          item: languageItem,
-          count,
-          isAvailable: count > 0,
-          isActive: count > 0 && (query.languageItemCodes?.includes(languageItem.code) ?? true),
-        };
-      });
-    }
-    return null;
-  }
+export const selectAssetKindFilters = selectFilters<string>('assetKindItemCodes', (data) =>
+  Object.values(data.assetKindItems).map((item) => ({
+    name: makeTranslatedValueFromItemName(item),
+    value: item.code,
+  }))
 );
 
-export const selectAvailableGeometries = createSelector(
-  selectAssetsSearchStats,
-  selectAssetSearchQuery,
-  (stats, query): AvailableValueCount<GeometryCode | 'None'>[] | null => {
-    const geometries: Array<GeometryCode | 'None'> = Object.values(GeometryCode);
-    geometries.push('None');
-    const availableGeometries = geometries.map((geometry) => {
-      const count = stats.geometryCodes.find((item) => item.value === geometry)?.count ?? 0;
-      return {
-        value: geometry,
-        count: count,
-        isAvailable: count > 0,
-        isActive: count > 0 && (query.geomCodes?.includes(geometry) ?? true),
-      };
-    });
-    return availableGeometries;
-  }
-);
+export const selectLanguageFilters = selectFilters<string>('languageItemCodes', (data) => [
+  ...Object.values(data.languageItems).map((item) => ({
+    name: makeTranslatedValueFromItemName(item),
+    value: item.code,
+  })),
+  {
+    name: { key: 'search.languageItem.None' },
+    value: 'None',
+  },
+]);
 
-export const selectAvailableManCatLabels = createSelector(
-  fromAppShared.selectRDReferenceData,
-  selectAssetsSearchStats,
-  selectAssetSearchQuery,
-  (referenceData, stats, query): AvailableItem[] | null => {
-    if (RD.isSuccess(referenceData)) {
-      const manCatLabels: ValueItem[] = Object.values(referenceData.value.manCatLabelItems);
-      return manCatLabels.map((manCatLabel) => {
-        const count = stats.manCatLabelItemCodes.find((item) => item.value === manCatLabel.code)?.count ?? 0;
-        return {
-          item: manCatLabel,
-          count,
-          isAvailable: count > 0,
-          isActive: count > 0 && (query.manCatLabelItemCodes?.includes(manCatLabel.code) ?? true),
-        };
-      });
-    }
-    return null;
-  }
+export const selectGeometryFilters = selectFilters<GeometryCode | 'None'>('geometryCodes', () => [
+  ...Object.values(GeometryCode).map((code) => ({
+    name: { key: `search.geometryCode.${code}` },
+    value: code,
+  })),
+  {
+    name: { key: 'search.geometryCode.None' },
+    value: 'None',
+  },
+]);
+
+export const selectManCatLabelFilters = selectFilters<string>('manCatLabelItemCodes', (data) =>
+  Object.values(data.manCatLabelItems).map((item) => ({
+    name: makeTranslatedValueFromItemName(item),
+    value: item.code,
+  }))
 );
 
 export interface AvailableAuthor {
@@ -268,30 +242,53 @@ export interface AvailableAuthor {
 }
 
 export interface FullContact extends Contact {
-  role?: string;
+  role?: AssetContactRole;
 }
 
-export interface AvailableItem {
-  item: ValueItem;
+export interface Filter<T extends string = string> {
+  name: Translation;
+  value: T;
+
+  /**
+   * The total number of assets within the current result set
+   * that match this filter.
+   */
   count: number;
-  isAvailable: boolean;
+
+  /**
+   * Whether the filter is currently in effect,
+   * i.e. whether assets that match it are visible.
+   */
   isActive: boolean;
-  displayName?: string;
+
+  /**
+   * The field of {@link AssetSearchQuery} that contains this filter's values.
+   */
+  queryKey: keyof AssetSearchQuery;
 }
 
-export interface AvailableValueCount<T> extends ValueCount<T> {
-  isAvailable: boolean;
-  isActive: boolean;
-}
+type FilterConfig<T extends string> = Pick<Filter<T>, 'name' | 'value'>;
 
-export interface DrawerState {
-  showRefineOrStartSearch: 'show-refine' | 'show-start-search' | 'neither';
-  showResults: boolean;
-  showDetails: boolean;
-}
+export const makeTranslatedValueFromItemName = (item: ValueItem): TranslatedValue => ({
+  de: item.nameDe,
+  fr: item.nameFr,
+  rm: item.nameRm,
+  it: item.nameIt,
+  en: item.nameEn,
+});
 
 export interface StudyVM extends Study {
   assetId: number;
+}
+
+export interface AssetEditDetailVM {
+  assetId: number;
+  titlePublic: string;
+  createDate: number & DateIdBrand;
+  assetKindItem: ValueItem;
+  assetFormatItem: ValueItem;
+  contacts: Record<AssetContactRole, FullContact[]>;
+  manCatLabelItems: ValueItem[];
 }
 
 const makeAssetDetailVMNew = (referenceData: ReferenceData, assetDetail: AssetEditDetail, locale: string) => {

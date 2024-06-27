@@ -51,7 +51,6 @@ export const frAppTranslations: AppTranslations = {
     originalTitle: 'Titre original',
     kind: 'Type',
     topic: 'Thème',
-    language: 'Langue',
     format: 'Format',
     createdDate: 'Date de création',
     lastProcessedDate: 'Dernière mise à jour',
@@ -75,6 +74,10 @@ export const frAppTranslations: AppTranslations = {
       Polygon: 'Polygone',
       None: 'Aucune',
     },
+    language: 'Langue',
+    languageItem: {
+      None: 'aucune',
+    },
     resetSearch: 'Réinitialiser la recherche',
     file: 'Fichier',
     openFileInNewTab: 'Ouvrir {{fileName}} dans un nouvel onglet',
@@ -82,6 +85,8 @@ export const frAppTranslations: AppTranslations = {
     assetsUnderMouseCursor:
       '{{ assetsCount }} ssets trouvés sous le curseur de la souris. Veuillez en sélectionner un :',
     removePolygon: 'Annuler le polygone',
+    hideTable: 'fr Tabelle verbergen',
+    showTable: 'fr Tabelle anzeigen',
   },
   contactRoles: {
     author: 'Auteur',

@@ -39,7 +39,7 @@ Configure the following variables:
 Install node modules:
 
 ```bash
-npm run install
+npm install
 ```
 
 #### 4. Generate Database Types

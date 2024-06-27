@@ -1,38 +1,33 @@
-import { AfterViewInit, Component, OnDestroy, OnInit, inject } from '@angular/core';
+import { AfterViewInit, Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { MatOptionSelectionChange } from '@angular/material/core';
 import { Router } from '@angular/router';
-import { CURRENT_LANG, LifecycleHooksDirective, fromAppShared } from '@asset-sg/client-shared';
-import { AssetSearchQuery, DateRange, GeometryCode, Lang, UsageCode, getValueItemNameKey } from '@asset-sg/shared';
-import { concatLatestFrom } from '@ngrx/effects';
+import { AssetSearchQuery, DateRange } from '@asset-sg/shared';
 import { Store } from '@ngrx/store';
-import { Subscription, map, startWith } from 'rxjs';
+import { map, startWith, Subscription } from 'rxjs';
 
 import * as actions from '../../state/asset-search/asset-search.actions';
 import {
   AvailableAuthor,
-  AvailableItem,
-  AvailableValueCount,
+  selectAssetKindFilters,
   selectAssetSearchQuery,
-  selectAvailableAssetKindItems,
   selectAvailableAuthors,
-  selectAvailableGeometries,
-  selectAvailableLanguages,
-  selectAvailableManCatLabels,
   selectCreateDate,
-  selectUsageCodeData,
+  selectGeometryFilters,
+  selectIsFiltersOpen,
+  selectLanguageFilters,
+  selectManCatLabelFilters,
+  selectUsageCodeFilters,
 } from '../../state/asset-search/asset-search.selector';
 
 @Component({
   selector: 'asset-sg-asset-search-refine',
   templateUrl: './asset-search-refine.component.html',
   styleUrls: ['./asset-search-refine.component.scss'],
-  hostDirectives: [LifecycleHooksDirective],
 })
 export class AssetSearchRefineComponent implements OnInit, OnDestroy, AfterViewInit {
-  private _currentLang$ = inject(CURRENT_LANG);
-  private store = inject(Store);
-  private router = inject(Router);
+  private readonly store = inject(Store);
+  private readonly router = inject(Router);
 
   public authorAutoCompleteControl = new FormControl('');
   public minDateControl = new FormControl();
@@ -41,22 +36,20 @@ export class AssetSearchRefineComponent implements OnInit, OnDestroy, AfterViewI
   public createDateRange: DateRange | null = null;
   public availableAuthors: AvailableAuthor[] = [];
   public filteredAuthors: AvailableAuthor[] = [];
-  public availableGeomteryCodes: AvailableValueCount<GeometryCode | 'None'>[] = [];
-  public usageCodes: AvailableValueCount<UsageCode>[] = [];
-  public availableManCatLabels: AvailableItem[] = [];
-  public availableLanguages: AvailableItem[] = [];
-  public availableAssetKindItems: AvailableItem[] = [];
-  public isPanelOpen = false;
+  public isFiltersOpen = false;
 
-  public readonly assetSearchQuery$ = this.store.select(selectAssetSearchQuery);
+  public assetSearchQuery!: AssetSearchQuery;
+
   private readonly createDateRange$ = this.store.select(selectCreateDate);
   private readonly availableAuthors$ = this.store.select(selectAvailableAuthors);
-  private readonly usageCodes$ = this.store.select(selectUsageCodeData);
-  private readonly availableGeometryCodes$ = this.store.select(selectAvailableGeometries);
-  private readonly availableManCatLabels$ = this.store.select(selectAvailableManCatLabels);
-  private readonly availableLanguages$ = this.store.select(selectAvailableLanguages);
-  private readonly availableAssetKindItems$ = this.store.select(selectAvailableAssetKindItems);
-  private readonly isPanelOpen$ = this.store.select(fromAppShared.selectIsPanelOpen);
+  private readonly isFiltersOpen$ = this.store.select(selectIsFiltersOpen);
+
+  readonly usageCodeFilters$ = this.store.select(selectUsageCodeFilters);
+  readonly geometryCodeFilters$ = this.store.select(selectGeometryFilters);
+  readonly manCatLabelFilters$ = this.store.select(selectManCatLabelFilters);
+  readonly languageFilters$ = this.store.select(selectLanguageFilters);
+  readonly assetKindFilters$ = this.store.select(selectAssetKindFilters);
+
   private readonly subscriptions: Subscription = new Subscription();
 
   public ngOnInit() {
@@ -69,14 +62,14 @@ export class AssetSearchRefineComponent implements OnInit, OnDestroy, AfterViewI
 
   public ngAfterViewInit() {
     this.subscriptions.add(
-      this.minDateControl.valueChanges.pipe().subscribe((value) => {
+      this.minDateControl.valueChanges.subscribe((value) => {
         if (value instanceof Date || value === undefined) {
           this.updateSearch({ createDate: { min: value, max: this.maxDateControl.getRawValue() } });
         }
       })
     );
     this.subscriptions.add(
-      this.maxDateControl.valueChanges.pipe().subscribe((value) => {
+      this.maxDateControl.valueChanges.subscribe((value) => {
         if (value instanceof Date || value === undefined) {
           this.updateSearch({ createDate: { min: this.minDateControl.getRawValue(), max: value } });
         }
@@ -88,72 +81,6 @@ export class AssetSearchRefineComponent implements OnInit, OnDestroy, AfterViewI
     this.store.dispatch(actions.removePolygon());
   }
 
-  public updateManCatLabel(item: AvailableItem) {
-    const availableItem: AvailableItem | undefined = this.availableManCatLabels.find(
-      (element) => element.item.code === item.item.code
-    );
-    if (availableItem !== undefined) {
-      availableItem.isActive = !item.isActive;
-    }
-    this.updateSearch({
-      manCatLabelItemCodes: this.availableManCatLabels
-        .filter((element) => element.isActive)
-        .map((element) => element.item.code),
-    });
-  }
-
-  public updateAssetKindItems(item: AvailableItem) {
-    const availableItem: AvailableItem | undefined = this.availableAssetKindItems.find(
-      (element) => element.item.code === item.item.code
-    );
-    if (availableItem !== undefined) {
-      availableItem.isActive = !item.isActive;
-    }
-    this.updateSearch({
-      assetKindItemCodes: this.availableAssetKindItems
-        .filter((element) => element.isActive)
-        .map((element) => element.item.code),
-    });
-  }
-
-  public updateLanguages(item: AvailableItem) {
-    const availableItem: AvailableItem | undefined = this.availableLanguages.find(
-      (element) => element.item.code === item.item.code
-    );
-    if (availableItem !== undefined) {
-      availableItem.isActive = !item.isActive;
-    }
-    this.updateSearch({
-      languageItemCodes: this.availableLanguages
-        .filter((element) => element.isActive)
-        .map((element) => element.item.code),
-    });
-  }
-
-  public updateUsageCodes(item: AvailableValueCount<UsageCode>) {
-    const availableItem: AvailableValueCount<UsageCode> | undefined = this.usageCodes.find(
-      (element) => element.value === item.value
-    );
-    if (availableItem !== undefined) {
-      availableItem.isActive = !item.isActive;
-    }
-    this.updateSearch({
-      usageCodes: this.usageCodes.filter((element) => element.isActive).map((element) => element.value),
-    });
-  }
-
-  public updateGeometryCodes(item: AvailableValueCount<GeometryCode | 'None'>) {
-    const availableItem: AvailableValueCount<GeometryCode | 'None'> | undefined = this.availableGeomteryCodes.find(
-      (element) => element.value === item.value
-    );
-    if (availableItem !== undefined) {
-      availableItem.isActive = !item.isActive;
-    }
-    this.updateSearch({
-      geomCodes: this.availableGeomteryCodes.filter((element) => element.isActive).map((element) => element.value),
-    });
-  }
-
   public updateAuthor(event: MatOptionSelectionChange, authorId: number) {
     if (event.isUserInput) {
       this.updateSearch({ authorId });
@@ -161,7 +88,7 @@ export class AssetSearchRefineComponent implements OnInit, OnDestroy, AfterViewI
   }
 
   public updateSearch(filterConfiguration: Partial<AssetSearchQuery>) {
-    if (this.isPanelOpen) {
+    if (this.isFiltersOpen) {
       this.store.dispatch(actions.searchByFilterConfiguration({ filterConfiguration }));
     }
   }
@@ -185,7 +112,7 @@ export class AssetSearchRefineComponent implements OnInit, OnDestroy, AfterViewI
   }
 
   public resetSearch() {
-    this.router.navigate([]);
+    void this.router.navigate([]);
     this.authorAutoCompleteControl.setValue('');
     this.maxDateControl.setValue(null);
     this.maxDateControl.setValue(null);
@@ -193,7 +120,13 @@ export class AssetSearchRefineComponent implements OnInit, OnDestroy, AfterViewI
   }
 
   private initSubscriptions() {
-    this.subscriptions.add(this.isPanelOpen$.subscribe((isOpen) => (this.isPanelOpen = isOpen)));
+    this.subscriptions.add(this.isFiltersOpen$.subscribe((isOpen) => (this.isFiltersOpen = isOpen)));
+
+    this.subscriptions.add(
+      this.store.select(selectAssetSearchQuery).subscribe((query) => {
+        this.assetSearchQuery = query;
+      })
+    );
 
     this.subscriptions.add(
       this.createDateRange$.subscribe((dateRange) => {
@@ -209,51 +142,6 @@ export class AssetSearchRefineComponent implements OnInit, OnDestroy, AfterViewI
     );
 
     this.subscriptions.add(
-      this.usageCodes$.subscribe((usageCodes) => {
-        this.usageCodes = usageCodes ?? [];
-      })
-    );
-
-    this.subscriptions.add(
-      this.availableGeometryCodes$.subscribe((geomCode) => {
-        this.availableGeomteryCodes = geomCode ?? [];
-      })
-    );
-
-    this.subscriptions.add(
-      this.availableManCatLabels$
-        .pipe(
-          concatLatestFrom(() => this._currentLang$),
-          map(([manCatLabels, lang]) => {
-            this.availableManCatLabels = this.setLanguageForFilter(lang, manCatLabels ?? []);
-          })
-        )
-        .subscribe()
-    );
-
-    this.subscriptions.add(
-      this.availableLanguages$
-        .pipe(
-          concatLatestFrom(() => this._currentLang$),
-          map(([languages, currentLang]) => {
-            this.availableLanguages = this.setLanguageForFilter(currentLang, languages ?? []);
-          })
-        )
-        .subscribe()
-    );
-
-    this.subscriptions.add(
-      this.availableAssetKindItems$
-        .pipe(
-          concatLatestFrom(() => this._currentLang$),
-          map(([assetKindItems, currentLang]) => {
-            this.availableAssetKindItems = this.setLanguageForFilter(currentLang, assetKindItems ?? []);
-          })
-        )
-        .subscribe()
-    );
-
-    this.subscriptions.add(
       this.authorAutoCompleteControl.valueChanges
         .pipe(
           startWith(''),
@@ -263,24 +151,5 @@ export class AssetSearchRefineComponent implements OnInit, OnDestroy, AfterViewI
           this.filteredAuthors = filteredAuthors;
         })
     );
-
-    this.subscriptions.add(
-      this._currentLang$.subscribe((lang) => {
-        this.availableAssetKindItems = this.setLanguageForFilter(lang, this.availableAssetKindItems);
-        this.availableLanguages = this.setLanguageForFilter(lang, this.availableLanguages);
-        this.availableManCatLabels = this.setLanguageForFilter(lang, this.availableManCatLabels);
-      })
-    );
-  }
-
-  private setLanguageForFilter(lang: Lang, availableFilters: AvailableItem[]): AvailableItem[] {
-    const key = getValueItemNameKey(lang);
-    const filtersWithDisplayName = availableFilters.map((filter) => {
-      return {
-        ...filter,
-        displayName: filter.item[key],
-      };
-    });
-    return filtersWithDisplayName.sort((a, b) => a.displayName.localeCompare(b.displayName));
   }
 }

@@ -15,7 +15,6 @@ export default {
   },
   moduleFileExtensions: ['ts', 'js', 'html'],
   coverageDirectory: '../../coverage/apps/server-asset-sg',
-  coverageReporters: ['json', 'text', 'cobertura', 'lcov'],
 
   // Allow only a single worker so the tests don't run in parallel.
   // Many of the tests are integration tests, meaning they access actual databases.

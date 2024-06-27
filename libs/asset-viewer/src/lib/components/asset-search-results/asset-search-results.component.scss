@@ -3,7 +3,6 @@
 
 :host {
   @include drawerPanel.drawer-panel-width;
-  padding: 0 1rem 1rem 0;
   position: relative;
   display: flex;
   flex-direction: column;
@@ -12,15 +11,23 @@
 @include drawerPanel.draw-panel-header;
 @include drawerPanel.draw-panel-header-underline;
 
+.header {
+  padding: 0 1rem;
+  margin: 0;
+}
+
 .search-results {
   overflow-y: scroll;
   overflow-x: hidden;
+  display: flex;
+  flex-wrap: wrap;
+  height: 400px;
 }
 
-.asset-result {
-  background-color: variables.$white;
-  padding: 0.25rem 1rem 0.75rem 1rem;
-  margin-bottom: 0.75rem;
+.asset-favourite {
+  height: 2.5rem;
+  width: 2.5rem;
+  color: variables.$cyan-09;
 }
 
 .loading-spinner {
@@ -30,4 +37,39 @@
   display: grid;
   place-items: center;
   background-color: variables.$grey-03;
+}
+
+.mat-mdc-header-row .mat-mdc-cell {
+  background-color: variables.$grey-01;
+}
+
+.mat-mdc-row:hover .mat-mdc-cell {
+  background-color: variables.$grey-01;
+}
+
+.table-container {
+  max-height: 400px;
+  overflow-y: auto;
+  overflow-x: auto;
+  display: block;
+  width: 100%;
+  padding: 0 12px;
+
+  .mat-table {
+    width: max-content;
+    overflow-y: scroll;
+    display: block;
+  }
+
+  .table {
+    margin: 12px 0;
+
+    .table-header {
+      background-color: variables.$grey-03;
+    }
+
+    .mat-column-titlePublic {
+      word-wrap: break-word;
+    }
+  }
 }

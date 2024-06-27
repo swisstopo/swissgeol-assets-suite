@@ -1,28 +1,89 @@
-<div *ngIf="(loadingState | async) === LoadingState.Loading; else results" class="loading-spinner">
-  <mat-progress-spinner mode="indeterminate" />
-</div>
-<ng-template #results>
-  <ng-container *rxLet="assets$ | push">
-    <div class="header">
-      <div>
-        {{ "search.searchResults" | translate }}:
-        <asset-sg-animate-number [nextValue]="(pageStats$ | async)?.total ?? 0" />
-      </div>
-      <button asset-sg-icon-button style="width: unset" (click)="closeSearchResultsClicked.emit()">
-        <span> Ausblenden </span>
-        <svg-icon key="close-nav"></svg-icon>
-      </button>
+<ng-container *rxLet="isResultsOpen$; let isResultsOpen">
+  <div class="header">
+    <div>
+      {{ "search.searchResults" | translate }}:
+      <asset-sg-animate-number [nextValue]="(pageStats$ | async)?.total ?? 0" />
     </div>
-
+    <button asset-sg-icon-button style="width: unset" (click)="toggleResultsOpen(isResultsOpen)">
+      <span> {{ (isResultsOpen ? "search.hideTable" : "search.showTable") | translate }} </span>
+      <svg-icon key="close-nav"></svg-icon>
+    </button>
+  </div>
+  <ng-container *ngIf="isResultsOpen">
     <div class="search-results">
-      <div
-        class="asset-result"
-        *rxFor="let asset of assets$ | async; trackBy: 'assetId'"
-        (mouseover)="onAssetMouseOver(asset.assetId)"
-        (mouseout)="onAssetMouseOut()"
-      >
-        <asset-sg-asset-search-result [asset]="asset"></asset-sg-asset-search-result>
+      <div *ngIf="(loadingState | async) === LoadingState.Loading; else results" class="loading-spinner">
+        <mat-progress-spinner mode="indeterminate" />
       </div>
+      <ng-template #results>
+        <div class="table-container">
+          <table mat-table [dataSource]="assets$" class="mat-elevation-z8 table">
+            <ng-container matColumnDef="favourites">
+              <th mat-header-cell *matHeaderCellDef></th>
+              <td mat-cell *matCellDef="let asset">
+                <button asset-sg-reset class="asset-favourite">
+                  <svg-icon key="favourite" />
+                </button>
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="titlePublic">
+              <th mat-header-cell *matHeaderCellDef translate>{{ "edit.tabs.references.assetTitlePublic" }}</th>
+              <td mat-cell *matCellDef="let asset">{{ asset.titlePublic }}</td>
+            </ng-container>
+            <ng-container matColumnDef="assetFormat">
+              <th mat-header-cell *matHeaderCellDef translate>{{ "search.kind" }}</th>
+              <td mat-cell *matCellDef="let asset">
+                {{ asset.assetKindItem | valueItemName }} &ndash; {{ asset.assetFormatItem | valueItemName }}
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="manCatLabel">
+              <th mat-header-cell *matHeaderCellDef translate>{{ "search.topic" }}</th>
+              <td mat-cell *matCellDef="let asset">
+                <div *ngFor="let manCatLabelItem of asset.manCatLabelItems">
+                  {{ manCatLabelItem | valueItemName }}
+                </div>
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="authors">
+              <th mat-header-cell *matHeaderCellDef translate>{{ "contactRoles.author" }}</th>
+              <td mat-cell *matCellDef="let asset">
+                <div *ngFor="let contact of asset.contacts.author">
+                  {{ contact.name }}
+                </div>
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="initiators">
+              <th mat-header-cell *matHeaderCellDef translate>{{ "contactRoles.initiator" }}</th>
+              <td mat-cell *matCellDef="let asset">
+                <div *ngFor="let contact of asset.contacts.initiator">
+                  {{ contact.name }}
+                </div>
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="suppliers">
+              <th mat-header-cell *matHeaderCellDef translate>{{ "contactRoles.supplier" }}</th>
+              <td mat-cell *matCellDef="let asset">
+                <div *ngFor="let contact of asset.contacts.supplier">
+                  {{ contact.name }}
+                </div>
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="createDate">
+              <th mat-header-cell *matHeaderCellDef translate>{{ "search.createdDate" }}</th>
+              <td mat-cell *matCellDef="let asset">
+                {{ asset.createDate | assetSgDate }}
+              </td>
+            </ng-container>
+            <tr mat-header-row *matHeaderRowDef="COLUMNS; sticky: true" class="table-header"></tr>
+            <tr
+              mat-row
+              *matRowDef="let row; columns: COLUMNS"
+              (click)="searchForAsset(row.assetId)"
+              (mouseover)="onAssetMouseOver(row.assetId)"
+              (mouseleave)="onAssetMouseOut()"
+            ></tr>
+          </table>
+        </div>
+      </ng-template>
     </div>
   </ng-container>
-</ng-template>
+</ng-container>

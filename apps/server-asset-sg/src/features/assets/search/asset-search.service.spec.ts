@@ -74,11 +74,14 @@ describe(AssetSearchService, () => {
     expect(hit.sgsId).toEqual(asset.sgsId);
     expect(hit.createDate).toEqual(asset.createDate);
     expect(hit.assetKindItemCode).toEqual(asset.assetKindItemCode);
-    expect(hit.languageItemCodes).toEqual(asset.assetLanguages.map((it) => it.languageItemCode));
     expect(hit.usageCode).toEqual(makeUsageCode(asset.publicUse.isAvailable, asset.internalUse.isAvailable));
     expect(hit.authorIds).toEqual([]);
     expect(hit.contactNames).toEqual([]);
     expect(hit.manCatLabelItemCodes).toEqual([]);
+
+    const languageItemCodes =
+      asset.assetLanguages.length === 0 ? ['None'] : asset.assetLanguages.map((it) => it.languageItemCode);
+    expect(hit.languageItemCodes).toEqual(languageItemCodes);
   };
 
   describe('register', () => {
@@ -355,10 +358,17 @@ describe(AssetSearchService, () => {
         },
       ]);
       expect(stats.languageItemCodes).toEqual(
-        asset.assetLanguages.map((it) => ({
-          value: it.languageItemCode,
-          count: 1,
-        }))
+        asset.assetLanguages.length === 0
+          ? [
+              {
+                count: 1,
+                value: 'None',
+              },
+            ]
+          : asset.assetLanguages.map((it) => ({
+              value: it.languageItemCode,
+              count: 1,
+            }))
       );
       expect(stats.usageCodes).toEqual([
         {
@@ -539,6 +549,13 @@ describe(AssetSearchService, () => {
       const expectedLanguageItemCodes = makeBucket(expectedAssets, (asset) =>
         asset.assetLanguages.map((it) => it.languageItemCode)
       );
+      const assetsWithoutLanguage = expectedAssets.filter((it) => it.assetLanguages.length === 0);
+      if (assetsWithoutLanguage.length !== 0) {
+        expectedLanguageItemCodes.push({
+          key: 'None',
+          count: assetsWithoutLanguage.length,
+        });
+      }
       expect(aggs.buckets.languageItemCodes.sort(compareBuckets)).toEqual(
         expectedLanguageItemCodes.sort(compareBuckets)
       );

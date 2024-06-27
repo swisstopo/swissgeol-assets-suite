@@ -22,55 +22,41 @@
 @include drawerPanel.draw-panel-header-underline;
 
 .scrollable-area {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  padding-top: 0.75rem;
   overflow-y: scroll;
   overflow-x: hidden;
 }
 
 .search-control-wrapper {
-  > * {
-    width: 75%;
-
-    &:not(:last-child) {
-      margin-bottom: 0.5rem;
-    }
-  }
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-right: 1rem;
 }
 
-.refine-header {
+h2,
+h3 {
   display: flex;
   align-items: center;
-  margin-top: 2rem;
+  margin: 0;
   border-bottom: 2px solid #dee2e6;
   font-size: 0.875rem;
   font-weight: variables.$font-bold;
-  height: 3rem;
-  margin-bottom: 0.75rem;
+  min-height: 3rem;
 }
 
-.filter-group {
+h4 {
+  margin: 0;
+  line-height: 1rem;
+  margin-block: 0.75rem;
+}
+
+section.filters {
   display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-  margin-top: 0.5rem;
-  border-bottom: 2px solid #dee2e6;
-  margin-bottom: 0.75rem;
-  padding-bottom: 1rem;
-
-  .filter-button {
-    background-color: #dee2e6;
-    color: #212429;
-    padding: 0.5rem;
-    font-size: 0.875rem;
-
-    &.active {
-      background-color: #b9271a;
-      color: #fff;
-    }
-
-    &.disabled {
-      color: #868e96;
-    }
-  }
+  flex-direction: column;
 }
 
 .mat-mdc-form-field {
@@ -85,9 +71,4 @@
 
 .input-clear-button {
   color: variables.$cyan-09;
-}
-
-h4 {
-  margin: 0;
-  line-height: 2.5rem;
 }

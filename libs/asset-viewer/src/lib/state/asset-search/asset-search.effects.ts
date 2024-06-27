@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { ActivatedRoute, Params, Router } from '@angular/router';
 import { appSharedStateActions, fromAppShared } from '@asset-sg/client-shared';
 import { isDecodeError, isNotNull } from '@asset-sg/core';
@@ -41,7 +41,7 @@ export class AssetSearchEffects {
   // noinspection JSUnusedGlobalSymbols
   readSearchQueryParams$ = createEffect(() =>
     this.actions$.pipe(
-      ofType(actions.readParams),
+      ofType(actions.initializeSearch),
       concatLatestFrom(() => this.route.queryParams),
       map(([_, params]) => {
         const query: AssetSearchQuery = {};
@@ -55,7 +55,7 @@ export class AssetSearchEffects {
         query.manCatLabelItemCodes = readArrayParam(params, QUERY_PARAM_MAPPING.manCatLabelItemCodes);
         query.assetKindItemCodes = readArrayParam(params, QUERY_PARAM_MAPPING.assetKindItemCodes);
         query.usageCodes = readArrayParam(params, QUERY_PARAM_MAPPING.usageCodes);
-        query.geomCodes = readArrayParam(params, QUERY_PARAM_MAPPING.geomCodes);
+        query.geometryCodes = readArrayParam(params, QUERY_PARAM_MAPPING.geometryCodes);
         query.languageItemCodes = readArrayParam(params, QUERY_PARAM_MAPPING.languageItemCodes);
         return { query, assetId };
       }),
@@ -64,9 +64,16 @@ export class AssetSearchEffects {
     )
   );
 
+  getStatsOnInitialize$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(actions.initializeSearch),
+      map(() => actions.getStats())
+    )
+  );
+
   readAssetIdQueryParam$ = createEffect(() =>
     this.actions$.pipe(
-      ofType(actions.readParams),
+      ofType(actions.initializeSearch),
       concatLatestFrom(() => this.route.queryParams),
       map(([_, params]) => readNumberParam(params, QUERY_PARAM_MAPPING.assetId)),
       filter((assetId): assetId is number => assetId !== undefined),
@@ -95,7 +102,7 @@ export class AssetSearchEffects {
           updateArrayParam(params, QUERY_PARAM_MAPPING.manCatLabelItemCodes, query.manCatLabelItemCodes);
           updateArrayParam(params, QUERY_PARAM_MAPPING.assetKindItemCodes, query.assetKindItemCodes);
           updateArrayParam(params, QUERY_PARAM_MAPPING.usageCodes, query.usageCodes);
-          updateArrayParam(params, QUERY_PARAM_MAPPING.geomCodes, query.geomCodes);
+          updateArrayParam(params, QUERY_PARAM_MAPPING.geometryCodes, query.geometryCodes);
           updateArrayParam(params, QUERY_PARAM_MAPPING.languageItemCodes, query.languageItemCodes);
           this.router.navigate([], {
             queryParams: params,
@@ -114,7 +121,7 @@ export class AssetSearchEffects {
 
   public updateStatsAfterRemovingPolygonOrTriggeringStartSearch$ = createEffect(() => {
     return this.actions$.pipe(
-      ofType(actions.removePolygon, appSharedStateActions.triggerSearch),
+      ofType(actions.removePolygon),
       map(() => actions.getStats())
     );
   });
@@ -152,10 +159,23 @@ export class AssetSearchEffects {
     );
   });
 
+  public updateUrlWithAssetId = createEffect(
+    () => {
+      return this.actions$.pipe(
+        ofType(actions.searchForAssetDetail),
+        map(({ assetId }) => {
+          const queryParams = this.route.snapshot.queryParams;
+          this.router.navigate([], { queryParams: { ...queryParams, assetId }, queryParamsHandling: 'merge' });
+        })
+      );
+    },
+    { dispatch: false }
+  );
+
   public openPanelOnSuccessfulSearch$ = createEffect(() => {
     return this.actions$.pipe(
-      ofType(actions.searchByFilterConfiguration, appSharedStateActions.triggerSearch),
-      map(() => appSharedStateActions.openPanel())
+      ofType(actions.searchByFilterConfiguration),
+      map(() => actions.openFilters())
     );
   });
 
@@ -207,7 +227,7 @@ const QUERY_PARAM_MAPPING = {
   manCatLabelItemCodes: 'search[manCat]',
   assetKindItemCodes: 'search[kind]',
   usageCodes: 'search[usage]',
-  geomCodes: 'search[geom]',
+  geometryCodes: 'search[geometry]',
   languageItemCodes: 'search[lang]',
   assetId: 'assetId',
 };
