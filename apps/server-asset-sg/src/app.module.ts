@@ -26,6 +26,8 @@ import { FavoritesController } from '@/features/favorites/favorites.controller';
 import { OcrController } from '@/features/ocr/ocr.controller';
 import { UserRepo } from '@/features/users/user.repo';
 import { UsersController } from '@/features/users/users.controller';
+import { WorkgroupController } from '@/features/workgroups/workgroup.controller';
+import { WorkgroupRepo } from '@/features/workgroups/workgroup.repo';
 
 @Module({
   controllers: [
@@ -38,6 +40,7 @@ import { UsersController } from '@/features/users/users.controller';
     AssetController,
     ContactsController,
     OcrController,
+    WorkgroupController,
   ],
   imports: [HttpModule, ScheduleModule.forRoot(), CacheModule.register()],
   providers: [
@@ -50,6 +53,7 @@ import { UsersController } from '@/features/users/users.controller';
     ContactRepo,
     FavoriteRepo,
     UserRepo,
+    WorkgroupRepo,
     AssetEditService,
     AssetSearchService,
     {

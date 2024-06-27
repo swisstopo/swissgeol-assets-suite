@@ -12,7 +12,7 @@ import {
 import { Store } from '@ngrx/store';
 import { plainToInstance } from 'class-transformer';
 import * as E from 'fp-ts/Either';
-import { Observable, map, tap } from 'rxjs';
+import { map, Observable, tap } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class AssetSearchService {

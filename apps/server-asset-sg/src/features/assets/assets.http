@@ -4,7 +4,7 @@ Authorization: Impersonate {{user}}
 Content-Type: application/json
 
 {
-  "title": "My Title",
+  "title": "My new Asset",
   "originalTitle": null,
   "municipality": null,
   "kindCode": "package",
@@ -40,7 +40,8 @@ Content-Type: application/json
       "isAvailable": true,
       "statusCode": "approved"
     }
-  }
+  },
+  "workgroupId": 4
 }
 
 ### Update asset
@@ -61,7 +62,8 @@ Content-Type: application/json
   "links": {
     "parent": 44382,
     "siblings": [
-      44382, 44384
+      44382,
+      44384
     ]
   },
   "identifiers": [],
@@ -85,5 +87,11 @@ Content-Type: application/json
       "isAvailable": true,
       "statusCode": "approved"
     }
-  }
+  },
+  "workgroupId": 1
 }
+
+
+### Get asset
+GET {{host}}/api/assets/44383
+Authorization: Impersonate {{user}}

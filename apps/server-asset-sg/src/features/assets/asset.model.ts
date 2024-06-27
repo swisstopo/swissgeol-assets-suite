@@ -1,5 +1,15 @@
 import { Transform, Type } from 'class-transformer';
-import { IsArray, IsBoolean, IsDate, IsEnum, IsInt, IsObject, IsString, ValidateNested } from 'class-validator';
+import {
+  IsArray,
+  IsBoolean,
+  IsDate,
+  IsEnum,
+  IsInt,
+  IsNumber,
+  IsObject,
+  IsString,
+  ValidateNested,
+} from 'class-validator';
 
 import { IsNullable, messageNullableInt, messageNullableString } from '@/core/decorators/is-nullable.decorator';
 import { LocalDate } from '@/utils/data/local-date';
@@ -55,6 +65,7 @@ export interface AssetDetails {
   usage: AssetUsages;
   statuses: WorkStatus[];
   studies: Study[];
+  workgroupId: number | null;
 }
 
 export interface AssetUsages {
@@ -324,4 +335,8 @@ export class AssetDataBoundary implements AssetData {
   @ValidateNested()
   @Type(() => AssetUsagesBoundary)
   usage!: AssetUsagesBoundary;
+
+  @IsNumber()
+  @IsNullable()
+  workgroupId!: number | null;
 }

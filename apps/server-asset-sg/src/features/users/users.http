@@ -15,5 +15,12 @@ Content-Type: application/json
 
 {
   "role": "admin",
-  "lang": "de"
+  "lang": "de",
+  "workgroups": [
+    {
+      "workgroupId": 4,
+      "role": "MasterEditor"
+    }
+  ],
+  "isAdmin": false
 }

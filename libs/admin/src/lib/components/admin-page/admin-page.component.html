@@ -1,32 +1,12 @@
 <ng-template #templateDrawerPortalContent>
   <asset-sg-drawer>
-    <asset-sg-drawer-panel widthPercentageOfViewPanel="0.4" [display]="true" *rxLet="sm.state$; let state">
-      <div *ngIf="sm.stateIs.stateApiError(state)">error!</div>
-      <div class="drawer-panel-content">
-        <mat-progress-bar mode="indeterminate" *ngIf="state.showProgressBar" />
-        <ng-container *ngIf="!sm.stateIsAnyOf(['loading', 'stateApiError'])(state)">
-          <asset-sg-user-expanded
-            class="create-new-user"
-            *ngIf="sm.stateIs.createMode(state)"
-            (userExpandedOutput)="handleUserExpandedOutput($event)"
-          />
-          <div class="user-list">
-            <ng-container *rxFor="let user of state.usersVM; trackBy: trackByFn">
-              <asset-sg-user-expanded
-                *ngIf="user.expanded; else notExpanded"
-                [user]="user"
-                (userExpandedOutput)="handleUserExpandedOutput($event)"
-              />
-              <ng-template #notExpanded>
-                <asset-sg-user-collapsed
-                  [user]="user"
-                  [disableEdit]="user.disableEdit"
-                  (editClicked)="sm.editUser(user.id)"
-                />
-              </ng-template>
-            </ng-container>
-          </div>
-        </ng-container>
+    <asset-sg-drawer-panel widthPercentageOfViewPanel="0.4" [display]="true">
+      <!--      <h2>Workgroups</h2>-->
+      <div>
+        <h2>Workgroups</h2>
+        <asset-sg-workgroups></asset-sg-workgroups>
+        <h2>Users</h2>
+        <asset-sg-users></asset-sg-users>
       </div>
     </asset-sg-drawer-panel>
   </asset-sg-drawer>

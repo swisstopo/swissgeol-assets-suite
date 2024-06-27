@@ -193,7 +193,14 @@ export class JwtMiddleware implements NestMiddleware {
     if (email == null || !/^.+@.+\..+$/.test(email)) {
       throw new HttpException('invalid JWT payload: username does not contain an email', 401);
     }
-    return await this.userRepo.create({ oidcId, email, role: Role.Viewer, lang: 'de' });
+    return await this.userRepo.create({
+      oidcId,
+      email,
+      role: Role.Viewer,
+      lang: 'de',
+      isAdmin: false,
+      workgroups: [],
+    });
   }
 }
 
