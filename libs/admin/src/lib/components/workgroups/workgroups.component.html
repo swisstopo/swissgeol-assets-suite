@@ -1,0 +1,31 @@
+<div>
+  <button mat-button (click)="createWorkgroup()">Workgroup erstellen</button>
+  @if (selectedWorkgroup || mode === 'create') {
+  <asset-sg-workgroup-edit [workgroup]="selectedWorkgroup" [users]="users" [mode]="mode"></asset-sg-workgroup-edit>
+
+  }
+  <table mat-table [dataSource]="workgroups" class="mat-elevation-z8 table">
+    <ng-container matColumnDef="name">
+      <th mat-header-cell *matHeaderCellDef>Name</th>
+      <td mat-cell *matCellDef="let workgroup">{{ workgroup.name }}</td>
+    </ng-container>
+    <ng-container matColumnDef="status">
+      <th mat-header-cell *matHeaderCellDef>Deaktiviert</th>
+      <td mat-cell *matCellDef="let workgroup">{{ workgroup.disabled_at ? workgroup.disabled_at : "-" }}</td>
+    </ng-container>
+    <ng-container matColumnDef="users">
+      <th mat-header-cell *matHeaderCellDef>Anzahl Benutzer</th>
+      <td mat-cell *matCellDef="let workgroup">{{ workgroup.users.length }}</td>
+    </ng-container>
+    <ng-container matColumnDef="actions">
+      <th mat-header-cell *matHeaderCellDef>Aktionen</th>
+      <td mat-cell *matCellDef="let workgroup">
+        <button mat-button (click)="selectWorkgroup(workgroup)">Editieren</button>
+        <button mat-flat-button>Benutzer hinzufügen</button>
+        <button mat-icon-button (click)="deactivateWorkgroup(workgroup)">Deaktivieren</button>
+      </td>
+    </ng-container>
+    <tr mat-header-row *matHeaderRowDef="COLUMNS; sticky: true" class="table-header"></tr>
+    <tr mat-row *matRowDef="let row; columns: COLUMNS"></tr>
+  </table>
+</div>

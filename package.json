@@ -10,7 +10,7 @@
     "build": "npx nx run-many -t build -p server-asset-sg client-asset-sg --configuration=production",
     "build:server": "npx nx build server-asset-sg --configuration=production",
     "build:client": "npx nx build client-asset-sg --configuration=production",
-    "prisma": "dotenv -e apps/server-asset-sg/.env.local -- npx prisma",
+    "prisma": "dotenv -e apps/server-asset-sg/.env -e apps/server-asset-sg/.env.local -- npx prisma",
     "test": "npx nx run-many --target=test --all",
     "format": "npm run prettier --write . && npm run lint:fix",
     "lint": "npx prettier --check . && npx nx run-many --target=lint --all",

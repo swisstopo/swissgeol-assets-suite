@@ -157,11 +157,9 @@ export class AssetRepo implements Repo<Asset, AssetId, FullAssetData> {
     const condition =
       knownIds.length === 0 ? '' : Prisma.sql`AND study_${Prisma.raw(type)}_id NOT IN (${Prisma.join(knownIds, ',')})`;
     await this.prisma.$queryRaw`
-      DELETE FROM
-        public.study_${type}
-      WHERE
-        assetId = ${assetId}
-      ${condition}
+      DELETE
+      FROM public.study_${type}
+      WHERE assetId = ${assetId} ${condition}
     `;
   }
 
@@ -175,8 +173,7 @@ export class AssetRepo implements Repo<Asset, AssetId, FullAssetData> {
     `
     );
     await this.prisma.$queryRaw`
-      INSERT INTO
-        public.study_${type}
+      INSERT INTO public.study_${type}
         (asset_id, geom_quality_item_code, geom)
       VALUES
         ${Prisma.join(values, ',')}
@@ -197,13 +194,11 @@ export class AssetRepo implements Repo<Asset, AssetId, FullAssetData> {
     await this.prisma.$queryRaw`
       UPDATE
         public.study_${type}
-      SET
-        geom =
+      SET geom =
             CASE
-            ${Prisma.join(cases, '\n')}
-            ELSE geom
-      WHERE
-        assetId = ${assetId}
+              ${Prisma.join(cases, '\n')}
+              ELSE geom
+      WHERE assetId = ${assetId}
     `;
   }
 }
@@ -231,6 +226,13 @@ const mapDataToPrisma = (data: FullAssetData) =>
         assetFormatItemCode: data.formatCode,
       },
     },
+    workgroup: data.workgroupId
+      ? {
+          connect: {
+            id: data.workgroupId,
+          },
+        }
+      : undefined,
   });
 
 const mapDataToPrismaCreate = (data: FullAssetData): Prisma.AssetCreateInput => ({

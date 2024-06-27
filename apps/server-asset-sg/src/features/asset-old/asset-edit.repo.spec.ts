@@ -143,6 +143,7 @@ describe(AssetEditRepo, () => {
       expect(record.statusWorks[0].statusWorkItemCode).toEqual('initiateAsset');
       expect(record.statusWorks[0].statusWorkDate.getTime()).toBeLessThan(new Date().getTime());
       expect(record.assetFiles).toEqual([]);
+      expect(record.workgroupId).toEqual(patch.workgroupId);
     });
   });
 
@@ -200,6 +201,7 @@ describe(AssetEditRepo, () => {
       expect(updated.statusWorks[0].statusWorkItemCode).toEqual('initiateAsset');
       expect(updated.statusWorks[0].statusWorkDate.getTime()).toBeLessThan(new Date().getTime());
       expect(updated.assetFiles).toEqual([]);
+      expect(updated.workgroupId).toEqual(patch.workgroupId);
     });
   });
 
