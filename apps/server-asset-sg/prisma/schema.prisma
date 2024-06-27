@@ -639,12 +639,12 @@ model StatusWorkItem {
 
 model AssetUser {
   id                 String               @id @db.Uuid
-  role               String
   email              String
   lang               String
   oidcId             String
   AssetUserFavourite AssetUserFavourite[]
   workgroups         WorkgroupsOnUsers[]
+  isAdmin            Boolean              @default(false) @map("is_admin")
 
   @@map("asset_user")
 }
@@ -685,10 +685,9 @@ model WorkgroupsOnUsers {
 }
 
 enum Role {
-  VIEWER
-  EDITOR
-  MASTER_EDITOR
-  ADMIN
+  Viewer       @map("viewer")
+  Editor       @map("editor")
+  MasterEditor @map("master-editor")
 }
 
 view AllStudy {

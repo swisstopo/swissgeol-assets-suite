@@ -82,5 +82,89 @@
         "ValueType": "string"
       }
     ]
+  },
+  {
+    "SubjectId": "e06ad465-3adc-4ad7-bee5-ff0605a4b929",
+    "Username": "editor",
+    "Password": "editor",
+    "Claims": [
+      {
+        "Type": "name",
+        "Value": "Editor",
+        "ValueType": "string"
+      },
+      {
+        "Type": "family_name",
+        "Value": "Editor",
+        "ValueType": "string"
+      },
+      {
+        "Type": "given_name",
+        "Value": "Editor",
+        "ValueType": "string"
+      },
+      {
+        "Type": "email",
+        "Value": "editor@assets.swissgeol.ch",
+        "ValueType": "string"
+      },
+      {
+        "Type": "email_verified",
+        "Value": "true",
+        "ValueType": "boolean"
+      },
+      {
+        "Type": "cognito:groups",
+        "Value": "[\"assets.swissgeol\"]",
+        "ValueType": "json"
+      },
+      {
+        "Type": "username",
+        "Value": "3_editor@assets.swissgeol.ch",
+        "ValueType": "string"
+      }
+    ]
+  },
+  {
+    "SubjectId": "e06ad465-3adc-4ad7-bee5-ff0605a4b926",
+    "Username": "master-editor",
+    "Password": "master-editor",
+    "Claims": [
+      {
+        "Type": "name",
+        "Value": "master-editor",
+        "ValueType": "string"
+      },
+      {
+        "Type": "family_name",
+        "Value": "master-editor",
+        "ValueType": "string"
+      },
+      {
+        "Type": "given_name",
+        "Value": "master-editor",
+        "ValueType": "string"
+      },
+      {
+        "Type": "email",
+        "Value": "master-editor@assets.swissgeol.ch",
+        "ValueType": "string"
+      },
+      {
+        "Type": "email_verified",
+        "Value": "true",
+        "ValueType": "boolean"
+      },
+      {
+        "Type": "cognito:groups",
+        "Value": "[\"assets.swissgeol\"]",
+        "ValueType": "json"
+      },
+      {
+        "Type": "username",
+        "Value": "4_master-editor@assets.swissgeol.ch",
+        "ValueType": "string"
+      }
+    ]
   }
 ]
