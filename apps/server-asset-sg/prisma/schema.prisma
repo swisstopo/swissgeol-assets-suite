@@ -639,6 +639,7 @@ model StatusWorkItem {
 
 model AssetUser {
   id                 String               @id @db.Uuid
+  role               String
   email              String
   lang               String
   oidcId             String

@@ -75,4 +75,3 @@ ALTER TABLE "asset_user" ADD COLUMN     "is_admin" BOOLEAN NOT NULL DEFAULT fals
 
 UPDATE asset_user SET is_admin = true WHERE role = 'admin';
 
---ALTER TABLE "asset_user" DROP COLUMN "role";
