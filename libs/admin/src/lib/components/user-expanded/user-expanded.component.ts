@@ -2,13 +2,13 @@ import { Dialog, DialogRef } from '@angular/cdk/dialog';
 import {
   Component,
   EventEmitter,
+  inject,
   Input,
   Output,
   QueryList,
   TemplateRef,
   ViewChild,
   ViewChildren,
-  inject,
 } from '@angular/core';
 import { FormBuilder, FormControl } from '@angular/forms';
 import { ButtonComponent, ViewChildMarker } from '@asset-sg/client-shared';
@@ -53,6 +53,7 @@ export class UserExpandedComponent {
   public editForm = this._formBulder.group({
     email: new FormControl(''),
     role: new FormControl<UserRoleEnum>(UserRoleEnum.viewer),
+    isAdmin: new FormControl(false),
     lang: new FormControl('de'),
   });
   public UserRole = UserRoleEnum;
@@ -63,6 +64,7 @@ export class UserExpandedComponent {
   public get user(): User | undefined {
     return this._user;
   }
+
   public set user(value: User | undefined) {
     this._user = value;
     if (value) {
@@ -73,6 +75,7 @@ export class UserExpandedComponent {
       });
     }
   }
+
   private _user?: User | undefined;
 
   disableEverything() {
@@ -83,6 +86,7 @@ export class UserExpandedComponent {
       }
     });
   }
+
   submit() {
     this.disableEverything();
     if (this.user) {

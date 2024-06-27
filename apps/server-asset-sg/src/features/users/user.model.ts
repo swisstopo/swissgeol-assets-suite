@@ -1,11 +1,21 @@
-import { IsEnum, IsString } from 'class-validator';
-
+import { Role as PrismaRole } from '@prisma/client';
+import { IsArray, IsBoolean, IsEnum, IsString } from 'class-validator';
 import { Data, Model } from '@/utils/data/model';
 
 export interface User extends Model<UserId> {
   email: string;
   role: Role;
   lang: string;
+  workgroups: WorkgroupOnUser[];
+  isAdmin: boolean;
+}
+
+export interface WorkgroupOnUser {
+  workgroupId: number;
+  role: PrismaRole;
+  workgroup: {
+    name: string;
+  };
 }
 
 export type UserId = string;
@@ -24,6 +34,12 @@ export class UserDataBoundary implements UserData {
 
   @IsString()
   lang!: string;
+
+  @IsArray()
+  workgroups!: WorkgroupOnUser[];
+
+  @IsBoolean()
+  isAdmin!: boolean;
 }
 
 export const getRoleIndex = (role: Role): number => {

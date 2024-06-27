@@ -1,0 +1,27 @@
+<div>
+  <form [formGroup]="formGroup">
+    <div class="form">
+      <mat-form-field appearance="outline" class="print-dialog__stepper__content__form__element" hideRequiredMarker>
+        <mat-label>Name</mat-label>
+        <input matInput formControlName="name" placeholder="Name" />
+      </mat-form-field>
+      <mat-checkbox formControlName="status" color="primary">Deaktiviert</mat-checkbox>
+      <mat-form-field>
+        <mat-select formControlName="viewers" placeholder="Viewer" multiple>
+          <mat-option *ngFor="let user of users" [value]="user.id">{{ user.email }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field>
+        <mat-select formControlName="editors" placeholder="Editor" multiple>
+          <mat-option *ngFor="let user of users" [value]="user.id">{{ user.email }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field>
+        <mat-select formControlName="masterEditors" placeholder="Master Editor" multiple>
+          <mat-option *ngFor="let user of users" [value]="user.id">{{ user.email }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+    <button mat-button (click)="save()">Speichern</button>
+  </form>
+</div>

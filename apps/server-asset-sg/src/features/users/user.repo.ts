@@ -63,6 +63,19 @@ export class UserRepo implements Repo<User, UserId, UserData & { oidcId: string 
         data: {
           role: data.role,
           lang: data.lang,
+          isAdmin: data.isAdmin,
+          workgroups: {
+            deleteMany: {
+              workgroupId: { notIn: data.workgroups?.map((workgroup) => workgroup.workgroupId) },
+            },
+            createMany: {
+              data: data.workgroups?.map((workgroup) => ({
+                workgroupId: workgroup.workgroupId,
+                role: workgroup.role,
+              })),
+              skipDuplicates: true,
+            },
+          },
         },
         select: userSelection,
       });
@@ -87,11 +100,23 @@ export class UserRepo implements Repo<User, UserId, UserData & { oidcId: string 
   }
 }
 
-const userSelection = satisfy<Prisma.AssetUserSelect>()({
+export const userSelection = satisfy<Prisma.AssetUserSelect>()({
   id: true,
   role: true,
   email: true,
   lang: true,
+  isAdmin: true,
+  workgroups: {
+    select: {
+      workgroupId: true,
+      role: true,
+      workgroup: {
+        select: {
+          name: true,
+        },
+      },
+    },
+  },
 });
 
 type SelectedUser = Prisma.AssetUserGetPayload<{ select: typeof userSelection }>;

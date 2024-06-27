@@ -87,6 +87,7 @@ export const BaseAssetEditDetail = {
   siblingYAssets: C.array(LinkedAsset),
   statusWorks: C.array(StatusWork),
   assetFiles: C.array(AssetFile),
+  workgroupId: C.number,
 };
 
 export const AssetEditDetail = C.struct({
