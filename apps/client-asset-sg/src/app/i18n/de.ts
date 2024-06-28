@@ -27,7 +27,7 @@ export const deAppTranslations = {
     userManagement: 'Benutzer Verwaltung',
   },
   map: {
-    zoomIn: 'Hineinoomen',
+    zoomIn: 'Hineinzoomen',
     zoomOut: 'Herauszoomen',
     zoomToOrigin: 'Zur Ursprungsposition zoomen',
     drawingModeOn: 'Der Zeichenmodus ist ausgeschaltet. Klicken Sie, um den Zeichenmodus einzuschalten',

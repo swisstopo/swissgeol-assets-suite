@@ -95,7 +95,7 @@ registerLocaleData(locale_deCH, 'de-CH');
     StoreModule.forRoot(
       { router: routerReducer, shared: appSharedStateReducer },
       {
-        metaReducers: environment.ngrxStoreLoggerEnabled ? [storeLogger()] : [],
+        metaReducers: environment.ngrxStoreLoggerEnabled ? [] : [],
         runtimeChecks: {
           strictStateImmutability: false,
         },

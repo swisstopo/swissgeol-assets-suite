@@ -1,0 +1,32 @@
+@use "../../styles/variables";
+
+:host {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.25rem 0 0.75rem 0;
+
+  color: variables.$cyan-09;
+  background-color: variables.$grey-01;
+  border-radius: 8px;
+  box-shadow: 4px 4px 2px #00000029;
+}
+
+.divider {
+  height: 2px;
+  width: 1.5rem;
+  background-color: variables.$grey-03;
+  margin: 0.5rem 0;
+}
+
+:host > button:not([aria-disabled="true"]):not(:hover) {
+  &,
+  &:focus {
+    &.is-active {
+      color: variables.$red;
+    }
+    &:not(is-active) {
+      color: #357183;
+    }
+  }
+}

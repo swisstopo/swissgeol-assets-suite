@@ -1,10 +1,12 @@
-<asset-sg-map
-  [searchPolygon$]="searchPolygon$"
-  [highlightAssetStudies]="highlightAssetStudies$"
-  (polygonChanged)="polygonChanged$.next($event)"
-  (assetClicked)="assetClicked$.next($event)"
-  (mapInitialized)="handleMapInitialised()"
-></asset-sg-map>
+<!--<asset-sg-map-->
+<!--  [searchPolygon$]="searchPolygon$"-->
+<!--  [highlightAssetStudies]="highlightAssetStudies$"-->
+<!--  (polygonChanged)="polygonChanged$.next($event)"-->
+<!--  (assetClicked)="assetClicked$.next($event)"-->
+<!--  (mapInitialized)="handleMapInitialised()"-->
+<!--&gt;</asset-sg-map>-->
+
+<asset-sg-map2 (initializeEnd)="handleMapInitialised()" (polygonChange)="polygonChanged$.next($event)" />
 
 <asset-sg-asset-picker
   [assets]="assetsForPicker$"

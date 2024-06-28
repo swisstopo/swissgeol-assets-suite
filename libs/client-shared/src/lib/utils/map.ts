@@ -67,8 +67,12 @@ export const decorateFeature = (
   return feature;
 };
 
-export const olCoordsFromLV95Array = (coords: LV95[]): Coordinate[] =>
-  coords.map(lv95ToWGS).map((l) => fromLonLat([isoWGSLng.unwrap(l.lng), isoWGSLat.unwrap(l.lat)]));
+export const olCoordsFromLV95Array = (coords: LV95[]): Coordinate[] => coords.map(olCoordsFromLV95);
+
+export const olCoordsFromLV95 = (lv95Coords: LV95): Coordinate => {
+  const wgsCoords = lv95ToWGS(lv95Coords);
+  return fromLonLat([isoWGSLng.unwrap(wgsCoords.lng), isoWGSLat.unwrap(wgsCoords.lat)]);
+};
 
 export const featureStyles = {
   undefinedStyle: new Style(undefined),
@@ -214,7 +218,7 @@ export const zoomToStudies = (
       const newZoom = view.getZoom();
       oldCenter && view.setCenter(oldCenter);
       oldZoom && view.setZoom(oldZoom);
-      windowService.delayRequestAnimationFrame(1, () => {
+      window.requestAnimationFrame(() => {
         view.animate({ zoom: newZoom, center: newCenter, duration: 600 });
       });
     }

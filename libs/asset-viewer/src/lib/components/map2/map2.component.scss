@@ -1,0 +1,25 @@
+@use "../../styles/variables";
+
+:host {
+  position: relative;
+}
+
+.map {
+  height: 100%;
+  width: 100%;
+  transition: opacity ease-in 1.5s;
+}
+
+:host.is-loading .map {
+  opacity: 0;
+}
+
+asset-sg-map-controls {
+  position: absolute;
+  top: 2rem;
+  right: 2.5rem;
+}
+
+:host.is-loading asset-sg-map-controls {
+  opacity: 0;
+}

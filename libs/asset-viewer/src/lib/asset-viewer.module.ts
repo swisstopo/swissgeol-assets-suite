@@ -9,6 +9,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDateFnsModule } from '@angular/material-date-fns-adapter';
+import { MatTooltip } from '@angular/material/tooltip';
 import { RouterModule } from '@angular/router';
 import {
   AnchorComponent,
@@ -40,6 +41,8 @@ import { AssetSearchResultsComponent } from './components/asset-search-results';
 import { AssetSearchResultComponent } from './components/asset-search-results/asset-search-result/asset-search-result.component';
 import { AssetViewerPageComponent } from './components/asset-viewer-page';
 import { MapComponent } from './components/map';
+import { MapControlsComponent } from './components/map-controls/map-controls.component';
+import { Map2Component } from './components/map2/map2.component';
 import { AssetSearchEffects } from './state/asset-search/asset-search.effects';
 import { assetSearchReducer } from './state/asset-search/asset-search.reducer';
 
@@ -47,6 +50,8 @@ import { assetSearchReducer } from './state/asset-search/asset-search.reducer';
   declarations: [
     AssetViewerPageComponent,
     MapComponent,
+    Map2Component,
+    MapControlsComponent,
     AssetSearchDetailComponent,
     AssetSearchRefineComponent,
     AssetSearchResultsComponent,
@@ -93,6 +98,7 @@ import { assetSearchReducer } from './state/asset-search/asset-search.reducer';
     DrawerComponent,
     DrawerPanelComponent,
     DatepickerToggleIconComponent,
+    MatTooltip,
   ],
   providers: [
     { provide: MAT_DATE_LOCALE, useValue: de },
