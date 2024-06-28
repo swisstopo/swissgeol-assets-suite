@@ -74,7 +74,7 @@ export class AssetPickerComponent extends RxState<AssetPickerState> {
     this.connect('currentAssetId', currentAssetId$);
   }
 
-  @Output() assetMouseOver = new EventEmitter<O.Option<number>>();
+  @Output() assetMouseOver = new EventEmitter<number | null>();
 
   constructor() {
     super();
@@ -158,19 +158,11 @@ export class AssetPickerComponent extends RxState<AssetPickerState> {
       )
     );
 
-    this.closePicker$.pipe(untilDestroyed(this)).subscribe(() => this.onAssetMouseOut());
+    this.closePicker$.pipe(untilDestroyed(this)).subscribe(() => this.assetMouseOver.emit(null));
   }
 
   public selectAndClose(assetId: number) {
     this._store.dispatch(actions.searchForAssetDetail({ assetId }));
     this.closePicker$.next();
-  }
-
-  public onAssetMouseOver(assetId: number) {
-    this.assetMouseOver.emit(O.some(assetId));
-  }
-
-  public onAssetMouseOut() {
-    this.assetMouseOver.emit(O.none);
   }
 }

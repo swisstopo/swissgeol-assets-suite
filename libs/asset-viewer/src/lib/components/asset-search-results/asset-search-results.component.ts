@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, EventEmitter, inject, Output } from
 import { ActivatedRoute, Router } from '@angular/router';
 import { Store } from '@ngrx/store';
 import * as O from 'fp-ts/Option';
+import { Observable } from 'rxjs';
 import * as actions from '../../state/asset-search/asset-search.actions';
 import { AppStateWithAssetSearch, LoadingState } from '../../state/asset-search/asset-search.reducer';
 import {
@@ -19,7 +20,7 @@ import {
 })
 export class AssetSearchResultsComponent {
   @Output() closeSearchResultsClicked = new EventEmitter<void>();
-  @Output() assetMouseOver = new EventEmitter<O.Option<number>>();
+  @Output() assetMouseOver = new EventEmitter<number | null>();
 
   protected readonly COLUMNS = [
     'favourites',
@@ -39,15 +40,7 @@ export class AssetSearchResultsComponent {
   public loadingState = this._store.select(selectSearchLoadingState);
   public pageStats$ = this._store.select(selectAssetSearchPageData);
 
-  public onAssetMouseOver(assetId: number) {
-    this.assetMouseOver.emit(O.some(assetId));
-  }
-
   protected readonly LoadingState = LoadingState;
-
-  public onAssetMouseOut() {
-    this.assetMouseOver.emit(O.none);
-  }
 
   public searchForAsset(assetId: number) {
     this._store.dispatch(actions.searchForAssetDetail({ assetId }));

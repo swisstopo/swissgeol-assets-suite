@@ -78,8 +78,8 @@
               mat-row
               *matRowDef="let row; columns: COLUMNS"
               (click)="searchForAsset(row.assetId)"
-              (mouseover)="onAssetMouseOver(row.assetId)"
-              (mouseleave)="onAssetMouseOut()"
+              (mouseover)="assetMouseOver.emit(row.assetId)"
+              (mouseleave)="assetMouseOver.emit(null)"
             ></tr>
           </table>
         </div>
