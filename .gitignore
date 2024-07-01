@@ -49,7 +49,6 @@ Thumbs.db
 
 __pycache__
 
-.env.local
 .env.staging
 .env.prod
 
