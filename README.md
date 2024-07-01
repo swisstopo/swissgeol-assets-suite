@@ -13,28 +13,15 @@ The following components must be installed on the development computer:
 Follow these steps to set up the development environment on your local machine:
 
 - [1. Configure Local Systems](#1-Configure-Local-Systems)
-- [2. Configure the Asset Server](#2-Configure-the-Asset-Server)
-- [3. Install Dependencies](#3-Install-Dependencies)
-- [4. Generate Database Types](#4-Generate-Database-Types)
-- [5. Initialize MinIO](#5-Initialize-MinIO)
+- [3. Install Dependencies](#2-Install-Dependencies)
+- [4. Generate Database Types](#3-Generate-Database-Types)
+- [5. Initialize MinIO](#4-Initialize-MinIO)
 
 #### 1. Configure Local Systems
 
 Configure `development/.env` according to the [local service configuration](#Local-Service-Configuration).
 
-#### 2. Configure the Asset Server
-
-Create an empty copy of the [web server configuration](#Asset-Server-Configuration) as [`apps/server-asset-sg/.env.local`](apps/server-asset-sg/.env.local).
-Configure the following variables:
-
-- Set `FRONTEND_URL=http://localhost:4200`.
-- Set `DATABASE_URL=postgres://{DB_USER}:{DB_PASSWORD}@localhost:5432/postgres?schema=public`,
-  where `{DB_USER}` and `{DB_PASSWORD}` equals the environment variables set for your local services.
-- Set all `OAUTH_*` variables to the example values to use your local OIDC server.
-- Leave `OCR_URL` empty.
-- Leave `OCR_CALLBACK_URL` empty.
-
-#### 3. Install Dependencies
+#### 2. Install Dependencies
 
 Install node modules:
 
@@ -42,7 +29,7 @@ Install node modules:
 npm install
 ```
 
-#### 4. Generate Database Types
+#### 3. Generate Database Types
 
 Generate prisma-client for database-access:
 
@@ -50,7 +37,7 @@ Generate prisma-client for database-access:
 npm run prisma -- generate
 ```
 
-#### 5. Initialize MinIO
+#### 4. Initialize MinIO
 
 - [Start the development services](#Starting-the-Development-Environment).
 - Open http://localhost:9001
@@ -59,13 +46,9 @@ npm run prisma -- generate
 - Navigate to [the new bucket's browser](http://localhost:9001/browser/asset-sg) and create an empty folder with the name `asset-sg`.
 - Navigate to [Configuration](http://localhost:9001/settings/configurations/region) and change the server region to `local`.
 - Navigate to [Access Keys](http://localhost:9001/access-keys) and create a new access key.
-- Open your Asset Server Configuration at [`apps/server-asset-sg/.env.local`](apps/server-asset-sg/.env.local) and make the following changes:
-  - `S3_REGION=local`
-  - `S3_ENDPOINT=http://localhost:9000`
-  - `S3_BUCKET_NAME=asset-sg`
-  - `S3_ASSET_FOLDER=asset-sg`
-  - `S3_ACCESS_KEY_ID` as your newly generated access key.
-  - `S3_SECRET_ACCESS_KEY` as your newly generated access key's secret.
+- Open the file [`apps/server-asset-sg/.env.local`](apps/server-asset-sg/.env.local) and modify the following variables:
+  - Set `S3_ACCESS_KEY_ID` to your generated access key.
+  - Set `S3_SECRET_ACCESS_KEY` to your generated access key's secret.
 
 ### Starting the Development Environment
 
