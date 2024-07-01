@@ -9,10 +9,10 @@ on:
 
 env:
   NODE_VERSION: "20.x"
-  DB_USERNAME: postgres-test
-  DB_PASSWORD: postgres-test
-  DB_DATABASE: postgres-test
-  DATABASE_URL: postgres://postgres-test:postgres-test@localhost:5432/postgres-test?schema=public
+  DB_USERNAME: postgres
+  DB_PASSWORD: postgres
+  DB_DATABASE: postgres
+  DATABASE_URL: postgres://postgres:postgres@localhost:5432/postgres?schema=public
 
 jobs:
   install:
