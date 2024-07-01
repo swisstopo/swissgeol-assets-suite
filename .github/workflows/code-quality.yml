@@ -9,10 +9,10 @@ on:
 
 env:
   NODE_VERSION: "20.x"
-  DB_USERNAME: postgres-test
-  DB_PASSWORD: postgres-test
-  DB_DATABASE: postgres-test
-  DATABASE_URL: postgres://postgres-test:postgres-test@localhost:5432/postgres-test?schema=public
+  DB_USERNAME: postgres
+  DB_PASSWORD: postgres
+  DB_DATABASE: postgres
+  DATABASE_URL: postgres://postgres:postgres@localhost:5432/postgres?schema=public
 
 jobs:
   install:
@@ -153,7 +153,6 @@ jobs:
 
   cypress:
     runs-on: ubuntu-latest
-    if: ${{ false }}
     needs:
       - test
       - lint
@@ -167,6 +166,15 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+      - name: Setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: Restore cached node modules
+        uses: actions/cache/restore@v4
+        with:
+          path: ./node_modules
+          key: "${{ runner.os }}-node_modules-${{ hashFiles('package-lock.json') }}-${{ hashFiles('**/schema.prisma') }}"
       - name: Start services
         env:
           DB_USER: ${{ env.DB_USERNAME }}
@@ -174,10 +182,7 @@ jobs:
         run: |
           cd development
           docker compose up -d db oidc elasticsearch
-      - name: Setup
-        run: |
-          npm run prisma -- reset -f
-          # npm run start:server &> /dev/null &
+          sleep 30
       - name: Restore cached e2e node modules
         uses: actions/cache/restore@v4
         with:
@@ -196,6 +201,7 @@ jobs:
           start: npm start
           wait-on: "http://localhost:4200"
           wait-on-timeout: 120
+          working-directory: ./e2e
         env:
           VITE_APP_VERSION: 0.0.99+dev
           TZ: Europe/Zurich

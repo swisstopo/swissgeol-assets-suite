@@ -48,7 +48,6 @@ Thumbs.db
 /libs/db-models/src/prisma/swisstopo-lambda_testdaten_asset_swissgeol
 
 __pycache__
-
 .env.local
 .env.staging
 .env.prod
