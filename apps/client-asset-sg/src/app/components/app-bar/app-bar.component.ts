@@ -6,10 +6,10 @@ import { Lang } from '@asset-sg/shared';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { flow, pipe } from 'fp-ts/function';
 import * as O from 'fp-ts/Option';
+import packageInfo from 'package.json';
 import queryString from 'query-string';
 import { EMPTY, Observable, Subject, debounceTime, filter, map, startWith, switchMap } from 'rxjs';
 
-import packageInfo from 'package.json';
 
 @UntilDestroy()
 @Component({
