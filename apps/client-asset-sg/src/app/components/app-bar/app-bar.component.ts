@@ -10,7 +10,6 @@ import packageInfo from 'package.json';
 import queryString from 'query-string';
 import { EMPTY, Observable, Subject, debounceTime, filter, map, startWith, switchMap } from 'rxjs';
 
-
 @UntilDestroy()
 @Component({
   selector: 'asset-sg-app-bar',
