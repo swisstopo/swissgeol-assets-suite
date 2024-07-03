@@ -11,6 +11,7 @@ WORKDIR /app
 COPY . .
 
 RUN npm install
+RUN npm pkg set version=${APP_VERSION}
 RUN npx nx build client-asset-sg --configuration=production
 
 # final image build

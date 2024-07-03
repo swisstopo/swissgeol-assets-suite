@@ -6,6 +6,7 @@ import { Lang } from '@asset-sg/shared';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { flow, pipe } from 'fp-ts/function';
 import * as O from 'fp-ts/Option';
+import packageInfo from 'package.json';
 import queryString from 'query-string';
 import { EMPTY, Observable, Subject, debounceTime, filter, map, startWith, switchMap } from 'rxjs';
 
@@ -24,6 +25,8 @@ export class AppBarComponent implements OnInit {
   @ViewChild('searchInput', { read: ElementRef, static: true }) searchInput!: ElementRef<HTMLInputElement>;
 
   public searchTextKeyDown$ = new Subject<KeyboardEvent>();
+
+  public version = packageInfo.version;
 
   public _currentLang$ = this._router.events.pipe(
     filter((e): e is NavigationEnd => e instanceof NavigationEnd),

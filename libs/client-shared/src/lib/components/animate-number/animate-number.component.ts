@@ -1,7 +1,7 @@
 import { NumberInput } from '@angular/cdk/coercion';
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { PushModule } from '@rx-angular/template/push';
-import * as bezier from 'bezier-easing';
+import bezier from 'bezier-easing';
 import {
   BehaviorSubject,
   animationFrameScheduler,
