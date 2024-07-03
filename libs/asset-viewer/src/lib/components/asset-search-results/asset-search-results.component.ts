@@ -22,6 +22,8 @@ export class AssetSearchResultsComponent {
   @Output() closeSearchResultsClicked = new EventEmitter<void>();
   @Output() assetMouseOver = new EventEmitter<number | null>();
 
+  public currentAssetId: number | null = null;
+
   protected readonly COLUMNS = [
     'favourites',
     'titlePublic',
@@ -43,6 +45,7 @@ export class AssetSearchResultsComponent {
   protected readonly LoadingState = LoadingState;
 
   public searchForAsset(assetId: number) {
+    this.currentAssetId = assetId;
     this._store.dispatch(actions.searchForAssetDetail({ assetId }));
   }
 
