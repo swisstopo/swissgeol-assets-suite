@@ -80,17 +80,16 @@ export const makeRhombusImage = (radius: number) =>
     radius,
     angle: 0,
     fill: new Fill({ color: '#194ed0' }),
-    stroke: new Stroke({ color: 'black' }),
+    stroke: new Stroke({ color: '#194ed0' }),
   });
 
 export const featureStyles = {
   hidden: new Style(undefined),
-
   point: new Style({
     image: new Circle({
-      radius: 4,
+      radius: 10,
       fill: new Fill({ color: '#194ed0' }),
-      stroke: new Stroke({ color: 'black' }),
+      stroke: new Stroke({ color: '#194ed0' }),
     }),
   }),
   rhombus: new Style({
@@ -102,6 +101,7 @@ export const featureStyles = {
       stroke: new Stroke({ color: 'red', width: 2.5 }),
       fill: new Fill({ color: 'transparent' }),
     }),
+    zIndex: 3,
   }),
   bigPointAsset: new Style({
     image: new Circle({
@@ -128,6 +128,7 @@ export const featureStyles = {
   polygon: new Style({
     stroke: new Stroke({ color: 'red', width: 2.5 }),
     fill: new Fill({ color: 'transparent' }),
+    zIndex: 1,
   }),
   polygonAsset: new Style({
     stroke: new Stroke({ color: 'red', width: 3 }),
@@ -148,6 +149,7 @@ export const featureStyles = {
   lineString: new Style({
     stroke: new Stroke({ color: 'red', width: 3 }),
     fill: new Fill({ color: 'transparent' }),
+    zIndex: 2,
   }),
   lineStringAsset: new Style({
     stroke: new Stroke({ color: 'red', width: 3 }),

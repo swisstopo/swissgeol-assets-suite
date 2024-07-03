@@ -1,7 +1,6 @@
 <asset-sg-map
   [highlightedAssetId]="highlightedAssetId"
   (assetsClick)="assetClicked$.next($event)"
-  (assetsHover)="highlightedAssetId = $event[0]"
   (initializeEnd)="handleMapInitialised()"
 />
 
