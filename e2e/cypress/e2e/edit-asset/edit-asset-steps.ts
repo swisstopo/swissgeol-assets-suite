@@ -1,7 +1,9 @@
 import { Then, When } from '@badeball/cypress-cucumber-preprocessor';
 
 When(/^The user selects asset from the results$/, () => {
-  cy.get('a:contains("CypressTestAsset")', { timeout: 3000 }).click();
+  cy.get('td:contains("CypressTestAsset")', { timeout: 3000 })
+    .first()
+    .click({ force: true });
 });
 When(/^The user clicks edit button$/, () => {
   cy.get('svg-icon[data-testid="edit-asset-button"]').click();

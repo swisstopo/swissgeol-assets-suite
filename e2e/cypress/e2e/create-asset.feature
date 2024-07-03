@@ -2,6 +2,7 @@ Feature: create
 
   Background:
     Given The user is logged in
+    And User has admin permissions
 
   Scenario: User creates the asset
     When A user clicks the administration menu button
