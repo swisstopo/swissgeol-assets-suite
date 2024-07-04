@@ -44,13 +44,24 @@ export class AssetService {
   }
 
   async getAllStudies() {
-    const rawData: { studyId: string; isPoint: boolean; centroidGeomText: string }[] =
-      await this.prismaService.$queryRawUnsafe(
-        'select study_id as "studyId", is_point as "isPoint", centroid_geom_text as "centroidGeomText" from public.all_study'
-      );
+    interface RawStudy {
+      studyId: string;
+      assetId: number;
+      isPoint: boolean;
+      centroidGeomText: string;
+    }
+    const rawData: RawStudy[] = await this.prismaService.$queryRawUnsafe(`
+        SELECT
+          study_id AS "studyId",
+          asset_id AS "assetId",
+          is_point AS "isPoint",
+          centroid_geom_text AS "centroidGeomText"
+        FROM public.all_study
+      `);
 
     return rawData.map((study) => ({
       studyId: study.studyId,
+      assetId: study.assetId,
       isPoint: study.isPoint,
       centroid: study.centroidGeomText.replace('POINT(', '').replace(')', ''),
     }));

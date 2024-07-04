@@ -3,6 +3,7 @@ import { isNotUndefined } from '@asset-sg/core';
 import { AssetEditDetail, getCoordsFromStudy, Study } from '@asset-sg/shared';
 import { Control } from 'ol/control';
 import { Coordinate } from 'ol/coordinate';
+import { containsExtent } from 'ol/extent';
 import Feature from 'ol/Feature';
 import { Geometry, LineString, Point, Polygon } from 'ol/geom';
 import { fromExtent as polygonFromExtent } from 'ol/geom/Polygon';
@@ -21,15 +22,30 @@ export class MapController {
   private readonly map: OlMap;
 
   readonly layers: MapLayers;
-
   readonly sources: MapLayerSources;
 
-  private readonly assetsById = new Map<number, AssetEditDetail>();
-  private readonly assetsByStudyId = new Map<string, AssetEditDetail>();
-
-  private readonly _isInitialized$ = new BehaviorSubject(false);
   readonly assetsClick$: Observable<number[]>;
   readonly assetsHover$: Observable<number[]>;
+
+  /**
+   * The id of all visible assets, mapped to their {@link AssetEditDetail} object.
+   * @private
+   */
+  private readonly assetsById = new Map<number, AssetEditDetail>();
+
+  /**
+   * The IDs of all available studies, mapped to the id of the asset that they belong to.
+   * @private
+   */
+  private readonly assetIdsByStudyId = new Map<string, number>();
+
+  /**
+   * The currently selected asset.
+   * @private
+   */
+  private activeAsset: AssetEditDetail | null = null;
+
+  private readonly _isInitialized$ = new BehaviorSubject(false);
 
   constructor(element: HTMLElement) {
     const view = new View({
@@ -44,6 +60,7 @@ export class MapController {
 
     this.map = new OlMap({
       target: element,
+      controls: [],
       layers: [
         this.layers.raster,
         this.layers.heatmap,
@@ -87,12 +104,14 @@ export class MapController {
   }
 
   setStudies(studies: AllStudyDTO[]): void {
+    this.assetIdsByStudyId.clear();
     const studyFeatures: Feature<Point>[] = Array(studies.length);
     const heatmapFeatures: Feature<Point>[] = Array(studies.length);
 
     for (let i = 0; i < studies.length; i++) {
       const study = studies[i];
       const geometry = new Point(olCoordsFromLV95(study.centroid));
+      this.assetIdsByStudyId.set(study.studyId, study.assetId);
 
       const heatmapFeature = new Feature<Point>(geometry);
       heatmapFeature.setId(study.studyId);
@@ -116,7 +135,6 @@ export class MapController {
 
   setAssets(assets: AssetEditDetail[]): void {
     this.assetsById.clear();
-    this.assetsByStudyId.clear();
 
     const features: Feature[] = [];
     const studies: Study[] = [];
@@ -124,7 +142,7 @@ export class MapController {
       const asset = assets[i];
       this.assetsById.set(asset.assetId, asset);
       for (const assetStudy of asset.studies) {
-        const study = { studyId: assetStudy.studyId, geom: wktToGeoJSON(assetStudy.geomText) };
+        const study: Study = { studyId: assetStudy.studyId, geom: wktToGeoJSON(assetStudy.geomText) };
         features.push(
           makeStudyFeature(study, {
             point: featureStyles.bigPoint,
@@ -132,36 +150,29 @@ export class MapController {
             lineString: featureStyles.lineString,
           })
         );
-
         const studyFeature = this.sources.studies.getFeatureById(study.studyId);
         if (studyFeature != null) {
-          studyFeature.set('previousStyle', studyFeature.getStyle());
-          studyFeature.setStyle(featureStyles.hidden);
+          this.hideFeature(studyFeature);
         }
-
-        this.assetsByStudyId.set(study.studyId, asset);
+        studies.push(study);
       }
     }
     window.requestAnimationFrame(() => {
       this.sources.assets.clear();
       this.sources.assets.addFeatures(features);
+      this.sources.picker.clear();
       zoomToStudies(this.map, studies);
     });
   }
 
   clearAssets(): void {
     this.assetsById.clear();
-    this.assetsByStudyId.clear();
     window.requestAnimationFrame(() => {
       this.sources.assets.clear();
       this.sources.polygon.clear();
+      this.sources.picker.clear();
       this.sources.studies.forEachFeature((feature) => {
-        const previousStyle = feature.get('previousStyle');
-        if (previousStyle == null) {
-          return;
-        }
-        feature.setStyle(previousStyle);
-        feature.unset('previousStyle');
+        this.unhideFeature(feature);
       });
     });
   }
@@ -180,6 +191,7 @@ export class MapController {
         lineString: featureStyles.lineStringAssetHighlighted,
       });
     });
+
     this.sources.picker.clear();
     this.sources.picker.addFeatures(features);
   }
@@ -189,6 +201,9 @@ export class MapController {
   }
 
   setActiveAsset(asset: AssetEditDetail): void {
+    this.resetActiveAssetStyle();
+    this.activeAsset = asset;
+
     this.sources.activeAsset.clear();
     this.layers.assets.setOpacity(0.5);
     this.layers.studies.setOpacity(0.5);
@@ -208,6 +223,11 @@ export class MapController {
         lineString: featureStyles.lineStringAsset,
       });
       features.push(feature);
+
+      const studyFeature = this.sources.studies.getFeatureById(study.studyId);
+      if (studyFeature != null) {
+        this.hideFeature(studyFeature);
+      }
     }
 
     window.requestAnimationFrame(() => {
@@ -217,6 +237,8 @@ export class MapController {
   }
 
   clearActiveAsset(): void {
+    this.resetActiveAssetStyle();
+    this.activeAsset = null;
     this.sources.activeAsset.clear();
     this.layers.assets.setOpacity(1);
     this.layers.studies.setOpacity(1);
@@ -267,14 +289,52 @@ export class MapController {
     }) as MapLayer<Point>;
   }
 
+  /**
+   * Creates an observable that emits the ids of assets whose geometries have been clicked.
+   *
+   * - If a study point has been clicked, that study's assetId is emitted as the only clicked element.
+   * - Otherwise, the assetIds of all overlapping studies hit by the click are emitted.
+   *
+   * @private
+   */
   private makeAssetsClick$(): Observable<number[]> {
     return fromEventPattern<MapBrowserEvent<PointerEvent>>(
       (h) => this.map.on('click', h),
       (h) => this.map.un('click', h)
     ).pipe(
-      // Extract the ids of the assets that have been clicked.
-      map((event) => {
-        const assetIds: number[] = [];
+      // Check if the click has hit a study point, and use only that point if so.
+      switchMap(async (event) => {
+        let assetId: number | null = null;
+        this.map.forEachFeatureAtPixel(
+          event.pixel,
+          (feature): void => {
+            if (assetId != null) {
+              return;
+            }
+            const featureId = feature.getId();
+            if (featureId == null) {
+              return;
+            }
+            const currentAssetId = this.assetIdsByStudyId.get(`${featureId}`);
+            if (currentAssetId != null) {
+              assetId = currentAssetId;
+            }
+          },
+          {
+            layerFilter: (layer) => layer === this.layers.studies,
+          }
+        );
+        return [event, assetId] as const;
+      }),
+
+      map(([event, assetIdFromStudy]) => {
+        // Use the study point's asset if one has been clicked.
+        if (assetIdFromStudy != null) {
+          return [assetIdFromStudy];
+        }
+
+        // Otherwise, extract the assetIds of all overlapping study geometries that have been clicked.
+        const assetIds = new Set<number>();
         this.map.forEachFeatureAtPixel(
           event.pixel,
           (feature): void => {
@@ -282,16 +342,16 @@ export class MapController {
             if (featureId == null) {
               return;
             }
-            const asset = this.assetsByStudyId.get(`${featureId}`);
-            if (asset != null) {
-              assetIds.push(asset.assetId);
+            const assetId = this.assetIdsByStudyId.get(`${featureId}`);
+            if (assetId != null) {
+              assetIds.add(assetId);
             }
           },
           {
             layerFilter: (layer) => layer === this.layers.assets,
           }
         );
-        return assetIds;
+        return [...assetIds];
       })
     );
   }
@@ -305,20 +365,56 @@ export class MapController {
 
       // Extract the ids of the assets that have been hovered.
       map((features) => {
+        const viewExtent = this.map.getView().calculateExtent(this.map.getSize());
         const assetIds: number[] = [];
         for (const feature of features) {
           const featureId = feature.getId();
           if (featureId == null) {
             continue;
           }
-          const asset = this.assetsByStudyId.get(`${featureId}`);
-          if (asset != null) {
-            assetIds.push(asset.assetId);
+
+          // Ignore geometries that fill up the entire view.
+          const geometry = feature.getGeometry();
+          if (geometry != null && containsExtent(geometry.getExtent(), viewExtent)) {
+            continue;
+          }
+
+          const assetId = this.assetIdsByStudyId.get(`${featureId}`);
+          if (assetId != null) {
+            assetIds.push(assetId);
           }
         }
         return assetIds;
       })
     );
+  }
+
+  private resetActiveAssetStyle(): void {
+    // If we have no active asset, or if the active asset is also contained in the currently visible assets,
+    // then we either can't or don't need to show the asset's study points.
+    if (this.activeAsset == null || this.assetsById.has(this.activeAsset.assetId)) {
+      return;
+    }
+    for (const study of this.activeAsset.studies) {
+      const feature = this.sources.studies.getFeatureById(study.studyId);
+      if (feature != null) {
+        this.unhideFeature(feature);
+      }
+    }
+  }
+
+  private hideFeature(feature: Feature): void {
+    feature.set('previousStyle', feature.getStyle());
+    feature.setStyle(featureStyles.hidden);
+  }
+
+  private unhideFeature(feature: Feature): void {
+    const previousStyle = feature.get('previousStyle');
+    if (previousStyle == null) {
+      return;
+    }
+    feature.setStyle(previousStyle);
+    feature.unset('previousStyle');
   }
 }
 
@@ -398,12 +494,17 @@ const makeStudyFeature = (study: Study, styles: { point: Style; polygon: Style; 
         return [new Point(olCoordsFromLV95(study.geom.coord)), styles.point];
       case 'LineString':
         return [new LineString(study.geom.coords.map(olCoordsFromLV95)), styles.lineString];
-      case 'Polygon':
-        return [new Polygon([study.geom.coords.map(olCoordsFromLV95)]), styles.polygon];
+      case 'Polygon': {
+        const polygon = new Polygon([study.geom.coords.map(olCoordsFromLV95)]);
+        const style = styles.polygon.clone();
+        style.setZIndex((style.getZIndex() ?? 0) + 1 / polygon.getArea());
+        return [polygon, style];
+      }
     }
   })();
 
   const feature = new Feature({ geometry });
+
   feature.setId(study.studyId);
   feature.setStyle(style);
   feature.setProperties({ 'swisstopo.type': 'StudyGeometry' });
@@ -419,6 +520,7 @@ const zoomToStudies = (map: OlMap, studies: Study[]): void => {
   const size = map.getSize();
   const oldCenter = view.getCenter();
   const oldZoom = view.getZoom();
+
   if (size == null) {
     return;
   }

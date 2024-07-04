@@ -5,12 +5,14 @@ import { Equals, assert } from 'tsafe';
 
 export const AllStudyDTO = D.struct({
   studyId: D.string,
+  assetId: D.number,
   isPoint: D.boolean,
   centroid: LV95,
 });
 
 export const eqAllStudyDTO = TEq.struct({
   studyId: TEq.string,
+  assetId: TEq.number,
   isPoint: TEq.boolean,
   centroid: eqLV95,
 });
