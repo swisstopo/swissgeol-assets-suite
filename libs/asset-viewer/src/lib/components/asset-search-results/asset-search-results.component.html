@@ -80,6 +80,7 @@
               (click)="searchForAsset(row.assetId)"
               (mouseover)="assetMouseOver.emit(row.assetId)"
               (mouseleave)="assetMouseOver.emit(null)"
+              [ngClass]="{ selected: row.assetId === (currentAssetDetail$ | async)?.assetId }"
             ></tr>
           </table>
         </div>

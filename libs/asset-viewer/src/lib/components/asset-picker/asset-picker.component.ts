@@ -3,11 +3,11 @@ import {
   Component,
   ElementRef,
   EventEmitter,
+  inject,
   Input,
   NgZone,
   Output,
   ViewChild,
-  inject,
 } from '@angular/core';
 import { DragHandleOffset, getCssCustomPropertyNumberValue } from '@asset-sg/client-shared';
 import { AssetEditDetail } from '@asset-sg/shared';
@@ -17,16 +17,16 @@ import { RxState } from '@rx-angular/state';
 import * as O from 'fp-ts/Option';
 import { WINDOW } from 'ngx-window-token';
 import {
-  Observable,
-  Subject,
   distinctUntilChanged,
   filter,
   identity,
   map,
   merge,
+  Observable,
   pairwise,
   scan,
   startWith,
+  Subject,
   switchMap,
 } from 'rxjs';
 
@@ -162,7 +162,7 @@ export class AssetPickerComponent extends RxState<AssetPickerState> {
   }
 
   public selectAndClose(assetId: number) {
-    this._store.dispatch(actions.searchForAssetDetail({ assetId }));
+    this._store.dispatch(actions.assetClicked({ assetId }));
     this.closePicker$.next();
   }
 }

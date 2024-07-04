@@ -46,6 +46,7 @@
 
 .mat-mdc-row:hover .mat-mdc-cell {
   background-color: variables.$grey-01;
+  cursor: pointer;
 }
 
 .table-container {

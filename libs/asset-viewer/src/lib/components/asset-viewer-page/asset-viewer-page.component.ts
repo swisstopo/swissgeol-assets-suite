@@ -146,7 +146,7 @@ export class AssetViewerPageComponent implements AfterViewInit, OnDestroy {
     );
 
     singleStudyClicked$.pipe(untilDestroyed(this)).subscribe((assetIds) => {
-      this._store.dispatch(actions.searchForAssetDetail({ assetId: assetIds[0] }));
+      this._store.dispatch(actions.assetClicked({ assetId: assetIds[0] }));
     });
 
     merge(
