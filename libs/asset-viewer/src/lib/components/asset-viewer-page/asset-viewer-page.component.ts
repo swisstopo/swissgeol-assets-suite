@@ -1,4 +1,3 @@
-import { ENTER } from '@angular/cdk/keycodes';
 import { TemplatePortal } from '@angular/cdk/portal';
 import {
   AfterViewInit,
@@ -13,7 +12,6 @@ import {
   ViewChild,
   ViewContainerRef,
 } from '@angular/core';
-import { Router } from '@angular/router';
 import {
   AppPortalService,
   appSharedStateActions,
@@ -22,7 +20,7 @@ import {
   LifecycleHooksDirective,
 } from '@asset-sg/client-shared';
 import { isTruthy } from '@asset-sg/core';
-import { AssetEditDetail, LV95 } from '@asset-sg/shared';
+import { AssetEditDetail } from '@asset-sg/shared';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { Store } from '@ngrx/store';
 import * as A from 'fp-ts/Array';
@@ -47,7 +45,6 @@ import {
 
 import * as actions from '../../state/asset-search/asset-search.actions';
 import {
-  selectAssetSearchPolygon,
   selectAssetSearchQuery,
   selectAssetSearchResultData,
   selectCurrentAssetDetail,
@@ -61,7 +58,7 @@ import {
   styleUrls: ['./asset-viewer-page.component.scss'],
   hostDirectives: [LifecycleHooksDirective],
 })
-export class AssetViewerPageComponent implements OnDestroy, AfterViewInit {
+export class AssetViewerPageComponent implements AfterViewInit, OnDestroy {
   @ViewChild('templateAppBarPortalContent') templateAppBarPortalContent!: TemplateRef<unknown>;
   @ViewChild('searchInput') searchInput!: ElementRef<HTMLInputElement>;
 
@@ -72,32 +69,28 @@ export class AssetViewerPageComponent implements OnDestroy, AfterViewInit {
   private _appRef = inject(ApplicationRef);
   private _cd = inject(ChangeDetectorRef);
   private _ngZone = inject(NgZone);
-  private _router = inject(Router);
 
-  public searchPolygon$ = this._store.select(selectAssetSearchPolygon).pipe(map(O.fromNullable));
   public currentAssetId$ = this._store.select(selectCurrentAssetDetail).pipe(
     map((currentAsset) => currentAsset?.assetId),
     map(O.fromNullable)
   );
   public currentAsset$ = this._store.select(selectCurrentAssetDetail);
-  public removePolygon$ = new Subject<void>();
   public isFiltersOpen$ = this._store.select(selectIsFiltersOpen);
 
   public _searchTextKeyDown$ = new Subject<KeyboardEvent>();
   private _searchTextChanged$ = this._searchTextKeyDown$.pipe(
-    filter((ev) => ev.keyCode === ENTER),
+    filter((ev) => ev.key === 'Enter'),
     map((ev) => {
       const value = (ev.target as HTMLInputElement).value;
       return value ? O.some(value) : O.none;
     })
   );
 
-  public polygonChanged$ = new Subject<LV95[]>();
   public assetClicked$ = new Subject<number[]>();
   public closeSearchResultsClicked$ = new Subject<void>();
   public closeInstructions$ = new Subject<void>();
   public assetsForPicker$: Observable<AssetEditDetail[]>;
-  public highlightAssetStudies$ = new Subject<O.Option<number>>();
+  public highlightedAssetId: number | null = null;
 
   public ngAfterViewInit() {
     this._store.dispatch(actions.initializeSearch());
@@ -166,11 +159,7 @@ export class AssetViewerPageComponent implements OnDestroy, AfterViewInit {
             O.getOrElseW(() => actions.clearSearchText())
           )
         )
-      ),
-      this.polygonChanged$.pipe(
-        map((polygon) => actions.searchByFilterConfiguration({ filterConfiguration: { polygon } }))
-      ),
-      this.removePolygon$.pipe(map(() => actions.removePolygon()))
+      )
     )
       .pipe(untilDestroyed(this))
       .subscribe(this._store);

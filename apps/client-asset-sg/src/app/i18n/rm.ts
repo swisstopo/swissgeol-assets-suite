@@ -29,7 +29,7 @@ export const rmAppTranslations: AppTranslations = {
     userManagement: 'RM Benutzer Verwaltung',
   },
   map: {
-    zoomIn: 'RM Hineinoomen',
+    zoomIn: 'RM Hineinzoomen',
     zoomOut: 'RM Herauszoomen',
     zoomToOrigin: 'RM Zur Ursprungsposition zoomen',
     drawingModeOn: 'RM Zeichenmodus ein',

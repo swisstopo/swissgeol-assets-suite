@@ -29,7 +29,7 @@ export const itAppTranslations: AppTranslations = {
     userManagement: 'IT Benutzer Verwaltung',
   },
   map: {
-    zoomIn: 'IT Hineinoomen',
+    zoomIn: 'IT Hineinzoomen',
     zoomOut: 'IT Herauszoomen',
     zoomToOrigin: 'IT Zur Ursprungsposition zoomen',
     drawingModeOn: 'IT Zeichenmodus ein',

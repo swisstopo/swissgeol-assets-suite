@@ -12,7 +12,7 @@ import { LineString, Point, Polygon, SimpleGeometry } from 'ol/geom';
 import { fromExtent as polygonFromExtent } from 'ol/geom/Polygon';
 import Map from 'ol/Map';
 import { fromLonLat } from 'ol/proj';
-import { Circle, Fill, Icon, Stroke, Style } from 'ol/style';
+import { Circle, Fill, Icon, RegularShape, Stroke, Style } from 'ol/style';
 import View from 'ol/View';
 
 import { isoWGSLat, isoWGSLng } from '../models';
@@ -67,48 +67,57 @@ export const decorateFeature = (
   return feature;
 };
 
-export const olCoordsFromLV95Array = (coords: LV95[]): Coordinate[] =>
-  coords.map(lv95ToWGS).map((l) => fromLonLat([isoWGSLng.unwrap(l.lng), isoWGSLat.unwrap(l.lat)]));
+export const olCoordsFromLV95Array = (coords: LV95[]): Coordinate[] => coords.map(olCoordsFromLV95);
+
+export const olCoordsFromLV95 = (lv95Coords: LV95): Coordinate => {
+  const wgsCoords = lv95ToWGS(lv95Coords);
+  return fromLonLat([isoWGSLng.unwrap(wgsCoords.lng), isoWGSLat.unwrap(wgsCoords.lat)]);
+};
+
+export const makeRhombusImage = (radius: number) =>
+  new RegularShape({
+    points: 4,
+    radius,
+    angle: 0,
+    fill: new Fill({ color: '#194ed0' }),
+    stroke: new Stroke({ color: 'black' }),
+  });
 
 export const featureStyles = {
-  undefinedStyle: new Style(undefined),
+  hidden: new Style(undefined),
 
-  pointStyle: new Style({
+  point: new Style({
     image: new Circle({
       radius: 4,
       fill: new Fill({ color: '#194ed0' }),
-      stroke: new Stroke({ color: '#194ed0' }),
+      stroke: new Stroke({ color: 'black' }),
     }),
   }),
-
-  rhombusStyle: new Style({
-    image: new Icon({
-      src: `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 12' height='9'%3E%3Cpath d='M8 0 0 6l8 6 8-6Z' fill='%23194ed0'/%3E%3C/svg%3E%0A`,
-    }),
+  rhombus: new Style({
+    image: makeRhombusImage(5),
   }),
-  bigPointStyle: new Style({
+  bigPoint: new Style({
     image: new Circle({
       radius: 20,
       stroke: new Stroke({ color: 'red', width: 2.5 }),
       fill: new Fill({ color: 'transparent' }),
     }),
   }),
-  bigPointStyleAsset: new Style({
+  bigPointAsset: new Style({
     image: new Circle({
       radius: 20,
       stroke: new Stroke({ color: 'red', width: 6 }),
       fill: new Fill({ color: '#ffffff88' }),
     }),
   }),
-  bigPointStyleAssetSelected: new Style({
+  bigPointAssetHighlighted: new Style({
     image: new Circle({
       radius: 20,
       stroke: new Stroke({ color: '#0b7285', width: 6 }),
       fill: new Fill({ color: '#eafc5288' }),
     }),
   }),
-
-  bigPointStyleAssetNotSelected: new Style({
+  bigPointAssetNotSelected: new Style({
     image: new Circle({
       radius: 20,
       stroke: new Stroke({ color: '#ff0000', width: 6, lineDash: [10, 5] }),
@@ -116,39 +125,39 @@ export const featureStyles = {
     }),
   }),
 
-  polygonStyle: new Style({
+  polygon: new Style({
     stroke: new Stroke({ color: 'red', width: 2.5 }),
     fill: new Fill({ color: 'transparent' }),
   }),
-  polygonStyleAsset: new Style({
-    stroke: new Stroke({ color: 'red', width: 6 }),
+  polygonAsset: new Style({
+    stroke: new Stroke({ color: 'red', width: 3 }),
     fill: new Fill({ color: '#ffffff88' }),
   }),
   linePreview: new Style({
-    stroke: new Stroke({ color: '#0b7285', width: 6, lineDash: [10, 10] }),
+    stroke: new Stroke({ color: '#0b7285', width: 3, lineDash: [10, 10] }),
   }),
-  polygonStyleAssetSelected: new Style({
-    stroke: new Stroke({ color: '#0b7285', width: 6 }),
+  polygonAssetHighlighted: new Style({
+    stroke: new Stroke({ color: '#0b7285', width: 4 }),
     fill: new Fill({ color: '#eafc5288' }),
   }),
-  polygonStyleAssetNotSelected: new Style({
-    stroke: new Stroke({ color: '#ff0000', width: 6, lineDash: [10, 10] }),
+  polygonAssetNotSelected: new Style({
+    stroke: new Stroke({ color: '#ff0000', width: 3, lineDash: [10, 10] }),
     fill: new Fill({ color: '#ffffff88' }),
   }),
 
-  lineStringStyle: new Style({
-    stroke: new Stroke({ color: 'red', width: 6 }),
+  lineString: new Style({
+    stroke: new Stroke({ color: 'red', width: 3 }),
     fill: new Fill({ color: 'transparent' }),
   }),
-
-  lineStringStyleAsset: new Style({
-    stroke: new Stroke({ color: 'red', width: 6 }),
+  lineStringAsset: new Style({
+    stroke: new Stroke({ color: 'red', width: 3 }),
   }),
-  lineStringStyleAssetSelected: new Style({
-    stroke: new Stroke({ color: '#0b7285', width: 6 }),
+  lineStringAssetHighlighted: new Style({
+    stroke: new Stroke({ color: '#0b7285', width: 4 }),
+    fill: new Fill({ color: '#eafc5288' }),
   }),
-  lineStringStyleAssetNotSelected: new Style({
-    stroke: new Stroke({ color: '#ff0000', width: 6, lineDash: [10, 10] }),
+  lineStringAssetNotSelected: new Style({
+    stroke: new Stroke({ color: '#ff0000', width: 3, lineDash: [10, 10] }),
   }),
 };
 
@@ -214,7 +223,7 @@ export const zoomToStudies = (
       const newZoom = view.getZoom();
       oldCenter && view.setCenter(oldCenter);
       oldZoom && view.setZoom(oldZoom);
-      windowService.delayRequestAnimationFrame(1, () => {
+      window.requestAnimationFrame(() => {
         view.animate({ zoom: newZoom, center: newCenter, duration: 600 });
       });
     }

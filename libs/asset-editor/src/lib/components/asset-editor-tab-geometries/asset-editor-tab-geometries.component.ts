@@ -414,9 +414,9 @@ export class AssetEditorTabGeometriesComponent implements OnInit {
           this._vectorSourceAssetGeoms.clear();
           const { studies } = this._form.getRawValue();
           const studiesWithFeature = createFeaturesFromStudies(studies, {
-            point: featureStyles.bigPointStyleAsset,
-            polygon: featureStyles.polygonStyleAsset,
-            lineString: featureStyles.lineStringStyleAsset,
+            point: featureStyles.bigPointAsset,
+            polygon: featureStyles.polygonAsset,
+            lineString: featureStyles.lineStringAsset,
           });
           this._vectorSourceAssetGeoms.addFeatures(studiesWithFeature.map((s) => s.olGeometry));
           zoomToStudies(this._windowService, olMap, studies, 1);
@@ -523,15 +523,15 @@ export class AssetEditorTabGeometriesComponent implements OnInit {
                       }
                       this._selectInteraction.getFeatures().push(f);
                     }
-                    f.setStyle(featureStyles.bigPointStyleAssetSelected);
+                    f.setStyle(featureStyles.bigPointAssetHighlighted);
                   } else {
-                    f.setStyle(featureStyles.bigPointStyleAssetNotSelected);
+                    f.setStyle(featureStyles.bigPointAssetNotSelected);
                   }
                 } else {
                   f.setStyle(
                     this._state.get().selectedStudyGeometrySelected
-                      ? featureStyles.bigPointStyleAssetSelected
-                      : featureStyles.bigPointStyleAsset
+                      ? featureStyles.bigPointAssetHighlighted
+                      : featureStyles.bigPointAsset
                   );
                 }
               }
@@ -540,14 +540,12 @@ export class AssetEditorTabGeometriesComponent implements OnInit {
                   geomStyle(
                     selectedStudy.geom,
                     selectedStudyGeometrySelected
-                      ? featureStyles.bigPointStyleAssetSelected
-                      : featureStyles.bigPointStyleAsset,
+                      ? featureStyles.bigPointAssetHighlighted
+                      : featureStyles.bigPointAsset,
+                    selectedStudyGeometrySelected ? featureStyles.polygonAssetHighlighted : featureStyles.polygonAsset,
                     selectedStudyGeometrySelected
-                      ? featureStyles.polygonStyleAssetSelected
-                      : featureStyles.polygonStyleAsset,
-                    selectedStudyGeometrySelected
-                      ? featureStyles.lineStringStyleAssetSelected
-                      : featureStyles.lineStringStyleAsset
+                      ? featureStyles.lineStringAssetHighlighted
+                      : featureStyles.lineStringAsset
                   )
                 );
               }
@@ -574,15 +572,15 @@ export class AssetEditorTabGeometriesComponent implements OnInit {
             const id = getFeatureId(f);
             if (O.isSome(id)) {
               if (id.value.startsWith(makeCoordFeatureIdStartWithId(a.selectedStudy.studyId))) {
-                f.setStyle(featureStyles.bigPointStyleAssetSelected);
+                f.setStyle(featureStyles.bigPointAssetHighlighted);
               }
               if (id.value === a.selectedStudy.studyId) {
                 f.setStyle(
                   geomStyle(
                     a.selectedStudy.geom,
-                    featureStyles.bigPointStyleAssetSelected,
-                    featureStyles.polygonStyleAssetSelected,
-                    featureStyles.lineStringStyleAssetNotSelected
+                    featureStyles.bigPointAssetHighlighted,
+                    featureStyles.polygonAssetHighlighted,
+                    featureStyles.lineStringAssetNotSelected
                   )
                 );
               }
@@ -606,9 +604,9 @@ export class AssetEditorTabGeometriesComponent implements OnInit {
         if (O.isSome(study)) {
           const newStudies = [...this._state.get().studies, study.value];
           const studiesWithFeature = createFeaturesFromStudies([study.value], {
-            point: featureStyles.bigPointStyleAsset,
-            polygon: featureStyles.polygonStyleAsset,
-            lineString: featureStyles.lineStringStyleAsset,
+            point: featureStyles.bigPointAsset,
+            polygon: featureStyles.polygonAsset,
+            lineString: featureStyles.lineStringAsset,
           });
           this._vectorSourceAssetGeoms.addFeatures(studiesWithFeature.map((s) => s.olGeometry));
           this._state.set(
@@ -701,7 +699,7 @@ export class AssetEditorTabGeometriesComponent implements OnInit {
               const marker = this._vectorSourceAssetGeoms.getFeatureById(makeCoordFeatureId(study, i));
               if (marker) {
                 marker.setGeometry(new Point(olCoordsFromLV95Array([coord])[0]));
-                marker.setStyle(featureStyles.bigPointStyleAssetSelected);
+                marker.setStyle(featureStyles.bigPointAssetHighlighted);
               } else {
                 makeCoordinateMarker(this._vectorSourceAssetGeoms, coord, i, study);
               }
@@ -723,7 +721,7 @@ export class AssetEditorTabGeometriesComponent implements OnInit {
                 const marker = this._vectorSourceAssetGeoms.getFeatureById(makeCoordFeatureId(study, i));
                 if (marker) {
                   marker.setGeometry(new Point(olCoordsFromLV95Array([coord])[0]));
-                  marker.setStyle(featureStyles.bigPointStyleAssetSelected);
+                  marker.setStyle(featureStyles.bigPointAssetHighlighted);
                 } else {
                   makeCoordinateMarker(this._vectorSourceAssetGeoms, coord, i, study);
                 }
@@ -748,7 +746,7 @@ export class AssetEditorTabGeometriesComponent implements OnInit {
     const draw = new Draw({
       source: this._vectorSourceDraw,
       type: 'Point',
-      style: featureStyles.bigPointStyleAssetSelected,
+      style: featureStyles.bigPointAssetHighlighted,
     });
     olMap.addInteraction(draw);
 
@@ -762,7 +760,7 @@ export class AssetEditorTabGeometriesComponent implements OnInit {
       if (O.isSome(study)) {
         const point = new Point(olCoordsFromLV95Array(study.value.geom.coords)[currentPointIndex]);
         const feature = decorateFeature(new Feature({ geometry: point }), {
-          style: featureStyles.bigPointStyleAsset,
+          style: featureStyles.bigPointAsset,
           id: `point_${currentPointIndex}`,
         });
         this._vectorSourceDraw.addFeature(feature);
@@ -775,7 +773,7 @@ export class AssetEditorTabGeometriesComponent implements OnInit {
               ]),
             }),
             {
-              style: featureStyles.polygonStyleAsset,
+              style: featureStyles.polygonAsset,
               id: `line_${currentPointIndex - 1}`,
             }
           );
@@ -792,7 +790,7 @@ export class AssetEditorTabGeometriesComponent implements OnInit {
               ]),
             }),
             {
-              style: featureStyles.polygonStyleAssetNotSelected,
+              style: featureStyles.polygonAssetNotSelected,
               id: `line_final`,
             }
           );
@@ -811,7 +809,7 @@ export class AssetEditorTabGeometriesComponent implements OnInit {
       .subscribe(() => {
         olMap.addInteraction(draw);
         const finalFeature = this._vectorSourceDraw.getFeatureById(`line_final`);
-        finalFeature && finalFeature.setStyle(featureStyles.polygonStyleAssetNotSelected);
+        finalFeature && finalFeature.setStyle(featureStyles.polygonAssetNotSelected);
       });
 
     fromEvent(this.mapDiv.nativeElement, 'mouseout')
@@ -822,7 +820,7 @@ export class AssetEditorTabGeometriesComponent implements OnInit {
         const preview2LineFeature = this._vectorSourceDraw.getFeatureById(`line_preview2`);
         preview2LineFeature && this._vectorSourceDraw.removeFeature(preview2LineFeature);
         const finalFeature = this._vectorSourceDraw.getFeatureById(`line_final`);
-        finalFeature && finalFeature.setStyle(featureStyles.polygonStyleAsset);
+        finalFeature && finalFeature.setStyle(featureStyles.polygonAsset);
 
         olMap.removeInteraction(draw);
 
@@ -1014,7 +1012,7 @@ export class AssetEditorTabGeometriesComponent implements OnInit {
           if (pointFeature) {
             this._selectInteraction.getFeatures().clear();
             this._selectInteraction.getFeatures().push(pointFeature);
-            pointFeature.setStyle(featureStyles.bigPointStyleAssetSelected);
+            pointFeature.setStyle(featureStyles.bigPointAssetHighlighted);
           }
         }
       } else {
@@ -1052,9 +1050,9 @@ export class AssetEditorTabGeometriesComponent implements OnInit {
     const study = getCurrentStudy(this._state.get());
     if (O.isSome(study)) {
       const studyWithFeature = createFeaturesFromStudy(study.value, {
-        point: featureStyles.bigPointStyleAsset,
-        polygon: featureStyles.polygonStyleAsset,
-        lineString: featureStyles.lineStringStyleAsset,
+        point: featureStyles.bigPointAsset,
+        polygon: featureStyles.polygonAsset,
+        lineString: featureStyles.lineStringAsset,
       });
       this._vectorSourceAssetGeoms.addFeatures([studyWithFeature.olGeometry]);
       this.updateMarkersForStudy(study.value);
@@ -1084,9 +1082,9 @@ export class AssetEditorTabGeometriesComponent implements OnInit {
             f.setStyle(
               geomStyle(
                 study.value.geom,
-                featureStyles.bigPointStyleAsset,
-                featureStyles.polygonStyleAsset,
-                featureStyles.lineStringStyleAsset
+                featureStyles.bigPointAsset,
+                featureStyles.polygonAsset,
+                featureStyles.lineStringAsset
               )
             );
           }
@@ -1158,7 +1156,7 @@ const makeCoordinateMarker = (vectorSource: VectorSource<Geometry>, coord: LV95,
     decorateFeature(
       new Feature(new Point(olCoordsFromLV95Array([coord])[0])),
       {
-        style: featureStyles.bigPointStyleAsset,
+        style: featureStyles.bigPointAsset,
         id: makeCoordFeatureId(study, index),
       },
       {
@@ -1170,9 +1168,9 @@ const makeCoordinateMarker = (vectorSource: VectorSource<Geometry>, coord: LV95,
 
 const setFeatureStyle = (feature: Feature, study: Study, selected: boolean) => {
   const style = Geom.matchStrict({
-    Point: () => (selected ? featureStyles.bigPointStyleAsset : featureStyles.bigPointStyleAssetNotSelected),
-    Polygon: () => (selected ? featureStyles.polygonStyleAsset : featureStyles.polygonStyleAssetNotSelected),
-    LineString: () => (selected ? featureStyles.lineStringStyleAsset : featureStyles.lineStringStyleAssetNotSelected),
+    Point: () => (selected ? featureStyles.bigPointAsset : featureStyles.bigPointAssetNotSelected),
+    Polygon: () => (selected ? featureStyles.polygonAsset : featureStyles.polygonAssetNotSelected),
+    LineString: () => (selected ? featureStyles.lineStringAsset : featureStyles.lineStringAssetNotSelected),
   })(study.geom);
   feature.setStyle(style);
 };

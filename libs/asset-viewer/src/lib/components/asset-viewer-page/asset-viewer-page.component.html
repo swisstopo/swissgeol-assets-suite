@@ -1,16 +1,15 @@
 <asset-sg-map
-  [searchPolygon$]="searchPolygon$"
-  [highlightAssetStudies]="highlightAssetStudies$"
-  (polygonChanged)="polygonChanged$.next($event)"
-  (assetClicked)="assetClicked$.next($event)"
-  (mapInitialized)="handleMapInitialised()"
-></asset-sg-map>
+  [highlightedAssetId]="highlightedAssetId"
+  (assetsClick)="assetClicked$.next($event)"
+  (assetsHover)="highlightedAssetId = $event[0]"
+  (initializeEnd)="handleMapInitialised()"
+/>
 
 <asset-sg-asset-picker
+  class="asset-picker"
   [assets]="assetsForPicker$"
   [currentAssetId]="currentAssetId$"
-  (assetMouseOver)="highlightAssetStudies$.next($event)"
-  class="asset-picker"
+  (assetMouseOver)="highlightedAssetId = $event"
 />
 
 <ng-template #templateAppBarPortalContent>
@@ -24,6 +23,6 @@
 
 <asset-sg-asset-search-refine *ngIf="isFiltersOpen$ | push" class="mat-elevation-z4" [style.visibility]="'visible'" />
 
-<asset-sg-asset-search-results class="mat-elevation-z2" (assetMouseOver)="highlightAssetStudies$.next($event)" />
+<asset-sg-asset-search-results class="mat-elevation-z2" (assetMouseOver)="highlightedAssetId = $event" />
 
 <asset-sg-asset-search-detail *ngIf="currentAsset$ | push" class="mat-elevation-z4" />

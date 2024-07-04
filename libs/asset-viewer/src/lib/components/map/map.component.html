@@ -1,4 +1,6 @@
+<mat-progress-bar *ngIf="!isInitialized" mode="indeterminate" />
+
 <div #map class="map"></div>
-<div class="map-loading-spinner" *ngIf="!(_isMapInitialised$ | push)">
-  <mat-progress-bar mode="indeterminate" />
+<div #mapControls>
+  <asset-sg-map-controls *ngIf="controls != null" [zoom]="controls.zoom" [draw]="controls.draw" />
 </div>
