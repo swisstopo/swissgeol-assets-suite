@@ -1,5 +1,6 @@
 {
   "tag": "generated_by_build",
   "build": "generated_by_build",
-  "commit": "generated_by_build"
+  "commit": "generated_by_build",
+  "version": "0.0.0-local"
 }
