@@ -152,7 +152,6 @@ export class AssetSearchEffects {
     return this.actions$.pipe(
       ofType(actions.assetClicked),
       withLatestFrom(this.store.select(selectCurrentAssetDetail)),
-      // filter(([{ assetId }, currentAssetDetail]) => assetId !== currentAssetDetail?.assetId),
       switchMap(([{ assetId }, currentAssetDetail]) =>
         assetId !== currentAssetDetail?.assetId
           ? this.assetSearchService
