@@ -1,7 +1,6 @@
-ARG APP_VERSION
-
 FROM node:20-alpine as app-builder
 
+ARG APP_VERSION
 ENV APP_VERSION=${APP_VERSION}
 ENV CYPRESS_INSTALL_BINARY=0
 
@@ -11,12 +10,13 @@ WORKDIR /app
 COPY . .
 
 RUN npm install
-RUN sed -i 's/0.0.0-local/${APP_VERSION}/g' apps/client-asset-sg/src/assets/version.json
+RUN sed -i ''s/0.0.0-local/${APP_VERSION}/g'' apps/client-asset-sg/src/assets/version.json
 RUN npx nx build client-asset-sg --configuration=production
 
 # final image build
 FROM nginx:mainline-alpine
 
+ARG APP_VERSION
 ENV APP_VERSION=${APP_VERSION}
 
 WORKDIR /usr/share/nginx/html
