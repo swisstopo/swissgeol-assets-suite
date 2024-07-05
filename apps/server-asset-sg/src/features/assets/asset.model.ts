@@ -2,6 +2,7 @@ import { Transform, Type } from 'class-transformer';
 import { IsArray, IsBoolean, IsDate, IsEnum, IsInt, IsObject, IsString, ValidateNested } from 'class-validator';
 
 import { IsNullable, messageNullableInt, messageNullableString } from '@/core/decorators/is-nullable.decorator';
+import { StudyType } from '@/features/studies/study.model';
 import { LocalDate } from '@/utils/data/local-date';
 import { Data, Model } from '@/utils/data/model';
 
@@ -54,7 +55,7 @@ export interface AssetDetails {
   infoGeol: InfoGeol;
   usage: AssetUsages;
   statuses: WorkStatus[];
-  studies: Study[];
+  studies: AssetStudy[];
 }
 
 export interface AssetUsages {
@@ -70,7 +71,7 @@ export interface AssetData extends Omit<Data<Asset>, NonDataKeys> {
   links: AssetLinksData;
   identifiers: (AssetIdentifier | AssetIdentifierData)[];
   statuses: (WorkStatus | WorkStatusData)[];
-  studies: (Study | StudyData)[];
+  studies: (AssetStudy | StudyData)[];
 }
 
 interface InfoGeol {
@@ -137,20 +138,14 @@ export enum UsageCode {
   UseOnRequest = 'useOnRequest',
 }
 
-export interface Study extends Model<StudyId> {
+export interface AssetStudy extends Model<AssetStudyId> {
   geom: string;
   type: StudyType;
 }
 
-export type StudyData = Data<Study>;
+export type StudyData = Data<AssetStudy>;
 
-export type StudyId = number;
-
-export enum StudyType {
-  Area = 'area',
-  Location = 'location',
-  Trace = 'trace',
-}
+export type AssetStudyId = number;
 
 export class AssetUsageBoundary implements AssetUsage {
   @IsBoolean()

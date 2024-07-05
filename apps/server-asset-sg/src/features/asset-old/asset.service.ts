@@ -7,6 +7,8 @@ import {
   SearchAssetResult,
   UsageCode,
   makeUsageCode,
+  AllStudyDTOFromAPI,
+  AllStudyRaw,
 } from '@asset-sg/shared';
 import { Injectable } from '@nestjs/common';
 import { sequenceS } from 'fp-ts/Apply';
@@ -33,39 +35,6 @@ import { postgresStudiesByAssetId } from '@/utils/postgres-studies/postgres-stud
 @Injectable()
 export class AssetService {
   constructor(private readonly prismaService: PrismaService, private readonly assetSearchService: AssetSearchService) {}
-
-  async getData(polygon: [number, number][]) {
-    const polygonParam = polygon.map((point) => `${point[0]} ${point[1]}`).join(',');
-
-    const result = await this.prismaService.$queryRawUnsafe(
-      `select id, accident_uid, year, month, canton, ST_AsText(geom) as geom from bicycle_accidents where ST_INTERSECTS(geom, ST_GeomFromText('POLYGON((${polygonParam}))', 2056))`
-    );
-    return { result };
-  }
-
-  async getAllStudies() {
-    interface RawStudy {
-      studyId: string;
-      assetId: number;
-      isPoint: boolean;
-      centroidGeomText: string;
-    }
-    const rawData: RawStudy[] = await this.prismaService.$queryRawUnsafe(`
-        SELECT
-          study_id AS "studyId",
-          asset_id AS "assetId",
-          is_point AS "isPoint",
-          centroid_geom_text AS "centroidGeomText"
-        FROM public.all_study
-      `);
-
-    return rawData.map((study) => ({
-      studyId: study.studyId,
-      assetId: study.assetId,
-      isPoint: study.isPoint,
-      centroid: study.centroidGeomText.replace('POINT(', '').replace(')', ''),
-    }));
-  }
 
   getFile(fileId: number) {
     return getFile(this.prismaService, fileId);

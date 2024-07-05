@@ -87,3 +87,7 @@ Content-Type: application/json
     }
   }
 }
+
+### List studies
+GET {{host}}/api/all-study-short
+Authorization: Impersonate {{user}}

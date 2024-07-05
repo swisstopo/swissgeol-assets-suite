@@ -1,0 +1,4 @@
+### List studies
+GET {{host}}/api/studies
+Authorization: Impersonate {{user}}
+Accept: text/csv

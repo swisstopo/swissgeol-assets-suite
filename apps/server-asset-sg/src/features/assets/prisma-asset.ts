@@ -6,11 +6,11 @@ import {
   AssetUsage,
   ContactAssignmentRole,
   LinkedAsset,
-  Study,
-  StudyId,
-  StudyType,
+  AssetStudy,
+  AssetStudyId,
   UsageStatusCode,
 } from '@/features/assets/asset.model';
+import { StudyType } from '@/features/studies/study.model';
 import { LocalDate } from '@/utils/data/local-date';
 import { satisfy } from '@/utils/define';
 
@@ -192,7 +192,7 @@ export const parseAssetFromPrisma = (data: SelectedAsset): Asset => ({
       id,
       type,
       geom: it.geomText,
-    } as Study;
+    } as AssetStudy;
   }),
 });
 
@@ -207,7 +207,7 @@ const parseUsage = (data: SelectedUsage): AssetUsage => ({
   availableAt: data.startAvailabilityDate == null ? null : LocalDate.fromDate(data.startAvailabilityDate),
 });
 
-const parseStudyId = (studyId: string): { type: StudyType; id: StudyId } => {
+const parseStudyId = (studyId: string): { type: StudyType; id: AssetStudyId } => {
   if (!studyId.startsWith('study_')) {
     throw new Error('expected studyId to start with `study_`');
   }

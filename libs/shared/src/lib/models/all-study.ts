@@ -10,4 +10,10 @@ export const AllStudyDTOFromAPI = D.struct({
 });
 export type AllStudyDTOFromAPI = D.TypeOf<typeof AllStudyDTOFromAPI>;
 export const AllStudyDTOsFromAPI = D.array(AllStudyDTOFromAPI);
-export type AllStudyDTOsFromAPI = D.TypeOf<typeof AllStudyDTOsFromAPI>;
+
+export interface AllStudyRaw {
+  studyId: string;
+  assetId: number;
+  isPoint: boolean;
+  centroid: string;
+}
