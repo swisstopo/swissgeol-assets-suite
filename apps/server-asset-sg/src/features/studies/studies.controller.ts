@@ -2,7 +2,7 @@ import { Readable } from 'stream';
 import { Controller, Get, Res } from '@nestjs/common';
 import { Response } from 'express';
 import { RequireRole } from '@/core/decorators/require-role.decorator';
-import { Study } from '@/features/studies/study.model';
+import { serializeStudyAsCsv, Study } from '@/features/studies/study.model';
 import { StudyRepo } from '@/features/studies/study.repo';
 import { Role } from '@/features/users/user.model';
 
@@ -61,7 +61,8 @@ export class StudiesController {
 
         // Write the current batch to the response.
         for (const study of studies) {
-          yield `${study.id.substring(6)};${study.assetId};${+study.isPoint};${study.center.x};${study.center.y}\n`;
+          yield serializeStudyAsCsv(study);
+          yield '\n';
         }
       }
     }

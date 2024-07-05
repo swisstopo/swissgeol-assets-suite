@@ -14,3 +14,7 @@ export enum StudyType {
   Location = 'location',
   Trace = 'trace',
 }
+
+export const serializeStudyAsCsv = (study: Study): string => {
+  return `${study.id.substring(6)};${study.assetId};${+study.isPoint};${study.center.x};${study.center.y}`;
+};

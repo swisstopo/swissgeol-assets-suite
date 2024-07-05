@@ -9,11 +9,3 @@ export const AllStudyDTOFromAPI = D.struct({
   centroid: LV95FromSpaceSeparatedString,
 });
 export type AllStudyDTOFromAPI = D.TypeOf<typeof AllStudyDTOFromAPI>;
-export const AllStudyDTOsFromAPI = D.array(AllStudyDTOFromAPI);
-
-export interface AllStudyRaw {
-  studyId: string;
-  assetId: number;
-  isPoint: boolean;
-  centroid: string;
-}

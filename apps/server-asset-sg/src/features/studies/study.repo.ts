@@ -1,4 +1,4 @@
-import { LV95, LV95FromSpaceSeparatedString } from '@asset-sg/shared';
+import { LV95, LV95FromSpaceSeparatedString, parseLV95 } from '@asset-sg/shared';
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import * as E from 'fp-ts/Either';
@@ -54,10 +54,9 @@ export class StudyRepo implements ReadRepo<Study, StudyId> {
       ${condition}
     `;
     return studies.map((study) => {
-      const center = LV95FromSpaceSeparatedString.decode(study.center);
       return {
         ...study,
-        center: (center as E.Right<LV95>).right,
+        center: parseLV95(study.center, { separator: ' ' }),
       };
     });
   }
