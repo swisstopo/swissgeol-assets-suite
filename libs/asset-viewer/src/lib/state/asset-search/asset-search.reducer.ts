@@ -80,7 +80,10 @@ export const assetSearchReducer = createReducer(
     actions.updateSearchResults,
     (state, { searchResults }): AssetSearchState => ({
       ...state,
-      results: searchResults,
+      results: {
+        page: searchResults.page,
+        data: searchResults.data,
+      },
       loadingState: LoadingState.Loaded,
     })
   ),
@@ -109,7 +112,7 @@ export const assetSearchReducer = createReducer(
     })
   ),
   on(
-    actions.searchForAssetDetail,
+    actions.assetClicked,
     (state): AssetSearchState => ({
       ...state,
       assetDetailLoadingState: LoadingState.Loading,

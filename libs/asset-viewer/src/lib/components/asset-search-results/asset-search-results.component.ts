@@ -8,6 +8,7 @@ import { AppStateWithAssetSearch, LoadingState } from '../../state/asset-search/
 import {
   selectAssetEditDetailVM,
   selectAssetSearchPageData,
+  selectCurrentAssetDetail,
   selectIsResultsOpen,
   selectSearchLoadingState,
 } from '../../state/asset-search/asset-search.selector';
@@ -39,11 +40,12 @@ export class AssetSearchResultsComponent {
   public assets$ = this._store.select(selectAssetEditDetailVM);
   public loadingState = this._store.select(selectSearchLoadingState);
   public pageStats$ = this._store.select(selectAssetSearchPageData);
+  public currentAssetDetail$ = this._store.select(selectCurrentAssetDetail);
 
   protected readonly LoadingState = LoadingState;
 
   public searchForAsset(assetId: number) {
-    this._store.dispatch(actions.searchForAssetDetail({ assetId }));
+    this._store.dispatch(actions.assetClicked({ assetId }));
   }
 
   public toggleResultsOpen(isCurrentlyOpen: boolean) {
