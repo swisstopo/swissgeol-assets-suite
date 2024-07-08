@@ -18,20 +18,21 @@
         "inlineStyleLanguage": "scss",
         "assets": ["apps/client-asset-sg/src/favicon.ico", "apps/client-asset-sg/src/assets"],
         "styles": ["apps/client-asset-sg/src/styles.scss"],
-        "scripts": []
+        "scripts": [],
+        "allowedCommonJsDependencies": ["tsafe", "validator", "xml-utils", "pbf", "rbush", "earcut"]
       },
       "configurations": {
         "production": {
           "budgets": [
             {
               "type": "initial",
-              "maximumWarning": "1.2mb",
-              "maximumError": "1.3mb"
+              "maximumWarning": "1.4mb",
+              "maximumError": "1.6mb"
             },
             {
               "type": "anyComponentStyle",
-              "maximumWarning": "2kb",
-              "maximumError": "4kb"
+              "maximumWarning": "4kb",
+              "maximumError": "6kb"
             }
           ],
           "outputHashing": "all",

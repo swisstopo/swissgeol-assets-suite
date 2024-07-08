@@ -1,6 +1,6 @@
 import { unknownToError, unknownToUnknownError } from '@asset-sg/core';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
-import { pipe } from 'fp-ts/lib/function';
+import { pipe } from 'fp-ts/function';
 import * as TE from 'fp-ts/TaskEither';
 
 import { assetFolder, bucketName, createS3Client, destroyS3Client } from './common';
