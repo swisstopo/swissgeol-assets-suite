@@ -1,7 +1,7 @@
 import { NumberInput } from '@angular/cdk/coercion';
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { PushModule } from '@rx-angular/template/push';
-import * as bezier from 'bezier-easing';
+
 import {
   BehaviorSubject,
   animationFrameScheduler,
@@ -37,9 +37,8 @@ export class AnimateNumberComponent {
     scan((acc, v) => [acc[1], v], [0, 0]),
     switchMap(([from, to]) =>
       duration(225).pipe(
-        map(easing),
         map((t) => Math.round(from + (to - from) * t)),
-        endWith(to),
+        endWith(to as number),
         distinctUntilChanged()
       )
     )
@@ -56,5 +55,3 @@ const duration = (ms: number, scheduler = animationFrameScheduler) =>
     map((ems) => ems / ms),
     takeWhile((t) => t <= 1, true)
   );
-
-const easing = bezier(0.25, 0.8, 0.25, 1);

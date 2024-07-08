@@ -4,51 +4,50 @@ import {
   ChangeDetectionStrategy,
   Component,
   ElementRef,
+  inject,
   OnInit,
   QueryList,
   ViewChild,
   ViewChildren,
   ViewContainerRef,
-  inject,
 } from '@angular/core';
 import { FormGroupDirective } from '@angular/forms';
 import { MatSelectChange } from '@angular/material/select';
 import {
-  LifecycleHooks,
-  WGStoLV95,
-  WindowService,
-  ZoomControlsComponent,
   createFeaturesFromStudies,
   createFeaturesFromStudy,
   decorateFeature,
   featureStyles,
   isoWGSLat,
   isoWGSLng,
+  LifecycleHooks,
   lv95ToWGS,
   olCoordsFromLV95Array,
   olZoomControls,
   toLonLat,
+  WGStoLV95,
+  WindowService,
+  ZoomControlsComponent,
   zoomToStudies,
 } from '@asset-sg/client-shared';
 import { OO, sequenceProps } from '@asset-sg/core';
 import {
-  Geom,
-  Point as GeomPoint,
-  StudyPolygon as GeomPolygon,
-  GeomWithCoords,
-  LV95,
-  LV95X,
-  LV95Y,
-  Studies,
-  Study,
   eqStudies,
   eqStudyByStudyId,
+  Geom,
+  GeomWithCoords,
   getStudyWithGeomWithCoords,
+  LV95,
   lv95RoundedToMillimeter,
   lv95WithoutPrefix,
+  LV95X,
+  LV95Y,
+  Point as GeomPoint,
+  Studies,
+  Study,
+  StudyPolygon as GeomPolygon,
 } from '@asset-sg/shared';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { createId } from '@paralleldrive/cuid2';
 import { RxState } from '@rx-angular/state';
 import { point } from '@turf/helpers';
 import midpoint from '@turf/midpoint';
@@ -63,7 +62,7 @@ import { Coordinate } from 'ol/coordinate';
 import { easeOut } from 'ol/easing';
 import Feature from 'ol/Feature';
 import { Geometry, LineString, Point, Polygon } from 'ol/geom';
-import { Select, Translate, defaults } from 'ol/interaction';
+import { defaults, Select, Translate } from 'ol/interaction';
 import Draw, { DrawEvent } from 'ol/interaction/Draw';
 import { SelectEvent } from 'ol/interaction/Select';
 import { TranslateEvent } from 'ol/interaction/Translate';
@@ -74,18 +73,18 @@ import { Vector as VectorSource, XYZ } from 'ol/source';
 import Style from 'ol/style/Style';
 import View from 'ol/View';
 import {
-  EMPTY,
-  Observable,
   asyncScheduler,
   combineLatest,
   delay,
   distinctUntilChanged,
+  EMPTY,
   expand,
   filter,
   fromEvent,
   fromEventPattern,
   map,
   merge,
+  Observable,
   share,
   startWith,
   subscribeOn,
@@ -622,7 +621,7 @@ export class AssetEditorTabGeometriesComponent implements OnInit {
         }
       }
       if (e.value === 'Polygon') {
-        const study = { studyId: 'study_area_new_' + createId(), geom: Geom.as.Polygon({ coords: [] }) };
+        const study = { studyId: 'study_area_new_' + makeId(), geom: Geom.as.Polygon({ coords: [] }) };
         const newStudies = [...this._state.get().studies, study];
         this._state.set(
           flow(updateNewGeometryType('Polygon'), updateMode('create-new-geometry'), (s) => ({
@@ -651,7 +650,7 @@ export class AssetEditorTabGeometriesComponent implements OnInit {
           .subscribe();
       }
       if (e.value === 'LineString') {
-        const study = { studyId: 'study_trace_new_' + createId(), geom: Geom.as.LineString({ coords: [] }) };
+        const study = { studyId: 'study_trace_new_' + makeId(), geom: Geom.as.LineString({ coords: [] }) };
         const newStudies = [...this._state.get().studies, study];
         this._state.set(
           flow(updateNewGeometryType('Linestring'), updateMode('create-new-geometry'), (s) => ({
@@ -1469,7 +1468,7 @@ const createNewPointStudy = (olMap: Map | undefined): O.Option<Study> =>
     O.fromNullable,
     O.chain((map) => O.fromNullable(map.getView().getCenter())),
     O.map(coordinateToLv95RoundedToMillimeter),
-    O.map((coord) => ({ studyId: 'study_location_new_' + createId(), geom: Geom.as.Point({ coord }) }))
+    O.map((coord) => ({ studyId: 'study_location_new_' + makeId(), geom: Geom.as.Point({ coord }) }))
   );
 
 const coordinateToLv95RoundedToMillimeter = (c: Coordinate): LV95 =>
@@ -1494,3 +1493,6 @@ const scrollIntoViewIfNeeded = (element: Element) => {
     element.scrollIntoView({ behavior: 'smooth' });
   }
 };
+
+let nextId = 0;
+const makeId = () => nextId++;
