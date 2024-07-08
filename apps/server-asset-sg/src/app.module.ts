@@ -24,6 +24,8 @@ import { ContactsController } from '@/features/contacts/contacts.controller';
 import { FavoriteRepo } from '@/features/favorites/favorite.repo';
 import { FavoritesController } from '@/features/favorites/favorites.controller';
 import { OcrController } from '@/features/ocr/ocr.controller';
+import { StudiesController } from '@/features/studies/studies.controller';
+import { StudyRepo } from '@/features/studies/study.repo';
 import { UserRepo } from '@/features/users/user.repo';
 import { UsersController } from '@/features/users/users.controller';
 
@@ -36,6 +38,7 @@ import { UsersController } from '@/features/users/users.controller';
     AssetSearchController,
     AssetsController,
     AssetController,
+    StudiesController,
     ContactsController,
     OcrController,
   ],
@@ -50,6 +53,7 @@ import { UsersController } from '@/features/users/users.controller';
     ContactRepo,
     FavoriteRepo,
     UserRepo,
+    StudyRepo,
     AssetEditService,
     AssetSearchService,
     {

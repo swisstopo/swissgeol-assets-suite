@@ -67,11 +67,6 @@ export class AssetController {
     return e.right;
   }
 
-  @Get('/all-study')
-  getAllStudies() {
-    return this.assetService.getAllStudies();
-  }
-
   @Get('/reference-data')
   async getReferenceData() {
     const e = await this.assetService.getReferenceData()();

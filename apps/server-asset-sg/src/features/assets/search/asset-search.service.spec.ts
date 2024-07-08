@@ -32,12 +32,14 @@ import { PrismaService } from '@/core/prisma.service';
 import { fakeAssetPatch, fakeAssetUsage, fakeContact, fakeUser } from '@/features/asset-old/asset-edit.fake';
 import { AssetData, AssetEditRepo } from '@/features/asset-old/asset-edit.repo';
 import { AssetEditDetail } from '@/features/asset-old/asset-edit.service';
+import { StudyRepo } from '@/features/studies/study.repo';
 
 describe(AssetSearchService, () => {
   const elastic = openElasticsearchClient();
   const prisma = new PrismaService();
   const assetRepo = new AssetEditRepo(prisma);
-  const service = new AssetSearchService(elastic, prisma, assetRepo);
+  const studyRepo = new StudyRepo(prisma);
+  const service = new AssetSearchService(elastic, prisma, assetRepo, studyRepo);
 
   beforeAll(async () => {
     const existsIndex = await elastic.indices.exists({ index: ASSET_ELASTIC_INDEX });

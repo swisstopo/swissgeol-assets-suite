@@ -16,7 +16,7 @@ import { Observable, map, tap } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class AssetSearchService {
-  constructor(private _httpClient: HttpClient, private store: Store<AppState>) {}
+  constructor(private _httpClient: HttpClient) {}
 
   public search(searchQuery: AssetSearchQuery): Observable<AssetSearchResult> {
     return this._httpClient.post('/api/assets/search?limit=10000', searchQuery).pipe(

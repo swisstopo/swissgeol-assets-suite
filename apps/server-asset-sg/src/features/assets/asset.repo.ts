@@ -8,12 +8,12 @@ import {
   AssetData,
   AssetId,
   AssetUsage,
-  Study,
+  AssetStudy,
   StudyData,
-  StudyId,
-  StudyType,
+  AssetStudyId,
 } from '@/features/assets/asset.model';
 import { assetSelection, parseAssetFromPrisma } from '@/features/assets/prisma-asset';
+import { StudyType } from '@/features/studies/study.model';
 import { User } from '@/features/users/user.model';
 import { isNotPersisted, isPersisted } from '@/utils/data/model';
 import { satisfy } from '@/utils/define';
@@ -130,9 +130,9 @@ export class AssetRepo implements Repo<Asset, AssetId, FullAssetData> {
     }
   }
 
-  private async manageStudies(assetId: AssetId, data: (Study | StudyData)[]): Promise<void> {
+  private async manageStudies(assetId: AssetId, data: (AssetStudy | StudyData)[]): Promise<void> {
     const studiesToCreate: Partial<Record<StudyType, StudyData[]>> = {};
-    const studiesToUpdate: Partial<Record<StudyType, Study[]>> = {};
+    const studiesToUpdate: Partial<Record<StudyType, AssetStudy[]>> = {};
     for (const study of data) {
       if (isPersisted(study)) {
         (studiesToUpdate[study.type] ??= []).push(study);
@@ -140,7 +140,7 @@ export class AssetRepo implements Repo<Asset, AssetId, FullAssetData> {
         (studiesToCreate[study.type] ??= []).push(study);
       }
     }
-    for (const [type, studies] of Object.entries(studiesToUpdate) as Array<[StudyType, Study[]]>) {
+    for (const [type, studies] of Object.entries(studiesToUpdate) as Array<[StudyType, AssetStudy[]]>) {
       await this.deleteStudies(
         assetId,
         type,
@@ -153,7 +153,7 @@ export class AssetRepo implements Repo<Asset, AssetId, FullAssetData> {
     }
   }
 
-  private async deleteStudies(assetId: AssetId, type: StudyType, knownIds: StudyId[]): Promise<void> {
+  private async deleteStudies(assetId: AssetId, type: StudyType, knownIds: AssetStudyId[]): Promise<void> {
     const condition =
       knownIds.length === 0 ? '' : Prisma.sql`AND study_${Prisma.raw(type)}_id NOT IN (${Prisma.join(knownIds, ',')})`;
     await this.prisma.$queryRaw`
@@ -183,7 +183,7 @@ export class AssetRepo implements Repo<Asset, AssetId, FullAssetData> {
     `;
   }
 
-  private async updateStudies(assetId: AssetId, type: StudyType, data: Study[]): Promise<void> {
+  private async updateStudies(assetId: AssetId, type: StudyType, data: AssetStudy[]): Promise<void> {
     if (data.length === 0) {
       return;
     }

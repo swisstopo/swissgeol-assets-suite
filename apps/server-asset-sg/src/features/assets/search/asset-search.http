@@ -1,18 +1,10 @@
-### Start asset sync
-POST {{host}}/api/assets/sync
-Authorization: Impersonate {{user}}
-
-### Show asset sync progress
-GET {{host}}/api/assets/sync
-Authorization: Impersonate {{user}}
-
 ### Search assets
-POST {{host}}/api/assets/search?limit=1
+POST {{host}}/api/assets/search?limit=10000
 Content-Type: application/json
 Authorization: Impersonate {{user}}
 
 {
-  "languageItemCodes": ["DE"]
+  "text": "n1"
 }
 
 ### Show assets search stats
