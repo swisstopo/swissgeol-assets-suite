@@ -652,7 +652,7 @@ const wgs84Projection = proj4.WGS84;
 
 const mapLv95ToElastic = (lv95: LV95): ElasticPoint => {
   const wgs = proj4(lv95Projection, wgs84Projection, [lv95.x as number, lv95.y as number]);
-  return { lat: wgs[0], lon: wgs[1] };
+  return { lat: wgs[1], lon: wgs[0] };
 };
 
 const mapQueryToElasticDsl = (query: AssetSearchQuery): QueryDslQueryContainer => {
