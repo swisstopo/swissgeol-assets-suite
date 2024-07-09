@@ -29,7 +29,7 @@ export class AllStudyService {
           studyId: `study_${id}`,
           assetId: parseInt(assetId),
           isPoint: Boolean(isPoint),
-          centroid: { x: parseInt(x), y: parseInt(y) } as LV95,
+          centroid: { x: parseFloat(x), y: parseFloat(y) } as LV95,
         } as AllStudyDTO;
       }),
       toArray(),

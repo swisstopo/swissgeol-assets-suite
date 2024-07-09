@@ -86,9 +86,9 @@ export const lv95RoundedToMillimeter = (lv95: LV95): LV95 => ({
 });
 
 export const parseLV95 = (value: string, { separator }: { separator: string }): LV95 => {
-  const [x, y] = value.split(separator, 2);
+  const [y, x] = value.split(separator, 2);
   return {
-    x: parseInt(x) as LV95X,
-    y: parseInt(y) as LV95Y,
+    x: parseFloat(x) as LV95X,
+    y: parseFloat(y) as LV95Y,
   };
 };
