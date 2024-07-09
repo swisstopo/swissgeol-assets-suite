@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { ActivatedRoute, Params, Router } from '@angular/router';
-import { appSharedStateActions, fromAppShared } from '@asset-sg/client-shared';
+import { fromAppShared } from '@asset-sg/client-shared';
 import { isDecodeError, isNotNull } from '@asset-sg/core';
 import { AssetSearchQuery, AssetSearchResult, LV95, Polygon } from '@asset-sg/shared';
 import * as RD from '@devexperts/remote-data-ts';
@@ -66,7 +66,7 @@ export class AssetSearchEffects {
 
   getStatsOnInitialize$ = createEffect(() =>
     this.actions$.pipe(
-      ofType(actions.initializeSearch),
+      ofType(actions.initializeSearch, actions.resetSearch),
       map(() => actions.getStats())
     )
   );
@@ -141,9 +141,11 @@ export class AssetSearchEffects {
       ofType(actions.search),
       withLatestFrom(this.searchStore.select(selectAssetSearchState)),
       switchMap(([_, state]) => {
-        return this.assetSearchService
-          .search(state.query)
-          .pipe(map((searchResults: AssetSearchResult) => actions.updateSearchResults({ searchResults })));
+        return Object.values(state.query).every((value) => value === undefined)
+          ? of(actions.resetSearch())
+          : this.assetSearchService
+              .search(state.query)
+              .pipe(map((searchResults: AssetSearchResult) => actions.updateSearchResults({ searchResults })));
       })
     );
   });
@@ -196,13 +198,6 @@ export class AssetSearchEffects {
           })
           .pipe(map((searchStats) => actions.updateStats({ searchStats })));
       })
-    );
-  });
-
-  public closePanelOnResetSearch$ = createEffect(() => {
-    return this.actions$.pipe(
-      ofType(actions.resetSearch),
-      map(() => appSharedStateActions.closePanel())
     );
   });
 

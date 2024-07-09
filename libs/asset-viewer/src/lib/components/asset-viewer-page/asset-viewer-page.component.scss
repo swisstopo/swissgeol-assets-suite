@@ -2,7 +2,6 @@
 
 :host {
   position: relative;
-  position: relative;
   height: 100%;
   overflow: hidden;
   display: grid;
@@ -12,6 +11,13 @@
     "search-filter search-results search-detail";
   grid-template-rows: 1fr auto;
   grid-template-columns: auto 1fr auto;
+}
+
+.loading-bar {
+  position: absolute;
+  inset: 0;
+  z-index: 100;
+  background-color: variables.$grey-03;
 }
 
 asset-sg-map,

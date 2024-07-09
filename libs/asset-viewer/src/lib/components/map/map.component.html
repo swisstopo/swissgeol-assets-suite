@@ -1,5 +1,3 @@
-<mat-progress-bar *ngIf="!isInitialized" mode="indeterminate" />
-
 <div #map class="map"></div>
 <div #mapControls>
   <asset-sg-map-controls *ngIf="controls != null" [zoom]="controls.zoom" [draw]="controls.draw" />

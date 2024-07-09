@@ -31,15 +31,6 @@
   color: variables.$cyan-09;
 }
 
-.loading-spinner {
-  position: absolute;
-  inset: 0;
-  z-index: 100;
-  display: grid;
-  place-items: center;
-  background-color: variables.$grey-03;
-}
-
 .mat-mdc-header-row .mat-mdc-cell {
   background-color: variables.$grey-01;
 }

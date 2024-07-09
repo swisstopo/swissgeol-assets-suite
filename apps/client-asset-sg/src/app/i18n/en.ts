@@ -43,7 +43,7 @@ export const enAppTranslations: AppTranslations = {
     closeInstructions: 'Close instructions',
     searchControl: 'Search control',
     refineSearch: 'Refine search',
-    searchResults: 'Search results',
+    searchResults: 'Assets',
     author: 'Author',
     documentDate: 'Document date',
     usage: 'Usage',

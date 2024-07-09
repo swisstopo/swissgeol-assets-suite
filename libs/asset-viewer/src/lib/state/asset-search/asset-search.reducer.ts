@@ -5,6 +5,7 @@ import { createReducer, on } from '@ngrx/store';
 import * as actions from './asset-search.actions';
 
 export enum LoadingState {
+  Initial = 'initial',
   Loading = 'loading',
   Loaded = 'loaded',
 }
@@ -14,7 +15,8 @@ export interface AssetSearchState {
   results: AssetSearchResult;
   stats: AssetSearchStats;
   currentAsset: AssetEditDetail | undefined;
-  loadingState: LoadingState;
+  resultsLoadingState: LoadingState;
+  filterLoadingState: LoadingState;
   assetDetailLoadingState: LoadingState;
   isMapInitialised: boolean;
   isFiltersOpen: boolean;
@@ -58,8 +60,9 @@ const initialState: AssetSearchState = {
   isMapInitialised: false,
   isFiltersOpen: true,
   isResultsOpen: false,
-  loadingState: LoadingState.Loading,
-  assetDetailLoadingState: LoadingState.Loading,
+  resultsLoadingState: LoadingState.Initial,
+  assetDetailLoadingState: LoadingState.Initial,
+  filterLoadingState: LoadingState.Initial,
   currentAsset: undefined,
 };
 
@@ -73,7 +76,6 @@ export const assetSearchReducer = createReducer(
         ...state.query,
         ...filterConfiguration,
       },
-      isResultsOpen: true,
     })
   ),
   on(
@@ -84,7 +86,8 @@ export const assetSearchReducer = createReducer(
         page: searchResults.page,
         data: searchResults.data,
       },
-      loadingState: LoadingState.Loaded,
+      resultsLoadingState: LoadingState.Loaded,
+      isResultsOpen: true,
     })
   ),
   on(
@@ -92,6 +95,7 @@ export const assetSearchReducer = createReducer(
     (state, { searchStats }): AssetSearchState => ({
       ...state,
       stats: searchStats,
+      filterLoadingState: LoadingState.Loaded,
     })
   ),
   on(
@@ -106,9 +110,11 @@ export const assetSearchReducer = createReducer(
   ),
   on(
     actions.resetSearch,
-    (): AssetSearchState => ({
+    (state): AssetSearchState => ({
       ...initialState,
       isMapInitialised: true,
+      stats: state.stats,
+      filterLoadingState: LoadingState.Loading,
     })
   ),
   on(
@@ -122,7 +128,7 @@ export const assetSearchReducer = createReducer(
     actions.setLoadingState,
     (state): AssetSearchState => ({
       ...state,
-      loadingState: LoadingState.Loading,
+      resultsLoadingState: LoadingState.Loading,
     })
   ),
   on(
