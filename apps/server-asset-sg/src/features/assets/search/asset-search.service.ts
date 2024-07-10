@@ -197,21 +197,19 @@ export class AssetSearchService {
    * @param query The query to match with.
    */
   async aggregate(query: AssetSearchQuery): Promise<AssetSearchStats> {
-    const [mapping, _total] = await this.searchAssetsByQuery(query);
-    const stats = await this.aggregateAssetIds([...mapping.keys()]);
-    if (stats !== null) {
-      return stats;
-    }
-    return {
-      total: 0,
-      assetKindItemCodes: [],
-      authorIds: [],
-      createDate: null,
-      languageItemCodes: [],
-      geometryCodes: [],
-      manCatLabelItemCodes: [],
-      usageCodes: [],
-    };
+    const stats = await this.aggregateAssetIds(query);
+    return (
+      stats ?? {
+        total: 0,
+        assetKindItemCodes: [],
+        authorIds: [],
+        createDate: null,
+        languageItemCodes: [],
+        geometryCodes: [],
+        manCatLabelItemCodes: [],
+        usageCodes: [],
+      }
+    );
   }
 
   /**
@@ -320,33 +318,27 @@ export class AssetSearchService {
     }
   }
 
-  private async aggregateAssetIds(assetIds: AssetId[]): Promise<AssetSearchStats | null> {
-    if (assetIds.length === 0) {
-      return null;
-    }
-
+  private async aggregateAssetIds(query: AssetSearchQuery): Promise<AssetSearchStats | null> {
     interface Result {
-      aggregations: {
-        minCreateDate: { value: DateId };
-        maxCreateDate: { value: DateId };
-        authorIds: {
-          buckets: AggregationBucket<number>[];
-        };
-        assetKindItemCodes: {
-          buckets: AggregationBucket[];
-        };
-        languageItemCodes: {
-          buckets: AggregationBucket[];
-        };
-        geometryCodes: {
-          buckets: AggregationBucket<GeometryCode | 'None'>[];
-        };
-        usageCodes: {
-          buckets: AggregationBucket<UsageCode>[];
-        };
-        manCatLabelItemCodes: {
-          buckets: AggregationBucket[];
-        };
+      minCreateDate: { value: DateId };
+      maxCreateDate: { value: DateId };
+      authorIds: {
+        buckets: AggregationBucket<number>[];
+      };
+      assetKindItemCodes: {
+        buckets: AggregationBucket[];
+      };
+      languageItemCodes: {
+        buckets: AggregationBucket[];
+      };
+      geometryCodes: {
+        buckets: AggregationBucket<GeometryCode | 'None'>[];
+      };
+      usageCodes: {
+        buckets: AggregationBucket<UsageCode>[];
+      };
+      manCatLabelItemCodes: {
+        buckets: AggregationBucket[];
       };
     }
 
@@ -355,29 +347,60 @@ export class AssetSearchService {
       doc_count: number;
     }
 
+    const aggregateGroup = async (query: AssetSearchQuery, operator: string, groupName: string, fieldName?: string) => {
+      const elasticDslQuery = mapQueryToElasticDsl({ ...query, [groupName]: undefined });
+      return (
+        await this.elastic.search({
+          index: INDEX,
+          size: 0,
+          query: elasticDslQuery,
+          track_total_hits: true,
+          aggs: {
+            agg: { [operator]: { field: fieldName ?? groupName } },
+          },
+        })
+      ).aggregations?.agg;
+    };
+
+    const elasticQuery = mapQueryToElasticDsl(query);
     const response = await this.elastic.search({
       index: INDEX,
       size: 0,
-      query: {
-        terms: {
-          assetId: assetIds,
-        },
-      },
+      query: elasticQuery,
       track_total_hits: true,
-      aggs: {
-        authorIds: { terms: { field: 'authorIds' } },
-        minCreateDate: { min: { field: 'createDate' } },
-        maxCreateDate: { max: { field: 'createDate' } },
-        assetKindItemCodes: { terms: { field: 'assetKindItemCode' } },
-        languageItemCodes: { terms: { field: 'languageItemCodes' } },
-        geometryCodes: { terms: { field: 'geometryCodes' } },
-        usageCodes: { terms: { field: 'usageCode' } },
-        manCatLabelItemCodes: { terms: { field: 'manCatLabelItemCodes' } },
-      },
     });
 
+    const [
+      assetKindItemCodes,
+      authorIds,
+      languageItemCodes,
+      geometryCodes,
+      manCatLabelItemCodes,
+      usageCodes,
+      minCreateDate,
+      maxCreateDate,
+    ] = await Promise.all([
+      aggregateGroup(query, 'terms', 'assetKindItemCodes', 'assetKindItemCode'),
+      aggregateGroup(query, 'terms', 'authorIds'),
+      aggregateGroup(query, 'terms', 'languageItemCodes'),
+      aggregateGroup(query, 'terms', 'geometryCodes'),
+      aggregateGroup(query, 'terms', 'manCatLabelItemCodes'),
+      aggregateGroup(query, 'terms', 'usageCodes', 'usageCode'),
+      aggregateGroup(query, 'min', 'minCreateDate', 'createDate'),
+      aggregateGroup(query, 'max', 'maxCreateDate', 'createDate'),
+    ]);
+    const aggs = {
+      assetKindItemCodes,
+      authorIds,
+      languageItemCodes,
+      geometryCodes,
+      manCatLabelItemCodes,
+      usageCodes,
+      minCreateDate,
+      maxCreateDate,
+    } as unknown as Result;
+
     const total = (response.hits.total as SearchTotalHits).value;
-    const { aggregations: aggs } = response as unknown as Result;
     const mapBucket = <T>(bucket: AggregationBucket<T>): ValueCount<T> => ({
       value: bucket.key,
       count: bucket.doc_count,
