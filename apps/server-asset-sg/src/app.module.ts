@@ -35,9 +35,9 @@ import { WorkgroupRepo } from '@/features/workgroups/workgroup.repo';
   controllers: [
     AppController,
     AssetEditController,
-    AssetsController,
     AssetSearchController,
     AssetSyncController,
+    AssetsController,
     ContactsController,
     FavoritesController,
     FilesController,

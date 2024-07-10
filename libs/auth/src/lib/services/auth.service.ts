@@ -1,11 +1,11 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable, inject } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { ApiError, httpErrorResponseOrUnknownError } from '@asset-sg/client-shared';
-import { OE, ORD, decode } from '@asset-sg/core';
+import { decode, OE, ORD } from '@asset-sg/core';
 import { User } from '@asset-sg/shared';
 import * as RD from '@devexperts/remote-data-ts';
 import { OAuthService } from 'angular-oauth2-oidc';
-import { BehaviorSubject, Observable, map, startWith } from 'rxjs';
+import { BehaviorSubject, map, Observable, startWith } from 'rxjs';
 import urlJoin from 'url-join';
 
 @Injectable({ providedIn: 'root' })
@@ -78,9 +78,11 @@ export class AuthService {
   }
 
   private _getUserProfile() {
-    return this._httpClient
-      .get('/api/users/current')
-      .pipe(map(decode(User)), OE.catchErrorW(httpErrorResponseOrUnknownError));
+    return this._httpClient.get('/api/users/current').pipe(
+      map((it) => ({ ...it, role: (it as { isAdmin: boolean }).isAdmin ? 'admin' : 'master-editor' })),
+      map(decode(User)),
+      OE.catchErrorW(httpErrorResponseOrUnknownError)
+    );
   }
 
   buildAuthUrl = (path: string) => urlJoin(`/auth`, path);

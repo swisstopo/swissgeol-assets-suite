@@ -98,7 +98,7 @@ export class PolicyGuard implements CanActivate {
     }
     const repo = this.moduleRef.get(repoType);
     const findBy = target.findBy == null ? repo.find : target.findBy(repo);
-    const record = await findBy.call(repo, [id]);
+    const record = await findBy.call(repo, id);
     if (record == null) {
       throw new HttpException('Not found', HttpStatus.NOT_FOUND);
     }

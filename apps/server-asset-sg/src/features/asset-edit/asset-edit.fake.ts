@@ -1,5 +1,6 @@
-import { AssetUsage, Contact, PatchAsset, User, UserRoleEnum, dateIdFromDate } from '@asset-sg/shared';
+import { AssetUsage, Contact, PatchAsset, dateIdFromDate } from '@asset-sg/shared';
 import { fakerDE_CH as faker } from '@faker-js/faker';
+import { User } from '@shared/models/user';
 import * as O from 'fp-ts/Option';
 
 // eslint-disable-next-line @nx/enforce-module-boundaries
@@ -27,7 +28,8 @@ export const fakeUser = () =>
     email: faker.internet.email(),
     id: faker.string.uuid(),
     lang: faker.helpers.fromRegExp(/[a-z]{2}/),
-    role: faker.helpers.arrayElement(Object.values(UserRoleEnum)),
+    isAdmin: false,
+    workgroups: [],
   });
 
 export const fakeContact = () =>
