@@ -29,9 +29,9 @@ import { ASSET_ELASTIC_INDEX, AssetSearchService } from './asset-search.service'
 
 import { openElasticsearchClient } from '@/core/elasticsearch';
 import { PrismaService } from '@/core/prisma.service';
-import { fakeAssetPatch, fakeAssetUsage, fakeContact, fakeUser } from '@/features/asset-old/asset-edit.fake';
-import { AssetData, AssetEditRepo } from '@/features/asset-old/asset-edit.repo';
-import { AssetEditDetail } from '@/features/asset-old/asset-edit.service';
+import { fakeAssetPatch, fakeAssetUsage, fakeContact, fakeUser } from '@/features/asset-edit/asset-edit.fake';
+import { AssetEditData, AssetEditRepo } from '@/features/asset-edit/asset-edit.repo';
+import { AssetEditDetail } from '@/features/asset-edit/asset-edit.service';
 import { StudyRepo } from '@/features/studies/study.repo';
 
 describe(AssetSearchService, () => {
@@ -63,7 +63,7 @@ describe(AssetSearchService, () => {
     });
   });
 
-  const create = async (data: AssetData): Promise<AssetEditDetail> => {
+  const create = async (data: AssetEditData): Promise<AssetEditDetail> => {
     const asset = await assetRepo.create(data);
     await service.register(asset);
     return asset;

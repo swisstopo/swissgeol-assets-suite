@@ -1,18 +1,19 @@
 import { Readable } from 'stream';
 import { Controller, Get, Res } from '@nestjs/common';
 import { Response } from 'express';
-import { RequireRole } from '@/core/decorators/require-role.decorator';
+import { Authorize } from '@/core/decorators/authorize.decorator';
+import { CurrentUser } from '@/core/decorators/current-user.decorator';
 import { serializeStudyAsCsv, Study } from '@/features/studies/study.model';
 import { StudyRepo } from '@/features/studies/study.repo';
-import { Role } from '@/features/users/user.model';
+import { User } from '@/features/users/user.model';
 
 @Controller('/studies')
 export class StudiesController {
   constructor(private readonly studyRepo: StudyRepo) {}
 
   @Get('/')
-  @RequireRole(Role.Viewer)
-  async list(@Res() res: Response): Promise<void> {
+  @Authorize.User()
+  async list(@Res() res: Response, @CurrentUser() user: User): Promise<void> {
     // This route loads all studies and encodes them as CSV.
     // CSV has been chosen as we have a large amount of studies (13'000+)
     // and need a concise format that can be processed in batches (which, for example, JSON can't).
@@ -37,7 +38,11 @@ export class StudiesController {
 
       // The promise that is loading the next batch.
       // Note that this is running in parallel to the response writer.
-      let next: Promise<Study[]> | null = studyRepo.list({ limit: INITIAL_BATCH_SIZE, offset: 0 });
+      let next: Promise<Study[]> | null = studyRepo.list({
+        limit: INITIAL_BATCH_SIZE,
+        offset: 0,
+        workgroupIds: user.isAdmin ? null : user.workgroups.map((it) => it.id),
+      });
 
       // The maximal size of the next batch.
       let nextLimit = INITIAL_BATCH_SIZE;

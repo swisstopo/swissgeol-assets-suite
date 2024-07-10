@@ -78,7 +78,9 @@ export class AuthService {
   }
 
   private _getUserProfile() {
-    return this._httpClient.get('/api/user').pipe(map(decode(User)), OE.catchErrorW(httpErrorResponseOrUnknownError));
+    return this._httpClient
+      .get('/api/users/current')
+      .pipe(map(decode(User)), OE.catchErrorW(httpErrorResponseOrUnknownError));
   }
 
   buildAuthUrl = (path: string) => urlJoin(`/auth`, path);

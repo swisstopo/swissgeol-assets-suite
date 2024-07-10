@@ -1,5 +1,4 @@
 import {
-  Body,
   Controller,
   Delete,
   Get,
@@ -10,22 +9,30 @@ import {
   ParseIntPipe,
   Post,
   Put,
-  ValidationPipe,
 } from '@nestjs/common';
 
+import { Authorize } from '@/core/decorators/authorize.decorator';
+import { Authorized } from '@/core/decorators/authorized.decorator';
+import { Boundary } from '@/core/decorators/boundary.decorator';
 import { CurrentUser } from '@/core/decorators/current-user.decorator';
-import { RequireRole } from '@/core/decorators/require-role.decorator';
+import { UsePolicy } from '@/core/decorators/use-policy.decorator';
+import { UseRepo } from '@/core/decorators/use-repo.decorator';
+import { AssetEditPolicy } from '@/features/asset-edit/asset-edit.policy';
 import { AssetInfoRepo } from '@/features/assets/asset-info.repo';
-import { Asset, AssetDataBoundary, AssetId } from '@/features/assets/asset.model';
+import { Asset, AssetData, AssetDataBoundary, AssetId } from '@/features/assets/asset.model';
+import { AssetPolicy } from '@/features/assets/asset.policy';
 import { AssetRepo } from '@/features/assets/asset.repo';
-import { Role, User } from '@/features/users/user.model';
+import { User } from '@/features/users/user.model';
+import { Role } from '@/features/workgroups/workgroup.model';
 
 @Controller('/assets')
+@UseRepo(AssetRepo)
+@UsePolicy(AssetPolicy)
 export class AssetsController {
   constructor(private readonly assetRepo: AssetRepo, private readonly assetInfoRepo: AssetInfoRepo) {}
 
   @Get('/:id')
-  @RequireRole(Role.Viewer)
+  @Authorize.Show({ id: Number })
   async show(@Param('id', ParseIntPipe) id: AssetId): Promise<Asset> {
     const asset = await this.assetRepo.find(id);
     if (asset === null) {
@@ -35,24 +42,26 @@ export class AssetsController {
   }
 
   @Post('/')
-  @RequireRole(Role.MasterEditor)
+  @Authorize.Create()
   async create(
-    @Body(new ValidationPipe({ transform: true, whitelist: true, forbidNonWhitelisted: true }))
-    data: AssetDataBoundary,
-    @CurrentUser() user: User
+    @Boundary(AssetDataBoundary) data: AssetData,
+    @CurrentUser() user: User,
+    @Authorized.Policy() policy: AssetEditPolicy
   ): Promise<Asset> {
+    validateData(data, policy);
     return await this.assetRepo.create({ ...data, processor: user });
   }
 
   @Put('/:id')
-  @RequireRole(Role.MasterEditor)
+  @Authorize.Update({ id: Number })
   async update(
-    @Param('id', ParseIntPipe) id: AssetId,
-    @Body(new ValidationPipe({ transform: true, whitelist: true, forbidNonWhitelisted: true }))
-    data: AssetDataBoundary,
-    @CurrentUser() user: User
+    @Boundary(AssetDataBoundary) data: AssetData,
+    @CurrentUser() user: User,
+    @Authorized.Record() record: Asset,
+    @Authorized.Policy() policy: AssetEditPolicy
   ): Promise<Asset> {
-    const asset = await this.assetRepo.update(id, { ...data, processor: user });
+    validateData(data, policy);
+    const asset = await this.assetRepo.update(record.id, { ...data, processor: user });
     if (asset === null) {
       throw new HttpException('not found', 404);
     }
@@ -60,12 +69,20 @@ export class AssetsController {
   }
 
   @Delete('/:id')
-  @RequireRole(Role.MasterEditor)
+  @Authorize.Delete({ id: Number })
   @HttpCode(HttpStatus.NO_CONTENT)
-  async delete(@Param('id', ParseIntPipe) id: AssetId): Promise<void> {
-    const isOk = await this.assetRepo.delete(id);
-    if (!isOk) {
-      throw new HttpException('not found', 404);
-    }
+  async delete(@Authorized.Record() record: Asset): Promise<void> {
+    await this.assetRepo.delete(record.id);
   }
 }
+
+const validateData = (data: AssetData, policy: AssetEditPolicy) => {
+  // Specialization of the policy where we disallow assets to be moved to another workgroup
+  // if the current user is not an editor for that workgroup.
+  if (!policy.canDoEverything() && !policy.hasRole(Role.Editor, data.workgroupId)) {
+    throw new HttpException(
+      "Can't move asset to a workgroup for which the user is not an editor",
+      HttpStatus.UNPROCESSABLE_ENTITY
+    );
+  }
+};

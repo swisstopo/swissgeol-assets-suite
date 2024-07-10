@@ -38,7 +38,7 @@ export class AssetSearchDetailComponent {
 
   downloadFile(file: Omit<AssetFile, 'fileSize'>, isDownload = true): void {
     this.activeFileDownloads.set(file.fileId, { isDownload });
-    this.httpClient.get(`/api/file/${file.fileId}`, { responseType: 'blob' }).subscribe({
+    this.httpClient.get(`/api/files/${file.fileId}`, { responseType: 'blob' }).subscribe({
       next: (blob) => {
         const url = URL.createObjectURL(blob);
         const anchor = document.createElement('a');

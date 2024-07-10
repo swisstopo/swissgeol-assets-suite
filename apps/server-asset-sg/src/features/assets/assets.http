@@ -94,7 +94,3 @@ Content-Type: application/json
 ### Get asset
 GET {{host}}/api/assets/44383
 Authorization: Impersonate {{user}}
-
-### List studies
-GET {{host}}/api/all-study-short
-Authorization: Impersonate {{user}}

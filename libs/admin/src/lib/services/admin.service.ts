@@ -42,7 +42,7 @@ export class AdminService {
   private _httpClient = inject(HttpClient);
 
   public getUsers(): ORD.ObservableRemoteData<ApiError, Users> {
-    return this._httpClient.get('/api/admin/user').pipe(
+    return this._httpClient.get('/api/users').pipe(
       map(flow(Users.decode, E.mapLeft(decodeError))),
       // TODO need to test instance of HttpErrorResponse here
       OE.catchErrorW(httpErrorResponseError),
@@ -52,7 +52,7 @@ export class AdminService {
   }
 
   public getUsersNew(): Observable<User[]> {
-    return this._httpClient.get('/api/admin/user').pipe(map((res) => res as User[]));
+    return this._httpClient.get('/api/users').pipe(map((res) => res as User[]));
   }
 
   public getWorkgroups(): Observable<Workgroup[]> {
@@ -80,7 +80,7 @@ export class AdminService {
 
   public deleteUser(id: string): ORD.ObservableRemoteData<ApiError, void> {
     console.log('888', id);
-    return this._httpClient.delete(`/api/admin/user/${id}`).pipe(
+    return this._httpClient.delete(`/api/users/${id}`).pipe(
       tap((a) => console.log('deleteUser', a)),
       map(() => E.right(undefined)),
       // TODO need to test instance of HttpErrorResponse here
