@@ -1,5 +1,5 @@
 import { isNotNull, unknownToUnknownError } from '@asset-sg/core';
-import { BaseAssetEditDetail, PatchAsset, User } from '@asset-sg/shared';
+import { BaseAssetEditDetail, PatchAsset } from '@asset-sg/shared';
 import { Injectable } from '@nestjs/common';
 import { pipe } from 'fp-ts/function';
 import * as TE from 'fp-ts/TaskEither';
@@ -9,6 +9,7 @@ import { AssetEditRepo } from './asset-edit.repo';
 
 import { PrismaService } from '@/core/prisma.service';
 import { AssetSearchService } from '@/features/assets/search/asset-search.service';
+import { User } from '@/features/users/user.model';
 import { notFoundError } from '@/utils/errors';
 import { deleteFile } from '@/utils/file/delete-file';
 import { putFile } from '@/utils/file/put-file';
@@ -22,15 +23,15 @@ export type AssetEditDetail = C.TypeOf<typeof AssetEditDetail>;
 @Injectable()
 export class AssetEditService {
   constructor(
-    private readonly assetRepo: AssetEditRepo,
+    private readonly assetEditRepo: AssetEditRepo,
     private readonly prismaService: PrismaService,
     private readonly assetSearchService: AssetSearchService
   ) {}
 
   public createAsset(user: User, patch: PatchAsset) {
     return pipe(
-      TE.tryCatch(() => this.assetRepo.create({ user, patch }), unknownToUnknownError),
-      TE.chain(({ assetId }) => TE.tryCatch(() => this.assetRepo.find(assetId), unknownToUnknownError)),
+      TE.tryCatch(() => this.assetEditRepo.create({ user, patch }), unknownToUnknownError),
+      TE.chain(({ assetId }) => TE.tryCatch(() => this.assetEditRepo.find(assetId), unknownToUnknownError)),
       TE.chainW(TE.fromPredicate(isNotNull, notFoundError)),
       TE.tap((asset) => TE.tryCatch(() => this.assetSearchService.register(asset), unknownToUnknownError)),
       TE.map((asset) => AssetEditDetail.encode(asset))
@@ -39,7 +40,7 @@ export class AssetEditService {
 
   public updateAsset(user: User, assetId: number, patch: PatchAsset) {
     return pipe(
-      TE.tryCatch(() => this.assetRepo.update(assetId, { user, patch }), unknownToUnknownError),
+      TE.tryCatch(() => this.assetEditRepo.update(assetId, { user, patch }), unknownToUnknownError),
       TE.chainW(TE.fromPredicate(isNotNull, notFoundError)),
       TE.tap((asset) => TE.tryCatch(() => this.assetSearchService.register(asset), unknownToUnknownError)),
       TE.map((asset) => AssetEditDetail.encode(asset))

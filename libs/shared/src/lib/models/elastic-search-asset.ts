@@ -17,6 +17,7 @@ export interface ElasticSearchAsset {
   manCatLabelItemCodes: string[];
   geometryCodes: GeometryCode[] | ['None'];
   studyLocations: ElasticPoint[];
+  workgroupId: number;
   data: SerializedAssetEditDetail;
 }
 

@@ -98,11 +98,7 @@ export const assetInfoSelection = satisfy<Prisma.AssetSelect>()({
   createDate: true,
   receiptDate: true,
   lastProcessedDate: true,
-  workgroup: {
-    select: {
-      id: true,
-    },
-  },
+  workgroupId: true,
 });
 
 export const assetSelection = satisfy<Prisma.AssetSelect>()({
@@ -199,7 +195,7 @@ export const parseAssetFromPrisma = (data: SelectedAsset): Asset => ({
       geom: it.geomText,
     } as AssetStudy;
   }),
-  workgroupId: data.workgroup?.id ?? null,
+  workgroupId: data.workgroupId,
 });
 
 const parseLinkedAsset = (data: SelectedLinkedAsset): LinkedAsset => ({

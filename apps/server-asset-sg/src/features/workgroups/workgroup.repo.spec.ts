@@ -2,8 +2,8 @@ import { faker } from '@faker-js/faker';
 // eslint-disable-next-line @nx/enforce-module-boundaries
 import { clearPrismaAssets, setupDB, setupDefaultWorkgroup } from '../../../../../test/setup-db';
 import { PrismaService } from '@/core/prisma.service';
-import { fakeAssetPatch, fakeUser } from '@/features/asset-old/asset-edit.fake';
-import { AssetEditRepo } from '@/features/asset-old/asset-edit.repo';
+import { fakeAssetPatch, fakeUser } from '@/features/asset-edit/asset-edit.fake';
+import { AssetEditRepo } from '@/features/asset-edit/asset-edit.repo';
 import { Role as UserRole } from '@/features/users/user.model';
 import { UserRepo } from '@/features/users/user.repo';
 import { WorkgroupData, Role } from '@/features/workgroups/workgroup.model';

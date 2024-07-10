@@ -1,6 +1,7 @@
 import { SearchAssetResult, SearchAssetResultEmpty } from '@asset-sg/shared';
 import { Controller, Delete, Get, HttpCode, HttpStatus, Param, ParseIntPipe, Put } from '@nestjs/common';
 
+import { Authorize } from '@/core/decorators/authorize.decorator';
 import { CurrentUser } from '@/core/decorators/current-user.decorator';
 import { AssetSearchService } from '@/features/assets/search/asset-search.service';
 import { FavoriteRepo } from '@/features/favorites/favorite.repo';
@@ -13,6 +14,7 @@ export class FavoritesController {
 
   // TODO make an alternative, new endpoint for this that does not use fp-ts.
   @Get('/')
+  @Authorize.User()
   async list(@CurrentUser() user: User): Promise<SearchAssetResult> {
     const favorites = await this.favoriteRepo.listByUserId(user.id);
     if (favorites.length === 0) {
@@ -23,12 +25,14 @@ export class FavoritesController {
   }
 
   @Put('/:assetId')
+  @Authorize.User()
   @HttpCode(HttpStatus.NO_CONTENT)
   async add(@Param('assetId', ParseIntPipe) assetId: number, @CurrentUser() user: User): Promise<void> {
     await this.favoriteRepo.create({ userId: user.id, assetId });
   }
 
   @Delete('/:assetId')
+  @Authorize.User()
   @HttpCode(HttpStatus.NO_CONTENT)
   async remove(@Param('assetId', ParseIntPipe) assetId: number, @CurrentUser() user: User): Promise<void> {
     await this.favoriteRepo.delete({ userId: user.id, assetId });
