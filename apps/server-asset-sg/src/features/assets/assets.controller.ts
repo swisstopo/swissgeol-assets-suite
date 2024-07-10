@@ -1,3 +1,9 @@
+import { Asset, AssetData, AssetId, UsageStatusCode } from '@asset-sg/shared/v2';
+
+import { User } from '@asset-sg/shared/v2';
+import { Role } from '@asset-sg/shared/v2';
+import { AssetPolicy } from '@asset-sg/shared/v2';
+import { AssetDataSchema } from '@asset-sg/shared/v2';
 import {
   Controller,
   Delete,
@@ -10,57 +16,46 @@ import {
   Post,
   Put,
 } from '@nestjs/common';
-
-import { Authorize } from '@/core/decorators/authorize.decorator';
-import { Authorized } from '@/core/decorators/authorized.decorator';
-import { Boundary } from '@/core/decorators/boundary.decorator';
+import { authorize } from '@/core/authorize';
 import { CurrentUser } from '@/core/decorators/current-user.decorator';
-import { UsePolicy } from '@/core/decorators/use-policy.decorator';
-import { UseRepo } from '@/core/decorators/use-repo.decorator';
-import { AssetEditPolicy } from '@/features/asset-edit/asset-edit.policy';
-import { AssetInfoRepo } from '@/features/assets/asset-info.repo';
-import { Asset, AssetData, AssetDataBoundary, AssetId } from '@/features/assets/asset.model';
-import { AssetPolicy } from '@/features/assets/asset.policy';
+import { ParseBody } from '@/core/decorators/parse.decorator';
 import { AssetRepo } from '@/features/assets/asset.repo';
-import { User } from '@/features/users/user.model';
-import { Role } from '@/features/workgroups/workgroup.model';
 
 @Controller('/assets')
-@UseRepo(AssetRepo)
-@UsePolicy(AssetPolicy)
 export class AssetsController {
-  constructor(private readonly assetRepo: AssetRepo, private readonly assetInfoRepo: AssetInfoRepo) {}
+  constructor(private readonly assetRepo: AssetRepo) {}
 
   @Get('/:id')
-  @Authorize.Show({ id: Number })
-  async show(@Param('id', ParseIntPipe) id: AssetId): Promise<Asset> {
-    const asset = await this.assetRepo.find(id);
-    if (asset === null) {
+  async show(@Param('id', ParseIntPipe) id: AssetId, @CurrentUser() user: User): Promise<Asset> {
+    const record = await this.assetRepo.find(id);
+    if (record === null) {
       throw new HttpException('not found', 404);
     }
-    return asset;
+    authorize(AssetPolicy, user).canShow(record);
+    return record;
   }
 
   @Post('/')
-  @Authorize.Create()
-  async create(
-    @Boundary(AssetDataBoundary) data: AssetData,
-    @CurrentUser() user: User,
-    @Authorized.Policy() policy: AssetEditPolicy
-  ): Promise<Asset> {
-    validateData(data, policy);
+  async create(@ParseBody(AssetDataSchema) data: AssetData, @CurrentUser() user: User): Promise<Asset> {
+    authorize(AssetPolicy, user).canCreate();
+    validateData(user, data);
     return await this.assetRepo.create({ ...data, processor: user });
   }
 
   @Put('/:id')
-  @Authorize.Update({ id: Number })
   async update(
-    @Boundary(AssetDataBoundary) data: AssetData,
-    @CurrentUser() user: User,
-    @Authorized.Record() record: Asset,
-    @Authorized.Policy() policy: AssetEditPolicy
+    @Param('id', ParseIntPipe) id: number,
+    @ParseBody(AssetDataSchema) data: AssetData,
+    @CurrentUser() user: User
   ): Promise<Asset> {
-    validateData(data, policy);
+    const record = await this.assetRepo.find(id);
+    if (record == null) {
+      throw new HttpException('not found', HttpStatus.NOT_FOUND);
+    }
+
+    authorize(AssetPolicy, user).canUpdate(record);
+    validateData(user, data, record);
+
     const asset = await this.assetRepo.update(record.id, { ...data, processor: user });
     if (asset === null) {
       throw new HttpException('not found', 404);
@@ -69,20 +64,38 @@ export class AssetsController {
   }
 
   @Delete('/:id')
-  @Authorize.Delete({ id: Number })
   @HttpCode(HttpStatus.NO_CONTENT)
-  async delete(@Authorized.Record() record: Asset): Promise<void> {
+  async delete(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: User): Promise<void> {
+    const record = await this.assetRepo.find(id);
+    if (record == null) {
+      throw new HttpException('not found', HttpStatus.NOT_FOUND);
+    }
+    authorize(AssetPolicy, user).canDelete(record);
     await this.assetRepo.delete(record.id);
   }
 }
 
-const validateData = (data: AssetData, policy: AssetEditPolicy) => {
+const validateData = (user: User, data: AssetData, record?: Asset) => {
+  const policy = new AssetPolicy(user);
+
   // Specialization of the policy where we disallow assets to be moved to another workgroup
   // if the current user is not an editor for that workgroup.
   if (!policy.canDoEverything() && !policy.hasRole(Role.Editor, data.workgroupId)) {
     throw new HttpException(
       "Can't move asset to a workgroup for which the user is not an editor",
-      HttpStatus.UNPROCESSABLE_ENTITY
+      HttpStatus.FORBIDDEN
     );
+  }
+
+  // Specialization of the policy where we disallow the internal status to be changed to anything else than `tobechecked`
+  // if the current user is not a master-editor for the asset's current or future workgroup.
+  const hasInternalUseChanged = record == null || record.usage.internal.statusCode !== data.usage.internal.statusCode;
+  if (
+    hasInternalUseChanged &&
+    data.usage.internal.statusCode !== UsageStatusCode.ToBeChecked &&
+    ((record != null && !policy.hasRole(Role.MasterEditor, record.workgroupId)) ||
+      !policy.hasRole(Role.MasterEditor, data.workgroupId))
+  ) {
+    throw new HttpException("Changing the asset's status is not allowed", HttpStatus.FORBIDDEN);
   }
 };

@@ -1,5 +1,5 @@
+import { Policy } from '@asset-sg/shared/v2';
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
-import { Policy } from '@/core/policy';
 import { AuthorizedRequest } from '@/models/jwt-request';
 
 export const Authorized = {

@@ -1,16 +1,16 @@
-import { Injectable, inject } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { NavigationEnd, Router, RouterStateSnapshot } from '@angular/router';
 import { AuthService } from '@asset-sg/auth';
 import { appSharedStateActions, fromAppShared } from '@asset-sg/client-shared';
 import { ORD } from '@asset-sg/core';
-import { Lang, eqLangRight } from '@asset-sg/shared';
+import { eqLangRight, Lang } from '@asset-sg/shared';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { ROUTER_NAVIGATION, RouterNavigationAction } from '@ngrx/router-store';
 import { Store } from '@ngrx/store';
 import { TranslateService } from '@ngx-translate/core';
 import * as E from 'fp-ts/Either';
-import { combineLatest, distinctUntilChanged, filter, map, merge, switchMap, take } from 'rxjs';
+import { combineLatest, distinctUntilChanged, filter, map, switchMap, take } from 'rxjs';
 
 import { AppSharedStateService } from './app-shared-state.service';
 import { AppState } from './app-state';
@@ -40,19 +40,10 @@ export class AppSharedStateEffects {
         }
       });
 
-    merge(
-      this.actions$.pipe(
-        ofType<RouterNavigationAction<RouterStateSnapshot>>(ROUTER_NAVIGATION),
-        filter((a) => !a.payload.routerState.url.match(/^\/\w\w\/a\//)),
-        take(1)
-      ),
-      this.actions$.pipe(ofType(appSharedStateActions.logout))
-    )
-      .pipe(untilDestroyed(this))
-      .subscribe(() => {
-        this.store.dispatch(appSharedStateActions.loadUserProfile());
-        this.store.dispatch(appSharedStateActions.loadReferenceData());
-      });
+    this.actions$.pipe(ofType(appSharedStateActions.logout), untilDestroyed(this)).subscribe(() => {
+      this.store.dispatch(appSharedStateActions.loadUserProfile());
+      this.store.dispatch(appSharedStateActions.loadReferenceData());
+    });
 
     this.actions$
       .pipe(

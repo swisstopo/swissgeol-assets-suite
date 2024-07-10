@@ -1,11 +1,11 @@
 import { SearchAssetResult, SearchAssetResultEmpty } from '@asset-sg/shared';
+import { User } from '@asset-sg/shared/v2';
 import { Controller, Delete, Get, HttpCode, HttpStatus, Param, ParseIntPipe, Put } from '@nestjs/common';
 
 import { Authorize } from '@/core/decorators/authorize.decorator';
 import { CurrentUser } from '@/core/decorators/current-user.decorator';
 import { AssetSearchService } from '@/features/assets/search/asset-search.service';
 import { FavoriteRepo } from '@/features/favorites/favorite.repo';
-import { User } from '@/features/users/user.model';
 import { define } from '@/utils/define';
 
 @Controller('/users/current/favorites')

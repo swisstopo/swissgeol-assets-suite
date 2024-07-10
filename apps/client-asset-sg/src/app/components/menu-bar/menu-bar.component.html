@@ -24,7 +24,7 @@
     <svg-icon key="favourite" />
     <span translate>menuBar.favourites</span>
   </a>
-  <ng-container *ngIf="isEditor$ | push">
+  <ng-container *canCreate="AssetEditPolicy">
     <button
       asset-sg-reset
       class="menu-bar-item active"
@@ -47,11 +47,11 @@
     </ng-template>
   </ng-container>
   <a
-    *ngIf="isAdmin$ | push"
+    *adminOnly
     [routerLink]="[_translateService.currentLang, 'admin']"
     asset-sg-reset
     class="menu-bar-item"
-    [ngClass]="{ active: (isAdminActive$ | async) }"
+    [class]="{ active: (isAdminActive$ | async) }"
   >
     <svg-icon key="user-management" />
     <span translate>menuBar.userManagement</span>
@@ -71,12 +71,4 @@
     <svg-icon key="help" />
     <span translate>menuBar.help</span>
   </a>
-  <!-- <a routerLink="/test" asset-sg-reset disabled class="menu-bar-item">
-        <svg-icon key="settings"></svg-icon>
-        <span translate>menuBar.settings</span>
-    </a> -->
-  <!-- <button asset-sg-reset class="menu-bar-item" disabled>
-        <svg-icon key="close-nav"></svg-icon>
-        <span translate>menuBar.signOut</span>
-    </button> -->
 </div>

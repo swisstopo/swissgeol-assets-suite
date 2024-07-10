@@ -1,6 +1,6 @@
+import { User } from '@asset-sg/shared/v2';
 import { ExecutionContext, createParamDecorator } from '@nestjs/common';
 
-import { User } from '@/features/users/user.model';
 import { JwtRequest } from '@/models/jwt-request';
 
 /**

@@ -19,7 +19,7 @@
         {{ "login" | translate }}
       </button>
     </ng-container>
-    <ng-container *ngSwitchCase="AuthState.Forbidden">
+    <ng-container *ngSwitchCase="AuthState.AccessForbidden">
       <div class="alert">
         <p>
           {{ "accessForbidden" | translate }}

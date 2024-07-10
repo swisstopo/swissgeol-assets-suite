@@ -19,6 +19,9 @@ import {
   UsageCode,
   ValueCount,
 } from '@asset-sg/shared';
+import { AssetId } from '@asset-sg/shared/v2';
+import { StudyId } from '@asset-sg/shared/v2';
+import { User } from '@asset-sg/shared/v2';
 import { Client as ElasticsearchClient } from '@elastic/elasticsearch';
 import {
   BulkOperationContainer,
@@ -33,12 +36,9 @@ import proj4 from 'proj4';
 // eslint-disable-next-line @nx/enforce-module-boundaries
 import indexMapping from '../../../../../../development/init/elasticsearch/mappings/swissgeol_asset_asset.json';
 
-import { AssetId } from '../asset.model';
 import { PrismaService } from '@/core/prisma.service';
 import { AssetEditRepo } from '@/features/asset-edit/asset-edit.repo';
-import { StudyId } from '@/features/studies/study.model';
 import { StudyRepo } from '@/features/studies/study.repo';
-import { User } from '@/features/users/user.model';
 
 const INDEX = 'swissgeol_asset_asset';
 export { INDEX as ASSET_ELASTIC_INDEX };

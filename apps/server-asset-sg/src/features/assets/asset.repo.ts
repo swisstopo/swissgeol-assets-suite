@@ -1,26 +1,17 @@
+import { Asset, AssetData, AssetId, AssetStudy, AssetStudyId, AssetUsage, StudyData } from '@asset-sg/shared/v2';
+import { isNotPersisted, isPersisted } from '@asset-sg/shared/v2';
+import { StudyType } from '@asset-sg/shared/v2';
+import { User } from '@asset-sg/shared/v2';
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-
 import { PrismaService } from '@/core/prisma.service';
-import { Repo, RepoListOptions } from '@/core/repo';
-import {
-  Asset,
-  AssetData,
-  AssetId,
-  AssetUsage,
-  AssetStudy,
-  StudyData,
-  AssetStudyId,
-} from '@/features/assets/asset.model';
+import { FindRepo, MutateRepo } from '@/core/repo';
 import { assetSelection, parseAssetFromPrisma } from '@/features/assets/prisma-asset';
-import { StudyType } from '@/features/studies/study.model';
-import { User } from '@/features/users/user.model';
-import { isNotPersisted, isPersisted } from '@/utils/data/model';
 import { satisfy } from '@/utils/define';
 import { handlePrismaMutationError } from '@/utils/prisma';
 
 @Injectable()
-export class AssetRepo implements Repo<Asset, AssetId, FullAssetData> {
+export class AssetRepo implements FindRepo<Asset, AssetId>, MutateRepo<Asset, AssetId, FullAssetData> {
   constructor(private readonly prisma: PrismaService) {}
 
   async find(id: AssetId): Promise<Asset | null> {
@@ -29,21 +20,6 @@ export class AssetRepo implements Repo<Asset, AssetId, FullAssetData> {
       select: assetSelection,
     });
     return entry == null ? null : parseAssetFromPrisma(entry);
-  }
-
-  async list({ limit, offset, ids }: RepoListOptions<AssetId> = {}): Promise<Asset[]> {
-    const entries = await this.prisma.asset.findMany({
-      where:
-        ids == null
-          ? undefined
-          : {
-              assetId: { in: ids },
-            },
-      select: assetSelection,
-      take: limit,
-      skip: offset,
-    });
-    return entries.map(parseAssetFromPrisma);
   }
 
   async create(data: FullAssetData): Promise<Asset> {

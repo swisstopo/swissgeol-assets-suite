@@ -1,4 +1,4 @@
-import { UserId } from '@/features/users/user.model';
+import { UserId } from './user';
 
 export interface Favorite {
   assetId: number;

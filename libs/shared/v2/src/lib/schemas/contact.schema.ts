@@ -1,24 +1,7 @@
 import { IsOptional, IsString } from 'class-validator';
+import { ContactData } from '../models/contact';
 
-import { Data, Model } from '@/utils/data/model';
-
-export interface Contact extends Model<ContactId> {
-  name: string;
-  street: string | null;
-  houseNumber: string | null;
-  plz: string | null;
-  locality: string | null;
-  country: string | null;
-  telephone: string | null;
-  email: string | null;
-  website: string | null;
-  contactKindItemCode: string;
-}
-
-export type ContactId = number;
-export type ContactData = Data<Contact>;
-
-export class ContactDataBoundary implements ContactData {
+export class ContactDataSchema implements ContactData {
   @IsString()
   name!: string;
 

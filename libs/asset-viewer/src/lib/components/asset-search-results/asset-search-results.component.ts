@@ -1,5 +1,6 @@
 import {
   ChangeDetectionStrategy,
+  ChangeDetectorRef,
   Component,
   ElementRef,
   EventEmitter,
@@ -53,6 +54,7 @@ export class AssetSearchResultsComponent implements OnInit, OnDestroy {
   public readonly pageStats$ = this._store.select(selectAssetSearchPageData);
   public readonly currentAssetDetail$ = this._store.select(selectCurrentAssetDetail);
   private readonly subscriptions: Subscription = new Subscription();
+  private changeDetector = inject(ChangeDetectorRef);
 
   public ngOnInit() {
     this.initSubscriptions();
@@ -92,6 +94,7 @@ export class AssetSearchResultsComponent implements OnInit, OnDestroy {
         if (this.scrollContainer) {
           this.scrollContainer.nativeElement.scrollTop = 0;
         }
+        this.changeDetector.markForCheck();
       })
     );
   }

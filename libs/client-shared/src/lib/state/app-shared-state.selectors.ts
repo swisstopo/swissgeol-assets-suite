@@ -1,11 +1,4 @@
-import {
-  Contact,
-  emptyValueItem,
-  isEditor,
-  isMasterEditor,
-  ReferenceData,
-  valueItemRecordToArray,
-} from '@asset-sg/shared';
+import { Contact, emptyValueItem, ReferenceData, valueItemRecordToArray } from '@asset-sg/shared';
 import * as RD from '@devexperts/remote-data-ts';
 import { createSelector } from '@ngrx/store';
 import * as A from 'fp-ts/Array';
@@ -22,7 +15,9 @@ export const selectRDReferenceData = createSelector(appSharedFeature, (state) =>
 
 export const selectRDUserProfile = createSelector(appSharedFeature, (state) => state.rdUserProfile);
 
-const makeRefenceDataVM = (referenceData: ReferenceData) => ({
+export const selectUser = createSelector(selectRDUserProfile, RD.toNullable);
+
+const makeReferenceDataVM = (referenceData: ReferenceData) => ({
   ...referenceData,
   assetFormItemArray: valueItemRecordToArray(referenceData.assetFormatItems),
   assetKindItemArray: valueItemRecordToArray(referenceData.assetKindItems),
@@ -39,7 +34,7 @@ const makeRefenceDataVM = (referenceData: ReferenceData) => ({
     A.map((a) => a[1])
   ),
 });
-export type ReferenceDataVM = ReturnType<typeof makeRefenceDataVM>;
+export type ReferenceDataVM = ReturnType<typeof makeReferenceDataVM>;
 
 export const emptyReferenceDataVM: ReferenceDataVM = {
   assetFormatItems: {},
@@ -95,19 +90,3 @@ export const selectRDReferenceDataVM = createSelector(
 );
 
 export const selectLocale = createSelector(appSharedFeature, (state) => (state.lang === 'en' ? 'en-GB' : 'de-CH'));
-
-export const selectIsNotMasterEditor = createSelector(
-  selectRDUserProfile,
-  flow(
-    RD.map((userProfile) => !isMasterEditor(userProfile)),
-    RD.getOrElse(() => true)
-  )
-);
-
-export const selectIsEditor = createSelector(
-  selectRDUserProfile,
-  flow(
-    RD.map((userProfile) => isEditor(userProfile)),
-    RD.getOrElse(() => false)
-  )
-);

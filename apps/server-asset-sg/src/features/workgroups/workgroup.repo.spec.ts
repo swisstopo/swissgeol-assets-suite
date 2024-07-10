@@ -1,12 +1,11 @@
+import { WorkgroupData, Role } from '@asset-sg/shared/v2';
 import { faker } from '@faker-js/faker';
 // eslint-disable-next-line @nx/enforce-module-boundaries
 import { clearPrismaAssets, setupDB, setupDefaultWorkgroup } from '../../../../../test/setup-db';
 import { PrismaService } from '@/core/prisma.service';
 import { fakeAssetPatch, fakeUser } from '@/features/asset-edit/asset-edit.fake';
 import { AssetEditRepo } from '@/features/asset-edit/asset-edit.repo';
-import { Role as UserRole } from '@/features/users/user.model';
 import { UserRepo } from '@/features/users/user.repo';
-import { WorkgroupData, Role } from '@/features/workgroups/workgroup.model';
 import { WorkgroupRepo } from '@/features/workgroups/workgroup.repo';
 
 describe('WorkgroupRepo', () => {
@@ -112,14 +111,13 @@ describe('WorkgroupRepo', () => {
         lang: 'de',
         oidcId: faker.string.uuid(),
         isAdmin: false,
-        role: UserRole.Viewer,
         workgroups: [],
       });
       const data: WorkgroupData = {
         name: 'test',
         disabled_at: null,
         assets: [asset],
-        users: [{ userId: user.id, role: 'MasterEditor' }],
+        users: [{ userId: user.id, role: Role.MasterEditor }],
       };
 
       // When
@@ -153,7 +151,6 @@ describe('WorkgroupRepo', () => {
         lang: 'de',
         oidcId: faker.string.uuid(),
         isAdmin: false,
-        role: UserRole.Viewer,
         workgroups: [],
       });
       const initialWorkgroup: WorkgroupData = { name: 'test', disabled_at: null, assets: [], users: [] };
@@ -192,14 +189,13 @@ describe('WorkgroupRepo', () => {
         lang: 'de',
         oidcId: faker.string.uuid(),
         isAdmin: false,
-        role: UserRole.Viewer,
         workgroups: [],
       });
       const data: WorkgroupData = {
         name: 'test',
         disabled_at: null,
         assets: [{ assetId: asset.assetId }],
-        users: [{ userId: user.id, role: 'MasterEditor' }],
+        users: [{ userId: user.id, role: Role.MasterEditor }],
       };
       const workgroup = await repo.create(data);
 

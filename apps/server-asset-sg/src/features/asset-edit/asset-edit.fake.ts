@@ -1,4 +1,6 @@
-import { AssetUsage, Contact, PatchAsset, User, UserRoleEnum, dateIdFromDate } from '@asset-sg/shared';
+import { AssetUsage, Contact, PatchAsset, dateIdFromDate } from '@asset-sg/shared';
+import { User } from '@asset-sg/shared/v2';
+import { Role } from '@asset-sg/shared/v2';
 import { fakerDE_CH as faker } from '@faker-js/faker';
 import * as O from 'fp-ts/Option';
 
@@ -27,7 +29,8 @@ export const fakeUser = () =>
     email: faker.internet.email(),
     id: faker.string.uuid(),
     lang: faker.helpers.fromRegExp(/[a-z]{2}/),
-    role: faker.helpers.arrayElement(Object.values(UserRoleEnum)),
+    isAdmin: false,
+    workgroups: [{ id: 1, role: Role.Viewer }],
   });
 
 export const fakeContact = () =>

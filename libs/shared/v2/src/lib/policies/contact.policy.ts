@@ -1,6 +1,6 @@
-import { Policy } from '@/core/policy';
-import { Contact } from '@/features/contacts/contact.model';
-import { Role } from '@/features/workgroups/workgroup.model';
+import { Contact } from '../models/contact';
+import { Role } from '../models/workgroup';
+import { Policy } from './base/policy';
 
 export class ContactPolicy extends Policy<Contact> {
   canShow(_value: Contact): boolean {

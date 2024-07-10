@@ -1,11 +1,11 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable, inject } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { ApiError, httpErrorResponseOrUnknownError } from '@asset-sg/client-shared';
-import { OE, ORD, decode } from '@asset-sg/core';
+import { decode, OE, ORD } from '@asset-sg/core';
 import { User } from '@asset-sg/shared';
 import * as RD from '@devexperts/remote-data-ts';
 import { OAuthService } from 'angular-oauth2-oidc';
-import { BehaviorSubject, Observable, map, startWith } from 'rxjs';
+import { BehaviorSubject, map, Observable, startWith } from 'rxjs';
 import urlJoin from 'url-join';
 
 @Injectable({ providedIn: 'root' })
@@ -14,7 +14,7 @@ export class AuthService {
 
   private oauthService = inject(OAuthService);
 
-  private state = new BehaviorSubject(AuthState.Ongoing);
+  private _state = new BehaviorSubject(AuthState.Ongoing);
 
   public configureOAuth(
     issuer: string,
@@ -38,27 +38,35 @@ export class AuthService {
 
   async signIn(): Promise<void> {
     try {
-      if (this.state.value === AuthState.Ongoing) {
+      if (this._state.value === AuthState.Ongoing) {
         const success = await this.oauthService.loadDiscoveryDocumentAndLogin();
         if (success) {
           this.oauthService.setupAutomaticSilentRefresh();
-          this.state.next(AuthState.Success);
+
+          // If something else has interrupted the auth process, then we don't want to signal a success.
+          if (this._state.value === AuthState.Ongoing) {
+            this._state.next(AuthState.Success);
+          }
         }
       } else {
-        this.state.next(AuthState.Ongoing);
+        this._state.next(AuthState.Ongoing);
         this.oauthService.initLoginFlow();
       }
     } catch (e) {
-      this.state.next(AuthState.Aborted);
+      this._state.next(AuthState.Aborted);
     }
   }
 
+  get state(): AuthState {
+    return this._state.value;
+  }
+
   get state$(): Observable<AuthState> {
-    return this.state.asObservable();
+    return this._state.asObservable();
   }
 
   setState(state: AuthState): void {
-    this.state.next(state);
+    this._state.next(state);
   }
 
   getUserProfile(): ORD.ObservableRemoteData<ApiError, User> {
@@ -78,9 +86,11 @@ export class AuthService {
   }
 
   private _getUserProfile() {
-    return this._httpClient
-      .get('/api/users/current')
-      .pipe(map(decode(User)), OE.catchErrorW(httpErrorResponseOrUnknownError));
+    return this._httpClient.get('/api/users/current').pipe(
+      map((it) => ({ ...it, role: (it as { isAdmin: boolean }).isAdmin ? 'admin' : 'master-editor' })),
+      map(decode(User)),
+      OE.catchErrorW(httpErrorResponseOrUnknownError)
+    );
   }
 
   buildAuthUrl = (path: string) => urlJoin(`/auth`, path);
@@ -89,6 +99,7 @@ export class AuthService {
 export enum AuthState {
   Ongoing,
   Aborted,
-  Forbidden,
+  AccessForbidden,
+  ForbiddenResource,
   Success,
 }
