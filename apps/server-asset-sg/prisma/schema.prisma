@@ -59,8 +59,8 @@ model Asset {
   studyTraces             StudyTrace[]
   typeNatRels             TypeNatRel[]
 
-  workgroup   Workgroup? @relation(fields: [workgroupId], references: [id])
-  workgroupId Int?       @map("workgroup_id")
+  workgroup   Workgroup @relation(fields: [workgroupId], references: [id])
+  workgroupId Int       @map("workgroup_id")
 
   siblingXAssets AssetXAssetY[] @relation("sibling_x_asset")
   siblingYAssets AssetXAssetY[] @relation("sibling_y_asset")
@@ -639,7 +639,6 @@ model StatusWorkItem {
 
 model AssetUser {
   id                 String               @id @db.Uuid
-  role               String
   email              String
   lang               String
   oidcId             String

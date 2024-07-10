@@ -20,10 +20,6 @@ export interface UserOnWorkgroup {
   userId: UserId;
   role: Role;
 }
-
-export type Role = PrismaRole;
-export const Role = PrismaRole;
-
 export class WorkgroupDataBoundary implements WorkgroupData {
   @IsString()
   name!: string;
@@ -39,3 +35,17 @@ export class WorkgroupDataBoundary implements WorkgroupData {
   @Type(() => Date)
   disabled_at!: Date | null;
 }
+
+export type Role = PrismaRole;
+export const Role = PrismaRole;
+
+export const getRoleIndex = (role: Role): number => {
+  switch (role) {
+    case 'Viewer':
+      return 0;
+    case 'Editor':
+      return 1;
+    case 'MasterEditor':
+      return 2;
+  }
+};

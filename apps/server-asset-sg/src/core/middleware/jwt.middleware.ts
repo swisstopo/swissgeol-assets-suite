@@ -11,7 +11,7 @@ import * as jwt from 'jsonwebtoken';
 import { Jwt, JwtPayload } from 'jsonwebtoken';
 import jwkToPem from 'jwk-to-pem';
 
-import { Role, User } from '@/features/users/user.model';
+import { User } from '@/features/users/user.model';
 import { UserRepo } from '@/features/users/user.repo';
 import { JwtRequest } from '@/models/jwt-request';
 
@@ -196,7 +196,6 @@ export class JwtMiddleware implements NestMiddleware {
     return await this.userRepo.create({
       oidcId,
       email,
-      role: Role.Viewer,
       lang: 'de',
       isAdmin: false,
       workgroups: [],

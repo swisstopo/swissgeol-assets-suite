@@ -66,7 +66,7 @@ export interface AssetDetails {
   usage: AssetUsages;
   statuses: WorkStatus[];
   studies: AssetStudy[];
-  workgroupId: number | null;
+  workgroupId: number;
 }
 
 export interface AssetUsages {
@@ -332,6 +332,5 @@ export class AssetDataBoundary implements AssetData {
   usage!: AssetUsagesBoundary;
 
   @IsNumber()
-  @IsNullable()
-  workgroupId!: number | null;
+  workgroupId!: number;
 }

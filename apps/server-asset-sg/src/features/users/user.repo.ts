@@ -3,7 +3,7 @@ import { Prisma } from '@prisma/client';
 
 import { PrismaService } from '@/core/prisma.service';
 import { Repo, RepoListOptions } from '@/core/repo';
-import { Role, User, UserData, UserId } from '@/features/users/user.model';
+import { User, UserData, UserId } from '@/features/users/user.model';
 import { satisfy } from '@/utils/define';
 import { handlePrismaMutationError } from '@/utils/prisma';
 
@@ -48,7 +48,6 @@ export class UserRepo implements Repo<User, UserId, UserData & { oidcId: string 
         id: data.oidcId,
         oidcId: data.oidcId,
         email: data.email,
-        role: data.role,
         lang: data.lang,
       },
       select: userSelection,
@@ -61,16 +60,15 @@ export class UserRepo implements Repo<User, UserId, UserData & { oidcId: string 
       const entry = await this.prisma.assetUser.update({
         where: { id },
         data: {
-          role: data.role,
           lang: data.lang,
           isAdmin: data.isAdmin,
           workgroups: {
             deleteMany: {
-              workgroupId: { notIn: data.workgroups?.map((workgroup) => workgroup.workgroupId) },
+              workgroupId: { notIn: data.workgroups?.map((workgroup) => workgroup.id) },
             },
             createMany: {
               data: data.workgroups?.map((workgroup) => ({
-                workgroupId: workgroup.workgroupId,
+                workgroupId: workgroup.id,
                 role: workgroup.role,
               })),
               skipDuplicates: true,
@@ -102,7 +100,6 @@ export class UserRepo implements Repo<User, UserId, UserData & { oidcId: string 
 
 export const userSelection = satisfy<Prisma.AssetUserSelect>()({
   id: true,
-  role: true,
   email: true,
   lang: true,
   isAdmin: true,
@@ -110,11 +107,6 @@ export const userSelection = satisfy<Prisma.AssetUserSelect>()({
     select: {
       workgroupId: true,
       role: true,
-      workgroup: {
-        select: {
-          name: true,
-        },
-      },
     },
   },
 });
@@ -123,5 +115,8 @@ type SelectedUser = Prisma.AssetUserGetPayload<{ select: typeof userSelection }>
 
 const parse = (data: SelectedUser): User => ({
   ...data,
-  role: data.role as Role,
+  workgroups: data.workgroups.map((it) => ({
+    id: it.workgroupId,
+    role: it.role,
+  })),
 });

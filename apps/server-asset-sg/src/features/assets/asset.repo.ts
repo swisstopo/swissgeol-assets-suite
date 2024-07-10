@@ -226,13 +226,11 @@ const mapDataToPrisma = (data: FullAssetData) =>
         assetFormatItemCode: data.formatCode,
       },
     },
-    workgroup: data.workgroupId
-      ? {
-          connect: {
-            id: data.workgroupId,
-          },
-        }
-      : undefined,
+    workgroup: {
+      connect: {
+        id: data.workgroupId,
+      },
+    },
   });
 
 const mapDataToPrismaCreate = (data: FullAssetData): Prisma.AssetCreateInput => ({

@@ -33,7 +33,7 @@ describe('FavouriteService', () => {
       expect(favourites).toEqual(dummyFavourites);
     });
 
-    const request = httpMock.expectOne(`/api/user/favourite`);
+    const request = httpMock.expectOne(`/api/users/current/favorites`);
     expect(request.request.method).toBe('GET');
     request.flush(dummyFavourites);
   });

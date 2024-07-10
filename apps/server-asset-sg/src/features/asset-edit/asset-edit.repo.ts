@@ -1,5 +1,5 @@
 import { decodeError, isNotNull } from '@asset-sg/core';
-import { AssetUsage, dateFromDateId, DateIdFromDate, PatchAsset, User } from '@asset-sg/shared';
+import { AssetUsage, dateFromDateId, DateIdFromDate, PatchAsset } from '@asset-sg/shared';
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import * as E from 'fp-ts/Either';
@@ -9,6 +9,7 @@ import { AssetEditDetail } from './asset-edit.service';
 
 import { PrismaService } from '@/core/prisma.service';
 import { Repo, RepoListOptions } from '@/core/repo';
+import { User } from '@/features/users/user.model';
 import { AssetEditDetailFromPostgres } from '@/models/asset-edit-detail';
 import {
   createStudies,
@@ -18,12 +19,23 @@ import {
 } from '@/utils/postgres-studies/postgres-studies';
 
 @Injectable()
-export class AssetEditRepo implements Repo<AssetEditDetail, number, AssetData> {
+export class AssetEditRepo implements Repo<AssetEditDetail, number, AssetEditData> {
   constructor(private readonly prismaService: PrismaService) {}
 
   async find(id: number): Promise<AssetEditDetail | null> {
     const asset = await this.prismaService.asset.findUnique({
       where: { assetId: id },
+      select: selectPrismaAsset,
+    });
+    if (asset === null) {
+      return null;
+    }
+    return this.loadDetail(asset);
+  }
+
+  async findByFile(fileId: number): Promise<AssetEditDetail | null> {
+    const asset = await this.prismaService.asset.findFirst({
+      where: { assetFiles: { some: { fileId } } },
       select: selectPrismaAsset,
     });
     if (asset === null) {
@@ -47,7 +59,7 @@ export class AssetEditRepo implements Repo<AssetEditDetail, number, AssetData> {
     return await Promise.all(assets.map((it) => this.loadDetail(it)));
   }
 
-  async create(data: AssetData): Promise<AssetEditDetail> {
+  async create(data: AssetEditData): Promise<AssetEditDetail> {
     const asset = await this.prismaService.asset.create({
       select: { assetId: true },
       data: {
@@ -104,7 +116,7 @@ export class AssetEditRepo implements Repo<AssetEditDetail, number, AssetData> {
     return (await this.find(asset.assetId)) as AssetEditDetail;
   }
 
-  async update(id: number, data: AssetData): Promise<AssetEditDetail | null> {
+  async update(id: number, data: AssetEditData): Promise<AssetEditDetail | null> {
     // Check if a record for `id` exists, and return `null` if not.
     const count = await this.prismaService.asset.count({ where: { assetId: id } });
     if (count === 0) {
@@ -311,7 +323,7 @@ export class AssetEditRepo implements Repo<AssetEditDetail, number, AssetData> {
 /**
  * The data required to create or update an {@link AssetEditDetail}.
  */
-export interface AssetData {
+export interface AssetEditData {
   patch: PatchAsset;
   user: User;
 }
