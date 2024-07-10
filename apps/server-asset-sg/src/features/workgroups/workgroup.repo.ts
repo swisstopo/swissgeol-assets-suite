@@ -1,14 +1,20 @@
+import { User } from '@asset-sg/shared';
+import { Workgroup, WorkgroupData, WorkgroupId } from '@asset-sg/shared/v2';
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '@/core/prisma.service';
 import { Repo, RepoListOptions } from '@/core/repo';
-import { Workgroup, WorkgroupData, WorkgroupId } from '@/features/workgroups/workgroup.model';
+import { SimpleWorkgroupRepo } from '@/features/workgroups/workgroup-simple.repo';
 import { satisfy } from '@/utils/define';
 import { handlePrismaMutationError } from '@/utils/prisma';
 
 @Injectable()
 export class WorkgroupRepo implements Repo<Workgroup, WorkgroupId, WorkgroupData> {
   constructor(private readonly prisma: PrismaService) {}
+
+  simple(user: User): SimpleWorkgroupRepo {
+    return new SimpleWorkgroupRepo(this.prisma, user);
+  }
 
   find(id: WorkgroupId): Promise<Workgroup | null> {
     return this.prisma.workgroup.findUnique({

@@ -3,7 +3,7 @@ import { DialogModule } from '@angular/cdk/dialog';
 import { CommonModule, NgOptimizedImage, registerLocaleData } from '@angular/common';
 import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
 import locale_deCH from '@angular/common/locales/de-CH';
-import { NgModule, inject } from '@angular/core';
+import { inject, NgModule } from '@angular/core';
 import { MAT_FORM_FIELD_DEFAULT_OPTIONS } from '@angular/material/form-field';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { BrowserModule } from '@angular/platform-browser';
@@ -11,18 +11,20 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { RouterModule } from '@angular/router';
 import { AuthInterceptor, AuthModule, ErrorService } from '@asset-sg/auth';
 import {
+  AdminOnlyDirective,
   AlertModule,
   AnchorComponent,
   ButtonComponent,
+  CanCreateDirective,
   CURRENT_LANG,
-  TranslateTsLoader,
   currentLangFactory,
   icons,
+  TranslateTsLoader,
 } from '@asset-sg/client-shared';
 import { storeLogger } from '@asset-sg/core';
-import { SvgIconComponent, provideSvgIcons } from '@ngneat/svg-icon';
+import { provideSvgIcons, SvgIconComponent } from '@ngneat/svg-icon';
 import { EffectsModule } from '@ngrx/effects';
-import { FullRouterStateSerializer, StoreRouterConnectingModule, routerReducer } from '@ngrx/router-store';
+import { FullRouterStateSerializer, routerReducer, StoreRouterConnectingModule } from '@ngrx/router-store';
 import { StoreModule } from '@ngrx/store';
 import { TranslateLoader, TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ForModule } from '@rx-angular/template/for';
@@ -31,7 +33,7 @@ import { PushModule } from '@rx-angular/template/push';
 
 import { environment } from '../environments/environment';
 
-import { adminGuard, editorGuard } from './app-guards';
+import { adminGuard } from './app-guards';
 import { assetsPageMatcher } from './app-matchers';
 import { AppComponent } from './app.component';
 import { AppBarComponent, MenuBarComponent, NotFoundComponent, RedirectToLangComponent } from './components';
@@ -73,7 +75,6 @@ registerLocaleData(locale_deCH, 'de-CH');
       {
         path: ':lang/asset-admin',
         loadChildren: () => import('@asset-sg/asset-editor').then((m) => m.AssetEditorModule),
-        canActivate: [editorGuard],
       },
       {
         matcher: assetsPageMatcher,
@@ -116,6 +117,8 @@ registerLocaleData(locale_deCH, 'de-CH');
     AlertModule,
     NgOptimizedImage,
     MatProgressSpinnerModule,
+    AdminOnlyDirective,
+    CanCreateDirective,
   ],
   providers: [
     provideSvgIcons(icons),

@@ -6,7 +6,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 
 import { AppController } from '@/app.controller';
 import { provideElasticsearch } from '@/core/elasticsearch';
-import { PolicyGuard } from '@/core/guards/policy.guard';
+import { AuthorizationGuard } from '@/core/guards/authorization-guard.service';
 import { JwtMiddleware } from '@/core/middleware/jwt.middleware';
 import { PrismaService } from '@/core/prisma.service';
 import { AssetEditController } from '@/features/asset-edit/asset-edit.controller';
@@ -28,23 +28,23 @@ import { StudiesController } from '@/features/studies/studies.controller';
 import { StudyRepo } from '@/features/studies/study.repo';
 import { UserRepo } from '@/features/users/user.repo';
 import { UsersController } from '@/features/users/users.controller';
-import { WorkgroupController } from '@/features/workgroups/workgroup.controller';
 import { WorkgroupRepo } from '@/features/workgroups/workgroup.repo';
+import { WorkgroupsController } from '@/features/workgroups/workgroups.controller';
 
 @Module({
   controllers: [
     AppController,
     AssetEditController,
-    AssetsController,
     AssetSearchController,
     AssetSyncController,
+    AssetsController,
     ContactsController,
     FavoritesController,
     FilesController,
     OcrController,
     StudiesController,
     UsersController,
-    WorkgroupController,
+    WorkgroupsController,
   ],
   imports: [HttpModule, ScheduleModule.forRoot(), CacheModule.register()],
   providers: [
@@ -62,7 +62,7 @@ import { WorkgroupRepo } from '@/features/workgroups/workgroup.repo';
     WorkgroupRepo,
     {
       provide: APP_GUARD,
-      useClass: PolicyGuard,
+      useClass: AuthorizationGuard,
     },
   ],
 })

@@ -5,7 +5,6 @@ import { NgModule } from '@angular/core';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { RouterModule } from '@angular/router';
 import { AnchorComponent, ButtonComponent, icons } from '@asset-sg/client-shared';
 import { provideSvgIcons } from '@ngneat/svg-icon';
 import { TranslateModule } from '@ngx-translate/core';

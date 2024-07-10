@@ -2,6 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Component, inject } from '@angular/core';
 import { AppState } from '@asset-sg/client-shared';
 import { AssetFile } from '@asset-sg/shared';
+import { AssetEditPolicy } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
 
 import * as actions from '../../state/asset-search/asset-search.actions';
@@ -63,4 +64,6 @@ export class AssetSearchDetailComponent {
       },
     });
   }
+
+  protected readonly AssetEditPolicy = AssetEditPolicy;
 }

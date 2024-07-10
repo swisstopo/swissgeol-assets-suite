@@ -1,11 +1,11 @@
 import { Readable } from 'stream';
+import { serializeStudyAsCsv, Study } from '@asset-sg/shared/v2';
+import { User } from '@asset-sg/shared/v2';
 import { Controller, Get, Res } from '@nestjs/common';
 import { Response } from 'express';
 import { Authorize } from '@/core/decorators/authorize.decorator';
 import { CurrentUser } from '@/core/decorators/current-user.decorator';
-import { serializeStudyAsCsv, Study } from '@/features/studies/study.model';
 import { StudyRepo } from '@/features/studies/study.repo';
-import { User } from '@/features/users/user.model';
 
 @Controller('/studies')
 export class StudiesController {

@@ -4,6 +4,7 @@ export const enAppTranslations: AppTranslations = {
   logoSwissGeol: 'Logo Swissgeol Assets',
   welcomeTo: 'Welcome to',
   accessForbidden: 'You do not have access to this application.',
+  resourceForbidden: 'You do not have access to this resource.',
   ok: 'OK',
   submit: 'Submit',
   cancel: 'Cancel',

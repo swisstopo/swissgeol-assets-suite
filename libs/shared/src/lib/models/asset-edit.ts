@@ -89,6 +89,8 @@ export const BaseAssetEditDetail = {
   assetFiles: C.array(AssetFile),
   workgroupId: C.number,
 };
+const base = C.struct(BaseAssetEditDetail);
+export type BaseAssetEditDetail = C.TypeOf<typeof base>;
 
 export const AssetEditDetail = C.struct({
   ...BaseAssetEditDetail,

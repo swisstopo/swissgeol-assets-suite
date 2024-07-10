@@ -1,22 +1,7 @@
 import { unknownToError } from '@asset-sg/core';
-import { AssetByTitle, PatchContact } from '@asset-sg/shared';
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  HttpCode,
-  HttpException,
-  HttpStatus,
-  Param,
-  ParseIntPipe,
-  Patch,
-  Put,
-  Query,
-  Redirect,
-  ValidationPipe,
-} from '@nestjs/common';
-import { plainToInstance } from 'class-transformer';
+import { AssetByTitle } from '@asset-sg/shared';
+import { User } from '@asset-sg/shared/v2';
+import { Controller, Get, HttpException, Query } from '@nestjs/common';
 import { sequenceS } from 'fp-ts/Apply';
 import * as A from 'fp-ts/Array';
 import * as E from 'fp-ts/Either';
@@ -28,21 +13,10 @@ import { Authorize } from '@/core/decorators/authorize.decorator';
 import { CurrentUser } from '@/core/decorators/current-user.decorator';
 import { PrismaService } from '@/core/prisma.service';
 import { AssetSearchService } from '@/features/assets/search/asset-search.service';
-import { Contact, ContactData, ContactDataBoundary, ContactId } from '@/features/contacts/contact.model';
-import { ContactRepo } from '@/features/contacts/contact.repo';
-import { ContactsController } from '@/features/contacts/contacts.controller';
-import { User, UserDataBoundary, UserId } from '@/features/users/user.model';
-import { UserRepo } from '@/features/users/user.repo';
-import { UsersController } from '@/features/users/users.controller';
 
 @Controller('/')
 export class AppController {
-  constructor(
-    private readonly userRepo: UserRepo,
-    private readonly contactRepo: ContactRepo,
-    private readonly assetSearchService: AssetSearchService,
-    private readonly prismaService: PrismaService
-  ) {}
+  constructor(private readonly assetSearchService: AssetSearchService, private readonly prismaService: PrismaService) {}
 
   @Get('/oauth-config/config')
   getConfig() {
