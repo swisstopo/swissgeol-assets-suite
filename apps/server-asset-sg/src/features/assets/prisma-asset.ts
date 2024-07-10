@@ -1,5 +1,4 @@
 import { Prisma } from '@prisma/client';
-
 import {
   Asset,
   AssetInfo,
@@ -9,9 +8,10 @@ import {
   AssetStudy,
   AssetStudyId,
   UsageStatusCode,
-} from '@/features/assets/asset.model';
-import { StudyType } from '@/features/studies/study.model';
-import { LocalDate } from '@/utils/data/local-date';
+} from '@shared/models/asset';
+import { LocalDate } from '@shared/models/base/local-date';
+
+import { StudyType } from '@shared/models/study';
 import { satisfy } from '@/utils/define';
 
 type SelectedAssetInfo = Prisma.AssetGetPayload<{ select: typeof assetInfoSelection }>;

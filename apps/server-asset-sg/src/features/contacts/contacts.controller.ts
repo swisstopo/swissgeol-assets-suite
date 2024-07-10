@@ -1,11 +1,12 @@
 import { Controller, HttpCode, HttpException, HttpStatus, Post, Put } from '@nestjs/common';
+import { Contact, ContactData } from '@shared/models/contact';
+import { ContactPolicy } from '@shared/policies/contact.policy';
+import { ContactDataSchema } from '@shared/schemas/contact.schema';
 import { Authorize } from '@/core/decorators/authorize.decorator';
 import { Authorized } from '@/core/decorators/authorized.decorator';
-import { Boundary } from '@/core/decorators/boundary.decorator';
+import { Transform } from '@/core/decorators/transform.decorator';
 import { UsePolicy } from '@/core/decorators/use-policy.decorator';
 import { UseRepo } from '@/core/decorators/use-repo.decorator';
-import { Contact, ContactData, ContactDataBoundary } from '@/features/contacts/contact.model';
-import { ContactPolicy } from '@/features/contacts/contact.policy';
 import { ContactRepo } from '@/features/contacts/contact.repo';
 
 @Controller('/contacts')
@@ -17,7 +18,7 @@ export class ContactsController {
   @Post('/')
   @Authorize.Create()
   @HttpCode(HttpStatus.CREATED)
-  create(@Boundary(ContactDataBoundary) data: ContactData): Promise<Contact> {
+  create(@Transform(ContactDataSchema) data: ContactData): Promise<Contact> {
     return this.contactRepo.create(data);
   }
 
@@ -25,7 +26,7 @@ export class ContactsController {
   @Authorize.Update({ id: Number })
   async update(
     @Authorized.Record() record: Contact,
-    @Boundary(ContactDataBoundary) data: ContactData
+    @Transform(ContactDataSchema) data: ContactData
   ): Promise<Contact> {
     const contact = await this.contactRepo.update(record.id, data);
     if (contact == null) {

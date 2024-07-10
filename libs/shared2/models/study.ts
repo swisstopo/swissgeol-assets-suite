@@ -1,5 +1,5 @@
 import { LV95 } from '@asset-sg/shared';
-import { AssetId } from '@/features/assets/asset.model';
+import { AssetId } from '@shared/models/asset';
 
 export interface Study {
   id: StudyId;

@@ -12,6 +12,8 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { User } from '@shared/models/user';
+import { AssetEditPolicy } from '@shared/policies/asset-edit.policy';
 import { Response } from 'express';
 import * as E from 'fp-ts/Either';
 import { Authorize } from '@/core/decorators/authorize.decorator';
@@ -20,10 +22,8 @@ import { CurrentUser } from '@/core/decorators/current-user.decorator';
 import { UsePolicy } from '@/core/decorators/use-policy.decorator';
 import { UseRepo } from '@/core/decorators/use-repo.decorator';
 import { PrismaService } from '@/core/prisma.service';
-import { AssetEditPolicy } from '@/features/asset-edit/asset-edit.policy';
 import { AssetEditRepo } from '@/features/asset-edit/asset-edit.repo';
 import { AssetEditService } from '@/features/asset-edit/asset-edit.service';
-import { User } from '@/features/users/user.model';
 import { getFile } from '@/utils/file/get-file';
 
 @Controller('/files')

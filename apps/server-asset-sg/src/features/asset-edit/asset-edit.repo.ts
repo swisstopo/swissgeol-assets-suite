@@ -2,6 +2,7 @@ import { decodeError, isNotNull } from '@asset-sg/core';
 import { AssetUsage, dateFromDateId, DateIdFromDate, PatchAsset } from '@asset-sg/shared';
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
+import { User } from '@shared/models/user';
 import * as E from 'fp-ts/Either';
 import * as O from 'fp-ts/Option';
 
@@ -9,7 +10,6 @@ import { AssetEditDetail } from './asset-edit.service';
 
 import { PrismaService } from '@/core/prisma.service';
 import { Repo, RepoListOptions } from '@/core/repo';
-import { User } from '@/features/users/user.model';
 import { AssetEditDetailFromPostgres } from '@/models/asset-edit-detail';
 import {
   createStudies,

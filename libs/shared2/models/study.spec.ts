@@ -1,5 +1,5 @@
 import { LV95X, LV95Y } from '@asset-sg/shared';
-import { serializeStudyAsCsv, Study } from './study.model';
+import { serializeStudyAsCsv, Study } from '@shared/models/study';
 
 describe('serializeStudyAsCsv', () => {
   it('serializes a point study in CSV format', () => {

@@ -1,6 +1,7 @@
 import { environment } from '@environment';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { HttpException, Inject, Injectable, NestMiddleware } from '@nestjs/common';
+import { User } from '@shared/models/user';
 import axios from 'axios';
 import { Cache } from 'cache-manager';
 import { NextFunction, Request, Response } from 'express';
@@ -11,7 +12,6 @@ import * as jwt from 'jsonwebtoken';
 import { Jwt, JwtPayload } from 'jsonwebtoken';
 import jwkToPem from 'jwk-to-pem';
 
-import { User } from '@/features/users/user.model';
 import { UserRepo } from '@/features/users/user.repo';
 import { JwtRequest } from '@/models/jwt-request';
 

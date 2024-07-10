@@ -1,5 +1,5 @@
-import { User, WorkgroupOnUser } from '@/features/users/user.model';
-import { getRoleIndex, Role, WorkgroupId } from '@/features/workgroups/workgroup.model';
+import { User, WorkgroupOnUser } from '@shared/models/user';
+import { getRoleIndex, Role, WorkgroupId } from '@shared/models/workgroup';
 
 export abstract class Policy<T> {
   private readonly workgroups = new Map<WorkgroupId, WorkgroupOnUser>();
@@ -54,7 +54,7 @@ export abstract class Policy<T> {
     return this.canCreate();
   }
 
-  canDelete(value: T): boolean {
+  canDelete(_value: T): boolean {
     return this.canCreate();
   }
 }

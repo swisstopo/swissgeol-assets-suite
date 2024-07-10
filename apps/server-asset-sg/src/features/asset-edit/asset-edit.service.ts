@@ -1,6 +1,7 @@
 import { isNotNull, unknownToUnknownError } from '@asset-sg/core';
 import { BaseAssetEditDetail, PatchAsset } from '@asset-sg/shared';
 import { Injectable } from '@nestjs/common';
+import { User } from '@shared/models/user';
 import { pipe } from 'fp-ts/function';
 import * as TE from 'fp-ts/TaskEither';
 import * as C from 'io-ts/Codec';
@@ -9,7 +10,6 @@ import { AssetEditRepo } from './asset-edit.repo';
 
 import { PrismaService } from '@/core/prisma.service';
 import { AssetSearchService } from '@/features/assets/search/asset-search.service';
-import { User } from '@/features/users/user.model';
 import { notFoundError } from '@/utils/errors';
 import { deleteFile } from '@/utils/file/delete-file';
 import { putFile } from '@/utils/file/put-file';

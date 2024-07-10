@@ -1,12 +1,12 @@
 import { faker } from '@faker-js/faker';
 // eslint-disable-next-line @nx/enforce-module-boundaries
+import { Role as UserRole } from '@shared/models/user';
+import { WorkgroupData, Role } from '@shared/models/workgroup';
 import { clearPrismaAssets, setupDB, setupDefaultWorkgroup } from '../../../../../test/setup-db';
 import { PrismaService } from '@/core/prisma.service';
 import { fakeAssetPatch, fakeUser } from '@/features/asset-edit/asset-edit.fake';
 import { AssetEditRepo } from '@/features/asset-edit/asset-edit.repo';
-import { Role as UserRole } from '@/features/users/user.model';
 import { UserRepo } from '@/features/users/user.repo';
-import { WorkgroupData, Role } from '@/features/workgroups/workgroup.model';
 import { WorkgroupRepo } from '@/features/workgroups/workgroup.repo';
 
 describe('WorkgroupRepo', () => {

@@ -1,6 +1,6 @@
+import { AssetId, AssetInfo } from '@shared/models/asset';
 import { PrismaService } from '@/core/prisma.service';
 import { ReadRepo, RepoListOptions } from '@/core/repo';
-import { AssetId, AssetInfo } from '@/features/assets/asset.model';
 import { assetInfoSelection, parseAssetInfoFromPrisma } from '@/features/assets/prisma-asset';
 
 export class AssetInfoRepo implements ReadRepo<AssetInfo, AssetId> {

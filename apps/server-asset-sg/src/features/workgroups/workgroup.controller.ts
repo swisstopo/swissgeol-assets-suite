@@ -1,13 +1,13 @@
 import { Controller, Delete, Get, HttpCode, HttpException, HttpStatus, Post, Put } from '@nestjs/common';
+import { User } from '@shared/models/user';
+import { Workgroup, WorkgroupData, WorkgroupDataBoundary } from '@shared/models/workgroup';
+import { WorkgroupPolicy } from '@shared/policies/workgroup.policy';
 import { Authorize } from '@/core/decorators/authorize.decorator';
 import { Authorized } from '@/core/decorators/authorized.decorator';
-import { Boundary } from '@/core/decorators/boundary.decorator';
 import { CurrentUser } from '@/core/decorators/current-user.decorator';
+import { Transform } from '@/core/decorators/transform.decorator';
 import { UsePolicy } from '@/core/decorators/use-policy.decorator';
 import { UseRepo } from '@/core/decorators/use-repo.decorator';
-import { User } from '@/features/users/user.model';
-import { Workgroup, WorkgroupData, WorkgroupDataBoundary } from '@/features/workgroups/workgroup.model';
-import { WorkgroupPolicy } from '@/features/workgroups/workgroup.policy';
 import { WorkgroupRepo } from '@/features/workgroups/workgroup.repo';
 
 @Controller('/workgroups')
@@ -32,7 +32,7 @@ export class WorkgroupController {
   @Authorize.Create()
   @HttpCode(HttpStatus.CREATED)
   async create(
-    @Boundary(WorkgroupDataBoundary)
+    @Transform(WorkgroupDataBoundary)
     data: WorkgroupDataBoundary
   ): Promise<Workgroup> {
     return this.workgroupRepo.create(data);
@@ -42,7 +42,7 @@ export class WorkgroupController {
   @Authorize.Update({ id: Number })
   async update(
     @Authorized.Record() record: Workgroup,
-    @Boundary(WorkgroupDataBoundary)
+    @Transform(WorkgroupDataBoundary)
     data: WorkgroupData
   ): Promise<Workgroup> {
     const workgroup = await this.workgroupRepo.update(record.id, data);

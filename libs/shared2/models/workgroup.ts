@@ -1,10 +1,10 @@
 import { Role as PrismaRole } from '@prisma/client';
+import { AssetId } from '@shared/models/asset';
+import { Data, Model } from '@shared/models/base/model';
+import { UserId } from '@shared/models/user';
+import { IsNullable } from '@shared/utils/class-validator/is-nullable.decorator';
 import { Type } from 'class-transformer';
 import { IsArray, IsDate, IsString } from 'class-validator';
-import { IsNullable } from '@/core/decorators/is-nullable.decorator';
-import { AssetId } from '@/features/assets/asset.model';
-import { UserId } from '@/features/users/user.model';
-import { Data, Model } from '@/utils/data/model';
 
 export interface Workgroup extends Model<WorkgroupId> {
   name: string;

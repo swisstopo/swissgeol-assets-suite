@@ -6,11 +6,11 @@ import {
   AssetSearchStatsDTO,
 } from '@asset-sg/shared';
 import { Body, Controller, HttpCode, HttpStatus, Post, Query, ValidationPipe } from '@nestjs/common';
+import { User } from '@shared/models/user';
 import { plainToInstance } from 'class-transformer';
 import { Authorize } from '@/core/decorators/authorize.decorator';
 import { CurrentUser } from '@/core/decorators/current-user.decorator';
 import { AssetSearchService } from '@/features/assets/search/asset-search.service';
-import { User } from '@/features/users/user.model';
 
 @Controller('/assets/search')
 export class AssetSearchController {

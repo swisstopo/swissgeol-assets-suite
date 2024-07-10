@@ -1,8 +1,7 @@
+import { User } from '@shared/models/user';
+import { Policy } from '@shared/policies/base/policy';
 import { Request } from 'express';
 import * as jwt from 'jsonwebtoken';
-
-import { Policy } from '@/core/policy';
-import { User } from '@/features/users/user.model';
 
 export interface JwtRequest extends Request {
   user: User;

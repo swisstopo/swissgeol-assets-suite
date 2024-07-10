@@ -1,6 +1,6 @@
 import { ExecutionContext, createParamDecorator } from '@nestjs/common';
 
-import { User } from '@/features/users/user.model';
+import { User } from '@shared/models/user';
 import { JwtRequest } from '@/models/jwt-request';
 
 /**

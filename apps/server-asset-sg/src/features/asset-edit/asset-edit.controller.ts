@@ -1,17 +1,17 @@
 import { PatchAsset } from '@asset-sg/shared';
 import { Controller, Get, HttpException, HttpStatus, Post, Put } from '@nestjs/common';
+import { User } from '@shared/models/user';
+import { Role } from '@shared/models/workgroup';
+import { AssetEditPolicy } from '@shared/policies/asset-edit.policy';
 import * as E from 'fp-ts/Either';
 import { Authorize } from '@/core/decorators/authorize.decorator';
 import { Authorized } from '@/core/decorators/authorized.decorator';
-import { Boundary } from '@/core/decorators/boundary.decorator';
 import { CurrentUser } from '@/core/decorators/current-user.decorator';
+import { Transform } from '@/core/decorators/transform.decorator';
 import { UsePolicy } from '@/core/decorators/use-policy.decorator';
 import { UseRepo } from '@/core/decorators/use-repo.decorator';
-import { AssetEditPolicy } from '@/features/asset-edit/asset-edit.policy';
 import { AssetEditRepo } from '@/features/asset-edit/asset-edit.repo';
 import { AssetEditDetail, AssetEditService } from '@/features/asset-edit/asset-edit.service';
-import { User } from '@/features/users/user.model';
-import { Role } from '@/features/workgroups/workgroup.model';
 
 @Controller('/asset-edit')
 @UseRepo(AssetEditRepo)
@@ -31,7 +31,7 @@ export class AssetEditController {
   @Post('/')
   @Authorize.Create()
   async create(
-    @Boundary(PatchAsset) patch: PatchAsset,
+    @Transform(PatchAsset) patch: PatchAsset,
     @CurrentUser() user: User,
     @Authorized.Policy() policy: AssetEditPolicy
   ) {
@@ -46,7 +46,7 @@ export class AssetEditController {
   @Put('/:id')
   @Authorize.Update({ id: Number })
   async update(
-    @Boundary(PatchAsset) patch: PatchAsset,
+    @Transform(PatchAsset) patch: PatchAsset,
     @CurrentUser() user: User,
     @Authorized.Record() asset: AssetEditDetail,
     @Authorized.Policy() policy: AssetEditPolicy

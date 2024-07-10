@@ -1,6 +1,6 @@
-import { Policy } from '@/core/policy';
-import { Asset } from '@/features/assets/asset.model';
-import { Role } from '@/features/workgroups/workgroup.model';
+import { Asset } from '@shared/models/asset';
+import { Role } from '@shared/models/workgroup';
+import { Policy } from '@shared/policies/base/policy';
 
 export class AssetPolicy extends Policy<Asset> {
   canShow(value: Asset): boolean {

@@ -27,18 +27,18 @@ import {
   SearchTotalHits,
 } from '@elastic/elasticsearch/lib/api/types';
 import { Injectable } from '@nestjs/common';
+import { AssetId } from '@shared/models/asset';
+import { StudyId } from '@shared/models/study';
+import { User } from '@shared/models/user';
 import * as E from 'fp-ts/Either';
 import proj4 from 'proj4';
 
 // eslint-disable-next-line @nx/enforce-module-boundaries
 import indexMapping from '../../../../../../development/init/elasticsearch/mappings/swissgeol_asset_asset.json';
 
-import { AssetId } from '../asset.model';
 import { PrismaService } from '@/core/prisma.service';
 import { AssetEditRepo } from '@/features/asset-edit/asset-edit.repo';
-import { StudyId } from '@/features/studies/study.model';
 import { StudyRepo } from '@/features/studies/study.repo';
-import { User } from '@/features/users/user.model';
 
 const INDEX = 'swissgeol_asset_asset';
 export { INDEX as ASSET_ELASTIC_INDEX };

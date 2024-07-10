@@ -1,21 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 
+import { Asset, AssetData, AssetId, AssetUsage, AssetStudy, StudyData, AssetStudyId } from '@shared/models/asset';
+import { isNotPersisted, isPersisted } from '@shared/models/base/model';
+import { StudyType } from '@shared/models/study';
+import { User } from '@shared/models/user';
 import { PrismaService } from '@/core/prisma.service';
 import { Repo, RepoListOptions } from '@/core/repo';
-import {
-  Asset,
-  AssetData,
-  AssetId,
-  AssetUsage,
-  AssetStudy,
-  StudyData,
-  AssetStudyId,
-} from '@/features/assets/asset.model';
 import { assetSelection, parseAssetFromPrisma } from '@/features/assets/prisma-asset';
-import { StudyType } from '@/features/studies/study.model';
-import { User } from '@/features/users/user.model';
-import { isNotPersisted, isPersisted } from '@/utils/data/model';
 import { satisfy } from '@/utils/define';
 import { handlePrismaMutationError } from '@/utils/prisma';
 

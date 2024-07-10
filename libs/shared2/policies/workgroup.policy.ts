@@ -1,5 +1,5 @@
-import { Policy } from '@/core/policy';
-import { Workgroup } from '@/features/workgroups/workgroup.model';
+import { Workgroup } from '@shared/models/workgroup';
+import { Policy } from '@shared/policies/base/policy';
 
 export class WorkgroupPolicy extends Policy<Workgroup> {
   canShow(value: Workgroup): boolean {

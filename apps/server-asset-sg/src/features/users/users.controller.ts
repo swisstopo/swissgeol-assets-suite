@@ -1,19 +1,9 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  HttpCode,
-  HttpException,
-  HttpStatus,
-  Param,
-  Put,
-  ValidationPipe,
-} from '@nestjs/common';
-
+import { Controller, Delete, Get, HttpCode, HttpException, HttpStatus, Param, Put } from '@nestjs/common';
+import { User, UserData, UserId } from '@shared/models/user';
+import { UserDataSchema } from '@shared/schemas/user.schema';
 import { Authorize } from '@/core/decorators/authorize.decorator';
 import { CurrentUser } from '@/core/decorators/current-user.decorator';
-import { User, UserDataBoundary, UserId } from '@/features/users/user.model';
+import { Transform } from '@/core/decorators/transform.decorator';
 import { UserRepo } from '@/features/users/user.repo';
 
 @Controller('/users')
@@ -35,8 +25,8 @@ export class UsersController {
   @Authorize.Admin()
   async update(
     @Param('id') id: UserId,
-    @Body(new ValidationPipe({ transform: true, whitelist: true, forbidNonWhitelisted: true }))
-    data: UserDataBoundary
+    @Transform(UserDataSchema)
+    data: UserData
   ): Promise<User> {
     const user = await this.userRepo.update(id, data);
     if (user === null) {

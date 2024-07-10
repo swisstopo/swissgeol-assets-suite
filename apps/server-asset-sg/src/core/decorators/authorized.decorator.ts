@@ -1,5 +1,5 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
-import { Policy } from '@/core/policy';
+import { Policy } from '@shared/policies/base/policy';
 import { AuthorizedRequest } from '@/models/jwt-request';
 
 export const Authorized = {

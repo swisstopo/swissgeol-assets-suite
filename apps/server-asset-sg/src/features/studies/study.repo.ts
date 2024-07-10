@@ -1,10 +1,10 @@
 import { parseLV95 } from '@asset-sg/shared';
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
+import { Study, StudyId } from '@shared/models/study';
+import { WorkgroupId } from '@shared/models/workgroup';
 import { PrismaService } from '@/core/prisma.service';
 import { ReadRepo, RepoListOptions } from '@/core/repo';
-import { Study, StudyId } from '@/features/studies/study.model';
-import { WorkgroupId } from '@/features/workgroups/workgroup.model';
 
 @Injectable()
 export class StudyRepo implements ReadRepo<Study, StudyId> {
@@ -38,7 +38,7 @@ export class StudyRepo implements ReadRepo<Study, StudyId> {
         s.study_id IN (${Prisma.join(ids, ',')})
       `);
     }
-    if (conditions.length != null) {
+    if (conditions.length != 0) {
       parts.push(Prisma.sql`WHERE ${Prisma.join(conditions, ' AND ')}`);
     }
     parts.push(Prisma.sql`

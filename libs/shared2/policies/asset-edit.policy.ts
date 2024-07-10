@@ -1,6 +1,6 @@
 import { AssetEditDetail } from '@asset-sg/shared';
-import { Policy } from '@/core/policy';
-import { Role } from '@/features/workgroups/workgroup.model';
+import { Role } from '@shared/models/workgroup';
+import { Policy } from '@shared/policies/base/policy';
 
 export class AssetEditPolicy extends Policy<AssetEditDetail> {
   canShow(value: AssetEditDetail): boolean {

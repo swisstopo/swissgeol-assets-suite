@@ -10,20 +10,21 @@ import {
   Post,
   Put,
 } from '@nestjs/common';
+import { Asset, AssetData, AssetId } from '@shared/models/asset';
 
+import { User } from '@shared/models/user';
+import { Role } from '@shared/models/workgroup';
+import { AssetEditPolicy } from '@shared/policies/asset-edit.policy';
+import { AssetPolicy } from '@shared/policies/asset.policy';
+import { AssetDataSchema } from '@shared/schemas/asset.schema';
 import { Authorize } from '@/core/decorators/authorize.decorator';
 import { Authorized } from '@/core/decorators/authorized.decorator';
-import { Boundary } from '@/core/decorators/boundary.decorator';
 import { CurrentUser } from '@/core/decorators/current-user.decorator';
+import { Transform } from '@/core/decorators/transform.decorator';
 import { UsePolicy } from '@/core/decorators/use-policy.decorator';
 import { UseRepo } from '@/core/decorators/use-repo.decorator';
-import { AssetEditPolicy } from '@/features/asset-edit/asset-edit.policy';
 import { AssetInfoRepo } from '@/features/assets/asset-info.repo';
-import { Asset, AssetData, AssetDataBoundary, AssetId } from '@/features/assets/asset.model';
-import { AssetPolicy } from '@/features/assets/asset.policy';
 import { AssetRepo } from '@/features/assets/asset.repo';
-import { User } from '@/features/users/user.model';
-import { Role } from '@/features/workgroups/workgroup.model';
 
 @Controller('/assets')
 @UseRepo(AssetRepo)
@@ -44,7 +45,7 @@ export class AssetsController {
   @Post('/')
   @Authorize.Create()
   async create(
-    @Boundary(AssetDataBoundary) data: AssetData,
+    @Transform(AssetDataSchema) data: AssetData,
     @CurrentUser() user: User,
     @Authorized.Policy() policy: AssetEditPolicy
   ): Promise<Asset> {
@@ -55,7 +56,7 @@ export class AssetsController {
   @Put('/:id')
   @Authorize.Update({ id: Number })
   async update(
-    @Boundary(AssetDataBoundary) data: AssetData,
+    @Transform(AssetDataSchema) data: AssetData,
     @CurrentUser() user: User,
     @Authorized.Record() record: Asset,
     @Authorized.Policy() policy: AssetEditPolicy
