@@ -128,7 +128,7 @@
               <th translate="search.language"></th>
               <td>
                 <ul class="languages">
-                  <li *ngFor="let language of assetDetail.languages">{{ language }}</li>
+                  <li *ngFor="let language of assetDetail.languages">{{ language | valueItemName }}</li>
                 </ul>
               </td>
             </tr>
