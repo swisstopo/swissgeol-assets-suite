@@ -197,19 +197,7 @@ export class AssetSearchService {
    * @param query The query to match with.
    */
   async aggregate(query: AssetSearchQuery): Promise<AssetSearchStats> {
-    const stats = await this.aggregateAssetIds(query);
-    return (
-      stats ?? {
-        total: 0,
-        assetKindItemCodes: [],
-        authorIds: [],
-        createDate: null,
-        languageItemCodes: [],
-        geometryCodes: [],
-        manCatLabelItemCodes: [],
-        usageCodes: [],
-      }
-    );
+    return await this.aggregateAssetIds(query);
   }
 
   /**
@@ -318,7 +306,7 @@ export class AssetSearchService {
     }
   }
 
-  private async aggregateAssetIds(query: AssetSearchQuery): Promise<AssetSearchStats | null> {
+  private async aggregateAssetIds(query: AssetSearchQuery): Promise<AssetSearchStats> {
     interface Result {
       minCreateDate: { value: DateId };
       maxCreateDate: { value: DateId };
@@ -341,6 +329,18 @@ export class AssetSearchService {
         buckets: AggregationBucket[];
       };
     }
+
+    const defaultResult = () =>
+      ({
+        total: 0,
+        assetKindItemCodes: [],
+        authorIds: [],
+        createDate: null,
+        languageItemCodes: [],
+        geometryCodes: [],
+        manCatLabelItemCodes: [],
+        usageCodes: [],
+      } as AssetSearchStats);
 
     interface AggregationBucket<K = string> {
       key: K;
@@ -369,6 +369,10 @@ export class AssetSearchService {
       query: elasticQuery,
       track_total_hits: true,
     });
+    const total = (response.hits.total as SearchTotalHits).value;
+    if (total === 0) {
+      return defaultResult();
+    }
 
     const [
       assetKindItemCodes,
@@ -400,7 +404,6 @@ export class AssetSearchService {
       maxCreateDate,
     } as unknown as Result;
 
-    const total = (response.hits.total as SearchTotalHits).value;
     const mapBucket = <T>(bucket: AggregationBucket<T>): ValueCount<T> => ({
       value: bucket.key,
       count: bucket.doc_count,
