@@ -33,18 +33,6 @@ Cypress.Commands.add('login', (username: string, password: string) => {
         .then((token) => window.localStorage.setItem('access_token', token));
     },
     {
-      /*      validate() {
-        cy.window()
-          .then((win) => win.localStorage.getItem('access_token'))
-          .as('access_token');
-        cy.get('@access_token').then((token) =>
-          cy.request({
-            method: 'GET',
-            url: '/api/user',
-            auth: bearerAuth(token),
-          })
-        );
-      },*/
       cacheAcrossSpecs: true,
     }
   );

@@ -13,9 +13,9 @@ The following components must be installed on the development computer:
 Follow these steps to set up the development environment on your local machine:
 
 - [1. Configure Local Systems](#1-Configure-Local-Systems)
-- [3. Install Dependencies](#2-Install-Dependencies)
-- [4. Generate Database Types](#3-Generate-Database-Types)
-- [5. Initialize MinIO](#4-Initialize-MinIO)
+- [2. Install Dependencies](#2-Install-Dependencies)
+- [3. Generate Database Types](#3-Generate-Database-Types)
+- [4. Initialize MinIO](#4-Initialize-MinIO)
 
 #### 1. Configure Local Systems
 

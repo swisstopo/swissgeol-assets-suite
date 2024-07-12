@@ -86,8 +86,7 @@ jobs:
           chmod +x ./init/elasticsearch/init.sh
           sed -i 's/- \.\/volumes\/elasticsearch\/data:\/usr\/share\/elasticsearch\/data//g' ./docker-compose.yaml
           docker compose up -d db oidc elasticsearch
-          sleep 120
-          docker compose logs elasticsearch
+          sleep 60
       - name: Migrate database
         run: npm run prisma -- migrate deploy
       - name: Restore cached e2e node modules
