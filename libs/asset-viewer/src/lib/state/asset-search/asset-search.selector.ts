@@ -320,7 +320,7 @@ const makeAssetDetailVMNew = (referenceData: ReferenceData, assetDetail: AssetEd
         return { role: contact.role, contact: referenceData.contacts[contact.contactId] };
       })
       .map((contact) => makeAssetDetailContactVM(referenceData, contact)),
-    languages: assetLanguages,
+    languages: assetLanguages.map(({ languageItemCode: code }) => referenceData.languageItems[code]),
     manCatLabels: manCatLabelRefs.map((manCatLabelItemCode) => referenceData.manCatLabelItems[manCatLabelItemCode]),
     assetFormatCompositions: assetFormatCompositions.map(
       (assetFormatItemCode) => referenceData.assetFormatItems[assetFormatItemCode]
