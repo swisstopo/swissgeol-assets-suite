@@ -188,14 +188,11 @@ export class AssetSearchEffects {
 
   public updateStats$ = createEffect(() => {
     return this.actions$.pipe(
-      ofType(actions.getStats),
+      ofType(actions.getStats, actions.search),
       withLatestFrom(this.searchStore.select(selectAssetSearchState)),
       switchMap(([_, state]) => {
         return this.assetSearchService
-          .updateSearchResultStats({
-            text: state.query.text,
-            polygon: state.query.polygon,
-          })
+          .updateSearchResultStats(state.query)
           .pipe(map((searchStats) => actions.updateStats({ searchStats })));
       })
     );
