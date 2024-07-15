@@ -1,0 +1,94 @@
+name: owasp-security-scan
+
+on:
+  pull_request:
+    branches:
+      - "**"
+      - "!main"
+
+env:
+  NODE_VERSION: "20.x"
+  DB_USERNAME: postgres
+  DB_PASSWORD: postgres
+  DB_DATABASE: postgres
+  DATABASE_URL: postgres://postgres:postgres@localhost:5432/postgres?schema=public
+
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: Get npm cache directory
+        id: npm-cache-dir
+        run: echo "dir=$(npm config get cache)" >> ${GITHUB_OUTPUT}
+      - name: Cache npm
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.npm-cache-dir.outputs.dir }}
+          key: "${{ runner.os }}-npm-${{ hashFiles('package-lock.json') }}"
+          restore-keys: |
+            ${{ runner.os }}-npm-
+      - name: Cache node modules
+        uses: actions/cache@v4
+        with:
+          path: ./node_modules
+          key: "${{ runner.os }}-node_modules-${{ hashFiles('package-lock.json') }}-${{ hashFiles('**/schema.prisma') }}"
+          restore-keys: |
+            ${{ runner.os }}-node_modules-
+      - name: Install node dependencies
+        run: npm ci
+      - name: Generate prisma types
+        run: npm run prisma -- generate
+
+  owaspscan:
+    runs-on: ubuntu-latest
+    needs:
+      - install
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: Restore cached node modules
+        uses: actions/cache/restore@v4
+        with:
+          path: ./node_modules
+          key: "${{ runner.os }}-node_modules-${{ hashFiles('package-lock.json') }}-${{ hashFiles('**/schema.prisma') }}"
+      - name: Start services
+        env:
+          DB_USER: ${{ env.DB_USERNAME }}
+          DB_PASSWORD: ${{ env.DB_PASSWORD }}
+        run: |
+          cd development
+          chmod +x ./init/elasticsearch/init.sh
+          sed -i 's/- \.\/volumes\/elasticsearch\/data:\/usr\/share\/elasticsearch\/data//g' ./docker-compose.yaml
+          docker compose up -d db oidc elasticsearch
+          sleep 60
+      - name: Migrate database
+        run: npm run prisma -- migrate deploy
+      - name: Start frontend
+        run: |
+          npm run build
+          npm start &
+          sleep 60
+      - name: OWASP ZAP Full Scan
+        uses: zaproxy/action-full-scan@v0.10.0
+        with:
+          target: "http://localhost:4200"
+          cmd_options: "-a"
+      - name: Upload ZAP Scan Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: zap_scan
+          path: ./zap/scan-results
+      - name: Stop services
+        run: |
+          cd development
+          docker compose down
