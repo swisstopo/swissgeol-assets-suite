@@ -1,3 +1,4 @@
+<mat-progress-bar *ngIf="isLoading$ | async" mode="indeterminate" class="loading-bar" />
 <asset-sg-map
   [highlightedAssetId]="highlightedAssetId"
   (assetsClick)="assetClicked$.next($event)"

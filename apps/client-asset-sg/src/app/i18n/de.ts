@@ -42,7 +42,7 @@ export const deAppTranslations = {
     closeInstructions: 'Anleitung schliessen',
     searchControl: 'Suchsteuerung',
     refineSearch: 'Suche verfeinern',
-    searchResults: 'Suchtreffer',
+    searchResults: 'Assets',
     author: 'Autor',
     documentDate: 'Dokumentdatum',
     usage: 'Nutzung',

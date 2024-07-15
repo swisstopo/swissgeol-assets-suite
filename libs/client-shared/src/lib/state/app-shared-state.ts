@@ -6,7 +6,6 @@ import { ApiError } from '../utils';
 export interface AppSharedState {
   rdUserProfile: RD.RemoteData<ApiError, User>;
   rdReferenceData: RD.RemoteData<ApiError, ReferenceData>;
-  isPanelOpen: boolean;
   lang: Lang;
 }
 

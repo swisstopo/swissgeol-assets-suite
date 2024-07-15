@@ -8,7 +8,6 @@ import * as R from 'fp-ts/Record';
 const initialState: AppSharedState = {
   rdUserProfile: RD.initial,
   rdReferenceData: RD.initial,
-  isPanelOpen: false,
   lang: 'de',
 };
 
@@ -23,8 +22,6 @@ export const appSharedStateReducer = createReducer(
     (state, rdReferenceData): AppSharedState => ({ ...state, rdReferenceData })
   ),
   on(appSharedStateActions.logout, (): AppSharedState => initialState),
-  on(appSharedStateActions.openPanel, (state): AppSharedState => ({ ...state, isPanelOpen: true })),
-  on(appSharedStateActions.closePanel, (state): AppSharedState => ({ ...state, isPanelOpen: false })),
   on(appSharedStateActions.setLang, (state, { lang }): AppSharedState => ({ ...state, lang })),
   on(
     appSharedStateActions.createContactResult,

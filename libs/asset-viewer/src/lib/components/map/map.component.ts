@@ -158,8 +158,12 @@ export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
       this.store.select(selectAssetSearchResultData).subscribe((assets) => {
         if (assets.length === 0) {
           this.controller.clearAssets();
+          this.controller.layers.studies.setVisible(true);
+          this.controller.layers.heatmap.setVisible(true);
         } else {
           this.controller.setAssets(assets);
+          this.controller.layers.studies.setVisible(false);
+          this.controller.layers.heatmap.setVisible(false);
         }
       })
     );

@@ -12,13 +12,7 @@ import {
   ViewChild,
   ViewContainerRef,
 } from '@angular/core';
-import {
-  AppPortalService,
-  appSharedStateActions,
-  AppState,
-  LifecycleHooks,
-  LifecycleHooksDirective,
-} from '@asset-sg/client-shared';
+import { AppPortalService, AppState, LifecycleHooks, LifecycleHooksDirective } from '@asset-sg/client-shared';
 import { isTruthy } from '@asset-sg/core';
 import { AssetEditDetail } from '@asset-sg/shared';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
@@ -29,6 +23,7 @@ import { Eq as eqNumber } from 'fp-ts/number';
 import * as O from 'fp-ts/Option';
 import {
   asyncScheduler,
+  combineLatest,
   delay,
   filter,
   map,
@@ -44,11 +39,16 @@ import {
 } from 'rxjs';
 
 import * as actions from '../../state/asset-search/asset-search.actions';
+import { LoadingState } from '../../state/asset-search/asset-search.reducer';
 import {
+  selectAssetDetailLoadingState,
   selectAssetSearchQuery,
   selectAssetSearchResultData,
   selectCurrentAssetDetail,
+  selectFilterLoadingState,
   selectIsFiltersOpen,
+  selectIsMapInitialized,
+  selectSearchLoadingState,
 } from '../../state/asset-search/asset-search.selector';
 
 @UntilDestroy()
@@ -70,6 +70,19 @@ export class AssetViewerPageComponent implements AfterViewInit, OnDestroy {
   private _cd = inject(ChangeDetectorRef);
   private _ngZone = inject(NgZone);
 
+  public isLoading$ = combineLatest(
+    [
+      this._store.select(selectIsMapInitialized),
+      this._store.select(selectFilterLoadingState),
+      this._store.select(selectSearchLoadingState),
+      this._store.select(selectAssetDetailLoadingState),
+    ],
+    (isMapInitialized, filterLoadingState, searchLoadingState, detailLoadingState) =>
+      !isMapInitialized ||
+      filterLoadingState === LoadingState.Loading ||
+      searchLoadingState === LoadingState.Loading ||
+      detailLoadingState === LoadingState.Loading
+  );
   public currentAssetId$ = this._store.select(selectCurrentAssetDetail).pipe(
     map((currentAsset) => currentAsset?.assetId),
     map(O.fromNullable)
@@ -88,7 +101,6 @@ export class AssetViewerPageComponent implements AfterViewInit, OnDestroy {
 
   public assetClicked$ = new Subject<number[]>();
   public closeSearchResultsClicked$ = new Subject<void>();
-  public closeInstructions$ = new Subject<void>();
   public assetsForPicker$: Observable<AssetEditDetail[]>;
   public highlightedAssetId: number | null = null;
 
@@ -151,7 +163,6 @@ export class AssetViewerPageComponent implements AfterViewInit, OnDestroy {
 
     merge(
       this.closeSearchResultsClicked$.pipe(map(() => actions.closeRefineAndResults())),
-      this.closeInstructions$.pipe(map(() => appSharedStateActions.closePanel())),
       this._searchTextChanged$.pipe(
         map(
           flow(
