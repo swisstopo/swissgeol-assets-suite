@@ -2,7 +2,7 @@ Feature: edit
 
   Background:
     Given The user is logged in
-    And Test asset is created
+    And User has admin permissions
     And Elastic index is created
 
   Scenario: Edit asset
@@ -14,4 +14,4 @@ Feature: edit
     And The user clicks edit button
     And The user edits asset information
     And The user clicks save
-    Then The changes are saved 
+    Then The changes are saved
