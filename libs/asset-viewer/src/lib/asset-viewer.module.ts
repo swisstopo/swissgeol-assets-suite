@@ -21,6 +21,7 @@ import {
   MatRowDef,
   MatTable,
 } from '@angular/material/table';
+import { MatTooltip } from '@angular/material/tooltip';
 import { MatDateFnsModule } from '@angular/material-date-fns-adapter';
 import { RouterModule } from '@angular/router';
 import {
@@ -53,7 +54,8 @@ import { AssetSearchFilterListComponent } from './components/asset-search-filter
 import { AssetSearchRefineComponent } from './components/asset-search-refine';
 import { AssetSearchResultsComponent } from './components/asset-search-results';
 import { AssetViewerPageComponent } from './components/asset-viewer-page';
-import { MapComponent } from './components/map';
+import { MapComponent } from './components/map/map.component';
+import { MapControlsComponent } from './components/map-controls/map-controls.component';
 import { AssetSearchEffects } from './state/asset-search/asset-search.effects';
 import { assetSearchReducer } from './state/asset-search/asset-search.reducer';
 
@@ -61,6 +63,7 @@ import { assetSearchReducer } from './state/asset-search/asset-search.reducer';
   declarations: [
     AssetViewerPageComponent,
     MapComponent,
+    MapControlsComponent,
     AssetSearchDetailComponent,
     AssetSearchRefineComponent,
     AssetSearchFilterListComponent,
@@ -119,6 +122,7 @@ import { assetSearchReducer } from './state/asset-search/asset-search.reducer';
     MatRowDef,
     SmartTranslatePipe,
     CdkMonitorFocus,
+    MatTooltip,
   ],
   providers: [
     TranslatePipe,

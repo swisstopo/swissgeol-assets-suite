@@ -1,514 +1,209 @@
-import { DOCUMENT } from '@angular/common';
-import { Component, ElementRef, EventEmitter, inject, Input, Output, ViewChild, ViewContainerRef } from '@angular/core';
 import {
-  createFeaturesFromStudies,
-  decorateFeature,
-  featureStyles,
-  fitToSwitzerland,
-  isoWGSLat,
-  isoWGSLng,
-  LifecycleHooks,
-  LifecycleHooksDirective,
-  lv95ToWGS,
-  olCoordsFromLV95Array,
-  olZoomControls,
-  toLonLat,
-  WGStoLV95,
-  WindowService,
-  ZoomControlsComponent,
-  zoomToStudies,
-} from '@asset-sg/client-shared';
-import { makePairs, OO, ORD } from '@asset-sg/core';
-import { AssetEditDetail, eqLV95Array, LV95 } from '@asset-sg/shared';
-import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { concatLatestFrom } from '@ngrx/effects';
+  AfterViewInit,
+  Component,
+  ElementRef,
+  EventEmitter,
+  HostBinding,
+  inject,
+  Input,
+  OnChanges,
+  OnDestroy,
+  Output,
+  SimpleChanges,
+  ViewChild,
+} from '@angular/core';
+import { AppState } from '@asset-sg/client-shared';
+import { ORD } from '@asset-sg/core';
 import { Store } from '@ngrx/store';
-import { RxState } from '@rx-angular/state';
-import * as A from 'fp-ts/Array';
-import { Lazy, pipe } from 'fp-ts/function';
-import * as NEA from 'fp-ts/NonEmptyArray';
-import * as O from 'fp-ts/Option';
-import Feature from 'ol/Feature';
-import { Geometry, Point, Polygon } from 'ol/geom';
-import Draw, { DrawEvent } from 'ol/interaction/Draw';
-import { Heatmap, Tile as TileLayer, Vector as VectorLayer } from 'ol/layer';
-import Map from 'ol/Map';
-import MapBrowserEvent from 'ol/MapBrowserEvent';
-import { fromLonLat } from 'ol/proj';
-import { Cluster, Vector as VectorSource, XYZ } from 'ol/source';
-import { Icon } from 'ol/style';
-import CircleStyle from 'ol/style/Circle';
-import Style from 'ol/style/Style';
-import View from 'ol/View';
-import {
-  asyncScheduler,
-  delay,
-  distinctUntilChanged,
-  filter,
-  fromEventPattern,
-  identity,
-  map,
-  merge,
-  Observable,
-  share,
-  shareReplay,
-  subscribeOn,
-  switchMap,
-  take,
-  withLatestFrom,
-} from 'rxjs';
-
-import { AllStudyDTO } from '../../models';
+import { asapScheduler, first, identity, skip, Subscription, switchMap } from 'rxjs';
 import { AllStudyService } from '../../services/all-study.service';
+import * as searchActions from '../../state/asset-search/asset-search.actions';
 import {
+  selectAssetSearchPolygon,
+  selectAssetSearchResultData,
   selectCurrentAssetDetail,
-  selectStudies,
-  StudyVM,
-  wktToGeoJSON,
 } from '../../state/asset-search/asset-search.selector';
+import { DrawControl } from '../map-controls/draw-controls';
+import { ZoomControl } from '../map-controls/zoom-control';
+import { MapController } from './map-controller';
 
-interface MapState {
-  currentAssetDetail: AssetEditDetail | undefined;
-  studiesFromSearch: StudyVM[];
-  isMapInitialised: boolean;
-  drawingMode: boolean;
-  polygon: O.Option<LV95[]>;
-  highlightAssetStudies: O.Option<number>;
-}
-
-const initialMapState: MapState = {
-  currentAssetDetail: undefined,
-  studiesFromSearch: [],
-  isMapInitialised: false,
-  drawingMode: false,
-  polygon: O.none,
-  highlightAssetStudies: O.none,
-};
-
-@UntilDestroy()
 @Component({
   selector: 'asset-sg-map',
   templateUrl: './map.component.html',
-  styleUrls: ['./map.component.scss'],
-  hostDirectives: [LifecycleHooksDirective],
-  providers: [RxState],
+  styleUrl: './map.component.scss',
 })
-export class MapComponent {
-  @ViewChild('map', { static: true }) mapDiv!: ElementRef<HTMLDivElement>;
-  @Output() public polygonChanged = new EventEmitter<LV95[]>();
-
-  private _lc = inject(LifecycleHooks);
-  private _dcmnt = inject(DOCUMENT);
-  private _viewContainerRef = inject(ViewContainerRef);
-  private _allStudyService = inject(AllStudyService);
-  private _windowService = inject(WindowService);
-  private _store = inject(Store);
-  private state: RxState<MapState> = inject(RxState<MapState>);
-
-  public _isMapInitialised$ = this.state.select('isMapInitialised');
-
-  @Output()
-  public mapInitialized = this.state.$.pipe(
-    map((s) => s.isMapInitialised),
-    distinctUntilChanged(),
-    shareReplay({ bufferSize: 1, refCount: true })
-  );
-
-  @Output()
-  public assetClicked = new EventEmitter<number[]>();
-
+export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
+  /**
+   * The id of an asset that should be highlighted.
+   */
   @Input()
-  public set searchPolygon$(value: Observable<O.Option<LV95[]>>) {
-    this.state.connect('polygon', value);
-  }
+  highlightedAssetId: number | null = null;
 
-  @Input() set highlightAssetStudies(value: Observable<O.Option<number>>) {
-    this.state.connect('highlightAssetStudies', value);
-  }
+  /**
+   * Event emitted when one or more assets are clicked.
+   * The event consists of an array containing the IDs of all clicked assets.
+   *
+   * Note that each event corresponds to a single click,
+   * which might target multiple overlapping assets.
+   *
+   * Clicks that don't hit any assets don't emit an event.
+   */
+  @Output()
+  readonly assetsClick = new EventEmitter<number[]>();
 
-  private readonly studiesFromSearch$ = this._store.select(selectStudies);
-  private readonly currentAssetDetail$ = this._store.select(selectCurrentAssetDetail);
+  /**
+   * Event emitted when one or more assets are hovered.
+   * The event consists of an array containing the IDs of all hovered assets.
+   */
+  @Output()
+  readonly assetsHover = new EventEmitter<number[]>();
+
+  /**
+   * Event emitted once the map is fully initialized.
+   */
+  @Output()
+  readonly initializeEnd = new EventEmitter<void>();
+
+  @ViewChild('map', { static: true })
+  mapElement!: ElementRef<HTMLDivElement>;
+
+  @ViewChild('mapControls', { static: true })
+  controlsElement!: ElementRef<HTMLElement>;
+
+  private readonly store = inject(Store<AppState>);
+
+  private controller!: MapController;
+
+  controls!: {
+    zoom: ZoomControl;
+    draw: DrawControl;
+  };
+
+  isInitialized = false;
+
+  private readonly allStudyService = inject(AllStudyService);
+
+  private readonly subscription = new Subscription();
 
   constructor() {
-    this.state.set(initialMapState);
-
-    this.state.connect('studiesFromSearch', this.studiesFromSearch$);
-    this.state.connect('currentAssetDetail', this.currentAssetDetail$);
-
-    this._lc.afterViewInit$
-      .pipe(take(1), subscribeOn(asyncScheduler), untilDestroyed(this))
-      .subscribe(() => this._ngAfterViewInit());
+    this.initializeEnd.subscribe(() => {
+      this.isInitialized = true;
+    });
   }
 
-  _ngAfterViewInit(): void {
-    const raster = new TileLayer({
-      source: new XYZ({
-        url: `https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.pixelkarte-farbe/default/current/3857/{z}/{x}/{y}.jpeg`,
+  ngAfterViewInit(): void {
+    asapScheduler.schedule(() => {
+      this.initializeMap();
+    });
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (this.controller == null) {
+      return;
+    }
+    if ('highlightedAssetId' in changes) {
+      this.handleHighlightedAssetIdChange();
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.subscription.unsubscribe();
+    this.controller.dispose();
+  }
+
+  private initializeMap(): void {
+    this.controller = new MapController(this.mapElement.nativeElement);
+
+    this.controls = {
+      zoom: new ZoomControl({
+        element: this.controlsElement.nativeElement,
       }),
-    });
-
-    const origin = {
-      center: [900000, 5900000],
-      zoom: 9,
-    };
-    const view = new View({
-      projection: 'EPSG:3857',
-      ...origin,
-      minZoom: 7,
-    });
-
-    setTimeout(() => {
-      fitToSwitzerland(view, false);
-      const zoom = view.getZoom();
-      if (zoom != null) {
-        view.setMinZoom(zoom);
-      }
-    });
-
-    const vectorSourceAllStudies = new VectorSource({ wrapX: false });
-    const vectorLayerAllStudies = new VectorLayer({ source: vectorSourceAllStudies, minZoom: 11 });
-
-    const heatmapClusterSource = new VectorSource({ wrapX: false });
-    const source = new Cluster({
-      distance: 2,
-      source: heatmapClusterSource,
-    }) as unknown as VectorSource<Point>;
-    const heatmapLayer = new Heatmap({
-      source,
-      weight: (feature) => feature.get('features').length,
-      maxZoom: 12,
-      blur: 20,
-      radius: 5,
-      opacity: 0.7,
-    });
-
-    const vectorSourcePolygonSelection = new VectorSource({ wrapX: false });
-    const vectorLayerPolygonSelection = new VectorLayer({ source: vectorSourcePolygonSelection });
-
-    const vectorSourceGeoms = new VectorSource({ wrapX: false });
-    const vectorLayerGeoms = new VectorLayer({ source: vectorSourceGeoms });
-
-    const vectorSourceAssetGeoms = new VectorSource({ wrapX: false });
-    const vectorLayerAssetGeoms = new VectorLayer({ source: vectorSourceAssetGeoms });
-
-    const vectorSourcePickerMouseOver = new VectorSource({ wrapX: false });
-    const vectorLayerPickerMouseOver = new VectorLayer({ source: vectorSourcePickerMouseOver });
-
-    const zoomControlsInstance = this.createZoomControlsComponent().instance;
-    const olMap = new Map({
-      target: this.mapDiv.nativeElement,
-      controls: olZoomControls(this._dcmnt, zoomControlsInstance),
-      layers: [
-        raster,
-        heatmapLayer,
-        vectorLayerAllStudies,
-        vectorLayerGeoms,
-        vectorLayerAssetGeoms,
-        vectorLayerPolygonSelection,
-        vectorLayerPickerMouseOver,
-      ],
-      view: view,
-    });
-
-    fromEventPattern(
-      (h) => olMap.getView().on('change:resolution', h),
-      (h) => olMap.getView().un('change:resolution', h)
-    )
-      .pipe(
-        map(() => olMap.getView().getZoom()),
-        distinctUntilChanged(),
-        untilDestroyed(this)
-      )
-      .subscribe((zoom) => {
-        if (zoom == null) return;
-        vectorSourceAllStudies.forEachFeature((f) => {
-          const style = f.getStyle();
-          if (style instanceof Style) {
-            const image = style.getImage();
-            if (image instanceof Icon) {
-              image.setScale(zoom < 12 ? 1 : zoom / 7.5);
-            }
-            if (image instanceof CircleStyle) {
-              image.setRadius(zoom < 12 ? 4 : 4 * (zoom / 7.5));
-            }
-          }
-        });
-      });
-
-    type AllStudyDTOWithGeometry = AllStudyDTO & { geometry: Point };
-    const addPointGeometry = (study: AllStudyDTO): AllStudyDTOWithGeometry => {
-      const lonLat = lv95ToWGS(study.centroid);
-      return {
-        ...study,
-        geometry: new Point(fromLonLat([isoWGSLng.unwrap(lonLat.lng), isoWGSLat.unwrap(lonLat.lat)])),
-      };
+      draw: new DrawControl({
+        element: this.controlsElement.nativeElement,
+        polygonSource: this.controller.sources.polygon,
+      }),
     };
 
-    const mapInitialised$ = fromEventPattern(
-      (h) => olMap.once('loadend', h),
-      (h) => olMap.un('loadend', h)
-    ).pipe(
-      switchMap(() => this._allStudyService.getAllStudies()),
-      ORD.fromFilteredSuccess,
-      map(A.map(addPointGeometry)),
-      withLatestFrom(this.state.select('studiesFromSearch')),
-      switchMap(([allStudies, studiesFromSearch]) => {
-        const makeHeatmapFeatures = () => allStudies.map((s) => new Feature({ geometry: s.geometry }));
-        clearVectorSourceThenAddFeatures(heatmapClusterSource, makeHeatmapFeatures);
-        return this._windowService.delayRequestAnimationFrame(300, () => {
-          const makeVectorFeatures = () =>
-            allStudies.map((s) =>
-              decorateFeature(new Feature({ geometry: s.geometry }), {
-                id: s.studyId,
-                style: s.isPoint ? featureStyles.pointStyle : featureStyles.rhombusStyle,
-              })
-            );
-          clearVectorSourceThenAddFeatures(vectorSourceAllStudies, makeVectorFeatures);
-          if (studiesFromSearch.length > 0) {
-            studiesFromSearch.forEach((s) => {
-              const f = vectorSourceAllStudies.getFeatureById(s.studyId);
-              f?.set('previousStyle', f?.getStyle());
-              f?.setStyle(featureStyles.undefinedStyle);
-            });
-          }
-        });
-      }),
-      take(1)
+    this.controller.addControl(this.controls.zoom);
+    this.controller.addControl(this.controls.draw);
+
+    this.subscription.add(this.controller.assetsClick$.subscribe(this.assetsClick));
+    this.subscription.add(this.controller.assetsHover$.subscribe(this.assetsHover));
+
+    // Some bindings can be initialized only after the map has fully loaded,
+    // since they modify the map's zoom level.
+    this.initializeEnd.pipe(first()).subscribe(() => {
+      this.initializePolygonBindings();
+      this.initializeStoreBindings();
+      this.handleHighlightedAssetIdChange();
+    });
+
+    const studies$ = this.allStudyService.getAllStudies().pipe(ORD.fromFilteredSuccess);
+    this.subscription.add(
+      studies$.subscribe((studies) => {
+        this.controller.setStudies(studies);
+      })
     );
-    this.state.connect(mapInitialised$, () => ({ isMapInitialised: true }));
 
-    this.state.connect('polygon', this.polygonChanged.pipe(map(O.some)));
-
-    const draw = new Draw({ source: vectorSourcePolygonSelection, type: 'Polygon' });
-
-    this.state
-      .select(['currentAssetDetail', 'studiesFromSearch'], identity)
-      .pipe(untilDestroyed(this))
-      .subscribe(({ currentAssetDetail, studiesFromSearch }) => {
-        if (!currentAssetDetail) {
-          vectorSourceAssetGeoms.clear();
-          vectorLayerGeoms.setOpacity(1);
-          vectorLayerAllStudies.setOpacity(1);
-          if (studiesFromSearch.length > 0) {
-            zoomToStudies(this._windowService, olMap, studiesFromSearch, 1);
-          }
-        } else {
-          vectorSourceAssetGeoms.clear();
-          vectorLayerGeoms.setOpacity(0.5);
-          vectorLayerAllStudies.setOpacity(0.5);
-          const studiesWithGeometry = currentAssetDetail.studies.map((study) => {
-            return {
-              ...study,
-              geom: wktToGeoJSON(study.geomText),
-            };
-          });
-          zoomToStudies(this._windowService, olMap, studiesWithGeometry, 1);
-          const studiesWithFeature = createFeaturesFromStudies(studiesWithGeometry, {
-            point: featureStyles.bigPointStyleAsset,
-            polygon: featureStyles.polygonStyleAsset,
-            lineString: featureStyles.lineStringStyleAsset,
-          });
-          vectorSourceAssetGeoms.addFeatures(studiesWithFeature.map((s) => s.olGeometry));
-        }
-      });
-
-    zoomControlsInstance._zoomOriginClicked$.pipe(untilDestroyed(this)).subscribe(() => {
-      fitToSwitzerland(view, true);
-    });
-
-    // For some reason, the 'currentAssetDetail' property in the state does not get updated when the value is set to undefiend, thus, i have a separate subscription listening directly to the selector from the store
-    // This should be removed in order not to have to much code dublication
-    this.currentAssetDetail$
+    this.controller.isInitialized$
       .pipe(
-        untilDestroyed(this),
-        concatLatestFrom(() => this.state.select('studiesFromSearch'))
+        first(identity),
+        switchMap(() => studies$)
       )
-      .subscribe(([currentAssetDetail, studiesFromSearch]) => {
-        if (currentAssetDetail === undefined) {
-          this.state.set('currentAssetDetail', (oldState) => (oldState.currentAssetDetail = undefined));
-          vectorSourceAssetGeoms.clear();
-          vectorLayerGeoms.setOpacity(1);
-          vectorLayerAllStudies.setOpacity(1);
-          zoomToStudies(this._windowService, olMap, studiesFromSearch, 1);
-        }
-      });
-
-    this.state
-      .select('studiesFromSearch')
-      .pipe(untilDestroyed(this))
-      .subscribe((studiesFromSearch) => {
-        if (studiesFromSearch.length === 0) {
-          vectorSourcePolygonSelection.clear();
-        }
-        if (studiesFromSearch.length > 0) {
-          vectorSourceGeoms.clear();
-          zoomToStudies(this._windowService, olMap, studiesFromSearch, 1);
-          const studiesWithFeature = createFeaturesFromStudies(studiesFromSearch, {
-            point: featureStyles.bigPointStyle,
-            polygon: featureStyles.polygonStyle,
-            lineString: featureStyles.lineStringStyle,
-          });
-          studiesWithFeature
-            .map((s) => vectorSourceAllStudies.getFeatureById(s.studyId))
-            .forEach((f) => {
-              f?.set('previousStyle', f?.getStyle());
-              f?.setStyle(featureStyles.undefinedStyle);
-            });
-          vectorSourceGeoms.addFeatures(studiesWithFeature.map((s) => s.olGeometry));
-        } else {
-          vectorSourceAllStudies.forEachFeature((f) => {
-            if (f.get('previousStyle')) {
-              f.setStyle(f.get('previousStyle'));
-              f.set('previousStyle', undefined);
-            }
-          });
-          vectorSourceGeoms.forEachFeature((f) => vectorSourceGeoms.removeFeature(f));
-        }
-      });
-
-    const polygon$ = this.state.select('polygon');
-
-    merge(
-      fromEventPattern<DrawEvent>(
-        (h) => draw.on('drawstart', h),
-        (h) => draw.un('drawstart', h)
-      ),
-      polygon$.pipe(filter(O.isNone))
-    )
-      .pipe(untilDestroyed(this))
-      .subscribe(() => {
-        vectorSourcePolygonSelection.clear();
-      });
-
-    const drawEnd$ = fromEventPattern<DrawEvent>(
-      (h) => draw.on('drawend', h),
-      (h) => draw.un('drawend', h)
-    ).pipe(share());
-
-    const featureToLV95Polygon = (f: Feature<Geometry>) =>
-      pipe(
-        f.getGeometry(),
-        O.fromNullable,
-        O.chain((geometry) => (geometry.getType() === 'Polygon' ? O.some(geometry as Polygon) : O.none)),
-        O.map((g) => pipe(g.getFlatCoordinates(), makePairs, A.map(toLonLat), A.map(WGStoLV95)))
-      );
-
-    polygon$.pipe(OO.fromFilteredSome, untilDestroyed(this)).subscribe((polygon) => {
-      const polygonFromMap = pipe(
-        vectorSourcePolygonSelection.getFeatures(),
-        NEA.fromArray,
-        O.map(NEA.head),
-        O.chain(featureToLV95Polygon)
-      );
-
-      if (!O.getEq(eqLV95Array).equals(O.some(polygon), polygonFromMap)) {
-        vectorSourcePolygonSelection.clear();
-        vectorSourcePolygonSelection.addFeature(
-          new Feature({
-            geometry: new Polygon([olCoordsFromLV95Array(polygon)]),
-          })
-        );
-      }
-    });
-
-    drawEnd$
-      .pipe(
-        map((e) =>
-          pipe((e.feature.getGeometry() as Polygon).getFlatCoordinates(), makePairs, A.map(toLonLat), A.map(WGStoLV95))
-        ),
-        untilDestroyed(this)
-      )
-      .subscribe((polygon) => {
-        zoomControlsInstance.setDrawingMode(false);
-        setTimeout(() => {
-          this.polygonChanged.emit(polygon);
-        });
-      });
-
-    this.state
-      .select('drawingMode')
-      .pipe(untilDestroyed(this))
-      .subscribe((drawMode) => {
-        if (drawMode) {
-          olMap.addInteraction(draw);
-        } else {
-          olMap.removeInteraction(draw);
-        }
-      });
-
-    fromEventPattern<MapBrowserEvent<PointerEvent>>(
-      (h) => olMap.on('click', h),
-      (h) => olMap.un('click', h)
-    )
-      .pipe(
-        withLatestFrom(this.state.select('drawingMode')),
-        filter(([, drawingMode]) => !drawingMode),
-        map(([event]) => event),
-        withLatestFrom(this.state.select('studiesFromSearch')),
-        map(([event, studies]) => {
-          const clickedFeatureIds: string[] = [];
-          olMap.forEachFeatureAtPixel(
-            event.pixel,
-            (feature) => {
-              const id = feature.getId();
-              id && clickedFeatureIds.push(String(id));
-            },
-            {
-              layerFilter: (layer) => layer === vectorLayerGeoms,
-            }
-          );
-          return pipe(
-            studies,
-            A.filter((s) => clickedFeatureIds.includes(s.studyId)),
-            A.map((s) => s.assetId)
-          );
-        }),
-        untilDestroyed(this)
-      )
-      .subscribe(this.assetClicked);
-
-    this.state
-      .select(['highlightAssetStudies', 'studiesFromSearch'], ({ studiesFromSearch, highlightAssetStudies }) =>
-        pipe(
-          highlightAssetStudies,
-          O.map((assetId) =>
-            pipe(
-              studiesFromSearch,
-              A.filter((s) => s.assetId === assetId)
-            )
-          )
-        )
-      )
-      .pipe(untilDestroyed(this))
-      .subscribe((studies) => {
-        if (O.isSome(studies)) {
-          const studiesWithFeature = createFeaturesFromStudies(studies.value, {
-            point: featureStyles.bigPointStyleAssetSelected,
-            polygon: featureStyles.polygonStyleAssetSelected,
-            lineString: featureStyles.lineStringStyleAssetSelected,
-          });
-          vectorSourcePickerMouseOver.addFeatures(studiesWithFeature.map((s) => s.olGeometry));
-        } else {
-          vectorSourcePickerMouseOver.clear();
-        }
-      });
+      .subscribe(() => this.initializeEnd.emit());
   }
 
-  createZoomControlsComponent() {
-    const zoomControlsComponent = this._viewContainerRef.createComponent(ZoomControlsComponent);
-    this.state.connect('drawingMode', zoomControlsComponent.instance.drawingMode$.pipe(delay(0)));
-    return zoomControlsComponent;
+  private initializeStoreBindings() {
+    this.subscription.add(
+      this.store.select(selectAssetSearchResultData).subscribe((assets) => {
+        if (assets.length === 0) {
+          this.controller.clearAssets();
+          this.controller.layers.studies.setVisible(true);
+          this.controller.layers.heatmap.setVisible(true);
+        } else {
+          this.controller.setAssets(assets);
+          this.controller.layers.studies.setVisible(false);
+          this.controller.layers.heatmap.setVisible(false);
+        }
+      })
+    );
+
+    this.subscription.add(
+      this.store.select(selectCurrentAssetDetail).subscribe((asset) => {
+        if (asset == null) {
+          this.controller.clearActiveAsset();
+        } else {
+          this.controller.setActiveAsset(asset);
+        }
+      })
+    );
+  }
+
+  private initializePolygonBindings(): void {
+    this.subscription.add(
+      this.store.select(selectAssetSearchPolygon).subscribe((polygon) => {
+        this.controls.draw.setPolygon(polygon ?? null);
+      })
+    );
+    this.controls.draw.polygon$.pipe(skip(1)).subscribe((polygon) => {
+      this.store.dispatch(
+        searchActions.searchByFilterConfiguration({
+          filterConfiguration: { polygon: polygon ?? undefined },
+        })
+      );
+    });
+  }
+
+  private handleHighlightedAssetIdChange() {
+    if (this.highlightedAssetId == null) {
+      this.controller.clearHighlightedAsset();
+    } else {
+      this.controller.setHighlightedAsset(this.highlightedAssetId);
+    }
+  }
+
+  @HostBinding('class.is-loading')
+  get isLoading(): boolean {
+    return !this.isInitialized;
   }
 }
-
-const clearVectorSourceThenAddFeatures = (vectorSource: VectorSource, f: Lazy<Feature[]>) => {
-  const addFeatures = () => vectorSource.addFeatures(f());
-  if (vectorSource.getFeatures().length === 0) {
-    addFeatures();
-  } else {
-    vectorSource.once('clear', () => {
-      addFeatures();
-    });
-    vectorSource.clear(false);
-  }
-};

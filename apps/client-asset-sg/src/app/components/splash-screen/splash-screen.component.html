@@ -8,7 +8,7 @@
   />
   <div class="text">
     <p class="welcome">{{ "welcomeTo" | translate }} {{ host }}</p>
-    <p class="system">Asset Data Management System</p>
+    <p class="system">Assets</p>
   </div>
   <ng-container [ngSwitch]="authService.state$ | async">
     <ng-container *ngSwitchCase="AuthState.Ongoing">

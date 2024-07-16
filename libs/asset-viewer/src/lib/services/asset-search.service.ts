@@ -12,11 +12,11 @@ import {
 import { Store } from '@ngrx/store';
 import { plainToInstance } from 'class-transformer';
 import * as E from 'fp-ts/Either';
-import { Observable, map, tap } from 'rxjs';
+import { map, Observable, tap } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class AssetSearchService {
-  constructor(private _httpClient: HttpClient, private store: Store<AppState>) {}
+  constructor(private _httpClient: HttpClient) {}
 
   public search(searchQuery: AssetSearchQuery): Observable<AssetSearchResult> {
     return this._httpClient.post('/api/assets/search?limit=10000', searchQuery).pipe(

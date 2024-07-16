@@ -1,7 +1,7 @@
-import { defineConfig } from 'cypress';
 import { addCucumberPreprocessorPlugin } from '@badeball/cypress-cucumber-preprocessor';
 import createEsbuildPlugin from '@badeball/cypress-cucumber-preprocessor/esbuild';
 import * as createBundler from '@bahmutov/cypress-esbuild-preprocessor';
+import { defineConfig } from 'cypress';
 
 //processor config example from https://github.com/badeball/cypress-cucumber-preprocessor/blob/master/examples/esbuild-ts/cypress.config.ts
 async function setupNodeEvents(
@@ -28,6 +28,7 @@ export default defineConfig({
   e2e: {
     specPattern: '**/*.feature',
     chromeWebSecurity: false,
+    supportFile: false,
     setupNodeEvents,
   },
   reporter: 'junit',

@@ -1,4 +1,5 @@
 import { ENTER } from '@angular/cdk/keycodes';
+import { HttpClient } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, ElementRef, Input, OnInit, Output, ViewChild } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
 import { isTruthy } from '@asset-sg/core';
@@ -8,6 +9,7 @@ import { flow, pipe } from 'fp-ts/function';
 import * as O from 'fp-ts/Option';
 import queryString from 'query-string';
 import { EMPTY, Observable, Subject, debounceTime, filter, map, startWith, switchMap } from 'rxjs';
+import { Version } from './version';
 
 @UntilDestroy()
 @Component({
@@ -24,6 +26,8 @@ export class AppBarComponent implements OnInit {
   @ViewChild('searchInput', { read: ElementRef, static: true }) searchInput!: ElementRef<HTMLInputElement>;
 
   public searchTextKeyDown$ = new Subject<KeyboardEvent>();
+
+  public version = '';
 
   public _currentLang$ = this._router.events.pipe(
     filter((e): e is NavigationEnd => e instanceof NavigationEnd),
@@ -72,7 +76,8 @@ export class AppBarComponent implements OnInit {
 
   private _ngOnInit$ = new Subject<void>();
 
-  constructor(private _router: Router) {
+  constructor(private _router: Router, private readonly httpClient: HttpClient) {
+    this.httpClient.get<Version>('/assets/version.json').subscribe((v) => (this.version = v.version));
     this.searchTextChanged = this.searchTextKeyDown$.pipe(
       filter((ev) => ev.keyCode === ENTER),
       map((ev) => {

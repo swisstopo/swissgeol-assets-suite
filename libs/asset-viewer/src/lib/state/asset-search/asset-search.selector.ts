@@ -3,23 +3,23 @@ import { fromAppShared, TranslatedValue, Translation } from '@asset-sg/client-sh
 import {
   AssetContactRole,
   AssetEditDetail,
+  AssetSearchQuery,
+  AssetSearchStats,
   Contact,
   DateIdBrand,
   DateRange,
   GeometryCode,
   LineString,
   LV95,
+  ordStatusWorkByDate,
   Point,
   ReferenceData,
   Study,
   StudyPolygon,
   UsageCode,
+  usageCodes,
   ValueCount,
   ValueItem,
-  AssetSearchQuery,
-  AssetSearchStats,
-  usageCodes,
-  ordStatusWorkByDate,
 } from '@asset-sg/shared';
 import * as RD from '@devexperts/remote-data-ts';
 import { createSelector } from '@ngrx/store';
@@ -35,11 +35,14 @@ const assetSearchFeature = (state: AppStateWithAssetSearch) => state.assetSearch
 
 export const selectAssetSearchState = createSelector(assetSearchFeature, (state) => state);
 
-export const selectSearchLoadingState = createSelector(assetSearchFeature, (state) => state.loadingState);
+export const selectSearchLoadingState = createSelector(assetSearchFeature, (state) => state.resultsLoadingState);
+export const selectFilterLoadingState = createSelector(assetSearchFeature, (state) => state.filterLoadingState);
 
 export const selectIsFiltersOpen = createSelector(assetSearchFeature, (state) => state.isFiltersOpen);
 
 export const selectIsResultsOpen = createSelector(assetSearchFeature, (state) => state.isResultsOpen);
+
+export const selectIsMapInitialized = createSelector(assetSearchFeature, (state) => state.isMapInitialised);
 
 export const selectAssetDetailLoadingState = createSelector(
   assetSearchFeature,
@@ -49,8 +52,6 @@ export const selectAssetDetailLoadingState = createSelector(
 export const selectAssetSearchQuery = createSelector(assetSearchFeature, (state) => state.query);
 
 export const selectAssetSearchResultData = createSelector(assetSearchFeature, (state) => state.results.data);
-
-export const selectAssetSearchPageData = createSelector(assetSearchFeature, (state) => state.results.page);
 
 export const selectAssetSearchPolygon = createSelector(assetSearchFeature, (state) => state.query.polygon);
 
@@ -67,6 +68,8 @@ export const selectStudies = createSelector(selectAssetSearchResultData, (assetE
 );
 
 export const selectAssetsSearchStats = createSelector(assetSearchFeature, (state) => state.stats);
+
+export const selectAssetSearchPageData = createSelector(assetSearchFeature, (state) => state.results.page);
 
 export const selectCurrentAssetDetail = createSelector(assetSearchFeature, (state) => state.currentAsset);
 
@@ -159,7 +162,7 @@ const makeFilter = <T extends string>(
     // For filters to be active, they need to have at least one asset that they apply to.
     // Also, if there are currently no filters selected (e.g. in the default search state),
     // then we select all available filters.
-    isActive: count > 0 && (activeValues?.includes(filter.value) ?? true),
+    isActive: activeValues?.includes(filter.value) ?? false,
   };
 };
 
@@ -317,7 +320,7 @@ const makeAssetDetailVMNew = (referenceData: ReferenceData, assetDetail: AssetEd
         return { role: contact.role, contact: referenceData.contacts[contact.contactId] };
       })
       .map((contact) => makeAssetDetailContactVM(referenceData, contact)),
-    languages: assetLanguages,
+    languages: assetLanguages.map(({ languageItemCode: code }) => referenceData.languageItems[code]),
     manCatLabels: manCatLabelRefs.map((manCatLabelItemCode) => referenceData.manCatLabelItems[manCatLabelItemCode]),
     assetFormatCompositions: assetFormatCompositions.map(
       (assetFormatItemCode) => referenceData.assetFormatItems[assetFormatItemCode]

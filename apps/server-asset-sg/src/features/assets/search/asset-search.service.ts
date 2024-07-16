@@ -1,20 +1,23 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import {
   AssetByTitle,
+  AssetEditDetail,
   AssetSearchQuery,
   AssetSearchResult,
   AssetSearchStats,
+  dateFromDateId,
   DateId,
+  dateIdFromDate,
+  ElasticPoint,
   ElasticSearchAsset,
   GeometryCode,
-  Polygon,
+  LV95,
+  makeUsageCode,
   SearchAssetAggregations,
   SearchAssetResult,
+  SerializedAssetEditDetail,
   UsageCode,
   ValueCount,
-  dateFromDateId,
-  dateIdFromDate,
-  makeUsageCode,
 } from '@asset-sg/shared';
 import { Client as ElasticsearchClient } from '@elastic/elasticsearch';
 import {
@@ -24,26 +27,28 @@ import {
   SearchTotalHits,
 } from '@elastic/elasticsearch/lib/api/types';
 import { Injectable } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import * as E from 'fp-ts/Either';
+import proj4 from 'proj4';
 
 // eslint-disable-next-line @nx/enforce-module-boundaries
 import indexMapping from '../../../../../../development/init/elasticsearch/mappings/swissgeol_asset_asset.json';
 
+import { AssetId } from '../asset.model';
 import { PrismaService } from '@/core/prisma.service';
 import { AssetEditRepo } from '@/features/asset-old/asset-edit.repo';
-import { AssetEditDetail } from '@/features/asset-old/asset-edit.service';
-import { AssetEditDetailFromPostgres } from '@/models/asset-edit-detail';
+import { StudyId } from '@/features/studies/study.model';
+import { StudyRepo } from '@/features/studies/study.repo';
 
 const INDEX = 'swissgeol_asset_asset';
 export { INDEX as ASSET_ELASTIC_INDEX };
 
 interface SearchOptions {
   scope: Array<keyof ElasticSearchAsset>;
-  assetIds?: number[];
+  assetIds?: AssetId[];
 }
 
 interface ElasticSearchResult {
-  scoresByAssetId: Map<number, number>;
+  scoresByAssetId: Map<AssetId, number>;
   aggs: SearchAssetAggregations;
 }
 
@@ -52,7 +57,8 @@ export class AssetSearchService {
   constructor(
     private readonly elastic: ElasticsearchClient,
     private readonly prisma: PrismaService,
-    private readonly assetRepo: AssetEditRepo
+    private readonly assetRepo: AssetEditRepo,
+    private readonly studyRepo: StudyRepo
   ) {}
 
   register(oneOrMore: AssetEditDetail | AssetEditDetail[]): Promise<void> {
@@ -105,7 +111,7 @@ export class AssetSearchService {
       ...indexMapping,
     });
 
-    // Refresh the sync index so we can reindex its contents.
+    // Refresh the sync index, so we can reindex its contents.
     await this.elastic.indices.refresh({ index: SYNC_INDEX });
 
     // Copy the sync index's contents into the empty asset index.
@@ -126,11 +132,16 @@ export class AssetSearchService {
     { index, shouldRefresh = false }: { index: string; shouldRefresh?: boolean }
   ): Promise<void> {
     const assets = Array.isArray(oneOrMore) ? oneOrMore : [oneOrMore];
-    const elasticAssets = await Promise.all(assets.map((asset) => this.mapAssetToElastic(asset)));
-    const operations = elasticAssets.reduce((ops, elasticAsset) => {
-      ops.push({ index: { _index: index, _id: `${elasticAsset.assetId}` } }, elasticAsset);
-      return ops;
-    }, [] as Array<BulkOperationContainer | ElasticSearchAsset>);
+    const operations: Array<BulkOperationContainer | ElasticSearchAsset> = Array(assets.length * 2);
+    const mappings: Array<Promise<void>> = Array(assets.length);
+    for (let i = 0; i < assets.length; i++) {
+      const asset = assets[i];
+      mappings[i] = this.mapAssetToElastic(asset).then((elasticAsset) => {
+        operations[i * 2] = { index: { _index: index, _id: `${elasticAsset.assetId}` } };
+        operations[i * 2 + 1] = elasticAsset;
+      });
+    }
+    await Promise.all(mappings);
     await this.elastic.bulk({
       index,
       refresh: shouldRefresh,
@@ -152,20 +163,29 @@ export class AssetSearchService {
    * @param query The query to match with.
    * @param limit The maximum amount of assets to load. Defaults to `100`.
    * @param offset The amount of assets being skipped before loading the assets.
+   * @param decode Whether to decode the assets. If this is set to `false`, the assets should be decoded via `AssetEditDetail` before accessing them.
+   *               This option primarily exists so that the assets are not decoded and directly re-encoded when returning them via API.
    */
-  async search(query: AssetSearchQuery, { limit = 100, offset = 0 }: PageOptions = {}): Promise<AssetSearchResult> {
+  async search(
+    query: AssetSearchQuery,
+    { limit = 100, offset = 0, decode = true }: PageOptions & { decode?: boolean } = {}
+  ): Promise<AssetSearchResult> {
     // Apply the query to find all matching ids.
-    const ids = await this.searchIds(query);
+    const [serializedAssets, total] = await this.searchAssetsByQuery(query, { limit, offset });
 
     // Load the matched assets from the database.
-    const data = await this.assetRepo.list({ ids, limit, offset });
+    const data: AssetEditDetail[] = [];
+    for (const serializedAsset of serializedAssets.values()) {
+      const asset = JSON.parse(serializedAsset);
+      data.push(decode ? (AssetEditDetail.decode(asset) as E.Right<AssetEditDetail>).right : asset);
+    }
 
     // Return the matched data in a paginated format.
     return {
       page: {
         offset,
         size: data.length,
-        total: ids.length,
+        total,
       },
       data,
     };
@@ -177,21 +197,7 @@ export class AssetSearchService {
    * @param query The query to match with.
    */
   async aggregate(query: AssetSearchQuery): Promise<AssetSearchStats> {
-    const ids = await this.searchIds(query);
-    const stats = await this.aggregateAssetIds(ids);
-    if (stats !== null) {
-      return stats;
-    }
-    return {
-      total: 0,
-      assetKindItemCodes: [],
-      authorIds: [],
-      createDate: null,
-      languageItemCodes: [],
-      geometryCodes: [],
-      manCatLabelItemCodes: [],
-      usageCodes: [],
-    };
+    return await this.aggregateAssetIds(query);
   }
 
   /**
@@ -229,127 +235,175 @@ export class AssetSearchService {
     }));
   }
 
-  private async searchIds(query: AssetSearchQuery): Promise<number[]> {
-    // Apply the query on Elasticsearch.
-    const queriedAssetIds = await this.searchAssetIdsByQuery(query);
+  private async searchAssetsByQuery(
+    query: AssetSearchQuery,
+    page: PageOptions = {}
+  ): Promise<[Map<AssetId, SerializedAssetEditDetail>, number]> {
+    const BATCH_SIZE = 10_000;
 
-    // Polygon searches need to be applied on the database.
-    // With no polygon being present, we can just use the ids returned by Elasticsearch.
-    return query.polygon == null ? queriedAssetIds : await this.filterAssetIdsByPolygon(query.polygon, queriedAssetIds);
-  }
-
-  private async searchAssetIdsByQuery(query: AssetSearchQuery): Promise<number[]> {
     const elasticQuery = mapQueryToElasticDsl(query);
-    const matchedAssetIds: number[] = [];
-    for (;;) {
+    const matchedAssets = new Map<number, string>();
+    let lastAssetId: number | null = null;
+    let totalCount: number | null = null;
+
+    let remainingOffset = page.offset ?? 0;
+    while (remainingOffset > 0) {
+      const remainingLimit = Math.min(BATCH_SIZE, remainingOffset);
+      if (remainingLimit <= 0) {
+        break;
+      }
       const response = await this.elastic.search({
         index: INDEX,
         query: elasticQuery,
         fields: ['assetId'],
-        size: 10_000,
+        size: remainingLimit,
         sort: {
           assetId: 'desc',
         },
-        track_total_hits: true,
         _source: false,
-        search_after:
-          matchedAssetIds.length === 0 ? undefined : ([matchedAssetIds[matchedAssetIds.length - 1]] as number[]),
+        track_total_hits: totalCount == null,
+        search_after: lastAssetId == null ? undefined : [lastAssetId],
       });
-      matchedAssetIds.push(...response.hits.hits.map((hit) => hit.fields!['assetId'][0]));
-      const totalHits = (response.hits.total as SearchTotalHits).value;
-      if (totalHits <= matchedAssetIds.length) {
-        return matchedAssetIds;
+      totalCount ??= (response.hits.total as SearchTotalHits).value as number;
+      if (response.hits.hits.length < remainingLimit) {
+        return [matchedAssets, totalCount];
+      }
+      remainingOffset -= response.hits.hits.length;
+      lastAssetId = response.hits.hits[response.hits.hits.length - 1].fields!['assetId'][0] as number;
+    }
+
+    for (;;) {
+      const remainingLimit = page.limit == null ? BATCH_SIZE : Math.min(BATCH_SIZE, page.limit - matchedAssets.size);
+      if (remainingLimit <= 0 && totalCount != null) {
+        return [matchedAssets, totalCount];
+      }
+      const response = await this.elastic.search({
+        index: INDEX,
+        query: elasticQuery,
+        fields: ['assetId', 'data'],
+        size: remainingLimit,
+        sort: {
+          assetId: 'desc',
+        },
+        track_total_hits: totalCount == null,
+        _source: false,
+        search_after: lastAssetId == null ? undefined : [lastAssetId],
+      });
+      totalCount ??= (response.hits.total as SearchTotalHits).value as number;
+      if (response.hits.hits.length === 0) {
+        return [matchedAssets, totalCount];
+      }
+
+      for (const hit of response.hits.hits) {
+        const assetId: number = hit.fields!['assetId'][0];
+        const data = hit.fields!['data'][0];
+        matchedAssets.set(assetId, data);
+        lastAssetId = assetId;
+      }
+      if (totalCount <= (page.offset ?? 0) + matchedAssets.size) {
+        return [matchedAssets, totalCount];
       }
     }
   }
 
-  private async filterAssetIdsByPolygon(polygon: Polygon, assetIds: number[]): Promise<number[]> {
-    if (assetIds.length === 0) {
-      return [];
-    }
-    if (polygon.length === 0) {
-      return assetIds;
-    }
-    const conditions: Prisma.Sql[] = [Prisma.sql`a.asset_id IN (${Prisma.join(assetIds, ',')})`];
-
-    const sqlPolygonParams = polygon.map(({ x, y }) => `${y} ${x}`).join(',');
-    const sqlPolygon = `polygon((${sqlPolygonParams}))`;
-    conditions.push(Prisma.sql`
-        ST_CONTAINS(
-          ST_GEOMFROMTEXT(${sqlPolygon}, 2056),
-          ST_CENTROID(s.geom)
-        )
-    `);
-    const matchedAssets = await this.prisma.$queryRaw<Array<{ assetId: number }>>`
-            SELECT DISTINCT a.asset_id as "assetId"
-            FROM public.asset a
-                     LEFT JOIN
-                 public.all_study s
-                 ON
-                     s.asset_id = a.asset_id
-            WHERE ${Prisma.join(conditions, ' AND ')}
-        `;
-    return matchedAssets.map((it) => it.assetId);
-  }
-
-  private async aggregateAssetIds(assetIds: number[]): Promise<AssetSearchStats | null> {
-    if (assetIds.length === 0) {
-      return null;
-    }
-
+  private async aggregateAssetIds(query: AssetSearchQuery): Promise<AssetSearchStats> {
     interface Result {
-      aggregations: {
-        minCreateDate: { value: DateId };
-        maxCreateDate: { value: DateId };
-        authorIds: {
-          buckets: AggregationBucket<number>[];
-        };
-        assetKindItemCodes: {
-          buckets: AggregationBucket[];
-        };
-        languageItemCodes: {
-          buckets: AggregationBucket[];
-        };
-        geometryCodes: {
-          buckets: AggregationBucket<GeometryCode | 'None'>[];
-        };
-        usageCodes: {
-          buckets: AggregationBucket<UsageCode>[];
-        };
-        manCatLabelItemCodes: {
-          buckets: AggregationBucket[];
-        };
+      minCreateDate: { value: DateId };
+      maxCreateDate: { value: DateId };
+      authorIds: {
+        buckets: AggregationBucket<number>[];
+      };
+      assetKindItemCodes: {
+        buckets: AggregationBucket[];
+      };
+      languageItemCodes: {
+        buckets: AggregationBucket[];
+      };
+      geometryCodes: {
+        buckets: AggregationBucket<GeometryCode | 'None'>[];
+      };
+      usageCodes: {
+        buckets: AggregationBucket<UsageCode>[];
+      };
+      manCatLabelItemCodes: {
+        buckets: AggregationBucket[];
       };
     }
+
+    const defaultResult = () =>
+      ({
+        total: 0,
+        assetKindItemCodes: [],
+        authorIds: [],
+        createDate: null,
+        languageItemCodes: [],
+        geometryCodes: [],
+        manCatLabelItemCodes: [],
+        usageCodes: [],
+      } as AssetSearchStats);
 
     interface AggregationBucket<K = string> {
       key: K;
       doc_count: number;
     }
 
+    const aggregateGroup = async (query: AssetSearchQuery, operator: string, groupName: string, fieldName?: string) => {
+      const elasticDslQuery = mapQueryToElasticDsl({ ...query, [groupName]: undefined });
+      return (
+        await this.elastic.search({
+          index: INDEX,
+          size: 0,
+          query: elasticDslQuery,
+          track_total_hits: true,
+          aggs: {
+            agg: { [operator]: { field: fieldName ?? groupName } },
+          },
+        })
+      ).aggregations?.agg;
+    };
+
+    const elasticQuery = mapQueryToElasticDsl(query);
     const response = await this.elastic.search({
       index: INDEX,
       size: 0,
-      query: {
-        terms: {
-          assetId: assetIds,
-        },
-      },
+      query: elasticQuery,
       track_total_hits: true,
-      aggs: {
-        authorIds: { terms: { field: 'authorIds' } },
-        minCreateDate: { min: { field: 'createDate' } },
-        maxCreateDate: { max: { field: 'createDate' } },
-        assetKindItemCodes: { terms: { field: 'assetKindItemCode' } },
-        languageItemCodes: { terms: { field: 'languageItemCodes' } },
-        geometryCodes: { terms: { field: 'geometryCodes' } },
-        usageCodes: { terms: { field: 'usageCode' } },
-        manCatLabelItemCodes: { terms: { field: 'manCatLabelItemCodes' } },
-      },
     });
-
     const total = (response.hits.total as SearchTotalHits).value;
-    const { aggregations: aggs } = response as unknown as Result;
+    if (total === 0) {
+      return defaultResult();
+    }
+
+    const [
+      assetKindItemCodes,
+      authorIds,
+      languageItemCodes,
+      geometryCodes,
+      manCatLabelItemCodes,
+      usageCodes,
+      minCreateDate,
+      maxCreateDate,
+    ] = await Promise.all([
+      aggregateGroup(query, 'terms', 'assetKindItemCodes', 'assetKindItemCode'),
+      aggregateGroup(query, 'terms', 'authorIds'),
+      aggregateGroup(query, 'terms', 'languageItemCodes'),
+      aggregateGroup(query, 'terms', 'geometryCodes'),
+      aggregateGroup(query, 'terms', 'manCatLabelItemCodes'),
+      aggregateGroup(query, 'terms', 'usageCodes', 'usageCode'),
+      aggregateGroup(query, 'min', 'minCreateDate', 'createDate'),
+      aggregateGroup(query, 'max', 'maxCreateDate', 'createDate'),
+    ]);
+    const aggs = {
+      assetKindItemCodes,
+      authorIds,
+      languageItemCodes,
+      geometryCodes,
+      manCatLabelItemCodes,
+      usageCodes,
+      minCreateDate,
+      maxCreateDate,
+    } as unknown as Result;
+
     const mapBucket = <T>(bucket: AggregationBucket<T>): ValueCount<T> => ({
       value: bucket.key,
       count: bucket.doc_count,
@@ -564,7 +618,7 @@ export class AssetSearchService {
     };
   }
 
-  private async mapAssetToElastic(asset: AssetEditDetailFromPostgres): Promise<ElasticSearchAsset> {
+  private async mapAssetToElastic(asset: AssetEditDetail): Promise<ElasticSearchAsset> {
     const contacts = await this.prisma.contact.findMany({
       select: {
         name: true,
@@ -573,9 +627,11 @@ export class AssetSearchService {
         contactId: { in: asset.assetContacts.map((it) => it.contactId) },
       },
     });
-    const geometryCodes = asset.studies
-      .map((study) => study.geomText.split('(', 2)[0])
-      .map((prefix) => {
+    const geometryCodes: GeometryCode[] = [];
+    const studyLocations: ElasticPoint[] = [];
+    for (const study of asset.studies) {
+      const geometryCode = (() => {
+        const prefix = study.geomText.split('(', 2)[0];
         switch (prefix) {
           case 'POINT':
             return GeometryCode.Point;
@@ -586,7 +642,15 @@ export class AssetSearchService {
           default:
             throw new Error(`unknown geomText prefix: ${prefix}`);
         }
-      });
+      })();
+      geometryCodes.push(geometryCode);
+
+      const fullStudy = await this.studyRepo.find(study.studyId as StudyId);
+      if (fullStudy != null) {
+        studyLocations.push(mapLv95ToElastic(fullStudy.center));
+      }
+    }
+
     const languageItemCodes =
       asset.assetLanguages.length === 0 ? ['None'] : asset.assetLanguages.map((it) => it.languageItemCode);
     return {
@@ -602,9 +666,20 @@ export class AssetSearchService {
       contactNames: contacts.map((it) => it.name),
       manCatLabelItemCodes: asset.manCatLabelRefs,
       geometryCodes: geometryCodes.length > 0 ? [...new Set(geometryCodes)] : ['None'],
+      studyLocations,
+      data: JSON.stringify(AssetEditDetail.encode(asset)),
     };
   }
 }
+
+const lv95Projection =
+  '+proj=somerc +lat_0=46.95240555555556 +lon_0=7.439583333333333 +k_0=1 +x_0=2600000 +y_0=1200000 +ellps=bessel +towgs84=674.374,15.056,405.346,0,0,0,0 +units=m +no_defs';
+const wgs84Projection = proj4.WGS84;
+
+const mapLv95ToElastic = (lv95: LV95): ElasticPoint => {
+  const wgs = proj4(lv95Projection, wgs84Projection, [lv95.x as number, lv95.y as number]);
+  return { lat: wgs[1], lon: wgs[0] };
+};
 
 const mapQueryToElasticDsl = (query: AssetSearchQuery): QueryDslQueryContainer => {
   const scope = ['titlePublic', 'titleOriginal', 'contactNames', 'sgsId'];
@@ -659,6 +734,15 @@ const mapQueryToElasticDsl = (query: AssetSearchQuery): QueryDslQueryContainer =
   }
   if (query.geometryCodes != null) {
     filters.push(makeArrayFilter('geometryCodes', query.geometryCodes));
+  }
+  if (query.polygon != null) {
+    queries.push({
+      geo_polygon: {
+        studyLocations: {
+          points: query.polygon.map(mapLv95ToElastic),
+        },
+      },
+    });
   }
 
   return {

@@ -31,10 +31,15 @@
   }
 }
 
+.spacer {
+  flex: 10;
+}
+
+.version {
+  color: #828e9a;
+}
+
 .language-links {
-  flex: 1 1 auto;
-  display: flex;
-  justify-content: flex-end;
   margin-right: 24px;
   a {
     margin-left: 0.5rem;

@@ -26,7 +26,6 @@ export const loadUserProfileResult = createAction(
 );
 
 export const openPanel = createAction('[App Shared State] Open Panel');
-export const closePanel = createAction('[App Shared State] Close Panel');
 
 export const logout = createAction('[App Shared State] Logout');
 

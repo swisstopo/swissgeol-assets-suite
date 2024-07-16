@@ -43,7 +43,7 @@ export const frAppTranslations: AppTranslations = {
     closeInstructions: "Fermer le mode d'emploi",
     searchControl: 'Commande de recherche',
     refineSearch: 'Affiner la recherche',
-    searchResults: 'Résultats de recherche',
+    searchResults: 'Assets',
     author: 'Auteurr',
     documentDate: 'Date du document',
     usage: 'Utilisation',

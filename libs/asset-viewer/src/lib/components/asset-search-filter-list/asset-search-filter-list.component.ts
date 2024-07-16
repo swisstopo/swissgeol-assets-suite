@@ -24,7 +24,7 @@ export class AssetSearchFilterListComponent<T extends string> {
     }
     this.store.dispatch(
       actions.searchByFilterConfiguration({
-        filterConfiguration: { [filter.queryKey]: [...activeValues] },
+        filterConfiguration: { [filter.queryKey]: activeValues.size > 0 ? [...activeValues] : undefined },
       })
     );
   }

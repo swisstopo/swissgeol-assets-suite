@@ -2,7 +2,7 @@ Feature: search
 
   Background:
     Given The user is logged in
-    And Test asset is created
+    And User has admin permissions
     And Elastic index is created
 
   Scenario: Search for test asset

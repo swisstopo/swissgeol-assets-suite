@@ -17,7 +17,8 @@ Given('Test asset is created', () => {
         auth: bearerAuth(token),
       })
       .then((response) => {
-        if (response.body._tag === 'SearchAssetResultEmpty') {
+        cy.log(response.body);
+        if (response.body.data.length === 0) {
           cy.request({
             method: 'PUT',
             url: 'http://localhost:4200/api/asset-edit',

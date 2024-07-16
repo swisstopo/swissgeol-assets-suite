@@ -2,12 +2,16 @@
   "name": "swissgeol-assets-e2e-tests",
   "version": "0.0.0",
   "private": true,
-  "scripts": {},
+  "scripts": {
+    "build": "cd .. && npm run build",
+    "start": "cd .. && npm run start"
+  },
   "dependencies": {
     "@typescript-eslint/eslint-plugin": "^5.51.0",
     "dayjs": "^1.11.10",
     "eslint-config-prettier": "^8.6.0",
     "eslint-plugin-prettier": "^4.2.1",
+    "proj4": "^2.11.0",
     "rxjs": "~7.4.0",
     "tslib": "^2.3.0",
     "zone.js": "~0.11.4"

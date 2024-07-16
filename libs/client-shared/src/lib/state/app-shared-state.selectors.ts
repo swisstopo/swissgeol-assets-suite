@@ -10,7 +10,7 @@ import * as RD from '@devexperts/remote-data-ts';
 import { createSelector } from '@ngrx/store';
 import * as A from 'fp-ts/Array';
 import { flow, pipe } from 'fp-ts/function';
-import { contramap } from 'fp-ts/lib/Ord';
+import { contramap } from 'fp-ts/Ord';
 import * as R from 'fp-ts/Record';
 import * as S from 'fp-ts/string';
 

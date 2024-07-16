@@ -16,4 +16,13 @@ export interface ElasticSearchAsset {
   contactNames: string[];
   manCatLabelItemCodes: string[];
   geometryCodes: GeometryCode[] | ['None'];
+  studyLocations: ElasticPoint[];
+  data: SerializedAssetEditDetail;
 }
+
+export interface ElasticPoint {
+  lat: number;
+  lon: number;
+}
+
+export type SerializedAssetEditDetail = string;

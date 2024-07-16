@@ -1,14 +1,24 @@
-import { ChangeDetectionStrategy, Component, EventEmitter, inject, Output } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
-import { Store } from '@ngrx/store';
-import * as O from 'fp-ts/Option';
-import * as actions from '../../state/asset-search/asset-search.actions';
-import { AppStateWithAssetSearch, LoadingState } from '../../state/asset-search/asset-search.reducer';
 import {
+  ChangeDetectionStrategy,
+  Component,
+  ElementRef,
+  EventEmitter,
+  inject,
+  OnDestroy,
+  OnInit,
+  Output,
+  ViewChild,
+} from '@angular/core';
+import { Store } from '@ngrx/store';
+import { Subscription } from 'rxjs';
+import * as actions from '../../state/asset-search/asset-search.actions';
+import { AppStateWithAssetSearch } from '../../state/asset-search/asset-search.reducer';
+import {
+  AssetEditDetailVM,
   selectAssetEditDetailVM,
   selectAssetSearchPageData,
+  selectCurrentAssetDetail,
   selectIsResultsOpen,
-  selectSearchLoadingState,
 } from '../../state/asset-search/asset-search.selector';
 
 @Component({
@@ -17,9 +27,10 @@ import {
   styleUrls: ['./asset-search-results.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class AssetSearchResultsComponent {
+export class AssetSearchResultsComponent implements OnInit, OnDestroy {
+  @ViewChild('scrollContainer') scrollContainer?: ElementRef;
   @Output() closeSearchResultsClicked = new EventEmitter<void>();
-  @Output() assetMouseOver = new EventEmitter<O.Option<number>>();
+  @Output() assetMouseOver = new EventEmitter<number | null>();
 
   protected readonly COLUMNS = [
     'favourites',
@@ -31,26 +42,28 @@ export class AssetSearchResultsComponent {
     'createDate',
   ];
 
-  private _store = inject(Store<AppStateWithAssetSearch>);
-  private _router = inject(Router);
-  private _route = inject(ActivatedRoute);
-  public isResultsOpen$ = this._store.select(selectIsResultsOpen);
-  public assets$ = this._store.select(selectAssetEditDetailVM);
-  public loadingState = this._store.select(selectSearchLoadingState);
-  public pageStats$ = this._store.select(selectAssetSearchPageData);
+  public allResults: AssetEditDetailVM[] = [];
+  public resultsToDisplay: AssetEditDetailVM[] = [];
+  private size = 0;
+  private limit = 100;
 
-  public onAssetMouseOver(assetId: number) {
-    this.assetMouseOver.emit(O.some(assetId));
+  private readonly _store = inject(Store<AppStateWithAssetSearch>);
+  public readonly isResultsOpen$ = this._store.select(selectIsResultsOpen);
+  public readonly assets$ = this._store.select(selectAssetEditDetailVM);
+  public readonly pageStats$ = this._store.select(selectAssetSearchPageData);
+  public readonly currentAssetDetail$ = this._store.select(selectCurrentAssetDetail);
+  private readonly subscriptions: Subscription = new Subscription();
+
+  public ngOnInit() {
+    this.initSubscriptions();
   }
 
-  protected readonly LoadingState = LoadingState;
-
-  public onAssetMouseOut() {
-    this.assetMouseOver.emit(O.none);
+  public ngOnDestroy() {
+    this.subscriptions.unsubscribe();
   }
 
   public searchForAsset(assetId: number) {
-    this._store.dispatch(actions.searchForAssetDetail({ assetId }));
+    this._store.dispatch(actions.assetClicked({ assetId }));
   }
 
   public toggleResultsOpen(isCurrentlyOpen: boolean) {
@@ -59,5 +72,27 @@ export class AssetSearchResultsComponent {
     } else {
       this._store.dispatch(actions.openResults());
     }
+  }
+
+  public onScroll(event: Event) {
+    const target = event.target as HTMLElement;
+
+    if (target.offsetHeight + target.scrollTop >= target.scrollHeight) {
+      this.size += this.limit;
+      this.resultsToDisplay = this.allResults.slice(0, this.size);
+    }
+  }
+
+  private initSubscriptions() {
+    this.subscriptions.add(
+      this.assets$.subscribe((assets) => {
+        this.allResults = assets;
+        this.size = this.limit;
+        this.resultsToDisplay = this.allResults.slice(0, this.size);
+        if (this.scrollContainer) {
+          this.scrollContainer.nativeElement.scrollTop = 0;
+        }
+      })
+    );
   }
 }

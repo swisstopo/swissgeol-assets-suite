@@ -149,3 +149,6 @@ export const eqStudyByStudyId = contramap((s: Study) => s.studyId)(eqString);
 export const Studies = D.array(Study);
 export type Studies = D.TypeOf<typeof Studies>;
 export const eqStudies: Eq<Studies> = A.getEq(eqStudy);
+
+export const getCoordsFromStudy = (study: Study): LV95[] =>
+  study.geom._tag === 'Point' ? [study.geom.coord] : study.geom.coords;
