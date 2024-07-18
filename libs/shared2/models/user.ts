@@ -9,7 +9,7 @@ export interface User extends Model<UserId> {
 }
 
 export interface WorkgroupOnUser {
-  id: number;
+  id: WorkgroupId;
   role: Role;
 }
 

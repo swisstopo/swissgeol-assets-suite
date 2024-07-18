@@ -1,5 +1,4 @@
 export * from './animate-number';
-export * from './auth-pipes';
 export * from './button';
 export * from './date';
 export * from './datepicker-toggle-icon';

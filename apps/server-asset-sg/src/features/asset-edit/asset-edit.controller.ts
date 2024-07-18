@@ -35,7 +35,7 @@ export class AssetEditController {
     @CurrentUser() user: User,
     @Authorized.Policy() policy: AssetEditPolicy
   ) {
-    validatePatch(patch, policy);
+    validatePatch(policy, patch);
     const result = await this.assetEditService.createAsset(user, patch)();
     if (E.isLeft(result)) {
       throw new HttpException(result.left.message, 500);
@@ -48,11 +48,11 @@ export class AssetEditController {
   async update(
     @Transform(PatchAsset) patch: PatchAsset,
     @CurrentUser() user: User,
-    @Authorized.Record() asset: AssetEditDetail,
+    @Authorized.Record() record: AssetEditDetail,
     @Authorized.Policy() policy: AssetEditPolicy
   ) {
-    validatePatch(patch, policy);
-    const result = await this.assetEditService.updateAsset(user, asset.assetId, patch)();
+    validatePatch(policy, patch, record);
+    const result = await this.assetEditService.updateAsset(user, record.assetId, patch)();
     if (E.isLeft(result)) {
       throw new HttpException(result.left.message, 500);
     }
@@ -60,7 +60,7 @@ export class AssetEditController {
   }
 }
 
-const validatePatch = (patch: PatchAsset, policy: AssetEditPolicy) => {
+const validatePatch = (policy: AssetEditPolicy, patch: PatchAsset, record?: AssetEditDetail) => {
   // Specialization of the policy where we disallow assets to be moved to another workgroup
   // if the current user is not an editor for that workgroup.
   if (!policy.canDoEverything() && !policy.hasRole(Role.Editor, patch.workgroupId)) {
@@ -68,5 +68,18 @@ const validatePatch = (patch: PatchAsset, policy: AssetEditPolicy) => {
       "Can't move asset to a workgroup for which the user is not an editor",
       HttpStatus.UNPROCESSABLE_ENTITY
     );
+  }
+
+  // Specialization of the policy where we disallow the internal status to be changed to anything else than `tobechecked`
+  // if the current user is not a master-editor for the asset's current or future workgroup.
+  const hasInternalUseChanged =
+    record == null || record.internalUse.statusAssetUseItemCode !== patch.internalUse.statusAssetUseItemCode;
+  if (
+    hasInternalUseChanged &&
+    patch.internalUse.statusAssetUseItemCode !== 'tobechecked' &&
+    ((record != null && policy.hasRole(Role.MasterEditor, record.workgroupId)) ||
+      policy.hasRole(Role.MasterEditor, patch.workgroupId))
+  ) {
+    throw new HttpException("Changing the asset's internal status is not allowed", HttpStatus.UNPROCESSABLE_ENTITY);
   }
 };

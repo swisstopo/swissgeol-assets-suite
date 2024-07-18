@@ -3,19 +3,27 @@ import { ChangeDetectionStrategy, Component, Input, OnInit, TemplateRef, ViewChi
 import { FormGroupDirective } from '@angular/forms';
 import { MatCheckboxChange } from '@angular/material/checkbox';
 import { LifecycleHooks, LifecycleHooksDirective, fromAppShared } from '@asset-sg/client-shared';
+import { isNotNull } from '@asset-sg/core';
+import * as RD from '@devexperts/remote-data-ts';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { Store } from '@ngrx/store';
 import { TranslateService } from '@ngx-translate/core';
 import { RxState } from '@rx-angular/state';
-import { Observable, map, of, startWith, switchMap } from 'rxjs';
 
+import { isMasterEditor } from '@shared/models/user';
+import * as O from 'fp-ts/Option';
+import { Observable, map, of, startWith, switchMap, withLatestFrom, filter } from 'rxjs';
+import { AssetEditDetailVM } from '../../models';
 import { AssetEditorFormGroup, AssetEditorUsageFormGroup } from '../asset-editor-form-group';
 
 interface AssetEditorTabUsageState {
   referenceDataVM: fromAppShared.ReferenceDataVM;
+  assetEditDetail: O.Option<AssetEditDetailVM>;
 }
 
 const initialAssetEditorTabUsageState: AssetEditorTabUsageState = {
   referenceDataVM: fromAppShared.emptyReferenceDataVM,
+  assetEditDetail: O.none,
 };
 
 @UntilDestroy()
@@ -43,11 +51,28 @@ export class AssetEditorTabUsageComponent implements OnInit {
 
   private _dialogRefRemoveNationalInterestDialog?: DialogRef;
 
+  private readonly filteredAssetEditDetail$ = this._state
+    .select('assetEditDetail')
+    .pipe(map(O.toNullable), filter(isNotNull));
+
+  private readonly store = inject(Store);
+  public readonly isMasterEditor$ = this.store.select(fromAppShared.selectRDUserProfile).pipe(
+    map(RD.toNullable),
+    filter(isNotNull),
+    withLatestFrom(this.filteredAssetEditDetail$),
+    map(([user, assetEditDetail]) => isMasterEditor(user, assetEditDetail.workgroupId))
+  );
+
   @ViewChild('tmplRemoveNationalInterestDialog') private _tmplRemoveNationalInterestDialog!: TemplateRef<unknown>;
 
   @Input()
   public set referenceDataVM$(value: Observable<fromAppShared.ReferenceDataVM>) {
     this._state.connect('referenceDataVM', value);
+  }
+
+  @Input()
+  public set assetEditDetail$(value: Observable<O.Option<AssetEditDetailVM>>) {
+    this._state.connect('assetEditDetail', value);
   }
 
   private _form$ = this._lc.onInit$.pipe(map(() => this.rootFormGroup.controls['usage']));
@@ -135,12 +160,6 @@ export class AssetEditorTabUsageComponent implements OnInit {
       this._form.controls['natRelTypeItemCodes'].reset(undefined);
       this._form.controls['natRelTypeItemCodes'].disable();
     }
-  }
-
-  public _removeNatRelTypeItemCode(value: string) {
-    this._form.controls['natRelTypeItemCodes'].setValue(
-      this._form.controls['natRelTypeItemCodes'].value.filter((v: string) => v !== value)
-    );
   }
 
   public getUsageErrorText(errors: null | { internalPublicUsageDateError?: true }) {

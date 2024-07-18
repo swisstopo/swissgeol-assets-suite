@@ -24,7 +24,6 @@ export class WorkgroupEditComponent implements OnInit {
 
   public ngOnInit() {
     this.initializeForm();
-    console.log(this.workgroup);
   }
 
   public initializeForm() {

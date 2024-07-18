@@ -18,182 +18,180 @@
   </div>
   <div class="asset-detail-scroll-container">
     <div class="asset-detail">
-      <ng-container *rxLet="assetDetail$ | push; let assetDetail">
-        <ng-container *ngIf="assetDetail">
-          <div class="flex flex-row justify-between mb-4">
-            <div class="text-dark-red break-word font-bold mt-2.5" [innerHTML]="assetDetail.titlePublic"></div>
-            <a *ngIf="null | isEditor" asset-sg-icon-button [routerLink]="['asset-admin', assetDetail.assetId]">
+      <ng-container *ngIf="assetDetail$ | push as assetDetail">
+        <div class="flex flex-row justify-between mb-4">
+          <div class="text-dark-red break-word font-bold mt-2.5" [innerHTML]="assetDetail.titlePublic"></div>
+          <ng-container *canUpdate="AssetEditPolicy; with: assetDetail">
+            <a asset-sg-icon-button [routerLink]="['asset-admin', assetDetail.assetId]">
               <svg-icon key="edit" data-testid="edit-asset-button"></svg-icon>
             </a>
-          </div>
-          <div class="asset-status">
-            <ng-container *ngIf="assetDetail.publicUse.isAvailable; else internalUse">
+          </ng-container>
+        </div>
+        <div class="asset-status">
+          <ng-container *ngIf="assetDetail.publicUse.isAvailable; else internalUse">
+            <svg-icon
+              [attr.aria-hidden]="false"
+              key="success-filled"
+              [attr.alt]="'search.usageCode.public' | translate"
+            />
+          </ng-container>
+          <ng-template #internalUse>
+            <ng-container *ngIf="assetDetail.internalUse.isAvailable; else onRequest">
               <svg-icon
                 [attr.aria-hidden]="false"
-                key="success-filled"
-                [attr.alt]="'search.usageCode.public' | translate"
+                key="warning-filled"
+                [attr.alt]="'search.usageCode.internal' | translate"
               />
             </ng-container>
-            <ng-template #internalUse>
-              <ng-container *ngIf="assetDetail.internalUse.isAvailable; else onRequest">
-                <svg-icon
-                  [attr.aria-hidden]="false"
-                  key="warning-filled"
-                  [attr.alt]="'search.usageCode.internal' | translate"
-                />
-              </ng-container>
-              <ng-template #onRequest>
-                <svg-icon
-                  [attr.aria-hidden]="false"
-                  key="error-filled"
-                  [attr.alt]="'search.usageCode.useOnRequest' | translate"
-                />
-              </ng-template>
+            <ng-template #onRequest>
+              <svg-icon
+                [attr.aria-hidden]="false"
+                key="error-filled"
+                [attr.alt]="'search.usageCode.useOnRequest' | translate"
+              />
             </ng-template>
-          </div>
-          <table class="asset-details">
-            <tr>
-              <th translate="search.file" class="icon-height"></th>
-              <td>
-                <ul [class.single-entry]="assetDetail.assetFiles.length === 1">
-                  <li *rxFor="let assetFile of assetDetail.assetFiles" class="link">
-                    <span class="filename"> {{ assetFile.fileName }} ({{ assetFile.fileSize }}) </span>
-                    <button
-                      asset-sg-icon-button
-                      *ngIf="!isActiveFileDownload(assetFile, false); else downloadSpinner"
-                      [title]="'search.openFileInNewTab' | translate : { fileName: assetFile.fileName }"
-                      (click)="downloadFile(assetFile, false)"
-                    >
-                      <svg-icon key="ext-link"></svg-icon>
-                    </button>
-                    <button
-                      asset-sg-icon-button
-                      *ngIf="!isActiveFileDownload(assetFile); else downloadSpinner"
-                      [title]="'search.downloadFile' | translate : { fileName: assetFile.fileName }"
-                      (click)="downloadFile(assetFile)"
-                    >
-                      <svg-icon key="download"></svg-icon>
-                    </button>
+          </ng-template>
+        </div>
+        <table class="asset-details">
+          <tr>
+            <th translate="search.file" class="icon-height"></th>
+            <td>
+              <ul [class.single-entry]="assetDetail.assetFiles.length === 1">
+                <li *rxFor="let assetFile of assetDetail.assetFiles" class="link">
+                  <span class="filename"> {{ assetFile.fileName }} ({{ assetFile.fileSize }}) </span>
+                  <button
+                    asset-sg-icon-button
+                    *ngIf="!isActiveFileDownload(assetFile, false); else downloadSpinner"
+                    [title]="'search.openFileInNewTab' | translate : { fileName: assetFile.fileName }"
+                    (click)="downloadFile(assetFile, false)"
+                  >
+                    <svg-icon key="ext-link"></svg-icon>
+                  </button>
+                  <button
+                    asset-sg-icon-button
+                    *ngIf="!isActiveFileDownload(assetFile); else downloadSpinner"
+                    [title]="'search.downloadFile' | translate : { fileName: assetFile.fileName }"
+                    (click)="downloadFile(assetFile)"
+                  >
+                    <svg-icon key="download"></svg-icon>
+                  </button>
 
-                    <ng-template #downloadSpinner>
-                      <mat-progress-spinner mode="indeterminate" [diameter]="24" />
-                    </ng-template>
-                  </li>
-                </ul>
-              </td>
-            </tr>
-            <tr>
-              <th translate="search.originalTitle"></th>
-              <td [innerHTML]="assetDetail.titleOriginal"></td>
-            </tr>
-            <tr>
-              <th translate="search.kind"></th>
-              <td>{{ assetDetail.assetKindItem | valueItemName }}</td>
-            </tr>
-            <tr>
-              <th translate="search.createdDate"></th>
-              <td>{{ assetDetail.createDate | assetSgDate }}</td>
-            </tr>
-            <tr>
-              <th translate="search.alternativeId"></th>
-              <td>
-                <ng-container *ngIf="assetDetail.ids.length === 0">&ndash;</ng-container>
-                <span class="line" *rxFor="let id of assetDetail.ids">{{ id.id + " [" + id.description + "]" }}</span>
-              </td>
-            </tr>
-            <tr>
-              <th translate="search.contacts"></th>
-              <td>
-                <ng-container *ngIf="assetDetail.assetContacts.length === 0">&ndash;</ng-container>
-                <ul [class.single-entry]="assetDetail.assetContacts.length === 1">
-                  <li *rxFor="let contact of assetDetail.assetContacts">
-                    {{ "contactRoles." + contact.role | translate }}: <br />
-                    {{ contact.name }} <br />
-                    {{ contact.locality }} <br />
-                    {{ contact.contactKindItem | valueItemName }}
-                  </li>
-                </ul>
-              </td>
-            </tr>
-            <tr>
-              <th translate="search.subject"></th>
-              <td>
-                <ng-container *ngIf="assetDetail.manCatLabels.length === 0">&ndash;</ng-container>
-                <ng-container *rxFor="let manCatLabel of assetDetail.manCatLabels; let last = last">
-                  {{ (manCatLabel | valueItemName) + (last ? "" : ", ") }}
-                </ng-container>
-              </td>
-            </tr>
-            <tr>
-              <th translate="search.language"></th>
-              <td>
-                <ul class="languages">
-                  <li *ngFor="let language of assetDetail.languages">{{ language | valueItemName }}</li>
-                </ul>
-              </td>
-            </tr>
-            <tr>
-              <th translate="search.format"></th>
-              <td>{{ assetDetail.assetFormatItem | valueItemName }}</td>
-            </tr>
-            <tr>
-              <th translate="search.content"></th>
-              <td>
-                <ng-container *ngIf="assetDetail.assetFormatCompositions.length === 0">&ndash; </ng-container>
-                <ng-container
-                  *rxFor="let assetFormatComposition of assetDetail.assetFormatCompositions; let last = last"
-                >
-                  {{ (assetFormatComposition | valueItemName) + (last ? "" : ", ") }}
-                </ng-container>
-              </td>
-            </tr>
-            <tr>
-              <th translate="search.nationalInterest"></th>
-              <td>
-                <ng-container *ngIf="assetDetail.typeNatRels.length === 0">&ndash;</ng-container>
-                <span class="line" *rxFor="let typeNatRel of assetDetail.typeNatRels">{{
-                  typeNatRel | valueItemName
-                }}</span>
-              </td>
-            </tr>
-            <tr>
-              <th translate="search.reference"></th>
-              <td>
-                <ng-container *ngIf="assetDetail.referenceAssets.length === 0">&ndash; </ng-container>
-                <ul [class.single-entry]="assetDetail.referenceAssets.length === 1">
-                  <li *rxFor="let referenceAsset of assetDetail.referenceAssets">
-                    <a
-                      asset-sg-reset
-                      class="line"
-                      [routerLink]="['.']"
-                      [queryParams]="{ searchParams: undefined, assetId: referenceAsset.assetId }"
-                      queryParamsHandling="merge"
-                    >
-                      {{ referenceAsset.titlePublic }}
-                    </a>
-                  </li>
-                </ul>
-              </td>
-            </tr>
-            <tr>
-              <th translate="search.lastProcessedDate"></th>
-              <td>{{ assetDetail.lastProcessedDate | assetSgDate }}</td>
-            </tr>
-            <tr>
-              <th translate="search.status"></th>
-              <td>
-                <ng-container *ngIf="assetDetail.statusWorks.length === 0">&ndash;</ng-container>
-                <table class="status-works">
-                  <caption></caption>
-                  <tr *rxFor="let statusWork of assetDetail.statusWorks">
-                    <th>{{ statusWork.statusWorkDate | assetSgDate }}</th>
-                    <td>{{ statusWork.statusWork | valueItemName }}</td>
-                  </tr>
-                </table>
-              </td>
-            </tr>
-          </table>
-        </ng-container>
+                  <ng-template #downloadSpinner>
+                    <mat-progress-spinner mode="indeterminate" [diameter]="24" />
+                  </ng-template>
+                </li>
+              </ul>
+            </td>
+          </tr>
+          <tr>
+            <th translate="search.originalTitle"></th>
+            <td [innerHTML]="assetDetail.titleOriginal"></td>
+          </tr>
+          <tr>
+            <th translate="search.kind"></th>
+            <td>{{ assetDetail.assetKindItem | valueItemName }}</td>
+          </tr>
+          <tr>
+            <th translate="search.createdDate"></th>
+            <td>{{ assetDetail.createDate | assetSgDate }}</td>
+          </tr>
+          <tr>
+            <th translate="search.alternativeId"></th>
+            <td>
+              <ng-container *ngIf="assetDetail.ids.length === 0">&ndash;</ng-container>
+              <span class="line" *rxFor="let id of assetDetail.ids">{{ id.id + " [" + id.description + "]" }}</span>
+            </td>
+          </tr>
+          <tr>
+            <th translate="search.contacts"></th>
+            <td>
+              <ng-container *ngIf="assetDetail.assetContacts.length === 0">&ndash;</ng-container>
+              <ul [class.single-entry]="assetDetail.assetContacts.length === 1">
+                <li *rxFor="let contact of assetDetail.assetContacts">
+                  {{ "contactRoles." + contact.role | translate }}: <br />
+                  {{ contact.name }} <br />
+                  {{ contact.locality }} <br />
+                  {{ contact.contactKindItem | valueItemName }}
+                </li>
+              </ul>
+            </td>
+          </tr>
+          <tr>
+            <th translate="search.subject"></th>
+            <td>
+              <ng-container *ngIf="assetDetail.manCatLabels.length === 0">&ndash;</ng-container>
+              <ng-container *rxFor="let manCatLabel of assetDetail.manCatLabels; let last = last">
+                {{ (manCatLabel | valueItemName) + (last ? "" : ", ") }}
+              </ng-container>
+            </td>
+          </tr>
+          <tr>
+            <th translate="search.language"></th>
+            <td>
+              <ul class="languages">
+                <li *ngFor="let language of assetDetail.languages">{{ language | valueItemName }}</li>
+              </ul>
+            </td>
+          </tr>
+          <tr>
+            <th translate="search.format"></th>
+            <td>{{ assetDetail.assetFormatItem | valueItemName }}</td>
+          </tr>
+          <tr>
+            <th translate="search.content"></th>
+            <td>
+              <ng-container *ngIf="assetDetail.assetFormatCompositions.length === 0">&ndash; </ng-container>
+              <ng-container *rxFor="let assetFormatComposition of assetDetail.assetFormatCompositions; let last = last">
+                {{ (assetFormatComposition | valueItemName) + (last ? "" : ", ") }}
+              </ng-container>
+            </td>
+          </tr>
+          <tr>
+            <th translate="search.nationalInterest"></th>
+            <td>
+              <ng-container *ngIf="assetDetail.typeNatRels.length === 0">&ndash;</ng-container>
+              <span class="line" *rxFor="let typeNatRel of assetDetail.typeNatRels">{{
+                typeNatRel | valueItemName
+              }}</span>
+            </td>
+          </tr>
+          <tr>
+            <th translate="search.reference"></th>
+            <td>
+              <ng-container *ngIf="assetDetail.referenceAssets.length === 0">&ndash; </ng-container>
+              <ul [class.single-entry]="assetDetail.referenceAssets.length === 1">
+                <li *rxFor="let referenceAsset of assetDetail.referenceAssets">
+                  <a
+                    asset-sg-reset
+                    class="line"
+                    [routerLink]="['.']"
+                    [queryParams]="{ searchParams: undefined, assetId: referenceAsset.assetId }"
+                    queryParamsHandling="merge"
+                  >
+                    {{ referenceAsset.titlePublic }}
+                  </a>
+                </li>
+              </ul>
+            </td>
+          </tr>
+          <tr>
+            <th translate="search.lastProcessedDate"></th>
+            <td>{{ assetDetail.lastProcessedDate | assetSgDate }}</td>
+          </tr>
+          <tr>
+            <th translate="search.status"></th>
+            <td>
+              <ng-container *ngIf="assetDetail.statusWorks.length === 0">&ndash;</ng-container>
+              <table class="status-works">
+                <caption></caption>
+                <tr *rxFor="let statusWork of assetDetail.statusWorks">
+                  <th>{{ statusWork.statusWorkDate | assetSgDate }}</th>
+                  <td>{{ statusWork.statusWork | valueItemName }}</td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
       </ng-container>
     </div>
   </div>

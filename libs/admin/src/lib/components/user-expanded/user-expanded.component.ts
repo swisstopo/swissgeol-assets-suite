@@ -70,7 +70,6 @@ export class UserExpandedComponent {
     if (value) {
       this.editForm.patchValue({
         email: value.email,
-        role: value.role,
         lang: value.lang,
       });
     }
@@ -90,11 +89,11 @@ export class UserExpandedComponent {
   submit() {
     this.disableEverything();
     if (this.user) {
-      const { role, lang } = this.editForm.getRawValue();
+      const { lang } = this.editForm.getRawValue();
 
-      if (!role || !lang) return;
+      if (!lang) return;
 
-      this.userExpandedOutput.emit(UserExpandedOutput.of.userEdited({ ...this.user, role, lang }));
+      this.userExpandedOutput.emit(UserExpandedOutput.of.userEdited({ ...this.user, lang }));
     }
   }
 

@@ -39,7 +39,6 @@ export class AppComponent {
         oAuthConfig['oauth_tokenEndpoint'] as string
       );
       await this.authService.signIn();
-      this.store.dispatch(appSharedStateActions.loadUserProfile());
       this.store.dispatch(appSharedStateActions.loadReferenceData());
     });
 

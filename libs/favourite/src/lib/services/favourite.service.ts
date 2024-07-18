@@ -10,6 +10,6 @@ export class FavouriteService {
   constructor(private http: HttpClient) {}
 
   getFavourites(): Observable<Favourite[]> {
-    return this.http.get<Favourite[]>(`/api/favourites`);
+    return this.http.get<Favourite[]>(`/api/users/current/favorites`);
   }
 }

@@ -1,24 +1,25 @@
-import { AssetEditDetail } from '@asset-sg/shared';
-import { Role } from '@shared/models/workgroup';
+import { Role, WorkgroupId } from '@shared/models/workgroup';
 import { Policy } from '@shared/policies/base/policy';
 
-export class AssetEditPolicy extends Policy<AssetEditDetail> {
-  canShow(value: AssetEditDetail): boolean {
+type Asset = { workgroupId: WorkgroupId };
+
+export class AssetEditPolicy extends Policy<Asset> {
+  override canShow(value: Asset): boolean {
     // A user can see all assets in all workgroups that they are assigned to.
     return this.hasWorkgroup(value.workgroupId);
   }
 
-  canCreate(): boolean {
+  override canCreate(): boolean {
     // A user can create assets for workgroups for which they are an Editor.
     return this.hasRole(Role.Editor);
   }
 
-  canUpdate(value: AssetEditDetail): boolean {
+  override canUpdate(value: Asset): boolean {
     // A user can update assets for all workgroups for which they are an Editor.
     return this.hasRole(Role.Editor, value.workgroupId);
   }
 
-  canDelete(value: AssetEditDetail): boolean {
+  override canDelete(value: Asset): boolean {
     // A user can delete assets for all workgroups for which they are an Editor.
     return this.hasRole(Role.Editor, value.workgroupId);
   }

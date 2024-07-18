@@ -1,10 +1,14 @@
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnInit, Output, inject } from '@angular/core';
-import { FormBuilder, FormGroupDirective } from '@angular/forms';
+import { ChangeDetectionStrategy, Component, EventEmitter, inject, Input, OnInit, Output } from '@angular/core';
+import { FormGroupDirective } from '@angular/forms';
 import { fromAppShared } from '@asset-sg/client-shared';
+import { isNotNull } from '@asset-sg/core';
 import { DateId } from '@asset-sg/shared';
+import * as RD from '@devexperts/remote-data-ts';
+import { Store } from '@ngrx/store';
 import { RxState } from '@rx-angular/state';
+import { isMasterEditor } from '@shared/models/user';
 import * as O from 'fp-ts/Option';
-import { Observable } from 'rxjs';
+import { filter, map, Observable, withLatestFrom } from 'rxjs';
 
 import { AssetEditDetailVM } from '../../models';
 import { AssetEditorAdministrationFormGroup, AssetEditorFormGroup } from '../asset-editor-form-group';
@@ -36,13 +40,24 @@ const initialTabAdministrationState: TabAdministrationState = {
 export class AssetEditorTabAdministrationComponent implements OnInit {
   public _rootFormGroupDirective = inject(FormGroupDirective);
   public _rootFormGroup = this._rootFormGroupDirective.control as AssetEditorFormGroup;
-  private _formBuilder = inject(FormBuilder);
   private _state = inject<RxState<TabAdministrationState>>(RxState);
 
   public _form!: AssetEditorAdministrationFormGroup;
 
   public _referenceDataVM$ = this._state.select('referenceDataVM');
   public _assetEditDetail$ = this._state.select('assetEditDetail');
+
+  private readonly filteredAssetEditDetail$ = this._state
+    .select('assetEditDetail')
+    .pipe(map(O.toNullable), filter(isNotNull));
+
+  private readonly store = inject(Store);
+  public readonly isMasterEditor$ = this.store.select(fromAppShared.selectRDUserProfile).pipe(
+    map(RD.toNullable),
+    filter(isNotNull),
+    withLatestFrom(this.filteredAssetEditDetail$),
+    map(([user, assetEditDetail]) => isMasterEditor(user, assetEditDetail.workgroupId))
+  );
 
   // eslint-disable-next-line @angular-eslint/no-output-rename
   @Output('save')

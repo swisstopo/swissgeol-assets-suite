@@ -4,6 +4,7 @@ import { AppState } from '@asset-sg/client-shared';
 import { AssetFile } from '@asset-sg/shared';
 import { Store } from '@ngrx/store';
 
+import { AssetEditPolicy } from '@shared/policies/asset-edit.policy';
 import * as actions from '../../state/asset-search/asset-search.actions';
 import { LoadingState } from '../../state/asset-search/asset-search.reducer';
 import {
@@ -63,4 +64,6 @@ export class AssetSearchDetailComponent {
       },
     });
   }
+
+  protected readonly AssetEditPolicy = AssetEditPolicy;
 }

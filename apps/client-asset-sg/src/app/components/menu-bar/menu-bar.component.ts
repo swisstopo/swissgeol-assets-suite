@@ -1,11 +1,10 @@
 import { ChangeDetectionStrategy, Component, HostBinding, inject } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
-import { appSharedStateActions, fromAppShared } from '@asset-sg/client-shared';
-import { isAdmin, isEditor } from '@asset-sg/shared';
-import * as RD from '@devexperts/remote-data-ts';
+import { appSharedStateActions } from '@asset-sg/client-shared';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { Store } from '@ngrx/store';
 import { TranslateService } from '@ngx-translate/core';
+import { AssetEditPolicy } from '@shared/policies/asset-edit.policy';
 import queryString from 'query-string';
 import { filter, map, shareReplay } from 'rxjs';
 
@@ -23,10 +22,6 @@ export class MenuBarComponent {
   private _router = inject(Router);
   public _translateService = inject(TranslateService);
   private _store = inject(Store<AppState>);
-
-  private userProfile$ = inject(Store<AppState>).select(fromAppShared.selectRDUserProfile);
-  public isAdmin$ = this.userProfile$.pipe(map((user) => RD.isSuccess(user) && isAdmin(user.value)));
-  public isEditor$ = this.userProfile$.pipe(map((user) => RD.isSuccess(user) && isEditor(user.value)));
 
   public isAssetsActive$ = this.createIsRouteActive$((url) => Boolean(url.match(/^\/\w\w$/)));
   public isEditActive$ = this.isSegmentActive('asset-admin');
@@ -56,4 +51,6 @@ export class MenuBarComponent {
   public openAssetDrawer() {
     this._store.dispatch(appSharedStateActions.toggleSearchFilter());
   }
+
+  protected readonly AssetEditPolicy = AssetEditPolicy;
 }
