@@ -91,6 +91,10 @@ export class DrawControl extends Control {
     return this._isDrawing$.asObservable();
   }
 
+  get isDrawing(): boolean {
+    return this._isDrawing$.value;
+  }
+
   setPolygon(polygon: LV95[] | null) {
     this._isDrawing$.next(false);
     this._polygon$.next(polygon);
