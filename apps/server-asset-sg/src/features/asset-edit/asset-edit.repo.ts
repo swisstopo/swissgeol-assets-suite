@@ -194,6 +194,7 @@ export class AssetEditRepo implements Repo<AssetEditDetail, number, AssetEditDat
                 }
               : [],
           },
+          workgroupId: data.patch.workgroupId,
         },
       });
 

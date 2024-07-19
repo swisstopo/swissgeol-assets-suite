@@ -8,6 +8,7 @@ import * as R from 'fp-ts/Record';
 const initialState: AppSharedState = {
   rdUserProfile: RD.initial,
   rdReferenceData: RD.initial,
+  workgroups: [],
   lang: 'de',
 };
 
@@ -21,6 +22,7 @@ export const appSharedStateReducer = createReducer(
     appSharedStateActions.loadReferenceDataResult,
     (state, rdReferenceData): AppSharedState => ({ ...state, rdReferenceData })
   ),
+  on(appSharedStateActions.loadWorkgroupsResult, (state, { workgroups }): AppSharedState => ({ ...state, workgroups })),
   on(appSharedStateActions.logout, (): AppSharedState => initialState),
   on(appSharedStateActions.setLang, (state, { lang }): AppSharedState => ({ ...state, lang })),
   on(

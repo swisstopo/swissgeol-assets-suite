@@ -2,6 +2,15 @@
   <form [formGroup]="_form" class="flex flex-row max-h-full">
     <div class="flex flex-column form-column mr-8">
       <div class="flex flex-column bg-white mb-4 py-4 px-6 overflow-y-scroll">
+        <mat-form-field class="mb-2">
+          <mat-label>Workgroup</mat-label>
+          <mat-select formControlName="workgroupId">
+            <mat-option class="ellipsis" *rxFor="let workgroup of availableWorkgroups$" [value]="workgroup.id">
+              {{ workgroup.name }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
         <div class="font-bold mb-4" translate>edit.tabs.general.title</div>
         <mat-form-field class="mb-2">
           <mat-label translate>edit.tabs.general.publicTitle</mat-label>

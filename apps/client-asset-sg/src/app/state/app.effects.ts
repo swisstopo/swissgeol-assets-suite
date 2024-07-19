@@ -83,4 +83,12 @@ export class AppSharedStateEffects {
       map(appSharedStateActions.loadUserProfileResult)
     )
   );
+
+  loadWorkgroups$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(appSharedStateActions.loadWorkgroups),
+      switchMap(() => this.appSharedStateService.loadWorkgroups()),
+      map((workgroups) => appSharedStateActions.loadWorkgroupsResult({ workgroups }))
+    )
+  );
 }
