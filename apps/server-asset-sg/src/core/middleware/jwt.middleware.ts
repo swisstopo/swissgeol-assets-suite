@@ -61,7 +61,7 @@ export class JwtMiddleware implements NestMiddleware {
       await this.initializeRequest(req, result.right.accessToken, result.right.jwtPayload as JwtPayload);
       next();
     } else {
-      res.status(403).json({ error: result.left.message });
+      res.status(403).json({ error: 'not authorized by eIAM' });
     }
   }
 

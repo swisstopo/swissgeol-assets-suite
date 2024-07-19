@@ -41,7 +41,9 @@ export class AuthInterceptor implements HttpInterceptor {
   private async handleError(error: HttpErrorResponse): Promise<void> {
     switch (error.status) {
       case 403:
-        this.authService.setState(AuthState.Forbidden);
+        this.authService.setState(
+          error.error == 'not authorized by eIAM' ? AuthState.AccessForbidden : AuthState.ForbiddenResource
+        );
         break;
       case 401:
         this.store.dispatch(

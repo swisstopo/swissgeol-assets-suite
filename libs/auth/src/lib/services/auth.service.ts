@@ -42,7 +42,11 @@ export class AuthService {
         const success = await this.oauthService.loadDiscoveryDocumentAndLogin();
         if (success) {
           this.oauthService.setupAutomaticSilentRefresh();
-          this.state.next(AuthState.Success);
+
+          // If something else has interrupted the auth process, then we don't want to signal a success.
+          if (this.state.value === AuthState.Ongoing) {
+            this.state.next(AuthState.Success);
+          }
         }
       } else {
         this.state.next(AuthState.Ongoing);
@@ -91,6 +95,7 @@ export class AuthService {
 export enum AuthState {
   Ongoing,
   Aborted,
-  Forbidden,
+  AccessForbidden,
+  ForbiddenResource,
   Success,
 }
