@@ -25,9 +25,6 @@ export class AssetEditController {
     return AssetEditDetail.encode(asset);
   }
 
-  /**
-   * @deprecated
-   */
   @Post('/')
   @Authorize.Create()
   async create(
