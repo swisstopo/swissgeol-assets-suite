@@ -1,7 +1,7 @@
 import { User } from '@asset-sg/shared';
+import { UserId } from '@asset-sg/shared/v2';
+import { Role, SimpleWorkgroup, WorkgroupId } from '@asset-sg/shared/v2';
 import { Prisma } from '@prisma/client';
-import { UserId } from '@shared/models/user';
-import { Role, SimpleWorkgroup, WorkgroupId } from '@shared/models/workgroup';
 import { PrismaService } from '@/core/prisma.service';
 import { ReadRepo, RepoListOptions } from '@/core/repo';
 import { satisfy } from '@/utils/define';

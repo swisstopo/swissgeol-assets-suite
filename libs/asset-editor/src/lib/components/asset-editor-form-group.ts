@@ -34,6 +34,9 @@ const makeAssetEditorGeneralFormGroup = (formBuilder: FormBuilder) =>
     assetFiles: new FormControl<(AssetFile & { willBeDeleted: boolean })[]>([], { nonNullable: true }),
     filesToDelete: new FormControl<number[]>([], { nonNullable: true }),
     newFiles: formBuilder.array<FormControl<File>>([]),
+    workgroupId: new FormControl<number | null>(null, {
+      validators: Validators.required,
+    }),
   });
 export type AssetEditorGeneralFormGroup = ReturnType<typeof makeAssetEditorGeneralFormGroup>;
 
