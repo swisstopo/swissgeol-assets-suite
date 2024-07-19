@@ -1,13 +1,13 @@
+import { FindRepo, ReadRepo } from '@/core/repo';
 import { HttpException, HttpStatus, SetMetadata } from '@nestjs/common';
 import { Request } from 'express';
 import { SingleKeyObject } from 'type-fest';
-import { ReadRepo } from '@/core/repo';
 
 type ParamType = typeof Number | typeof String;
 
 export interface AuthorizationTarget {
   getId: (request: Request) => string | number;
-  findBy?: (repo: ReadRepo<unknown, unknown>) => (id: never) => Promise<object | null>;
+  findBy?: (repo: FindRepo<unknown, unknown>) => (id: never) => Promise<object | null>;
 }
 
 type TargetIdMapping<M> = SingleKeyObject<M> | ((req: Request) => string | number);
