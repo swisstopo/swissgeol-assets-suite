@@ -51,7 +51,7 @@
     [routerLink]="[_translateService.currentLang, 'admin']"
     asset-sg-reset
     class="menu-bar-item"
-    [ngClass]="{ active: (isAdminActive$ | async) }"
+    [class]="{ active: (isAdminActive$ | async) }"
   >
     <svg-icon key="user-management" />
     <span translate>menuBar.userManagement</span>

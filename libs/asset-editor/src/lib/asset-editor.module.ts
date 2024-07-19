@@ -125,7 +125,6 @@ export const canLeaveEdit: CanDeactivateFn<AssetEditorPageComponent> = (c) => c.
               store.select(fromAppShared.selectUser).pipe(filter(isNotNull)),
             ]).pipe(
               map(([assetEditDetail, user]) => {
-                console.log('hello?');
                 const policy = new AssetEditPolicy(user);
                 return (
                   policy.canDoEverything() ||

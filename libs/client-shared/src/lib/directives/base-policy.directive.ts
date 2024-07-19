@@ -1,4 +1,5 @@
 import {
+  ChangeDetectorRef,
   Directive,
   inject,
   OnChanges,
@@ -27,6 +28,8 @@ export abstract class BasePolicyDirective<T> implements OnInit, OnChanges, OnDes
 
   private user: User | null = null;
 
+  private ref = inject(ChangeDetectorRef);
+
   private readonly subscription = new Subscription();
 
   constructor(private readonly templateRef: TemplateRef<unknown>, private readonly viewContainer: ViewContainerRef) {}
@@ -45,6 +48,7 @@ export abstract class BasePolicyDirective<T> implements OnInit, OnChanges, OnDes
 
   ngOnChanges(_changes: SimpleChanges): void {
     this.render();
+    this.ref.markForCheck();
   }
 
   ngOnDestroy(): void {
