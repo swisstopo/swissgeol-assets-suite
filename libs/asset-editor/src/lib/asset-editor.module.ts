@@ -41,7 +41,7 @@ import { AssetEditPolicy } from '@shared/policies/asset-edit.policy';
 import { de } from 'date-fns/locale/de';
 
 import * as O from 'fp-ts/Option';
-import { filter, map, withLatestFrom } from 'rxjs';
+import { combineLatest, filter, map, tap, withLatestFrom } from 'rxjs';
 import { AssetEditorLaunchComponent } from './components/asset-editor-launch';
 import { AssetEditorPageComponent } from './components/asset-editor-page';
 import { AssetEditorSyncComponent } from './components/asset-editor-sync/asset-editor-sync.component';
@@ -115,12 +115,14 @@ export const canLeaveEdit: CanDeactivateFn<AssetEditorPageComponent> = (c) => c.
         canActivate: [
           (() => {
             const store = inject(Store);
-            return store.select(fromAssetEditor.selectRDAssetEditDetail).pipe(
-              map(RD.toNullable),
-              filter(isNotNull),
-              map(O.toNullable),
-              withLatestFrom(store.select(fromAppShared.selectUser).pipe(filter(isNotNull))),
+            return combineLatest([
+              store
+                .select(fromAssetEditor.selectRDAssetEditDetail)
+                .pipe(map(RD.toNullable), filter(isNotNull), map(O.toNullable)),
+              store.select(fromAppShared.selectUser).pipe(filter(isNotNull)),
+            ]).pipe(
               map(([assetEditDetail, user]) => {
+                console.log('hello?');
                 const policy = new AssetEditPolicy(user);
                 return assetEditDetail == null ? policy.canCreate() : policy.canUpdate(assetEditDetail);
               })
