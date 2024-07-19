@@ -1,7 +1,13 @@
-import { AssetId } from '@asset-sg/shared/v2';
-import { User } from '@asset-sg/shared/v2';
-import { Workgroup, WorkgroupData, WorkgroupDataBoundary } from '@asset-sg/shared/v2';
-import { WorkgroupPolicy } from '@asset-sg/shared/v2';
+import {
+  AssetId,
+  SimpleWorkgroup,
+  User,
+  Workgroup,
+  WorkgroupData,
+  WorkgroupDataBoundary,
+  WorkgroupId,
+  WorkgroupPolicy,
+} from '@asset-sg/shared/v2';
 import {
   Controller,
   Delete,
@@ -13,21 +19,35 @@ import {
   ParseIntPipe,
   Post,
   Put,
+  Query,
 } from '@nestjs/common';
+import { Expose, Transform as TransformValue } from 'class-transformer';
+import { IsBoolean } from 'class-validator';
 import { authorize } from '@/core/authorize';
 import { Authorize } from '@/core/decorators/authorize.decorator';
 import { CurrentUser } from '@/core/decorators/current-user.decorator';
 import { ParseBody } from '@/core/decorators/parse.decorator';
+import { RepoListOptions } from '@/core/repo';
 import { WorkgroupRepo } from '@/features/workgroups/workgroup.repo';
 
+class ListQuery {
+  @Expose({ name: 'simple' })
+  @TransformValue(({ value }) => value != null && value !== 'false', { toClassOnly: true })
+  @IsBoolean()
+  isSimple!: boolean;
+}
+
 @Controller('/workgroups')
-export class WorkgroupController {
+export class WorkgroupsController {
   constructor(private readonly workgroupRepo: WorkgroupRepo) {}
 
   @Get('/')
   @Authorize.User()
-  async list(@CurrentUser() user: User): Promise<Workgroup[]> {
-    return this.workgroupRepo.list({ ids: user.isAdmin ? undefined : user.workgroups.map((it) => it.id) });
+  async list(@CurrentUser() user: User, @Query() query: ListQuery): Promise<Workgroup[] | SimpleWorkgroup[]> {
+    const options: RepoListOptions<WorkgroupId> = {
+      ids: user.isAdmin ? undefined : user.workgroups.map((it) => it.id),
+    };
+    return query.isSimple ? this.workgroupRepo.simple(user).list(options) : this.workgroupRepo.list(options);
   }
 
   @Get('/:id')
