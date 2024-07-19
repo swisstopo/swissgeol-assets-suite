@@ -77,9 +77,9 @@ const validatePatch = (policy: AssetEditPolicy, patch: PatchAsset, record?: Asse
   if (
     hasInternalUseChanged &&
     patch.internalUse.statusAssetUseItemCode !== 'tobechecked' &&
-    ((record != null && policy.hasRole(Role.MasterEditor, record.workgroupId)) ||
-      policy.hasRole(Role.MasterEditor, patch.workgroupId))
+    ((record != null && !policy.hasRole(Role.MasterEditor, record.workgroupId)) ||
+      !policy.hasRole(Role.MasterEditor, patch.workgroupId))
   ) {
-    throw new HttpException("Changing the asset's internal status is not allowed", HttpStatus.UNPROCESSABLE_ENTITY);
+    throw new HttpException("Changing the asset's status is not allowed", HttpStatus.UNPROCESSABLE_ENTITY);
   }
 };

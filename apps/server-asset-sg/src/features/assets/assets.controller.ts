@@ -92,9 +92,9 @@ const validateData = (policy: AssetEditPolicy, data: AssetData, record?: Asset) 
   if (
     hasInternalUseChanged &&
     data.usage.internal.statusCode !== UsageStatusCode.ToBeChecked &&
-    ((record != null && policy.hasRole(Role.MasterEditor, record.workgroupId)) ||
-      policy.hasRole(Role.MasterEditor, data.workgroupId))
+    ((record != null && !policy.hasRole(Role.MasterEditor, record.workgroupId)) ||
+      !policy.hasRole(Role.MasterEditor, data.workgroupId))
   ) {
-    throw new HttpException("Changing the asset's internal status is not allowed", HttpStatus.UNPROCESSABLE_ENTITY);
+    throw new HttpException("Changing the asset's status is not allowed", HttpStatus.UNPROCESSABLE_ENTITY);
   }
 };
