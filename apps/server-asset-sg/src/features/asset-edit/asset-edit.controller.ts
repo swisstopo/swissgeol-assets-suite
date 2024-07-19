@@ -63,7 +63,7 @@ const validatePatch = (policy: AssetEditPolicy, patch: PatchAsset, record?: Asse
   if (!policy.canDoEverything() && !policy.hasRole(Role.Editor, patch.workgroupId)) {
     throw new HttpException(
       "Can't move asset to a workgroup for which the user is not an editor",
-      HttpStatus.UNPROCESSABLE_ENTITY
+      HttpStatus.FORBIDDEN
     );
   }
 
@@ -77,6 +77,6 @@ const validatePatch = (policy: AssetEditPolicy, patch: PatchAsset, record?: Asse
     ((record != null && !policy.hasRole(Role.MasterEditor, record.workgroupId)) ||
       !policy.hasRole(Role.MasterEditor, patch.workgroupId))
   ) {
-    throw new HttpException("Changing the asset's status is not allowed", HttpStatus.UNPROCESSABLE_ENTITY);
+    throw new HttpException("Changing the asset's status is not allowed", HttpStatus.FORBIDDEN);
   }
 };
