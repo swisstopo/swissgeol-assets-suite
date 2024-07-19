@@ -10,12 +10,10 @@
   flex-direction: column;
 }
 
-.mat-option {
-  ::ng-deep .mat-mdc-option .mdc-list-item__primary-text {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
+::ng-deep .mat-mdc-option.author > .mdc-list-item__primary-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 @include drawerPanel.draw-panel-header;

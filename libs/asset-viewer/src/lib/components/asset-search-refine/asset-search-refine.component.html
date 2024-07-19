@@ -54,6 +54,7 @@
             <mat-option
               *ngFor="let author of filteredAuthors"
               [value]="author.name"
+              class="author"
               (onSelectionChange)="updateAuthor($event, author.contactId)"
             >
               {{ author.name }} ({{ author.count }})
