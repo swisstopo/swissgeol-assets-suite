@@ -1,6 +1,6 @@
 ARG APP_VERSION
 
-FROM node:20-alpine as api-builder
+FROM node:22-alpine as api-builder
 
 ENV APP_VERSION=${APP_VERSION}
 ENV NODE_ENV=development
@@ -12,7 +12,7 @@ RUN npm install && ./node_modules/.bin/prisma generate
 RUN npx nx build server-asset-sg --configuration=production
 
 # final image build
-FROM node:20-alpine
+FROM node:22-alpine
 
 ENV APP_VERSION=${APP_VERSION}
 ENV NODE_ENV=production

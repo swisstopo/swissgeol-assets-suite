@@ -1,4 +1,4 @@
-FROM node:20-alpine as app-builder
+FROM node:22-alpine as app-builder
 
 ARG APP_VERSION
 ENV APP_VERSION=${APP_VERSION}
