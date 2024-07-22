@@ -15,7 +15,7 @@ import {
 import { AppState } from '@asset-sg/client-shared';
 import { ORD } from '@asset-sg/core';
 import { Store } from '@ngrx/store';
-import { asapScheduler, filter, first, identity, skip, Subscription, switchMap } from 'rxjs';
+import { asapScheduler, first, identity, skip, Subscription, switchMap } from 'rxjs';
 import { AllStudyService } from '../../services/all-study.service';
 import * as searchActions from '../../state/asset-search/asset-search.actions';
 import {
@@ -127,9 +127,11 @@ export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
     this.controller.addControl(this.controls.zoom);
     this.controller.addControl(this.controls.draw);
 
-    this.subscription.add(
-      this.controller.assetsClick$.pipe(filter(() => !this.controls.draw.isDrawing)).subscribe(this.assetsClick)
-    );
+    this.controls.draw.isDrawing$.subscribe((isDrawing) => {
+      this.controller.setClickEnabled(!isDrawing);
+    });
+
+    this.subscription.add(this.controller.assetsClick$.subscribe(this.assetsClick));
     this.subscription.add(this.controller.assetsHover$.subscribe(this.assetsHover));
 
     // Some bindings can be initialized only after the map has fully loaded,
