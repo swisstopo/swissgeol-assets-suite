@@ -45,6 +45,12 @@ export class MapController {
    */
   private activeAsset: AssetEditDetail | null = null;
 
+  /**
+   * Whether clicking things on the map is currently allowed.
+   * @private
+   */
+  private isClickEnabled = true;
+
   private readonly _isInitialized$ = new BehaviorSubject(false);
 
   constructor(element: HTMLElement) {
@@ -97,6 +103,10 @@ export class MapController {
 
   get isInitialized$(): Observable<boolean> {
     return this._isInitialized$.asObservable();
+  }
+
+  setClickEnabled(isEnabled: boolean): void {
+    this.isClickEnabled = isEnabled;
   }
 
   addControl(control: Control): void {
@@ -302,6 +312,8 @@ export class MapController {
       (h) => this.map.on('click', h),
       (h) => this.map.un('click', h)
     ).pipe(
+      filter(() => this.isClickEnabled),
+
       // Check if the click has hit a study point, and use only that point if so.
       switchMap(async (event) => {
         let assetId: number | null = null;

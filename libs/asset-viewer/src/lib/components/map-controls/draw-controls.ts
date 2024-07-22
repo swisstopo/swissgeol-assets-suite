@@ -5,11 +5,8 @@ import { Control } from 'ol/control';
 import Feature from 'ol/Feature';
 import { Polygon } from 'ol/geom';
 import Draw, { DrawEvent } from 'ol/interaction/Draw';
-import Map from 'ol/Map';
-import MapBrowserEvent from 'ol/MapBrowserEvent';
 import VectorSource from 'ol/source/Vector';
-import View from 'ol/View';
-import { BehaviorSubject, distinctUntilChanged, filter, fromEventPattern, map, Observable, Subscription } from 'rxjs';
+import { asapScheduler, BehaviorSubject, filter, fromEventPattern, map, Observable, Subscription } from 'rxjs';
 
 export class DrawControl extends Control {
   private readonly polygonSource: VectorSource;
@@ -76,7 +73,11 @@ export class DrawControl extends Control {
           return polygon;
         })
       )
-      .subscribe(this.setPolygon.bind(this));
+      .subscribe((polygon) =>
+        asapScheduler.schedule(() => {
+          this.setPolygon(polygon);
+        })
+      );
   }
 
   toggle(): void {
