@@ -1,33 +1,35 @@
-import { Controller, HttpCode, HttpException, HttpStatus, Post, Put } from '@nestjs/common';
+import { Controller, HttpCode, HttpException, HttpStatus, Param, ParseIntPipe, Post, Put } from '@nestjs/common';
 import { Contact, ContactData } from '@shared/models/contact';
+import { User } from '@shared/models/user';
 import { ContactPolicy } from '@shared/policies/contact.policy';
 import { ContactDataSchema } from '@shared/schemas/contact.schema';
-import { Authorize } from '@/core/decorators/authorize.decorator';
-import { Authorized } from '@/core/decorators/authorized.decorator';
-import { Transform } from '@/core/decorators/transform.decorator';
-import { UsePolicy } from '@/core/decorators/use-policy.decorator';
-import { UseRepo } from '@/core/decorators/use-repo.decorator';
+import { authorize } from '@/core/authorize';
+import { CurrentUser } from '@/core/decorators/current-user.decorator';
+import { ParseBody } from '@/core/decorators/parse.decorator';
 import { ContactRepo } from '@/features/contacts/contact.repo';
 
 @Controller('/contacts')
-@UseRepo(ContactRepo)
-@UsePolicy(ContactPolicy)
 export class ContactsController {
   constructor(private readonly contactRepo: ContactRepo) {}
 
   @Post('/')
-  @Authorize.Create()
   @HttpCode(HttpStatus.CREATED)
-  create(@Transform(ContactDataSchema) data: ContactData): Promise<Contact> {
+  create(@ParseBody(ContactDataSchema) data: ContactData, @CurrentUser() user: User): Promise<Contact> {
+    authorize(ContactPolicy, user).canCreate();
     return this.contactRepo.create(data);
   }
 
   @Put('/:id')
-  @Authorize.Update({ id: Number })
   async update(
-    @Authorized.Record() record: Contact,
-    @Transform(ContactDataSchema) data: ContactData
+    @Param('id', ParseIntPipe) id: number,
+    @ParseBody(ContactDataSchema) data: ContactData,
+    @CurrentUser() user: User
   ): Promise<Contact> {
+    const record = await this.contactRepo.find(id);
+    if (record == null) {
+      throw new HttpException('not found', HttpStatus.NOT_FOUND);
+    }
+    authorize(ContactPolicy, user).canUpdate(record);
     const contact = await this.contactRepo.update(record.id, data);
     if (contact == null) {
       throw new HttpException('not found', 404);

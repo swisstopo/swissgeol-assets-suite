@@ -6,7 +6,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 
 import { AppController } from '@/app.controller';
 import { provideElasticsearch } from '@/core/elasticsearch';
-import { PolicyGuard } from '@/core/guards/policy.guard';
+import { AuthorizationGuard } from '@/core/guards/authorization-guard.service';
 import { JwtMiddleware } from '@/core/middleware/jwt.middleware';
 import { PrismaService } from '@/core/prisma.service';
 import { AssetEditController } from '@/features/asset-edit/asset-edit.controller';
@@ -62,7 +62,7 @@ import { WorkgroupRepo } from '@/features/workgroups/workgroup.repo';
     WorkgroupRepo,
     {
       provide: APP_GUARD,
-      useClass: PolicyGuard,
+      useClass: AuthorizationGuard,
     },
   ],
 })

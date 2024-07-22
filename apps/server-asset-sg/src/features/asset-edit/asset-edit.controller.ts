@@ -1,38 +1,33 @@
 import { PatchAsset } from '@asset-sg/shared';
-import { Controller, Get, HttpException, HttpStatus, Post, Put } from '@nestjs/common';
+import { Controller, Get, HttpException, HttpStatus, Param, ParseIntPipe, Post, Put } from '@nestjs/common';
 import { User } from '@shared/models/user';
 import { Role } from '@shared/models/workgroup';
 import { AssetEditPolicy } from '@shared/policies/asset-edit.policy';
 import * as E from 'fp-ts/Either';
-import { Authorize } from '@/core/decorators/authorize.decorator';
-import { Authorized } from '@/core/decorators/authorized.decorator';
+import { authorize } from '@/core/authorize';
 import { CurrentUser } from '@/core/decorators/current-user.decorator';
-import { Transform } from '@/core/decorators/transform.decorator';
-import { UsePolicy } from '@/core/decorators/use-policy.decorator';
-import { UseRepo } from '@/core/decorators/use-repo.decorator';
+import { ParseBody } from '@/core/decorators/parse.decorator';
 import { AssetEditRepo } from '@/features/asset-edit/asset-edit.repo';
 import { AssetEditDetail, AssetEditService } from '@/features/asset-edit/asset-edit.service';
 
 @Controller('/asset-edit')
-@UseRepo(AssetEditRepo)
-@UsePolicy(AssetEditPolicy)
 export class AssetEditController {
-  constructor(private readonly assetEditService: AssetEditService) {}
+  constructor(private readonly assetEditRepo: AssetEditRepo, private readonly assetEditService: AssetEditService) {}
 
   @Get('/:id')
-  @Authorize.Show({ id: Number })
-  async show(@Authorized.Record() asset: AssetEditDetail): Promise<unknown> {
-    return AssetEditDetail.encode(asset);
+  async show(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: User): Promise<unknown> {
+    const record = await this.assetEditRepo.find(id);
+    if (record == null) {
+      throw new HttpException('not found', HttpStatus.NOT_FOUND);
+    }
+    authorize(AssetEditPolicy, user).canShow(record);
+    return AssetEditDetail.encode(record);
   }
 
   @Post('/')
-  @Authorize.Create()
-  async create(
-    @Transform(PatchAsset) patch: PatchAsset,
-    @CurrentUser() user: User,
-    @Authorized.Policy() policy: AssetEditPolicy
-  ) {
-    validatePatch(policy, patch);
+  async create(@ParseBody(PatchAsset) patch: PatchAsset, @CurrentUser() user: User) {
+    authorize(AssetEditPolicy, user).canCreate();
+    validatePatch(user, patch);
     const result = await this.assetEditService.createAsset(user, patch)();
     if (E.isLeft(result)) {
       throw new HttpException(result.left.message, 500);
@@ -41,14 +36,19 @@ export class AssetEditController {
   }
 
   @Put('/:id')
-  @Authorize.Update({ id: Number })
   async update(
-    @Transform(PatchAsset) patch: PatchAsset,
-    @CurrentUser() user: User,
-    @Authorized.Record() record: AssetEditDetail,
-    @Authorized.Policy() policy: AssetEditPolicy
+    @Param('id', ParseIntPipe) id: number,
+    @ParseBody(PatchAsset) patch: PatchAsset,
+    @CurrentUser() user: User
   ) {
-    validatePatch(policy, patch, record);
+    const record = await this.assetEditRepo.find(id);
+    if (record == null) {
+      throw new HttpException('not found', HttpStatus.NOT_FOUND);
+    }
+
+    authorize(AssetEditPolicy, user).canUpdate(record);
+    validatePatch(user, patch, record);
+
     const result = await this.assetEditService.updateAsset(user, record.assetId, patch)();
     if (E.isLeft(result)) {
       throw new HttpException(result.left.message, 500);
@@ -57,7 +57,9 @@ export class AssetEditController {
   }
 }
 
-const validatePatch = (policy: AssetEditPolicy, patch: PatchAsset, record?: AssetEditDetail) => {
+const validatePatch = (user: User, patch: PatchAsset, record?: AssetEditDetail) => {
+  const policy = new AssetEditPolicy(user);
+
   // Specialization of the policy where we disallow assets to be moved to another workgroup
   // if the current user is not an editor for that workgroup.
   if (!policy.canDoEverything() && !policy.hasRole(Role.Editor, patch.workgroupId)) {

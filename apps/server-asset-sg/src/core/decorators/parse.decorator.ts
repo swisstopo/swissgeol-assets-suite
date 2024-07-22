@@ -21,7 +21,7 @@ const validationPipe = new ValidationPipe({ transform: true, whitelist: true, fo
  *   console.log(`My parsed and validated value is ${myValue}.`);
  * }
  */
-export const Transform = createParamDecorator(async (dataType: SchemaType, context: ExecutionContext) => {
+export const ParseBody = createParamDecorator(async (dataType: SchemaType, context: ExecutionContext) => {
   const request = context.switchToHttp().getRequest() as JwtRequest;
   if (dataType instanceof Function) {
     // It's a class transformer.

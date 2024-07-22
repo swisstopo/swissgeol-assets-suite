@@ -3,7 +3,7 @@ import { User, UserData, UserId } from '@shared/models/user';
 import { UserDataSchema } from '@shared/schemas/user.schema';
 import { Authorize } from '@/core/decorators/authorize.decorator';
 import { CurrentUser } from '@/core/decorators/current-user.decorator';
-import { Transform } from '@/core/decorators/transform.decorator';
+import { ParseBody } from '@/core/decorators/parse.decorator';
 import { UserRepo } from '@/features/users/user.repo';
 
 @Controller('/users')
@@ -25,7 +25,7 @@ export class UsersController {
   @Authorize.Admin()
   async update(
     @Param('id') id: UserId,
-    @Transform(UserDataSchema)
+    @ParseBody(UserDataSchema)
     data: UserData
   ): Promise<User> {
     const user = await this.userRepo.update(id, data);

@@ -14,53 +14,48 @@ import { Asset, AssetData, AssetId, UsageStatusCode } from '@shared/models/asset
 
 import { User } from '@shared/models/user';
 import { Role } from '@shared/models/workgroup';
-import { AssetEditPolicy } from '@shared/policies/asset-edit.policy';
 import { AssetPolicy } from '@shared/policies/asset.policy';
 import { AssetDataSchema } from '@shared/schemas/asset.schema';
-import { Authorize } from '@/core/decorators/authorize.decorator';
-import { Authorized } from '@/core/decorators/authorized.decorator';
+import { authorize } from '@/core/authorize';
 import { CurrentUser } from '@/core/decorators/current-user.decorator';
-import { Transform } from '@/core/decorators/transform.decorator';
-import { UsePolicy } from '@/core/decorators/use-policy.decorator';
-import { UseRepo } from '@/core/decorators/use-repo.decorator';
+import { ParseBody } from '@/core/decorators/parse.decorator';
 import { AssetRepo } from '@/features/assets/asset.repo';
 
 @Controller('/assets')
-@UseRepo(AssetRepo)
-@UsePolicy(AssetPolicy)
 export class AssetsController {
   constructor(private readonly assetRepo: AssetRepo) {}
 
   @Get('/:id')
-  @Authorize.Show({ id: Number })
-  async show(@Param('id', ParseIntPipe) id: AssetId): Promise<Asset> {
-    const asset = await this.assetRepo.find(id);
-    if (asset === null) {
+  async show(@Param('id', ParseIntPipe) id: AssetId, @CurrentUser() user: User): Promise<Asset> {
+    const record = await this.assetRepo.find(id);
+    if (record === null) {
       throw new HttpException('not found', 404);
     }
-    return asset;
+    authorize(AssetPolicy, user).canShow(record);
+    return record;
   }
 
   @Post('/')
-  @Authorize.Create()
-  async create(
-    @Transform(AssetDataSchema) data: AssetData,
-    @CurrentUser() user: User,
-    @Authorized.Policy() policy: AssetEditPolicy
-  ): Promise<Asset> {
-    validateData(policy, data);
+  async create(@ParseBody(AssetDataSchema) data: AssetData, @CurrentUser() user: User): Promise<Asset> {
+    authorize(AssetPolicy, user).canCreate();
+    validateData(user, data);
     return await this.assetRepo.create({ ...data, processor: user });
   }
 
   @Put('/:id')
-  @Authorize.Update({ id: Number })
   async update(
-    @Transform(AssetDataSchema) data: AssetData,
-    @CurrentUser() user: User,
-    @Authorized.Record() record: Asset,
-    @Authorized.Policy() policy: AssetEditPolicy
+    @Param('id', ParseIntPipe) id: number,
+    @ParseBody(AssetDataSchema) data: AssetData,
+    @CurrentUser() user: User
   ): Promise<Asset> {
-    validateData(policy, data, record);
+    const record = await this.assetRepo.find(id);
+    if (record == null) {
+      throw new HttpException('not found', HttpStatus.NOT_FOUND);
+    }
+
+    authorize(AssetPolicy, user).canUpdate(record);
+    validateData(user, data, record);
+
     const asset = await this.assetRepo.update(record.id, { ...data, processor: user });
     if (asset === null) {
       throw new HttpException('not found', 404);
@@ -69,14 +64,20 @@ export class AssetsController {
   }
 
   @Delete('/:id')
-  @Authorize.Delete({ id: Number })
   @HttpCode(HttpStatus.NO_CONTENT)
-  async delete(@Authorized.Record() record: Asset): Promise<void> {
+  async delete(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: User): Promise<void> {
+    const record = await this.assetRepo.find(id);
+    if (record == null) {
+      throw new HttpException('not found', HttpStatus.NOT_FOUND);
+    }
+    authorize(AssetPolicy, user).canDelete(record);
     await this.assetRepo.delete(record.id);
   }
 }
 
-const validateData = (policy: AssetEditPolicy, data: AssetData, record?: Asset) => {
+const validateData = (user: User, data: AssetData, record?: Asset) => {
+  const policy = new AssetPolicy(user);
+
   // Specialization of the policy where we disallow assets to be moved to another workgroup
   // if the current user is not an editor for that workgroup.
   if (!policy.canDoEverything() && !policy.hasRole(Role.Editor, data.workgroupId)) {

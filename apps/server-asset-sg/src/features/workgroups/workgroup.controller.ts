@@ -1,18 +1,26 @@
-import { Controller, Delete, Get, HttpCode, HttpException, HttpStatus, Post, Put } from '@nestjs/common';
+import {
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpException,
+  HttpStatus,
+  Param,
+  ParseIntPipe,
+  Post,
+  Put,
+} from '@nestjs/common';
+import { AssetId } from '@shared/models/asset';
 import { User } from '@shared/models/user';
 import { Workgroup, WorkgroupData, WorkgroupDataBoundary } from '@shared/models/workgroup';
 import { WorkgroupPolicy } from '@shared/policies/workgroup.policy';
+import { authorize } from '@/core/authorize';
 import { Authorize } from '@/core/decorators/authorize.decorator';
-import { Authorized } from '@/core/decorators/authorized.decorator';
 import { CurrentUser } from '@/core/decorators/current-user.decorator';
-import { Transform } from '@/core/decorators/transform.decorator';
-import { UsePolicy } from '@/core/decorators/use-policy.decorator';
-import { UseRepo } from '@/core/decorators/use-repo.decorator';
+import { ParseBody } from '@/core/decorators/parse.decorator';
 import { WorkgroupRepo } from '@/features/workgroups/workgroup.repo';
 
 @Controller('/workgroups')
-@UsePolicy(WorkgroupPolicy)
-@UseRepo(WorkgroupRepo)
 export class WorkgroupController {
   constructor(private readonly workgroupRepo: WorkgroupRepo) {}
 
@@ -23,28 +31,38 @@ export class WorkgroupController {
   }
 
   @Get('/:id')
-  @Authorize.Show({ id: Number })
-  async show(@Authorized.Record() workgroup: Workgroup): Promise<Workgroup> {
-    return workgroup;
+  async show(@Param('id', ParseIntPipe) id: AssetId, @CurrentUser() user: User): Promise<Workgroup> {
+    const record = await this.workgroupRepo.find(id);
+    if (record === null) {
+      throw new HttpException('not found', 404);
+    }
+    authorize(WorkgroupPolicy, user).canShow(record);
+    return record;
   }
 
   @Post('/')
-  @Authorize.Create()
   @HttpCode(HttpStatus.CREATED)
   async create(
-    @Transform(WorkgroupDataBoundary)
-    data: WorkgroupDataBoundary
+    @ParseBody(WorkgroupDataBoundary)
+    data: WorkgroupData,
+    @CurrentUser() user: User
   ): Promise<Workgroup> {
+    authorize(WorkgroupPolicy, user).canCreate();
     return this.workgroupRepo.create(data);
   }
 
   @Put('/:id')
-  @Authorize.Update({ id: Number })
   async update(
-    @Authorized.Record() record: Workgroup,
-    @Transform(WorkgroupDataBoundary)
-    data: WorkgroupData
+    @Param('id', ParseIntPipe) id: number,
+    @ParseBody(WorkgroupDataBoundary)
+    data: WorkgroupData,
+    @CurrentUser() user: User
   ): Promise<Workgroup> {
+    const record = await this.workgroupRepo.find(id);
+    if (record === null) {
+      throw new HttpException('not found', 404);
+    }
+    authorize(WorkgroupPolicy, user).canUpdate(record);
     const workgroup = await this.workgroupRepo.update(record.id, data);
     if (workgroup === null) {
       throw new HttpException('not found', 404);
@@ -53,9 +71,13 @@ export class WorkgroupController {
   }
 
   @Delete('/:id')
-  @Authorize.Delete({ id: Number })
   @HttpCode(HttpStatus.NO_CONTENT)
-  async delete(@Authorized.Record() record: Workgroup): Promise<void> {
+  async delete(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: User): Promise<void> {
+    const record = await this.workgroupRepo.find(id);
+    if (record == null) {
+      throw new HttpException('not found', HttpStatus.NOT_FOUND);
+    }
+    authorize(WorkgroupPolicy, user).canDelete(record);
     await this.workgroupRepo.delete(record.id);
   }
 }
