@@ -8,7 +8,7 @@ on:
       - "!main"
 
 env:
-  NODE_VERSION: "20.x"
+  NODE_VERSION: "22.x"
   DB_USERNAME: postgres
   DB_PASSWORD: postgres
   DB_DATABASE: postgres
@@ -39,25 +39,25 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ steps.npm-cache-dir.outputs.dir }}
-          key: "${{ runner.os }}-npm-${{ hashFiles('package-lock.json') }}"
+          key: "${{ runner.os }}-npm-${{ env.NODE_VERSION }}-${{ hashFiles('package-lock.json') }}"
           restore-keys: |
             ${{ runner.os }}-npm-
       - name: Cache node modules
         uses: actions/cache@v4
         with:
           path: ./node_modules
-          key: "${{ runner.os }}-node_modules-${{ hashFiles('package-lock.json') }}-${{ hashFiles('**/schema.prisma') }}"
+          key: "${{ runner.os }}-node_modules-${{ env.NODE_VERSION }}-${{ hashFiles('package-lock.json') }}-${{ hashFiles('**/schema.prisma') }}"
           restore-keys: |
             ${{ runner.os }}-node_modules-
       - name: Cache e2e node modules
         uses: actions/cache@v4
         with:
           path: ./e2e/node_modules
-          key: "${{ runner.os }}-node_modules_e2e-${{ hashFiles('./e2e/package-lock.json') }}"
+          key: "${{ runner.os }}-node_modules_e2e-${{ env.NODE_VERSION }}-${{ hashFiles('./e2e/package-lock.json') }}"
           restore-keys: |
             ${{ runner.os }}-node_modules_e2e-
       - name: Install node dependencies
-        run: npm ci
+        run: npm install
       - name: Generate prisma types
         run: npm run prisma -- generate
       - name: Install e2e node dependencies
@@ -96,7 +96,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: ./node_modules
-          key: "${{ runner.os }}-node_modules-${{ hashFiles('package-lock.json') }}-${{ hashFiles('**/schema.prisma') }}"
+          key: "${{ runner.os }}-node_modules-${{ env.NODE_VERSION }}-${{ hashFiles('package-lock.json') }}-${{ hashFiles('**/schema.prisma') }}"
       - name: Migrate database
         run: npm run prisma -- migrate deploy
       - name: Run tests
@@ -116,7 +116,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: ./node_modules
-          key: "${{ runner.os }}-node_modules-${{ hashFiles('package-lock.json') }}-${{ hashFiles('**/schema.prisma') }}"
+          key: "${{ runner.os }}-node_modules-${{ env.NODE_VERSION }}-${{ hashFiles('package-lock.json') }}-${{ hashFiles('**/schema.prisma') }}"
       - name: Run lint
         run: npm run lint
       - name: Run prettier
@@ -145,7 +145,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: ./node_modules
-          key: "${{ runner.os }}-node_modules-${{ hashFiles('package-lock.json') }}-${{ hashFiles('**/schema.prisma') }}"
+          key: "${{ runner.os }}-node_modules-${{ env.NODE_VERSION }}-${{ hashFiles('package-lock.json') }}-${{ hashFiles('**/schema.prisma') }}"
       - name: Reset nx
         run: npx nx reset
       - name: Run build
@@ -173,7 +173,7 @@ jobs:
 #        uses: actions/cache/restore@v4
 #        with:
 #          path: ./node_modules
-#          key: "${{ runner.os }}-node_modules-${{ hashFiles('package-lock.json') }}-${{ hashFiles('**/schema.prisma') }}"
+#          key: "${{ runner.os }}-node_modules-${{ env.NODE_VERSION }}-${{ hashFiles('package-lock.json') }}-${{ hashFiles('**/schema.prisma') }}"
 #      - name: Start services
 #        env:
 #          DB_USER: ${{ env.DB_USERNAME }}
@@ -190,7 +190,7 @@ jobs:
 #        uses: actions/cache/restore@v4
 #        with:
 #          path: ./e2e/node_modules
-#          key: "${{ runner.os }}-node_modules_e2e-${{ hashFiles('./e2e/package-lock.json') }}"
+#          key: "${{ runner.os }}-node_modules_e2e-${{ env.NODE_VERSION }}-${{ hashFiles('./e2e/package-lock.json') }}"
 #      - name: Cypress run
 #        uses: cypress-io/github-action@v6
 #        with:
