@@ -55,9 +55,14 @@
               *ngFor="let author of filteredAuthors"
               [value]="author.name"
               class="author"
+              [matTooltip]="author.name"
+              matTooltipPosition="right"
               (onSelectionChange)="updateAuthor($event, author.contactId)"
             >
-              {{ author.name }} ({{ author.count }})
+              <div class="author__name">
+                {{ author.name }}
+              </div>
+              <div class="author__count">({{ author.count }})</div>
             </mat-option>
           </mat-autocomplete>
         </mat-form-field>

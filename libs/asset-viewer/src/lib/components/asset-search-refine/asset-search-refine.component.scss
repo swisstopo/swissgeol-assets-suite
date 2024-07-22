@@ -10,12 +10,6 @@
   flex-direction: column;
 }
 
-::ng-deep .mat-mdc-option.author > .mdc-list-item__primary-text {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
 @include drawerPanel.draw-panel-header;
 @include drawerPanel.draw-panel-header-underline;
 
@@ -69,4 +63,23 @@ section.filters {
 
 .input-clear-button {
   color: variables.$cyan-09;
+}
+
+::ng-deep .mat-mdc-option.author > .mdc-list-item__primary-text {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  gap: 1rem;
+
+  & > .author__name {
+    flex: 1 1 100%;
+
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  & > .author__count {
+    flex: auto;
+  }
 }
