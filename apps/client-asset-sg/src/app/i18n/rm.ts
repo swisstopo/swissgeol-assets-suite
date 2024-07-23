@@ -19,6 +19,9 @@ export const rmAppTranslations: AppTranslations = {
   delete: 'RM Löschen',
   close: 'RM Schliessen',
   datePlaceholder: 'AAAA-MM-GG',
+  workgroup: {
+    title: 'IT Arbeitsgruppe',
+  },
   menuBar: {
     assets: 'RM Assets',
     admin: 'RM Verwaltung',

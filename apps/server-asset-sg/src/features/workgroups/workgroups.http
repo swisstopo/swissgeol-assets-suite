@@ -8,6 +8,11 @@ Authorization: Impersonate {{user}}
 GET {{host}}/api/workgroups
 Authorization: Impersonate {{user}}
 
+### List simple workgroups
+GET {{host}}/api/workgroups?simple
+Authorization: Impersonate {{user}}
+
+
 ### Create workgroup
 POST {{host}}/api/workgroups
 Authorization: Impersonate {{user}}

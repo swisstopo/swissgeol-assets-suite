@@ -28,8 +28,8 @@ import { StudiesController } from '@/features/studies/studies.controller';
 import { StudyRepo } from '@/features/studies/study.repo';
 import { UserRepo } from '@/features/users/user.repo';
 import { UsersController } from '@/features/users/users.controller';
-import { WorkgroupController } from '@/features/workgroups/workgroup.controller';
 import { WorkgroupRepo } from '@/features/workgroups/workgroup.repo';
+import { WorkgroupsController } from '@/features/workgroups/workgroups.controller';
 
 @Module({
   controllers: [
@@ -44,7 +44,7 @@ import { WorkgroupRepo } from '@/features/workgroups/workgroup.repo';
     OcrController,
     StudiesController,
     UsersController,
-    WorkgroupController,
+    WorkgroupsController,
   ],
   imports: [HttpModule, ScheduleModule.forRoot(), CacheModule.register()],
   providers: [

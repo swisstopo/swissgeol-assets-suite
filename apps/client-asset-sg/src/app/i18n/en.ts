@@ -19,6 +19,9 @@ export const enAppTranslations: AppTranslations = {
   delete: 'Delete',
   close: 'Close',
   datePlaceholder: 'YYYY-MM-DD',
+  workgroup: {
+    title: 'Workgroup',
+  },
   menuBar: {
     assets: 'Assets',
     admin: 'Administration',

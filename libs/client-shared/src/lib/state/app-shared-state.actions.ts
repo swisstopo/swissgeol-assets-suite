@@ -1,4 +1,5 @@
 import { Contact, Lang, ReferenceData, User } from '@asset-sg/shared';
+import { SimpleWorkgroup } from '@asset-sg/shared/v2';
 import * as RD from '@devexperts/remote-data-ts';
 import { createAction, props } from '@ngrx/store';
 
@@ -23,6 +24,12 @@ export const loadUserProfile = createAction('[App Shared State] Load User Profil
 export const loadUserProfileResult = createAction(
   '[App Shared State] Load User Profile Result',
   props<RD.RemoteData<ApiError, User>>()
+);
+
+export const loadWorkgroups = createAction('[App Shared State] Load Workgroups');
+export const loadWorkgroupsResult = createAction(
+  '[App Shared State] Load Workgroups Result',
+  props<{ workgroups: SimpleWorkgroup[] }>()
 );
 
 export const openPanel = createAction('[App Shared State] Open Panel');

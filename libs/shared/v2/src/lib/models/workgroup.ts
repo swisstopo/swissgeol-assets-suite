@@ -8,18 +8,31 @@ import { UserId } from './user';
 
 export interface Workgroup extends Model<WorkgroupId> {
   name: string;
+
+  // TODO change this to `AssetId[]`
   assets?: { assetId: AssetId }[];
   users?: UserOnWorkgroup[];
+
+  // TODO make this camel case
   disabled_at: Date | null;
 }
 
 export type WorkgroupId = number;
 export type WorkgroupData = Data<Workgroup>;
+export type SimpleWorkgroup = Pick<Workgroup, 'id' | 'name'> & {
+  /**
+   * The role of the current within this workgroup.
+   * Note that admins are registered as {@link Role.MasterEditor} for every workgroup.
+   */
+  role: Role;
+};
 
 export interface UserOnWorkgroup {
+  // TODO change this to `id`
   userId: UserId;
   role: Role;
 }
+
 export class WorkgroupDataBoundary implements WorkgroupData {
   @IsString()
   name!: string;
