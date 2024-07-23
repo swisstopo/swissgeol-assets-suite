@@ -1,5 +1,4 @@
-import { contramap } from 'fp-ts/Ord';
-import { Ord as ordString } from 'fp-ts/string';
+import { Role } from '@prisma/client';
 import * as C from 'io-ts/Codec';
 import * as D from 'io-ts/Decoder';
 
@@ -10,45 +9,22 @@ export enum UserRoleEnum {
   viewer = 'viewer',
 }
 
-const UserRoleDecoder = D.union(
-  D.literal(UserRoleEnum.admin),
-  D.literal(UserRoleEnum.editor),
-  D.literal(UserRoleEnum.masterEditor),
-  D.literal(UserRoleEnum.viewer)
-);
-export const UserRole = C.fromDecoder(UserRoleDecoder);
-export type UserRole = D.TypeOf<typeof UserRoleDecoder>;
-
-export const isAdmin = (u: User) => u.role === UserRoleEnum.admin;
-export const isMasterEditor = (u: User) => [UserRoleEnum.admin, UserRoleEnum.masterEditor].includes(u.role);
-export const isEditor = (u: User) =>
-  [UserRoleEnum.admin, UserRoleEnum.editor, UserRoleEnum.masterEditor].includes(u.role);
+const WorkgroupRoleDecoder = D.union(D.literal(Role.Editor), D.literal(Role.MasterEditor), D.literal(Role.Viewer));
+export const WorkgroupRole = C.fromDecoder(WorkgroupRoleDecoder);
 
 export const User = C.struct({
   id: C.string,
   email: C.string,
-  role: UserRole,
   lang: C.string,
+  isAdmin: C.boolean,
+  workgroups: C.array(
+    C.struct({
+      id: C.number,
+      role: WorkgroupRole,
+    })
+  ),
 });
 export type User = D.TypeOf<typeof User>;
-export const byEmail = contramap((u: User) => u.email)(ordString);
-
-export type UserWithoutId = Omit<User, 'id'>;
 
 export const Users = C.array(User);
 export type Users = User[];
-
-export const UserPost = D.struct({
-  email: D.string,
-  role: UserRoleDecoder,
-  lang: D.string,
-  oidcId: D.string,
-  id: D.string,
-});
-export type UserPost = D.TypeOf<typeof UserPost>;
-
-export const UserPatch = D.struct({
-  role: UserRoleDecoder,
-  lang: D.string,
-});
-export type UserPatch = D.TypeOf<typeof UserPatch>;

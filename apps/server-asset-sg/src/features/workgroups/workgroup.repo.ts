@@ -1,8 +1,8 @@
+import { Workgroup, WorkgroupData, WorkgroupId } from '@asset-sg/shared/v2';
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '@/core/prisma.service';
 import { Repo, RepoListOptions } from '@/core/repo';
-import { Workgroup, WorkgroupData, WorkgroupId } from '@/features/workgroups/workgroup.model';
 import { satisfy } from '@/utils/define';
 import { handlePrismaMutationError } from '@/utils/prisma';
 

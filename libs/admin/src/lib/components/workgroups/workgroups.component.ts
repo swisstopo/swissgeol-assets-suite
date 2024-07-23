@@ -26,7 +26,6 @@ export class WorkgroupsComponent implements OnInit, OnDestroy {
   }
 
   public selectWorkgroup(workgroup: Workgroup): void {
-    console.log('here');
     this.selectedWorkgroup = workgroup;
   }
 

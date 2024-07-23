@@ -2,10 +2,8 @@ import fs from 'fs/promises';
 
 import { Controller, Get, HttpException, OnApplicationBootstrap, Post, Res } from '@nestjs/common';
 import { Response } from 'express';
-
-import { RequireRole } from '@/core/decorators/require-role.decorator';
+import { Authorize } from '@/core/decorators/authorize.decorator';
 import { AssetSearchService } from '@/features/assets/search/asset-search.service';
-import { Role } from '@/features/users/user.model';
 
 @Controller('/assets/sync')
 export class AssetSyncController implements OnApplicationBootstrap {
@@ -22,7 +20,7 @@ export class AssetSyncController implements OnApplicationBootstrap {
   }
 
   @Get('/')
-  @RequireRole(Role.MasterEditor)
+  @Authorize.Admin()
   async show(@Res() res: Response): Promise<{ progress: number } | void> {
     try {
       const data = await fs.readFile(assetSyncFile, { encoding: 'utf-8' });
@@ -38,7 +36,7 @@ export class AssetSyncController implements OnApplicationBootstrap {
   }
 
   @Post('/')
-  @RequireRole(Role.MasterEditor)
+  @Authorize.Admin()
   async start(@Res() res: Response): Promise<void> {
     const isSyncRunning = await fs
       .access(assetSyncFile)

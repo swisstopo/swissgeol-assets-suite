@@ -1,3 +1,4 @@
+import { User } from '@asset-sg/shared/v2';
 import { environment } from '@environment';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { HttpException, Inject, Injectable, NestMiddleware } from '@nestjs/common';
@@ -11,7 +12,6 @@ import * as jwt from 'jsonwebtoken';
 import { Jwt, JwtPayload } from 'jsonwebtoken';
 import jwkToPem from 'jwk-to-pem';
 
-import { Role, User } from '@/features/users/user.model';
 import { UserRepo } from '@/features/users/user.repo';
 import { JwtRequest } from '@/models/jwt-request';
 
@@ -61,7 +61,7 @@ export class JwtMiddleware implements NestMiddleware {
       await this.initializeRequest(req, result.right.accessToken, result.right.jwtPayload as JwtPayload);
       next();
     } else {
-      res.status(403).json({ error: result.left.message });
+      res.status(403).json({ error: 'not authorized by eIAM' });
     }
   }
 
@@ -196,7 +196,6 @@ export class JwtMiddleware implements NestMiddleware {
     return await this.userRepo.create({
       oidcId,
       email,
-      role: Role.Viewer,
       lang: 'de',
       isAdmin: false,
       workgroups: [],

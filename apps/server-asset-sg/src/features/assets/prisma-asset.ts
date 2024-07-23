@@ -1,5 +1,3 @@
-import { Prisma } from '@prisma/client';
-
 import {
   Asset,
   AssetInfo,
@@ -9,9 +7,11 @@ import {
   AssetStudy,
   AssetStudyId,
   UsageStatusCode,
-} from '@/features/assets/asset.model';
-import { StudyType } from '@/features/studies/study.model';
-import { LocalDate } from '@/utils/data/local-date';
+} from '@asset-sg/shared/v2';
+import { LocalDate } from '@asset-sg/shared/v2';
+
+import { StudyType } from '@asset-sg/shared/v2';
+import { Prisma } from '@prisma/client';
 import { satisfy } from '@/utils/define';
 
 type SelectedAssetInfo = Prisma.AssetGetPayload<{ select: typeof assetInfoSelection }>;
@@ -98,11 +98,7 @@ export const assetInfoSelection = satisfy<Prisma.AssetSelect>()({
   createDate: true,
   receiptDate: true,
   lastProcessedDate: true,
-  workgroup: {
-    select: {
-      id: true,
-    },
-  },
+  workgroupId: true,
 });
 
 export const assetSelection = satisfy<Prisma.AssetSelect>()({
@@ -199,7 +195,7 @@ export const parseAssetFromPrisma = (data: SelectedAsset): Asset => ({
       geom: it.geomText,
     } as AssetStudy;
   }),
-  workgroupId: data.workgroup?.id ?? null,
+  workgroupId: data.workgroupId,
 });
 
 const parseLinkedAsset = (data: SelectedLinkedAsset): LinkedAsset => ({

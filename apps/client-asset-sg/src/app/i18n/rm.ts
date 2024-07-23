@@ -4,6 +4,7 @@ export const rmAppTranslations: AppTranslations = {
   logoSwissGeol: 'Logo Swissgeol Assets',
   welcomeTo: 'RM Willkommen bei',
   accessForbidden: 'RM Sie haben keinen Zugriff auf diese Applikation.',
+  resourceForbidden: 'RM Sie haben keinen Zugriff auf diese Ressource.',
   ok: 'OK',
   submit: 'RM Absenden',
   cancel: 'RM Abbrechen',

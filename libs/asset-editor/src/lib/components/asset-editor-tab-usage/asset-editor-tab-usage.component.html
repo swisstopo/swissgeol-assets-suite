@@ -12,18 +12,13 @@
         <mat-form-field class="mb-2">
           <mat-label translate>edit.tabs.usage.status</mat-label>
           <mat-select formControlName="internalUseStatusAssetUseCode">
-            <mat-option class="ellipsis" [disabled]="false" value="tobechecked">
+            <mat-option class="ellipsis" value="tobechecked">
               {{ vm.statusAssetUseItems["tobechecked"] | valueItemName }}
             </mat-option>
-            <mat-option
-              class="ellipsis"
-              [disabled]="false"
-              value="underclarification"
-              [disabled]="null | isNotMasterEditor"
-            >
+            <mat-option class="ellipsis" value="underclarification" [disabled]="!(isMasterEditor$ | push)">
               {{ vm.statusAssetUseItems["underclarification"] | valueItemName }}
             </mat-option>
-            <mat-option class="ellipsis" [disabled]="false" value="approved" [disabled]="null | isNotMasterEditor">
+            <mat-option class="ellipsis" value="approved" [disabled]="!(isMasterEditor$ | push)">
               {{ vm.statusAssetUseItems["approved"] | valueItemName }}
             </mat-option>
           </mat-select>
@@ -49,18 +44,13 @@
         <mat-form-field class="mb-2">
           <mat-label>Status</mat-label>
           <mat-select formControlName="publicUseStatusAssetUseCode">
-            <mat-option class="ellipsis" [disabled]="false" value="tobechecked">
+            <mat-option class="ellipsis" value="tobechecked">
               {{ vm.statusAssetUseItems["tobechecked"] | valueItemName }}
             </mat-option>
-            <mat-option
-              class="ellipsis"
-              [disabled]="false"
-              value="underclarification"
-              [disabled]="null | isNotMasterEditor"
-            >
+            <mat-option class="ellipsis" value="underclarification" [disabled]="!(isMasterEditor$ | push)">
               {{ vm.statusAssetUseItems["underclarification"] | valueItemName }}
             </mat-option>
-            <mat-option class="ellipsis" [disabled]="false" value="approved" [disabled]="null | isNotMasterEditor">
+            <mat-option class="ellipsis" value="approved" [disabled]="!(isMasterEditor$ | push)">
               {{ vm.statusAssetUseItems["approved"] | valueItemName }}
             </mat-option>
           </mat-select>

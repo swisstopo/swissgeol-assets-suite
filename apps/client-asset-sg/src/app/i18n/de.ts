@@ -2,6 +2,7 @@ export const deAppTranslations = {
   logoSwissGeol: 'Logo Swissgeol Assets',
   welcomeTo: 'Willkommen bei',
   accessForbidden: 'Sie haben keinen Zugriff auf diese Applikation.',
+  resourceForbidden: 'Sie haben keinen Zugriff auf diese Ressource.',
   ok: 'OK',
   submit: 'Absenden',
   cancel: 'Abbrechen',

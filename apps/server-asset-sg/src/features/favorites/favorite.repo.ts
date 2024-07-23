@@ -1,10 +1,10 @@
+import { Favorite } from '@asset-sg/shared/v2';
+import { UserId } from '@asset-sg/shared/v2';
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 
 import { PrismaService } from '@/core/prisma.service';
 import { CreateRepo, DeleteRepo, ReadRepo, RepoListOptions } from '@/core/repo';
-import { Favorite } from '@/features/favorites/favorite.model';
-import { UserId } from '@/features/users/user.model';
 import { satisfy } from '@/utils/define';
 import { handlePrismaMutationError } from '@/utils/prisma';
 

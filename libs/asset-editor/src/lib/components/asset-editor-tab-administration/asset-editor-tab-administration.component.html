@@ -64,7 +64,7 @@
             <mat-option
               *ngFor="let statusWorkItem of referenceDataVM.statusWorkItemsArray"
               [value]="statusWorkItem.code"
-              [disabled]="statusWorkItem.code === 'published' && (null | isNotMasterEditor)"
+              [disabled]="statusWorkItem.code === 'published' && !(isMasterEditor$ | push)"
             >
               {{ statusWorkItem | valueItemName }}
             </mat-option>

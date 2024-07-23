@@ -1,5 +1,8 @@
+import { AssetId } from '@asset-sg/shared/v2';
+import { User } from '@asset-sg/shared/v2';
+import { Workgroup, WorkgroupData, WorkgroupDataBoundary } from '@asset-sg/shared/v2';
+import { WorkgroupPolicy } from '@asset-sg/shared/v2';
 import {
-  Body,
   Controller,
   Delete,
   Get,
@@ -10,50 +13,57 @@ import {
   ParseIntPipe,
   Post,
   Put,
-  ValidationPipe,
 } from '@nestjs/common';
-import { RequireRole } from '@/core/decorators/require-role.decorator';
-import { Role } from '@/features/users/user.model';
-import { Workgroup, WorkgroupDataBoundary, WorkgroupId } from '@/features/workgroups/workgroup.model';
+import { authorize } from '@/core/authorize';
+import { Authorize } from '@/core/decorators/authorize.decorator';
+import { CurrentUser } from '@/core/decorators/current-user.decorator';
+import { ParseBody } from '@/core/decorators/parse.decorator';
 import { WorkgroupRepo } from '@/features/workgroups/workgroup.repo';
 
 @Controller('/workgroups')
 export class WorkgroupController {
   constructor(private readonly workgroupRepo: WorkgroupRepo) {}
 
-  @Get('/:id')
-  async show(@Param('id', ParseIntPipe) id: WorkgroupId): Promise<Workgroup> {
-    const workGroup = await this.workgroupRepo.find(id);
-    if (workGroup === null) {
-      throw new HttpException('not found', 404);
-    }
-    return workGroup;
+  @Get('/')
+  @Authorize.User()
+  async list(@CurrentUser() user: User): Promise<Workgroup[]> {
+    return this.workgroupRepo.list({ ids: user.isAdmin ? undefined : user.workgroups.map((it) => it.id) });
   }
 
-  @Get('/')
-  @RequireRole(Role.Viewer)
-  async list(): Promise<Workgroup[]> {
-    return this.workgroupRepo.list();
+  @Get('/:id')
+  async show(@Param('id', ParseIntPipe) id: AssetId, @CurrentUser() user: User): Promise<Workgroup> {
+    const record = await this.workgroupRepo.find(id);
+    if (record === null) {
+      throw new HttpException('not found', 404);
+    }
+    authorize(WorkgroupPolicy, user).canShow(record);
+    return record;
   }
 
   @Post('/')
-  @RequireRole(Role.Admin)
   @HttpCode(HttpStatus.CREATED)
   async create(
-    @Body(new ValidationPipe({ transform: true, whitelist: true, forbidNonWhitelisted: true }))
-    data: WorkgroupDataBoundary
+    @ParseBody(WorkgroupDataBoundary)
+    data: WorkgroupData,
+    @CurrentUser() user: User
   ): Promise<Workgroup> {
+    authorize(WorkgroupPolicy, user).canCreate();
     return this.workgroupRepo.create(data);
   }
 
   @Put('/:id')
-  @RequireRole(Role.Admin)
   async update(
-    @Param('id', ParseIntPipe) id: WorkgroupId,
-    @Body(new ValidationPipe({ transform: true, whitelist: true, forbidNonWhitelisted: true }))
-    data: WorkgroupDataBoundary
+    @Param('id', ParseIntPipe) id: number,
+    @ParseBody(WorkgroupDataBoundary)
+    data: WorkgroupData,
+    @CurrentUser() user: User
   ): Promise<Workgroup> {
-    const workgroup = await this.workgroupRepo.update(id, data);
+    const record = await this.workgroupRepo.find(id);
+    if (record === null) {
+      throw new HttpException('not found', 404);
+    }
+    authorize(WorkgroupPolicy, user).canUpdate(record);
+    const workgroup = await this.workgroupRepo.update(record.id, data);
     if (workgroup === null) {
       throw new HttpException('not found', 404);
     }
@@ -61,12 +71,13 @@ export class WorkgroupController {
   }
 
   @Delete('/:id')
-  @RequireRole(Role.Admin)
   @HttpCode(HttpStatus.NO_CONTENT)
-  async delete(@Param('id', ParseIntPipe) id: WorkgroupId): Promise<void> {
-    const isOk = await this.workgroupRepo.delete(id);
-    if (!isOk) {
-      throw new HttpException('not found', 404);
+  async delete(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: User): Promise<void> {
+    const record = await this.workgroupRepo.find(id);
+    if (record == null) {
+      throw new HttpException('not found', HttpStatus.NOT_FOUND);
     }
+    authorize(WorkgroupPolicy, user).canDelete(record);
+    await this.workgroupRepo.delete(record.id);
   }
 }

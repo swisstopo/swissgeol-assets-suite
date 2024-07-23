@@ -1,24 +1,22 @@
 import { TemplatePortal } from '@angular/cdk/portal';
-import { HttpClient } from '@angular/common/http';
 import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
-  OnInit,
+  inject,
   TemplateRef,
   ViewChild,
   ViewContainerRef,
-  inject,
 } from '@angular/core';
 import {
   AppPortalService,
+  appSharedStateActions,
   AppState,
   LifecycleHooks,
   LifecycleHooksDirective,
-  appSharedStateActions,
 } from '@asset-sg/client-shared';
 import { Store } from '@ngrx/store';
-import { Observable, asyncScheduler, observeOn, take } from 'rxjs';
+import { asyncScheduler, observeOn } from 'rxjs';
 
 @Component({
   selector: 'asset-sg-editor-launch',
@@ -27,7 +25,7 @@ import { Observable, asyncScheduler, observeOn, take } from 'rxjs';
   hostDirectives: [LifecycleHooksDirective],
   styleUrls: ['./asset-editor-launch.component.scss'],
 })
-export class AssetEditorLaunchComponent implements OnInit {
+export class AssetEditorLaunchComponent {
   @ViewChild('templateDrawerPortalContent') _templateDrawerPortalContent!: TemplateRef<unknown>;
 
   private _lc = inject(LifecycleHooks);
@@ -35,9 +33,6 @@ export class AssetEditorLaunchComponent implements OnInit {
   private _viewContainerRef = inject(ViewContainerRef);
   private _cd = inject(ChangeDetectorRef);
   private _store = inject<Store<AppState>>(Store);
-  private _httpClient = inject(HttpClient);
-
-  syncProgress: number | null = null;
 
   constructor() {
     this._lc.afterViewInit$.pipe(observeOn(asyncScheduler)).subscribe(() => {
@@ -49,42 +44,4 @@ export class AssetEditorLaunchComponent implements OnInit {
       this._store.dispatch(appSharedStateActions.openPanel());
     });
   }
-
-  ngOnInit() {
-    void this.refreshAssetSyncProgress().then(() => {
-      if (this.syncProgress != null) {
-        void this.loopAssetSyncProgress();
-      }
-    });
-  }
-
-  async synchronizeElastic() {
-    if (this.syncProgress !== null) {
-      return;
-    }
-    this.syncProgress = 0;
-    await resolveFirst(this._httpClient.post('/api/assets/sync', null));
-    await this.loopAssetSyncProgress();
-  }
-
-  private async loopAssetSyncProgress() {
-    while (this.syncProgress !== null) {
-      await this.refreshAssetSyncProgress();
-      await new Promise((resolve) => setTimeout(resolve, 500));
-    }
-  }
-
-  private async refreshAssetSyncProgress() {
-    type Progress = { progress: number } | null | undefined;
-    const progress = await resolveFirst(this._httpClient.get<Progress>('/api/assets/sync'));
-    this.syncProgress = progress == null ? null : Math.round(progress.progress * 100);
-  }
 }
-
-const resolveFirst = <T>(value$: Observable<T>): Promise<T> =>
-  new Promise((resolve, reject) => {
-    value$.pipe(take(1)).subscribe({
-      next: resolve,
-      error: reject,
-    });
-  });

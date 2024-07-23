@@ -6,13 +6,12 @@ import { ScheduleModule } from '@nestjs/schedule';
 
 import { AppController } from '@/app.controller';
 import { provideElasticsearch } from '@/core/elasticsearch';
-import { RoleGuard } from '@/core/guards/role.guard';
+import { AuthorizationGuard } from '@/core/guards/authorization-guard.service';
 import { JwtMiddleware } from '@/core/middleware/jwt.middleware';
 import { PrismaService } from '@/core/prisma.service';
-import { AssetEditRepo } from '@/features/asset-old/asset-edit.repo';
-import { AssetEditService } from '@/features/asset-old/asset-edit.service';
-import { AssetController } from '@/features/asset-old/asset.controller';
-import { AssetService } from '@/features/asset-old/asset.service';
+import { AssetEditController } from '@/features/asset-edit/asset-edit.controller';
+import { AssetEditRepo } from '@/features/asset-edit/asset-edit.repo';
+import { AssetEditService } from '@/features/asset-edit/asset-edit.service';
 import { AssetInfoRepo } from '@/features/assets/asset-info.repo';
 import { AssetRepo } from '@/features/assets/asset.repo';
 import { AssetsController } from '@/features/assets/assets.controller';
@@ -23,6 +22,7 @@ import { ContactRepo } from '@/features/contacts/contact.repo';
 import { ContactsController } from '@/features/contacts/contacts.controller';
 import { FavoriteRepo } from '@/features/favorites/favorite.repo';
 import { FavoritesController } from '@/features/favorites/favorites.controller';
+import { FilesController } from '@/features/files/files.controller';
 import { OcrController } from '@/features/ocr/ocr.controller';
 import { StudiesController } from '@/features/studies/studies.controller';
 import { StudyRepo } from '@/features/studies/study.repo';
@@ -34,35 +34,35 @@ import { WorkgroupRepo } from '@/features/workgroups/workgroup.repo';
 @Module({
   controllers: [
     AppController,
-    UsersController,
-    FavoritesController,
-    AssetSyncController,
+    AssetEditController,
     AssetSearchController,
+    AssetSyncController,
     AssetsController,
-    AssetController,
-    StudiesController,
     ContactsController,
+    FavoritesController,
+    FilesController,
     OcrController,
+    StudiesController,
+    UsersController,
     WorkgroupController,
   ],
   imports: [HttpModule, ScheduleModule.forRoot(), CacheModule.register()],
   providers: [
     provideElasticsearch,
-    PrismaService,
-    AssetRepo,
-    AssetInfoRepo,
-    AssetService,
     AssetEditRepo,
+    AssetEditService,
+    AssetInfoRepo,
+    AssetRepo,
+    AssetSearchService,
     ContactRepo,
     FavoriteRepo,
+    PrismaService,
+    StudyRepo,
     UserRepo,
     WorkgroupRepo,
-    StudyRepo,
-    AssetEditService,
-    AssetSearchService,
     {
       provide: APP_GUARD,
-      useClass: RoleGuard,
+      useClass: AuthorizationGuard,
     },
   ],
 })
