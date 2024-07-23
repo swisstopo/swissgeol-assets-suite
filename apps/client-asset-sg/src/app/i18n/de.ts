@@ -17,6 +17,9 @@ export const deAppTranslations = {
   delete: 'Löschen',
   close: 'Schliessen',
   datePlaceholder: 'JJJJ-MM-TT',
+  workgroup: {
+    title: 'Arbeitsgruppe',
+  },
   menuBar: {
     assets: 'Assets',
     admin: 'Verwaltung',

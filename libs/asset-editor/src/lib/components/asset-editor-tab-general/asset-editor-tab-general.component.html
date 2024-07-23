@@ -2,8 +2,9 @@
   <form [formGroup]="_form" class="flex flex-row max-h-full">
     <div class="flex flex-column form-column mr-8">
       <div class="flex flex-column bg-white mb-4 py-4 px-6 overflow-y-scroll">
+        <div class="font-bold mb-4" translate>workgroup.title</div>
         <mat-form-field class="mb-2">
-          <mat-label>Workgroup</mat-label>
+          <mat-label translate>workgroup.title</mat-label>
           <mat-select formControlName="workgroupId">
             <mat-option class="ellipsis" *rxFor="let workgroup of availableWorkgroups$" [value]="workgroup.id">
               {{ workgroup.name }}

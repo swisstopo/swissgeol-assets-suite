@@ -19,6 +19,9 @@ export const itAppTranslations: AppTranslations = {
   delete: 'IT Löschen',
   close: 'IT Schliessen',
   datePlaceholder: 'AAAA-MM-GG',
+  workgroup: {
+    title: 'IT Arbeitsgruppe',
+  },
   menuBar: {
     assets: 'IT Assets',
     admin: 'IT Verwaltung',
