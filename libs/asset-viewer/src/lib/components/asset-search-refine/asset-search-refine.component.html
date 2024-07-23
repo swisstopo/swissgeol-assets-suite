@@ -85,7 +85,7 @@
         <mat-datepicker-toggle matPrefix [for]="createDateFromPicker" cdkMonitorSubtreeFocus>
           <asset-sg-datepicker-toggle-icon matDatepickerToggleIcon></asset-sg-datepicker-toggle-icon>
         </mat-datepicker-toggle>
-        <mat-datepicker #createDateFromPicker [startAt]="createDateRange?.min ?? null"></mat-datepicker>
+        <mat-datepicker #createDateFromPicker [startAt]="minCreateDate"></mat-datepicker>
         <button
           class="input-clear-button"
           asset-sg-icon-button

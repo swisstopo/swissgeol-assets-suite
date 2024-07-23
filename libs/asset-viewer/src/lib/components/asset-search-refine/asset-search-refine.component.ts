@@ -20,6 +20,8 @@ import {
   selectUsageCodeFilters,
 } from '../../state/asset-search/asset-search.selector';
 
+const MIN_CREATE_DATE = new Date(1800, 0, 1);
+
 @Component({
   selector: 'asset-sg-asset-search-refine',
   templateUrl: './asset-search-refine.component.html',
@@ -75,6 +77,14 @@ export class AssetSearchRefineComponent implements OnInit, OnDestroy, AfterViewI
         }
       })
     );
+  }
+
+  public get minCreateDate(): Date | null {
+    const min = this.createDateRange?.min;
+    if (min == null) {
+      return null;
+    }
+    return min.getTime() < MIN_CREATE_DATE.getTime() ? MIN_CREATE_DATE : min;
   }
 
   public removePolygon() {
