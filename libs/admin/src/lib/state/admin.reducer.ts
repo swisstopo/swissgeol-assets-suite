@@ -1,12 +1,12 @@
 import { AppState } from '@asset-sg/client-shared';
+import { User, Workgroup } from '@asset-sg/shared/v2';
 import { createReducer, on } from '@ngrx/store';
-import { User, Workgroup } from '../services/admin.service';
 import * as actions from './admin.actions';
 
 export interface AdminState {
-  selectedWorkgroup: Workgroup | undefined;
+  selectedWorkgroup: Workgroup | null;
   workgroups: Workgroup[];
-  selectedUser: User | undefined;
+  selectedUser: User | null;
   users: User[];
   isLoading: boolean;
 }
@@ -16,9 +16,9 @@ export interface AppStateWithAdmin extends AppState {
 }
 
 const initialState: AdminState = {
-  selectedWorkgroup: undefined,
+  selectedWorkgroup: null,
   workgroups: [],
-  selectedUser: undefined,
+  selectedUser: null,
   users: [],
   isLoading: false,
 };
@@ -68,19 +68,33 @@ export const adminReducer = createReducer(
       isLoading: true,
     })
   ),
-  on(
-    actions.setWorkgroup,
-    (state, { workgroup }): AdminState => ({
+  on(actions.setWorkgroup, (state, { workgroup }): AdminState => {
+    const workgroups = [...state.workgroups];
+    const i = workgroups.findIndex((it) => it.id === workgroup.id);
+    if (i < 0) {
+      workgroups.push(workgroup);
+    } else {
+      workgroups[i] = workgroup;
+    }
+    return {
       ...state,
+      workgroups,
       selectedWorkgroup: workgroup,
       isLoading: false,
+    };
+  }),
+  on(
+    actions.addWorkgroup,
+    (state, { workgroup }): AdminState => ({
+      ...state,
+      workgroups: [...state.workgroups, workgroup],
     })
   ),
   on(
     actions.resetWorkgroup,
     (state): AdminState => ({
       ...state,
-      selectedWorkgroup: undefined,
+      selectedWorkgroup: null,
     })
   ),
   on(

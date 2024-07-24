@@ -1,5 +1,4 @@
-import { User } from '@asset-sg/shared';
-import { UserId } from '@asset-sg/shared/v2';
+import { User, UserId } from '@asset-sg/shared/v2';
 import { Role, SimpleWorkgroup, WorkgroupId } from '@asset-sg/shared/v2';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '@/core/prisma.service';

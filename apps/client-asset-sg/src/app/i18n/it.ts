@@ -265,7 +265,7 @@ export const itAppTranslations: AppTranslations = {
       activate: 'IT Aktivieren',
       deactivate: 'IT Deaktivieren',
       create: 'IT Erstellen',
-      isDeactivated: 'IT Deaktiviert',
+      isDisabled: 'IT Deaktiviert',
       chooseUsersText: 'IT Füge Nutzer hinzu, um sie zu verwalten',
       addUsers: 'IT Benutzer hinzufügen',
     },

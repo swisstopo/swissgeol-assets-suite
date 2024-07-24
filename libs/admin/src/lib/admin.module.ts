@@ -39,10 +39,11 @@ import { EffectsModule } from '@ngrx/effects';
 import { StoreModule } from '@ngrx/store';
 import { TranslateModule } from '@ngx-translate/core';
 import { ForModule } from '@rx-angular/template/for';
+import { IfModule } from '@rx-angular/template/if';
 import { LetModule } from '@rx-angular/template/let';
 import { PushModule } from '@rx-angular/template/push';
 import { AdminPageRoutingModule } from './admin-routing.module';
-import { AddWorkgroupUserDialog } from './components/add-workgroup-user-dialog/add-workgroup-user-dialog.component';
+import { AddWorkgroupUserDialogComponent } from './components/add-workgroup-user-dialog/add-workgroup-user-dialog.component';
 import { AdminPageComponent } from './components/admin-page';
 import { UserEditComponent } from './components/user-edit/user-edit.component';
 import { UsersComponent } from './components/users/users.component';
@@ -58,7 +59,7 @@ import { adminReducer } from './state/admin.reducer';
     WorkgroupEditComponent,
     UsersComponent,
     UserEditComponent,
-    AddWorkgroupUserDialog,
+    AddWorkgroupUserDialogComponent,
   ],
   imports: [
     CommonModule,
@@ -105,6 +106,7 @@ import { adminReducer } from './state/admin.reducer';
     MatAutocompleteModule,
     MatCard,
     MatSlideToggle,
+    IfModule,
   ],
 })
 export class AdminModule {}

@@ -198,7 +198,7 @@ export class JwtMiddleware implements NestMiddleware {
       email,
       lang: 'de',
       isAdmin: false,
-      workgroups: [],
+      roles: new Map(),
     });
   }
 }

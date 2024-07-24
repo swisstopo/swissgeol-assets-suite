@@ -1,7 +1,6 @@
-import { Location } from '@angular/common';
-import { Component, inject, TemplateRef, ViewChild } from '@angular/core';
+import { Component, inject, OnInit, TemplateRef, ViewChild } from '@angular/core';
 import { Router } from '@angular/router';
-import { AppState, LifecycleHooksDirective } from '@asset-sg/client-shared';
+import { AppPortalService, AppState, CURRENT_LANG, LifecycleHooksDirective } from '@asset-sg/client-shared';
 import { Store } from '@ngrx/store';
 import * as actions from '../../state/admin.actions';
 import { selectIsLoading } from '../../state/admin.selector';
@@ -12,21 +11,23 @@ import { selectIsLoading } from '../../state/admin.selector';
   styleUrls: ['./admin-page.component.scss'],
   hostDirectives: [LifecycleHooksDirective],
 })
-export class AdminPageComponent {
+export class AdminPageComponent implements OnInit {
   @ViewChild('templateDrawerPortalContent') templateDrawerPortalContent!: TemplateRef<unknown>;
 
   private readonly store = inject(Store<AppState>);
-  // private readonly location = inject(Location);
-
   public readonly isLoading$ = this.store.select(selectIsLoading);
+  public readonly currentLang$ = inject(CURRENT_LANG);
+  private readonly appPortalService = inject(AppPortalService);
+  private readonly router = inject(Router);
 
-  constructor(private location: Location, private router: Router) {
+  ngOnInit(): void {
     this.store.dispatch(actions.listWorkgroups());
     this.store.dispatch(actions.listUsers());
+    this.appPortalService.setAppBarPortalContent(null);
+    this.appPortalService.setDrawerPortalContent(null);
   }
 
   public get isDetailPage(): boolean {
-    // Example condition, adjust based on your routing structure
     return (
       this.router.url.includes('/workgroups/') ||
       this.router.url.includes('/users/') ||
@@ -34,7 +35,10 @@ export class AdminPageComponent {
     );
   }
 
-  goBack(): void {
-    this.location.back();
+  getBackPath(lang: string): string[] {
+    if (this.router.url.includes('/workgroups/')) {
+      return [`/${lang}/admin/workgroups`];
+    }
+    return [`/${lang}/admin/users`];
   }
 }

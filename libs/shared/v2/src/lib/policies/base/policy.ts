@@ -1,33 +1,24 @@
-import { User, WorkgroupOnUser } from '../../models/user';
+import { User } from '../../models/user';
 import { getRoleIndex, Role, WorkgroupId } from '../../models/workgroup';
 
 export abstract class Policy<T> {
-  private readonly workgroups = new Map<WorkgroupId, WorkgroupOnUser>();
-
-  constructor(protected readonly user: User) {
-    for (const workgroup of this.user.workgroups) {
-      this.workgroups.set(workgroup.id, workgroup);
-    }
-  }
+  constructor(protected readonly user: User) {}
 
   protected hasWorkgroup(ids: WorkgroupId | Iterable<WorkgroupId>): boolean {
     ids = typeof ids === 'number' ? [ids] : ids;
     for (const id of ids) {
-      if (this.workgroups.has(id)) {
+      if (this.user.roles.has(id)) {
         return true;
       }
     }
     return false;
   }
 
-  protected withWorkgroup(
-    ids: WorkgroupId | Iterable<WorkgroupId>,
-    action: (workgroup: WorkgroupOnUser) => boolean
-  ): boolean {
+  protected withWorkgroupRole(ids: WorkgroupId | Iterable<WorkgroupId>, action: (role: Role) => boolean): boolean {
     ids = typeof ids === 'number' ? [ids] : ids;
     for (const id of ids) {
-      const workgroup = this.workgroups.get(id);
-      if (workgroup != null && action(workgroup)) {
+      const role = this.user.roles.get(id);
+      if (role != null && action(role)) {
         return true;
       }
     }
@@ -37,9 +28,14 @@ export abstract class Policy<T> {
   hasRole(role: Role, ids?: WorkgroupId | Iterable<WorkgroupId>): boolean {
     const roleIndex = getRoleIndex(role);
     if (ids == null) {
-      return null != this.user.workgroups.find((group) => getRoleIndex(group.role) >= roleIndex);
+      for (const role of this.user.roles.values()) {
+        if (getRoleIndex(role) >= roleIndex) {
+          return true;
+        }
+      }
+      return false;
     }
-    return this.withWorkgroup(ids, (group) => getRoleIndex(group.role) >= roleIndex);
+    return this.withWorkgroupRole(ids, (role) => getRoleIndex(role) >= roleIndex);
   }
 
   canDoEverything(): boolean {

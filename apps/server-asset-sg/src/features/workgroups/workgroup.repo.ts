@@ -1,5 +1,4 @@
-import { User } from '@asset-sg/shared';
-import { Workgroup, WorkgroupData, WorkgroupId } from '@asset-sg/shared/v2';
+import { User, UserId, UserOnWorkgroup, Workgroup, WorkgroupData, WorkgroupId } from '@asset-sg/shared/v2';
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '@/core/prisma.service';
@@ -16,36 +15,35 @@ export class WorkgroupRepo implements Repo<Workgroup, WorkgroupId, WorkgroupData
     return new SimpleWorkgroupRepo(this.prisma, user);
   }
 
-  find(id: WorkgroupId): Promise<Workgroup | null> {
-    return this.prisma.workgroup.findUnique({
+  async find(id: WorkgroupId): Promise<Workgroup | null> {
+    const entry = await this.prisma.workgroup.findUnique({
       where: { id },
-      select: workGroupSelection,
+      select: workgroupSelection,
     });
+    return entry == null ? null : parse(entry);
   }
 
-  list({ limit, offset, ids }: RepoListOptions<WorkgroupId> = {}): Promise<Workgroup[]> {
-    return this.prisma.workgroup.findMany({
+  async list({ limit, offset, ids }: RepoListOptions<WorkgroupId> = {}): Promise<Workgroup[]> {
+    const entries = await this.prisma.workgroup.findMany({
       where: ids == null ? undefined : { id: { in: ids } },
       take: limit,
       skip: offset,
-      select: workGroupSelection,
+      select: workgroupSelection,
     });
+    return entries.map(parse);
   }
 
-  create(data: WorkgroupData): Promise<Workgroup> {
-    return this.prisma.workgroup.create({
+  async create(data: WorkgroupData): Promise<Workgroup> {
+    const entry = await this.prisma.workgroup.create({
       data: {
         name: data.name,
         created_at: new Date(),
-        disabled_at: data.disabled_at,
-        assets: {
-          connect: data.assets?.map((asset) => ({ assetId: asset.assetId })),
-        },
+        disabled_at: data.disabledAt,
         users: data.users
           ? {
               createMany: {
-                data: data.users.map((user) => ({
-                  userId: user.user.id,
+                data: [...data.users].map(([userId, user]) => ({
+                  userId,
                   role: user.role,
                 })),
                 skipDuplicates: true,
@@ -53,28 +51,26 @@ export class WorkgroupRepo implements Repo<Workgroup, WorkgroupId, WorkgroupData
             }
           : undefined,
       },
-      select: workGroupSelection,
+      select: workgroupSelection,
     });
+    return parse(entry);
   }
 
   async update(id: WorkgroupId, data: WorkgroupData): Promise<Workgroup | null> {
     try {
-      return await this.prisma.workgroup.update({
+      const entry = await this.prisma.workgroup.update({
         where: { id },
         data: {
           name: data.name,
-          disabled_at: data.disabled_at,
-          assets: {
-            set: data.assets ? data.assets.map((asset) => ({ assetId: asset.assetId })) : undefined,
-          },
+          disabled_at: data.disabledAt,
           users: data.users
             ? {
                 deleteMany: {
                   userId: {},
                 },
                 createMany: {
-                  data: data.users.map((user) => ({
-                    userId: user.user.id,
+                  data: [...data.users].map(([userId, user]) => ({
+                    userId: userId,
                     role: user.role,
                   })),
                   skipDuplicates: true,
@@ -82,8 +78,9 @@ export class WorkgroupRepo implements Repo<Workgroup, WorkgroupId, WorkgroupData
               }
             : undefined,
         },
-        select: workGroupSelection,
+        select: workgroupSelection,
       });
+      return parse(entry);
     } catch (e) {
       return handlePrismaMutationError(e);
     }
@@ -102,11 +99,16 @@ export class WorkgroupRepo implements Repo<Workgroup, WorkgroupId, WorkgroupData
   }
 }
 
-export const workGroupSelection = satisfy<Prisma.WorkgroupSelect>()({
+export const workgroupSelection = satisfy<Prisma.WorkgroupSelect>()({
   id: true,
   name: true,
   disabled_at: true,
   users: {
+    orderBy: {
+      user: {
+        email: 'asc',
+      },
+    },
     select: {
       role: true,
       user: {
@@ -118,8 +120,29 @@ export const workGroupSelection = satisfy<Prisma.WorkgroupSelect>()({
     },
   },
   assets: {
+    orderBy: {
+      assetId: 'asc',
+    },
     select: {
       assetId: true,
     },
   },
 });
+
+type SelectedWorkgroup = Prisma.WorkgroupGetPayload<{ select: typeof workgroupSelection }>;
+
+const parse = (data: SelectedWorkgroup): Workgroup => {
+  const users = new Map<UserId, UserOnWorkgroup>();
+  for (const user of data.users) {
+    users.set(user.user.id, {
+      email: user.user.email,
+      role: user.role,
+    });
+  }
+  return {
+    id: data.id,
+    name: data.name,
+    users,
+    disabledAt: data.disabled_at,
+  };
+};

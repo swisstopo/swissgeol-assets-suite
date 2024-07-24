@@ -22,22 +22,26 @@
 }
 
 .workgroups {
-  .workgroups__header {
+  & > .workgroups__header {
     display: flex;
     justify-content: space-between;
     align-items: center;
+
+    & > *:last-child > mat-form-field {
+      width: 20rem;
+    }
   }
 
   .mat-column-name {
-    width: auto !important;
+    width: auto;
   }
 
   .mat-column-role {
-    width: 10% !important;
+    width: 12rem;
   }
 
   .mat-column-actions {
-    width: 5% !important;
+    width: 6rem;
   }
 
   .workgroups__table__form-field {

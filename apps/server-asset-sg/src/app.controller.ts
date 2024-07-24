@@ -91,7 +91,7 @@ const getReferenceData = (user: User, prismaService: PrismaService) => {
           : prismaService.contact.findMany({
               where: {
                 assetContacts: {
-                  some: { asset: { workgroupId: { in: user.workgroups.map((it) => it.id) } } },
+                  some: { asset: { workgroupId: { in: [...user.roles.keys()] } } },
                 },
               },
             }),

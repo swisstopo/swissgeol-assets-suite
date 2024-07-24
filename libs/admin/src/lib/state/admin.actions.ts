@@ -1,19 +1,14 @@
+import { User, Workgroup, WorkgroupData } from '@asset-sg/shared/v2';
 import { createAction, props } from '@ngrx/store';
-import { User, Workgroup, WorkgroupData } from '../services/admin.service';
 
 export const findUser = createAction(
-  '[Admin] Find user',
+  '[Admin] Find User',
   props<{
     userId: string;
   }>()
 );
 
-export const setUser = createAction(
-  '[Admin] Set user',
-  props<{
-    user: User;
-  }>()
-);
+export const setUser = createAction('[Admin] Set User', props<{ user: User }>());
 
 export const updateUser = createAction(
   '[Admin] Update User',
@@ -22,33 +17,40 @@ export const updateUser = createAction(
   }>()
 );
 
-export const listUsers = createAction('[Admin] List users');
+export const listUsers = createAction('[Admin] List Users');
 
 export const setUsers = createAction(
-  '[Admin] Set users',
+  '[Admin] Set Users',
   props<{
     users: User[];
   }>()
 );
 
 export const findWorkgroup = createAction(
-  '[Admin] Find workgroup',
+  '[Admin] Find Workgroup',
   props<{
     workgroupId: number;
   }>()
 );
 
 export const setWorkgroup = createAction(
-  '[Admin] Set workgroup',
+  '[Admin] Set Workgroup',
   props<{
     workgroup: Workgroup;
   }>()
 );
 
-export const resetWorkgroup = createAction('[Admin] Reset workgroup');
+export const addWorkgroup = createAction(
+  '[Admin] Add Workgroup',
+  props<{
+    workgroup: Workgroup;
+  }>()
+);
+
+export const resetWorkgroup = createAction('[Admin] Reset Workgroup');
 
 export const setWorkgroups = createAction(
-  '[Admin] Set workgroups',
+  '[Admin] Set Workgroups',
   props<{
     workgroups: Workgroup[];
   }>()
@@ -69,6 +71,4 @@ export const createWorkgroup = createAction(
   }>()
 );
 
-export const createWorkgroupSuccess = createAction('[Admin] Create Workgroup Success');
-
-export const listWorkgroups = createAction('[Admin] List workgroups');
+export const listWorkgroups = createAction('[Admin] List Workgroups');

@@ -1,44 +1,26 @@
-import { Component, inject, OnDestroy, OnInit } from '@angular/core';
+import { KeyValue } from '@angular/common';
+import { Component, inject } from '@angular/core';
+import { UserId, UserOnWorkgroup, Workgroup } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
-import { Subscription } from 'rxjs';
-import { UserOnWorkgroup, Workgroup } from '../../services/admin.service';
 import { AppStateWithAdmin } from '../../state/admin.reducer';
-import { selectUsers, selectWorkgroups } from '../../state/admin.selector';
+import { selectWorkgroups } from '../../state/admin.selector';
 
 @Component({
   selector: 'asset-sg-workgroups',
   templateUrl: './workgroups.component.html',
   styleUrls: ['./workgroups.component.scss'],
 })
-export class WorkgroupsComponent implements OnInit, OnDestroy {
-  public users: UserOnWorkgroup[] = [];
-  public workgroups: Workgroup[] = [];
-
+export class WorkgroupsComponent {
   protected readonly COLUMNS = ['name', 'users', 'status', 'actions'];
 
   private readonly store = inject(Store<AppStateWithAdmin>);
-  private readonly workgroups$ = this.store.select(selectWorkgroups);
-  private readonly users$ = this.store.select(selectUsers);
-  private readonly subscriptions: Subscription = new Subscription();
+  readonly workgroups$ = this.store.select(selectWorkgroups);
 
-  public ngOnInit(): void {
-    this.initSubscriptions();
-  }
-
-  public ngOnDestroy(): void {
-    this.subscriptions.unsubscribe();
-  }
-
-  private initSubscriptions(): void {
-    this.subscriptions.add(
-      this.workgroups$.subscribe((workgroups) => {
-        this.workgroups = workgroups;
-      })
-    );
-    this.subscriptions.add(
-      this.users$.subscribe((users) => {
-        this.users = users.map((user) => ({ role: user.role, user: { email: user.email, id: user.id } }));
-      })
-    );
+  getWorkgroupUsers(workgroup: Workgroup): Array<UserOnWorkgroup & { id: UserId }> {
+    const result: Array<UserOnWorkgroup & { id: UserId }> = [];
+    for (const [id, user] of workgroup.users) {
+      result.push({ ...user, id });
+    }
+    return result;
   }
 }

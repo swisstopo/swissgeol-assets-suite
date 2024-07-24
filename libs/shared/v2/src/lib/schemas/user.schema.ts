@@ -1,13 +1,25 @@
-import { IsArray, IsBoolean, IsString } from 'class-validator';
-import { UserData, WorkgroupOnUser } from '../models/user';
+import { Role } from '@prisma/client';
+import { IsBoolean, IsEnum, IsString } from 'class-validator';
+import { User, UserData, UserId } from '../models/user';
+import { WorkgroupId } from '../models/workgroup';
+import { Schema, TransformMap } from './base/schema';
 
-export class UserDataSchema implements UserData {
+export class UserDataSchema extends Schema implements UserData {
   @IsString()
   lang!: string;
 
-  @IsArray()
-  workgroups!: WorkgroupOnUser[];
-
   @IsBoolean()
   isAdmin!: boolean;
+
+  @TransformMap()
+  @IsEnum(Role, { each: true })
+  roles!: Map<WorkgroupId, Role>;
+}
+
+export class UserSchema extends UserDataSchema implements User {
+  @IsString()
+  id!: UserId;
+
+  @IsString()
+  email!: string;
 }

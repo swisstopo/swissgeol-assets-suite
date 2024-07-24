@@ -265,9 +265,8 @@ export const enAppTranslations: AppTranslations = {
       activate: 'Activate',
       deactivate: 'Deactivate',
       create: 'Create',
-      isDeactivated: 'Deactivated',
+      isDisabled: 'Deactivated',
       chooseUsersText: 'Add users to manage',
-
       addUsers: 'Add users',
     },
   },

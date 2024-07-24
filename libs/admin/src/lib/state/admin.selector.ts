@@ -3,7 +3,6 @@ import { AppStateWithAdmin } from './admin.reducer';
 
 const adminFeature = (state: AppStateWithAdmin) => state.admin;
 
-export const selectAdminState = createSelector(adminFeature, (state) => state);
 export const selectSelectedUser = createSelector(adminFeature, (state) => state.selectedUser);
 export const selectSelectedWorkgroup = createSelector(adminFeature, (state) => state.selectedWorkgroup);
 export const selectWorkgroups = createSelector(adminFeature, (state) => state.workgroups);

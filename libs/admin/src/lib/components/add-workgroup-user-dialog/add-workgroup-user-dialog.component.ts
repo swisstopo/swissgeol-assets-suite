@@ -1,10 +1,10 @@
 import { Component, Inject, OnInit } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { User, UserId, Workgroup, WorkgroupData } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
 import { Role } from '@prisma/client';
 import { Observable, Subscription } from 'rxjs';
-import { User, Workgroup } from '../../services/admin.service';
 import * as actions from '../../state/admin.actions';
 import { AppStateWithAdmin } from '../../state/admin.reducer';
 import { selectUsers } from '../../state/admin.selector';
@@ -15,23 +15,24 @@ import { Mode } from '../workgroup-edit/workgroup-edit.component';
   templateUrl: './add-workgroup-user-dialog.component.html',
   styleUrls: ['./add-workgroup-user-dialog.component.scss'],
 })
-export class AddWorkgroupUserDialog implements OnInit {
-  public formGroup: FormGroup = new FormGroup({
-    users: new FormControl([], Validators.required),
-    role: new FormControl(Role.Viewer, Validators.required),
+export class AddWorkgroupUserDialogComponent implements OnInit {
+  public formGroup = new FormGroup({
+    users: new FormControl<UserId[]>([], { validators: [Validators.required], nonNullable: true }),
+    role: new FormControl(Role.Viewer, { validators: [Validators.required], nonNullable: true }),
   });
+
+  public readonly roles: Role[] = Object.values(Role);
 
   public users: User[] = [];
   public workgroup: Workgroup;
-  public mode: Mode = 'edit';
-  public readonly roles: Role[] = Object.values(Role);
+  public mode: Mode;
 
   private readonly users$: Observable<User[]> = this.store.select(selectUsers);
   private readonly subscriptions: Subscription = new Subscription();
 
   constructor(
     @Inject(MAT_DIALOG_DATA) public data: { workgroup: Workgroup; mode: Mode },
-    private readonly dialogRef: MatDialogRef<AddWorkgroupUserDialog>,
+    private readonly dialogRef: MatDialogRef<AddWorkgroupUserDialogComponent>,
     private store: Store<AppStateWithAdmin>
   ) {
     this.workgroup = this.data.workgroup;
@@ -47,31 +48,35 @@ export class AddWorkgroupUserDialog implements OnInit {
   }
 
   public addUsers() {
-    if (!this.formGroup.valid) {
+    if (this.formGroup.invalid) {
       return;
     }
-    const usersToAdd = this.users
-      .filter((user) => this.formGroup.controls['users'].value.includes(user.id))
-      .map((user) => ({
-        user: { email: user.email, id: user.id },
+    const users = new Map(this.workgroup.users);
+    const newUserIds = new Set(this.formGroup.controls.users.value);
+    for (const user of this.users) {
+      if (!newUserIds.has(user.id)) {
+        continue;
+      }
+      users.set(user.id, {
+        email: user.email,
         role: this.formGroup.controls['role'].value,
-      }));
-    const updatedWorkgroup = {
+      });
+    }
+    const workgroup: WorkgroupData = {
       name: this.workgroup.name,
-      assets: this.workgroup.assets,
-      disabled_at: this.workgroup.disabled_at,
-      users: [...usersToAdd, ...this.workgroup.users],
+      disabledAt: this.workgroup.disabledAt,
+      users,
     };
     if (this.mode === 'edit') {
-      this.store.dispatch(actions.updateWorkgroup({ workgroupId: this.workgroup.id, workgroup: updatedWorkgroup }));
+      this.store.dispatch(actions.updateWorkgroup({ workgroupId: this.workgroup.id, workgroup }));
     } else {
-      this.store.dispatch(actions.setWorkgroup({ workgroup: { ...updatedWorkgroup, id: 0 } }));
+      this.store.dispatch(actions.setWorkgroup({ workgroup: { ...workgroup, id: -1 } }));
     }
     this.dialogRef.close();
   }
 
   public isUserInWorkgroup(userId: string): boolean {
-    return this.workgroup.users.some((user) => user.user.id === userId) ?? false;
+    return this.workgroup.users.has(userId);
   }
 
   private initSubscriptions() {
