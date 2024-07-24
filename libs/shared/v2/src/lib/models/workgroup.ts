@@ -1,55 +1,27 @@
 import { Role as PrismaRole } from '@prisma/client';
-import { Type } from 'class-transformer';
-import { IsArray, IsDate, IsString } from 'class-validator';
-import { IsNullable } from '../utils/class-validator/is-nullable.decorator';
-import { AssetId } from './asset';
 import { Data, Model } from './base/model';
 import { UserId } from './user';
 
 export interface Workgroup extends Model<WorkgroupId> {
   name: string;
+  users: Map<UserId, UserOnWorkgroup>;
+  disabledAt: Date | null;
+}
 
-  // TODO change this to `AssetId[]`
-  assets?: { assetId: AssetId }[];
-  users?: UserOnWorkgroup[];
-
-  // TODO make this camel case
-  disabled_at: Date | null;
+export interface UserOnWorkgroup {
+  email: string;
+  role: Role;
 }
 
 export type WorkgroupId = number;
-export type WorkgroupData = Data<Workgroup>;
+export type WorkgroupData = Omit<Data<Workgroup>, 'assets'>;
 export type SimpleWorkgroup = Pick<Workgroup, 'id' | 'name'> & {
   /**
-   * The role of the current within this workgroup.
+   * The role of the current user within this workgroup.
    * Note that admins are registered as {@link Role.MasterEditor} for every workgroup.
    */
   role: Role;
 };
-
-export interface UserOnWorkgroup {
-  role: Role;
-  user: {
-    id: UserId;
-    email: string;
-  };
-}
-
-export class WorkgroupDataBoundary implements WorkgroupData {
-  @IsString()
-  name!: string;
-
-  @IsArray()
-  assets?: { assetId: AssetId }[];
-
-  @IsArray()
-  users?: UserOnWorkgroup[];
-
-  @IsDate()
-  @IsNullable()
-  @Type(() => Date)
-  disabled_at!: Date | null;
-}
 
 export type Role = PrismaRole;
 export const Role = PrismaRole;

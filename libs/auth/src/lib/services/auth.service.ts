@@ -1,10 +1,11 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { ApiError, httpErrorResponseOrUnknownError } from '@asset-sg/client-shared';
-import { decode, OE, ORD } from '@asset-sg/core';
-import { User } from '@asset-sg/shared';
+import { ApiError } from '@asset-sg/client-shared';
+import { ORD } from '@asset-sg/core';
+import { User, UserSchema } from '@asset-sg/shared/v2';
 import * as RD from '@devexperts/remote-data-ts';
 import { OAuthService } from 'angular-oauth2-oidc';
+import { plainToInstance } from 'class-transformer';
 import { BehaviorSubject, map, Observable, startWith } from 'rxjs';
 import urlJoin from 'url-join';
 
@@ -70,7 +71,10 @@ export class AuthService {
   }
 
   getUserProfile(): ORD.ObservableRemoteData<ApiError, User> {
-    return this._getUserProfile().pipe(map(RD.fromEither), startWith(RD.pending));
+    return this._getUserProfile().pipe(
+      map((it) => RD.success(it)),
+      startWith(RD.pending)
+    );
   }
 
   isLoggedIn(): boolean {
@@ -85,12 +89,8 @@ export class AuthService {
     });
   }
 
-  private _getUserProfile() {
-    return this._httpClient.get('/api/users/current').pipe(
-      map((it) => ({ ...it, role: (it as { isAdmin: boolean }).isAdmin ? 'admin' : 'master-editor' })),
-      map(decode(User)),
-      OE.catchErrorW(httpErrorResponseOrUnknownError)
-    );
+  private _getUserProfile(): Observable<User> {
+    return this._httpClient.get('/api/users/current').pipe(map((it) => plainToInstance(UserSchema, it)));
   }
 
   buildAuthUrl = (path: string) => urlJoin(`/auth`, path);

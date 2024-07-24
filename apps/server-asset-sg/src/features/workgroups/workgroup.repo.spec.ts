@@ -3,15 +3,12 @@ import { faker } from '@faker-js/faker';
 // eslint-disable-next-line @nx/enforce-module-boundaries
 import { clearPrismaAssets, setupDB, setupDefaultWorkgroup } from '../../../../../test/setup-db';
 import { PrismaService } from '@/core/prisma.service';
-import { fakeAssetPatch, fakeUser } from '@/features/asset-edit/asset-edit.fake';
-import { AssetEditRepo } from '@/features/asset-edit/asset-edit.repo';
 import { UserRepo } from '@/features/users/user.repo';
 import { WorkgroupRepo } from '@/features/workgroups/workgroup.repo';
 
 describe('WorkgroupRepo', () => {
   const prisma = new PrismaService();
   const repo = new WorkgroupRepo(prisma);
-  const assetRepo = new AssetEditRepo(prisma);
   const userRepo = new UserRepo(prisma);
 
   beforeAll(async () => {
@@ -35,7 +32,7 @@ describe('WorkgroupRepo', () => {
     });
     it('returns the record associated with a specific id', async () => {
       // Given
-      const data: WorkgroupData = { name: 'test', disabled_at: null, assets: [], users: [] };
+      const data: WorkgroupData = { name: 'test', disabledAt: null, users: new Map() };
       const expected = await repo.create(data);
 
       // When
@@ -57,11 +54,11 @@ describe('WorkgroupRepo', () => {
     });
     it('returns the specified amount of records', async () => {
       // Given
-      const record1 = await repo.create({ name: 'Test 1', disabled_at: null, assets: [], users: [] });
-      const record2 = await repo.create({ name: 'Test 2', disabled_at: null, assets: [], users: [] });
-      const record3 = await repo.create({ name: 'Test 3', disabled_at: null, assets: [], users: [] });
-      await repo.create({ name: 'Test 4', disabled_at: null, assets: [], users: [] });
-      await repo.create({ name: 'Test 5', disabled_at: null, assets: [], users: [] });
+      const record1 = await repo.create({ name: 'Test 1', disabledAt: null, users: new Map() });
+      const record2 = await repo.create({ name: 'Test 2', disabledAt: null, users: new Map() });
+      const record3 = await repo.create({ name: 'Test 3', disabledAt: null, users: new Map() });
+      await repo.create({ name: 'Test 4', disabledAt: null, users: new Map() });
+      await repo.create({ name: 'Test 5', disabledAt: null, users: new Map() });
 
       // When
       const workgroups = await repo.list({ limit: 3 });
@@ -72,11 +69,11 @@ describe('WorkgroupRepo', () => {
     });
     it('returns the records appearing after the specified offset', async () => {
       //Given
-      await repo.create({ name: 'Test 1', disabled_at: null, assets: [], users: [] });
-      await repo.create({ name: 'Test 2', disabled_at: null, assets: [], users: [] });
-      const record1 = await repo.create({ name: 'Test 3', disabled_at: null, assets: [], users: [] });
-      const record2 = await repo.create({ name: 'Test 4', disabled_at: null, assets: [], users: [] });
-      const record3 = await repo.create({ name: 'Test 5', disabled_at: null, assets: [], users: [] });
+      await repo.create({ name: 'Test 1', disabledAt: null, users: new Map() });
+      await repo.create({ name: 'Test 2', disabledAt: null, users: new Map() });
+      const record1 = await repo.create({ name: 'Test 3', disabledAt: null, users: new Map() });
+      const record2 = await repo.create({ name: 'Test 4', disabledAt: null, users: new Map() });
+      const record3 = await repo.create({ name: 'Test 5', disabledAt: null, users: new Map() });
 
       // When
       const workgroups = await repo.list({ limit: 3, offset: 2 });
@@ -87,11 +84,11 @@ describe('WorkgroupRepo', () => {
     });
     it('returns an empty list when offset is greater than the number of records', async () => {
       //Given
-      await repo.create({ name: 'Test 1', disabled_at: null, assets: [], users: [] });
-      await repo.create({ name: 'Test 2', disabled_at: null, assets: [], users: [] });
-      await repo.create({ name: 'Test 3', disabled_at: null, assets: [], users: [] });
-      await repo.create({ name: 'Test 4', disabled_at: null, assets: [], users: [] });
-      await repo.create({ name: 'Test 5', disabled_at: null, assets: [], users: [] });
+      await repo.create({ name: 'Test 1', disabledAt: null, users: new Map() });
+      await repo.create({ name: 'Test 2', disabledAt: null, users: new Map() });
+      await repo.create({ name: 'Test 3', disabledAt: null, users: new Map() });
+      await repo.create({ name: 'Test 4', disabledAt: null, users: new Map() });
+      await repo.create({ name: 'Test 5', disabledAt: null, users: new Map() });
 
       // When
       const workgroups = await repo.list({ limit: 3, offset: 5 });
@@ -105,19 +102,25 @@ describe('WorkgroupRepo', () => {
     it('creates a new record', async () => {
       // Given
       await setupDefaultWorkgroup(prisma);
-      const asset = await assetRepo.create({ patch: fakeAssetPatch(), user: fakeUser() });
       const user = await userRepo.create({
         email: faker.internet.email(),
         lang: 'de',
         oidcId: faker.string.uuid(),
         isAdmin: false,
-        workgroups: [],
+        roles: new Map(),
       });
       const data: WorkgroupData = {
         name: 'test',
-        disabled_at: null,
-        assets: [asset],
-        users: [{ userId: user.id, role: Role.MasterEditor }],
+        disabledAt: null,
+        users: new Map([
+          [
+            user.id,
+            {
+              role: Role.MasterEditor,
+              email: user.email,
+            },
+          ],
+        ]),
       };
 
       // When
@@ -125,8 +128,7 @@ describe('WorkgroupRepo', () => {
 
       // Then
       expect(workgroup.name).toEqual(data.name);
-      expect(workgroup.disabled_at).toEqual(data.disabled_at);
-      expect(workgroup.assets).toEqual(data.assets.map(({ assetId }) => ({ assetId })));
+      expect(workgroup.disabledAt).toEqual(data.disabledAt);
       expect(workgroup.users).toEqual(data.users);
     });
   });
@@ -134,7 +136,7 @@ describe('WorkgroupRepo', () => {
   describe('update', () => {
     it('returns `null` when updating a non-existent record', async () => {
       //Given
-      const data: WorkgroupData = { name: 'test', disabled_at: null, assets: [], users: [] };
+      const data: WorkgroupData = { name: 'test', disabledAt: null, users: new Map() };
 
       // When
       const workgroup = await repo.update(1, data);
@@ -145,21 +147,27 @@ describe('WorkgroupRepo', () => {
     it('updates an existing record', async () => {
       //Given
       await setupDefaultWorkgroup(prisma);
-      const asset = await assetRepo.create({ patch: fakeAssetPatch(), user: fakeUser() });
       const user = await userRepo.create({
         email: faker.internet.email(),
         lang: 'de',
         oidcId: faker.string.uuid(),
         isAdmin: false,
-        workgroups: [],
+        roles: new Map(),
       });
-      const initialWorkgroup: WorkgroupData = { name: 'test', disabled_at: null, assets: [], users: [] };
+      const initialWorkgroup: WorkgroupData = { name: 'test', disabledAt: null, users: new Map() };
       const workgroup = await repo.create(initialWorkgroup);
       const data: WorkgroupData = {
         name: 'new name',
-        disabled_at: new Date(),
-        assets: [{ assetId: asset.assetId }],
-        users: [{ userId: user.id, role: Role.MasterEditor }],
+        disabledAt: new Date(),
+        users: new Map([
+          [
+            user.id,
+            {
+              role: Role.MasterEditor,
+              email: user.email,
+            },
+          ],
+        ]),
       };
 
       //When
@@ -167,8 +175,7 @@ describe('WorkgroupRepo', () => {
 
       //Then
       expect(updatedWorkgroup.name).toEqual(data.name);
-      expect(updatedWorkgroup.disabled_at).toEqual(data.disabled_at);
-      expect(updatedWorkgroup.assets).toEqual(data.assets);
+      expect(updatedWorkgroup.disabledAt).toEqual(data.disabledAt);
       expect(updatedWorkgroup.users).toEqual(data.users);
     });
   });
@@ -183,19 +190,25 @@ describe('WorkgroupRepo', () => {
     it('removes a record and its relations from the database', async () => {
       //Given
       await setupDefaultWorkgroup(prisma);
-      const asset = await assetRepo.create({ patch: fakeAssetPatch(), user: fakeUser() });
       const user = await userRepo.create({
         email: faker.internet.email(),
         lang: 'de',
         oidcId: faker.string.uuid(),
         isAdmin: false,
-        workgroups: [],
+        roles: new Map(),
       });
       const data: WorkgroupData = {
         name: 'test',
-        disabled_at: null,
-        assets: [{ assetId: asset.assetId }],
-        users: [{ userId: user.id, role: Role.MasterEditor }],
+        disabledAt: null,
+        users: new Map([
+          [
+            user.id,
+            {
+              role: Role.MasterEditor,
+              email: user.email,
+            },
+          ],
+        ]),
       };
       const workgroup = await repo.create(data);
 

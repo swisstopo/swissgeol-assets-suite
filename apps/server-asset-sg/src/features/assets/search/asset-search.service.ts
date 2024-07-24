@@ -686,7 +686,7 @@ const mapQueryToElasticDsl = (query: AssetSearchQuery, user: User): QueryDslQuer
   if (!user.isAdmin) {
     filters.push({
       terms: {
-        workgroupId: user.workgroups.map((it) => it.id),
+        workgroupId: [...user.roles.keys()],
       },
     });
   }

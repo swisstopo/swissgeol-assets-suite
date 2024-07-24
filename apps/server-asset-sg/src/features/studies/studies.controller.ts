@@ -41,7 +41,7 @@ export class StudiesController {
       let next: Promise<Study[]> | null = studyRepo.list({
         limit: INITIAL_BATCH_SIZE,
         offset: 0,
-        workgroupIds: user.isAdmin ? null : user.workgroups.map((it) => it.id),
+        workgroupIds: user.isAdmin ? null : [...user.roles.keys()],
       });
 
       // The maximal size of the next batch.

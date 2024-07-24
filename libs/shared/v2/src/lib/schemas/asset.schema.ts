@@ -26,8 +26,9 @@ import {
 import { LocalDate } from '../models/base/local-date';
 import { StudyType } from '../models/study';
 import { IsNullable, messageNullableInt, messageNullableString } from '../utils/class-validator/is-nullable.decorator';
+import { Schema } from './base/schema';
 
-export class AssetUsageSchema implements AssetUsage {
+export class AssetUsageSchema extends Schema implements AssetUsage {
   @IsBoolean()
   isAvailable!: boolean;
 
@@ -41,7 +42,7 @@ export class AssetUsageSchema implements AssetUsage {
   availableAt!: LocalDate | null;
 }
 
-export class AssetUsagesSchema implements AssetUsages {
+export class AssetUsagesSchema extends Schema implements AssetUsages {
   @IsObject()
   @ValidateNested()
   @Type(() => AssetUsageSchema)
@@ -53,7 +54,7 @@ export class AssetUsagesSchema implements AssetUsages {
   internal!: AssetUsageSchema;
 }
 
-export class InfoGeolSchema implements InfoGeol {
+export class InfoGeolSchema extends Schema implements InfoGeol {
   @IsString({ message: messageNullableString })
   @IsNullable()
   main!: string | null;
@@ -67,7 +68,7 @@ export class InfoGeolSchema implements InfoGeol {
   auxiliary!: string | null;
 }
 
-export class ContactAssignmentSchema implements ContactAssignment {
+export class ContactAssignmentSchema extends Schema implements ContactAssignment {
   @IsInt()
   contactId!: number;
 
@@ -75,7 +76,7 @@ export class ContactAssignmentSchema implements ContactAssignment {
   role!: ContactAssignmentRole;
 }
 
-export class StudyDataSchema implements StudyData {
+export class StudyDataSchema extends Schema implements StudyData {
   @IsInt({ message: messageNullableInt })
   @IsNullable()
   id?: number | undefined;
@@ -87,7 +88,7 @@ export class StudyDataSchema implements StudyData {
   type!: StudyType;
 }
 
-export class WorkStatusSchema implements WorkStatusData {
+export class WorkStatusSchema extends Schema implements WorkStatusData {
   @IsInt({ message: messageNullableInt })
   @IsNullable()
   id?: number | undefined;
@@ -100,7 +101,7 @@ export class WorkStatusSchema implements WorkStatusData {
   itemCode!: string;
 }
 
-export class AssetIdentifierSchema implements AssetIdentifierData {
+export class AssetIdentifierSchema extends Schema implements AssetIdentifierData {
   @IsInt({ message: messageNullableInt })
   @IsNullable()
   id?: number | undefined;
@@ -112,7 +113,7 @@ export class AssetIdentifierSchema implements AssetIdentifierData {
   description!: string;
 }
 
-export class AssetLinksDataSchema implements AssetLinksData {
+export class AssetLinksDataSchema extends Schema implements AssetLinksData {
   @IsInt({ message: messageNullableInt })
   @IsNullable()
   parent!: number | null;
@@ -121,7 +122,7 @@ export class AssetLinksDataSchema implements AssetLinksData {
   siblings!: number[];
 }
 
-export class AssetDataSchema implements AssetData {
+export class AssetDataSchema extends Schema implements AssetData {
   @IsObject()
   @ValidateNested()
   @Type(() => AssetLinksDataSchema)

@@ -14,8 +14,10 @@ export * from './lib/policies/asset-edit.policy';
 export * from './lib/policies/contact.policy';
 export * from './lib/policies/workgroup.policy';
 
+export * from './lib/schemas/base/schema';
 export * from './lib/schemas/asset.schema';
 export * from './lib/schemas/contact.schema';
 export * from './lib/schemas/user.schema';
+export * from './lib/schemas/workgroup.schema';
 
 export * from './lib/utils/class-validator/is-nullable.decorator';

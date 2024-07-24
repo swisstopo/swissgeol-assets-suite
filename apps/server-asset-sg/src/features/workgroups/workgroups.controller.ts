@@ -1,12 +1,14 @@
 import {
   AssetId,
+  convert,
   SimpleWorkgroup,
   User,
   Workgroup,
   WorkgroupData,
-  WorkgroupDataBoundary,
+  WorkgroupDataSchema,
   WorkgroupId,
   WorkgroupPolicy,
+  WorkgroupSchema,
 } from '@asset-sg/shared/v2';
 import {
   Controller,
@@ -45,9 +47,12 @@ export class WorkgroupsController {
   @Authorize.User()
   async list(@CurrentUser() user: User, @Query() query: ListQuery): Promise<Workgroup[] | SimpleWorkgroup[]> {
     const options: RepoListOptions<WorkgroupId> = {
-      ids: user.isAdmin ? undefined : user.workgroups.map((it) => it.id),
+      ids: user.isAdmin ? undefined : [...user.roles.keys()],
     };
-    return query.isSimple ? this.workgroupRepo.simple(user).list(options) : this.workgroupRepo.list(options);
+    if (query.isSimple) {
+      return this.workgroupRepo.simple(user).list(options);
+    }
+    return convert(WorkgroupSchema, await this.workgroupRepo.list(options));
   }
 
   @Get('/:id')
@@ -57,24 +62,25 @@ export class WorkgroupsController {
       throw new HttpException('not found', 404);
     }
     authorize(WorkgroupPolicy, user).canShow(record);
-    return record;
+    return convert(WorkgroupSchema, record);
   }
 
   @Post('/')
   @HttpCode(HttpStatus.CREATED)
   async create(
-    @ParseBody(WorkgroupDataBoundary)
+    @ParseBody(WorkgroupDataSchema)
     data: WorkgroupData,
     @CurrentUser() user: User
   ): Promise<Workgroup> {
     authorize(WorkgroupPolicy, user).canCreate();
-    return this.workgroupRepo.create(data);
+    const record = await this.workgroupRepo.create(data);
+    return convert(WorkgroupSchema, record);
   }
 
   @Put('/:id')
   async update(
     @Param('id', ParseIntPipe) id: number,
-    @ParseBody(WorkgroupDataBoundary)
+    @ParseBody(WorkgroupDataSchema)
     data: WorkgroupData,
     @CurrentUser() user: User
   ): Promise<Workgroup> {
@@ -87,7 +93,7 @@ export class WorkgroupsController {
     if (workgroup === null) {
       throw new HttpException('not found', 404);
     }
-    return workgroup;
+    return convert(WorkgroupSchema, workgroup);
   }
 
   @Delete('/:id')

@@ -1,4 +1,4 @@
-import { User, UserData, UserId } from '@asset-sg/shared/v2';
+import { Role, User, UserData, UserId, WorkgroupId } from '@asset-sg/shared/v2';
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 
@@ -49,6 +49,13 @@ export class UserRepo implements Repo<User, UserId, UserData & { oidcId: string 
         oidcId: data.oidcId,
         email: data.email,
         lang: data.lang,
+        isAdmin: false,
+        workgroups: {
+          createMany: {
+            data: [...data.roles].map(([workgroupId, role]) => ({ workgroupId, role })),
+            skipDuplicates: true,
+          },
+        },
       },
       select: userSelection,
     });
@@ -67,10 +74,7 @@ export class UserRepo implements Repo<User, UserId, UserData & { oidcId: string 
               workgroupId: {},
             },
             createMany: {
-              data: data.workgroups?.map((workgroup) => ({
-                workgroupId: workgroup.id,
-                role: workgroup.role,
-              })),
+              data: [...data.roles].map(([workgroupId, role]) => ({ workgroupId, role })),
               skipDuplicates: true,
             },
           },
@@ -113,10 +117,16 @@ export const userSelection = satisfy<Prisma.AssetUserSelect>()({
 
 type SelectedUser = Prisma.AssetUserGetPayload<{ select: typeof userSelection }>;
 
-const parse = (data: SelectedUser): User => ({
-  ...data,
-  workgroups: data.workgroups.map((it) => ({
-    id: it.workgroupId,
-    role: it.role,
-  })),
-});
+const parse = (data: SelectedUser): User => {
+  const roles = new Map<WorkgroupId, Role>();
+  for (const workgroup of data.workgroups) {
+    roles.set(workgroup.workgroupId, workgroup.role);
+  }
+  return {
+    id: data.id,
+    email: data.email,
+    isAdmin: data.isAdmin,
+    lang: data.lang,
+    roles,
+  };
+};

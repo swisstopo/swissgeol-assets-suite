@@ -10,8 +10,7 @@ import {
   LifecycleHooksDirective,
   appSharedStateActions,
 } from '@asset-sg/client-shared';
-import { rdIsComplete } from '@asset-sg/core';
-import { User } from '@asset-sg/shared';
+import { User } from '@asset-sg/shared/v2';
 import * as RD from '@devexperts/remote-data-ts';
 import { Store } from '@ngrx/store';
 import { RxState } from '@rx-angular/state';
@@ -56,7 +55,7 @@ export class ProfileComponent extends RxState<ProfileComponentState> {
 
     this.logoutClicked$.pipe(switchMap(async () => this._authService.logOut())).subscribe((rd) => {
       this._store.dispatch(appSharedStateActions.logout());
-      this._router.navigate(['/']);
+      void this._router.navigate(['/']);
     });
   }
 }

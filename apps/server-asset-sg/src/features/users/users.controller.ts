@@ -1,4 +1,4 @@
-import { User, UserData, UserId } from '@asset-sg/shared/v2';
+import { convert, User, UserData, UserId, UserSchema } from '@asset-sg/shared/v2';
 import { UserDataSchema } from '@asset-sg/shared/v2';
 import { Controller, Delete, Get, HttpCode, HttpException, HttpStatus, Param, Put } from '@nestjs/common';
 import { Authorize } from '@/core/decorators/authorize.decorator';
@@ -12,18 +12,25 @@ export class UsersController {
 
   @Get('/current')
   showCurrent(@CurrentUser() user: User | null): User | null {
-    return user;
+    if (user == null) {
+      return null;
+    }
+    return convert(UserSchema, user);
   }
 
   @Get('/')
   @Authorize.Admin()
-  list(): Promise<User[]> {
-    return this.userRepo.list();
+  async list(): Promise<User[]> {
+    return convert(UserSchema, await this.userRepo.list());
   }
 
   @Get('/:id')
-  show(@Param('id') id: UserId): Promise<User | null> {
-    return this.userRepo.find(id);
+  async show(@Param('id') id: UserId): Promise<User | null> {
+    const user = await this.userRepo.find(id);
+    if (user == null) {
+      return null;
+    }
+    return convert(UserSchema, user);
   }
 
   @Put('/:id')
@@ -34,10 +41,10 @@ export class UsersController {
     data: UserData
   ): Promise<User> {
     const user = await this.userRepo.update(id, data);
-    if (user === null) {
+    if (user == null) {
       throw new HttpException('not found', 404);
     }
-    return user;
+    return convert(UserSchema, user);
   }
 
   @Delete('/:id')

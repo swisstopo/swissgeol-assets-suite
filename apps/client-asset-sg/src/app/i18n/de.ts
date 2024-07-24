@@ -264,7 +264,7 @@ export const deAppTranslations = {
       activate: 'Aktivieren',
       deactivate: 'Deaktivieren',
       create: 'Erstellen',
-      isDeactivated: 'Deaktiviert',
+      isDisabled: 'Deaktiviert',
       chooseUsersText: 'Füge Benutzer hinzu, um sie zu verwalten',
       addUsers: 'Benutzer hinzufügen',
     },

@@ -266,7 +266,7 @@ export const frAppTranslations: AppTranslations = {
       create: 'Créer',
       activate: 'Activer',
       deactivate: 'Désactiver',
-      isDeactivated: 'Désactivé',
+      isDisabled: 'Désactivé',
       chooseUsersText: 'Ajoutez des utilisateurs pour les gérer',
       addUsers: 'Ajouter des utilisateurs',
     },

@@ -5,9 +5,8 @@
     <button asset-sg-warn (click)="authService.logOut()">Logout</button>
   </div>
 </ng-container>
-
 <ng-template #content>
-  <ng-container *rxLet="authService.state$; let authState">
+  <ng-container *ngIf="authService.state$ | async as authState">
     @if (authState === AuthState.Success || authState === AuthState.ForbiddenResource) {
     <asset-sg-app-bar>
       <ng-template [cdkPortalOutlet]="(appPortalService.appBarPortalContent$ | push) ?? ''"></ng-template>

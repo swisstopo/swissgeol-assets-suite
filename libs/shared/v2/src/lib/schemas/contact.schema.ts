@@ -1,7 +1,8 @@
 import { IsOptional, IsString } from 'class-validator';
 import { ContactData } from '../models/contact';
+import { Schema } from './base/schema';
 
-export class ContactDataSchema implements ContactData {
+export class ContactDataSchema extends Schema implements ContactData {
   @IsString()
   name!: string;
 

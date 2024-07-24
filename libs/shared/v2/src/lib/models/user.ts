@@ -4,13 +4,12 @@ import { getRoleIndex, Role, WorkgroupId } from './workgroup';
 export interface User extends Model<UserId> {
   email: string;
   lang: string;
-  workgroups: WorkgroupOnUser[];
   isAdmin: boolean;
-}
 
-export interface WorkgroupOnUser {
-  id: WorkgroupId;
-  role: Role;
+  /**
+   * The user's roles, mapped by the id of the workgroup to which they apply.
+   */
+  roles: Map<WorkgroupId, Role>;
 }
 
 export type UserId = string;
@@ -24,14 +23,14 @@ const hasRole = (role: Role) => (user: User | null | undefined, workgroupId?: Wo
     return true;
   }
   const roleIndex = getRoleIndex(role);
-  if (workgroupId == null) {
-    return null != user.workgroups.find((it) => getRoleIndex(it.role) >= roleIndex);
+  if (workgroupId != null) {
+    const role = user.roles.get(workgroupId);
+    return role != null && getRoleIndex(role) >= roleIndex;
   }
-  for (const workgroup of user.workgroups) {
-    if (workgroup.id != workgroupId) {
-      continue;
+  for (const userRole of user.roles.values()) {
+    if (getRoleIndex(userRole) >= roleIndex) {
+      return true;
     }
-    return getRoleIndex(workgroup.role) >= roleIndex;
   }
   return false;
 };

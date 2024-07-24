@@ -2,8 +2,8 @@
   <div class="header">
     <h1 translate>admin.users</h1>
   </div>
-  <div>
-    <table mat-table [dataSource]="users" class="mat-elevation-z8">
+  <div *rxLet="currentUser$; let currentUser">
+    <table mat-table [dataSource]="users$" class="mat-elevation-z8">
       <ng-container matColumnDef="email">
         <th mat-header-cell *matHeaderCellDef translate>admin.email</th>
         <td mat-cell *matCellDef="let user">{{ user.email }}</td>
@@ -12,7 +12,11 @@
         <th mat-header-cell *matHeaderCellDef translate>admin.userPage.admin</th>
 
         <td mat-cell *matCellDef="let user">
-          <mat-checkbox [checked]="user.isAdmin" (change)="updateIsAdminStatus(user, $event)"></mat-checkbox>
+          <mat-checkbox
+            [checked]="user.isAdmin"
+            (change)="updateIsAdminStatus(user, $event)"
+            [disabled]="user.id === currentUser.id"
+          ></mat-checkbox>
         </td>
       </ng-container>
       <ng-container matColumnDef="languages">
@@ -24,18 +28,15 @@
         <td
           mat-cell
           *matCellDef="let user"
-          [matTooltip]="formatWorkgroupsTooltip(user.workgroups)"
+          [matTooltip]="formatWorkgroupsTooltip(user.roles)"
           matTooltipClass="workgroups-tooltip"
           matTooltipPosition="left"
         >
-          @for (workgroup of user.workgroups.slice(0, workgroupCutoffLength); track workgroup.workgroupId; let last =
-          $last) {
-          <span>{{ workgroup.workgroup.name }}.{{ workgroup.role }}</span>
-          <ng-container *ngIf="!last">,</ng-container>
-          } @if (user.workgroups.length > workgroupCutoffLength) {
-          <span
-            >, +{{ user.workgroups.length - workgroupCutoffLength }} <span translate>admin.userPage.more</span>
-          </span>
+          @for (workgroup of getUserWorkgroups(user); track workgroup.id; let isLast = $last) {
+          <span>{{ workgroup.name }}.{{ workgroup.role }}</span>
+          <ng-container *ngIf="!isLast">,</ng-container>
+          } @if (user.roles.size > WORKGROUP_DISPLAY_COUNT) {
+          <span>, +{{ user.roles.size - WORKGROUP_DISPLAY_COUNT }} <span translate>admin.userPage.more</span> </span>
           }
         </td>
       </ng-container>

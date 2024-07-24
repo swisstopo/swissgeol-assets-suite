@@ -1,5 +1,5 @@
 import { AssetUsage, Contact, PatchAsset, dateIdFromDate } from '@asset-sg/shared';
-import { User } from '@asset-sg/shared/v2';
+import { User, WorkgroupId } from '@asset-sg/shared/v2';
 import { Role } from '@asset-sg/shared/v2';
 import { fakerDE_CH as faker } from '@faker-js/faker';
 import * as O from 'fp-ts/Option';
@@ -24,14 +24,17 @@ export const fakeAssetUsage = (): AssetUsage => ({
   statusAssetUseItemCode: faker.helpers.arrayElement(['tobechecked', 'underclarification', 'approved']),
 });
 
-export const fakeUser = () =>
-  define<User>({
+export const fakeUser = () => {
+  const roles = new Map<WorkgroupId, Role>();
+  roles.set(1, Role.Viewer);
+  return define<User>({
     email: faker.internet.email(),
     id: faker.string.uuid(),
     lang: faker.helpers.fromRegExp(/[a-z]{2}/),
     isAdmin: false,
-    workgroups: [{ id: 1, role: Role.Viewer }],
+    roles,
   });
+};
 
 export const fakeContact = () =>
   define<Omit<Contact, 'id'>>({

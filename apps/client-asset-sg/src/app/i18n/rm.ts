@@ -265,7 +265,7 @@ export const rmAppTranslations: AppTranslations = {
       create: 'RM Erstellen',
       activate: 'RM Aktivieren',
       deactivate: 'RM Deaktivieren',
-      isDeactivated: 'RM Deaktiviert',
+      isDisabled: 'RM Deaktiviert',
       chooseUsersText: 'RM Füge Nutzer hinzu, um sie zu verwalten',
       addUsers: 'RM Benutzer hinzufügen',
     },
