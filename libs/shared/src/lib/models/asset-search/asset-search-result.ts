@@ -21,8 +21,9 @@ export interface AssetSearchStats {
   assetKindItemCodes: ValueCount<string>[];
   languageItemCodes: ValueCount<string>[];
   geometryCodes: ValueCount<GeometryCode | 'None'>[];
-  usageCodes: ValueCount<UsageCode>[];
   manCatLabelItemCodes: ValueCount<string>[];
+  usageCodes: ValueCount<UsageCode>[];
+  workgroupIds: ValueCount<number>[];
   createDate: DateRange | null;
 }
 

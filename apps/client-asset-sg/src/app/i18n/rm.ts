@@ -82,6 +82,7 @@ export const rmAppTranslations: AppTranslations = {
     languageItem: {
       None: 'RM keine',
     },
+    workgroup: 'RM Arbeitsgruppe',
     resetSearch: 'RM Suche zurücksetzen',
     file: 'RM Datei',
     openFileInNewTab: 'RM {{fileName}} in neuem Tab öffnen',

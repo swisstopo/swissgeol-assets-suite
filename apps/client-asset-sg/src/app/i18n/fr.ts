@@ -82,6 +82,7 @@ export const frAppTranslations: AppTranslations = {
     languageItem: {
       None: 'aucune',
     },
+    workgroup: 'groupe de travail',
     resetSearch: 'Réinitialiser la recherche',
     file: 'Fichier',
     openFileInNewTab: 'Ouvrir {{fileName}} dans un nouvel onglet',

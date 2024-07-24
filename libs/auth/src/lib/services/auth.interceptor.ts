@@ -58,7 +58,10 @@ export class AuthInterceptor implements HttpInterceptor, OnDestroy {
   private async handleError(error: HttpErrorResponse): Promise<void> {
     switch (error.status) {
       case 403:
-        if (error.error == 'not authorized by eIAM') {
+        if (
+          error.error == 'not authorized by eIAM' ||
+          (typeof error.error === 'object' && error.error != null && error.error.error === 'not authorized by eIAM')
+        ) {
           // The initial logging via eIAM was successful,
           // but the user does not have access to this application.
           this.authService.setState(AuthState.AccessForbidden);

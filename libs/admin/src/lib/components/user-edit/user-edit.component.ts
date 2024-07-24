@@ -171,14 +171,14 @@ export class UserEditComponent implements OnInit, OnDestroy {
     );
 
     this.subscriptions.add(
-      this.formGroup.valueChanges.subscribe((value) => {
+      this.formGroup.valueChanges.subscribe(() => {
         if (this.user == null || this.formGroup.pristine) {
           return;
         }
         this.updateUser({
           ...this.user,
-          isAdmin: value.isAdmin ?? false,
-          lang: value.lang ?? 'de',
+          isAdmin: this.formGroup.controls.isAdmin.value ?? false,
+          lang: this.formGroup.controls.lang.value ?? 'de',
         });
       })
     );

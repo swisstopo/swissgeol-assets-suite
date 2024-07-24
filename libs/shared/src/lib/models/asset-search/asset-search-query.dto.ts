@@ -38,6 +38,10 @@ export class AssetSearchQueryDTO implements AssetSearchQuery {
   @IsOptional()
   languageItemCodes?: string[];
 
+  @IsNumber({}, { each: true })
+  @IsOptional()
+  workgroupIds?: number[];
+
   @IsOptional()
   @ValidateNested()
   @Type(() => PartialDateRangeDTO)

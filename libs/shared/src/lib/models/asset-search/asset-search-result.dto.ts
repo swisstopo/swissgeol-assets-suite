@@ -18,8 +18,9 @@ export class AssetSearchStatsDTO implements AssetSearchStats {
   assetKindItemCodes!: ValueCount<string>[];
   languageItemCodes!: ValueCount<string>[];
   geometryCodes!: ValueCount<GeometryCode>[];
-  usageCodes!: ValueCount<UsageCode>[];
   manCatLabelItemCodes!: ValueCount<string>[];
+  usageCodes!: ValueCount<UsageCode>[];
+  workgroupIds!: ValueCount<number>[];
 
   @Type(() => DateRangeDTO)
   createDate!: DateRangeDTO | null;

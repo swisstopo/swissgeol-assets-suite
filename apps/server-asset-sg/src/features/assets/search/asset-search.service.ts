@@ -19,9 +19,7 @@ import {
   UsageCode,
   ValueCount,
 } from '@asset-sg/shared';
-import { AssetId } from '@asset-sg/shared/v2';
-import { StudyId } from '@asset-sg/shared/v2';
-import { User } from '@asset-sg/shared/v2';
+import { AssetId, StudyId } from '@asset-sg/shared/v2';
 import { Client as ElasticsearchClient } from '@elastic/elasticsearch';
 import {
   BulkOperationContainer,
@@ -162,7 +160,6 @@ export class AssetSearchService {
    * Searches for assets using a {@link AssetSearchQuery}.
    *
    * @param query The query to match with.
-   * @param user The user whose assets are to be searched.
    * @param limit The maximum amount of assets to load. Defaults to `100`.
    * @param offset The amount of assets being skipped before loading the assets.
    * @param decode Whether to decode the assets. If this is set to `false`, the assets should be decoded via `AssetEditDetail` before accessing them.
@@ -170,11 +167,10 @@ export class AssetSearchService {
    */
   async search(
     query: AssetSearchQuery,
-    user: User,
     { limit = 100, offset = 0, decode = true }: PageOptions & { decode?: boolean } = {}
   ): Promise<AssetSearchResult> {
     // Apply the query to find all matching ids.
-    const [serializedAssets, total] = await this.searchAssetsByQuery(query, user, { limit, offset });
+    const [serializedAssets, total] = await this.searchAssetsByQuery(query, { limit, offset });
 
     // Load the matched assets from the database.
     const data: AssetEditDetail[] = [];
@@ -198,9 +194,8 @@ export class AssetSearchService {
    * Aggregates the stats over all assets matching a specific {@link AssetSearchQuery}.
    *
    * @param query The query to match with.
-   * @param user The user whose assets are to be aggregated.
    */
-  async aggregate(query: AssetSearchQuery, user: User): Promise<AssetSearchStats> {
+  async aggregate(query: AssetSearchQuery): Promise<AssetSearchStats> {
     interface Result {
       minCreateDate: { value: DateId };
       maxCreateDate: { value: DateId };
@@ -216,11 +211,14 @@ export class AssetSearchService {
       geometryCodes: {
         buckets: AggregationBucket<GeometryCode | 'None'>[];
       };
+      manCatLabelItemCodes: {
+        buckets: AggregationBucket[];
+      };
       usageCodes: {
         buckets: AggregationBucket<UsageCode>[];
       };
-      manCatLabelItemCodes: {
-        buckets: AggregationBucket[];
+      workgroupIds: {
+        buckets: AggregationBucket<number>[];
       };
     }
 
@@ -230,7 +228,7 @@ export class AssetSearchService {
     }
 
     const aggregateGroup = async (query: AssetSearchQuery, operator: string, groupName: string, fieldName?: string) => {
-      const elasticDslQuery = mapQueryToElasticDsl({ ...query, [groupName]: undefined }, user);
+      const elasticDslQuery = mapQueryToElasticDsl({ ...query, [groupName]: undefined });
       return (
         await this.elastic.search({
           index: INDEX,
@@ -244,7 +242,7 @@ export class AssetSearchService {
       ).aggregations?.agg;
     };
 
-    const elasticQuery = mapQueryToElasticDsl(query, user);
+    const elasticQuery = mapQueryToElasticDsl(query);
     const response = await this.elastic.search({
       index: INDEX,
       size: 0,
@@ -262,6 +260,7 @@ export class AssetSearchService {
         geometryCodes: [],
         manCatLabelItemCodes: [],
         usageCodes: [],
+        workgroupIds: [],
       };
     }
 
@@ -272,6 +271,7 @@ export class AssetSearchService {
       geometryCodes,
       manCatLabelItemCodes,
       usageCodes,
+      workgroupIds,
       minCreateDate,
       maxCreateDate,
     ] = await Promise.all([
@@ -281,6 +281,7 @@ export class AssetSearchService {
       aggregateGroup(query, 'terms', 'geometryCodes'),
       aggregateGroup(query, 'terms', 'manCatLabelItemCodes'),
       aggregateGroup(query, 'terms', 'usageCodes', 'usageCode'),
+      aggregateGroup(query, 'terms', 'workgroupIds', 'workgroupId'),
       aggregateGroup(query, 'min', 'minCreateDate', 'createDate'),
       aggregateGroup(query, 'max', 'maxCreateDate', 'createDate'),
     ]);
@@ -291,6 +292,7 @@ export class AssetSearchService {
       geometryCodes,
       manCatLabelItemCodes,
       usageCodes,
+      workgroupIds,
       minCreateDate,
       maxCreateDate,
     } as unknown as Result;
@@ -307,6 +309,7 @@ export class AssetSearchService {
       geometryCodes: aggs.geometryCodes.buckets.map(mapBucket),
       manCatLabelItemCodes: aggs.manCatLabelItemCodes.buckets.map(mapBucket),
       usageCodes: aggs.usageCodes.buckets.map(mapBucket),
+      workgroupIds: aggs.workgroupIds.buckets.map(mapBucket),
       createDate: {
         min: dateFromDateId(aggs.minCreateDate.value),
         max: dateFromDateId(aggs.maxCreateDate.value),
@@ -351,12 +354,11 @@ export class AssetSearchService {
 
   private async searchAssetsByQuery(
     query: AssetSearchQuery,
-    user: User,
     page: PageOptions = {}
   ): Promise<[Map<AssetId, SerializedAssetEditDetail>, number]> {
     const BATCH_SIZE = 10_000;
 
-    const elasticQuery = mapQueryToElasticDsl(query, user);
+    const elasticQuery = mapQueryToElasticDsl(query);
     const matchedAssets = new Map<number, string>();
     let lastAssetId: number | null = null;
     let totalCount: number | null = null;
@@ -679,17 +681,10 @@ const mapLv95ToElastic = (lv95: LV95): ElasticPoint => {
   return { lat: wgs[1], lon: wgs[0] };
 };
 
-const mapQueryToElasticDsl = (query: AssetSearchQuery, user: User): QueryDslQueryContainer => {
+const mapQueryToElasticDsl = (query: AssetSearchQuery): QueryDslQueryContainer => {
   const scope = ['titlePublic', 'titleOriginal', 'contactNames', 'sgsId'];
   const queries: QueryDslQueryContainer[] = [];
   const filters: QueryDslQueryContainer[] = [];
-  if (!user.isAdmin) {
-    filters.push({
-      terms: {
-        workgroupId: [...user.roles.keys()],
-      },
-    });
-  }
   if (query.text != null && query.text.length > 0) {
     queries.push({
       bool: {
@@ -739,6 +734,13 @@ const mapQueryToElasticDsl = (query: AssetSearchQuery, user: User): QueryDslQuer
   }
   if (query.geometryCodes != null) {
     filters.push(makeArrayFilter('geometryCodes', query.geometryCodes));
+  }
+  if (query.workgroupIds != null) {
+    filters.push({
+      terms: {
+        workgroupId: query.workgroupIds,
+      },
+    });
   }
   if (query.polygon != null) {
     queries.push({

@@ -14,6 +14,7 @@ import jwkToPem from 'jwk-to-pem';
 
 import { UserRepo } from '@/features/users/user.repo';
 import { JwtRequest } from '@/models/jwt-request';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class JwtMiddleware implements NestMiddleware {
@@ -193,13 +194,26 @@ export class JwtMiddleware implements NestMiddleware {
     if (email == null || !/^.+@.+\..+$/.test(email)) {
       throw new HttpException('invalid JWT payload: username does not contain an email', 401);
     }
-    return await this.userRepo.create({
-      oidcId,
-      email,
-      lang: 'de',
-      isAdmin: false,
-      roles: new Map(),
-    });
+    try {
+      return await this.userRepo.create({
+        oidcId,
+        email,
+        lang: 'de',
+        isAdmin: false,
+        roles: new Map(),
+      });
+    } catch (e) {
+      // If two requests of the same user overlap, it is possible that the user creation collides.
+      // If this happens, we load the user that has already been created by someone else from the DB.
+      if (!(e instanceof Prisma.PrismaClientKnownRequestError) || e.code !== 'P2002') {
+        throw e;
+      }
+      const user = await this.userRepo.find(oidcId);
+      if (user == null) {
+        throw e;
+      }
+      return user;
+    }
   }
 }
 

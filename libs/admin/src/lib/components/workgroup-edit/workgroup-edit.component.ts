@@ -88,13 +88,13 @@ export class WorkgroupEditComponent implements OnInit, OnDestroy {
     );
 
     this.subscriptions.add(
-      this.formGroup.valueChanges.subscribe((value) => {
+      this.formGroup.valueChanges.subscribe(() => {
         if (this.workgroup == null || this.formGroup.pristine) {
           return;
         }
         this.updateWorkgroup(this.workgroup.id, {
-          name: value.name ?? '',
-          disabledAt: value.disabledAt ?? null,
+          name: this.formGroup.controls.name.value ?? '',
+          disabledAt: this.formGroup.controls.disabledAt.value ?? null,
           users: this.workgroup.users,
         });
       })
