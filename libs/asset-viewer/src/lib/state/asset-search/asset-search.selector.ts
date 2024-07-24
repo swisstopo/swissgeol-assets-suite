@@ -21,8 +21,9 @@ import {
   ValueCount,
   ValueItem,
 } from '@asset-sg/shared';
+import { WorkgroupId } from '@asset-sg/shared/v2';
 import * as RD from '@devexperts/remote-data-ts';
-import { createSelector } from '@ngrx/store';
+import { createSelector, MemoizedSelector } from '@ngrx/store';
 import * as A from 'fp-ts/Array';
 import { pipe } from 'fp-ts/function';
 import * as O from 'fp-ts/Option';
@@ -138,7 +139,7 @@ export const selectAvailableAuthors = createSelector(
 
 export const selectCreateDate = createSelector(selectAssetsSearchStats, (stats): DateRange | null => stats.createDate);
 
-const makeFilters = <T extends string>(
+const makeFilters = <T>(
   configs: Array<FilterConfig<T>>,
   counts: Array<ValueCount<T>>,
   activeValues: T[] | undefined,
@@ -147,7 +148,7 @@ const makeFilters = <T extends string>(
   return configs.map((filter) => makeFilter(filter, activeValues, counts, queryKey));
 };
 
-const makeFilter = <T extends string>(
+const makeFilter = <T>(
   filter: FilterConfig<T>,
   activeValues: T[] | undefined,
   counts: Array<ValueCount<T>>,
@@ -194,6 +195,26 @@ export const selectFilters = <T extends string>(
       );
     }
   );
+
+export const selectWorkgroupFilters = createSelector(
+  fromAppShared.selectWorkgroups,
+  selectAssetSearchQuery,
+  selectAssetsSearchStats,
+  (workgroups, query, stats) => {
+    const configs: FilterConfig<WorkgroupId>[] = [];
+    for (const stat of stats.workgroupIds) {
+      const workgroup = workgroups.find((it) => it.id === stat.value);
+      if (workgroup == null) {
+        continue;
+      }
+      configs.push({
+        name: workgroup.name,
+        value: workgroup.id,
+      });
+    }
+    return makeFilters(configs, stats.workgroupIds, query.workgroupIds, 'workgroupIds');
+  }
+);
 
 export const selectUsageCodeFilters = selectFilters<UsageCode>('usageCodes', () =>
   usageCodes.map((code) => ({
@@ -248,7 +269,7 @@ export interface FullContact extends Contact {
   role?: AssetContactRole;
 }
 
-export interface Filter<T extends string = string> {
+export interface Filter<T = string> {
   name: Translation;
   value: T;
 
@@ -270,7 +291,7 @@ export interface Filter<T extends string = string> {
   queryKey: keyof AssetSearchQuery;
 }
 
-type FilterConfig<T extends string> = Pick<Filter<T>, 'name' | 'value'>;
+type FilterConfig<T> = Pick<Filter<T>, 'name' | 'value'>;
 
 export const makeTranslatedValueFromItemName = (item: ValueItem): TranslatedValue => ({
   de: item.nameDe,

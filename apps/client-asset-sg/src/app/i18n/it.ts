@@ -82,6 +82,7 @@ export const itAppTranslations: AppTranslations = {
     languageItem: {
       None: 'IT keine',
     },
+    workgroup: 'IT Arbeitsgruppe',
     resetSearch: 'IT Suche zurücksetzen',
     file: 'IT Datei',
     openFileInNewTab: 'IT {{fileName}} in neuem Tab öffnen',

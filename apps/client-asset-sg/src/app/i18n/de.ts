@@ -81,6 +81,7 @@ export const deAppTranslations = {
     languageItem: {
       None: 'keine',
     },
+    workgroup: 'Arbeitsgruppe',
     resetSearch: 'Suche zurücksetzen',
     file: 'Datei',
     openFileInNewTab: '{{fileName}} in neuem Tab öffnen',

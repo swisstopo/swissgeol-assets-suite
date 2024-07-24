@@ -18,6 +18,7 @@ import {
   selectLanguageFilters,
   selectManCatLabelFilters,
   selectUsageCodeFilters,
+  selectWorkgroupFilters,
 } from '../../state/asset-search/asset-search.selector';
 
 @Component({
@@ -49,6 +50,7 @@ export class AssetSearchRefineComponent implements OnInit, OnDestroy, AfterViewI
   readonly manCatLabelFilters$ = this.store.select(selectManCatLabelFilters);
   readonly languageFilters$ = this.store.select(selectLanguageFilters);
   readonly assetKindFilters$ = this.store.select(selectAssetKindFilters);
+  readonly workgroupFilters$ = this.store.select(selectWorkgroupFilters);
 
   private readonly subscriptions: Subscription = new Subscription();
 
