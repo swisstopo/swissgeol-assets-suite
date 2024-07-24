@@ -111,7 +111,7 @@ npm run prisma -- migrate deploy
 
 # Import example data:
 cd development
-docker compose exec db sh -c 'psql --dbname=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:5432/${POSTGRES_DB} -f /dump.sql'
+docker compose exec db sh -c 'psql --dbname=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:5432/${POSTGRES_DB} -v ON_ERROR_STOP=1 -f /dump.sql'
 ```
 
 > You will need to manually sync the data to Elasticsearch via the admin panel in the web UI.

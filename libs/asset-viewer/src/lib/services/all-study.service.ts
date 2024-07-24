@@ -28,7 +28,7 @@ export class AllStudyService {
         return {
           studyId: `study_${id}`,
           assetId: parseInt(assetId),
-          isPoint: Boolean(isPoint),
+          isPoint: Boolean(parseInt(isPoint)),
           centroid: { x: parseFloat(x), y: parseFloat(y) } as LV95,
         } as AllStudyDTO;
       }),
