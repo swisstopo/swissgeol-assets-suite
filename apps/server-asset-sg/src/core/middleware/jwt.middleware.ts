@@ -2,6 +2,7 @@ import { User } from '@asset-sg/shared/v2';
 import { environment } from '@environment';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { HttpException, Inject, Injectable, NestMiddleware } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import axios from 'axios';
 import { Cache } from 'cache-manager';
 import { NextFunction, Request, Response } from 'express';
@@ -14,7 +15,6 @@ import jwkToPem from 'jwk-to-pem';
 
 import { UserRepo } from '@/features/users/user.repo';
 import { JwtRequest } from '@/models/jwt-request';
-import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class JwtMiddleware implements NestMiddleware {
