@@ -21,6 +21,7 @@ import {
   ValueCount,
   ValueItem,
 } from '@asset-sg/shared';
+import { SimpleWorkgroup, WorkgroupId } from '@asset-sg/shared/v2';
 import * as RD from '@devexperts/remote-data-ts';
 import { createSelector } from '@ngrx/store';
 import * as A from 'fp-ts/Array';
@@ -138,7 +139,7 @@ export const selectAvailableAuthors = createSelector(
 
 export const selectCreateDate = createSelector(selectAssetsSearchStats, (stats): DateRange | null => stats.createDate);
 
-const makeFilters = <T extends string>(
+const makeFilters = <T>(
   configs: Array<FilterConfig<T>>,
   counts: Array<ValueCount<T>>,
   activeValues: T[] | undefined,
@@ -147,7 +148,7 @@ const makeFilters = <T extends string>(
   return configs.map((filter) => makeFilter(filter, activeValues, counts, queryKey));
 };
 
-const makeFilter = <T extends string>(
+const makeFilter = <T>(
   filter: FilterConfig<T>,
   activeValues: T[] | undefined,
   counts: Array<ValueCount<T>>,
@@ -194,6 +195,46 @@ export const selectFilters = <T extends string>(
       );
     }
   );
+
+export const selectWorkgroupFilters = createSelector(
+  fromAppShared.selectWorkgroups,
+  selectAssetSearchQuery,
+  selectAssetsSearchStats,
+  (workgroups, query, stats) => {
+    // Create a mapping of workgroups by their id for easier and more performant lookup.
+    const workgroupsById = new Map<WorkgroupId, SimpleWorkgroup>();
+    for (const workgroup of workgroups) {
+      workgroupsById.set(workgroup.id, workgroup);
+    }
+
+    // Map the workgroups with stats to filters.
+    const configs: FilterConfig<WorkgroupId>[] = [];
+    for (const stat of stats.workgroupIds) {
+      const workgroup = workgroupsById.get(stat.value);
+      if (workgroup == null) {
+        continue;
+      }
+      workgroupsById.delete(stat.value);
+      configs.push({
+        name: workgroup.name,
+        value: workgroup.id,
+      });
+    }
+
+    // Include workgroups with no assigned assets.
+    for (const workgroup of workgroupsById.values()) {
+      configs.push({
+        name: workgroup.name,
+        value: workgroup.id,
+      });
+    }
+
+    // Sort the filters so their orders stays consistent.
+    configs.sort((a, b) => (a.name as string).localeCompare(b.name as string));
+
+    return makeFilters(configs, stats.workgroupIds, query.workgroupIds, 'workgroupIds');
+  }
+);
 
 export const selectUsageCodeFilters = selectFilters<UsageCode>('usageCodes', () =>
   usageCodes.map((code) => ({
@@ -248,7 +289,7 @@ export interface FullContact extends Contact {
   role?: AssetContactRole;
 }
 
-export interface Filter<T extends string = string> {
+export interface Filter<T = string> {
   name: Translation;
   value: T;
 
@@ -270,7 +311,7 @@ export interface Filter<T extends string = string> {
   queryKey: keyof AssetSearchQuery;
 }
 
-type FilterConfig<T extends string> = Pick<Filter<T>, 'name' | 'value'>;
+type FilterConfig<T> = Pick<Filter<T>, 'name' | 'value'>;
 
 export const makeTranslatedValueFromItemName = (item: ValueItem): TranslatedValue => ({
   de: item.nameDe,

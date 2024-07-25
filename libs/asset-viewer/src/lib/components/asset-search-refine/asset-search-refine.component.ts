@@ -18,7 +18,10 @@ import {
   selectLanguageFilters,
   selectManCatLabelFilters,
   selectUsageCodeFilters,
+  selectWorkgroupFilters,
 } from '../../state/asset-search/asset-search.selector';
+
+const MIN_CREATE_DATE = new Date(1800, 0, 1);
 
 @Component({
   selector: 'asset-sg-asset-search-refine',
@@ -49,6 +52,7 @@ export class AssetSearchRefineComponent implements OnInit, OnDestroy, AfterViewI
   readonly manCatLabelFilters$ = this.store.select(selectManCatLabelFilters);
   readonly languageFilters$ = this.store.select(selectLanguageFilters);
   readonly assetKindFilters$ = this.store.select(selectAssetKindFilters);
+  readonly workgroupFilters$ = this.store.select(selectWorkgroupFilters);
 
   private readonly subscriptions: Subscription = new Subscription();
 
@@ -75,6 +79,14 @@ export class AssetSearchRefineComponent implements OnInit, OnDestroy, AfterViewI
         }
       })
     );
+  }
+
+  public get minCreateDate(): Date | null {
+    const min = this.createDateRange?.min;
+    if (min == null) {
+      return null;
+    }
+    return min.getTime() < MIN_CREATE_DATE.getTime() ? MIN_CREATE_DATE : min;
   }
 
   public removePolygon() {

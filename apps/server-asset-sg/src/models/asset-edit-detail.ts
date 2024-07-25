@@ -93,6 +93,7 @@ export const AssetEditDetailFromPostgres = pipe(
       ),
       D.map((a) => a.map((b) => b.file))
     ),
+    workgroupId: D.number,
     studies: PostgresAllStudies,
   })
 );

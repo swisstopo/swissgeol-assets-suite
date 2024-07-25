@@ -29,6 +29,7 @@ asset-sg-menu-bar {
 .router-outlet {
   grid-area: router-outlet;
   display: grid;
+
   router-outlet {
     display: none;
   }
@@ -70,4 +71,25 @@ asset-sg-menu-bar {
 
   /// angular-cdk-overlay is at 1000, so we go to 1500.
   z-index: 1500;
+}
+
+.forbidden {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+
+  h1 {
+    font-size: 4rem;
+    margin: 0;
+    color: mat.get-color-from-palette($asset-sg-warn, 300);
+  }
+
+  p {
+    font-size: 1.5rem;
+    margin: 0;
+    padding: 1rem 0 0 0;
+    color: mat.get-color-from-palette($asset-sg-warn, 200);
+  }
 }

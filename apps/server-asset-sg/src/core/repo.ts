@@ -1,13 +1,19 @@
 export type Repo<T, TId, TData, TUpdate = TData> = ReadRepo<T, TId> & MutateRepo<T, TId, TData, TUpdate>;
 
-export interface ReadRepo<T, TId> {
+export interface FindRepo<T, TId> {
   find(id: TId): Promise<T | null>;
+}
+
+export interface ListRepo<T, TId> {
   list(options?: RepoListOptions<TId>): Promise<T[]>;
 }
 
-export type MutateRepo<T, TId, TData, TUpdate = TData> = CreateRepo<T, TData> &
-  UpdateRepo<T, TId, TUpdate> &
-  DeleteRepo<TId>;
+export interface ReadRepo<T, TId> extends FindRepo<T, TId>, ListRepo<T, TId> {}
+
+export interface MutateRepo<T, TId, TData, TUpdate = TData>
+  extends CreateRepo<T, TData>,
+    UpdateRepo<T, TId, TUpdate>,
+    DeleteRepo<TId> {}
 
 export interface CreateRepo<T, TData = T> {
   create(data: TData): Promise<T>;

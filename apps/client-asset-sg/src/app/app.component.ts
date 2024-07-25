@@ -41,6 +41,7 @@ export class AppComponent {
       await this.authService.signIn();
       this.store.dispatch(appSharedStateActions.loadUserProfile());
       this.store.dispatch(appSharedStateActions.loadReferenceData());
+      this.store.dispatch(appSharedStateActions.loadWorkgroups());
     });
 
     const wndw = this._wndw;

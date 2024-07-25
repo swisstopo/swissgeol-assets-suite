@@ -1,0 +1,72 @@
+@workgroupId = 5
+
+### Show specific workgroup
+GET {{host}}/api/workgroups/{{workgroupId}}
+Authorization: Impersonate {{user}}
+
+### List workgroups
+GET {{host}}/api/workgroups
+Authorization: Impersonate {{user}}
+
+### List simple workgroups
+GET {{host}}/api/workgroups?simple
+Authorization: Impersonate {{user}}
+
+
+### Create workgroup
+POST {{host}}/api/workgroups
+Authorization: Impersonate {{user}}
+Content-Type: application/json
+
+{
+  "name": "WORKGROUP",
+  "disabled_at": null,
+  "assets": [
+    {
+      "assetId": 12
+    },
+    {
+      "assetId": 13
+    }
+  ],
+  "users": [
+    {
+      "userId": "379a20e6-6a5d-4390-93ca-d408613e854d",
+      "role": "MasterEditor"
+    }
+  ]
+}
+
+### Update workgroup
+PUT {{host}}/api/workgroups/{{workgroupId}}
+Authorization: Impersonate {{user}}
+Content-Type: application/json
+
+{
+  "name": "Testing5",
+  "disabled_at": null,
+  "assets": [
+    {
+      "assetId": 5
+    },
+    {
+      "assetId": 13
+    },
+    {
+      "assetId": 18
+    },
+    {
+      "assetId": 21
+    }
+  ],
+  "users": [
+    {
+      "userId": "379a20e6-6a5d-4390-93ca-d408613e854d",
+      "role": "Editor"
+    }
+  ]
+}
+
+### DELETE user
+DELETE {{host}}/api/workgroups/{{workgroupId}}
+Authorization: Impersonate {{user}}

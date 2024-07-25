@@ -127,6 +127,10 @@ export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
     this.controller.addControl(this.controls.zoom);
     this.controller.addControl(this.controls.draw);
 
+    this.controls.draw.isDrawing$.subscribe((isDrawing) => {
+      this.controller.setClickEnabled(!isDrawing);
+    });
+
     this.subscription.add(this.controller.assetsClick$.subscribe(this.assetsClick));
     this.subscription.add(this.controller.assetsHover$.subscribe(this.assetsHover));
 

@@ -1,12 +1,18 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable, inject } from '@angular/core';
-import { ApiError, httpErrorResponseError } from '@asset-sg/client-shared';
-import { OE, ORD, decodeError } from '@asset-sg/core';
-import { User, Users } from '@asset-sg/shared';
-import * as RD from '@devexperts/remote-data-ts';
-import * as E from 'fp-ts/Either';
-import { flow } from 'fp-ts/function';
-import { map, startWith, tap } from 'rxjs';
+import { inject, Injectable } from '@angular/core';
+import {
+  convert,
+  User,
+  UserData,
+  UserDataSchema,
+  UserSchema,
+  Workgroup,
+  WorkgroupData,
+  WorkgroupDataSchema,
+  WorkgroupSchema,
+} from '@asset-sg/shared/v2';
+import { plainToInstance } from 'class-transformer';
+import { map, Observable, tap } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
@@ -14,41 +20,51 @@ import { map, startWith, tap } from 'rxjs';
 export class AdminService {
   private _httpClient = inject(HttpClient);
 
-  public getUsers(): ORD.ObservableRemoteData<ApiError, Users> {
-    return this._httpClient.get('/api/admin/user').pipe(
-      map(flow(Users.decode, E.mapLeft(decodeError))),
-      // TODO need to test instance of HttpErrorResponse here
-      OE.catchErrorW(httpErrorResponseError),
-      map(RD.fromEither),
-      startWith(RD.pending)
-    );
+  public getUsers(): Observable<User[]> {
+    return this._httpClient.get<object[]>('/api/users').pipe(map((it) => plainToInstance(UserSchema, it)));
   }
 
-  public updateUser(user: User): ORD.ObservableRemoteData<ApiError, void> {
+  public getUser(id: string): Observable<User> {
+    return this._httpClient.get<object>(`/api/users/${id}`).pipe(map((it) => plainToInstance(UserSchema, it)));
+  }
+
+  public getWorkgroups(): Observable<Workgroup[]> {
+    return this._httpClient.get<object[]>('/api/workgroups').pipe(map((it) => plainToInstance(WorkgroupSchema, it)));
+  }
+
+  public getWorkgroup(id: string): Observable<Workgroup> {
     return this._httpClient
-      .patch(`/api/admin/user/${user.id}`, {
-        role: user.role,
-        lang: user.lang,
-      })
-      .pipe(
-        map(() => E.right(undefined)),
-        // TODO need to test instance of HttpErrorResponse here
-        OE.catchErrorW(httpErrorResponseError),
-        map(RD.fromEither),
-        startWith(RD.pending)
-      );
+      .get<object>(`/api/workgroups/${id}`)
+      .pipe(map((it) => plainToInstance(WorkgroupSchema, it)));
   }
 
-  public deleteUser(id: string): ORD.ObservableRemoteData<ApiError, void> {
-    console.log('888', id);
-    return this._httpClient.delete(`/api/admin/user/${id}`).pipe(
-      tap((a) => console.log('deleteUser', a)),
-      map(() => E.right(undefined)),
-      // TODO need to test instance of HttpErrorResponse here
-      OE.catchErrorW(httpErrorResponseError),
-      map(RD.fromEither),
-      startWith(RD.pending),
-      tap((a) => console.log('deleteUser', a))
-    );
+  public createWorkgroup(workgroup: WorkgroupData): Observable<Workgroup> {
+    return this._httpClient.post<Workgroup>(`/api/workgroups`, convertWorkgroupData(workgroup));
+  }
+
+  public updateWorkgroup(id: number, workgroup: WorkgroupData): Observable<Workgroup> {
+    return this._httpClient
+      .put<Workgroup>(`/api/workgroups/${id}`, convertWorkgroupData(workgroup))
+      .pipe(map((it) => plainToInstance(WorkgroupSchema, it)));
+  }
+
+  public updateUser(user: User): Observable<User> {
+    return this._httpClient
+      .put<User>(
+        `/api/users/${user.id}`,
+        convert(UserDataSchema, {
+          lang: user.lang,
+          roles: user.roles,
+          isAdmin: user.isAdmin,
+        } as UserData)
+      )
+      .pipe(map((it) => plainToInstance(UserSchema, it)));
   }
 }
+
+const convertWorkgroupData = (data: WorkgroupData): WorkgroupData =>
+  convert(WorkgroupDataSchema, {
+    name: data.name,
+    users: data.users,
+    disabledAt: data.disabledAt,
+  } as WorkgroupData);

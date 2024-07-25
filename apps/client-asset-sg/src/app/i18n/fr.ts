@@ -4,6 +4,7 @@ export const frAppTranslations: AppTranslations = {
   logoSwissGeol: 'Logo Swissgeol Assets',
   welcomeTo: 'Bienvenue sur',
   accessForbidden: "Vous n'avez pas accès à cette application.",
+  resourceForbidden: "Vous n'avez pas accès à cette ressource.",
   ok: 'OK',
   submit: 'Envoyer',
   cancel: 'Annuler',
@@ -18,6 +19,9 @@ export const frAppTranslations: AppTranslations = {
   delete: 'Supprimer',
   close: 'Fermer',
   datePlaceholder: 'AAAA-MM-JJ',
+  workgroup: {
+    title: 'groupe de travail',
+  },
   menuBar: {
     assets: 'Assets',
     admin: 'Administration',
@@ -78,6 +82,7 @@ export const frAppTranslations: AppTranslations = {
     languageItem: {
       None: 'aucune',
     },
+    workgroup: 'groupe de travail',
     resetSearch: 'Réinitialiser la recherche',
     file: 'Fichier',
     openFileInNewTab: 'Ouvrir {{fileName}} dans un nouvel onglet',
@@ -233,5 +238,38 @@ export const frAppTranslations: AppTranslations = {
       "Fait correspondre l'état d'Elasticsearch avec la base de données." +
       " Cela permet de s'assurer que la recherche inclut tous les actifs existants.",
     adminInstructionsSyncElasticAssetsStart: 'Démarrer la synchronisation',
+  },
+  admin: {
+    users: 'Utilisateurs',
+    workgroups: 'Groupes de travail',
+    name: 'Nom',
+    role: 'Rôle',
+    actions: 'Actions',
+    email: 'E-mail',
+    back: 'Retour',
+    languages: {
+      de: 'Allemand',
+      en: 'Anglais',
+      fr: 'Français',
+      it: 'Italien',
+      rm: 'Romanche',
+    },
+    userPage: {
+      admin: 'Admin',
+      lang: 'Langue',
+      addWorkgroups: 'Ajouter des groupes de travail',
+      more: 'en plus',
+      userAddError: 'Ajoute au moins un utilisateur',
+    },
+    workgroupPage: {
+      name: 'Nom',
+      isActive: 'Actif',
+      create: 'Créer',
+      activate: 'Activer',
+      deactivate: 'Désactiver',
+      isDisabled: 'Désactivé',
+      chooseUsersText: 'Ajoutez des utilisateurs pour les gérer',
+      addUsers: 'Ajouter des utilisateurs',
+    },
   },
 };

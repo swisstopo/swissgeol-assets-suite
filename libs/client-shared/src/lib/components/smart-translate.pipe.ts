@@ -32,7 +32,10 @@ export class SmartTranslatePipe implements PipeTransform, OnDestroy {
     this.subscription.unsubscribe();
   }
 
-  transform(value: TranslationKey | TranslatedValue): string {
+  transform(value: Translation): string {
+    if (typeof value === 'string') {
+      return value;
+    }
     if (isTranslationKey(value)) {
       return this.translationPipe.transform(value.key);
     }
@@ -40,7 +43,7 @@ export class SmartTranslatePipe implements PipeTransform, OnDestroy {
   }
 }
 
-export type Translation = TranslationKey | TranslatedValue;
+export type Translation = TranslationKey | TranslatedValue | string;
 
 export interface TranslationKey {
   key: string;

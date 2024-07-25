@@ -17,3 +17,9 @@ export * from './lib/features/alert/alert.model';
 export * from './lib/features/alert/alert.module';
 export * from './lib/features/alert/alert.reducer';
 export * from './lib/features/alert/alert.selectors';
+
+export * from './lib/directives/admin-only.directive';
+export * from './lib/directives/can-create.directive';
+export * from './lib/directives/can-delete.directive';
+export * from './lib/directives/can-show.directive';
+export * from './lib/directives/can-update.directive';

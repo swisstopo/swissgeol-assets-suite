@@ -10,6 +10,10 @@
   <section class="filters">
     <h3 translate>search.refineSearch</h3>
     <section>
+      <h4 translate>search.workgroup</h4>
+      <asset-sg-asset-search-filter-list [filters]="workgroupFilters$ | push" />
+    </section>
+    <section>
       <h4 translate>search.usage</h4>
       <asset-sg-asset-search-filter-list [filters]="usageCodeFilters$ | push" />
     </section>
@@ -54,9 +58,15 @@
             <mat-option
               *ngFor="let author of filteredAuthors"
               [value]="author.name"
+              class="author"
+              [matTooltip]="author.name"
+              matTooltipPosition="right"
               (onSelectionChange)="updateAuthor($event, author.contactId)"
             >
-              {{ author.name }} ({{ author.count }})
+              <div class="author__name">
+                {{ author.name }}
+              </div>
+              <div class="author__count">({{ author.count }})</div>
             </mat-option>
           </mat-autocomplete>
         </mat-form-field>
@@ -79,7 +89,7 @@
         <mat-datepicker-toggle matPrefix [for]="createDateFromPicker" cdkMonitorSubtreeFocus>
           <asset-sg-datepicker-toggle-icon matDatepickerToggleIcon></asset-sg-datepicker-toggle-icon>
         </mat-datepicker-toggle>
-        <mat-datepicker #createDateFromPicker [startAt]="createDateRange?.min ?? null"></mat-datepicker>
+        <mat-datepicker #createDateFromPicker [startAt]="minCreateDate"></mat-datepicker>
         <button
           class="input-clear-button"
           asset-sg-icon-button

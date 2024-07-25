@@ -2,6 +2,7 @@ export const deAppTranslations = {
   logoSwissGeol: 'Logo Swissgeol Assets',
   welcomeTo: 'Willkommen bei',
   accessForbidden: 'Sie haben keinen Zugriff auf diese Applikation.',
+  resourceForbidden: 'Sie haben keinen Zugriff auf diese Ressource.',
   ok: 'OK',
   submit: 'Absenden',
   cancel: 'Abbrechen',
@@ -16,6 +17,9 @@ export const deAppTranslations = {
   delete: 'Löschen',
   close: 'Schliessen',
   datePlaceholder: 'JJJJ-MM-TT',
+  workgroup: {
+    title: 'Arbeitsgruppe',
+  },
   menuBar: {
     assets: 'Assets',
     admin: 'Verwaltung',
@@ -77,6 +81,7 @@ export const deAppTranslations = {
     languageItem: {
       None: 'keine',
     },
+    workgroup: 'Arbeitsgruppe',
     resetSearch: 'Suche zurücksetzen',
     file: 'Datei',
     openFileInNewTab: '{{fileName}} in neuem Tab öffnen',
@@ -231,5 +236,38 @@ export const deAppTranslations = {
       'Gleicht den Zustand von Elasticsearch mit der Datenbank ab.' +
       ' Damit wird sichergestellt, dass die Suche alle vorhandenen Assets miteinbezieht.',
     adminInstructionsSyncElasticAssetsStart: 'Synchronisation starten',
+  },
+  admin: {
+    users: 'Benutzer',
+    workgroups: 'Arbeitsgruppen',
+    name: 'Name',
+    role: 'Rolle',
+    actions: 'Aktionen',
+    email: 'E-Mail',
+    back: 'Zurück',
+    languages: {
+      de: 'Deutsch',
+      en: 'Englisch',
+      fr: 'Französisch',
+      it: 'Italienisch',
+      rm: 'Rätoromanisch',
+    },
+    userPage: {
+      admin: 'Admin',
+      lang: 'Sprache',
+      addWorkgroups: 'Arbeitsgruppen hinzufügen',
+      more: 'weitere',
+      userAddError: 'Füge mindestens einen Benutzer hinzu',
+    },
+    workgroupPage: {
+      name: 'Name',
+      isActive: 'Aktiv',
+      activate: 'Aktivieren',
+      deactivate: 'Deaktivieren',
+      create: 'Erstellen',
+      isDisabled: 'Deaktiviert',
+      chooseUsersText: 'Füge Benutzer hinzu, um sie zu verwalten',
+      addUsers: 'Benutzer hinzufügen',
+    },
   },
 };

@@ -3,7 +3,9 @@ import { ChangeDetectionStrategy, Component, ElementRef, Input, OnInit, ViewChil
 import { FormBuilder, FormControl, FormGroupDirective } from '@angular/forms';
 import { fromAppShared } from '@asset-sg/client-shared';
 import { eqAssetLanguageEdit } from '@asset-sg/shared';
+import { Role } from '@asset-sg/shared/v2';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { Store } from '@ngrx/store';
 import { RxState } from '@rx-angular/state';
 import * as O from 'fp-ts/Option';
 import {
@@ -106,6 +108,15 @@ export class AssetEditorTabGeneralComponent implements OnInit {
   );
   public _currentlyEditedIdIndex$ = this._state.select('currentlyEditedIdIndex');
 
+  private store = inject(Store);
+
+  /**
+   * The workgroups to which the user is allowed to assign an asset.
+   */
+  public availableWorkgroups$ = this.store
+    .select(fromAppShared.selectWorkgroups)
+    .pipe(map((workgroups) => workgroups.filter((it) => it.role != Role.Viewer)));
+
   @Input()
   public set referenceDataVM$(value: Observable<fromAppShared.ReferenceDataVM>) {
     this._state.connect('referenceDataVM', value);
@@ -174,12 +185,6 @@ export class AssetEditorTabGeneralComponent implements OnInit {
       }
     });
     this._ngOnInit$.next();
-  }
-
-  public _removeManCatLabelRef(value: string) {
-    this._form.controls['manCatLabelRefs'].setValue(
-      this._form.controls['manCatLabelRefs'].value.filter((v: string) => v !== value)
-    );
   }
 
   public _insertNewIdClicked() {

@@ -1,0 +1,102 @@
+<mat-card class="card">
+  <div class="user-edit">
+    <form [formGroup]="formGroup" class="form">
+      <div *ngIf="user" class="header">
+        <h2 class="email">
+          {{ user.email }}
+        </h2>
+      </div>
+      <div class="user-data">
+        <div class="user-data__group">
+          <mat-form-field class="lang-form-field" subscriptSizing="dynamic">
+            <mat-label translate>admin.userPage.lang</mat-label>
+            <mat-select formControlName="lang">
+              <mat-option value="de" translate><span translate>admin.languages.de</span></mat-option>
+              <mat-option value="en" translate><span translate>admin.languages.en</span></mat-option>
+              <mat-option value="fr" translate><span translate>admin.languages.fr</span></mat-option>
+              <mat-option value="it" translate><span translate>admin.languages.it</span></mat-option>
+              <mat-option value="rm" translate><span translate>admin.languages.rm</span></mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+        <div class="user-data__group">
+          <mat-checkbox formControlName="isAdmin" color="primary">
+            <span translate>admin.userPage.admin</span>
+          </mat-checkbox>
+        </div>
+      </div>
+      <div class="workgroups">
+        <div class="workgroups__header">
+          <h3 translate>admin.workgroups</h3>
+          <form>
+            <mat-form-field>
+              <mat-label translate>admin.userPage.addWorkgroups</mat-label>
+              <input
+                type="text"
+                [placeholder]="'admin.name' | translate"
+                matInput
+                [formControl]="workgroupAutoCompleteControl"
+                [matAutocomplete]="auto"
+              />
+              <button
+                class="input-clear-button"
+                asset-sg-icon-button
+                matSuffix
+                cdkMonitorElementFocus
+                (click)="resetWorkgroupSearch()"
+              >
+                <svg-icon key="close"></svg-icon>
+              </button>
+              <mat-autocomplete #auto="matAutocomplete">
+                <mat-option
+                  *ngFor="let workgroup of filteredWorkgroups"
+                  [value]="workgroup.name"
+                  (onSelectionChange)="addWorkgroupRole($event, workgroup.id)"
+                  [disabled]="isUserPartOfWorkgroup(workgroup.id)"
+                >
+                  {{ workgroup.name }}
+                </mat-option>
+              </mat-autocomplete>
+            </mat-form-field>
+          </form>
+        </div>
+        <div>
+          <table mat-table [dataSource]="userWorkgroups$" class="mat-elevation-z1">
+            <!-- ID Column -->
+            <ng-container matColumnDef="name">
+              <th mat-header-cell *matHeaderCellDef>Name</th>
+              <td mat-cell *matCellDef="let workgroup">{{ workgroup.name }}</td>
+            </ng-container>
+
+            <!-- Role Column -->
+            <ng-container matColumnDef="role">
+              <th mat-header-cell *matHeaderCellDef translate>admin.role</th>
+              <td mat-cell *matCellDef="let workgroup">
+                <mat-form-field appearance="fill" subscriptSizing="dynamic" class="workgroups__table__form-field">
+                  <mat-label translate>admin.role</mat-label>
+                  <mat-select [value]="workgroup.role" (selectionChange)="updateWorkgroupRole($event, workgroup.id)">
+                    <mat-option *ngFor="let role of roles" [value]="role">
+                      {{ role }}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef translate>admin.actions</th>
+              <td mat-cell *matCellDef="let workgroup">
+                <button (click)="removeWorkgroupRole(workgroup.id)">
+                  <svg-icon key="delete"></svg-icon>
+                </button>
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="['name', 'role', 'actions']" class="workgroups__table__header"></tr>
+            <tr mat-row *matRowDef="let row; columns: COLUMNS"></tr>
+          </table>
+        </div>
+      </div>
+    </form>
+  </div>
+</mat-card>

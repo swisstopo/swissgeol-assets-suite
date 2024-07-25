@@ -1,9 +1,9 @@
+import { Role, User, UserData, UserId, WorkgroupId } from '@asset-sg/shared/v2';
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 
 import { PrismaService } from '@/core/prisma.service';
 import { Repo, RepoListOptions } from '@/core/repo';
-import { Role, User, UserData, UserId } from '@/features/users/user.model';
 import { satisfy } from '@/utils/define';
 import { handlePrismaMutationError } from '@/utils/prisma';
 
@@ -48,8 +48,14 @@ export class UserRepo implements Repo<User, UserId, UserData & { oidcId: string 
         id: data.oidcId,
         oidcId: data.oidcId,
         email: data.email,
-        role: data.role,
         lang: data.lang,
+        isAdmin: false,
+        workgroups: {
+          createMany: {
+            data: [...data.roles].map(([workgroupId, role]) => ({ workgroupId, role })),
+            skipDuplicates: true,
+          },
+        },
       },
       select: userSelection,
     });
@@ -61,8 +67,17 @@ export class UserRepo implements Repo<User, UserId, UserData & { oidcId: string 
       const entry = await this.prisma.assetUser.update({
         where: { id },
         data: {
-          role: data.role,
           lang: data.lang,
+          isAdmin: data.isAdmin,
+          workgroups: {
+            deleteMany: {
+              workgroupId: {},
+            },
+            createMany: {
+              data: [...data.roles].map(([workgroupId, role]) => ({ workgroupId, role })),
+              skipDuplicates: true,
+            },
+          },
         },
         select: userSelection,
       });
@@ -87,16 +102,31 @@ export class UserRepo implements Repo<User, UserId, UserData & { oidcId: string 
   }
 }
 
-const userSelection = satisfy<Prisma.AssetUserSelect>()({
+export const userSelection = satisfy<Prisma.AssetUserSelect>()({
   id: true,
-  role: true,
   email: true,
   lang: true,
+  isAdmin: true,
+  workgroups: {
+    select: {
+      workgroupId: true,
+      role: true,
+    },
+  },
 });
 
 type SelectedUser = Prisma.AssetUserGetPayload<{ select: typeof userSelection }>;
 
-const parse = (data: SelectedUser): User => ({
-  ...data,
-  role: data.role as Role,
-});
+const parse = (data: SelectedUser): User => {
+  const roles = new Map<WorkgroupId, Role>();
+  for (const workgroup of data.workgroups) {
+    roles.set(workgroup.workgroupId, workgroup.role);
+  }
+  return {
+    id: data.id,
+    email: data.email,
+    isAdmin: data.isAdmin,
+    lang: data.lang,
+    roles,
+  };
+};

@@ -1,6 +1,8 @@
+import { User } from '@asset-sg/shared/v2';
 import { environment } from '@environment';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { HttpException, Inject, Injectable, NestMiddleware } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import axios from 'axios';
 import { Cache } from 'cache-manager';
 import { NextFunction, Request, Response } from 'express';
@@ -11,7 +13,6 @@ import * as jwt from 'jsonwebtoken';
 import { Jwt, JwtPayload } from 'jsonwebtoken';
 import jwkToPem from 'jwk-to-pem';
 
-import { Role, User } from '@/features/users/user.model';
 import { UserRepo } from '@/features/users/user.repo';
 import { JwtRequest } from '@/models/jwt-request';
 
@@ -61,7 +62,7 @@ export class JwtMiddleware implements NestMiddleware {
       await this.initializeRequest(req, result.right.accessToken, result.right.jwtPayload as JwtPayload);
       next();
     } else {
-      res.status(403).json({ error: result.left.message });
+      res.status(403).json({ error: 'not authorized by eIAM' });
     }
   }
 
@@ -193,7 +194,26 @@ export class JwtMiddleware implements NestMiddleware {
     if (email == null || !/^.+@.+\..+$/.test(email)) {
       throw new HttpException('invalid JWT payload: username does not contain an email', 401);
     }
-    return await this.userRepo.create({ oidcId, email, role: Role.Viewer, lang: 'de' });
+    try {
+      return await this.userRepo.create({
+        oidcId,
+        email,
+        lang: 'de',
+        isAdmin: false,
+        roles: new Map(),
+      });
+    } catch (e) {
+      // If two requests of the same user overlap, it is possible that the user creation collides.
+      // If this happens, we load the user that has already been created by someone else from the DB.
+      if (!(e instanceof Prisma.PrismaClientKnownRequestError) || e.code !== 'P2002') {
+        throw e;
+      }
+      const user = await this.userRepo.find(oidcId);
+      if (user == null) {
+        throw e;
+      }
+      return user;
+    }
   }
 }
 

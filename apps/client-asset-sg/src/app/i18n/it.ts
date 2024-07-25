@@ -4,6 +4,7 @@ export const itAppTranslations: AppTranslations = {
   logoSwissGeol: 'Logo Swissgeol Assets',
   welcomeTo: 'Benvenuti su',
   accessForbidden: 'Non avete accesso a questa applicazione.',
+  resourceForbidden: 'IT Sie haben keinen Zugriff auf diese Ressource.',
   ok: 'OK',
   submit: 'IT Absenden',
   cancel: 'IT Abbrechen',
@@ -18,6 +19,9 @@ export const itAppTranslations: AppTranslations = {
   delete: 'IT Löschen',
   close: 'IT Schliessen',
   datePlaceholder: 'AAAA-MM-GG',
+  workgroup: {
+    title: 'IT Arbeitsgruppe',
+  },
   menuBar: {
     assets: 'IT Assets',
     admin: 'IT Verwaltung',
@@ -78,6 +82,7 @@ export const itAppTranslations: AppTranslations = {
     languageItem: {
       None: 'IT keine',
     },
+    workgroup: 'IT Arbeitsgruppe',
     resetSearch: 'IT Suche zurücksetzen',
     file: 'IT Datei',
     openFileInNewTab: 'IT {{fileName}} in neuem Tab öffnen',
@@ -232,5 +237,38 @@ export const itAppTranslations: AppTranslations = {
       'IT Gleicht den Zustand von Elasticsearch mit der Datenbank ab.' +
       'IT Damit wird sichergestellt, dass die Suche alle vorhandenen Assets miteinbezieht.',
     adminInstructionsSyncElasticAssetsStart: 'IT Synchronisation starten',
+  },
+  admin: {
+    users: 'IT Benutzer',
+    workgroups: 'IT Arbeitsgruppen',
+    name: 'IT Name',
+    role: 'IT Rolle',
+    actions: 'IT Aktionen',
+    email: 'IT E-Mail',
+    back: 'IT Zurück',
+    languages: {
+      de: 'IT Deutsch',
+      en: 'IT Englisch',
+      fr: 'IT Französisch',
+      it: 'IT Italienisch',
+      rm: 'IT Rätoromanisch',
+    },
+    userPage: {
+      admin: 'IT Admin',
+      lang: 'IT Sprache',
+      addWorkgroups: 'IT Arbeitsgruppen hinzufügen',
+      more: 'IT weitere',
+      userAddError: 'IT Füge mindestens einen Benutzer hinzu',
+    },
+    workgroupPage: {
+      name: 'IT Name',
+      isActive: 'IT Aktiv',
+      activate: 'IT Aktivieren',
+      deactivate: 'IT Deaktivieren',
+      create: 'IT Erstellen',
+      isDisabled: 'IT Deaktiviert',
+      chooseUsersText: 'IT Füge Nutzer hinzu, um sie zu verwalten',
+      addUsers: 'IT Benutzer hinzufügen',
+    },
   },
 };

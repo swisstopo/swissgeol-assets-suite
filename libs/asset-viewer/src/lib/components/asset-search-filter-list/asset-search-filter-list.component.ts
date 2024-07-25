@@ -9,7 +9,7 @@ import { Filter } from '../../state/asset-search/asset-search.selector';
   templateUrl: './asset-search-filter-list.component.html',
   styleUrl: './asset-search-filter-list.component.scss',
 })
-export class AssetSearchFilterListComponent<T extends string> {
+export class AssetSearchFilterListComponent<T> {
   @Input({ required: true })
   filters!: Array<Filter<T>>;
 
