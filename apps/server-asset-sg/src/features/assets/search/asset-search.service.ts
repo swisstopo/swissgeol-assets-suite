@@ -297,8 +297,6 @@ export class AssetSearchService {
       maxCreateDate,
     } as unknown as Result;
 
-    console.log(workgroupIds);
-
     const mapBucket = <T>(bucket: AggregationBucket<T>): ValueCount<T> => ({
       value: bucket.key,
       count: bucket.doc_count,

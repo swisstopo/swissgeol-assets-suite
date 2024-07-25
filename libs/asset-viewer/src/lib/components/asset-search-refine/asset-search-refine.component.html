@@ -10,6 +10,10 @@
   <section class="filters">
     <h3 translate>search.refineSearch</h3>
     <section>
+      <h4 translate>search.workgroup</h4>
+      <asset-sg-asset-search-filter-list [filters]="workgroupFilters$ | push" />
+    </section>
+    <section>
       <h4 translate>search.usage</h4>
       <asset-sg-asset-search-filter-list [filters]="usageCodeFilters$ | push" />
     </section>
@@ -28,10 +32,6 @@
     <section>
       <h4 translate>search.topic</h4>
       <asset-sg-asset-search-filter-list [filters]="manCatLabelFilters$ | push" />
-    </section>
-    <section>
-      <h4 translate>search.workgroup</h4>
-      <asset-sg-asset-search-filter-list [filters]="workgroupFilters$ | push" />
     </section>
     <section>
       <h4 translate>search.author</h4>
