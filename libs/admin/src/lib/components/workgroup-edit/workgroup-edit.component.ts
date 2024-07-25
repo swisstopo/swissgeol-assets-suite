@@ -26,7 +26,7 @@ export class WorkgroupEditComponent implements OnInit, OnDestroy {
   public readonly roles: Role[] = Object.values(Role);
   public readonly formGroup = new FormGroup({
     name: new FormControl('', { validators: Validators.required, updateOn: 'blur', nonNullable: true }),
-    disabledAt: new FormControl<Date | null>(null),
+    isDisabled: new FormControl(false, { nonNullable: true }),
     users: new FormControl<Map<UserId, UserOnWorkgroup>>(new Map(), { nonNullable: true }),
   });
 
@@ -70,7 +70,7 @@ export class WorkgroupEditComponent implements OnInit, OnDestroy {
     this.formGroup.patchValue(
       {
         name: workgroup.name,
-        disabledAt: workgroup.disabledAt,
+        isDisabled: workgroup.disabledAt != null,
         users: workgroup.users,
       },
       { emitEvent: false }
@@ -94,7 +94,7 @@ export class WorkgroupEditComponent implements OnInit, OnDestroy {
         }
         this.updateWorkgroup(this.workgroup.id, {
           name: this.formGroup.controls.name.value ?? '',
-          disabledAt: this.formGroup.controls.disabledAt.value ?? null,
+          disabledAt: this.formGroup.controls.isDisabled.value ? this.workgroup?.disabledAt ?? new Date() : null,
           users: this.workgroup.users,
         });
       })
