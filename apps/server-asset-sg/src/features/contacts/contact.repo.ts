@@ -1,9 +1,9 @@
+import { Contact, ContactData, ContactId } from '@asset-sg/shared/v2';
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 
 import { PrismaService } from '@/core/prisma.service';
 import { Repo, RepoListOptions } from '@/core/repo';
-import { Contact, ContactData, ContactId } from '@/features/contacts/contact.model';
 import { satisfy } from '@/utils/define';
 import { handlePrismaMutationError } from '@/utils/prisma';
 

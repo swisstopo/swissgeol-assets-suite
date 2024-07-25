@@ -36,5 +36,6 @@ export const PatchAsset = C.struct({
   siblingAssetIds: C.array(C.number),
   newStudies: C.array(C.string),
   newStatusWorkItemCode: CT.optionFromNullable(C.string),
+  workgroupId: C.number,
 });
 export type PatchAsset = C.TypeOf<typeof PatchAsset>;

@@ -1,77 +1,44 @@
-import { TemplatePortal } from '@angular/cdk/portal';
-import {
-  ChangeDetectionStrategy,
-  ChangeDetectorRef,
-  Component,
-  TemplateRef,
-  ViewChild,
-  ViewContainerRef,
-  inject,
-} from '@angular/core';
-
-import {
-  AppPortalService,
-  AppState,
-  LifecycleHooks,
-  LifecycleHooksDirective,
-  fromAppShared,
-} from '@asset-sg/client-shared';
-import { ORD, rdIsNotComplete } from '@asset-sg/core';
-import { User } from '@asset-sg/shared';
+import { Component, inject, OnInit, TemplateRef, ViewChild } from '@angular/core';
+import { Router } from '@angular/router';
+import { AppPortalService, AppState, CURRENT_LANG, LifecycleHooksDirective } from '@asset-sg/client-shared';
 import { Store } from '@ngrx/store';
-import { asyncScheduler, observeOn, takeWhile } from 'rxjs';
-
-import { AdminService } from '../../services/admin.service';
-import { UserExpandedOutput } from '../user-expanded';
-
-import { AdminPageStateMachine } from './admin-page.state-machine';
+import * as actions from '../../state/admin.actions';
+import { selectIsLoading } from '../../state/admin.selector';
 
 @Component({
   selector: 'asset-sg-admin',
   templateUrl: './admin-page.component.html',
   styleUrls: ['./admin-page.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   hostDirectives: [LifecycleHooksDirective],
 })
-export class AdminPageComponent {
+export class AdminPageComponent implements OnInit {
   @ViewChild('templateDrawerPortalContent') templateDrawerPortalContent!: TemplateRef<unknown>;
 
-  private _lc = inject(LifecycleHooks);
-  private _appPortalService = inject(AppPortalService);
-  private _viewContainerRef = inject(ViewContainerRef);
-  private _cd = inject(ChangeDetectorRef);
-  private _adminService = inject(AdminService);
-  private _store = inject(Store<AppState>);
+  private readonly store = inject(Store<AppState>);
+  public readonly isLoading$ = this.store.select(selectIsLoading);
+  public readonly currentLang$ = inject(CURRENT_LANG);
+  private readonly appPortalService = inject(AppPortalService);
+  private readonly router = inject(Router);
 
-  public sm = new AdminPageStateMachine({
-    rdUserId$: this._store.select(fromAppShared.selectRDUserProfile).pipe(
-      ORD.map((u) => u.id),
-      takeWhile(rdIsNotComplete, true)
-    ),
-    getUsers: () => this._adminService.getUsers(),
-    updateUser: (user) => this._adminService.updateUser(user),
-    deleteUser: (id) => this._adminService.deleteUser(id),
-  });
-
-  constructor() {
-    this._lc.afterViewInit$.pipe(observeOn(asyncScheduler)).subscribe(() => {
-      this._appPortalService.setAppBarPortalContent(null);
-      this._appPortalService.setDrawerPortalContent(
-        new TemplatePortal(this.templateDrawerPortalContent, this._viewContainerRef)
-      );
-      this._cd.detectChanges();
-    });
+  ngOnInit(): void {
+    this.store.dispatch(actions.listWorkgroups());
+    this.store.dispatch(actions.listUsers());
+    this.appPortalService.setAppBarPortalContent(null);
+    this.appPortalService.setDrawerPortalContent(null);
   }
 
-  public handleUserExpandedOutput(output: UserExpandedOutput): void {
-    UserExpandedOutput.match({
-      userEdited: (user) => this.sm.saveEditedUser(user),
-      userExpandCanceled: () => this.sm.cancelEditOrSave(),
-      userDelete: (user) => this.sm.deleteUser(user.id),
-    })(output);
+  public get isDetailPage(): boolean {
+    return (
+      this.router.url.includes('/workgroups/') ||
+      this.router.url.includes('/users/') ||
+      this.router.url.includes('/new')
+    );
   }
 
-  public trackByFn(_: number, item: User): string {
-    return item.id;
+  getBackPath(lang: string): string[] {
+    if (this.router.url.includes('/workgroups/')) {
+      return [`/${lang}/admin/workgroups`];
+    }
+    return [`/${lang}/admin/users`];
   }
 }

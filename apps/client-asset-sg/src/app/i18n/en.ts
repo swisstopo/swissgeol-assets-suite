@@ -4,6 +4,7 @@ export const enAppTranslations: AppTranslations = {
   logoSwissGeol: 'Logo Swissgeol Assets',
   welcomeTo: 'Welcome to',
   accessForbidden: 'You do not have access to this application.',
+  resourceForbidden: 'You do not have access to this resource.',
   ok: 'OK',
   submit: 'Submit',
   cancel: 'Cancel',
@@ -18,6 +19,9 @@ export const enAppTranslations: AppTranslations = {
   delete: 'Delete',
   close: 'Close',
   datePlaceholder: 'YYYY-MM-DD',
+  workgroup: {
+    title: 'Workgroup',
+  },
   menuBar: {
     assets: 'Assets',
     admin: 'Administration',
@@ -78,6 +82,7 @@ export const enAppTranslations: AppTranslations = {
     languageItem: {
       None: 'none',
     },
+    workgroup: 'Workgroup',
     resetSearch: 'Reset search',
     file: 'File',
     openFileInNewTab: 'Open {{fileName}} in new tab',
@@ -232,5 +237,38 @@ export const enAppTranslations: AppTranslations = {
       'Equalizes the state of Elasticsearch with the local database.' +
       ' This ensures that the search includes all existing assets.',
     adminInstructionsSyncElasticAssetsStart: 'Start synchronization',
+  },
+  admin: {
+    users: 'Users',
+    workgroups: 'Workgroups',
+    name: 'Name',
+    role: 'Role',
+    actions: 'Actions',
+    email: 'Email',
+    back: 'Back',
+    languages: {
+      de: 'German',
+      en: 'English',
+      fr: 'French',
+      it: 'Italian',
+      rm: 'Romansh',
+    },
+    userPage: {
+      admin: 'Admin',
+      lang: 'Language',
+      addWorkgroups: 'Add workgroups',
+      more: 'more',
+      userAddError: 'Add at least one user',
+    },
+    workgroupPage: {
+      name: 'Name',
+      isActive: 'Active',
+      activate: 'Activate',
+      deactivate: 'Deactivate',
+      create: 'Create',
+      isDisabled: 'Deactivated',
+      chooseUsersText: 'Add users to manage',
+      addUsers: 'Add users',
+    },
   },
 };

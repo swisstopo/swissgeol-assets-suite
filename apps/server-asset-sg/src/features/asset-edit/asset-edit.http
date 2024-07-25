@@ -1,0 +1,75 @@
+### Get asset-edit
+GET {{host}}/api/asset-edit/5
+Authorization: Impersonate {{user}}
+
+### Create asset-edit
+POST {{host}}/api/asset-edit
+Authorization: Impersonate {{user}}
+Content-Type: application/json
+
+{
+  "assetContacts": [],
+  "assetFormatItemCode": "pdf",
+  "assetKindItemCode": "report",
+  "assetMainId": null,
+  "createDate": 20200409,
+  "ids": [],
+  "internalUse": {
+    "isAvailable": false,
+    "startAvailabilityDate": 20230303,
+    "statusAssetUseItemCode": "tobechecked"
+  },
+  "publicUse": {
+    "isAvailable": true,
+    "startAvailabilityDate": 20220706,
+    "statusAssetUseItemCode": "underclarification"
+  },
+  "isNatRel": false,
+  "assetLanguages": [],
+  "manCatLabelRefs": [],
+  "newStatusWorkItemCode": null,
+  "newStudies": [],
+  "receiptDate": 20240709,
+  "siblingAssetIds": [],
+  "studies": [],
+  "titleOriginal": "My Cool Asset",
+  "titlePublic": "Our Cool Asset",
+  "typeNatRels": [],
+  "workgroupId": 1
+}
+
+### Update asset-edit
+PUT {{host}}/api/asset-edit/5
+Authorization: Impersonate {{user}}
+Content-Type: application/json
+
+{
+  "assetContacts": [],
+  "assetFormatItemCode": "pdf",
+  "assetKindItemCode": "report",
+  "assetMainId": null,
+  "createDate": 20200409,
+  "ids": [],
+  "internalUse": {
+    "isAvailable": false,
+    "startAvailabilityDate": 20230303,
+    "statusAssetUseItemCode": "tobechecked"
+  },
+  "publicUse": {
+    "isAvailable": true,
+    "startAvailabilityDate": 20220706,
+    "statusAssetUseItemCode": "underclarification"
+  },
+  "isNatRel": false,
+  "assetLanguages": [],
+  "manCatLabelRefs": [],
+  "newStatusWorkItemCode": null,
+  "newStudies": [],
+  "receiptDate": 20240709,
+  "siblingAssetIds": [],
+  "studies": [],
+  "titleOriginal": "My Cool Asset",
+  "titlePublic": "Our Cool Asset",
+  "typeNatRels": [],
+  "workgroupId": 1
+}

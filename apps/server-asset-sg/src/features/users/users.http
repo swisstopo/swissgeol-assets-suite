@@ -8,6 +8,14 @@ Authorization: Impersonate {{user}}
 GET {{host}}/api/users
 Authorization: Impersonate {{user}}
 
+### Find User by ID
+GET {{host}}/api/users/{{user-id}}
+Authorization: Impersonate {{user}}
+
+### Find User by ID
+GET {{host}}/api/admin/user/{{user-id}}
+Authorization: Impersonate {{user}}
+
 ### Update user
 PUT {{host}}/api/users/{{user-id}}
 Authorization: Impersonate {{user}}
@@ -15,5 +23,12 @@ Content-Type: application/json
 
 {
   "role": "admin",
-  "lang": "de"
+  "lang": "de",
+  "workgroups": [
+    {
+      "workgroupId": 4,
+      "role": "MasterEditor"
+    }
+  ],
+  "isAdmin": false
 }

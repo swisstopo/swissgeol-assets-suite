@@ -2,6 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Component, inject } from '@angular/core';
 import { AppState } from '@asset-sg/client-shared';
 import { AssetFile } from '@asset-sg/shared';
+import { AssetEditPolicy } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
 
 import * as actions from '../../state/asset-search/asset-search.actions';
@@ -38,7 +39,7 @@ export class AssetSearchDetailComponent {
 
   downloadFile(file: Omit<AssetFile, 'fileSize'>, isDownload = true): void {
     this.activeFileDownloads.set(file.fileId, { isDownload });
-    this.httpClient.get(`/api/file/${file.fileId}`, { responseType: 'blob' }).subscribe({
+    this.httpClient.get(`/api/files/${file.fileId}`, { responseType: 'blob' }).subscribe({
       next: (blob) => {
         const url = URL.createObjectURL(blob);
         const anchor = document.createElement('a');
@@ -63,4 +64,6 @@ export class AssetSearchDetailComponent {
       },
     });
   }
+
+  protected readonly AssetEditPolicy = AssetEditPolicy;
 }

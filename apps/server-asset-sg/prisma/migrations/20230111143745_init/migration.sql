@@ -1,3 +1,5 @@
+DROP SCHEMA IF EXISTS "auth" CASCADE;
+
 -- CreateSchema
 CREATE SCHEMA IF NOT EXISTS "auth";
 

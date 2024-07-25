@@ -1,0 +1,66 @@
+<mat-card class="card">
+  <div *ngIf="workgroup$ | async as workgroup" class="workgroup-edit">
+    <h2 class="email">
+      {{ workgroup.name }}
+    </h2>
+    <form [formGroup]="formGroup">
+      <div class="form">
+        <mat-form-field appearance="fill" subscriptSizing="dynamic">
+          <mat-label translate>admin.name</mat-label>
+          <input matInput formControlName="name" placeholder="Name" />
+        </mat-form-field>
+        <mat-slide-toggle formControlName="disabledAt" color="primary"
+          ><span translate>admin.workgroupPage.isDisabled</span>
+        </mat-slide-toggle>
+      </div>
+    </form>
+
+    <div class="users-table">
+      <div class="users-table__title">
+        <h3 translate>admin.users</h3>
+        <button asset-sg-primary (click)="addUsersToWorkgroup()" translate="">admin.workgroupPage.addUsers</button>
+      </div>
+
+      @if (workgroup.users.size === 0) {
+      <p translate>admin.workgroupPage.chooseUsersText</p>
+      } @else {
+      <table mat-table [dataSource]="users$" class="mat-elevation-z1">
+        <tr mat-header-row *matHeaderRowDef="['id', 'role', 'actions']" class="users-table__header"></tr>
+        <tr mat-row *matRowDef="let row; columns: ['id', 'role', 'actions']"></tr>
+
+        <ng-container matColumnDef="id">
+          <th mat-header-cell *matHeaderCellDef translate>admin.email</th>
+          <td mat-cell *matCellDef="let user">{{ user.email }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="role">
+          <th mat-header-cell *matHeaderCellDef translate>admin.role</th>
+          <td mat-cell *matCellDef="let user">
+            <mat-form-field appearance="fill" subscriptSizing="dynamic" class="users-table__form-field">
+              <mat-label translate>admin.role</mat-label>
+              <mat-select [value]="user.role" (selectionChange)="updateRoleForUser($event, user.id, user)">
+                <mat-option *ngFor="let role of roles" [value]="role">
+                  {{ role }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef translate>admin.actions</th>
+          <td mat-cell *matCellDef="let user">
+            <button (click)="deleteUserFromWorkgroup(user.id)">
+              <svg-icon key="delete"></svg-icon>
+            </button>
+          </td>
+        </ng-container>
+      </table>
+      }
+      <div *ngIf="mode === 'create'" class="users-table__save">
+        <button asset-sg-secondary (click)="cancel()" translate>cancel</button>
+        <button asset-sg-primary (click)="createWorkgroup()" translate>save</button>
+      </div>
+    </div>
+  </div>
+</mat-card>

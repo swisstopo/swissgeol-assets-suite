@@ -17,7 +17,6 @@ export * from './study';
 export * from './study-dto';
 export * from './ReferenceData';
 export * from './usage';
-export * from './user';
 
 export * from './asset-search/asset-search-query';
 export * from './asset-search/asset-search-query.dto';

@@ -12,7 +12,7 @@ import { LineString, Point, Polygon, SimpleGeometry } from 'ol/geom';
 import { fromExtent as polygonFromExtent } from 'ol/geom/Polygon';
 import Map from 'ol/Map';
 import { fromLonLat } from 'ol/proj';
-import { Circle, Fill, Icon, RegularShape, Stroke, Style } from 'ol/style';
+import { Circle, Fill, RegularShape, Stroke, Style } from 'ol/style';
 import View from 'ol/View';
 
 import { isoWGSLat, isoWGSLng } from '../models';

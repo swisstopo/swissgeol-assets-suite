@@ -1,0 +1,8 @@
+<h3 translate class="mt-8">edit.adminInstructionsSyncElasticAssetsHeading</h3>
+<div class="asset-sync" [class.active]="syncProgress !== null">
+  <button type="button" asset-sg-primary class="self-start" translate (click)="synchronizeElastic()">
+    edit.adminInstructionsSyncElasticAssetsStart
+  </button>
+  <div class="progress">{{ syncProgress }}%</div>
+</div>
+<p translate class="mt-2">edit.adminInstructionsSyncElasticAssets</p>

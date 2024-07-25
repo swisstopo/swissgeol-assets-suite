@@ -1,0 +1,36 @@
+<div class="workgroups">
+  <div class="header">
+    <h1 translate>admin.workgroups</h1>
+    <button asset-sg-primary routerLink="new" translate>admin.workgroupPage.create</button>
+  </div>
+  <div class="table">
+    <table mat-table [dataSource]="workgroups$" class="mat-elevation-z8">
+      <ng-container matColumnDef="name">
+        <th mat-header-cell *matHeaderCellDef translate>admin.name</th>
+        <td mat-cell *matCellDef="let workgroup">{{ workgroup.name }}</td>
+      </ng-container>
+      <ng-container matColumnDef="users">
+        <th mat-header-cell *matHeaderCellDef translate>admin.users</th>
+        <td mat-cell *matCellDef="let workgroup">
+          @for (user of getWorkgroupUsers(workgroup); track user.id) {
+          <span>{{ user.email }}, </span>
+          }
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="status">
+        <th mat-header-cell *matHeaderCellDef translate>admin.workgroupPage.isActive</th>
+        <td mat-cell *matCellDef="let workgroup">{{ workgroup.disabled_at ? "inaktiv" : "aktiv" }}</td>
+      </ng-container>
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef translate>admin.actions</th>
+        <td mat-cell *matCellDef="let workgroup">
+          <button [routerLink]="[workgroup.id]">
+            <svg-icon key="edit"></svg-icon>
+          </button>
+        </td>
+      </ng-container>
+      <tr mat-header-row *matHeaderRowDef="COLUMNS; sticky: true" class="table__header"></tr>
+      <tr mat-row *matRowDef="let row; columns: COLUMNS"></tr>
+    </table>
+  </div>
+</div>

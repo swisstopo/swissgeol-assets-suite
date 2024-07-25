@@ -12,6 +12,7 @@ export interface AssetSearchQuery {
   usageCodes?: UsageCode[];
   geometryCodes?: Array<GeometryCode | 'None'>;
   languageItemCodes?: string[];
+  workgroupIds?: number[];
 }
 
 export enum GeometryCode {

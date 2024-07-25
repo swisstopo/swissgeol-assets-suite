@@ -27,7 +27,7 @@ export class AssetEditorService {
 
   public createAsset(patchAsset: PatchAsset): ORD.ObservableRemoteData<ApiError, AssetEditDetail> {
     return this._httpClient
-      .put(`/api/asset-edit`, PatchAsset.encode(patchAsset))
+      .post(`/api/asset-edit`, PatchAsset.encode(patchAsset))
       .pipe(
         map(flow(AssetEditDetail.decode, E.mapLeft(decodeError))),
         OE.catchErrorW(httpErrorResponseError),
@@ -41,7 +41,7 @@ export class AssetEditorService {
     patchAsset: PatchAsset
   ): ORD.ObservableRemoteData<ApiError, AssetEditDetail> {
     return this._httpClient
-      .patch(`/api/asset-edit/${assetId}`, PatchAsset.encode(patchAsset))
+      .put(`/api/asset-edit/${assetId}`, PatchAsset.encode(patchAsset))
       .pipe(
         map(flow(AssetEditDetail.decode, E.mapLeft(decodeError))),
         OE.catchErrorW(httpErrorResponseError),
@@ -55,7 +55,7 @@ export class AssetEditorService {
       ? forkJoin(
           fileIds.map((fileId) => {
             return this._httpClient
-              .delete(`/api/asset-edit/${assetId}/file/${fileId}`)
+              .delete(`/api/files/${fileId}`)
               .pipe(map(E.right), OE.catchErrorW(httpErrorResponseError), map(RD.fromEither), startWith(RD.pending));
           })
         ).pipe(
@@ -76,8 +76,9 @@ export class AssetEditorService {
           ...files.map((file) => {
             const formData = new FormData();
             formData.append('file', file);
+            formData.append('assetId', `${assetId}`);
             return this._httpClient
-              .post(`/api/asset-edit/${assetId}/file`, formData)
+              .post(`/api/files`, formData)
               .pipe(map(E.right), OE.catchErrorW(httpErrorResponseError));
           })
         ).pipe(
@@ -96,7 +97,7 @@ export class AssetEditorService {
 
   public updateContact(contactId: number, patchContact: PatchContact): ORD.ObservableRemoteData<ApiError, Contact> {
     return this._httpClient
-      .patch(`/api/contact-edit/${contactId}`, PatchContact.encode(patchContact))
+      .put(`/api/contacts/${contactId}`, PatchContact.encode(patchContact))
       .pipe(
         map(flow(Contact.decode, E.mapLeft(decodeError))),
         OE.catchErrorW(httpErrorResponseError),
@@ -107,7 +108,7 @@ export class AssetEditorService {
 
   public createContact(patchContact: PatchContact): ORD.ObservableRemoteData<ApiError, Contact> {
     return this._httpClient
-      .put(`/api/contact-edit`, PatchContact.encode(patchContact))
+      .post(`/api/contacts`, PatchContact.encode(patchContact))
       .pipe(
         map(flow(Contact.decode, E.mapLeft(decodeError))),
         OE.catchErrorW(httpErrorResponseError),

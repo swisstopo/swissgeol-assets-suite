@@ -4,6 +4,7 @@ export const rmAppTranslations: AppTranslations = {
   logoSwissGeol: 'Logo Swissgeol Assets',
   welcomeTo: 'RM Willkommen bei',
   accessForbidden: 'RM Sie haben keinen Zugriff auf diese Applikation.',
+  resourceForbidden: 'RM Sie haben keinen Zugriff auf diese Ressource.',
   ok: 'OK',
   submit: 'RM Absenden',
   cancel: 'RM Abbrechen',
@@ -18,6 +19,9 @@ export const rmAppTranslations: AppTranslations = {
   delete: 'RM Löschen',
   close: 'RM Schliessen',
   datePlaceholder: 'AAAA-MM-GG',
+  workgroup: {
+    title: 'IT Arbeitsgruppe',
+  },
   menuBar: {
     assets: 'RM Assets',
     admin: 'RM Verwaltung',
@@ -78,6 +82,7 @@ export const rmAppTranslations: AppTranslations = {
     languageItem: {
       None: 'RM keine',
     },
+    workgroup: 'RM Arbeitsgruppe',
     resetSearch: 'RM Suche zurücksetzen',
     file: 'RM Datei',
     openFileInNewTab: 'RM {{fileName}} in neuem Tab öffnen',
@@ -232,5 +237,38 @@ export const rmAppTranslations: AppTranslations = {
       'RM Gleicht den Zustand von Elasticsearch mit der Datenbank ab.' +
       'RM Damit wird sichergestellt, dass die Suche alle vorhandenen Assets miteinbezieht.',
     adminInstructionsSyncElasticAssetsStart: 'RM Synchronisation starten',
+  },
+  admin: {
+    users: 'RM Benutzer',
+    workgroups: 'RM Arbeitsgruppen',
+    name: 'RM Name',
+    role: 'RM Rolle',
+    actions: 'RM Aktionen',
+    email: 'RM E-Mail',
+    back: 'RM Zurück',
+    languages: {
+      de: 'RM Deutsch',
+      en: 'RM Englisch',
+      fr: 'RM Französisch',
+      it: 'RM Italienisch',
+      rm: 'RM Rätoromanisch',
+    },
+    userPage: {
+      admin: 'RM Admin',
+      lang: 'RM Sprache',
+      addWorkgroups: 'RM Arbeitsgruppen hinzufügen',
+      more: 'RM weitere',
+      userAddError: 'RM Füge mindestens einen Benutzer hinzu',
+    },
+    workgroupPage: {
+      name: 'RM Name',
+      isActive: 'RM Aktiv',
+      create: 'RM Erstellen',
+      activate: 'RM Aktivieren',
+      deactivate: 'RM Deaktivieren',
+      isDisabled: 'RM Deaktiviert',
+      chooseUsersText: 'RM Füge Nutzer hinzu, um sie zu verwalten',
+      addUsers: 'RM Benutzer hinzufügen',
+    },
   },
 };
