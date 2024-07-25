@@ -21,9 +21,9 @@ import {
   ValueCount,
   ValueItem,
 } from '@asset-sg/shared';
-import { WorkgroupId } from '@asset-sg/shared/v2';
+import { SimpleWorkgroup, WorkgroupId } from '@asset-sg/shared/v2';
 import * as RD from '@devexperts/remote-data-ts';
-import { createSelector, MemoizedSelector } from '@ngrx/store';
+import { createSelector } from '@ngrx/store';
 import * as A from 'fp-ts/Array';
 import { pipe } from 'fp-ts/function';
 import * as O from 'fp-ts/Option';
@@ -201,17 +201,37 @@ export const selectWorkgroupFilters = createSelector(
   selectAssetSearchQuery,
   selectAssetsSearchStats,
   (workgroups, query, stats) => {
+    // Create a mapping of workgroups by their id for easier and more performant lookup.
+    const workgroupsById = new Map<WorkgroupId, SimpleWorkgroup>();
+    for (const workgroup of workgroups) {
+      workgroupsById.set(workgroup.id, workgroup);
+    }
+
+    // Map the workgroups with stats to filters.
     const configs: FilterConfig<WorkgroupId>[] = [];
     for (const stat of stats.workgroupIds) {
-      const workgroup = workgroups.find((it) => it.id === stat.value);
+      const workgroup = workgroupsById.get(stat.value);
       if (workgroup == null) {
         continue;
       }
+      workgroupsById.delete(stat.value);
       configs.push({
         name: workgroup.name,
         value: workgroup.id,
       });
     }
+
+    // Include workgroups with no assigned assets.
+    for (const workgroup of workgroupsById.values()) {
+      configs.push({
+        name: workgroup.name,
+        value: workgroup.id,
+      });
+    }
+
+    // Sort the filters so their orders stays consistent.
+    configs.sort((a, b) => (a.name as string).localeCompare(b.name as string));
+
     return makeFilters(configs, stats.workgroupIds, query.workgroupIds, 'workgroupIds');
   }
 );
