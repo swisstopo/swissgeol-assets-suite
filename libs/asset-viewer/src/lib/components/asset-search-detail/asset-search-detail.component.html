@@ -140,7 +140,7 @@
           <tr>
             <th translate="search.content"></th>
             <td>
-              <ng-container *ngIf="assetDetail.assetFormatCompositions.length === 0">&ndash; </ng-container>
+              <ng-container *ngIf="assetDetail.assetFormatCompositions.length === 0">&ndash;</ng-container>
               <ng-container *rxFor="let assetFormatComposition of assetDetail.assetFormatCompositions; let last = last">
                 {{ (assetFormatComposition | valueItemName) + (last ? "" : ", ") }}
               </ng-container>
@@ -158,14 +158,13 @@
           <tr>
             <th translate="search.reference"></th>
             <td>
-              <ng-container *ngIf="assetDetail.referenceAssets.length === 0">&ndash; </ng-container>
+              <ng-container *ngIf="assetDetail.referenceAssets.length === 0">&ndash;</ng-container>
               <ul [class.single-entry]="assetDetail.referenceAssets.length === 1">
                 <li *rxFor="let referenceAsset of assetDetail.referenceAssets">
                   <a
                     asset-sg-reset
                     class="line"
-                    [routerLink]="['.']"
-                    [queryParams]="{ searchParams: undefined, assetId: referenceAsset.assetId }"
+                    (click)="searchForReferenceAsset(referenceAsset.assetId)"
                     queryParamsHandling="merge"
                   >
                     {{ referenceAsset.titlePublic }}

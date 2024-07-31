@@ -32,12 +32,16 @@ export class AssetSearchDetailComponent {
 
   constructor(private httpClient: HttpClient) {}
 
-  isActiveFileDownload(file: Omit<AssetFile, 'fileSize'>, isDownload = true): boolean {
+  public isActiveFileDownload(file: Omit<AssetFile, 'fileSize'>, isDownload = true): boolean {
     const download = this.activeFileDownloads.get(file.fileId);
     return download != null && download.isDownload == isDownload;
   }
 
-  downloadFile(file: Omit<AssetFile, 'fileSize'>, isDownload = true): void {
+  public searchForReferenceAsset(assetId: number) {
+    this._store.dispatch(actions.assetClicked({ assetId }));
+  }
+
+  public downloadFile(file: Omit<AssetFile, 'fileSize'>, isDownload = true): void {
     this.activeFileDownloads.set(file.fileId, { isDownload });
     this.httpClient.get(`/api/files/${file.fileId}`, { responseType: 'blob' }).subscribe({
       next: (blob) => {
