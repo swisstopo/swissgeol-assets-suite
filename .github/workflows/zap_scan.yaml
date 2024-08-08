@@ -7,13 +7,21 @@ on:
       - "!main"
 
 env:
-  NODE_VERSION: "20.x"
+  NODE_VERSION: "22.x"
   DB_USERNAME: postgres
   DB_PASSWORD: postgres
   DB_DATABASE: postgres
   DATABASE_URL: postgres://postgres:postgres@localhost:5432/postgres?schema=public
 
 jobs:
+  dependency-review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Review Dependencies
+        uses: actions/dependency-review-action@v4
+
   install:
     runs-on: ubuntu-latest
     steps:
@@ -30,18 +38,25 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ steps.npm-cache-dir.outputs.dir }}
-          key: "${{ runner.os }}-npm-${{ hashFiles('package-lock.json') }}"
+          key: "${{ runner.os }}-npm-${{ env.NODE_VERSION }}-${{ hashFiles('package-lock.json') }}"
           restore-keys: |
             ${{ runner.os }}-npm-
       - name: Cache node modules
         uses: actions/cache@v4
         with:
           path: ./node_modules
-          key: "${{ runner.os }}-node_modules-${{ hashFiles('package-lock.json') }}-${{ hashFiles('**/schema.prisma') }}"
+          key: "${{ runner.os }}-node_modules-${{ env.NODE_VERSION }}-${{ hashFiles('package-lock.json') }}-${{ hashFiles('**/schema.prisma') }}"
           restore-keys: |
             ${{ runner.os }}-node_modules-
+      - name: Cache e2e node modules
+        uses: actions/cache@v4
+        with:
+          path: ./e2e/node_modules
+          key: "${{ runner.os }}-node_modules_e2e-${{ env.NODE_VERSION }}-${{ hashFiles('./e2e/package-lock.json') }}"
+          restore-keys: |
+            ${{ runner.os }}-node_modules_e2e-
       - name: Install node dependencies
-        run: npm ci
+        run: npm install
       - name: Generate prisma types
         run: npm run prisma -- generate
 
@@ -68,9 +83,10 @@ jobs:
         run: |
           cd development
           chmod +x ./init/elasticsearch/init.sh
+          chmod +r ./init/elasticsearch/mappings/swissgeol_asset_asset.json
           sed -i 's/- \.\/volumes\/elasticsearch\/data:\/usr\/share\/elasticsearch\/data//g' ./docker-compose.yaml
           docker compose up -d db oidc elasticsearch
-          sleep 60
+          sleep 120
       - name: Migrate database
         run: npm run prisma -- migrate deploy
       - name: Start frontend
@@ -82,7 +98,8 @@ jobs:
         uses: zaproxy/action-full-scan@v0.10.0
         with:
           target: "http://localhost:4200"
-          cmd_options: "-a"
+          fail_action: "false"
+          cmd_options: -a -j -U "admin" -n /zap/context/default.context
       - name: Upload ZAP Scan Results
         uses: actions/upload-artifact@v4
         with:
