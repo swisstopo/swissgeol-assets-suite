@@ -21,6 +21,9 @@ export const editContactResult = createAction(
 );
 
 export const loadUserProfile = createAction('[App Shared State] Load User Profile');
+
+export const setAnonymousMode = createAction('[App Shared State] Set Viewer Mode');
+
 export const loadUserProfileResult = createAction(
   '[App Shared State] Load User Profile Result',
   props<RD.RemoteData<ApiError, User>>()

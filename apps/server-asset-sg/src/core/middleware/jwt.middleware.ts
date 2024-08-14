@@ -1,5 +1,6 @@
-import { User } from '@asset-sg/shared/v2';
+import { Role, User, WorkgroupId } from '@asset-sg/shared/v2';
 import { environment } from '@environment';
+import { faker } from '@faker-js/faker';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { HttpException, Inject, Injectable, NestMiddleware } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
@@ -14,13 +15,23 @@ import { Jwt, JwtPayload } from 'jsonwebtoken';
 import jwkToPem from 'jwk-to-pem';
 
 import { UserRepo } from '@/features/users/user.repo';
+import { WorkgroupRepo } from '@/features/workgroups/workgroup.repo';
 import { JwtRequest } from '@/models/jwt-request';
 
 @Injectable()
 export class JwtMiddleware implements NestMiddleware {
-  constructor(@Inject(CACHE_MANAGER) private cacheManager: Cache, private readonly userRepo: UserRepo) {}
+  constructor(
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
+    private readonly userRepo: UserRepo,
+    private readonly workgroupRepo: WorkgroupRepo
+  ) {}
 
   async use(req: Request, res: Response, next: NextFunction) {
+    if (process.env.ANONYMOUS_MODE === 'true') {
+      await this.handleAnonymousModeRequest(req);
+      return next();
+    }
+
     if (process.env.NODE_ENV === 'development') {
       const authentication = req.header('Authorization');
       if (authentication != null && authentication.startsWith('Impersonate ')) {
@@ -184,6 +195,31 @@ export class JwtMiddleware implements NestMiddleware {
       jwtPayload: payload,
     };
     Object.assign(req, authenticatedFields);
+  }
+
+  private async handleAnonymousModeRequest(req: Request): Promise<void> {
+    const user = await this.createAnonymousUser();
+    const payload: JwtPayload = { sub: user.id, username: user.email };
+    // Extend the request with the fields required to make it an `AuthenticatedRequest`.
+    const authenticatedFields: Omit<JwtRequest, keyof Request> = {
+      user,
+      accessToken: 'anonymous-access-token',
+      jwtPayload: payload,
+    };
+    Object.assign(req, authenticatedFields);
+  }
+
+  private async createAnonymousUser(): Promise<User> {
+    const id = faker.string.uuid();
+    const workgroups = await this.workgroupRepo.list();
+    const roles = new Map<WorkgroupId, Role>(workgroups.map((workgroup) => [workgroup.id, Role.Viewer]));
+    return {
+      id,
+      email: '',
+      lang: 'de',
+      isAdmin: false,
+      roles,
+    };
   }
 
   private async initializeDefaultUser(oidcId: string, payload: JwtPayload): Promise<User> {

@@ -13,6 +13,8 @@ const appSharedFeature = (state: AppState) => state.shared;
 
 export const selectRDReferenceData = createSelector(appSharedFeature, (state) => state.rdReferenceData);
 
+export const selectIsAnonymousMode = createSelector(appSharedFeature, (state) => state.isAnonymousMode);
+
 export const selectRDUserProfile = createSelector(appSharedFeature, (state) => state.rdUserProfile);
 
 export const selectUser = createSelector(selectRDUserProfile, RD.toNullable);

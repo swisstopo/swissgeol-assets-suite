@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, HostBinding, inject } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
-import { appSharedStateActions } from '@asset-sg/client-shared';
+import { appSharedStateActions, fromAppShared } from '@asset-sg/client-shared';
 import { AssetEditPolicy } from '@asset-sg/shared/v2';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { Store } from '@ngrx/store';
@@ -23,6 +23,7 @@ export class MenuBarComponent {
   public _translateService = inject(TranslateService);
   private _store = inject(Store<AppState>);
 
+  public isAnonymousMode$ = this._store.select(fromAppShared.selectIsAnonymousMode);
   public isAssetsActive$ = this.createIsRouteActive$((url) => Boolean(url.match(/^\/\w\w$/)));
   public isEditActive$ = this.isSegmentActive('asset-admin');
   public isFavouritesActive$ = this.isSegmentActive('favourites');

@@ -1,5 +1,4 @@
-import { User, UserId } from '@asset-sg/shared/v2';
-import { Role, SimpleWorkgroup, WorkgroupId } from '@asset-sg/shared/v2';
+import { Role, SimpleWorkgroup, User, UserId, WorkgroupId } from '@asset-sg/shared/v2';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '@/core/prisma.service';
 import { ReadRepo, RepoListOptions } from '@/core/repo';
@@ -17,16 +16,18 @@ export class SimpleWorkgroupRepo implements ReadRepo<SimpleWorkgroup, WorkgroupI
   }
 
   async list({ limit, offset, ids }: RepoListOptions<WorkgroupId> = {}): Promise<SimpleWorkgroup[]> {
+    const isAnonymousMode = process.env.ANONYMOUS_MODE === 'true';
+    const unrestricted = isAnonymousMode || this.user.isAdmin;
     const entries = await this.prisma.workgroup.findMany({
       where: {
         id: ids == null ? undefined : { in: ids },
-        users: this.user.isAdmin ? undefined : { some: { userId: this.user.id } },
+        users: unrestricted ? undefined : { some: { userId: this.user.id } },
       },
       take: limit,
       skip: offset,
       select: simpleWorkgroupSelection(this.user.id),
     });
-    return entries.map((it) => parse(it, this.user.isAdmin));
+    return entries.map((it) => parse(it, this.user.isAdmin, isAnonymousMode));
   }
 }
 
@@ -46,8 +47,18 @@ export const simpleWorkgroupSelection = (userId: UserId) =>
 
 type SelectedWorkgroup = Prisma.WorkgroupGetPayload<{ select: ReturnType<typeof simpleWorkgroupSelection> }>;
 
-const parse = (data: SelectedWorkgroup, isAdmin: boolean): SimpleWorkgroup => ({
-  id: data.id,
-  name: data.name,
-  role: isAdmin ? Role.MasterEditor : data.users[0].role,
-});
+const parse = (data: SelectedWorkgroup, isAdmin: boolean, isAnonymousMode = false): SimpleWorkgroup => {
+  let role: Role;
+  if (isAdmin) {
+    role = Role.MasterEditor;
+  } else if (isAnonymousMode) {
+    role = Role.Viewer;
+  } else {
+    role = data.users[0].role;
+  }
+  return {
+    id: data.id,
+    name: data.name,
+    role,
+  };
+};
