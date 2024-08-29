@@ -82,6 +82,7 @@
     "tslib": "^2.3.0",
     "type-fest": "^4.21.0",
     "url-join": "^5.0.0",
+    "uuid": "^10.0.0",
     "vite-plugin-solid": "^2.5.0",
     "zone.js": "0.14.6"
   },
@@ -117,6 +118,7 @@
     "@types/multer": "^1.4.11",
     "@types/node": "^18.16.9",
     "@types/proj4": "^2.5.5",
+    "@types/uuid": "^10.0.0",
     "@types/validator": "^13.7.10",
     "@typescript-eslint/eslint-plugin": "^7.10.0",
     "@typescript-eslint/parser": "7.3.0",
@@ -158,8 +160,8 @@
     "@nx/nx-darwin-arm64": "19.2.1",
     "@nx/nx-darwin-x64": "19.2.1",
     "@nx/nx-linux-x64-gnu": "19.2.1",
-    "@nx/nx-win32-x64-msvc": "19.2.1",
     "@nx/nx-linux-x64-musl": "19.2.1",
+    "@nx/nx-win32-x64-msvc": "19.2.1",
     "@rollup/rollup-linux-x64-gnu": "4.16.0",
     "@rollup/rollup-linux-x64-musl": "4.16.0"
   },

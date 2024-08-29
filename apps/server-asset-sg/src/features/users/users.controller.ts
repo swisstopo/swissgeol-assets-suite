@@ -1,5 +1,4 @@
-import { convert, User, UserData, UserId, UserSchema } from '@asset-sg/shared/v2';
-import { UserDataSchema } from '@asset-sg/shared/v2';
+import { convert, User, UserData, UserDataSchema, UserId, UserSchema } from '@asset-sg/shared/v2';
 import { Controller, Delete, Get, HttpCode, HttpException, HttpStatus, Param, Put } from '@nestjs/common';
 import { Authorize } from '@/core/decorators/authorize.decorator';
 import { CurrentUser } from '@/core/decorators/current-user.decorator';

@@ -33,7 +33,7 @@ import { PushModule } from '@rx-angular/template/push';
 
 import { environment } from '../environments/environment';
 
-import { adminGuard } from './app-guards';
+import { adminGuard, notAnonymousGuard } from './app-guards';
 import { assetsPageMatcher } from './app-matchers';
 import { AppComponent } from './app.component';
 import { AppBarComponent, MenuBarComponent, NotFoundComponent, RedirectToLangComponent } from './components';
@@ -66,6 +66,7 @@ registerLocaleData(locale_deCH, 'de-CH');
       {
         path: ':lang/profile',
         loadChildren: () => import('@asset-sg/profile').then((m) => m.ProfileModule),
+        canActivate: [notAnonymousGuard],
       },
       {
         path: ':lang/admin',

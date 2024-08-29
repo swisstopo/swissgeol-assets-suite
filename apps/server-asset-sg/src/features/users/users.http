@@ -22,13 +22,12 @@ Authorization: Impersonate {{user}}
 Content-Type: application/json
 
 {
-  "role": "admin",
   "lang": "de",
-  "workgroups": [
-    {
-      "workgroupId": 4,
-      "role": "MasterEditor"
-    }
+  "roles": [
+    [
+      1,
+      "MasterEditor"
+    ]
   ],
   "isAdmin": false
 }
