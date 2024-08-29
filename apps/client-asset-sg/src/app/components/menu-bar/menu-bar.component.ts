@@ -23,7 +23,7 @@ export class MenuBarComponent {
   public _translateService = inject(TranslateService);
   private _store = inject(Store<AppState>);
 
-  public isAnonymousMode$ = this._store.select(fromAppShared.selectIsAnonymousMode);
+  public userExists$ = this._store.select(fromAppShared.selectIsAnonymousMode).pipe(map((anonymous) => !anonymous));
   public isAssetsActive$ = this.createIsRouteActive$((url) => Boolean(url.match(/^\/\w\w$/)));
   public isEditActive$ = this.isSegmentActive('asset-admin');
   public isFavouritesActive$ = this.isSegmentActive('favourites');

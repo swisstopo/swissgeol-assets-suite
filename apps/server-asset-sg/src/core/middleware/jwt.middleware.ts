@@ -47,6 +47,17 @@ export class JwtMiddleware implements NestMiddleware {
       }
     }
 
+    const token = await this.getToken(req);
+    // Set accessToken and jwtPayload to request if verification is successful
+    if (E.isRight(token)) {
+      await this.initializeRequest(req, token.right.accessToken, token.right.jwtPayload as JwtPayload);
+      next();
+    } else {
+      res.status(403).json({ error: 'not authorized by eIAM' });
+    }
+  }
+
+  private async getToken(req: Request) {
     // Get JWK from cache if exists, otherwise fetch from issuer and set to cache for 1 minute
     const cachedJwk = await this.getJwkFromCache()();
     const jwk = E.isRight(cachedJwk) ? cachedJwk : await this.getJwkTE()();
@@ -54,7 +65,7 @@ export class JwtMiddleware implements NestMiddleware {
 
     const token = this.extractTokenFromHeaderE(req);
     // Decode token, check groups permission, get JWK, convert JWK to PEM, and verify token
-    const result = pipe(
+    return pipe(
       token,
       E.chain(this.decodeTokenE),
       E.chain(this.isAuthorizedByGroupE),
@@ -67,14 +78,6 @@ export class JwtMiddleware implements NestMiddleware {
       this.jwkToPemE,
       E.chain((pem) => this.verifyToken(token, pem))
     );
-
-    // Set accessToken and jwtPayload to request if verification is successful
-    if (E.isRight(result)) {
-      await this.initializeRequest(req, result.right.accessToken, result.right.jwtPayload as JwtPayload);
-      next();
-    } else {
-      res.status(403).json({ error: 'not authorized by eIAM' });
-    }
   }
 
   private getJwkFromCache(): TE.TaskEither<Error, JwksKey[]> {

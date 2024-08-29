@@ -15,7 +15,7 @@
     </a>
   </ng-template>
   <a
-    *ngIf="(isAnonymousMode$ | async) === false"
+    *ngIf="userExists$ | async"
     asset-sg-reset
     [disabled]="true"
     [routerLink]="[_translateService.currentLang, 'favourites']"
@@ -60,7 +60,7 @@
 </div>
 <div>
   <a
-    *ngIf="(isAnonymousMode$ | async) === false"
+    *ngIf="userExists$ | async"
     [routerLink]="[_translateService.currentLang, 'profile']"
     asset-sg-reset
     class="menu-bar-item"
