@@ -1,6 +1,6 @@
 import { Role, User, WorkgroupId } from '@asset-sg/shared/v2';
 import { environment } from '@environment';
-import { faker } from '@faker-js/faker';
+
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { HttpException, Inject, Injectable, NestMiddleware } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
@@ -13,6 +13,7 @@ import * as TE from 'fp-ts/TaskEither';
 import * as jwt from 'jsonwebtoken';
 import { Jwt, JwtPayload } from 'jsonwebtoken';
 import jwkToPem from 'jwk-to-pem';
+import { v5 as uuidv5 } from 'uuid';
 
 import { UserRepo } from '@/features/users/user.repo';
 import { WorkgroupRepo } from '@/features/workgroups/workgroup.repo';
@@ -213,7 +214,8 @@ export class JwtMiddleware implements NestMiddleware {
   }
 
   private async createAnonymousUser(): Promise<User> {
-    const id = faker.string.uuid();
+    const swisstopoAssetsNamespace = '29248768-a9ac-4ef8-9dcb-d9847753208b';
+    const id = uuidv5('anonymous', swisstopoAssetsNamespace); // a743fc8a-afec-5eab-8b9b-e4002c2a01be
     const workgroups = await this.workgroupRepo.list();
     const roles = new Map<WorkgroupId, Role>(workgroups.map((workgroup) => [workgroup.id, Role.Viewer]));
     return {
