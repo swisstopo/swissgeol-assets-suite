@@ -18,6 +18,7 @@ import { AssetsController } from '@/features/assets/assets.controller';
 import { AssetSearchController } from '@/features/assets/search/asset-search.controller';
 import { AssetSearchService } from '@/features/assets/search/asset-search.service';
 import { AssetSyncController } from '@/features/assets/sync/asset-sync.controller';
+import { AssetSyncService } from '@/features/assets/sync/asset-sync.service';
 import { ContactRepo } from '@/features/contacts/contact.repo';
 import { ContactsController } from '@/features/contacts/contacts.controller';
 import { FavoriteRepo } from '@/features/favorites/favorite.repo';
@@ -54,6 +55,7 @@ import { WorkgroupsController } from '@/features/workgroups/workgroups.controlle
     AssetInfoRepo,
     AssetRepo,
     AssetSearchService,
+    AssetSyncService,
     ContactRepo,
     FavoriteRepo,
     PrismaService,

@@ -14,6 +14,10 @@ import { handlePrismaMutationError } from '@/utils/prisma';
 export class AssetRepo implements FindRepo<Asset, AssetId>, MutateRepo<Asset, AssetId, FullAssetData> {
   constructor(private readonly prisma: PrismaService) {}
 
+  async count() {
+    return await this.prisma.asset.count();
+  }
+
   async find(id: AssetId): Promise<Asset | null> {
     const entry = await this.prisma.asset.findFirst({
       where: { assetId: id },
