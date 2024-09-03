@@ -231,7 +231,7 @@ export class JwtMiddleware implements NestMiddleware {
     if (!('username' in payload) || payload.username.length === 0) {
       throw new HttpException('invalid JWT payload: missing username', 401);
     }
-    const email = payload.username.split('_')[1];
+    const email = payload.username.split('_').slice(1).join('_');
     if (email == null || !/^.+@.+\..+$/.test(email)) {
       throw new HttpException('invalid JWT payload: username does not contain an email', 401);
     }

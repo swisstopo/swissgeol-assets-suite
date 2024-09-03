@@ -146,15 +146,9 @@ export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
     this.subscription.add(
       studies$.subscribe((studies) => {
         this.controller.setStudies(studies);
+        setTimeout(() => this.initializeEnd.emit());
       })
     );
-
-    this.controller.isInitialized$
-      .pipe(
-        first(identity),
-        switchMap(() => studies$)
-      )
-      .subscribe(() => this.initializeEnd.emit());
   }
 
   private initializeStoreBindings() {
