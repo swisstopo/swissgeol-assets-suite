@@ -64,6 +64,10 @@ export class AssetSearchService {
     return this.registerWithOptions(oneOrMore, { index: INDEX, shouldRefresh: true });
   }
 
+  async count(): Promise<number> {
+    return (await this.elastic.count({ index: INDEX })).count;
+  }
+
   async syncWithDatabase(onProgress?: (percentage: number) => void | Promise<void>): Promise<void> {
     // Write all Prisma assets into the sync index.
     const total = await this.prisma.asset.count();
