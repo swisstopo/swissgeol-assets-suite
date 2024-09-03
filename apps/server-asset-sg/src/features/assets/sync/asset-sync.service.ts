@@ -70,9 +70,9 @@ export class AssetSyncService implements OnApplicationBootstrap {
   private async startSyncIfIndexOutOfSync() {
     console.debug(`startSyncIfIndexOutOfSync.`);
     const numberOfAssets = await this.assetRepo.count();
-    const numberOfIndixedAssets = await this.assetSearchService.count();
-    console.debug(`Found ${numberOfAssets} Assets and ${numberOfIndixedAssets} Indexed documents.`);
-    if (numberOfAssets !== numberOfIndixedAssets) {
+    const numberOfIndexedAssets = await this.assetSearchService.count();
+    console.debug(`Found ${numberOfAssets} Assets and ${numberOfIndexedAssets} Indexed documents.`);
+    if (numberOfAssets !== numberOfIndexedAssets) {
       await this.start();
     }
   }
