@@ -4,6 +4,14 @@
 
 ### Added
 
+### Changed
+
+### Fixed
+
+## v1.4.0
+
+### Added
+
 - Suchfilter zeigen Anzahl Ergebnisse und sind inital verfügbar
 - Mehrsprachigkeit von Assets
 - Versionsnummer der Applikation wird angezeigt
