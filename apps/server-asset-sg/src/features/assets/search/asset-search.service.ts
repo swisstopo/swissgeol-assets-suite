@@ -25,6 +25,7 @@ import {
   BulkOperationContainer,
   QueryDslNumberRangeQuery,
   QueryDslQueryContainer,
+  SearchRequest,
   SearchTotalHits,
 } from '@elastic/elasticsearch/lib/api/types';
 import { Injectable } from '@nestjs/common';
@@ -231,16 +232,25 @@ export class AssetSearchService {
       doc_count: number;
     }
 
-    const aggregateGroup = async (query: AssetSearchQuery, operator: string, groupName: string, fieldName?: string) => {
+    const aggregateGroup = async (
+      query: AssetSearchQuery,
+      operator: 'terms' | 'min' | 'max',
+      groupName: string,
+      fieldName?: string
+    ) => {
       const elasticDslQuery = mapQueryToElasticDsl({ ...query, [groupName]: undefined });
+      const field: { field: string; size?: number } = { field: fieldName ?? groupName, size: 10_000 };
+      if (operator !== 'terms') {
+        delete field.size;
+      }
       return (
         await this.elastic.search({
           index: INDEX,
           size: 0,
           query: elasticDslQuery,
           track_total_hits: true,
-          aggs: {
-            agg: { [operator]: { field: fieldName ?? groupName } },
+          aggregations: {
+            agg: { [operator]: field },
           },
         })
       ).aggregations?.agg;
