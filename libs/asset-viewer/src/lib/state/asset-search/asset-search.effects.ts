@@ -217,7 +217,6 @@ export class AssetSearchEffects {
             return;
           }
           const queryParams = this.route.snapshot.queryParams;
-          console.log(queryParams, assetDetail);
           return this.router.navigate([], { queryParams: { ...queryParams, assetId }, queryParamsHandling: 'merge' });
         })
       );
