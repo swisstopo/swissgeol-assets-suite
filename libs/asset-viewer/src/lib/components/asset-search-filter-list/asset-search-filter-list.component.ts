@@ -23,8 +23,8 @@ export class AssetSearchFilterListComponent<T> {
       activeValues.add(filter.value);
     }
     this.store.dispatch(
-      actions.searchByFilterConfiguration({
-        filterConfiguration: { [filter.queryKey]: activeValues.size > 0 ? [...activeValues] : undefined },
+      actions.search({
+        query: { [filter.queryKey]: activeValues.size > 0 ? [...activeValues] : undefined },
       })
     );
   }

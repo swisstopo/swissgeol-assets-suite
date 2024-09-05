@@ -41,7 +41,6 @@ export class ButtonComponent implements AfterViewInit, OnDestroy {
     observer.observe(this._host.nativeElement, {
       attributes: true, //configure it to listen to attribute changes
     });
-    // console.log(this._host.nativeElement.attributes);
   }
 
   @HostBinding('class')

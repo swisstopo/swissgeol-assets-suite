@@ -45,7 +45,6 @@ export class OcrController {
   private config: Config;
 
   constructor(private prismaService: PrismaService, private httpService: HttpService) {
-    console.log('hello ocr controller');
     this.config = pipe(
       Config.decode({
         ocrUrl: process.env.OCR_URL,

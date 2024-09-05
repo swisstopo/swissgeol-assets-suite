@@ -13,15 +13,17 @@ import {
   ViewChild,
 } from '@angular/core';
 import { AppState } from '@asset-sg/client-shared';
-import { ORD } from '@asset-sg/core';
+import { isNotNull } from '@asset-sg/core';
 import { Store } from '@ngrx/store';
-import { asapScheduler, first, identity, skip, Subscription, switchMap } from 'rxjs';
+import { asapScheduler, filter, first, skip, Subscription } from 'rxjs';
 import { AllStudyService } from '../../services/all-study.service';
 import * as searchActions from '../../state/asset-search/asset-search.actions';
 import {
   selectAssetSearchPolygon,
   selectAssetSearchResultData,
   selectCurrentAssetDetail,
+  selectAssetSearchNoActiveFilters,
+  selectStudies,
 } from '../../state/asset-search/asset-search.selector';
 import { DrawControl } from '../map-controls/draw-controls';
 import { ZoomControl } from '../map-controls/zoom-control';
@@ -142,28 +144,17 @@ export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
       this.handleHighlightedAssetIdChange();
     });
 
-    const studies$ = this.allStudyService.getAllStudies().pipe(ORD.fromFilteredSuccess);
-    this.subscription.add(
-      studies$.subscribe((studies) => {
-        this.controller.setStudies(studies);
-        setTimeout(() => this.initializeEnd.emit());
-      })
-    );
+    this.initializeEnd.emit();
   }
 
   private initializeStoreBindings() {
     this.subscription.add(
-      this.store.select(selectAssetSearchResultData).subscribe((assets) => {
-        if (assets.length === 0) {
-          this.controller.clearAssets();
-          this.controller.layers.studies.setVisible(true);
-          this.controller.layers.heatmap.setVisible(true);
-        } else {
-          this.controller.setAssets(assets);
-          this.controller.layers.studies.setVisible(false);
-          this.controller.layers.heatmap.setVisible(false);
-        }
+      this.store.select(selectAssetSearchNoActiveFilters).subscribe((showStudies) => {
+        this.controller.setShowHeatmap(showStudies);
       })
+    );
+    this.subscription.add(
+      this.store.select(selectAssetSearchResultData).subscribe((assets) => this.controller.setAssets(assets))
     );
 
     this.subscription.add(
@@ -175,6 +166,13 @@ export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
         }
       })
     );
+
+    this.subscription.add(
+      this.store
+        .select(selectStudies)
+        .pipe(filter(isNotNull))
+        .subscribe((studies) => this.controller.setStudies(studies))
+    );
   }
 
   private initializePolygonBindings(): void {
@@ -185,8 +183,8 @@ export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
     );
     this.controls.draw.polygon$.pipe(skip(1)).subscribe((polygon) => {
       this.store.dispatch(
-        searchActions.searchByFilterConfiguration({
-          filterConfiguration: { polygon: polygon ?? undefined },
+        searchActions.search({
+          query: { polygon: polygon ?? undefined },
         })
       );
     });

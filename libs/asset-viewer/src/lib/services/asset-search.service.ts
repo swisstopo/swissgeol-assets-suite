@@ -1,6 +1,5 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { AppState } from '@asset-sg/client-shared';
 import {
   AssetEditDetail,
   AssetSearchQuery,
@@ -9,7 +8,6 @@ import {
   AssetSearchStats,
   AssetSearchStatsDTO,
 } from '@asset-sg/shared';
-import { Store } from '@ngrx/store';
 import { plainToInstance } from 'class-transformer';
 import * as E from 'fp-ts/Either';
 import { map, Observable, tap } from 'rxjs';

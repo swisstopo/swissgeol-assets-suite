@@ -27,7 +27,6 @@ import {
   delay,
   filter,
   map,
-  merge,
   Observable,
   observeOn,
   partition,
@@ -47,7 +46,6 @@ import {
   selectCurrentAssetDetail,
   selectFilterLoadingState,
   selectIsFiltersOpen,
-  selectIsMapInitialized,
   selectSearchLoadingState,
 } from '../../state/asset-search/asset-search.selector';
 
@@ -72,13 +70,11 @@ export class AssetViewerPageComponent implements AfterViewInit, OnDestroy {
 
   public isLoading$ = combineLatest(
     [
-      this._store.select(selectIsMapInitialized),
       this._store.select(selectFilterLoadingState),
       this._store.select(selectSearchLoadingState),
       this._store.select(selectAssetDetailLoadingState),
     ],
-    (isMapInitialized, filterLoadingState, searchLoadingState, detailLoadingState) =>
-      !isMapInitialized ||
+    (filterLoadingState, searchLoadingState, detailLoadingState) =>
       filterLoadingState === LoadingState.Loading ||
       searchLoadingState === LoadingState.Loading ||
       detailLoadingState === LoadingState.Loading
@@ -161,17 +157,15 @@ export class AssetViewerPageComponent implements AfterViewInit, OnDestroy {
       this._store.dispatch(actions.assetClicked({ assetId: assetIds[0] }));
     });
 
-    merge(
-      this.closeSearchResultsClicked$.pipe(map(() => actions.closeRefineAndResults())),
-      this._searchTextChanged$.pipe(
+    this._searchTextChanged$
+      .pipe(
         map(
           flow(
-            O.map((text) => actions.searchByFilterConfiguration({ filterConfiguration: { text } })),
+            O.map((text) => actions.search({ query: { text } })),
             O.getOrElseW(() => actions.clearSearchText())
           )
         )
       )
-    )
       .pipe(untilDestroyed(this))
       .subscribe(this._store);
   }
@@ -179,13 +173,5 @@ export class AssetViewerPageComponent implements AfterViewInit, OnDestroy {
   ngOnDestroy() {
     this._store.dispatch(actions.closeFilters());
     this._appPortalService.setAppBarPortalContent(null);
-  }
-
-  public handleMapInitialised() {
-    this._appRef.isStable.pipe(filter(isTruthy), take(1), delay(0), untilDestroyed(this)).subscribe(() => {
-      this._ngZone.run(() => {
-        this._store.dispatch(actions.mapInitialised());
-      });
-    });
   }
 }

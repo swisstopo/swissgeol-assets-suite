@@ -43,8 +43,6 @@ export const selectIsFiltersOpen = createSelector(assetSearchFeature, (state) =>
 
 export const selectIsResultsOpen = createSelector(assetSearchFeature, (state) => state.isResultsOpen);
 
-export const selectIsMapInitialized = createSelector(assetSearchFeature, (state) => state.isMapInitialised);
-
 export const selectAssetDetailLoadingState = createSelector(
   assetSearchFeature,
   (state) => state.assetDetailLoadingState
@@ -56,23 +54,15 @@ export const selectAssetSearchResultData = createSelector(assetSearchFeature, (s
 
 export const selectAssetSearchPolygon = createSelector(assetSearchFeature, (state) => state.query.polygon);
 
-export const selectStudies = createSelector(selectAssetSearchResultData, (assetEditDetails): StudyVM[] =>
-  assetEditDetails.flatMap((assetEditDetail) =>
-    assetEditDetail.studies.map((study) => {
-      return {
-        assetId: study.assetId,
-        studyId: study.studyId,
-        geom: wktToGeoJSON(study.geomText),
-      };
-    })
-  )
-);
-
 export const selectAssetsSearchStats = createSelector(assetSearchFeature, (state) => state.stats);
 
-export const selectAssetSearchPageData = createSelector(assetSearchFeature, (state) => state.results.page);
+export const selectAssetSearchTotalResults = createSelector(assetSearchFeature, (state) => state.stats.total);
 
 export const selectCurrentAssetDetail = createSelector(assetSearchFeature, (state) => state.currentAsset);
+export const selectStudies = createSelector(assetSearchFeature, (state) => state.studies);
+export const selectAssetSearchNoActiveFilters = createSelector(assetSearchFeature, ({ query }) =>
+  Object.values(query).every((value) => value === undefined)
+);
 
 export const selectCurrentAssetDetailVM = createSelector(
   fromAppShared.selectRDReferenceData,

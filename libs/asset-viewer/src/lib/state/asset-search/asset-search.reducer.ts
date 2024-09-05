@@ -2,6 +2,7 @@ import { appSharedStateActions, AppState } from '@asset-sg/client-shared';
 import { AssetEditDetail, AssetSearchQuery, AssetSearchResult, AssetSearchStats } from '@asset-sg/shared';
 import { createReducer, on } from '@ngrx/store';
 
+import { AllStudyDTOs } from '../../models';
 import * as actions from './asset-search.actions';
 
 export enum LoadingState {
@@ -18,9 +19,9 @@ export interface AssetSearchState {
   resultsLoadingState: LoadingState;
   filterLoadingState: LoadingState;
   assetDetailLoadingState: LoadingState;
-  isMapInitialised: boolean;
   isFiltersOpen: boolean;
   isResultsOpen: boolean;
+  studies: AllStudyDTOs | null;
 }
 
 export interface AppStateWithAssetSearch extends AppState {
@@ -58,25 +59,26 @@ const initialState: AssetSearchState = {
     workgroupIds: [],
     createDate: null,
   },
-  isMapInitialised: false,
   isFiltersOpen: true,
   isResultsOpen: false,
   resultsLoadingState: LoadingState.Initial,
   assetDetailLoadingState: LoadingState.Initial,
   filterLoadingState: LoadingState.Initial,
   currentAsset: undefined,
+  studies: null,
 };
 
 export const assetSearchReducer = createReducer(
   initialState,
   on(
-    actions.searchByFilterConfiguration,
-    (state, { filterConfiguration }): AssetSearchState => ({
+    actions.search,
+    (state, { query }): AssetSearchState => ({
       ...state,
       query: {
         ...state.query,
-        ...filterConfiguration,
+        ...query,
       },
+      resultsLoadingState: LoadingState.Loading,
     })
   ),
   on(
@@ -88,7 +90,6 @@ export const assetSearchReducer = createReducer(
         data: searchResults.data,
       },
       resultsLoadingState: LoadingState.Loaded,
-      isResultsOpen: true,
     })
   ),
   on(
@@ -113,7 +114,6 @@ export const assetSearchReducer = createReducer(
     actions.resetSearch,
     (state): AssetSearchState => ({
       ...initialState,
-      isMapInitialised: true,
       stats: state.stats,
       filterLoadingState: LoadingState.Loading,
     })
@@ -123,13 +123,6 @@ export const assetSearchReducer = createReducer(
     (state): AssetSearchState => ({
       ...state,
       assetDetailLoadingState: LoadingState.Loading,
-    })
-  ),
-  on(
-    actions.setLoadingState,
-    (state): AssetSearchState => ({
-      ...state,
-      resultsLoadingState: LoadingState.Loading,
     })
   ),
   on(
@@ -148,7 +141,6 @@ export const assetSearchReducer = createReducer(
       assetDetailLoadingState: initialState.assetDetailLoadingState,
     })
   ),
-  on(actions.mapInitialised, (state): AssetSearchState => ({ ...state, isMapInitialised: true })),
   on(appSharedStateActions.openPanel, (state): AssetSearchState => ({ ...state, isFiltersOpen: true })),
   on(actions.openFilters, (state): AssetSearchState => ({ ...state, isFiltersOpen: true })),
   on(actions.closeFilters, (state): AssetSearchState => ({ ...state, isFiltersOpen: false })),
@@ -157,5 +149,6 @@ export const assetSearchReducer = createReducer(
     (state): AssetSearchState => ({ ...state, isFiltersOpen: !state.isFiltersOpen })
   ),
   on(actions.openResults, (state): AssetSearchState => ({ ...state, isResultsOpen: true })),
-  on(actions.closeResults, (state): AssetSearchState => ({ ...state, isResultsOpen: false }))
+  on(actions.closeResults, (state): AssetSearchState => ({ ...state, isResultsOpen: false })),
+  on(actions.setStudies, (state, { studies }): AssetSearchState => ({ ...state, studies }))
 );

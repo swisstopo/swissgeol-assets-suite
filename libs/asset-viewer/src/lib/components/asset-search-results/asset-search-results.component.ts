@@ -17,7 +17,7 @@ import { AppStateWithAssetSearch } from '../../state/asset-search/asset-search.r
 import {
   AssetEditDetailVM,
   selectAssetEditDetailVM,
-  selectAssetSearchPageData,
+  selectAssetSearchTotalResults,
   selectCurrentAssetDetail,
   selectIsResultsOpen,
 } from '../../state/asset-search/asset-search.selector';
@@ -46,12 +46,12 @@ export class AssetSearchResultsComponent implements OnInit, OnDestroy {
   public allResults: AssetEditDetailVM[] = [];
   public resultsToDisplay: AssetEditDetailVM[] = [];
   private size = 0;
-  private limit = 100;
+  private limit = 50;
 
   private readonly _store = inject(Store<AppStateWithAssetSearch>);
   public readonly isResultsOpen$ = this._store.select(selectIsResultsOpen);
   public readonly assets$ = this._store.select(selectAssetEditDetailVM);
-  public readonly pageStats$ = this._store.select(selectAssetSearchPageData);
+  public readonly total$ = this._store.select(selectAssetSearchTotalResults);
   public readonly currentAssetDetail$ = this._store.select(selectCurrentAssetDetail);
   private readonly subscriptions: Subscription = new Subscription();
   private changeDetector = inject(ChangeDetectorRef);
