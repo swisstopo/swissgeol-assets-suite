@@ -15,7 +15,6 @@ import { AllStudyService } from '../../services/all-study.service';
 import { AssetSearchService } from '../../services/asset-search.service';
 
 import * as actions from './asset-search.actions';
-import { AppStateWithAssetSearch } from './asset-search.reducer';
 import {
   selectAssetSearchQuery,
   selectCurrentAssetDetail,
@@ -32,7 +31,6 @@ export class AssetSearchEffects {
   private readonly route = inject(ActivatedRoute);
   private readonly assetSearchService = inject(AssetSearchService);
   private readonly allStudyService = inject(AllStudyService);
-  private readonly searchStore = inject(Store<AppStateWithAssetSearch>);
 
   constructor() {
     merge(this.store.select(fromAppShared.selectRDReferenceData))
