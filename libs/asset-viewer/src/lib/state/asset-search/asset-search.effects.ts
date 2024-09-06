@@ -3,12 +3,13 @@ import { ActivatedRoute, Params, Router } from '@angular/router';
 import { AppState, fromAppShared } from '@asset-sg/client-shared';
 import { isDecodeError, isNotNull, ORD } from '@asset-sg/core';
 import { AssetSearchQuery, AssetSearchResult, LV95, Polygon } from '@asset-sg/shared';
+import { filterNullish } from '@asset-sg/shared/v2';
 import * as RD from '@devexperts/remote-data-ts';
 import { UntilDestroy } from '@ngneat/until-destroy';
 import { Actions, concatLatestFrom, createEffect, ofType } from '@ngrx/effects';
 import { Store } from '@ngrx/store';
 import * as D from 'io-ts/Decoder';
-import { filter, first, map, merge, of, switchMap, withLatestFrom } from 'rxjs';
+import { filter, first, map, merge, of, share, switchMap, withLatestFrom } from 'rxjs';
 
 import { AllStudyService } from '../../services/all-study.service';
 import { AssetSearchService } from '../../services/asset-search.service';
@@ -118,41 +119,42 @@ export class AssetSearchEffects {
    * Query Parameter Interactions
    */
 
+  public queryParams$ = this.actions$.pipe(
+    ofType(actions.initializeSearch),
+    first(), // only read query params once
+    concatLatestFrom(() => this.route.queryParams),
+    map(([_, params]) => {
+      const query: AssetSearchQuery = {};
+      const assetId: number | undefined = readNumberParam(params, QUERY_PARAM_MAPPING.assetId);
+      query.text = readStringParam(params, QUERY_PARAM_MAPPING.text);
+      query.polygon = readPolygonParam(params, QUERY_PARAM_MAPPING.polygon);
+      query.authorId = readNumberParam(params, QUERY_PARAM_MAPPING.authorId);
+      const min = readDateParam(params, QUERY_PARAM_MAPPING.createDate.min);
+      const max = readDateParam(params, QUERY_PARAM_MAPPING.createDate.max);
+      query.createDate = min && max ? { min, max } : undefined;
+      query.manCatLabelItemCodes = readArrayParam(params, QUERY_PARAM_MAPPING.manCatLabelItemCodes);
+      query.assetKindItemCodes = readArrayParam(params, QUERY_PARAM_MAPPING.assetKindItemCodes);
+      query.usageCodes = readArrayParam(params, QUERY_PARAM_MAPPING.usageCodes);
+      query.geometryCodes = readArrayParam(params, QUERY_PARAM_MAPPING.geometryCodes);
+      query.languageItemCodes = readArrayParam(params, QUERY_PARAM_MAPPING.languageItemCodes);
+      query.workgroupIds = readArrayParam<number>(params, QUERY_PARAM_MAPPING.workgroupIds);
+      return { query, assetId };
+    }),
+    share()
+  );
+
   // noinspection JSUnusedGlobalSymbols
   public readSearchQueryParams$ = createEffect(() =>
-    this.actions$.pipe(
-      ofType(actions.initializeSearch),
-      first(), // only read query params once
-      concatLatestFrom(() => this.route.queryParams),
-      map(([_, params]) => {
-        const query: AssetSearchQuery = {};
-        const assetId: number | undefined = readNumberParam(params, QUERY_PARAM_MAPPING.assetId);
-        query.text = readStringParam(params, QUERY_PARAM_MAPPING.text);
-        query.polygon = readPolygonParam(params, QUERY_PARAM_MAPPING.polygon);
-        query.authorId = readNumberParam(params, QUERY_PARAM_MAPPING.authorId);
-        const min = readDateParam(params, QUERY_PARAM_MAPPING.createDate.min);
-        const max = readDateParam(params, QUERY_PARAM_MAPPING.createDate.max);
-        query.createDate = min && max ? { min, max } : undefined;
-        query.manCatLabelItemCodes = readArrayParam(params, QUERY_PARAM_MAPPING.manCatLabelItemCodes);
-        query.assetKindItemCodes = readArrayParam(params, QUERY_PARAM_MAPPING.assetKindItemCodes);
-        query.usageCodes = readArrayParam(params, QUERY_PARAM_MAPPING.usageCodes);
-        query.geometryCodes = readArrayParam(params, QUERY_PARAM_MAPPING.geometryCodes);
-        query.languageItemCodes = readArrayParam(params, QUERY_PARAM_MAPPING.languageItemCodes);
-        query.workgroupIds = readArrayParam<number>(params, QUERY_PARAM_MAPPING.workgroupIds);
-        return { query, assetId };
-      }),
+    this.queryParams$.pipe(
       filter(({ query }) => Object.values(query).some((value) => value !== undefined)),
       map(({ query }) => actions.search({ query: query }))
     )
   );
 
   public readAssetIdQueryParam$ = createEffect(() =>
-    this.actions$.pipe(
-      ofType(actions.initializeSearch),
-      first(), // only read query params once
-      concatLatestFrom(() => this.route.queryParams),
-      map(([_, params]) => readNumberParam(params, QUERY_PARAM_MAPPING.assetId)),
-      filter((assetId): assetId is number => assetId !== undefined),
+    this.queryParams$.pipe(
+      map(({ assetId }) => assetId),
+      filterNullish(),
       map((assetId) => actions.assetClicked({ assetId }))
     )
   );
@@ -161,11 +163,13 @@ export class AssetSearchEffects {
   public updateQueryParams$ = createEffect(
     () =>
       this.actions$.pipe(
-        ofType(actions.loadSearch),
-        concatLatestFrom(() => [this.store.select(selectAssetSearchQuery), this.route.queryParams]),
-        switchMap(([_, query, urlParams]) => {
-          const params: Params = { ...urlParams };
-
+        ofType(actions.initializeSearch, actions.loadSearch, actions.updateAssetDetail, actions.resetAssetDetail),
+        concatLatestFrom(() => [
+          this.store.select(selectAssetSearchQuery),
+          this.store.select(selectCurrentAssetDetail),
+        ]),
+        switchMap(([_, query, assetDetail]) => {
+          const params: Params = { assetId: assetDetail?.assetId };
           updatePlainParam(params, QUERY_PARAM_MAPPING.text, query.text);
           updateArrayParam(
             params,
@@ -181,46 +185,9 @@ export class AssetSearchEffects {
           updateArrayParam(params, QUERY_PARAM_MAPPING.geometryCodes, query.geometryCodes);
           updateArrayParam(params, QUERY_PARAM_MAPPING.languageItemCodes, query.languageItemCodes);
           updateArrayParam(params, QUERY_PARAM_MAPPING.workgroupIds, query.workgroupIds);
-          return this.router.navigate([], {
-            queryParams: params,
-          });
+          return this.router.navigate([], { queryParams: params });
         })
       ),
-    { dispatch: false }
-  );
-
-  public updateQueryParamsWithAssetId$ = createEffect(
-    () => {
-      return this.actions$.pipe(
-        ofType(actions.assetClicked),
-        concatLatestFrom(() => [this.store.select(selectCurrentAssetDetail), this.route.queryParams]),
-        map(([{ assetId }, currentAsset, params]) => {
-          const assetIdInUrl = currentAsset?.assetId === assetId ? null : assetId;
-          return this.router.navigate([], {
-            queryParams: { ...params, assetId: assetIdInUrl },
-            queryParamsHandling: 'merge',
-          });
-        })
-      );
-    },
-    { dispatch: false }
-  );
-
-  public updateQueryParamsWithAssetIdOnInit$ = createEffect(
-    () => {
-      return this.actions$.pipe(
-        ofType(actions.initializeSearch, actions.loadSearch),
-        concatLatestFrom(() => this.store.select(selectCurrentAssetDetail)),
-        map(([_, assetDetail]) => {
-          const assetId = assetDetail?.assetId;
-          if (assetId == null) {
-            return;
-          }
-          const queryParams = this.route.snapshot.queryParams;
-          return this.router.navigate([], { queryParams: { ...queryParams, assetId }, queryParamsHandling: 'merge' });
-        })
-      );
-    },
     { dispatch: false }
   );
 }
