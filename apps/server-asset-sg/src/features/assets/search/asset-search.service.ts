@@ -238,8 +238,9 @@ export class AssetSearchService {
       groupName: string,
       fieldName?: string
     ) => {
+      const NUMBER_OF_BUCKETS = 10_000;
       const elasticDslQuery = mapQueryToElasticDsl({ ...query, [groupName]: undefined });
-      const field: { field: string; size?: number } = { field: fieldName ?? groupName, size: 10_000 };
+      const field: { field: string; size?: number } = { field: fieldName ?? groupName, size: NUMBER_OF_BUCKETS };
       if (operator !== 'terms') {
         delete field.size;
       }
