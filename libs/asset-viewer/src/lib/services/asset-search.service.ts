@@ -17,7 +17,7 @@ export class AssetSearchService {
   constructor(private _httpClient: HttpClient) {}
 
   public search(searchQuery: AssetSearchQuery): Observable<AssetSearchResult> {
-    return this._httpClient.post('/api/assets/search?limit=10000', searchQuery).pipe(
+    return this._httpClient.post('/api/assets/search?limit=1000', searchQuery).pipe(
       map((res) => plainToInstance(AssetSearchResultDTO, res)),
       tap((result) => {
         result.data = result.data.map((asset) => (AssetEditDetail.decode(asset) as E.Right<AssetEditDetail>).right);

@@ -46,7 +46,7 @@ export class AssetSearchEffects {
 
   public loadSearch$ = createEffect(() =>
     this.actions$.pipe(
-      ofType(actions.initializeSearch, actions.search, actions.resetSearch, actions.removePolygon),
+      ofType(actions.search, actions.resetSearch, actions.removePolygon),
       withLatestFrom(this.store.select(selectAssetSearchQuery)),
       map(([_, query]) => actions.loadSearch({ query }))
     )
@@ -141,12 +141,8 @@ export class AssetSearchEffects {
     share()
   );
 
-  // noinspection JSUnusedGlobalSymbols
   public readSearchQueryParams$ = createEffect(() =>
-    this.queryParams$.pipe(
-      filter(({ query }) => Object.values(query).some((value) => value !== undefined)),
-      map(({ query }) => actions.search({ query: query }))
-    )
+    this.queryParams$.pipe(map(({ query }) => actions.search({ query: query })))
   );
 
   public readAssetIdQueryParam$ = createEffect(() =>
@@ -157,11 +153,10 @@ export class AssetSearchEffects {
     )
   );
 
-  // noinspection JSUnusedGlobalSymbols
   public updateQueryParams$ = createEffect(
     () =>
       this.actions$.pipe(
-        ofType(actions.initializeSearch, actions.loadSearch, actions.updateAssetDetail, actions.resetAssetDetail),
+        ofType(actions.loadSearch, actions.updateAssetDetail, actions.resetAssetDetail),
         concatLatestFrom(() => [
           this.store.select(selectAssetSearchQuery),
           this.store.select(selectCurrentAssetDetail),
