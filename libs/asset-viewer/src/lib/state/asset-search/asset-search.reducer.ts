@@ -141,7 +141,7 @@ export const assetSearchReducer = createReducer(
       assetDetailLoadingState: initialState.assetDetailLoadingState,
     })
   ),
-  on(appSharedStateActions.openPanel, (state): AssetSearchState => ({ ...state, isFiltersOpen: true })),
+  on(appSharedStateActions.openPanel, (state): AssetSearchState => ({ ...state })),
   on(actions.openFilters, (state): AssetSearchState => ({ ...state, isFiltersOpen: true })),
   on(actions.closeFilters, (state): AssetSearchState => ({ ...state, isFiltersOpen: false })),
   on(

@@ -1,24 +1,20 @@
 <div>
-  <button
+  <a
+    *ngIf="{ active: (isAssetsActive$ | async) ?? false } as isAsset"
+    [routerLink]="[_translateService.currentLang]"
     asset-sg-reset
-    class="menu-bar-item active"
-    *ngIf="isAssetsActive$ | async; else notAssetsActive"
-    (click)="openAssetDrawer()"
+    class="menu-bar-item"
+    [ngClass]="{ active: isAsset.active }"
+    (click)="isAsset.active ? openAssetDrawer() : null"
   >
     <svg-icon key="assets" />
     <span translate>menuBar.assets</span>
-  </button>
-  <ng-template #notAssetsActive>
-    <a [routerLink]="[_translateService.currentLang]" asset-sg-reset class="menu-bar-item" (click)="openAssetDrawer()">
-      <svg-icon key="assets" />
-      <span translate>menuBar.assets</span>
-    </a>
-  </ng-template>
+  </a>
   <a
     *ngIf="userExists$ | async"
     asset-sg-reset
     [disabled]="true"
-    [routerLink]="[_translateService.currentLang, 'favourites']"
+    aria-disabled="true"
     class="menu-bar-item"
     [ngClass]="{ active: (isFavouritesActive$ | async) }"
   >
