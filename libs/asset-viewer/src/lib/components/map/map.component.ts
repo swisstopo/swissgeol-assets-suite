@@ -15,7 +15,7 @@ import {
 import { AppState } from '@asset-sg/client-shared';
 import { isNotNull } from '@asset-sg/core';
 import { Store } from '@ngrx/store';
-import { asapScheduler, filter, first, skip, Subscription } from 'rxjs';
+import { asapScheduler, distinctUntilChanged, filter, first, pairwise, skip, Subscription, take, takeLast } from 'rxjs';
 import { AllStudyService } from '../../services/all-study.service';
 import * as searchActions from '../../state/asset-search/asset-search.actions';
 import {
@@ -28,6 +28,7 @@ import {
 import { DrawControl } from '../map-controls/draw-controls';
 import { ZoomControl } from '../map-controls/zoom-control';
 import { MapController } from './map-controller';
+import { filterNullish } from '@asset-sg/shared/v2';
 
 @Component({
   selector: 'asset-sg-map',
@@ -178,16 +179,22 @@ export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
   private initializePolygonBindings(): void {
     this.subscription.add(
       this.store.select(selectAssetSearchPolygon).subscribe((polygon) => {
+        console.log('1polygon', polygon);
         this.controls.draw.setPolygon(polygon ?? null);
       })
     );
-    this.controls.draw.polygon$.pipe(skip(1)).subscribe((polygon) => {
-      this.store.dispatch(
-        searchActions.search({
-          query: { polygon: polygon ?? undefined },
-        })
+    this.controls.draw.polygon$
+      .pipe(
+        filterNullish(),
+        distinctUntilChanged((a, b) => this.equalsCheck(a, b))
+      )
+      .subscribe((polygon) =>
+        this.store.dispatch(
+          searchActions.search({
+            query: { polygon: polygon },
+          })
+        )
       );
-    });
   }
 
   private handleHighlightedAssetIdChange() {
@@ -196,6 +203,10 @@ export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
     } else {
       this.controller.setHighlightedAsset(this.highlightedAssetId);
     }
+  }
+
+  private equalsCheck<T>(a: T[] | null, b: T[] | null) {
+    return !!a && !!b && a.length === b.length && a.every((v, i) => v === b[i]);
   }
 
   @HostBinding('class.is-loading')
