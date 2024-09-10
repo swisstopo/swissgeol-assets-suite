@@ -105,6 +105,7 @@ export class MapController {
   setShowHeatmap(showHeatmap: boolean): void {
     this.showHeatmap = showHeatmap;
     this.layers.heatmap.setVisible(showHeatmap);
+    this.layers.studies.setVisible(showHeatmap);
   }
 
   setClickEnabled(isEnabled: boolean): void {
