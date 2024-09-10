@@ -3,6 +3,10 @@ import { Observable, of } from 'rxjs';
 
 export type Langs = 'de' | 'en' | 'fr' | 'it' | 'rm';
 
+export function isSupportedLang(lang: string): lang is Langs {
+  return ['de', 'en', 'fr', 'it', 'rm'].includes(lang);
+}
+
 export interface TranslationsStruct<T> {
   de: T;
   en: T;

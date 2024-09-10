@@ -1,3 +1,4 @@
+export * from './app-matchers';
 export * from './control-value-accessor';
 export * from './current-lang';
 export * from './custom-property';

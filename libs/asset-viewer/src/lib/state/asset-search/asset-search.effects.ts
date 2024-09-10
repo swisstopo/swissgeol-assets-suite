@@ -1,15 +1,15 @@
 import { inject, Injectable } from '@angular/core';
 import { ActivatedRoute, Params, Router } from '@angular/router';
-import { AppState, fromAppShared } from '@asset-sg/client-shared';
-import { isDecodeError, isNotNull, ORD } from '@asset-sg/core';
+import { AppState, assetsPageMatcher, fromAppShared } from '@asset-sg/client-shared';
+import { deepEqual, isDecodeError, isNotNull, ORD } from '@asset-sg/core';
 import { AssetSearchQuery, AssetSearchResult, LV95, Polygon } from '@asset-sg/shared';
-import { filterNullish } from '@asset-sg/shared/v2';
 import * as RD from '@devexperts/remote-data-ts';
 import { UntilDestroy } from '@ngneat/until-destroy';
 import { Actions, concatLatestFrom, createEffect, ofType } from '@ngrx/effects';
+import { ROUTER_NAVIGATED } from '@ngrx/router-store';
 import { Store } from '@ngrx/store';
 import * as D from 'io-ts/Decoder';
-import { filter, first, map, merge, of, share, switchMap, withLatestFrom } from 'rxjs';
+import { filter, map, merge, of, share, switchMap, withLatestFrom } from 'rxjs';
 
 import { AllStudyService } from '../../services/all-study.service';
 import { AssetSearchService } from '../../services/asset-search.service';
@@ -116,12 +116,11 @@ export class AssetSearchEffects {
   /**
    * Query Parameter Interactions
    */
-
   public queryParams$ = this.actions$.pipe(
-    ofType(actions.initializeSearch),
-    first(), // only read query params once
-    concatLatestFrom(() => this.route.queryParams),
-    map(([_, params]) => {
+    ofType(ROUTER_NAVIGATED),
+    filter((x) => assetsPageMatcher(x.payload.routerState.root.firstChild.url) !== null),
+    map(({ payload }) => {
+      const params = payload.routerState.root.queryParams;
       const query: AssetSearchQuery = {};
       const assetId: number | undefined = readNumberParam(params, QUERY_PARAM_MAPPING.assetId);
       query.text = readStringParam(params, QUERY_PARAM_MAPPING.text);
@@ -142,14 +141,20 @@ export class AssetSearchEffects {
   );
 
   public readSearchQueryParams$ = createEffect(() =>
-    this.queryParams$.pipe(map(({ query }) => actions.search({ query: query })))
+    this.queryParams$.pipe(
+      withLatestFrom(this.store.select(selectAssetSearchQuery)),
+      filter(([params, query]) => !deepEqual(params.query, query)),
+      map(([params, query]) => actions.search({ query: params.query }))
+    )
   );
 
   public readAssetIdQueryParam$ = createEffect(() =>
     this.queryParams$.pipe(
-      map(({ assetId }) => assetId),
-      filterNullish(),
-      map((assetId) => actions.assetClicked({ assetId }))
+      withLatestFrom(this.store.select(selectCurrentAssetDetail)),
+      filter(([params, assetDetail]) => params.assetId !== assetDetail?.assetId),
+      map(([{ assetId }, _]) =>
+        assetId === undefined ? actions.resetAssetDetail() : actions.assetClicked({ assetId })
+      )
     )
   );
 

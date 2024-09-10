@@ -35,4 +35,4 @@ export const closeFilters = createAction('[Asset Viewer] Close Filters');
 export const openResults = createAction('[Asset Viewer] Open Results');
 export const closeResults = createAction('[Asset Viewer] Close Results');
 export const setStudies = createAction('[Asset Viewer] Load Studies', props<{ studies: AllStudyDTOs }>());
-export const loadSearch = createAction('[Asset Viewer] Load Search', props<{ query: AssetSearchQuery }>());
+export const loadSearch = createAction('[Asset Search] Load Search', props<{ query: AssetSearchQuery }>());

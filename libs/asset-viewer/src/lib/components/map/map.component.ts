@@ -14,6 +14,7 @@ import {
 } from '@angular/core';
 import { AppState } from '@asset-sg/client-shared';
 import { isNotNull } from '@asset-sg/core';
+import { filterNullish } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
 import { asapScheduler, distinctUntilChanged, filter, first, pairwise, skip, Subscription, take, takeLast } from 'rxjs';
 import { AllStudyService } from '../../services/all-study.service';
@@ -28,7 +29,6 @@ import {
 import { DrawControl } from '../map-controls/draw-controls';
 import { ZoomControl } from '../map-controls/zoom-control';
 import { MapController } from './map-controller';
-import { filterNullish } from '@asset-sg/shared/v2';
 
 @Component({
   selector: 'asset-sg-map',
@@ -163,7 +163,7 @@ export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
         if (asset == null) {
           this.controller.clearActiveAsset();
         } else {
-          this.controller.setActiveAsset(asset);
+          setTimeout(() => this.controller.setActiveAsset(asset));
         }
       })
     );
@@ -179,7 +179,6 @@ export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
   private initializePolygonBindings(): void {
     this.subscription.add(
       this.store.select(selectAssetSearchPolygon).subscribe((polygon) => {
-        console.log('1polygon', polygon);
         this.controls.draw.setPolygon(polygon ?? null);
       })
     );
