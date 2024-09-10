@@ -25,6 +25,7 @@ export const resetSearch = createAction('[Asset Search] Reset Search');
 export const removePolygon = createAction('[Asset Search] Remove polygon');
 export const initializeSearch = createAction('[Asset Search] Initialize search');
 export const assetClicked = createAction('[Asset Search] Asset clicked', props<{ assetId: number }>());
+export const showAssetDetail = createAction('[Asset Viewer] Show Asset Detail', props<{ assetId: number }>());
 export const updateAssetDetail = createAction(
   '[Asset Search] Update Asset Detail',
   props<{ assetDetail: AssetEditDetail }>()

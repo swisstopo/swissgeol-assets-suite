@@ -9,7 +9,7 @@ import { Actions, concatLatestFrom, createEffect, ofType } from '@ngrx/effects';
 import { ROUTER_NAVIGATED } from '@ngrx/router-store';
 import { Store } from '@ngrx/store';
 import * as D from 'io-ts/Decoder';
-import { filter, map, merge, of, share, switchMap, withLatestFrom } from 'rxjs';
+import { EMPTY, filter, map, merge, of, share, switchMap, withLatestFrom } from 'rxjs';
 
 import { AllStudyService } from '../../services/all-study.service';
 import { AssetSearchService } from '../../services/asset-search.service';
@@ -88,6 +88,20 @@ export class AssetSearchEffects {
     );
   });
 
+  public showAssetDetail$ = createEffect(() => {
+    return this.actions$.pipe(
+      ofType(actions.showAssetDetail),
+      withLatestFrom(this.store.select(selectCurrentAssetDetail)),
+      switchMap(([{ assetId }, currentAssetDetail]) =>
+        assetId !== currentAssetDetail?.assetId
+          ? this.assetSearchService
+              .loadAssetDetailData(assetId)
+              .pipe(map((assetDetail) => actions.updateAssetDetail({ assetDetail })))
+          : EMPTY
+      )
+    );
+  });
+
   public closeDetailOnUpdateSearch$ = createEffect(() => {
     return this.actions$.pipe(
       ofType(actions.search),
@@ -144,7 +158,14 @@ export class AssetSearchEffects {
     this.queryParams$.pipe(
       withLatestFrom(this.store.select(selectAssetSearchQuery)),
       filter(([params, query]) => !deepEqual(params.query, query)),
-      map(([params, query]) => actions.search({ query: params.query }))
+      map(([params, storeQuery]) => {
+        const paramsEmpty = Object.values(params.query).every((v) => v == null);
+        if (paramsEmpty) {
+          return actions.loadSearch({ query: storeQuery });
+        } else {
+          return actions.search({ query: params.query });
+        }
+      })
     )
   );
 
@@ -152,9 +173,11 @@ export class AssetSearchEffects {
     this.queryParams$.pipe(
       withLatestFrom(this.store.select(selectCurrentAssetDetail)),
       filter(([params, assetDetail]) => params.assetId !== assetDetail?.assetId),
-      map(([{ assetId }, _]) =>
-        assetId === undefined ? actions.resetAssetDetail() : actions.assetClicked({ assetId })
-      )
+      map(([params, storeAsset]) => {
+        const paramsEmpty = Object.values(params.query).every((v) => v == null);
+        const assetId = paramsEmpty ? storeAsset?.assetId : params.assetId;
+        return assetId === undefined ? actions.resetAssetDetail() : actions.showAssetDetail({ assetId });
+      })
     )
   );
 
