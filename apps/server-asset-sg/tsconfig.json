@@ -22,6 +22,7 @@
       "@asset-sg/client-shared": ["../../libs/client-shared/src/index.ts"],
       "@asset-sg/core": ["../../libs/core/src/index.ts"],
       "@asset-sg/favourite": ["../../libs/favourite/src/index.ts"],
+      "@asset-sg/persistence": ["../../libs/persistence/src/index.ts"],
       "@asset-sg/profile": ["../../libs/profile/src/index.ts"],
       "@asset-sg/shared": ["../../libs/shared/src/index.ts"],
       "@asset-sg/shared/v2": ["../../libs/shared/v2/src/index.ts"],
