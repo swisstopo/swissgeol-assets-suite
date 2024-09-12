@@ -150,5 +150,6 @@ export const assetSearchReducer = createReducer(
   ),
   on(actions.openResults, (state): AssetSearchState => ({ ...state, isResultsOpen: true })),
   on(actions.closeResults, (state): AssetSearchState => ({ ...state, isResultsOpen: false })),
+  on(actions.manualToggleResult, (state): AssetSearchState => ({ ...state, isResultsOpen: !state.isResultsOpen })),
   on(actions.setStudies, (state, { studies }): AssetSearchState => ({ ...state, studies }))
 );

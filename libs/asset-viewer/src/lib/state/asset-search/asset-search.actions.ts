@@ -25,16 +25,17 @@ export const resetSearch = createAction('[Asset Search] Reset Search');
 export const removePolygon = createAction('[Asset Search] Remove polygon');
 export const initializeSearch = createAction('[Asset Search] Initialize search');
 export const assetClicked = createAction('[Asset Search] Asset clicked', props<{ assetId: number }>());
-export const showAssetDetail = createAction('[Asset Viewer] Show Asset Detail', props<{ assetId: number }>());
+export const showAssetDetail = createAction('[Asset Search] Show Asset Detail', props<{ assetId: number }>());
 export const updateAssetDetail = createAction(
   '[Asset Search] Update Asset Detail',
   props<{ assetDetail: AssetEditDetail }>()
 );
 export const resetAssetDetail = createAction('[Asset Search] Reset Asset Detail');
-export const openFilters = createAction('[Asset Viewer] Open Filters');
-export const closeFilters = createAction('[Asset Viewer] Close Filters');
-export const openResults = createAction('[Asset Viewer] Open Results');
-export const closeResults = createAction('[Asset Viewer] Close Results');
-export const setStudies = createAction('[Asset Viewer] Load Studies', props<{ studies: AllStudyDTOs }>());
+export const openFilters = createAction('[Asset Search] Open Filters');
+export const closeFilters = createAction('[Asset Search] Close Filters');
+export const openResults = createAction('[Asset Search] Open Results');
+export const closeResults = createAction('[Asset Search] Close Results');
+export const setStudies = createAction('[Asset Search] Load Studies', props<{ studies: AllStudyDTOs }>());
 export const loadSearch = createAction('[Asset Search] Load Search', props<{ query: AssetSearchQuery }>());
 export const updateQueryParams = createAction('[Asset Search] Update Query Params');
+export const manualToggleResult = createAction('[Asset Search] Manual Toggle Params');

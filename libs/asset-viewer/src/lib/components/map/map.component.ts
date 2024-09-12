@@ -13,7 +13,7 @@ import {
   ViewChild,
 } from '@angular/core';
 import { AppState } from '@asset-sg/client-shared';
-import { isNotNull } from '@asset-sg/core';
+import { arrayEqual, isNotNull } from '@asset-sg/core';
 import { filterNullish } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
 import { asapScheduler, distinctUntilChanged, filter, first, pairwise, skip, Subscription, take, takeLast } from 'rxjs';
@@ -182,18 +182,13 @@ export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
         this.controls.draw.setPolygon(polygon ?? null);
       })
     );
-    this.controls.draw.polygon$
-      .pipe(
-        filterNullish(),
-        distinctUntilChanged((a, b) => this.equalsCheck(a, b))
+    this.controls.draw.polygon$.pipe(filterNullish(), distinctUntilChanged(arrayEqual)).subscribe((polygon) =>
+      this.store.dispatch(
+        searchActions.search({
+          query: { polygon: polygon },
+        })
       )
-      .subscribe((polygon) =>
-        this.store.dispatch(
-          searchActions.search({
-            query: { polygon: polygon },
-          })
-        )
-      );
+    );
   }
 
   private handleHighlightedAssetIdChange() {
@@ -202,10 +197,6 @@ export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
     } else {
       this.controller.setHighlightedAsset(this.highlightedAssetId);
     }
-  }
-
-  private equalsCheck<T>(a: T[] | null, b: T[] | null) {
-    return !!a && !!b && a.length === b.length && a.every((v, i) => v === b[i]);
   }
 
   @HostBinding('class.is-loading')

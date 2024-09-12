@@ -62,3 +62,7 @@ export function deepEqual(obj1: any, obj2: any): boolean {
   // If all checks pass, the objects are deep equal.
   return true;
 }
+
+export function arrayEqual<T>(a: T[] | null, b: T[] | null) {
+  return !!a && !!b && a.length === b.length && a.every((v, i) => v === b[i]);
+}

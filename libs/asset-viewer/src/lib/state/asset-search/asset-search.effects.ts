@@ -9,7 +9,7 @@ import { Actions, concatLatestFrom, createEffect, ofType } from '@ngrx/effects';
 import { ROUTER_NAVIGATED } from '@ngrx/router-store';
 import { Store } from '@ngrx/store';
 import * as D from 'io-ts/Decoder';
-import { EMPTY, filter, map, merge, of, share, switchMap, withLatestFrom } from 'rxjs';
+import { EMPTY, filter, map, merge, of, share, switchMap, takeUntil, withLatestFrom } from 'rxjs';
 
 import { AllStudyService } from '../../services/all-study.service';
 import { AssetSearchService } from '../../services/asset-search.service';
@@ -113,8 +113,18 @@ export class AssetSearchEffects {
   public openSearchResults$ = createEffect(() => {
     return this.actions$.pipe(
       ofType(actions.updateSearchResults),
+      takeUntil(this.actions$.pipe(ofType(actions.manualToggleResult))),
       withLatestFrom(this.store.select(selectAssetSearchNoActiveFilters)),
       map(([_, showStudies]) => (showStudies ? actions.closeResults() : actions.openResults()))
+    );
+  });
+
+  public closeSearchResults$ = createEffect(() => {
+    return this.actions$.pipe(
+      ofType(actions.updateSearchResults),
+      withLatestFrom(this.store.select(selectAssetSearchNoActiveFilters)),
+      filter(([_, showStudies]) => showStudies),
+      map(() => actions.closeResults())
     );
   });
 
@@ -161,7 +171,7 @@ export class AssetSearchEffects {
         this.store.select(selectAssetSearchQuery),
         this.store.select(selectAssetSearchResultData).pipe(map((r) => r.length > 0))
       ),
-      filter(([params, query]) => !deepEqual(params.query, query)),
+      filter(([params, storeQuery]) => !deepEqual(params.query, storeQuery)),
       map(([params, storeQuery, searchResultsLoaded]) => {
         const paramsEmpty = Object.values(params.query).every((v) => v == null);
         if (paramsEmpty) {
@@ -180,10 +190,10 @@ export class AssetSearchEffects {
   public readAssetIdQueryParam$ = createEffect(() =>
     this.queryParams$.pipe(
       withLatestFrom(this.store.select(selectCurrentAssetDetail)),
-      filter(([params, assetDetail]) => params.assetId !== assetDetail?.assetId),
-      map(([params, storeAsset]) => {
+      filter(([params, storeAssetDetail]) => params.assetId !== storeAssetDetail?.assetId),
+      map(([params, storeAssetDetail]) => {
         const paramsEmpty = Object.values(params.query).every((v) => v == null);
-        const assetId = paramsEmpty ? storeAsset?.assetId : params.assetId;
+        const assetId = paramsEmpty ? storeAssetDetail?.assetId : params.assetId;
         return assetId === undefined ? actions.resetAssetDetail() : actions.showAssetDetail({ assetId });
       })
     )

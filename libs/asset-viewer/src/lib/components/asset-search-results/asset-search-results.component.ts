@@ -69,11 +69,7 @@ export class AssetSearchResultsComponent implements OnInit, OnDestroy {
   }
 
   public toggleResultsOpen(isCurrentlyOpen: boolean) {
-    if (isCurrentlyOpen) {
-      this._store.dispatch(actions.closeResults());
-    } else {
-      this._store.dispatch(actions.openResults());
-    }
+    this._store.dispatch(actions.manualToggleResult());
   }
 
   public onScroll(event: Event) {
