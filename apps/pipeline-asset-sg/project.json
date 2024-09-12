@@ -1,0 +1,66 @@
+{
+  "name": "pipeline-asset-sg",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/pipeline-asset-sg/src",
+  "projectType": "application",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "options": {
+        "platform": "node",
+        "outputPath": "dist/apps/pipeline-asset-sg",
+        "format": ["cjs"],
+        "bundle": false,
+        "main": "apps/pipeline-asset-sg/src/main.ts",
+        "tsConfig": "apps/pipeline-asset-sg/tsconfig.app.json",
+        "assets": ["apps/pipeline-asset-sg/src/assets"],
+        "generatePackageJson": true,
+        "esbuildOptions": {
+          "sourcemap": true,
+          "outExtension": {
+            ".js": ".js"
+          }
+        }
+      },
+      "configurations": {
+        "development": {},
+        "production": {
+          "esbuildOptions": {
+            "sourcemap": false,
+            "outExtension": {
+              ".js": ".js"
+            }
+          }
+        }
+      }
+    },
+    "serve": {
+      "executor": "@nx/js:node",
+      "defaultConfiguration": "development",
+      "options": {
+        "buildTarget": "pipeline-asset-sg:build"
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "pipeline-asset-sg:build:development"
+        },
+        "production": {
+          "buildTarget": "pipeline-asset-sg:build:production"
+        }
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "apps/pipeline-asset-sg/jest.config.ts"
+      }
+    }
+  }
+}
