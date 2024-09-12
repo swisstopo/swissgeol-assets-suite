@@ -20,6 +20,7 @@ import {
   selectCurrentAssetDetail,
   selectAssetSearchNoActiveFilters,
   selectStudies,
+  selectAssetSearchResultData,
 } from './asset-search.selector';
 
 @UntilDestroy()
@@ -156,12 +157,19 @@ export class AssetSearchEffects {
 
   public readSearchQueryParams$ = createEffect(() =>
     this.queryParams$.pipe(
-      withLatestFrom(this.store.select(selectAssetSearchQuery)),
+      withLatestFrom(
+        this.store.select(selectAssetSearchQuery),
+        this.store.select(selectAssetSearchResultData).pipe(map((r) => r.length > 0))
+      ),
       filter(([params, query]) => !deepEqual(params.query, query)),
-      map(([params, storeQuery]) => {
+      map(([params, storeQuery, searchResultsLoaded]) => {
         const paramsEmpty = Object.values(params.query).every((v) => v == null);
         if (paramsEmpty) {
-          return actions.loadSearch({ query: storeQuery });
+          if (searchResultsLoaded) {
+            return actions.updateQueryParams();
+          } else {
+            return actions.loadSearch({ query: storeQuery });
+          }
         } else {
           return actions.search({ query: params.query });
         }
@@ -184,7 +192,7 @@ export class AssetSearchEffects {
   public updateQueryParams$ = createEffect(
     () =>
       this.actions$.pipe(
-        ofType(actions.loadSearch, actions.updateAssetDetail, actions.resetAssetDetail),
+        ofType(actions.updateQueryParams, actions.loadSearch, actions.updateAssetDetail, actions.resetAssetDetail),
         concatLatestFrom(() => [
           this.store.select(selectAssetSearchQuery),
           this.store.select(selectCurrentAssetDetail),

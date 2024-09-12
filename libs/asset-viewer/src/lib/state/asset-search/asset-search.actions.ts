@@ -37,3 +37,4 @@ export const openResults = createAction('[Asset Viewer] Open Results');
 export const closeResults = createAction('[Asset Viewer] Close Results');
 export const setStudies = createAction('[Asset Viewer] Load Studies', props<{ studies: AllStudyDTOs }>());
 export const loadSearch = createAction('[Asset Search] Load Search', props<{ query: AssetSearchQuery }>());
+export const updateQueryParams = createAction('[Asset Search] Update Query Params');
