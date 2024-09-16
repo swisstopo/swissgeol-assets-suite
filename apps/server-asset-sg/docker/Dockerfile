@@ -8,7 +8,7 @@ ENV NODE_ENV=development
 WORKDIR /app
 COPY . .
 
-RUN npm install && ./node_modules/.bin/prisma generate
+RUN npm install
 RUN npx nx build server-asset-sg --configuration=production
 
 # final image build

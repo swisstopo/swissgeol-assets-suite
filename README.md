@@ -197,7 +197,7 @@ An empty template for the file can be found in [`development/.env.template`](dev
 ## Database ORM
 
 This project uses [Prisma](https://www.prisma.io/) as its database ORM.
-The schema can be found at [apps/server-asset-sg/prisma/schema.prisma](libs/persistence/src/lib/prisma/schema.prisma).
+The schema can be found at [libs/persistence/src/lib/prisma/schema.prisma](libs/persistence/src/lib/prisma/schema.prisma).
 
 To run prisma commands, you can use the following shortcut:
 

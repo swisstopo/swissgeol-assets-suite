@@ -107,6 +107,23 @@ jobs:
           DOCKERFILE: ./apps/client-asset-sg/docker/Dockerfile
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+  build_and_push_pipeline:
+    name: "build and push pipeline"
+    needs:
+      - determine_version
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Create image
+        uses: ./.github/actions/create-image
+        with:
+          IMAGE_NAME: ${{ vars.BASE_IMAGE_NAME }}-pipeline
+          TAG: ${{ env.IS_EDGE == 'true' && 'edge' || '' }}
+          VERSION: ${{ needs.determine_version.outputs.version }}
+          DOCKERFILE: ./apps/pipeline-asset-sg/docker/Dockerfile
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   tag_commit:
     name: "tag commit"
     needs:

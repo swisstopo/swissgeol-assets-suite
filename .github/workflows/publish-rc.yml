@@ -53,11 +53,28 @@ jobs:
       - name: Push docker image
         run: docker push ${{ vars.BASE_IMAGE_NAME }}-api:release-candidate
 
+  tag_rc_image_pipeline:
+    name: tag rc image pipeline
+    runs-on: ubuntu-latest
+    steps:
+      - name: Login to GitHub Packages
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
+
+      - name: Pull docker image
+        run: docker pull ${{ vars.BASE_IMAGE_NAME }}-pipeline:${{ env.BASE }}
+
+      - name: Tag docker image
+        run: docker tag ${{ vars.BASE_IMAGE_NAME }}-pipeline:${{ env.BASE }} ${{ vars.BASE_IMAGE_NAME }}-pipeline:release-candidate
+
+      - name: Push docker image
+        run: docker push ${{ vars.BASE_IMAGE_NAME }}-pipeline:release-candidate
+
   tag_rc_commit:
     name: "tag rc commit"
     needs:
       - tag_rc_image_app
       - tag_rc_image_api
+      - tag_rc_image_pipeline
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository

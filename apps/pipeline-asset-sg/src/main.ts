@@ -1,24 +1,21 @@
 import { ExportToViewService } from './export-to-view.service';
 import { resetAndMigrateDatabase } from './reset-and-migrate-database';
 import { log } from './log';
+import { PrismaClient } from '@prisma/client';
+import { prismaConfig } from './utils';
+import { config } from './config';
 
 log('Starting data export to view');
-// Read connection string for source and destination databases
-const sourceConnectionString = process.env.SOURCE_CONNECTION_STRING;
-const destinationConnectionString = process.env.DESTINATION_CONNECTION_STRING;
-
-// Read allowed workgroup names from environment
-const allowedWorkgroupIds = process.env.ALLOWED_WORKGROUP_IDS.split(',').map(Number);
+log(`Found configuration ${JSON.stringify(config)}`);
 
 // Reset and migrate destination database
-// resetAndMigrateDatabase(destinationConnectionString);
+// resetAndMigrateDatabase(configuration.destination.connectionString);
+
+const sourcePrisma = new PrismaClient(prismaConfig(config.source.connectionString));
+const destinationPrisma = new PrismaClient(prismaConfig(config.destination.connectionString));
 
 // Export data from source to destination database
-const exportToViewService = new ExportToViewService(
-  sourceConnectionString,
-  destinationConnectionString,
-  allowedWorkgroupIds
-);
+const exportToViewService = new ExportToViewService(sourcePrisma, destinationPrisma, config);
 exportToViewService
   .exportToView()
   .then(() => log('Export to view completed'))

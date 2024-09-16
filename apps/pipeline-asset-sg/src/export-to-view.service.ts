@@ -1,11 +1,12 @@
 import { Prisma, PrismaClient } from '@prisma/client';
 import { log } from './log';
+import { PipelineConfig } from './config';
 
 const unique = (value, index, self) => self.indexOf(value) === index;
 
+type AssetInfo = { asset_id: number; public_use_id: number; internal_use_id: number; workgroup_id: number };
+
 export class ExportToViewService {
-  private readonly sourceConnectionString: string;
-  private readonly destinationConnectionString: string;
   private readonly allowedWorkgroupIds: number[];
 
   private readonly sourcePrisma: PrismaClient;
@@ -13,26 +14,10 @@ export class ExportToViewService {
 
   private readonly batchSize = 500;
 
-  constructor(sourceConnectionString: string, destinationConnectionString: string, allowedWorkgroupIds: number[]) {
-    this.sourceConnectionString = sourceConnectionString;
-    this.destinationConnectionString = destinationConnectionString;
-    this.allowedWorkgroupIds = allowedWorkgroupIds;
-
-    this.sourcePrisma = new PrismaClient({
-      datasources: {
-        db: {
-          url: this.sourceConnectionString,
-        },
-      },
-    });
-
-    this.destinationPrisma = new PrismaClient({
-      datasources: {
-        db: {
-          url: this.destinationConnectionString,
-        },
-      },
-    });
+  constructor(sourcePrisma: PrismaClient, destinationPrisma: PrismaClient, config: PipelineConfig) {
+    this.allowedWorkgroupIds = config.allowedWorkgroupIds;
+    this.sourcePrisma = sourcePrisma;
+    this.destinationPrisma = destinationPrisma;
   }
 
   public async exportToView() {
@@ -194,9 +179,6 @@ export class ExportToViewService {
     await this.export('assetObjectInfo', 'fileId', fileIds);
     const assetFileResult = await this.destinationPrisma.assetFile.createMany({ data: assetFiles });
     log(`Created ${assetFileResult.count} AssetFiles.`);
-
-    // Write file to S3
-    // s3service.uploadFiles(filesWithoutLegalDocs);
   }
 
   /**
@@ -249,9 +231,7 @@ export class ExportToViewService {
    * Find public asset ids.
    */
   private async findPublicAssetIds() {
-    return this.sourcePrisma.$queryRaw<
-      { asset_id: number; public_use_id: number; internal_use_id: number; workgroup_id: number }[]
-    >`
+    return this.sourcePrisma.$queryRaw<AssetInfo[]>`
       SELECT a.asset_id,a.public_use_id,a.internal_use_id,a.workgroup_id FROM asset a
       LEFT JOIN public_use p ON a.public_use_id = p.public_use_id
       LEFT JOIN LATERAL (SELECT * FROM status_work WHERE asset_id = a.asset_id ORDER BY status_work_date DESC LIMIT 1) AS sw ON a.asset_id = sw.asset_id

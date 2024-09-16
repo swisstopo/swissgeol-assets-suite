@@ -26,11 +26,11 @@
             "forwardAllArgs": false
           },
           {
-            "command": "npx shx cp ./apps/server-asset-sg/prisma/schema.prisma dist/apps/server-asset-sg/prisma/",
+            "command": "npx shx cp ./libs/persistence/src/lib/prisma/schema.prisma dist/apps/server-asset-sg/prisma/",
             "forwardAllArgs": false
           },
           {
-            "command": "npx shx cp -R ./apps/server-asset-sg/prisma/migrations dist/apps/server-asset-sg/prisma/",
+            "command": "npx shx cp -R ./libs/persistence/src/lib/prisma/migrations dist/apps/server-asset-sg/prisma/",
             "forwardAllArgs": false
           },
           {

@@ -6,9 +6,44 @@
   "tags": [],
   "targets": {
     "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "parallel": false,
+        "tsConfig": "apps/pipeline-asset-sg/tsconfig.app.json",
+        "commands": [
+          {
+            "command": "npm run prisma -- generate",
+            "forwardAllArgs": false
+          },
+          {
+            "command": "npx nx run pipeline-asset-sg:build-app:production"
+          },
+          {
+            "command": "npx shx cp apps/pipeline-asset-sg/docker/* dist/apps/pipeline-asset-sg",
+            "forwardAllArgs": false
+          },
+          {
+            "command": "npx shx mkdir dist/apps/pipeline-asset-sg/prisma",
+            "forwardAllArgs": false
+          },
+          {
+            "command": "npx shx cp ./libs/persistence/src/lib/prisma/schema.prisma dist/apps/pipeline-asset-sg/prisma/",
+            "forwardAllArgs": false
+          },
+          {
+            "command": "npx shx cp -R ./libs/persistence/src/lib/prisma/migrations dist/apps/pipeline-asset-sg/prisma/",
+            "forwardAllArgs": false
+          },
+          {
+            "command": "npx shx sed -i \"s/(\\.\\.\\/)*node_modules/\\.\\/node_modules/g\" dist/apps/pipeline-asset-sg/prisma/schema.prisma",
+            "forwardAllArgs": false
+          }
+        ]
+      }
+    },
+    "build-app": {
       "executor": "@nx/esbuild:esbuild",
       "outputs": ["{options.outputPath}"],
-      "defaultConfiguration": "production",
       "options": {
         "platform": "node",
         "outputPath": "dist/apps/pipeline-asset-sg",
@@ -16,7 +51,6 @@
         "bundle": false,
         "main": "apps/pipeline-asset-sg/src/main.ts",
         "tsConfig": "apps/pipeline-asset-sg/tsconfig.app.json",
-        "assets": ["apps/pipeline-asset-sg/src/assets"],
         "generatePackageJson": true,
         "esbuildOptions": {
           "sourcemap": true,
@@ -37,6 +71,7 @@
         }
       }
     },
+
     "serve": {
       "executor": "@nx/js:node",
       "defaultConfiguration": "development",
