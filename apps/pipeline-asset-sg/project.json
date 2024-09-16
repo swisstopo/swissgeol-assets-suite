@@ -88,7 +88,11 @@
       }
     },
     "lint": {
-      "executor": "@nx/eslint:lint"
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "eslintConfig": "apps/pipeline-asset-sg/eslint.config.js"
+      }
     },
     "test": {
       "executor": "@nx/jest:jest",

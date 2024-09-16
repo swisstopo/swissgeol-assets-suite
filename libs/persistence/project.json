@@ -6,7 +6,11 @@
   "tags": [],
   "targets": {
     "lint": {
-      "executor": "@nx/eslint:lint"
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "eslintConfig": "libs/persistence/eslint.config.js"
+      }
     },
     "test": {
       "executor": "@nx/jest:jest",

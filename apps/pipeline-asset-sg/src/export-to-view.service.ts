@@ -1,6 +1,6 @@
 import { Prisma, PrismaClient } from '@prisma/client';
-import { log } from './log';
 import { PipelineConfig } from './config';
+import { log } from './log';
 
 const unique = (value, index, self) => self.indexOf(value) === index;
 
