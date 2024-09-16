@@ -2,7 +2,7 @@
   <div class="header">
     <div>
       {{ "search.searchResults" | translate }}:
-      <asset-sg-animate-number [nextValue]="(pageStats$ | async)?.total ?? 0" />
+      <asset-sg-animate-number [nextValue]="(total$ | async) ?? 0" />
     </div>
     <button asset-sg-icon-button style="width: unset" (click)="toggleResultsOpen(isResultsOpen)">
       <span> {{ (isResultsOpen ? "search.hideTable" : "search.showTable") | translate }} </span>

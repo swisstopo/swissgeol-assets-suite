@@ -21,6 +21,7 @@ import {
   icons,
   TranslateTsLoader,
 } from '@asset-sg/client-shared';
+import { assetsPageMatcher } from '@asset-sg/client-shared';
 import { storeLogger } from '@asset-sg/core';
 import { provideSvgIcons, SvgIconComponent } from '@ngneat/svg-icon';
 import { EffectsModule } from '@ngrx/effects';
@@ -34,7 +35,6 @@ import { PushModule } from '@rx-angular/template/push';
 import { environment } from '../environments/environment';
 
 import { adminGuard, notAnonymousGuard } from './app-guards';
-import { assetsPageMatcher } from './app-matchers';
 import { AppComponent } from './app.component';
 import { AppBarComponent, MenuBarComponent, NotFoundComponent, RedirectToLangComponent } from './components';
 import { SplashScreenComponent } from './components/splash-screen/splash-screen.component';
@@ -59,10 +59,6 @@ registerLocaleData(locale_deCH, 'de-CH');
     BrowserAnimationsModule,
     HttpClientModule,
     RouterModule.forRoot([
-      {
-        path: ':lang/auth',
-        loadChildren: () => AuthModule,
-      },
       {
         path: ':lang/profile',
         loadChildren: () => import('@asset-sg/profile').then((m) => m.ProfileModule),

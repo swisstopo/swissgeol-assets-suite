@@ -148,9 +148,6 @@ export class AssetEditorTabPageComponent {
           this._form.controls.administration.controls.newStatusWorkItemCode.disable();
         }
       });
-    this._form.valueChanges.subscribe(() => {
-      // console.log('value', this._form.value);
-    });
 
     this._lc.afterViewInit$
       .pipe(

@@ -101,7 +101,7 @@ export class AssetSearchRefineComponent implements OnInit, OnDestroy, AfterViewI
 
   public updateSearch(filterConfiguration: Partial<AssetSearchQuery>) {
     if (this.isFiltersOpen) {
-      this.store.dispatch(actions.searchByFilterConfiguration({ filterConfiguration }));
+      this.store.dispatch(actions.search({ query: filterConfiguration }));
     }
   }
 

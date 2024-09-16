@@ -1,6 +1,6 @@
 import { ValidateIf, ValidationOptions } from 'class-validator';
 import { ValidationArguments } from 'class-validator/types/validation/ValidationArguments';
-
+import { filter, Observable, OperatorFunction, pipe, UnaryFunction } from 'rxjs';
 /**
  * Creates a validation failure message that indicates that the given property
  * must be either an integer or `null`.
@@ -29,4 +29,8 @@ export const messageNullableString = ({ property }: ValidationArguments): string
  */
 export function IsNullable(validationOptions?: ValidationOptions) {
   return ValidateIf((_object, value) => value !== null, validationOptions);
+}
+
+export function filterNullish<T>(): UnaryFunction<Observable<T | undefined | null>, Observable<T>> {
+  return pipe(filter((value) => value != null) as OperatorFunction<T | undefined | null, T>);
 }

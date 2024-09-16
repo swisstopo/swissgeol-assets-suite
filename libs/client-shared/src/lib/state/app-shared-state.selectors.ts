@@ -1,5 +1,6 @@
 import { Contact, emptyValueItem, ReferenceData, valueItemRecordToArray } from '@asset-sg/shared';
 import * as RD from '@devexperts/remote-data-ts';
+import { getRouterSelectors } from '@ngrx/router-store';
 import { createSelector } from '@ngrx/store';
 import * as A from 'fp-ts/Array';
 import { flow, pipe } from 'fp-ts/function';
@@ -94,3 +95,16 @@ export const selectRDReferenceDataVM = createSelector(
 );
 
 export const selectLocale = createSelector(appSharedFeature, (state) => (state.lang === 'en' ? 'en-GB' : 'de-CH'));
+
+export const {
+  selectCurrentRoute, // select the current route
+  selectFragment, // select the current route fragment
+  selectQueryParams, // select the current route query params
+  selectQueryParam, // factory function to select a query param
+  selectRouteParams, // select the current route params
+  selectRouteParam, // factory function to select a route param
+  selectRouteData, // select the current route data
+  selectRouteDataParam, // factory function to select a route data param
+  selectUrl, // select the current url
+  selectTitle, // select the title if available
+} = getRouterSelectors();

@@ -2,6 +2,7 @@ import { ENTER } from '@angular/cdk/keycodes';
 import { HttpClient } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, ElementRef, Input, OnInit, Output, ViewChild } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
+import { supportedLangs } from '@asset-sg/client-shared';
 import { isTruthy } from '@asset-sg/core';
 import { Lang } from '@asset-sg/shared';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
@@ -52,7 +53,7 @@ export class AppBarComponent implements OnInit {
   public links$ = this._currentLang$.pipe(
     debounceTime(0),
     map((currentLang) => ({
-      links: ['de', 'fr', 'it', 'rm', 'en'].map(
+      links: supportedLangs.map(
         (lang) =>
           pipe(
             currentLang,

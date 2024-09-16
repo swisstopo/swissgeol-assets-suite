@@ -1,9 +1,5 @@
 <mat-progress-bar *ngIf="isLoading$ | async" mode="indeterminate" class="loading-bar" />
-<asset-sg-map
-  [highlightedAssetId]="highlightedAssetId"
-  (assetsClick)="assetClicked$.next($event)"
-  (initializeEnd)="handleMapInitialised()"
-/>
+<asset-sg-map [highlightedAssetId]="highlightedAssetId" (assetsClick)="assetClicked$.next($event)" />
 
 <asset-sg-asset-picker
   class="asset-picker"
