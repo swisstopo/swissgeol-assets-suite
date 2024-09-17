@@ -63,6 +63,6 @@ export function deepEqual(obj1: any, obj2: any): boolean {
   return true;
 }
 
-export function arrayEqual<T>(a: T[] | null, b: T[] | null) {
+export function arrayEqual<T>(a: T[] | null | undefined, b: T[] | null | undefined) {
   return !!a && !!b && a.length === b.length && a.every((v, i) => v === b[i]);
 }

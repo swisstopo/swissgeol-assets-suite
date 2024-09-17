@@ -1,9 +1,9 @@
 import { olCoordsFromLV95, toLonLat, WGStoLV95 } from '@asset-sg/client-shared';
 import { isNotNull, isNull } from '@asset-sg/core';
-import { LV95 } from '@asset-sg/shared';
+import { Polygon } from '@asset-sg/shared';
 import { Control } from 'ol/control';
 import Feature from 'ol/Feature';
-import { Polygon } from 'ol/geom';
+import { Polygon as OlGeometry } from 'ol/geom';
 import Draw, { DrawEvent } from 'ol/interaction/Draw';
 import VectorSource from 'ol/source/Vector';
 import { asapScheduler, BehaviorSubject, filter, fromEventPattern, map, Observable, Subscription } from 'rxjs';
@@ -14,7 +14,7 @@ export class DrawControl extends Control {
 
   private readonly subscription = new Subscription();
 
-  private readonly _polygon$ = new BehaviorSubject<LV95[] | null>(null);
+  private readonly _polygon$ = new BehaviorSubject<Polygon | null>(null);
   private readonly _isDrawing$ = new BehaviorSubject<boolean>(false);
 
   constructor({ polygonSource, ...options }: Options) {
@@ -48,7 +48,7 @@ export class DrawControl extends Control {
 
     // Add or update the polygon feature when the polygon changes.
     this._polygon$.pipe(filter(isNotNull)).subscribe((polygon) => {
-      const geometry = new Polygon([polygon.map(olCoordsFromLV95)]);
+      const geometry = new OlGeometry([polygon.map(olCoordsFromLV95)]);
       const features = this.polygonSource.getFeatures();
       if (features.length > 1) {
         throw new Error('expected exactly one feature on the polygon layer');
@@ -64,8 +64,8 @@ export class DrawControl extends Control {
     fromEventPattern<DrawEvent>((h) => this.draw.on('drawend', h))
       .pipe(
         map((e) => {
-          const flatCoords = (e.feature.getGeometry() as Polygon).getFlatCoordinates();
-          const polygon: LV95[] = [];
+          const flatCoords = (e.feature.getGeometry() as OlGeometry).getFlatCoordinates();
+          const polygon: Polygon = [];
           for (let i = 0; i < flatCoords.length; i += 2) {
             const coords = WGStoLV95(toLonLat([flatCoords[i], flatCoords[i + 1]]));
             polygon.push(coords);
@@ -84,7 +84,7 @@ export class DrawControl extends Control {
     this._isDrawing$.next(!this._isDrawing$.value);
   }
 
-  get polygon$(): Observable<LV95[] | null> {
+  get polygon$(): Observable<Polygon | null> {
     return this._polygon$.asObservable();
   }
 
@@ -96,7 +96,7 @@ export class DrawControl extends Control {
     return this._isDrawing$.value;
   }
 
-  setPolygon(polygon: LV95[] | null) {
+  setPolygon(polygon: Polygon | null) {
     this._isDrawing$.next(false);
     this._polygon$.next(polygon);
   }

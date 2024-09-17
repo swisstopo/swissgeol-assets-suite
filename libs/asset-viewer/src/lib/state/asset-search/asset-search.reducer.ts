@@ -78,6 +78,12 @@ export const assetSearchReducer = createReducer(
         ...state.query,
         ...query,
       },
+    })
+  ),
+  on(
+    actions.loadSearch,
+    (state): AssetSearchState => ({
+      ...state,
       resultsLoadingState: LoadingState.Loading,
     })
   ),
