@@ -1,10 +1,12 @@
 import { execSync } from 'child_process';
 
 export function resetAndMigrateDatabase(connectionString: string) {
-  execSync(`export DATABASE_URL=${connectionString} && npx prisma migrate reset --force`, {
+  execSync(`npx prisma migrate reset --force`, {
+    env: { ...process.env, DATABASE_URL: connectionString },
     stdio: 'inherit',
   });
-  execSync(`export DATABASE_URL=${connectionString} && npx prisma migrate deploy`, {
+  execSync(`npx prisma migrate deploy`, {
+    env: { ...process.env, DATABASE_URL: connectionString },
     stdio: 'inherit',
   });
 }
