@@ -173,7 +173,6 @@ export class AssetSearchEffects {
       ),
       filter(([params, storeQuery]) => !deepEqual(params.query, storeQuery)),
       map(([params, storeQuery, searchResultsLoaded]) => {
-        console.log('123', params, storeQuery, searchResultsLoaded);
         const paramsEmpty = Object.values(params.query).every((v) => v == null);
         if (paramsEmpty) {
           if (searchResultsLoaded) {
