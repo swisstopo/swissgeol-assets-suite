@@ -168,7 +168,7 @@ export class ExportToViewService {
     const files = await this.sourcePrisma.file.findMany({ where: { fileId: { in: fileIds } } });
 
     // Filter out files which start with 'LDoc'
-    const filesWithoutLegalDocs = files.filter((file) => !file.fileName.startsWith('LDoc'));
+    const filesWithoutLegalDocs = files.filter((file) => !file.fileName.includes('LDoc'));
 
     // Write files to the destination database
     const fileResult = await this.destinationPrisma.file.createMany({
