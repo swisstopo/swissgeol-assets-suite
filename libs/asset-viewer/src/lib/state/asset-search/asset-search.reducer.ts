@@ -85,6 +85,7 @@ export const assetSearchReducer = createReducer(
     (state): AssetSearchState => ({
       ...state,
       resultsLoadingState: LoadingState.Loading,
+      filterLoadingState: LoadingState.Loading,
     })
   ),
   on(
@@ -121,7 +122,6 @@ export const assetSearchReducer = createReducer(
     (state): AssetSearchState => ({
       ...initialState,
       stats: state.stats,
-      filterLoadingState: LoadingState.Loading,
     })
   ),
   on(

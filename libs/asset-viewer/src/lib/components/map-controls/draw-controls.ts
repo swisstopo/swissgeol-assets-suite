@@ -3,7 +3,7 @@ import { isNotNull, isNull } from '@asset-sg/core';
 import { Polygon } from '@asset-sg/shared';
 import { Control } from 'ol/control';
 import Feature from 'ol/Feature';
-import { Polygon as OlGeometry } from 'ol/geom';
+import { Polygon as OlPolygon } from 'ol/geom';
 import Draw, { DrawEvent } from 'ol/interaction/Draw';
 import VectorSource from 'ol/source/Vector';
 import { asapScheduler, BehaviorSubject, filter, fromEventPattern, map, Observable, Subscription } from 'rxjs';
@@ -48,7 +48,7 @@ export class DrawControl extends Control {
 
     // Add or update the polygon feature when the polygon changes.
     this._polygon$.pipe(filter(isNotNull)).subscribe((polygon) => {
-      const geometry = new OlGeometry([polygon.map(olCoordsFromLV95)]);
+      const geometry = new OlPolygon([polygon.map(olCoordsFromLV95)]);
       const features = this.polygonSource.getFeatures();
       if (features.length > 1) {
         throw new Error('expected exactly one feature on the polygon layer');
@@ -64,7 +64,7 @@ export class DrawControl extends Control {
     fromEventPattern<DrawEvent>((h) => this.draw.on('drawend', h))
       .pipe(
         map((e) => {
-          const flatCoords = (e.feature.getGeometry() as OlGeometry).getFlatCoordinates();
+          const flatCoords = (e.feature.getGeometry() as OlPolygon).getFlatCoordinates();
           const polygon: Polygon = [];
           for (let i = 0; i < flatCoords.length; i += 2) {
             const coords = WGStoLV95(toLonLat([flatCoords[i], flatCoords[i + 1]]));
