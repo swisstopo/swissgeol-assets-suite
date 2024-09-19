@@ -56,7 +56,7 @@ export abstract class BasePolicyDirective<T> implements OnInit, OnChanges, OnDes
 
   private render(): void {
     const policyInstance = this.user == null ? null : new this.policy(this.user);
-    if (policyInstance != null && (policyInstance.canDoEverything() || this.check(policyInstance))) {
+    if (policyInstance != null && this.check(policyInstance)) {
       this.viewContainer.createEmbeddedView(this.templateRef);
     } else {
       this.viewContainer.clear();

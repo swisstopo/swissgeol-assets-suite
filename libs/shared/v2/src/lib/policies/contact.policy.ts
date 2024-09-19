@@ -8,7 +8,7 @@ export class ContactPolicy extends Policy<Contact> {
   }
 
   canCreate(): boolean {
-    // A user can create assets for workgroups for which they are an Editor.
+    // A user can create contacts for workgroups for which they are an Editor.
     return this.hasRole(Role.Editor);
   }
 }

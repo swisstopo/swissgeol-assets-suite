@@ -15,15 +15,15 @@ class Authorize<T> {
   }
 
   canCreate(): void {
-    check(this.policy.canDoEverything() || this.policy.canCreate());
+    check(this.policy.canCreate());
   }
 
   canUpdate(value: T): void {
-    check(this.policy.canDoEverything() || this.policy.canUpdate(value));
+    check(this.policy.canUpdate(value));
   }
 
   canDelete(value: T): void {
-    check(this.policy.canDoEverything() || this.policy.canDelete(value));
+    check(this.policy.canDelete(value));
   }
 }
 

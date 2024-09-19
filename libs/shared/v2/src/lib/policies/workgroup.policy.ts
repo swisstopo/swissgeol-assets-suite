@@ -9,6 +9,6 @@ export class WorkgroupPolicy extends Policy<Workgroup> {
 
   canCreate(): boolean {
     // Only admins can create workgroups.
-    return false;
+    return this.canDoEverything() || false;
   }
 }
