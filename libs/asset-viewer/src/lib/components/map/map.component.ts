@@ -16,7 +16,7 @@ import { AppState } from '@asset-sg/client-shared';
 import { arrayEqual, isNotNull } from '@asset-sg/core';
 import { filterNullish } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
-import { asapScheduler, distinctUntilChanged, filter, first, pairwise, skip, Subscription, take, takeLast } from 'rxjs';
+import { asapScheduler, filter, first, Subscription, withLatestFrom } from 'rxjs';
 import { AllStudyService } from '../../services/all-study.service';
 import * as searchActions from '../../state/asset-search/asset-search.actions';
 import {
@@ -182,12 +182,20 @@ export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
         this.controls.draw.setPolygon(polygon ?? null);
       })
     );
-    this.controls.draw.polygon$.pipe(filterNullish(), distinctUntilChanged(arrayEqual)).subscribe((polygon) =>
-      this.store.dispatch(
-        searchActions.search({
-          query: { polygon: polygon },
-        })
-      )
+    this.subscription.add(
+      this.controls.draw.polygon$
+        .pipe(
+          filterNullish(),
+          withLatestFrom(this.store.select(selectAssetSearchPolygon)),
+          filter(([polygon, storePolygon]) => !arrayEqual(polygon, storePolygon))
+        )
+        .subscribe(([polygon, _]) =>
+          this.store.dispatch(
+            searchActions.search({
+              query: { polygon: polygon },
+            })
+          )
+        )
     );
   }
 

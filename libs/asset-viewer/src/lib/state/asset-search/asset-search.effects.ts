@@ -105,7 +105,7 @@ export class AssetSearchEffects {
 
   public closeDetailOnUpdateSearch$ = createEffect(() => {
     return this.actions$.pipe(
-      ofType(actions.search),
+      ofType(actions.search, actions.resetSearch, actions.removePolygon),
       map(() => actions.resetAssetDetail())
     );
   });
