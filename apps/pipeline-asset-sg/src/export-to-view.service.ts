@@ -90,7 +90,7 @@ export class ExportToViewService {
   }
 
   /**
-   * Export study areas as unsafe query with st_astext.
+   * Export study locations as unsafe query with st_astext.
    */
   private async exportStudyLocations(assetIds: number[]) {
     const studyLocations = await this.sourcePrisma.$queryRaw<
@@ -115,7 +115,7 @@ export class ExportToViewService {
   }
 
   /**
-   * Export study areas as unsafe query with st_astext.
+   * Export study traces as unsafe query with st_astext.
    */
   private async exportStudyTraces(assetIds: number[]) {
     const studyTraces = await this.sourcePrisma.$queryRaw<
@@ -244,6 +244,8 @@ export class ExportToViewService {
 
     // Filter out files which start with 'LDoc'
     const filesWithoutLegalDocs = files.filter((file) => !file.fileName.includes('LDoc'));
+    const fileIdsWithoutLegalDocs = filesWithoutLegalDocs.map((file) => file.fileId);
+    const assetFilesWithoutLegalDocs = assetFiles.filter((af) => fileIdsWithoutLegalDocs.includes(af.fileId));
 
     // Write files to the destination database
     const fileResult = await this.destinationPrisma.file.createMany({
@@ -251,8 +253,8 @@ export class ExportToViewService {
       skipDuplicates: true,
     });
     log(`Created ${fileResult.count} files.`);
-    await this.export('assetObjectInfo', 'fileId', fileIds);
-    const assetFileResult = await this.destinationPrisma.assetFile.createMany({ data: assetFiles });
+    await this.export('assetObjectInfo', 'fileId', fileIdsWithoutLegalDocs);
+    const assetFileResult = await this.destinationPrisma.assetFile.createMany({ data: assetFilesWithoutLegalDocs });
     log(`Created ${assetFileResult.count} AssetFiles.`);
   }
 
