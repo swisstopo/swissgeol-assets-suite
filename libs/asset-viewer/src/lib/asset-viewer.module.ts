@@ -59,6 +59,7 @@ import { MapComponent } from './components/map/map.component';
 import { MapControlsComponent } from './components/map-controls/map-controls.component';
 import { AssetSearchEffects } from './state/asset-search/asset-search.effects';
 import { assetSearchReducer } from './state/asset-search/asset-search.reducer';
+import { mapControlReducer } from './state/map-control/map-control.reducer';
 
 @NgModule({
   declarations: [
@@ -81,6 +82,7 @@ import { assetSearchReducer } from './state/asset-search/asset-search.reducer';
     ]),
     TranslateModule.forChild(),
     StoreModule.forFeature('assetSearch', assetSearchReducer),
+    StoreModule.forFeature('mapControl', mapControlReducer),
     EffectsModule.forFeature(AssetSearchEffects),
     ReactiveFormsModule,
 

@@ -1,26 +1,33 @@
 import { olCoordsFromLV95, toLonLat, WGStoLV95 } from '@asset-sg/client-shared';
 import { isNotNull, isNull } from '@asset-sg/core';
 import { Polygon } from '@asset-sg/shared';
+import { Store } from '@ngrx/store';
 import { Control } from 'ol/control';
 import Feature from 'ol/Feature';
 import { Polygon as OlPolygon } from 'ol/geom';
 import Draw, { DrawEvent } from 'ol/interaction/Draw';
 import VectorSource from 'ol/source/Vector';
 import { asapScheduler, BehaviorSubject, filter, fromEventPattern, map, Observable, Subscription } from 'rxjs';
+import * as mapControlActions from '../../state/map-control/map-control.actions';
+import { AppStateWithMapControl } from '../../state/map-control/map-control.reducer';
+import { selectMapControlIsDrawing } from '../../state/map-control/map-control.selector';
 
 export class DrawControl extends Control {
   private readonly polygonSource: VectorSource;
   private readonly draw: Draw;
+  private readonly store: Store<AppStateWithMapControl>;
 
   private readonly subscription = new Subscription();
 
   private readonly _polygon$ = new BehaviorSubject<Polygon | null>(null);
-  private readonly _isDrawing$ = new BehaviorSubject<boolean>(false);
+  private readonly _isDrawing$: Observable<boolean>;
 
-  constructor({ polygonSource, ...options }: Options) {
+  constructor({ polygonSource, store, ...options }: Options) {
     super(options);
 
     this.polygonSource = polygonSource;
+    this.store = store;
+    this._isDrawing$ = this.store.select(selectMapControlIsDrawing);
     this.draw = new Draw({ source: this.polygonSource, type: 'Polygon' });
 
     // Toggle the draw interaction based on whether the control is active.
@@ -81,7 +88,7 @@ export class DrawControl extends Control {
   }
 
   toggle(): void {
-    this._isDrawing$.next(!this._isDrawing$.value);
+    this.store.dispatch(mapControlActions.toggleDraw());
   }
 
   get polygon$(): Observable<Polygon | null> {
@@ -89,15 +96,11 @@ export class DrawControl extends Control {
   }
 
   get isDrawing$(): Observable<boolean> {
-    return this._isDrawing$.asObservable();
-  }
-
-  get isDrawing(): boolean {
-    return this._isDrawing$.value;
+    return this._isDrawing$;
   }
 
   setPolygon(polygon: Polygon | null) {
-    this._isDrawing$.next(false);
+    this.store.dispatch(mapControlActions.cancelDraw());
     this._polygon$.next(polygon);
   }
 
@@ -111,4 +114,5 @@ type ControlOptions = ConstructorParameters<typeof Control>[0];
 
 interface Options extends ControlOptions {
   polygonSource: VectorSource;
+  store: Store<AppStateWithMapControl>;
 }

@@ -12,12 +12,10 @@ import {
   SimpleChanges,
   ViewChild,
 } from '@angular/core';
-import { AppState } from '@asset-sg/client-shared';
 import { arrayEqual, isNotNull } from '@asset-sg/core';
 import { filterNullish } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
 import { asapScheduler, filter, first, Subscription, withLatestFrom } from 'rxjs';
-import { AllStudyService } from '../../services/all-study.service';
 import * as searchActions from '../../state/asset-search/asset-search.actions';
 import {
   selectAssetSearchPolygon,
@@ -26,6 +24,7 @@ import {
   selectAssetSearchNoActiveFilters,
   selectStudies,
 } from '../../state/asset-search/asset-search.selector';
+import { AppStateWithMapControl } from '../../state/map-control/map-control.reducer';
 import { DrawControl } from '../map-controls/draw-controls';
 import { ZoomControl } from '../map-controls/zoom-control';
 import { MapController } from './map-controller';
@@ -73,7 +72,7 @@ export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
   @ViewChild('mapControls', { static: true })
   controlsElement!: ElementRef<HTMLElement>;
 
-  private readonly store = inject(Store<AppState>);
+  private readonly store = inject(Store<AppStateWithMapControl>);
 
   private controller!: MapController;
 
@@ -83,8 +82,6 @@ export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
   };
 
   isInitialized = false;
-
-  private readonly allStudyService = inject(AllStudyService);
 
   private readonly subscription = new Subscription();
 
@@ -124,6 +121,7 @@ export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
       draw: new DrawControl({
         element: this.controlsElement.nativeElement,
         polygonSource: this.controller.sources.polygon,
+        store: this.store,
       }),
     };
 

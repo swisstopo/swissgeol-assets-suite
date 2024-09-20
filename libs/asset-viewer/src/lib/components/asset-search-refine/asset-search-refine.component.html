@@ -3,6 +3,15 @@
 <div class="scrollable-area">
   <div class="search-control-wrapper">
     <button asset-sg-primary translate (click)="resetSearch()">search.resetSearch</button>
+    <button
+      asset-sg-primary
+      [ngClass]="{ 'asset-sg-active': isDrawActive$ | async }"
+      *ngIf="!assetSearchQuery.polygon"
+      (click)="toggleDrawPolygon()"
+      translate
+    >
+      search.drawPolygon
+    </button>
     <button asset-sg-primary *ngIf="assetSearchQuery.polygon" (click)="removePolygon()" translate>
       search.removePolygon
     </button>
