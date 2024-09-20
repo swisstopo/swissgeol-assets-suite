@@ -48,7 +48,7 @@ export const simpleWorkgroupSelection = (userId: UserId) =>
 type SelectedWorkgroup = Prisma.WorkgroupGetPayload<{ select: ReturnType<typeof simpleWorkgroupSelection> }>;
 
 const parse = (data: SelectedWorkgroup, isAdmin: boolean, isAnonymousMode = false): SimpleWorkgroup => {
-  let simpleWorkgroup: SimpleWorkgroup = {
+  const simpleWorkgroup: SimpleWorkgroup = {
     id: data.id,
     name: data.name,
     role: Role.Viewer,
