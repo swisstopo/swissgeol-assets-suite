@@ -138,10 +138,6 @@ export class AssetSearchRefineComponent implements OnInit, OnDestroy, AfterViewI
     this.store.dispatch(actions.resetSearch());
   }
 
-  public toggleDraw() {
-    this.store.dispatch(mapControlActions.toggleDraw());
-  }
-
   private initSubscriptions() {
     this.subscriptions.add(this.isFiltersOpen$.subscribe((isOpen) => (this.isFiltersOpen = isOpen)));
 
