@@ -7,14 +7,3 @@
 <button asset-sg-icon-button [matTooltip]="'map.zoomOut' | translate" (click)="zoom.zoomOut()">
   <svg-icon key="zoom-minus" />
 </button>
-
-<span aria-hidden="true" class="divider"></span>
-
-<button
-  asset-sg-icon-button
-  [matTooltip]="(isDrawing ? 'map.drawingModeOn' : 'map.drawingModeOff') | translate"
-  [class.is-active]="isDrawing"
-  (click)="draw.toggle()"
->
-  <svg-icon key="polygon" />
-</button>

@@ -90,6 +90,7 @@ export const frAppTranslations: AppTranslations = {
     assetsUnderMouseCursor:
       '{{ assetsCount }} ssets trouvés sous le curseur de la souris. Veuillez en sélectionner un :',
     removePolygon: 'Annuler le polygone',
+    drawPolygon: 'fr Draw polygon',
     hideTable: 'fr Tabelle verbergen',
     showTable: 'fr Tabelle anzeigen',
   },
