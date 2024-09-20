@@ -52,9 +52,9 @@ export class ExportToViewService {
       await this.export('autoCat', 'assetId', assetIds);
       await this.export('manCatLabelRef', 'assetId', assetIds);
       await this.export('statusWork', 'assetId', assetIds);
-      await this.export('studyArea', 'assetId', assetIds);
-      await this.export('studyLocation', 'assetId', assetIds);
-      await this.export('studyTrace', 'assetId', assetIds);
+      await this.exportStudyAreas(assetIds);
+      await this.exportStudyLocations(assetIds);
+      await this.exportStudyTraces(assetIds);
       await this.export('typeNatRel', 'assetId', assetIds);
 
       const timeTaken = Date.now() - time;
@@ -62,6 +62,81 @@ export class ExportToViewService {
     }
 
     await this.exportFiles(publicAssetIds);
+  }
+
+  /**
+   * Export study areas as unsafe query with st_astext.
+   */
+  private async exportStudyAreas(assetIds: number[]) {
+    const studyAreas = await this.sourcePrisma.$queryRaw<
+      { study_area_id: number; asset_id: number; geom_quality_item_code: string; geom: string }[]
+    >`
+      SELECT study_area_id, asset_id, geom_quality_item_code, st_astext(geom, 2056) as geom
+      FROM study_area WHERE asset_id IN (${Prisma.join(assetIds)})
+    `;
+
+    const formattedStudyAreas = studyAreas.map(
+      (sa) =>
+        Prisma.sql`(${sa.study_area_id}, ${sa.asset_id}, ${sa.geom_quality_item_code}, ST_GeomFromText(${sa.geom}, 2056))`
+    );
+
+    // insert into destination as raw query
+    const result = await this.destinationPrisma.$executeRaw`
+      INSERT INTO study_area (study_area_id, asset_id, geom_quality_item_code, geom)
+      VALUES ${Prisma.join(formattedStudyAreas)}
+    `;
+
+    log(`Created ${result} study areas.`);
+  }
+
+  /**
+   * Export study areas as unsafe query with st_astext.
+   */
+  private async exportStudyLocations(assetIds: number[]) {
+    const studyLocations = await this.sourcePrisma.$queryRaw<
+      { study_location_id: number; asset_id: number; geom_quality_item_code: string; geom: string }[]
+    >`
+      SELECT study_location_id, asset_id, geom_quality_item_code, st_astext(geom, 2056) as geom
+      FROM study_location WHERE asset_id IN (${Prisma.join(assetIds)})
+    `;
+
+    const formattedStudyLocations = studyLocations.map(
+      (sa) =>
+        Prisma.sql`(${sa.study_location_id}, ${sa.asset_id}, ${sa.geom_quality_item_code}, ST_GeomFromText(${sa.geom}, 2056))`
+    );
+
+    // insert into destination as raw query
+    const result = await this.destinationPrisma.$executeRaw`
+      INSERT INTO study_location (study_location_id, asset_id, geom_quality_item_code, geom)
+      VALUES ${Prisma.join(formattedStudyLocations)}
+    `;
+
+    log(`Created ${result} study locations.`);
+  }
+
+  /**
+   * Export study areas as unsafe query with st_astext.
+   */
+  private async exportStudyTraces(assetIds: number[]) {
+    const studyTraces = await this.sourcePrisma.$queryRaw<
+      { study_trace_id: number; asset_id: number; geom_quality_item_code: string; geom: string }[]
+    >`
+      SELECT study_trace_id, asset_id, geom_quality_item_code, st_astext(geom, 2056) as geom
+      FROM study_trace WHERE asset_id IN (${Prisma.join(assetIds)})
+    `;
+
+    const formattedStudyTraces = studyTraces.map(
+      (sa) =>
+        Prisma.sql`(${sa.study_trace_id}, ${sa.asset_id}, ${sa.geom_quality_item_code}, ST_GeomFromText(${sa.geom}, 2056))`
+    );
+
+    // insert into destination as raw query
+    const result = await this.destinationPrisma.$executeRaw`
+      INSERT INTO study_trace (study_trace_id, asset_id, geom_quality_item_code, geom)
+      VALUES ${Prisma.join(formattedStudyTraces)}
+    `;
+
+    log(`Created ${result} study traces.`);
   }
 
   /**
