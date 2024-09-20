@@ -80,7 +80,7 @@ const validateData = (user: User, data: AssetData, record?: Asset) => {
 
   // Specialization of the policy where we disallow assets to be moved to another workgroup
   // if the current user is not an editor for that workgroup.
-  if (!policy.canDoEverything() && !policy.hasRole(Role.Editor, data.workgroupId)) {
+  if (!policy.hasRole(Role.Editor, data.workgroupId)) {
     throw new HttpException(
       "Can't move asset to a workgroup for which the user is not an editor",
       HttpStatus.FORBIDDEN

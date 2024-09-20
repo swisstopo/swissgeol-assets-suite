@@ -5,7 +5,7 @@ import { Policy } from './base/policy';
 export class AssetPolicy extends Policy<Asset> {
   canShow(value: Asset): boolean {
     // A user can see all assets in all workgroups that they are assigned to.
-    return this.hasWorkgroup(value.workgroupId);
+    return this.user.isAdmin || this.hasWorkgroup(value.workgroupId);
   }
 
   override canCreate(): boolean {

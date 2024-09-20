@@ -48,17 +48,22 @@ export const simpleWorkgroupSelection = (userId: UserId) =>
 type SelectedWorkgroup = Prisma.WorkgroupGetPayload<{ select: ReturnType<typeof simpleWorkgroupSelection> }>;
 
 const parse = (data: SelectedWorkgroup, isAdmin: boolean, isAnonymousMode = false): SimpleWorkgroup => {
-  let role: Role;
-  if (isAdmin) {
-    role = Role.MasterEditor;
-  } else if (isAnonymousMode) {
-    role = Role.Viewer;
-  } else {
-    role = data.users[0].role;
-  }
-  return {
+  const simpleWorkgroup: SimpleWorkgroup = {
     id: data.id,
     name: data.name,
-    role,
+    role: Role.Viewer,
   };
+  if (isAnonymousMode) {
+    return simpleWorkgroup;
+  }
+
+  if (data.users.length !== 0) {
+    simpleWorkgroup.role = data.users[0].role;
+  }
+
+  if (isAdmin) {
+    return simpleWorkgroup;
+  }
+
+  throw new Error('User is not authorized to access this workgroup');
 };
