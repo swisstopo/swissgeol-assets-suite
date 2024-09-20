@@ -12,13 +12,6 @@
   box-shadow: 4px 4px 2px #00000029;
 }
 
-.divider {
-  height: 2px;
-  width: 1.5rem;
-  background-color: variables.$grey-03;
-  margin: 0.5rem 0;
-}
-
 :host > button:not([aria-disabled="true"]):not(:hover) {
   &,
   &:focus {

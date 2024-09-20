@@ -74,7 +74,7 @@
     }
   }
 
-  &:focus.asset-sg-active,
+  &.asset-sg-active:focus,
   &.asset-sg-active {
     color: variables.$dark-red;
   }
