@@ -32,9 +32,11 @@ export class AssetSyncService implements OnApplicationBootstrap {
   async show(): Promise<AssetSyncState | null> {
     try {
       const data = await fs.readFile(assetSyncFile, { encoding: 'utf-8' });
+      Logger.debug(`AssetSyncService.show: Sync in progress: ${data}`);
       return JSON.parse(data);
     } catch (e) {
       if ((e as { code?: string }).code === 'ENOENT') {
+        Logger.debug('AssetSyncService.show: No sync in progress.');
         return null;
       }
       throw e;

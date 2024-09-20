@@ -25,10 +25,9 @@ import {
   BulkOperationContainer,
   QueryDslNumberRangeQuery,
   QueryDslQueryContainer,
-  SearchRequest,
   SearchTotalHits,
 } from '@elastic/elasticsearch/lib/api/types';
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import * as E from 'fp-ts/Either';
 import proj4 from 'proj4';
 
@@ -66,13 +65,14 @@ export class AssetSearchService {
   }
 
   async count(): Promise<number> {
-    return (await this.elastic.count({ index: INDEX })).count;
+    return (await this.elastic.count({ index: INDEX, ignore_unavailable: true })).count;
   }
 
   async syncWithDatabase(onProgress?: (percentage: number) => void | Promise<void>): Promise<void> {
     // Write all Prisma assets into the sync index.
     const total = await this.prisma.asset.count();
     if (total === 0) {
+      Logger.debug('no assets to sync');
       if (onProgress != null) {
         onProgress(1);
       }
@@ -94,6 +94,7 @@ export class AssetSearchService {
 
     let offset = 0;
     for (;;) {
+      Logger.debug(`synced ${offset} of ${total} assets`);
       const records = await this.assetRepo.list({ limit: 1000, offset });
       if (records.length === 0) {
         break;
@@ -104,9 +105,10 @@ export class AssetSearchService {
         await onProgress(Math.min(offset / total, 1));
       }
     }
+    Logger.debug(`synced ${total} of ${total} assets`);
 
     // Delete the existing asset index.
-    await this.elastic.indices.delete({ index: INDEX });
+    await this.elastic.indices.delete({ index: INDEX, ignore_unavailable: true });
 
     // Recreate the asset index and configure its mapping.
     await this.elastic.indices.create({ index: INDEX });
@@ -654,7 +656,7 @@ export class AssetSearchService {
           case 'LINESTRING':
             return GeometryCode.LineString;
           default:
-            throw new Error(`unknown geomText prefix: ${prefix}`);
+            throw new Error(`unknown geomText prefix: ${prefix} for asset ${asset.assetId}`);
         }
       })();
       geometryCodes.push(geometryCode);
