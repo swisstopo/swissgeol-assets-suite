@@ -38,10 +38,6 @@ export abstract class Policy<T> {
     return this.withWorkgroupRole(ids, (role) => getRoleIndex(role) >= roleIndex);
   }
 
-  canDoEverything(): boolean {
-    return this.user.isAdmin;
-  }
-
   abstract canShow(value: T): boolean;
 
   abstract canCreate(): boolean;

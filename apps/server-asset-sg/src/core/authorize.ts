@@ -11,7 +11,7 @@ class Authorize<T> {
   constructor(private readonly policy: Policy<T>) {}
 
   canShow(value: T): void {
-    check(this.policy.canDoEverything() || this.policy.canShow(value));
+    check(this.policy.canShow(value));
   }
 
   canCreate(): void {

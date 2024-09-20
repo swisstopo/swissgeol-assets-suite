@@ -92,7 +92,7 @@ export const canLeaveEdit: CanDeactivateFn<AssetEditorPageComponent> = (c) => c.
               filter(isNotNull),
               map((user) => {
                 const policy = new AssetEditPolicy(user);
-                return policy.canDoEverything() || policy.canCreate();
+                return policy.canCreate();
               })
             );
           }) as CanActivateFn,
@@ -126,10 +126,7 @@ export const canLeaveEdit: CanDeactivateFn<AssetEditorPageComponent> = (c) => c.
             ]).pipe(
               map(([assetEditDetail, user]) => {
                 const policy = new AssetEditPolicy(user);
-                return (
-                  policy.canDoEverything() ||
-                  (assetEditDetail == null ? policy.canCreate() : policy.canUpdate(assetEditDetail))
-                );
+                return assetEditDetail == null ? policy.canCreate() : policy.canUpdate(assetEditDetail);
               })
             );
           }) as CanActivateFn,

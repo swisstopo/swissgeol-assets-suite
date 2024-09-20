@@ -4,7 +4,7 @@ import { Policy } from './base/policy';
 
 export class ContactPolicy extends Policy<Contact> {
   canShow(_value: Contact): boolean {
-    return this.hasRole(Role.Editor);
+    return this.user.isAdmin || this.hasRole(Role.Editor);
   }
 
   canCreate(): boolean {

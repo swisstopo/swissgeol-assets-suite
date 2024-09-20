@@ -6,7 +6,7 @@ type Asset = { workgroupId: WorkgroupId };
 export class AssetEditPolicy extends Policy<Asset> {
   override canShow(value: Asset): boolean {
     // A user can see all assets in all workgroups that they are assigned to.
-    return this.hasWorkgroup(value.workgroupId);
+    return this.user.isAdmin || this.hasWorkgroup(value.workgroupId);
   }
 
   override canCreate(): boolean {
