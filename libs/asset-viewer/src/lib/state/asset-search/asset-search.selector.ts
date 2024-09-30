@@ -36,7 +36,7 @@ const assetSearchFeature = (state: AppStateWithAssetSearch) => state.assetSearch
 export const selectSearchLoadingState = createSelector(assetSearchFeature, (state) => state.resultsLoadingState);
 export const selectFilterLoadingState = createSelector(assetSearchFeature, (state) => state.filterLoadingState);
 
-export const selectIsFiltersOpen = createSelector(assetSearchFeature, (state) => state.isFiltersOpen);
+export const selectIsFiltersOpen = createSelector(assetSearchFeature, (state) => state?.isFiltersOpen ?? false);
 
 export const selectIsResultsOpen = createSelector(assetSearchFeature, (state) => state.isResultsOpen);
 

@@ -1,8 +1,10 @@
-import { icon24x24 } from './icon';
-
 export const favouriteIcon = {
-  data: icon24x24(
-    '<path d="M12 1.5 8.6 8.387 1 9.492l5.5 5.361-1.3 7.569L12 18.85l6.8 3.572-1.3-7.568L23 9.492l-7.6-1.1Zm0 3.389 2.055 4.162.348.707.781.113 4.592.666-3.324 3.24-.564.551.133.777.785 4.574L12.7 17.52l-.7-.365-.7.367-4.107 2.16.786-4.57.133-.777-.564-.551-3.324-3.24 4.594-.668.782-.118.348-.707Z"/>'
-  ),
+  data: `
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg">
+      <g transform="translate(1, 1)">
+        <path d="M11 1.49023L14.09 7.75023L21 8.76023L16 13.6302L17.18 20.5102L11 17.2602L4.82 20.5102L6 13.6302L1 8.76023L7.91 7.75023L11 1.49023Z" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+      </g>
+    </svg>
+  `,
   name: 'favourite' as const,
 };

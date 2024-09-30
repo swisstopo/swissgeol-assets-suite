@@ -12,9 +12,4 @@ export const roleGuard = (testUser: (u: User) => boolean) => {
   return store.select(fromAppShared.selectUser).pipe(filter(isNotNull), map(testUser));
 };
 
-export const notAnonymousGuard: CanActivateFn = () => {
-  const store = inject(Store<AppState>);
-  return store.select(fromAppShared.selectIsAnonymousMode).pipe(map((isAnonymousMode) => !isAnonymousMode));
-};
-
 export const adminGuard: CanActivateFn = () => roleGuard((user) => user.isAdmin);

@@ -1,61 +1,37 @@
-<div>
-  <a
-    *ngIf="{ active: (isAssetsActive$ | async) ?? false } as isAsset"
-    [routerLink]="[_translateService.currentLang]"
-    asset-sg-reset
-    class="menu-bar-item"
-    [ngClass]="{ active: isAsset.active }"
-    (click)="isAsset.active ? openAssetDrawer() : null"
-  >
-    <svg-icon key="assets" />
-    <span translate>menuBar.assets</span>
-  </a>
-  <a
-    *ngIf="userExists$ | async"
-    asset-sg-reset
-    [disabled]="true"
-    aria-disabled="true"
-    class="menu-bar-item"
-    routerLinkActive="active"
-  >
-    <svg-icon key="favourite" />
-    <span translate>menuBar.favourites</span>
-  </a>
+<ng-container *rxLet="activeItem$; let activeItem">
+  <ul class="submenu">
+    <li
+      *rxLet="activeItem === 'home'; let isActive"
+      asset-sg-menu-bar-item
+      icon="assets"
+      [link]="isActive ? null : [translateService.currentLang]"
+      [isActive]="isActive && ((isFiltersOpen$ | async) ?? false)"
+      (click)="isActive ? toggleAssetDrawer() : null"
+    >
+      menuBar.filters
+    </li>
+    <li *ngIf="userExists$ | async" asset-sg-menu-bar-item icon="favourite" disabled>menuBar.favourites</li>
+    <li
+      *canCreate="AssetEditPolicy"
+      asset-sg-menu-bar-item
+      icon="add"
+      [link]="[translateService.currentLang, 'asset-admin', 'new']"
+      [isActive]="activeItem === 'create-asset'"
+    >
+      menuBar.createAsset
+    </li>
+  </ul>
 
-  <a
-    *canCreate="AssetEditPolicy"
-    [routerLink]="[_translateService.currentLang, 'asset-admin']"
-    asset-sg-reset
-    class="menu-bar-item"
-    routerLinkActive="active"
-  >
-    <svg-icon key="edit" />
-    <span translate>menuBar.admin</span>
-  </a>
-  <a
-    *adminOnly
-    [routerLink]="[_translateService.currentLang, 'admin']"
-    asset-sg-reset
-    class="menu-bar-item"
-    routerLinkActive="active"
-  >
-    <svg-icon key="user-management" />
-    <span translate>menuBar.userManagement</span>
-  </a>
-</div>
-<div>
-  <a
-    *ngIf="userExists$ | async"
-    [routerLink]="[_translateService.currentLang, 'profile']"
-    asset-sg-reset
-    class="menu-bar-item"
-    routerLinkActive="active"
-  >
-    <svg-icon key="profile" />
-    <span translate>menuBar.profile</span>
-  </a>
-  <a aria-disabled="true" [disabled]="true" asset-sg-reset class="menu-bar-item">
-    <svg-icon key="help" />
-    <span translate>menuBar.help</span>
-  </a>
-</div>
+  <ul class="submenu">
+    <li
+      *adminOnly
+      asset-sg-menu-bar-item
+      icon="options"
+      [link]="[translateService.currentLang, 'asset-admin']"
+      [isActive]="activeItem === 'options'"
+    >
+      menuBar.settings
+    </li>
+    <li asset-sg-menu-bar-item icon="help" disabled>menuBar.help</li>
+  </ul>
+</ng-container>

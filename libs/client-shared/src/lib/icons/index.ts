@@ -1,4 +1,5 @@
 import { actionMenuIcon } from './action-menu';
+import { addIcon } from './add';
 import { arrowDownIcon } from './arrow-down';
 import { arrowUpIcon } from './arrow-up';
 import { assetsIcon } from './assets';
@@ -18,8 +19,10 @@ import { favouriteIcon } from './favourite';
 import { helpIcon } from './help';
 import { infoIcon } from './info';
 import { infoFilledIcon } from './info-filled';
+import { optionsIcon } from './options';
 import { polygonIcon } from './polygon';
 import { profileIcon } from './profile';
+import { searchIcon } from './search';
 import { settingsIcon } from './settings';
 import { successIcon } from './success';
 import { successFilledIcon } from './success-filled';
@@ -33,6 +36,7 @@ import { zoomPlusIcon } from './zoom-plus';
 
 export const icons = [
   actionMenuIcon,
+  addIcon,
   arrowDownIcon,
   arrowUpIcon,
   assetsIcon,
@@ -51,9 +55,11 @@ export const icons = [
   favouriteIcon,
   helpIcon,
   infoFilledIcon,
+  optionsIcon,
   infoIcon,
   polygonIcon,
   profileIcon,
+  searchIcon,
   settingsIcon,
   successIcon,
   successFilledIcon,

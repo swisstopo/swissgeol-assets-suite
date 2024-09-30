@@ -21,14 +21,14 @@ export const deAppTranslations = {
     title: 'Arbeitsgruppe',
   },
   menuBar: {
-    assets: 'Assets',
+    filters: 'Filter',
     admin: 'Verwaltung',
     favourites: 'Favoriten',
     help: 'Hilfe',
     profile: 'Profil',
     settings: 'Einstellungen',
     signOut: 'Schliessen',
-    userManagement: 'Benutzer Verwaltung',
+    createAsset: 'Neues Asset',
   },
   map: {
     zoomIn: 'Hineinzoomen',
@@ -39,7 +39,7 @@ export const deAppTranslations = {
     dragHandleLabel: 'Ziehgriff',
   },
   search: {
-    textSearchFieldPlaceholder: 'Suche nach Original- oder Öffentlichem Titel und Autor oder Einlieferer',
+    textSearchFieldPlaceholder: 'Suche nach...',
     searchInstructionsHeading: 'Asset-Suche',
     searchInstructions:
       'Suchen Sie nach einem Asset über das Suchfeld oder durch Zeichnen eines Polygons auf der Karte.',
@@ -240,10 +240,8 @@ export const deAppTranslations = {
     },
     closeManageAsset: 'Asset verwalten schliessen',
     questionDiscardChanges: 'Möchten Sie die Änderungen verwerfen?',
-    adminInstructionsEditHeading: 'Asset verwalten',
-    adminInstructionsEdit: 'Suche nach einem Asset über das Menü Assets, um dieses zu verwalten.',
-    adminInstructionsCreateHeading: 'Neues Asset',
-    adminInstructionsCreate: 'Neues Asset erstellen',
+    userManagementHeading: 'Benutzer',
+    userManagementButton: 'Benutzer verwalten',
     adminInstructionsSyncElasticAssetsHeading: 'Assets mit Elasticsearch synchronisieren',
     adminInstructionsSyncElasticAssets:
       'Gleicht den Zustand von Elasticsearch mit der Datenbank ab.' +

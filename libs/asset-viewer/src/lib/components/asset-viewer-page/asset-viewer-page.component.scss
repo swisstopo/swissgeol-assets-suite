@@ -25,22 +25,33 @@ asset-sg-map {
   grid-area: map;
 }
 
+.search-input-wrapper {
+  position: relative;
+  margin-left: 160px;
+
+  & > svg-icon {
+    position: absolute;
+    left: 12px;
+    top: 0;
+    bottom: 0;
+    margin: auto 0;
+  }
+}
+
 .search-input {
-  margin-left: 6rem;
-  line-height: 3.5rem;
-  padding: 0 1rem;
+  padding: 8px 12px 8px 48px;
   border: none;
   outline: none;
-  background-color: variables.$cyan-01;
-  width: 38rem;
-  font-weight: variables.$font-medium;
+  width: 500px;
+  height: 56px;
 
-  &:focus {
-    background-color: variables.$focused;
-  }
+  border-bottom: 2px solid #337083;
+  color: #1c2834;
+  background-color: #f8f9fa;
+  border-radius: 6px;
 
   &::placeholder {
-    color: variables.$grey-09;
+    color: #1c2834;
   }
 }
 
