@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, ElementRef, Input, OnInit, Output, ViewChild } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
 import { supportedLangs } from '@asset-sg/client-shared';
-import { isTruthy } from '@asset-sg/core';
+import { isNotNull, isTruthy } from '@asset-sg/core';
 import { Lang } from '@asset-sg/shared';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { flow, pipe } from 'fp-ts/function';
@@ -30,7 +30,7 @@ export class AppBarComponent implements OnInit {
 
   public version = '';
 
-  public _currentLang$ = this._router.events.pipe(
+  public currentLang$ = this._router.events.pipe(
     filter((e): e is NavigationEnd => e instanceof NavigationEnd),
     map((e) => e.urlAfterRedirects),
     startWith(this._router.url),
@@ -47,32 +47,28 @@ export class AppBarComponent implements OnInit {
           queryParams: parsed.query,
         }))
       )
-    )
+    ),
+    map((it) => O.toNullable(it)),
+    filter(isNotNull)
   );
 
-  public links$ = this._currentLang$.pipe(
+  // {
+  //   disabled: false,
+  //   lang: lang.toUpperCase(),
+  //   params: [`/${lang}`],
+  //   queryParams: {},
+  // }
+
+  public languages$ = this.currentLang$.pipe(
     debounceTime(0),
-    map((currentLang) => ({
-      links: supportedLangs.map(
-        (lang) =>
-          pipe(
-            currentLang,
-            O.map((cl) => ({
-              disabled: lang === cl.lang,
-              lang: lang.toUpperCase(),
-              params: [`/${lang}${cl.path}`],
-              queryParams: cl.queryParams,
-            })),
-            O.getOrElseW(() => ({
-              disabled: false,
-              lang: lang.toUpperCase(),
-              params: [`/${lang}`],
-              queryParams: {},
-            }))
-          ),
-        {}
-      ),
-    }))
+    map((currentLang) =>
+      supportedLangs.map((lang) => ({
+        isActive: lang === currentLang.lang,
+        lang: lang.toUpperCase(),
+        params: [`/${lang}${currentLang.path}`],
+        queryParams: currentLang.queryParams,
+      }))
+    )
   );
 
   private _ngOnInit$ = new Subject<void>();

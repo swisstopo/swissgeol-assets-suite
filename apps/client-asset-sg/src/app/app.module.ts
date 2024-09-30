@@ -4,7 +4,9 @@ import { CommonModule, NgOptimizedImage, registerLocaleData } from '@angular/com
 import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
 import locale_deCH from '@angular/common/locales/de-CH';
 import { inject, NgModule } from '@angular/core';
+import { MatButton } from '@angular/material/button';
 import { MAT_FORM_FIELD_DEFAULT_OPTIONS } from '@angular/material/form-field';
+import { MatMenu, MatMenuTrigger } from '@angular/material/menu';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltip } from '@angular/material/tooltip';
 import { BrowserModule } from '@angular/platform-browser';
@@ -120,6 +122,9 @@ registerLocaleData(locale_deCH, 'de-CH');
     AdminOnlyDirective,
     CanCreateDirective,
     MatTooltip,
+    MatButton,
+    MatMenuTrigger,
+    MatMenu,
   ],
   providers: [
     provideSvgIcons(icons),
