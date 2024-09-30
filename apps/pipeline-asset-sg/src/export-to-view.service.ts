@@ -2,9 +2,12 @@ import { Prisma, PrismaClient } from '@prisma/client';
 import { PipelineConfig } from './config';
 import { log } from './log';
 
-const unique = (value, index, self) => self.indexOf(value) === index;
-
-type AssetInfo = { asset_id: number; public_use_id: number; internal_use_id: number; workgroup_id: number };
+interface AssetInfo {
+  assetId: number;
+  publicUseId: number;
+  internalUseId: number;
+  workgroupId: number;
+}
 
 export class ExportToViewService {
   private readonly allowedWorkgroupIds: number[];
@@ -22,7 +25,7 @@ export class ExportToViewService {
 
   public async exportToView() {
     const publicAssets = await this.findPublicAssetIds();
-    const publicAssetIds = publicAssets.map((item) => item.asset_id);
+    const publicAssetIds = publicAssets.map((item) => item.assetId);
     log(`Found ${publicAssetIds.length} public assets.`);
 
     const batches = this.batchList(publicAssets);
@@ -30,15 +33,15 @@ export class ExportToViewService {
 
     await this.exportItems();
 
-    const workgroupIds = publicAssets.map((item) => item.workgroup_id).filter(unique);
+    const workgroupIds = [...new Set(publicAssets.map((item) => item.workgroupId))];
     await this.export('workgroup', 'id', workgroupIds);
 
     // batch the list of public asset ids
     for (const batch of batches) {
       const time = Date.now();
-      const assetIds = batch.map((item) => item.asset_id);
-      const internalUseIds = batch.map((item) => item.internal_use_id);
-      const publicUseIds = batch.map((item) => item.public_use_id);
+      const assetIds = batch.map((item) => item.assetId);
+      const internalUseIds = batch.map((item) => item.internalUseId);
+      const publicUseIds = batch.map((item) => item.publicUseId);
       await this.export('internalUse', 'internalUseId', internalUseIds);
       await this.export('publicUse', 'publicUseId', publicUseIds);
       await this.exportAssets(assetIds);
@@ -65,19 +68,19 @@ export class ExportToViewService {
   }
 
   /**
-   * Export study areas as unsafe query with st_astext.
+   * Export study areas as raw query with st_astext.
    */
   private async exportStudyAreas(assetIds: number[]) {
     const studyAreas = await this.sourcePrisma.$queryRaw<
-      { study_area_id: number; asset_id: number; geom_quality_item_code: string; geom: string }[]
+      { studyAreaId: number; assetId: number; geomQualityItemCode: string; geom: string }[]
     >`
-      SELECT study_area_id, asset_id, geom_quality_item_code, st_astext(geom, 2056) as geom
+      SELECT study_area_id as "studyAreaId", asset_id as "assetId", geom_quality_item_code as "geomQualityItemCode", st_astext(geom, 2056) as geom
       FROM study_area WHERE asset_id IN (${Prisma.join(assetIds)})
     `;
 
     const formattedStudyAreas = studyAreas.map(
       (sa) =>
-        Prisma.sql`(${sa.study_area_id}, ${sa.asset_id}, ${sa.geom_quality_item_code}, ST_GeomFromText(${sa.geom}, 2056))`
+        Prisma.sql`(${sa.studyAreaId}, ${sa.assetId}, ${sa.geomQualityItemCode}, ST_GeomFromText(${sa.geom}, 2056))`
     );
 
     // insert into destination as raw query
@@ -90,19 +93,19 @@ export class ExportToViewService {
   }
 
   /**
-   * Export study locations as unsafe query with st_astext.
+   * Export study locations as raw query with st_astext.
    */
   private async exportStudyLocations(assetIds: number[]) {
     const studyLocations = await this.sourcePrisma.$queryRaw<
-      { study_location_id: number; asset_id: number; geom_quality_item_code: string; geom: string }[]
+      { studyLocationId: number; assetId: number; geomQualityItemCode: string; geom: string }[]
     >`
-      SELECT study_location_id, asset_id, geom_quality_item_code, st_astext(geom, 2056) as geom
+      SELECT study_location_id as "studyLocationId", asset_id as "assetId", geom_quality_item_code as "geomQualityItemCode", st_astext(geom, 2056) as geom
       FROM study_location WHERE asset_id IN (${Prisma.join(assetIds)})
     `;
 
     const formattedStudyLocations = studyLocations.map(
       (sa) =>
-        Prisma.sql`(${sa.study_location_id}, ${sa.asset_id}, ${sa.geom_quality_item_code}, ST_GeomFromText(${sa.geom}, 2056))`
+        Prisma.sql`(${sa.studyLocationId}, ${sa.assetId}, ${sa.geomQualityItemCode}, ST_GeomFromText(${sa.geom}, 2056))`
     );
 
     // insert into destination as raw query
@@ -115,19 +118,19 @@ export class ExportToViewService {
   }
 
   /**
-   * Export study traces as unsafe query with st_astext.
+   * Export study traces as raw query with st_astext.
    */
   private async exportStudyTraces(assetIds: number[]) {
     const studyTraces = await this.sourcePrisma.$queryRaw<
-      { study_trace_id: number; asset_id: number; geom_quality_item_code: string; geom: string }[]
+      { studyTraceId: number; assetId: number; geomQualityItemCode: string; geom: string }[]
     >`
-      SELECT study_trace_id, asset_id, geom_quality_item_code, st_astext(geom, 2056) as geom
+      SELECT study_trace_id as "studyTraceId", asset_id as "assetId", geom_quality_item_code as "geomQualityItemCode", st_astext(geom, 2056) as geom
       FROM study_trace WHERE asset_id IN (${Prisma.join(assetIds)})
     `;
 
     const formattedStudyTraces = studyTraces.map(
       (sa) =>
-        Prisma.sql`(${sa.study_trace_id}, ${sa.asset_id}, ${sa.geom_quality_item_code}, ST_GeomFromText(${sa.geom}, 2056))`
+        Prisma.sql`(${sa.studyTraceId}, ${sa.assetId}, ${sa.geomQualityItemCode}, ST_GeomFromText(${sa.geom}, 2056))`
     );
 
     // insert into destination as raw query
@@ -237,24 +240,21 @@ export class ExportToViewService {
    */
   private async exportFiles(assetIds: number[]) {
     log(`Starting file export.`);
-    // Read all unique file ids from the assetFiles
-    const assetFiles = await this.sourcePrisma.assetFile.findMany({ where: { assetId: { in: assetIds } } });
-    const fileIds = assetFiles.map((af) => af.fileId).filter(unique);
+    // Read all unique file ids from the assetFiles which dont include 'LDoc'
+    const assetFiles = await this.sourcePrisma.assetFile.findMany({
+      where: { assetId: { in: assetIds }, file: { fileName: { not: { contains: 'LDoc' } } } },
+    });
+    const fileIds = [...new Set(assetFiles.map((af) => af.fileId))];
     const files = await this.sourcePrisma.file.findMany({ where: { fileId: { in: fileIds } } });
-
-    // Filter out files which start with 'LDoc'
-    const filesWithoutLegalDocs = files.filter((file) => !file.fileName.includes('LDoc'));
-    const fileIdsWithoutLegalDocs = filesWithoutLegalDocs.map((file) => file.fileId);
-    const assetFilesWithoutLegalDocs = assetFiles.filter((af) => fileIdsWithoutLegalDocs.includes(af.fileId));
 
     // Write files to the destination database
     const fileResult = await this.destinationPrisma.file.createMany({
-      data: filesWithoutLegalDocs,
+      data: files,
       skipDuplicates: true,
     });
     log(`Created ${fileResult.count} files.`);
-    await this.export('assetObjectInfo', 'fileId', fileIdsWithoutLegalDocs);
-    const assetFileResult = await this.destinationPrisma.assetFile.createMany({ data: assetFilesWithoutLegalDocs });
+    await this.export('assetObjectInfo', 'fileId', fileIds);
+    const assetFileResult = await this.destinationPrisma.assetFile.createMany({ data: assetFiles });
     log(`Created ${assetFileResult.count} AssetFiles.`);
   }
 
@@ -308,8 +308,12 @@ export class ExportToViewService {
    * Find public asset ids.
    */
   private async findPublicAssetIds() {
-    return this.sourcePrisma.$queryRaw<AssetInfo[]>`
-      SELECT a.asset_id,a.public_use_id,a.internal_use_id,a.workgroup_id FROM asset a
+    return this.sourcePrisma.$queryRaw<AssetInfo[]>`SELECT
+          a.asset_id as "assetId",
+          a.public_use_id as "publicUseId",
+          a.internal_use_id as "internalUseId",
+          a.workgroup_id as "workgroupId"
+      FROM asset a
       LEFT JOIN public_use p ON a.public_use_id = p.public_use_id
       LEFT JOIN LATERAL (SELECT * FROM status_work WHERE asset_id = a.asset_id ORDER BY status_work_date DESC LIMIT 1) AS sw ON a.asset_id = sw.asset_id
       WHERE p.is_available

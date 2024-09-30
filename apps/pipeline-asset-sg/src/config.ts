@@ -1,4 +1,4 @@
-export type PipelineConfig = {
+export interface PipelineConfig {
   allowedWorkgroupIds: number[];
   source: {
     connectionString: string;
@@ -6,7 +6,7 @@ export type PipelineConfig = {
   destination: {
     connectionString: string;
   };
-};
+}
 
 function getEnvOrThrow(key: string): string {
   const value = process.env[key];

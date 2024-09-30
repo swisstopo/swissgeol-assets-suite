@@ -130,6 +130,7 @@ jobs:
       - determine_version
       - build_and_push_api
       - build_and_push_app
+      - build_and_push_pipeline
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository

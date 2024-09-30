@@ -216,3 +216,4 @@ jobs:
 
             await removePackageVersions(`${process.env.BASE_IMAGE_NAME}-api`, outdatedVersions);
             await removePackageVersions(`${process.env.BASE_IMAGE_NAME}-app`, outdatedVersions);
+            await removePackageVersions(`${process.env.BASE_IMAGE_NAME}-pipeline`, outdatedVersions);
