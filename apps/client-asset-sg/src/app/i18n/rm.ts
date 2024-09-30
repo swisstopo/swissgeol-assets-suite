@@ -27,10 +27,11 @@ export const rmAppTranslations: AppTranslations = {
     admin: 'RM Verwaltung',
     favourites: 'RM Favoriten',
     help: 'RM Hilfe',
-    profile: 'RM Profil',
+    profile: 'RM Einstellungen',
     settings: 'RM Einstellungen',
     signOut: 'RM Schliessen',
     userManagement: 'RM Benutzerverwaltung',
+    createAsset: 'RM Neues Asset',
   },
   map: {
     zoomIn: 'RM Hineinzoomen',

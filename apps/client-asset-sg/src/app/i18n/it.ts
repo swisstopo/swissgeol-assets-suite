@@ -31,6 +31,7 @@ export const itAppTranslations: AppTranslations = {
     settings: 'IT Einstellungen',
     signOut: 'IT Schliessen',
     userManagement: 'IT Benutzerverwaltung',
+    createAsset: 'IT Neues Asset',
   },
   map: {
     zoomIn: 'IT Hineinzoomen',

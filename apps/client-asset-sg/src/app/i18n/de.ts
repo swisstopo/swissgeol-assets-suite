@@ -29,6 +29,7 @@ export const deAppTranslations = {
     settings: 'Einstellungen',
     signOut: 'Schliessen',
     userManagement: 'Benutzerverwaltung',
+    createAsset: 'Neues Asset',
   },
   map: {
     zoomIn: 'Hineinzoomen',

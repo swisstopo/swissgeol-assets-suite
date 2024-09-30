@@ -31,6 +31,7 @@ export const frAppTranslations: AppTranslations = {
     settings: 'Paramètres',
     signOut: 'Fermer',
     userManagement: 'Gestion des utilisateurs',
+    createAsset: 'Nouvel Asset',
   },
   map: {
     zoomIn: 'Zoom avant',

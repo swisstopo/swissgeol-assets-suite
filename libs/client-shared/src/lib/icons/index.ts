@@ -1,4 +1,5 @@
 import { actionMenuIcon } from './action-menu';
+import { addIcon } from './add';
 import { arrowDownIcon } from './arrow-down';
 import { arrowUpIcon } from './arrow-up';
 import { assetsIcon } from './assets';
@@ -34,6 +35,7 @@ import { zoomPlusIcon } from './zoom-plus';
 
 export const icons = [
   actionMenuIcon,
+  addIcon,
   arrowDownIcon,
   arrowUpIcon,
   assetsIcon,

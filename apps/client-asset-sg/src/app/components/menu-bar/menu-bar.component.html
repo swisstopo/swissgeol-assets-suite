@@ -12,17 +12,19 @@
   <li
     *canCreate="AssetEditPolicy"
     asset-sg-menu-bar-item
-    icon="edit"
-    [link]="[_translateService.currentLang, 'asset-admin']"
+    icon="add"
+    [link]="[_translateService.currentLang, 'asset-admin', 'new']"
   >
-    menuBar.admin
-  </li>
-  <li *adminOnly asset-sg-menu-bar-item icon="user-management" [link]="[_translateService.currentLang, 'admin']">
-    menuBar.userManagement
+    menuBar.createAsset
   </li>
 </ul>
 
 <div class="submenu">
-  <li asset-sg-menu-bar-item icon="options" disabled>menuBar.profile</li>
+  <li *adminOnly asset-sg-menu-bar-item icon="user-management" [link]="[_translateService.currentLang, 'admin']">
+    menuBar.userManagement
+  </li>
+  <li *adminOnly asset-sg-menu-bar-item icon="options" [link]="[_translateService.currentLang, 'asset-admin']">
+    menuBar.settings
+  </li>
   <li asset-sg-menu-bar-item icon="help" disabled>menuBar.help</li>
 </div>
