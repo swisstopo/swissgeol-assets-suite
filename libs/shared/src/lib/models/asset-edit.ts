@@ -60,7 +60,7 @@ export type AssetFile = C.TypeOf<typeof AssetFile>;
 export const BaseAssetEditDetail = {
   assetId: C.number,
   titlePublic: C.string,
-  titleOriginal: C.string,
+  titleOriginal: C.nullable(C.string),
   createDate: DateId,
   receiptDate: DateId,
   lastProcessedDate: CT.DateFromISOString,

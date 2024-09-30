@@ -1,4 +1,5 @@
 /* eslint-disable @nx/enforce-module-boundaries */
+import { DT, unknownToError } from '@asset-sg/core';
 import { ListObjectsCommand, ListObjectsCommandOutput, S3Client } from '@aws-sdk/client-s3';
 import * as A from 'fp-ts/Array';
 import * as E from 'fp-ts/Either';
@@ -8,8 +9,6 @@ import * as O from 'fp-ts/Option';
 import * as R from 'fp-ts/Record';
 import * as TE from 'fp-ts/TaskEither';
 import * as D from 'io-ts/Decoder';
-
-import { DT, unknownToError } from '@asset-sg/core';
 
 const client = new S3Client({
   region: 'ch-dk-2',
