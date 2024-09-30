@@ -41,7 +41,7 @@ export const frAppTranslations: AppTranslations = {
     dragHandleLabel: 'Poignée de tirage',
   },
   search: {
-    textSearchFieldPlaceholder: 'Recherche par titre original ou public et auteur ou déposant',
+    textSearchFieldPlaceholder: 'Recherche par...',
     searchInstructionsHeading: "Recherche d'assets",
     searchInstructions: "Recherche d'un asset via le champ de recherche ou en dessinant un polygone sur la carte.",
     closeInstructions: "Fermer le mode d'emploi",

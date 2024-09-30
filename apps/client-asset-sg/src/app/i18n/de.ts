@@ -39,7 +39,7 @@ export const deAppTranslations = {
     dragHandleLabel: 'Ziehgriff',
   },
   search: {
-    textSearchFieldPlaceholder: 'Suche nach Original- oder Öffentlichem Titel und Autor oder Einlieferer',
+    textSearchFieldPlaceholder: 'Suche nach...',
     searchInstructionsHeading: 'Asset-Suche',
     searchInstructions:
       'Suchen Sie nach einem Asset über das Suchfeld oder durch Zeichnen eines Polygons auf der Karte.',

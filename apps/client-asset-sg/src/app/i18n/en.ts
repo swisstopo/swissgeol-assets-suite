@@ -41,7 +41,7 @@ export const enAppTranslations: AppTranslations = {
     dragHandleLabel: 'Drag handle',
   },
   search: {
-    textSearchFieldPlaceholder: 'Search by original or public title and author or consignor',
+    textSearchFieldPlaceholder: 'Search by...',
     searchInstructionsHeading: 'Asset-Search',
     searchInstructions: 'Search for an asset using the search field or by drawing a ploygon on the map.',
     closeInstructions: 'Close instructions',

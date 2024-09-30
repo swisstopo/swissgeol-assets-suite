@@ -22,6 +22,7 @@ import { infoFilledIcon } from './info-filled';
 import { optionsIcon } from './options';
 import { polygonIcon } from './polygon';
 import { profileIcon } from './profile';
+import { searchIcon } from './search';
 import { settingsIcon } from './settings';
 import { successIcon } from './success';
 import { successFilledIcon } from './success-filled';
@@ -58,6 +59,7 @@ export const icons = [
   infoIcon,
   polygonIcon,
   profileIcon,
+  searchIcon,
   settingsIcon,
   successIcon,
   successFilledIcon,

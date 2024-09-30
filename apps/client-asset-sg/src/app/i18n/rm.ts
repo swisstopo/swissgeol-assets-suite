@@ -41,7 +41,7 @@ export const rmAppTranslations: AppTranslations = {
     dragHandleLabel: 'RM Ziehgriff',
   },
   search: {
-    textSearchFieldPlaceholder: 'RM Suche nach Original- oder  Öffentlichem Titel und Autor oder Einlieferer',
+    textSearchFieldPlaceholder: 'RM Suche nach...',
     searchInstructionsHeading: 'RM Asset-Suche',
     searchInstructions: 'RM Suche nach einem Asset über das Suchfeld oder durch Zeichnen eines Polygons auf der Karte.',
     closeInstructions: 'RM Anleitung schliessen',

@@ -41,7 +41,7 @@ export const itAppTranslations: AppTranslations = {
     dragHandleLabel: 'IT Ziehgriff',
   },
   search: {
-    textSearchFieldPlaceholder: 'IT Suche nach Original- oder  Öffentlichem Titel und Autor oder Einlieferer',
+    textSearchFieldPlaceholder: 'IT Suche nach...',
     searchInstructionsHeading: 'IT Asset-Suche',
     searchInstructions: 'IT Suche nach einem Asset über das Suchfeld oder durch Zeichnen eines Polygons auf der Karte.',
     closeInstructions: 'IT Anleitung schliessen',
