@@ -21,14 +21,14 @@ export const deAppTranslations = {
     title: 'Arbeitsgruppe',
   },
   menuBar: {
-    assets: 'Assets',
+    filters: 'Filter',
     admin: 'Verwaltung',
     favourites: 'Favoriten',
     help: 'Hilfe',
     profile: 'Profil',
     settings: 'Einstellungen',
     signOut: 'Schliessen',
-    userManagement: 'Benutzer Verwaltung',
+    userManagement: 'Benutzerverwaltung',
   },
   map: {
     zoomIn: 'Hineinzoomen',

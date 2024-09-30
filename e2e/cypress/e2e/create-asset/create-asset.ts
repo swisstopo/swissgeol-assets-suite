@@ -2,7 +2,7 @@ import { Then, When } from '@badeball/cypress-cucumber-preprocessor';
 
 When(/^A user clicks the administration menu button$/, () => {
   cy.get('span:contains("Verwaltung")')
-    .not(':contains("Benutzer Verwaltung")')
+    .not(':contains("Benutzerverwaltung")')
     .click();
   cy.wait(1000);
 });

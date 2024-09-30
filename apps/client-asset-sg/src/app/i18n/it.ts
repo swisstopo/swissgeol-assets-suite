@@ -23,14 +23,14 @@ export const itAppTranslations: AppTranslations = {
     title: 'IT Arbeitsgruppe',
   },
   menuBar: {
-    assets: 'IT Assets',
+    filters: 'IT Filter',
     admin: 'IT Verwaltung',
     favourites: 'IT Favoriten',
     help: 'IT Hilfe',
     profile: 'IT Profil',
     settings: 'IT Einstellungen',
     signOut: 'IT Schliessen',
-    userManagement: 'IT Benutzer Verwaltung',
+    userManagement: 'IT Benutzerverwaltung',
   },
   map: {
     zoomIn: 'IT Hineinzoomen',

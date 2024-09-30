@@ -23,7 +23,7 @@ export const frAppTranslations: AppTranslations = {
     title: 'groupe de travail',
   },
   menuBar: {
-    assets: 'Assets',
+    filters: 'Filtres',
     admin: 'Administration',
     favourites: 'Favoris',
     help: 'Aide',

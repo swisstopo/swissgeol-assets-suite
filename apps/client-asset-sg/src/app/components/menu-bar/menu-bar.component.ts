@@ -31,7 +31,7 @@ export class MenuBarComponent {
     })
   );
 
-  public openAssetDrawer() {
+  public toggleAssetDrawer() {
     this._store.dispatch(appSharedStateActions.toggleSearchFilter());
   }
 

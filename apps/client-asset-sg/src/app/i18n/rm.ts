@@ -23,14 +23,14 @@ export const rmAppTranslations: AppTranslations = {
     title: 'IT Arbeitsgruppe',
   },
   menuBar: {
-    assets: 'RM Assets',
+    filters: 'RM Filter',
     admin: 'RM Verwaltung',
     favourites: 'RM Favoriten',
     help: 'RM Hilfe',
     profile: 'RM Profil',
     settings: 'RM Einstellungen',
     signOut: 'RM Schliessen',
-    userManagement: 'RM Benutzer Verwaltung',
+    userManagement: 'RM Benutzerverwaltung',
   },
   map: {
     zoomIn: 'RM Hineinzoomen',

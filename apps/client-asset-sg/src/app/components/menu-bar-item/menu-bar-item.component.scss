@@ -1,0 +1,69 @@
+:host {
+  position: relative;
+  width: 100%;
+  height: 58px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+:host > a.box,
+:host > a.box:active {
+  text-decoration: none;
+}
+
+.box {
+  position: absolute;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  color: currentColor;
+  justify-content: center;
+  align-items: center;
+}
+
+.box > .icon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 24px;
+
+  transition: color ease-out 100ms;
+}
+
+.box > .title {
+  position: absolute;
+  left: 0;
+  height: 40px;
+  min-width: 100%;
+  padding-left: 68px;
+  padding-right: 22px;
+
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+
+  border-radius: 4px;
+  background-color: #295969;
+  color: #295969;
+
+  transform: scaleX(0);
+  transition: ease-out 150ms;
+  transition-property: color, transform;
+  transform-origin: left;
+}
+
+:host:hover:not([disabled]) > .box {
+  & > .icon {
+    z-index: 2;
+    color: white;
+  }
+  & > .title {
+    transform: scaleX(100%);
+    color: white;
+  }
+}
+
+:host[disabled] > .box {
+  opacity: 0.6;
+}

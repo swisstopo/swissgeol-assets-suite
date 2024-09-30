@@ -1,0 +1,18 @@
+@if (link == null) {
+<div class="box">
+  <ng-container *ngTemplateOutlet="content" />
+</div>
+} @else {
+<a [routerLink]="link" class="box">
+  <ng-container *ngTemplateOutlet="content" />
+</a>
+}
+
+<ng-template #content>
+  <div class="title" translate>
+    <ng-content />
+  </div>
+  <div class="icon">
+    <svg-icon [key]="icon" />
+  </div>
+</ng-template>

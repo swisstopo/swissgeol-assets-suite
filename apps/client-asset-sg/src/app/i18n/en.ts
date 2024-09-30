@@ -23,7 +23,7 @@ export const enAppTranslations: AppTranslations = {
     title: 'Workgroup',
   },
   menuBar: {
-    assets: 'Assets',
+    filters: 'Filters',
     admin: 'Administration',
     favourites: 'Favourites',
     help: 'Help',
