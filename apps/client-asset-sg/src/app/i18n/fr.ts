@@ -30,7 +30,6 @@ export const frAppTranslations: AppTranslations = {
     profile: 'Profil',
     settings: 'Paramètres',
     signOut: 'Fermer',
-    userManagement: 'Gestion des utilisateurs',
     createAsset: 'Nouvel Asset',
   },
   map: {
@@ -231,10 +230,8 @@ export const frAppTranslations: AppTranslations = {
     },
     closeManageAsset: 'Fermer la gestion des asset',
     questionDiscardChanges: 'Souhaitez-vous annuler les modifications ?',
-    adminInstructionsEditHeading: 'Gérer des assets',
-    adminInstructionsEdit: 'Recherche un asset via le menu Assets pour le gérer.',
-    adminInstructionsCreateHeading: 'Nouvel asset',
-    adminInstructionsCreate: 'Créer un nouvel asset',
+    userManagementHeading: 'Utilisateurs',
+    userManagementButton: 'Gérer les utilisateurs',
     adminInstructionsSyncElasticAssetsHeading: 'Synchroniser les assets avec Elasticsearch',
     adminInstructionsSyncElasticAssets:
       "Fait correspondre l'état d'Elasticsearch avec la base de données." +

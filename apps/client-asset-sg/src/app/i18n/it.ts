@@ -30,7 +30,6 @@ export const itAppTranslations: AppTranslations = {
     profile: 'IT Profil',
     settings: 'IT Einstellungen',
     signOut: 'IT Schliessen',
-    userManagement: 'IT Benutzerverwaltung',
     createAsset: 'IT Neues Asset',
   },
   map: {
@@ -229,11 +228,9 @@ export const itAppTranslations: AppTranslations = {
       },
     },
     closeManageAsset: 'IT Asset verwalten schliessen',
+    userManagementHeading: 'IT Benutzer',
+    userManagementButton: 'IT Benutzer verwalten',
     questionDiscardChanges: 'IT Möchten Sie die Änderungen verwerfen?',
-    adminInstructionsEditHeading: 'IT Asset verwalten',
-    adminInstructionsEdit: 'IT Suche nach einem Asset über das Menü Assets, um dieses zu verwalten.',
-    adminInstructionsCreateHeading: 'IT Neues Asset',
-    adminInstructionsCreate: 'IT Neues Asset erstellen',
     adminInstructionsSyncElasticAssetsHeading: 'IT Assets mit Elasticsearch synchronisieren',
     adminInstructionsSyncElasticAssets:
       'IT Gleicht den Zustand von Elasticsearch mit der Datenbank ab.' +

@@ -28,7 +28,6 @@ export const deAppTranslations = {
     profile: 'Profil',
     settings: 'Einstellungen',
     signOut: 'Schliessen',
-    userManagement: 'Benutzerverwaltung',
     createAsset: 'Neues Asset',
   },
   map: {
@@ -229,10 +228,8 @@ export const deAppTranslations = {
     },
     closeManageAsset: 'Asset verwalten schliessen',
     questionDiscardChanges: 'Möchten Sie die Änderungen verwerfen?',
-    adminInstructionsEditHeading: 'Asset verwalten',
-    adminInstructionsEdit: 'Suche nach einem Asset über das Menü Assets, um dieses zu verwalten.',
-    adminInstructionsCreateHeading: 'Neues Asset',
-    adminInstructionsCreate: 'Neues Asset erstellen',
+    userManagementHeading: 'Benutzer',
+    userManagementButton: 'Benutzer verwalten',
     adminInstructionsSyncElasticAssetsHeading: 'Assets mit Elasticsearch synchronisieren',
     adminInstructionsSyncElasticAssets:
       'Gleicht den Zustand von Elasticsearch mit der Datenbank ab.' +

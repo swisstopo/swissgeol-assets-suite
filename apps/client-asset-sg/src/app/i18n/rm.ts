@@ -30,7 +30,6 @@ export const rmAppTranslations: AppTranslations = {
     profile: 'RM Einstellungen',
     settings: 'RM Einstellungen',
     signOut: 'RM Schliessen',
-    userManagement: 'RM Benutzerverwaltung',
     createAsset: 'RM Neues Asset',
   },
   map: {
@@ -229,11 +228,9 @@ export const rmAppTranslations: AppTranslations = {
       },
     },
     closeManageAsset: 'RM Asset verwalten schliessen',
+    userManagementHeading: 'RM Benutzer',
+    userManagementButton: 'RM Benutzer verwalten',
     questionDiscardChanges: 'RM Möchten Sie die Änderungen verwerfen?',
-    adminInstructionsEditHeading: 'RM Asset verwalten',
-    adminInstructionsEdit: 'RM Suche nach einem Asset über das Menü Assets, um dieses zu verwalten.',
-    adminInstructionsCreateHeading: 'RM Neues Asset',
-    adminInstructionsCreate: 'RM Neues Asset erstellen',
     adminInstructionsSyncElasticAssetsHeading: 'RM Assets mit Elasticsearch synchronisieren',
     adminInstructionsSyncElasticAssets:
       'RM Gleicht den Zustand von Elasticsearch mit der Datenbank ab.' +
