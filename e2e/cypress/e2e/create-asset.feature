@@ -3,6 +3,7 @@ Feature: create
   Background:
     Given The user is logged in
     And User has admin permissions
+    And Test data is imported
 
   Scenario: User creates the asset
     When A user clicks the administration menu button

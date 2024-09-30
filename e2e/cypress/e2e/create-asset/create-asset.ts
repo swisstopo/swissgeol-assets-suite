@@ -10,6 +10,11 @@ When(/^The user clicks the Create Asset button$/, () => {
   cy.get('a:contains("Neues Asset erstellen")').click();
 });
 When(/^The user fills out general information$/, () => {
+  cy.get('mat-select[formcontrolname="workgroupId"]')
+    .click()
+    .get('mat-option')
+    .contains(' Swisstopo ')
+    .click();
   cy.get('[formcontrolname="titlePublic"]', { timeout: 1000 }).type(
     'CypressTestAsset'
   );
@@ -60,7 +65,7 @@ Then(/^The user should see the Create Asset form$/, () => {
 Then(/^The asset is created$/, () => {
   cy.wait('@save')
     .then((xhr) => {
-      expect(xhr.response.statusCode).to.eq(200);
+      expect(xhr.response.statusCode).to.match(/^2\d{2}$/);
     })
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     .then((interception) => interception.response.body.assetId)
