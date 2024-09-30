@@ -4,14 +4,13 @@ import {
   BadRequestException,
   Body,
   Controller,
+  createParamDecorator,
   ExecutionContext,
   Injectable,
   Logger,
   Param,
   Post,
-  createParamDecorator,
 } from '@nestjs/common';
-import { Cron, CronExpression } from '@nestjs/schedule';
 import type { AxiosRequestConfig } from 'axios';
 import * as E from 'fp-ts/Either';
 import { pipe } from 'fp-ts/function';
@@ -28,9 +27,7 @@ const BufferBody = createParamDecorator(async (_, context: ExecutionContext) => 
   if (!req.readable) {
     throw new BadRequestException('Invalid body');
   }
-
-  const body = await streamToBufferAsync(req);
-  return body;
+  return await streamToBufferAsync(req);
 });
 
 const Config = D.struct({
@@ -42,9 +39,9 @@ type Config = D.TypeOf<typeof Config>;
 @Injectable()
 @Controller('ocr')
 export class OcrController {
-  private config: Config;
+  private readonly config: Config;
 
-  constructor(private prismaService: PrismaService, private httpService: HttpService) {
+  constructor(private readonly prismaService: PrismaService, private readonly httpService: HttpService) {
     this.config = pipe(
       Config.decode({
         ocrUrl: process.env.OCR_URL,
@@ -70,8 +67,8 @@ export class OcrController {
         TE.tryCatch(
           () =>
             this.prismaService.file.update({
-              where: { fileId: Number(fileId) },
-              data: { ocrStatus: 'success', fileSize: body.length, lastModified: new Date() },
+              where: { id: Number(fileId) },
+              data: { ocrStatus: 'success', size: body.length, lastModifiedAt: new Date() },
             }),
           unknownToUnknownError
         )
@@ -90,15 +87,15 @@ export class OcrController {
     await TE.tryCatch(
       () =>
         this.prismaService.file.update({
-          where: { fileId: Number(fileId) },
-          data: { ocrStatus: 'error', lastModified: new Date() },
+          where: { id: Number(fileId) },
+          data: { ocrStatus: 'error', lastModifiedAt: new Date() },
         }),
       unknownToUnknownError
     )();
     Logger.warn('OCR Job Error for file: ' + filename);
   }
 
-  @Cron(CronExpression.EVERY_30_SECONDS)
+  // @Cron(CronExpression.EVERY_30_SECONDS)
   async handleCron() {
     Logger.log('cron job running');
     const result = await pipe(
@@ -111,19 +108,19 @@ export class OcrController {
       ),
       TE.filterOrElseW(isNotNil, () => ({ _tag: 'nothingToDo' as const })),
       TE.bindTo('file'),
-      TE.bindW('s3File', ({ file }) => getFile(this.prismaService, file.fileId)),
+      TE.bindW('s3File', ({ file }) => getFile(this.prismaService, file.id)),
       TE.bindW('buffer', ({ s3File }) => streamToBufferTE(s3File.stream)),
       TE.bindW('updateResult', ({ file }) =>
         TE.tryCatch(
           () =>
             this.prismaService.file.update({
-              where: { fileId: file.fileId },
-              data: { ocrStatus: 'processing', lastModified: new Date() },
+              where: { id: file.id },
+              data: { ocrStatus: 'processing', lastModifiedAt: new Date() },
             }),
           unknownToUnknownError
         )
       ),
-      TE.chainW(({ buffer, file }) => this.extractText(buffer, file.fileId, file.fileName))
+      TE.chainW(({ buffer, file }) => this.extractText(buffer, file.id, file.name))
     )();
     Logger.log('result', result);
   }

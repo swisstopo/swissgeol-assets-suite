@@ -6,12 +6,17 @@
 
 - Anonymer Modus für view-assets
 - Synchronisations-Service zwischen verschiedenen Instanzen prod, prod-extern, prod-view
+- Dokumente für rechtliche Einwilligungen (_Legal Docs_) können nun separat von normalen Dateien
+  hochgeladen und angezeigt werden. Diese Einwilligungen können zusätzlich mit einem Typ versehen werden,
+  der die Art von Dokument wiederspiegelt.
 
 ### Changed
 
 - Admins haben nun auf alle Arbeitsgruppen Leserechte anstatt Schreibrechte - für das Schreiben muss ein Admin sich der Arbeitsgruppe hinzufügen
 - Der Button für Polygon-Filter ist nun links bei den restlichen Filtern
 - Dependency Updates
+- Existierende Dateien, welche mit `_LDoc.pdf` enden,
+  wurden als rechtliche Einwilligung mit Typ `permissionForm` markiert.
 
 ### Fixed
 

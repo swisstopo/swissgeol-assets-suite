@@ -86,14 +86,17 @@ import {
   merge,
   Observable,
   share,
-  startWith,
   subscribeOn,
   take,
   takeUntil,
   withLatestFrom,
 } from 'rxjs';
 
-import { AssetEditorFormGroup, AssetEditorGeometriesFormGroup } from '../asset-editor-form-group';
+import {
+  AssetEditorFormGroup,
+  AssetEditorGeometriesFormGroup,
+  isAssetEditorFormDisabled$,
+} from '../asset-editor-form-group';
 
 type Mode = 'edit-geometry' | 'choose-new-geometry' | 'create-new-geometry';
 type NewGeometryType = 'Point' | 'Polygon' | 'Linestring';
@@ -179,11 +182,7 @@ export class AssetEditorTabGeometriesComponent implements OnInit {
       ),
   });
 
-  public _disableAll$ = this.rootFormGroup.statusChanges.pipe(
-    startWith(this.rootFormGroup.status),
-    map(() => this.rootFormGroup.status === 'DISABLED'),
-    distinctUntilChanged()
-  );
+  public isDisabled$ = isAssetEditorFormDisabled$(this.rootFormGroup);
 
   public __selectedStudy$ = combineLatest([this._studies$, this._state.select('selectedStudyId')]).pipe(
     map(([studies, selectedStudyId]) =>

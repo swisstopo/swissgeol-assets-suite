@@ -1,9 +1,12 @@
 <ng-container *rxLet="referenceDataVM$">
   <ng-container *rxLet="assetEditDetail$">
-    <form [formGroup]="_form">
+    <form [formGroup]="form">
       <div #tabsWrapper class="tabs-wrapper"></div>
       <ng-template #tabPanelGeneralContent>
         <asset-sg-editor-tab-general [referenceDataVM$]="referenceDataVM$" />
+      </ng-template>
+      <ng-template #tabPanelFilesContent>
+        <asset-sg-editor-tab-files [referenceDataVM$]="referenceDataVM$" />
       </ng-template>
       <ng-template #tabPanelUsageContent>
         <asset-sg-editor-tab-usage [referenceDataVM$]="referenceDataVM$" [assetEditDetail$]="assetEditDetail$" />
@@ -16,10 +19,10 @@
         />
       </ng-template>
       <ng-template #tabPanelReferencesContent>
-        <asset-sg-editor-tab-references></asset-sg-editor-tab-references>
+        <asset-sg-editor-tab-references />
       </ng-template>
       <ng-template #tabPanelGeometriesContent>
-        <asset-sg-editor-tab-geometries></asset-sg-editor-tab-geometries>
+        <asset-sg-editor-tab-geometries />
       </ng-template>
       <ng-template #tabPanelAdministrationContent>
         <asset-sg-editor-tab-administration
@@ -40,6 +43,7 @@
     </div>
   </div>
 </ng-template>
+
 <mat-progress-bar mode="indeterminate" *ngIf="_showProgressBar$ | push" />
 <a
   [routerLink]="['../..']"

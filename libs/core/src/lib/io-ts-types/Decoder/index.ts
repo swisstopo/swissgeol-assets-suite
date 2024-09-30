@@ -1,5 +1,5 @@
 export { date, dateGuard } from './date';
-export { bigint } from './bigint';
+export { bigint, numberFromBigint } from './bigint';
 export { BigIntFromString } from './BigIntFromString';
 export { BooleanFromString } from './BooleanFromString';
 export { DateFromISOString } from './DateFromString';

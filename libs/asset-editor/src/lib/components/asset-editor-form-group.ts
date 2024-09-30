@@ -4,14 +4,17 @@ import { AbstractControl, FormBuilder, FormControl, ValidatorFn, Validators } fr
 import {
   AssetContactEdit,
   AssetFile,
+  AssetFileType,
   AssetLanguageEdit,
   DateId,
+  LegalDocItemCode,
   LinkedAsset,
   StatusAssetUseCode,
   StatusWork,
   Studies,
 } from '@asset-sg/shared';
 
+import { distinctUntilChanged, map, shareReplay, startWith } from 'rxjs';
 import { IdVM } from '../models';
 
 const makeAssetEditorGeneralFormGroup = (formBuilder: FormBuilder) =>
@@ -31,14 +34,38 @@ const makeAssetEditorGeneralFormGroup = (formBuilder: FormBuilder) =>
     assetLanguages: new FormControl<AssetLanguageEdit[]>([], { nonNullable: true }),
     manCatLabelRefs: new FormControl<string[]>(['other'], { nonNullable: true }),
     ids: new FormControl<IdVM[]>([], { nonNullable: true }),
-    assetFiles: new FormControl<(AssetFile & { willBeDeleted: boolean })[]>([], { nonNullable: true }),
-    filesToDelete: new FormControl<number[]>([], { nonNullable: true }),
-    newFiles: formBuilder.array<FormControl<File>>([]),
     workgroupId: new FormControl<number | null>(null, {
       validators: Validators.required,
     }),
   });
+
 export type AssetEditorGeneralFormGroup = ReturnType<typeof makeAssetEditorGeneralFormGroup>;
+
+const makeAssetEditorFilesFormGroup = (formBuilder: FormBuilder) =>
+  formBuilder.group({
+    normalFiles: makeAssetEditorFileTypeFormGroup(formBuilder),
+    legalFiles: makeAssetEditorFileTypeFormGroup(formBuilder),
+  });
+
+const makeAssetEditorFileTypeFormGroup = (formBuilder: FormBuilder) =>
+  formBuilder.group({
+    existingFiles: new FormControl<AssetEditorFile[]>([], { nonNullable: true }),
+    filesToDelete: new FormControl<number[]>([], { nonNullable: true }),
+    newFiles: formBuilder.array<FormControl<AssetEditorNewFile>>([]),
+  });
+
+export type AssetEditorFilesFormGroup = ReturnType<typeof makeAssetEditorFilesFormGroup>;
+export type AssetEditorFileTypeFormGroup = ReturnType<typeof makeAssetEditorFileTypeFormGroup>;
+
+export interface AssetEditorFile extends AssetFile {
+  willBeDeleted: boolean;
+}
+
+export interface AssetEditorNewFile {
+  type: AssetFileType;
+  legalDocItemCode: LegalDocItemCode | null;
+  file: File;
+}
 
 const validateUsageDates: ValidatorFn = (control: AbstractControl) => {
   const formGroup = control as AssetEditorUsageFormGroup;
@@ -133,9 +160,9 @@ export type AssetEditorAdministrationFormGroup = ReturnType<typeof makeAssetEdit
 
 export const makeAssetEditorFormGroup = () => {
   const formBuilder = inject(FormBuilder);
-
   return formBuilder.group({
     general: makeAssetEditorGeneralFormGroup(formBuilder),
+    files: makeAssetEditorFilesFormGroup(formBuilder),
     usage: makeAssetEditorUsageFormGroup(formBuilder),
     contacts: makeAssetEditorContactsFormGroup(formBuilder),
     references: makeAssetEditorReferencesFormGroup(formBuilder),
@@ -145,3 +172,11 @@ export const makeAssetEditorFormGroup = () => {
 };
 
 export type AssetEditorFormGroup = ReturnType<typeof makeAssetEditorFormGroup>;
+
+export const isAssetEditorFormDisabled$ = (root: AssetEditorFormGroup) =>
+  root.statusChanges.pipe(
+    startWith(root.status),
+    map((status) => status === 'DISABLED'),
+    distinctUntilChanged(),
+    shareReplay({ bufferSize: 1, refCount: true })
+  );

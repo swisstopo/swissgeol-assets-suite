@@ -1,0 +1,80 @@
+<div>
+  <div class="font-bold mb-4 mt-2" translate>edit.tabs.files.{{ type }}.many</div>
+  <div *ngIf="hasFiles" class="max-h-full overflow-y-scroll overflow-x-hidden -mr-5">
+    <ul class="mt-0 mb-4 p-0">
+      <li
+        *ngFor="let file of existingFiles; let index = index; let last = last"
+        class="list-none bg-grey-00 py-2 pl-4 files mb-2"
+      >
+        <div class="name ellipsis">{{ file.name }}</div>
+
+        <ng-container *ngIf="file.willBeDeleted; else fileFormFields">
+          <div *ngIf="file.willBeDeleted" class="notice text-sm text-grey-08" translate>
+            edit.tabs.files.willBeDeleted
+          </div>
+        </ng-container>
+
+        <ng-template #fileFormFields>
+          <button asset-sg-icon-button class="shrink-0 ml-2" [disabled]="isDisabled" (click)="deleteFile(file.id)">
+            <svg-icon key="delete"></svg-icon>
+          </button>
+
+          <mat-form-field *ngIf="file.type === 'Legal'" class="legal-doc-item-code">
+            <mat-label translate>edit.tabs.files.legalDocItemCode</mat-label>
+            <mat-select [(ngModel)]="file.legalDocItemCode" [ngModelOptions]="{ standalone: true }">
+              <mat-option class="ellipsis" *rxFor="let item of legalDocItems$" [value]="item.code">
+                {{ item | valueItemName }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+        </ng-template>
+      </li>
+      <li
+        *ngFor="let file of newFiles; let index = index; let last = last"
+        class="list-none bg-grey-00 py-2 pl-4 files mb-2"
+      >
+        <div class="name ellipsis">{{ file.file.name }}</div>
+
+        <button asset-sg-icon-button class="shrink-0 ml-2" (click)="removeNewFile(index)" [disabled]="isDisabled">
+          <svg-icon key="delete"></svg-icon>
+        </button>
+
+        <mat-form-field *ngIf="file.type === 'Legal'" class="legal-doc-item-code">
+          <mat-label translate>edit.tabs.files.legalDocItemCode</mat-label>
+          <mat-select [(ngModel)]="file.legalDocItemCode" [ngModelOptions]="{ standalone: true }">
+            <mat-option class="ellipsis" *rxFor="let item of legalDocItems$" [value]="item.code">
+              {{ item | valueItemName }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <div class="text-sm text-grey-08" translate>edit.tabs.files.willBeUploaded</div>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<label class="upload" [class.is-disabled]="isDisabled">
+  <input
+    type="file"
+    [disabled]="isDisabled"
+    class="absolute inset-0 opacity-0"
+    (change)="handleFileInputChange($event)"
+  />
+  <span translate>edit.tabs.files.dragFileHere</span>
+  <span class="m-2" translate>edit.tabs.files.or</span>
+  <span
+    class="bg-cyan-09 text-white h-10 flex items-center px-10 rounded cursor-pointer"
+    [class]="{
+      'hover:bg-cyan-06': !isDisabled,
+      'bg-grey-03': isDisabled,
+      'hover:bg-grey-03': isDisabled | push
+    }"
+    translate
+    >edit.tabs.files.selectFile</span
+  >
+  <div *ngIf="isFileTooLarge" class="text-red mt-3 flex items-center">
+    <svg-icon key="error-filled" class="mr-2" />
+    <span translate>edit.tabs.files.fileSizeToLarge</span>
+  </div>
+</label>
