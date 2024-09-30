@@ -16,7 +16,7 @@ import * as O from 'fp-ts/Option';
 import * as TE from 'fp-ts/TaskEither';
 
 // eslint-disable-next-line @nx/enforce-module-boundaries
-import { unknownToError } from '../../../../../../libs/core/src/';
+import { unknownToError } from '@asset-sg/core';
 
 import { queryFiles } from './seed-files';
 

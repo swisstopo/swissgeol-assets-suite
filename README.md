@@ -197,7 +197,7 @@ An empty template for the file can be found in [`development/.env.template`](dev
 ## Database ORM
 
 This project uses [Prisma](https://www.prisma.io/) as its database ORM.
-The schema can be found at [libs/persistence/src/lib/prisma/schema.prisma](libs/persistence/src/lib/prisma/schema.prisma).
+The schema can be found at [libs/persistence/src/lib/prisma/schema.prisma](libs/persistence/prisma/schema.prisma).
 
 To run prisma commands, you can use the following shortcut:
 
@@ -222,7 +222,7 @@ npm run prisma -- migrate reset
 
 ### Creating migrations
 
-To create a new migration, first modify [the Prisma schema](libs/persistence/src/lib/prisma/schema.prisma).
+To create a new migration, first modify [the Prisma schema](libs/persistence/prisma/schema.prisma).
 Then, create a [shadow database](https://www.prisma.io/docs/orm/prisma-migrate/understanding-prisma-migrate/shadow-database):
 
 ```bash
@@ -235,7 +235,7 @@ Afterward, you can generate the new migration:
 npm run prisma -- migrate dev --create-only
 ```
 
-You can find and modify your new migration within [the `migrations/` directory](libs/persistence/src/lib/prisma/migrations/).
+You can find and modify your new migration within [the `migrations/` directory](libs/persistence/prisma/migrations/).
 The finalized migration can be applied like any other migration:
 
 ```bash

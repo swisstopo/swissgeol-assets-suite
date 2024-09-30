@@ -9,7 +9,7 @@ import * as R from 'fp-ts/Record';
 import * as TE from 'fp-ts/TaskEither';
 import * as D from 'io-ts/Decoder';
 
-import { DT, unknownToError } from '../../../../../../libs/core/src/';
+import { DT, unknownToError } from '@asset-sg/core';
 
 const client = new S3Client({
   region: 'ch-dk-2',

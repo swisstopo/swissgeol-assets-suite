@@ -175,7 +175,7 @@
     "@rollup/rollup-linux-x64-musl": "4.16.0"
   },
   "prisma": {
-    "schema": "libs/persistence/src/lib/prisma/schema.prisma"
+    "schema": "libs/persistence/prisma/schema.prisma"
   },
   "lint-staged": {
     "**/*": "prettier --write --ignore-unknown"
