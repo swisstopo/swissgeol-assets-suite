@@ -27,8 +27,74 @@ init_index() {
 
   echo "Initializing index ${INDEX_NAME}..."
 
-  curl --silent -XPUT "${ELASTICSEARCH_URL}/${INDEX_NAME}"
-  curl --silent -XPUT "${ELASTICSEARCH_URL}/${INDEX_NAME}/_mapping" -d "@/init/mappings/${INDEX_NAME}.json"
+  curl --silent -XPUT "${ELASTICSEARCH_URL}/${INDEX_NAME}" -H 'Content-Type: application/json' -d'
+  {
+    "mappings": {
+      "properties": {
+        "assetId": {
+          "type": "integer"
+        },
+        "assetKindItemCode": {
+          "type": "keyword"
+        },
+        "authorIds": {
+          "type": "integer"
+        },
+        "contactNames": {
+          "type": "text",
+          "fields": {
+            "keyword": {
+              "type": "keyword",
+              "ignore_above": 256
+            }
+          }
+        },
+        "createDate": {
+          "type": "long"
+        },
+        "createDateId": {
+          "type": "integer"
+        },
+        "languageItemCodes": {
+          "type": "keyword"
+        },
+        "manCatLabelItemCodes": {
+          "type": "keyword"
+        },
+        "geometryCodes": {
+          "type": "keyword"
+        },
+        "sgsId": {
+          "type": "keyword"
+        },
+        "titleOriginal": {
+          "type": "text",
+          "fields": {
+            "keyword": {
+              "type": "keyword",
+              "ignore_above": 256
+            }
+          }
+        },
+        "titlePublic": {
+          "type": "text",
+          "fields": {
+            "keyword": {
+              "type": "keyword",
+              "ignore_above": 256
+            }
+          }
+        },
+        "usageCode": {
+          "type": "keyword"
+        },
+        "studyLocations": {
+          "type": "geo_point"
+        }
+      }
+    }
+  }
+  '
 
   echo "Successfully initialized index ${INDEX_NAME}"
 }

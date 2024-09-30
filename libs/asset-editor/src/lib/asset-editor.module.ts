@@ -92,7 +92,6 @@ export const canLeaveEdit: CanDeactivateFn<AssetEditorPageComponent> = (c) => c.
               filter(isNotNull),
               map((user) => {
                 const policy = new AssetEditPolicy(user);
-                console.log('policy.canCreate()', policy.canCreate());
                 return policy.canCreate();
               })
             );
