@@ -52,10 +52,13 @@
 
 table.asset-details {
   table-layout: fixed;
-  border-collapse: collapse;
   width: 100%;
   min-width: 100%;
   max-width: 100%;
+
+  // Add space between each of the table's rows.
+  border-collapse: separate;
+  border-spacing: 0 6px;
 
   tr:first-child {
     th:nth-child(1) {
@@ -103,7 +106,7 @@ td .line {
 table.status-works {
   table-layout: fixed;
   border-collapse: separate;
-  border-spacing: 0rem 0.125rem;
+  border-spacing: 0 0.125rem;
   width: 100%;
   min-width: 100%;
   max-width: 100%;
@@ -150,13 +153,14 @@ li::marker {
 
 li.link {
   display: inline-flex;
-  align-items: center;
-  max-width: 100%;
+  width: 100%;
   overflow: visible;
+  align-items: center;
+  flex-wrap: wrap;
+  column-gap: 6px;
 
-  .filename {
-    width: calc(100% - 5.5rem);
-    word-wrap: break-word;
+  &:not(:first-child) {
+    margin-top: 6px;
   }
 
   a {
@@ -165,10 +169,6 @@ li.link {
 
   a:first-of-type {
     margin-left: 0.5rem;
-  }
-
-  mat-progress-spinner {
-    margin: calc(calc(2.5rem - 24px) / 2);
   }
 }
 

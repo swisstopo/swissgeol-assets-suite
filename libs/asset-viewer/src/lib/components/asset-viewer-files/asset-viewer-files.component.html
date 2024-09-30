@@ -1,0 +1,26 @@
+<li *rxFor="let assetFile of files" class="link">
+  @if (assetFile.legalDocItem != null) {
+  <span class="legal-doc-item-code"> {{ assetFile.legalDocItem | valueItemName }}: </span>
+  }
+  <span class="name"> {{ assetFile.name }} ({{ displayFileSize(assetFile.size) }}) </span>
+  <button
+    asset-sg-icon-button
+    *ngIf="!isActiveFileDownload(assetFile, 'open-in-tab'); else downloadSpinner"
+    [title]="'search.openFileInNewTab' | translate : { fileName: assetFile.name }"
+    (click)="downloadFile(assetFile, 'open-in-tab')"
+  >
+    <svg-icon key="ext-link"></svg-icon>
+  </button>
+  <button
+    asset-sg-icon-button
+    *ngIf="!isActiveFileDownload(assetFile, 'save-file'); else downloadSpinner"
+    [title]="'search.downloadFile' | translate : { fileName: assetFile.name }"
+    (click)="downloadFile(assetFile, 'save-file')"
+  >
+    <svg-icon key="download"></svg-icon>
+  </button>
+
+  <ng-template #downloadSpinner>
+    <mat-progress-spinner mode="indeterminate" [diameter]="20" />
+  </ng-template>
+</li>

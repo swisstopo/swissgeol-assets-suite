@@ -52,6 +52,7 @@ export const fakeContact = () =>
 
 export const fakeAssetPatch = (): PatchAsset => ({
   assetContacts: [],
+  assetFiles: [],
   assetFormatItemCode: fakeAssetFormatItemCode(),
   assetKindItemCode: fakeAssetKindItemCode(),
   assetMainId: O.none,

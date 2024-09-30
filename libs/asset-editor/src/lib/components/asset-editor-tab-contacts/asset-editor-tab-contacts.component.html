@@ -33,7 +33,7 @@
                       (click)="showContact(assetContact.contactId)"
                       [attr.aria-label]="'edit.tabs.contacts.viewDetails' | translate"
                       [disabled]="
-                        (_disableAll$ | push) ||
+                        (disableAll$ | push) ||
                         (uiMode !== 'view' && uiMode !== 'viewContactDetails') ||
                         (currentContactId._tag === 'Some' && currentContactId.value === assetContact.contactId)
                       "
@@ -44,7 +44,7 @@
                       asset-sg-icon-button
                       (click)="unlinkContact(assetContact.contactId)"
                       [attr.aria-label]="'edit.tabs.contacts.unlinkContact' | translate"
-                      [disabled]="(_disableAll$ | push) || (uiMode !== 'view' && uiMode !== 'viewContactDetails')"
+                      [disabled]="(disableAll$ | push) || (uiMode !== 'view' && uiMode !== 'viewContactDetails')"
                     >
                       <svg-icon key="delete"></svg-icon>
                     </button>
@@ -57,7 +57,7 @@
               class="shrink-0 self-start"
               (click)="linkContact()"
               translate
-              [disabled]="(_disableAll$ | push) || (uiMode !== 'view' && uiMode !== 'viewContactDetails')"
+              [disabled]="(disableAll$ | push) || (uiMode !== 'view' && uiMode !== 'viewContactDetails')"
             >
               edit.tabs.contacts.linkContact
             </button>

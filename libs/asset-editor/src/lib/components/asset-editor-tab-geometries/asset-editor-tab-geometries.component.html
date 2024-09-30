@@ -9,7 +9,7 @@
               [value]="_selectedStudyId$ | push"
               (selectionChange)="selectStudy($event)"
               [placeholder]="'edit.tabs.geometries.selectGeometryLabel' | translate : { count: studies.length }"
-              [disabled]="(_disableAll$ | async) || mode !== 'edit-geometry'"
+              [disabled]="(isDisabled$ | async) || mode !== 'edit-geometry'"
             >
               <mat-option *rxFor="let study of studies; let index = index" [value]="study.studyId">
                 {{ "Geometry" }}&nbsp;{{ index + 1 }}&nbsp;&ndash;&nbsp;{{

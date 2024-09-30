@@ -88,9 +88,9 @@ export const assetInfoSelection = satisfy<Prisma.AssetSelect>()({
     select: {
       file: {
         select: {
-          fileId: true,
-          fileName: true,
-          fileSize: true,
+          id: true,
+          name: true,
+          size: true,
         },
       },
     },
@@ -158,9 +158,9 @@ export const parseAssetInfoFromPrisma = (data: SelectedAssetInfo): AssetInfo => 
     ],
   },
   files: data.assetFiles.map((it) => ({
-    id: it.file.fileId,
-    size: Number(it.file.fileSize),
-    name: it.file.fileName,
+    id: it.file.id,
+    size: Number(it.file.size),
+    name: it.file.name,
   })),
   createdAt: LocalDate.fromDate(data.createDate),
   receivedAt: LocalDate.fromDate(data.receiptDate),

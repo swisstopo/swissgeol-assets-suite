@@ -30,6 +30,14 @@ export const AssetContactRole = C.fromDecoder(
 export type AssetContactRole = C.TypeOf<typeof AssetContactRole>;
 export const eqAssetContactRole: Eq<AssetContactRole> = eqString;
 
+export const AssetFileType = C.fromDecoder(D.union(D.literal('Normal'), D.literal('Legal')));
+export type AssetFileType = C.TypeOf<typeof AssetFileType>;
+
+export const LegalDocItemCode = C.fromDecoder(
+  D.union(D.literal('federalData'), D.literal('permissionForm'), D.literal('contract'), D.literal('other'))
+);
+export type LegalDocItemCode = C.TypeOf<typeof LegalDocItemCode>;
+
 export const BaseAssetDetail = {
   assetId: C.number,
   titlePublic: C.string,
@@ -83,5 +91,13 @@ export const BaseAssetDetail = {
   siblingXAssets: C.array(LinkedAsset),
   siblingYAssets: C.array(LinkedAsset),
   statusWorks: C.array(StatusWork),
-  assetFiles: C.array(C.struct({ fileId: C.number, fileName: C.string, fileSize: CT.BigIntFromString })),
+  assetFiles: C.array(
+    C.struct({
+      id: C.number,
+      name: C.string,
+      size: C.number,
+      type: AssetFileType,
+      legalDocItemCode: C.nullable(LegalDocItemCode),
+    })
+  ),
 };

@@ -4,6 +4,7 @@ import * as RD from '@devexperts/remote-data-ts';
 import { createAction, props } from '@ngrx/store';
 import * as O from 'fp-ts/Option';
 
+import { AssetEditorNewFile } from '../components/asset-editor-form-group';
 import { AssetEditDetail } from '../models';
 
 export const loadAssetEditDetailResult = createAction(
@@ -15,7 +16,7 @@ export const createNewAsset = createAction('[Asset Editor] Create new asset', pr
 
 export const updateAssetEditDetail = createAction(
   '[Asset Editor] Update asset',
-  props<{ assetId: number; patchAsset: PatchAsset; filesToDelete: number[]; newFiles: File[] }>()
+  props<{ assetId: number; patchAsset: PatchAsset; filesToDelete: number[]; newFiles: AssetEditorNewFile[] }>()
 );
 
 export const updateAssetEditDetailResult = createAction(

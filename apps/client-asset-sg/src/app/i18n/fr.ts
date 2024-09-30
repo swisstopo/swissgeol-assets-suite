@@ -85,6 +85,7 @@ export const frAppTranslations: AppTranslations = {
     workgroup: 'groupe de travail',
     resetSearch: 'Réinitialiser la recherche',
     file: 'Fichier',
+    legalFile: 'Consentements légaux',
     openFileInNewTab: 'Ouvrir {{fileName}} dans un nouvel onglet',
     downloadFile: 'Télécharger {{fileName}}',
     assetsUnderMouseCursor:
@@ -119,7 +120,18 @@ export const frAppTranslations: AppTranslations = {
         alternativeId: 'ID alternative',
         alternativeIdDescription: "Description d'ID alternative",
         addNewAlternativeId: 'Ajouter une nouvelle ID alternative',
-        files: 'Fichiers',
+      },
+      files: {
+        tabName: 'Fichiers',
+        Normal: {
+          one: 'Fichier normal',
+          many: 'Fichiers normaux',
+        },
+        Legal: {
+          one: 'Consentement Légal',
+          many: 'Consentements Légaux',
+        },
+        legalDocItemCode: 'Type',
         dragFileHere: 'Glisser le fichier ici',
         or: 'ou',
         selectFile: 'Sélectionner un fichier',

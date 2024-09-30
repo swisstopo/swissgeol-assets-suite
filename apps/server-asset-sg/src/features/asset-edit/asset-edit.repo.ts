@@ -33,17 +33,6 @@ export class AssetEditRepo implements Repo<AssetEditDetail, number, AssetEditDat
     return this.loadDetail(asset);
   }
 
-  async findByFile(fileId: number): Promise<AssetEditDetail | null> {
-    const asset = await this.prismaService.asset.findFirst({
-      where: { assetFiles: { some: { fileId } } },
-      select: selectPrismaAsset,
-    });
-    if (asset === null) {
-      return null;
-    }
-    return this.loadDetail(asset);
-  }
-
   async list({ limit, offset, ids }: RepoListOptions<number> = {}): Promise<AssetEditDetail[]> {
     const assets = await this.prismaService.asset.findMany({
       select: selectPrismaAsset,
@@ -157,6 +146,18 @@ export class AssetEditRepo implements Repo<AssetEditDetail, number, AssetEditDat
           assetLanguages: {
             deleteMany: {},
             createMany: { data: data.patch.assetLanguages, skipDuplicates: true },
+          },
+          assetFiles: {
+            update: data.patch.assetFiles.map((it) => ({
+              data: {
+                file: {
+                  update: {
+                    ...it,
+                  },
+                },
+              },
+              where: { assetId_fileId: { assetId: id, fileId: it.id } },
+            })),
           },
           ids: {
             deleteMany: {
@@ -367,7 +368,10 @@ const selectPrismaAsset = selectOnAsset({
   siblingXAssets: { select: { assetY: { select: { assetId: true, titlePublic: true } } } },
   siblingYAssets: { select: { assetX: { select: { assetId: true, titlePublic: true } } } },
   statusWorks: { select: { statusWorkItemCode: true, statusWorkDate: true } },
-  assetFiles: { select: { file: true } },
+  assetFiles: {
+    select: { file: { select: { id: true, name: true, size: true, type: true, legalDocItemCode: true } } },
+    orderBy: [{ file: { type: 'asc' } }, { file: { name: 'asc' } }],
+  },
   workgroupId: true,
 });
 

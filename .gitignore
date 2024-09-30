@@ -54,3 +54,6 @@ __pycache__
 
 # NX cache
 .nx/
+
+# Asset sync progress file
+asset-sync-progress.tmp.json

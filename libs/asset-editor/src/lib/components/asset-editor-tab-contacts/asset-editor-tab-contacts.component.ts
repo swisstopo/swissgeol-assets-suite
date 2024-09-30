@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnInit, Output, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, inject, Input, OnInit, Output } from '@angular/core';
 import { FormBuilder, FormControl, FormGroupDirective, Validators } from '@angular/forms';
 import { fromAppShared } from '@asset-sg/client-shared';
 import { ordStringLowerCase } from '@asset-sg/core';
@@ -7,8 +7,8 @@ import {
   AssetContactRole,
   Contact,
   ContactEdit,
-  PatchContact,
   eqAssetContactEdit,
+  PatchContact,
 } from '@asset-sg/shared';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { RxState } from '@rx-angular/state';
@@ -19,20 +19,13 @@ import { Ord as ordNumber } from 'fp-ts/number';
 import * as O from 'fp-ts/Option';
 import { contramap } from 'fp-ts/Ord';
 import * as R from 'fp-ts/Record';
-import {
-  EMPTY,
-  Observable,
-  distinctUntilChanged,
-  identity,
-  map,
-  shareReplay,
-  skip,
-  startWith,
-  switchMap,
-  take,
-} from 'rxjs';
+import { distinctUntilChanged, EMPTY, identity, map, Observable, skip, switchMap, take } from 'rxjs';
 
-import { AssetEditorContactsFormGroup, AssetEditorFormGroup } from '../asset-editor-form-group';
+import {
+  AssetEditorContactsFormGroup,
+  AssetEditorFormGroup,
+  isAssetEditorFormDisabled$,
+} from '../asset-editor-form-group';
 
 type UIMode = 'view' | 'linkExisting' | 'linkNew' | 'viewContactDetails' | 'editContactDetails';
 interface TabContactsState {
@@ -81,12 +74,7 @@ export class AssetEditorTabContactsComponent implements OnInit {
     contactId: new FormControl<number | null>(null, Validators.required),
   });
 
-  public _disableAll$ = this.rootFormGroup.statusChanges.pipe(
-    startWith(this.rootFormGroup.status),
-    map(() => this.rootFormGroup.status === 'DISABLED'),
-    distinctUntilChanged(),
-    shareReplay({ bufferSize: 1, refCount: true })
-  );
+  public readonly disableAll$ = isAssetEditorFormDisabled$(this.rootFormGroup);
 
   private _contactFormCommon = () => ({
     name: new FormControl<string>('', { nonNullable: true, validators: Validators.required }),

@@ -1,13 +1,13 @@
-import { HttpClient } from '@angular/common/http';
 import { Component, inject } from '@angular/core';
 import { AppState } from '@asset-sg/client-shared';
-import { AssetFile } from '@asset-sg/shared';
+import { AssetFileType } from '@asset-sg/shared';
 import { AssetEditPolicy } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
-
+import { map, Observable } from 'rxjs';
 import * as actions from '../../state/asset-search/asset-search.actions';
 import { LoadingState } from '../../state/asset-search/asset-search.reducer';
 import {
+  AssetDetailFileVM,
   selectAssetDetailLoadingState,
   selectCurrentAssetDetailVM,
 } from '../../state/asset-search/asset-search.selector';
@@ -18,56 +18,35 @@ import {
   styleUrls: ['./asset-search-detail.component.scss'],
 })
 export class AssetSearchDetailComponent {
-  private _store = inject(Store<AppState>);
-  public readonly assetDetail$ = this._store.select(selectCurrentAssetDetailVM);
-  public loadingState = this._store.select(selectAssetDetailLoadingState);
+  private readonly store = inject(Store<AppState>);
 
-  public readonly activeFileDownloads = new Map<number, { isDownload: boolean }>();
+  public readonly assetDetail$ = this.store.select(selectCurrentAssetDetailVM);
+  public readonly filesByType$: Observable<Record<AssetFileType, AssetDetailFileVM[]>> = this.assetDetail$.pipe(
+    map((asset) => {
+      const mapping: Record<AssetFileType, AssetDetailFileVM[]> = {
+        Normal: [],
+        Legal: [],
+      };
+      if (asset == null) {
+        return mapping;
+      }
+      for (const file of asset.assetFiles) {
+        mapping[file.type].push(file);
+      }
+      return mapping;
+    })
+  );
+
+  public loadingState = this.store.select(selectAssetDetailLoadingState);
 
   public resetAssetDetail() {
-    this._store.dispatch(actions.resetAssetDetail());
-  }
-
-  protected readonly LoadingState = LoadingState;
-
-  constructor(private httpClient: HttpClient) {}
-
-  public isActiveFileDownload(file: Omit<AssetFile, 'fileSize'>, isDownload = true): boolean {
-    const download = this.activeFileDownloads.get(file.fileId);
-    return download != null && download.isDownload == isDownload;
+    this.store.dispatch(actions.resetAssetDetail());
   }
 
   public searchForReferenceAsset(assetId: number) {
-    this._store.dispatch(actions.assetClicked({ assetId }));
+    this.store.dispatch(actions.assetClicked({ assetId }));
   }
 
-  public downloadFile(file: Omit<AssetFile, 'fileSize'>, isDownload = true): void {
-    this.activeFileDownloads.set(file.fileId, { isDownload });
-    this.httpClient.get(`/api/files/${file.fileId}`, { responseType: 'blob' }).subscribe({
-      next: (blob) => {
-        const url = URL.createObjectURL(blob);
-        const anchor = document.createElement('a');
-
-        anchor.setAttribute('style', 'display: none');
-        anchor.href = url;
-        anchor.rel = 'noopener noreferrer';
-        if (isDownload) {
-          anchor.download = file.fileName;
-        } else {
-          anchor.target = '_blank';
-        }
-        document.body.appendChild(anchor);
-        anchor.click();
-        anchor.remove();
-        setTimeout(() => {
-          window.URL.revokeObjectURL(url);
-        });
-      },
-      complete: () => {
-        this.activeFileDownloads.delete(file.fileId);
-      },
-    });
-  }
-
+  protected readonly LoadingState = LoadingState;
   protected readonly AssetEditPolicy = AssetEditPolicy;
 }

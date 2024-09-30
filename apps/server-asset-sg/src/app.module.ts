@@ -23,6 +23,7 @@ import { ContactRepo } from '@/features/contacts/contact.repo';
 import { ContactsController } from '@/features/contacts/contacts.controller';
 import { FavoriteRepo } from '@/features/favorites/favorite.repo';
 import { FavoritesController } from '@/features/favorites/favorites.controller';
+import { FileRepo } from '@/features/files/file.repo';
 import { FilesController } from '@/features/files/files.controller';
 import { OcrController } from '@/features/ocr/ocr.controller';
 import { StudiesController } from '@/features/studies/studies.controller';
@@ -58,6 +59,7 @@ import { WorkgroupsController } from '@/features/workgroups/workgroups.controlle
     AssetSyncService,
     ContactRepo,
     FavoriteRepo,
+    FileRepo,
     PrismaService,
     StudyRepo,
     UserRepo,

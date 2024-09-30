@@ -52,35 +52,11 @@
             </ng-template>
           </ng-template>
         </div>
-        <table class="asset-details">
-          <tr>
-            <th translate="search.file" class="icon-height"></th>
+        <table class="asset-details" *rxLet="filesByType$; let files">
+          <tr *ngIf="files.Normal.length > 0">
+            <th translate="search.file"></th>
             <td>
-              <ul [class.single-entry]="assetDetail.assetFiles.length === 1">
-                <li *rxFor="let assetFile of assetDetail.assetFiles" class="link">
-                  <span class="filename"> {{ assetFile.fileName }} ({{ assetFile.fileSize }}) </span>
-                  <button
-                    asset-sg-icon-button
-                    *ngIf="!isActiveFileDownload(assetFile, false); else downloadSpinner"
-                    [title]="'search.openFileInNewTab' | translate : { fileName: assetFile.fileName }"
-                    (click)="downloadFile(assetFile, false)"
-                  >
-                    <svg-icon key="ext-link"></svg-icon>
-                  </button>
-                  <button
-                    asset-sg-icon-button
-                    *ngIf="!isActiveFileDownload(assetFile); else downloadSpinner"
-                    [title]="'search.downloadFile' | translate : { fileName: assetFile.fileName }"
-                    (click)="downloadFile(assetFile)"
-                  >
-                    <svg-icon key="download"></svg-icon>
-                  </button>
-
-                  <ng-template #downloadSpinner>
-                    <mat-progress-spinner mode="indeterminate" [diameter]="24" />
-                  </ng-template>
-                </li>
-              </ul>
+              <ul asset-sg-asset-viewer-files [assetId]="assetDetail.assetId" [files]="files.Normal" type="Normal"></ul>
             </td>
           </tr>
           <tr>
@@ -114,6 +90,12 @@
                   {{ contact.contactKindItem | valueItemName }}
                 </li>
               </ul>
+            </td>
+          </tr>
+          <tr *ngIf="files.Legal.length > 0">
+            <th translate="search.legalFile"></th>
+            <td>
+              <ul asset-sg-asset-viewer-files [assetId]="assetDetail.assetId" [files]="files.Legal" type="Legal"></ul>
             </td>
           </tr>
           <tr>

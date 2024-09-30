@@ -1,4 +1,4 @@
-# SwissGeol Asset
+# SwissGeol Assets
 
 ## Development
 
@@ -12,16 +12,11 @@ The following components must be installed on the development computer:
 
 Follow these steps to set up the development environment on your local machine:
 
-- [1. Configure Local Systems](#1-Configure-Local-Systems)
-- [2. Install Dependencies](#2-Install-Dependencies)
-- [3. Generate Database Types](#3-Generate-Database-Types)
-- [4. Initialize MinIO](#4-Initialize-MinIO)
+- [1. Install Dependencies](#2-Install-Dependencies)
+- [2. Generate Database Types](#3-Generate-Database-Types)
+- [3. Initialize MinIO](#4-Initialize-MinIO)
 
-#### 1. Configure Local Systems
-
-Configure `development/.env` according to the [local service configuration](#Local-Service-Configuration).
-
-#### 2. Install Dependencies
+#### 1. Install Dependencies
 
 Install node modules:
 
@@ -29,7 +24,7 @@ Install node modules:
 npm install
 ```
 
-#### 3. Generate Database Types
+#### 2. Generate Database Types
 
 Generate prisma-client for database-access:
 
@@ -37,7 +32,10 @@ Generate prisma-client for database-access:
 npm run prisma -- generate
 ```
 
-#### 4. Initialize MinIO
+#### 3. Initialize MinIO
+
+> Note that this step may be skipped if you do not need to interact with uploaded files,
+> and don't want to upload files yourselves.
 
 - [Start the development services](#Starting-the-Development-Environment).
 - Open http://localhost:9001
@@ -46,7 +44,7 @@ npm run prisma -- generate
 - Navigate to [the new bucket's browser](http://localhost:9001/browser/asset-sg) and create an empty folder with the name `asset-sg`.
 - Navigate to [Configuration](http://localhost:9001/settings/configurations/region) and change the server region to `local`.
 - Navigate to [Access Keys](http://localhost:9001/access-keys) and create a new access key.
-- Open the file [`apps/server-asset-sg/.env.local`](apps/server-asset-sg/.env.local) and modify the following variables:
+- Create the file [`apps/server-asset-sg/.env.local`](apps/server-asset-sg/.env.local) and add the following variables:
   - Set `S3_ACCESS_KEY_ID` to your generated access key.
   - Set `S3_SECRET_ACCESS_KEY` to your generated access key's secret.
 
@@ -150,10 +148,10 @@ nx run server-asset-sg:test -t 'AssetRepo create'
 
 ## Configuration
 
-### Asset Server Configuration
+### Server Configuration
 
-The file `apps/server-asset-sg/.env.local` configures secrets for the SwissGeol Asset server.
-An empty template for the file can be found in [`apps/server-asset-sg/.env.template`](apps/server-asset-sg/.env.template).
+The file `apps/server-asset-sg/.env` configures the configuration for the SwissGeol Assets server.
+By default, it is configured to work with the Docker services found in [`development/docker-compose.yml`](development/docker-compose.yml).
 
 | Variable                | Example                                                            | Description                                                         |
 | ----------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------- |
@@ -174,25 +172,33 @@ An empty template for the file can be found in [`apps/server-asset-sg/.env.templ
 | OCR_URL                 |                                                                    | Leave empty.                                                        |
 | OCR_CALLBACK_URL        |                                                                    | Leave empty.                                                        |
 
-> The local docker configuration contains an OIDC container supporting OAuth.
-> Use the example values to use it instead of an external issuer.
+### Services Configuration
 
-### Local Service Configuration
+The file [`development/.env`](development/.env) configures secrets for the services used in local development.
+By default, these secrets align with the server's configuration.
 
-The file `development/.env` configures secrets for the services used in local development.
-An empty template for the file can be found in [`development/.env.template`](development/.env.template).
+| Variable         | Beschreibung                           |
+| ---------------- | -------------------------------------- |
+| STORAGE_USER     | Username for the MinIO container.      |
+| STORAGE_PASSWORD | Password for the MinIO container.      |
+| DB_USER          | Username for the PostgreSQL container. |
+| DB_PASSWORD      | Password for the PostgreSQL container. |
+| PGADMIN_EMAIL    | Email for the PgAdmin container.       |
+| PGADMIN_PASSWORD | Password for the PgAdmin container.    |
 
-> Make sure that your passwords have a minimal length of 8 and contain at combination of
-> upper, lower and special characters. Some of the passwords will be checked for validity during startup.
+```bash
+git update-index --no-skip-worktree development/.env
+git update-index --no-skip-worktree apps/server-asset-sg/.env.local
+```
 
-| Variable         | Wert     | Beschreibung                           |
-| ---------------- | -------- | -------------------------------------- |
-| STORAGE_USER     | _custom_ | Username for the MinIO container.      |
-| STORAGE_PASSWORD | _custom_ | Password for the MinIO container.      |
-| DB_USER          | postgres | Username for the PostgreSQL container. |
-| DB_PASSWORD      | _custom_ | Password for the PostgreSQL container. |
-| PGADMIN_EMAIL    | _custom_ | Email for the PgAdmin container.       |
-| PGADMIN_PASSWORD | _custom_ | Password for the PgAdmin container.    |
+Then, after having committed your changes, remove them again:
+
+```bash
+git update-index --skip-worktree development/.env
+git update-index --skip-worktree apps/server-asset-sg/.env.local
+```
+
+> Note that worktree modifications need to be committed, just like file changes.
 
 ## Database ORM
 

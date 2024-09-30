@@ -3,6 +3,7 @@ import { AssetContactEdit, AssetLanguageEdit, DateIdFromDate, LinkedAsset, Statu
 import { pipe } from 'fp-ts/function';
 import * as D from 'io-ts/Decoder';
 
+import { AssetFilesFromPostgres } from '@/models/AssetDetailFromPostgres';
 import { PostgresAllStudies } from '@/utils/postgres-studies/postgres-studies';
 
 export const AssetEditDetailFromPostgres = pipe(
@@ -81,18 +82,7 @@ export const AssetEditDetailFromPostgres = pipe(
         statusWorkDate: DT.date,
       })
     ),
-    assetFiles: pipe(
-      D.array(
-        D.struct({
-          file: D.struct({
-            fileId: D.number,
-            fileName: D.string,
-            fileSize: DT.bigint,
-          }),
-        })
-      ),
-      D.map((a) => a.map((b) => b.file))
-    ),
+    assetFiles: AssetFilesFromPostgres,
     workgroupId: D.number,
     studies: PostgresAllStudies,
   })
