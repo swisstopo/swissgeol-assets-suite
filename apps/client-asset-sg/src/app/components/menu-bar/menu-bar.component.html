@@ -23,13 +23,6 @@
 </ul>
 
 <div class="submenu">
-  <li
-    *ngIf="userExists$ | async"
-    asset-sg-menu-bar-item
-    icon="profile"
-    [link]="[_translateService.currentLang, 'profile']"
-  >
-    menuBar.profile
-  </li>
+  <li asset-sg-menu-bar-item icon="options" disabled>menuBar.profile</li>
   <li asset-sg-menu-bar-item icon="help" disabled>menuBar.help</li>
 </div>

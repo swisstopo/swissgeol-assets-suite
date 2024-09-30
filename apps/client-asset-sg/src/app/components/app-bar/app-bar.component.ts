@@ -1,15 +1,27 @@
 import { ENTER } from '@angular/cdk/keycodes';
 import { HttpClient } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, ElementRef, Input, OnInit, Output, ViewChild } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  ElementRef,
+  inject,
+  Input,
+  OnInit,
+  Output,
+  ViewChild,
+} from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
-import { supportedLangs } from '@asset-sg/client-shared';
+import { AuthService } from '@asset-sg/auth';
+import { appSharedStateActions, fromAppShared, supportedLangs } from '@asset-sg/client-shared';
 import { isNotNull, isTruthy } from '@asset-sg/core';
 import { Lang } from '@asset-sg/shared';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { Store } from '@ngrx/store';
 import { flow, pipe } from 'fp-ts/function';
 import * as O from 'fp-ts/Option';
 import queryString from 'query-string';
-import { EMPTY, Observable, Subject, debounceTime, filter, map, startWith, switchMap } from 'rxjs';
+import { debounceTime, EMPTY, filter, map, Observable, startWith, Subject, switchMap } from 'rxjs';
+import { AppState } from '../../state/app-state';
 import { Version } from './version';
 
 @UntilDestroy()
@@ -26,14 +38,21 @@ export class AppBarComponent implements OnInit {
 
   @ViewChild('searchInput', { read: ElementRef, static: true }) searchInput!: ElementRef<HTMLInputElement>;
 
-  public searchTextKeyDown$ = new Subject<KeyboardEvent>();
+  public readonly searchTextKeyDown$ = new Subject<KeyboardEvent>();
 
   public version = '';
 
-  public currentLang$ = this._router.events.pipe(
+  private readonly store = inject(Store<AppState>);
+  private authService = inject(AuthService);
+
+  public readonly isAnonymous$ = this.store.select(fromAppShared.selectIsAnonymousMode);
+
+  public readonly user$ = this.authService.getUserProfile$();
+
+  public readonly currentLang$ = this.router.events.pipe(
     filter((e): e is NavigationEnd => e instanceof NavigationEnd),
     map((e) => e.urlAfterRedirects),
-    startWith(this._router.url),
+    startWith(this.router.url),
     map(
       flow(
         (url) => O.of(url.match('^/(\\w\\w)(.*)$')),
@@ -52,14 +71,7 @@ export class AppBarComponent implements OnInit {
     filter(isNotNull)
   );
 
-  // {
-  //   disabled: false,
-  //   lang: lang.toUpperCase(),
-  //   params: [`/${lang}`],
-  //   queryParams: {},
-  // }
-
-  public languages$ = this.currentLang$.pipe(
+  public readonly languages$ = this.currentLang$.pipe(
     debounceTime(0),
     map((currentLang) =>
       supportedLangs.map((lang) => ({
@@ -71,9 +83,9 @@ export class AppBarComponent implements OnInit {
     )
   );
 
-  private _ngOnInit$ = new Subject<void>();
+  private readonly _ngOnInit$ = new Subject<void>();
 
-  constructor(private _router: Router, private readonly httpClient: HttpClient) {
+  constructor(private router: Router, private readonly httpClient: HttpClient) {
     this.httpClient.get<Version>('/assets/version.json').subscribe((v) => (this.version = v.version));
     this.searchTextChanged = this.searchTextKeyDown$.pipe(
       filter((ev) => ev.keyCode === ENTER),
@@ -95,5 +107,11 @@ export class AppBarComponent implements OnInit {
   // TODO use new pattern here
   ngOnInit() {
     this._ngOnInit$.next();
+  }
+
+  logout(): void {
+    this.authService.logOut();
+    this.store.dispatch(appSharedStateActions.logout());
+    void this.router.navigate(['/']);
   }
 }

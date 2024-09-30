@@ -18,6 +18,7 @@ import { favouriteIcon } from './favourite';
 import { helpIcon } from './help';
 import { infoIcon } from './info';
 import { infoFilledIcon } from './info-filled';
+import { optionsIcon } from './options';
 import { polygonIcon } from './polygon';
 import { profileIcon } from './profile';
 import { settingsIcon } from './settings';
@@ -51,6 +52,7 @@ export const icons = [
   favouriteIcon,
   helpIcon,
   infoFilledIcon,
+  optionsIcon,
   infoIcon,
   polygonIcon,
   profileIcon,

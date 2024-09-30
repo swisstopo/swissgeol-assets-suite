@@ -65,11 +65,6 @@ registerLocaleData(locale_deCH, 'de-CH');
     HttpClientModule,
     RouterModule.forRoot([
       {
-        path: ':lang/profile',
-        loadChildren: () => import('@asset-sg/profile').then((m) => m.ProfileModule),
-        canActivate: [notAnonymousGuard],
-      },
-      {
         path: ':lang/admin',
         loadChildren: () => import('@asset-sg/admin').then((m) => m.AdminModule),
         canActivate: [adminGuard],

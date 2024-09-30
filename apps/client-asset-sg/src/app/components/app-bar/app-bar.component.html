@@ -5,7 +5,7 @@
 <div class="spacer"></div>
 <span class="version">{{ version }}</span>
 
-<button mat-button class="language" [matMenuTriggerFor]="languageMenu" *rxLet="currentLang$; let lang">
+<button mat-button type="button" class="language" [matMenuTriggerFor]="languageMenu" *rxLet="currentLang$; let lang">
   {{ lang.lang }}
 
   <svg-icon key="arrow-down" class="open" />
@@ -30,3 +30,20 @@
     }
   </ng-container>
 </mat-menu>
+
+<ng-container *ngIf="(isAnonymous$ | async) === false">
+  <button mat-button type="button" class="profile" [matMenuTriggerFor]="profileMenu">
+    <svg-icon key="profile" />
+  </button>
+
+  <mat-menu #profileMenu="matMenu" backdropClass="profile">
+    <ng-container *rxLet="user$; let user">
+      <div>
+        {{ user.email }}
+      </div>
+      <div>
+        <button asset-sg-primary translate (click)="logout()">logout</button>
+      </div>
+    </ng-container>
+  </mat-menu>
+</ng-container>
