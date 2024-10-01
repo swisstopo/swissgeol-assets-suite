@@ -3,8 +3,10 @@
   <ng-container *ngTemplateOutlet="content" />
 </div>
 } @else {
-<a [routerLink]="link" class="box">
-  <ng-container *ngTemplateOutlet="content" />
+<a [routerLink]="link">
+  <div class="box">
+    <ng-container *ngTemplateOutlet="content" />
+  </div>
 </a>
 }
 
