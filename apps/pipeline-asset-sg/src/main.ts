@@ -1,11 +1,9 @@
 import { PrismaClient } from '@prisma/client';
-import { config } from './config';
-import { ExportToViewService } from './export-to-view.service';
-import { log } from './log';
-import { resetAndMigrateDatabase } from './reset-and-migrate-database';
-import { prismaConfig } from './utils';
+import { ExportToViewService, getConfig, log, prismaConfig, resetAndMigrateDatabase } from './core';
 
 log('Starting data export to view');
+
+const config = getConfig();
 log(`Found configuration ${JSON.stringify(config)}`);
 
 // Reset and migrate destination database
