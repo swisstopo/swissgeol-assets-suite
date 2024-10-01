@@ -59,6 +59,7 @@ const parse = (data: SelectedWorkgroup, isAdmin: boolean, isAnonymousMode = fals
 
   if (data.users.length !== 0) {
     simpleWorkgroup.role = data.users[0].role;
+    return simpleWorkgroup;
   }
 
   if (isAdmin) {
