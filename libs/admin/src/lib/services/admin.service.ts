@@ -12,7 +12,7 @@ import {
   WorkgroupSchema,
 } from '@asset-sg/shared/v2';
 import { plainToInstance } from 'class-transformer';
-import { map, Observable, tap } from 'rxjs';
+import { map, Observable } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',

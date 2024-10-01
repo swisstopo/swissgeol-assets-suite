@@ -25,7 +25,6 @@ import {
   BulkOperationContainer,
   QueryDslNumberRangeQuery,
   QueryDslQueryContainer,
-  SearchRequest,
   SearchTotalHits,
 } from '@elastic/elasticsearch/lib/api/types';
 import { Injectable } from '@nestjs/common';
