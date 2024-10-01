@@ -5,6 +5,7 @@ const nxEslintPlugin = require('@nx/eslint-plugin');
 const stylistic = require('@stylistic/eslint-plugin');
 const eslintConfigPrettier = require('eslint-config-prettier');
 const eslintPluginImport = require('eslint-plugin-import');
+const unusedImports = require('eslint-plugin-unused-imports');
 
 const compat = new FlatCompat({
   baseDirectory: __dirname,
@@ -17,6 +18,7 @@ module.exports = [
       '@nx': nxEslintPlugin,
       import: eslintPluginImport,
       '@stylistic': stylistic,
+      'unused-imports': unusedImports,
     },
   },
   ...compat.config({ extends: ['plugin:@nx/typescript'] }).map((config) => ({
@@ -86,12 +88,15 @@ module.exports = [
       ],
       'sort-imports': 'off',
 
-      '@typescript-eslint/no-unused-vars': [
+      'no-unused-vars': 'off', // or "@typescript-eslint/no-unused-vars": "off",
+      'unused-imports/no-unused-imports': 'error',
+      'unused-imports/no-unused-vars': [
         'warn',
         {
-          argsIgnorePattern: '^_',
+          vars: 'all',
           varsIgnorePattern: '^_',
-          caughtErrorsIgnorePattern: '^_',
+          args: 'after-used',
+          argsIgnorePattern: '^_',
         },
       ],
     },
