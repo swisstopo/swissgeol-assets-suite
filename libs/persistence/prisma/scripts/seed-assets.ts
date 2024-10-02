@@ -6,6 +6,7 @@ import * as fs from 'node:fs';
 import * as readline from 'node:readline';
 import { promisify } from 'util';
 
+import { unknownToError } from '@asset-sg/core';
 import { Asset, PrismaClient } from '@prisma/client';
 import { parse as parseCsv } from 'csv-parse/sync';
 import { parseISO } from 'date-fns';
@@ -16,7 +17,6 @@ import * as O from 'fp-ts/Option';
 import * as TE from 'fp-ts/TaskEither';
 
 // eslint-disable-next-line @nx/enforce-module-boundaries
-import { unknownToError } from '../../../../../../libs/core/src/';
 
 import { queryFiles } from './seed-files';
 

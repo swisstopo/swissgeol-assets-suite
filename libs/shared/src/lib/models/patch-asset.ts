@@ -7,7 +7,7 @@ import { DateId } from './DateStruct';
 
 export const PatchAsset = C.struct({
   titlePublic: C.string,
-  titleOriginal: C.string,
+  titleOriginal: C.nullable(C.string),
   createDate: DateId,
   receiptDate: DateId,
   publicUse: AssetUsage,

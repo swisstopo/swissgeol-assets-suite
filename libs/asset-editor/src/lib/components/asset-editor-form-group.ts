@@ -19,7 +19,7 @@ const makeAssetEditorGeneralFormGroup = (formBuilder: FormBuilder) =>
     id: new FormControl<number>(0, { nonNullable: true }),
     titlePublic: new FormControl<string>('', { nonNullable: true, validators: Validators.required }),
     sgsId: new FormControl<number | null>(null),
-    titleOriginal: new FormControl<string>('', { nonNullable: true }),
+    titleOriginal: new FormControl<string | null>('', { nonNullable: true }),
     createDate: new FormControl<DateId | null | undefined>(undefined, {
       validators: Validators.required,
     }),

@@ -1,0 +1,105 @@
+{
+  "name": "pipeline-asset-sg",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/pipeline-asset-sg/src",
+  "projectType": "application",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "parallel": false,
+        "tsConfig": "apps/pipeline-asset-sg/tsconfig.app.json",
+        "commands": [
+          {
+            "command": "npm run prisma -- generate",
+            "forwardAllArgs": false
+          },
+          {
+            "command": "npx nx run pipeline-asset-sg:build-app:production"
+          },
+          {
+            "command": "npx shx cp apps/pipeline-asset-sg/docker/* dist/apps/pipeline-asset-sg",
+            "forwardAllArgs": false
+          },
+          {
+            "command": "npx shx mkdir dist/apps/pipeline-asset-sg/prisma",
+            "forwardAllArgs": false
+          },
+          {
+            "command": "npx shx cp ./libs/persistence/prisma/schema.prisma dist/apps/pipeline-asset-sg/prisma/",
+            "forwardAllArgs": false
+          },
+          {
+            "command": "npx shx cp -R ./libs/persistence/prisma/migrations dist/apps/pipeline-asset-sg/prisma/",
+            "forwardAllArgs": false
+          },
+          {
+            "command": "npx shx sed -i \"s/(\\.\\.\\/)*node_modules/\\.\\/node_modules/g\" dist/apps/pipeline-asset-sg/prisma/schema.prisma",
+            "forwardAllArgs": false
+          }
+        ]
+      }
+    },
+    "build-app": {
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "platform": "node",
+        "outputPath": "dist/apps/pipeline-asset-sg",
+        "format": ["cjs"],
+        "bundle": false,
+        "main": "apps/pipeline-asset-sg/src/main.ts",
+        "tsConfig": "apps/pipeline-asset-sg/tsconfig.app.json",
+        "generatePackageJson": true,
+        "esbuildOptions": {
+          "sourcemap": true,
+          "outExtension": {
+            ".js": ".js"
+          }
+        }
+      },
+      "configurations": {
+        "development": {},
+        "production": {
+          "esbuildOptions": {
+            "sourcemap": false,
+            "outExtension": {
+              ".js": ".js"
+            }
+          }
+        }
+      }
+    },
+
+    "serve": {
+      "executor": "@nx/js:node",
+      "defaultConfiguration": "development",
+      "options": {
+        "buildTarget": "pipeline-asset-sg:build"
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "pipeline-asset-sg:build:development"
+        },
+        "production": {
+          "buildTarget": "pipeline-asset-sg:build:production"
+        }
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "eslintConfig": "apps/pipeline-asset-sg/eslint.config.js"
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "apps/pipeline-asset-sg/jest.config.ts"
+      }
+    }
+  }
+}
