@@ -1,11 +1,9 @@
 import { TemplatePortal } from '@angular/cdk/portal';
 import {
-  ApplicationRef,
   ChangeDetectorRef,
   Component,
   ElementRef,
   inject,
-  NgZone,
   OnDestroy,
   OnInit,
   TemplateRef,

@@ -28,7 +28,7 @@ import {
   fromAppShared,
   AdminOnlyDirective,
 } from '@asset-sg/client-shared';
-import { isNotNull, ORD } from '@asset-sg/core';
+import { isNotNull } from '@asset-sg/core';
 import { AssetEditPolicy } from '@asset-sg/shared/v2';
 import * as RD from '@devexperts/remote-data-ts';
 import { SvgIconComponent } from '@ngneat/svg-icon';
@@ -41,7 +41,7 @@ import { PushModule } from '@rx-angular/template/push';
 import { de } from 'date-fns/locale/de';
 
 import * as O from 'fp-ts/Option';
-import { combineLatest, filter, map, tap, withLatestFrom } from 'rxjs';
+import { combineLatest, filter, map } from 'rxjs';
 import { AssetEditorLaunchComponent } from './components/asset-editor-launch';
 import { AssetEditorPageComponent } from './components/asset-editor-page';
 import { AssetEditorSyncComponent } from './components/asset-editor-sync/asset-editor-sync.component';
