@@ -4,9 +4,20 @@
 
 ### Added
 
+- Anonymer Modus für view-assets
+- Synchronisations-Service zwischen verschiedenen Instanzen prod, prod-extern, prod-view
+
 ### Changed
 
+- Admins haben nun auf alle Arbeitsgruppen Leserechte anstatt Schreibrechte - für das Schreiben muss ein Admin sich der Arbeitsgruppe hinzufügen
+- Der Button für Polygon-Filter ist nun links bei den restlichen Filtern
+- Dependency Updates
+
 ### Fixed
+
+- Benutzer mit Underscore in der Email können nun auch auf die Appliation zugreifen
+- Die Trefferzahlen bei Filtern spiegeln nun dir tatsächliche Anzahl der Treffer wieder - davor wurden nicht alle Werte beachtet
+- Navigation der Applikation über vorwärts und rückwärts Buttons behält nun den Suchstatus bei
 
 ## v1.4.0
 
