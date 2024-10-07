@@ -1,5 +1,5 @@
 import { Prisma, PrismaClient } from '@prisma/client';
-import { PipelineConfig } from './config';
+import { SyncConfig } from './config';
 import { log } from './log';
 
 interface AssetInfo {
@@ -17,7 +17,7 @@ export class ExportToViewService {
 
   private readonly batchSize = 500;
 
-  constructor(sourcePrisma: PrismaClient, destinationPrisma: PrismaClient, config: PipelineConfig) {
+  constructor(sourcePrisma: PrismaClient, destinationPrisma: PrismaClient, config: SyncConfig) {
     this.allowedWorkgroupIds = config.allowedWorkgroupIds;
     this.sourcePrisma = sourcePrisma;
     this.destinationPrisma = destinationPrisma;
