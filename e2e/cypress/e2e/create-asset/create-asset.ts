@@ -65,7 +65,7 @@ Then(/^The user should see the Create Asset form$/, () => {
 Then(/^The asset is created$/, () => {
   cy.wait('@save')
     .then((xhr) => {
-      expect(xhr.response.statusCode).to.match(/^2\d{2}$/);
+      expect(xhr.response.statusCode).to.be.eq(201);
     })
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     .then((interception) => interception.response.body.assetId)

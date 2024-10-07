@@ -28,7 +28,7 @@ services:
       - ./init/dump.sql:/dump.sql
       - ./volumes/db/data/postgres:/var/lib/postgresql/data
       - ./init/testing/give_admin_perm.sql:/give_admin_perm.sql
-      - ./init/testing/dump_3.sql:/dump_3.sql
+      - ./init/testing/static_entities.sql:/static_entities.sql
 
     healthcheck:
       test: "pg_isready -U ${DB_USER} -d postgres -h db"

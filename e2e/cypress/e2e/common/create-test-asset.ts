@@ -1,4 +1,3 @@
-import { assert } from 'chai';
 import { Given } from '@badeball/cypress-cucumber-preprocessor';
 import { bearerAuth } from '../../support/commands/helper.commands';
 
@@ -29,7 +28,7 @@ Given('Test asset is created', () => {
               'Content-Type': 'application/json',
             },
           }).then((response) => {
-            expect(response.status).to.match(/^2\d{2}$/);
+            expect(response.status).to.be.eq(201);
           });
         }
       })

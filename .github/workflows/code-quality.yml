@@ -184,7 +184,7 @@ jobs:
           cd development
           dos2unix ./init/elasticsearch/init.sh
           chmod +x ./init/elasticsearch/init.sh
-          chmod +x ./init/elasticsearch/mappings/swissgeol_asset_asset.json
+          chmod +r ./init/elasticsearch/mappings/swissgeol_asset_asset.json
           sed -i 's/- \.\/volumes\/elasticsearch\/data:\/usr\/share\/elasticsearch\/data//g' ./docker-compose.yaml
           docker compose up -d db oidc elasticsearch
           sleep 120
