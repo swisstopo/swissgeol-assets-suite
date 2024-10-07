@@ -1,7 +1,7 @@
 {
-  "name": "pipeline-asset-sg",
+  "name": "sync-asset-sg",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "apps/pipeline-asset-sg/src",
+  "sourceRoot": "apps/sync-asset-sg/src",
   "projectType": "application",
   "tags": [],
   "targets": {
@@ -9,33 +9,33 @@
       "executor": "nx:run-commands",
       "options": {
         "parallel": false,
-        "tsConfig": "apps/pipeline-asset-sg/tsconfig.app.json",
+        "tsConfig": "apps/sync-asset-sg/tsconfig.app.json",
         "commands": [
           {
             "command": "npm run prisma -- generate",
             "forwardAllArgs": false
           },
           {
-            "command": "npx nx run pipeline-asset-sg:build-app:production"
+            "command": "npx nx run sync-asset-sg:build-app:production"
           },
           {
-            "command": "npx shx cp apps/pipeline-asset-sg/docker/* dist/apps/pipeline-asset-sg",
+            "command": "npx shx cp apps/sync-asset-sg/docker/* dist/apps/sync-asset-sg",
             "forwardAllArgs": false
           },
           {
-            "command": "npx shx mkdir dist/apps/pipeline-asset-sg/prisma",
+            "command": "npx shx mkdir dist/apps/sync-asset-sg/prisma",
             "forwardAllArgs": false
           },
           {
-            "command": "npx shx cp ./libs/persistence/prisma/schema.prisma dist/apps/pipeline-asset-sg/prisma/",
+            "command": "npx shx cp ./libs/persistence/prisma/schema.prisma dist/apps/sync-asset-sg/prisma/",
             "forwardAllArgs": false
           },
           {
-            "command": "npx shx cp -R ./libs/persistence/prisma/migrations dist/apps/pipeline-asset-sg/prisma/",
+            "command": "npx shx cp -R ./libs/persistence/prisma/migrations dist/apps/sync-asset-sg/prisma/",
             "forwardAllArgs": false
           },
           {
-            "command": "npx shx sed -i \"s/(\\.\\.\\/)*node_modules/\\.\\/node_modules/g\" dist/apps/pipeline-asset-sg/prisma/schema.prisma",
+            "command": "npx shx sed -i \"s/(\\.\\.\\/)*node_modules/\\.\\/node_modules/g\" dist/apps/sync-asset-sg/prisma/schema.prisma",
             "forwardAllArgs": false
           }
         ]
@@ -46,11 +46,11 @@
       "outputs": ["{options.outputPath}"],
       "options": {
         "platform": "node",
-        "outputPath": "dist/apps/pipeline-asset-sg",
+        "outputPath": "dist/apps/sync-asset-sg",
         "format": ["cjs"],
         "bundle": false,
-        "main": "apps/pipeline-asset-sg/src/main.ts",
-        "tsConfig": "apps/pipeline-asset-sg/tsconfig.app.json",
+        "main": "apps/sync-asset-sg/src/main.ts",
+        "tsConfig": "apps/sync-asset-sg/tsconfig.app.json",
         "generatePackageJson": true,
         "esbuildOptions": {
           "sourcemap": true,
@@ -71,19 +71,18 @@
         }
       }
     },
-
     "serve": {
       "executor": "@nx/js:node",
       "defaultConfiguration": "development",
       "options": {
-        "buildTarget": "pipeline-asset-sg:build"
+        "buildTarget": "sync-asset-sg:build"
       },
       "configurations": {
         "development": {
-          "buildTarget": "pipeline-asset-sg:build:development"
+          "buildTarget": "sync-asset-sg:build:development"
         },
         "production": {
-          "buildTarget": "pipeline-asset-sg:build:production"
+          "buildTarget": "sync-asset-sg:build:production"
         }
       }
     },
@@ -91,14 +90,14 @@
       "executor": "@nx/eslint:lint",
       "outputs": ["{options.outputFile}"],
       "options": {
-        "eslintConfig": "apps/pipeline-asset-sg/eslint.config.js"
+        "eslintConfig": "apps/sync-asset-sg/eslint.config.js"
       }
     },
     "test": {
       "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
       "options": {
-        "jestConfig": "apps/pipeline-asset-sg/jest.config.ts"
+        "jestConfig": "apps/sync-asset-sg/jest.config.ts"
       }
     }
   }

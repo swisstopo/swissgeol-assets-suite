@@ -1,4 +1,4 @@
-export interface PipelineConfig {
+export interface SyncConfig {
   allowedWorkgroupIds: number[];
   source: {
     connectionString: string;
@@ -16,7 +16,7 @@ function getEnvOrThrow(key: string): string {
   return value;
 }
 
-export function getConfig(): PipelineConfig {
+export function getConfig(): SyncConfig {
   return {
     allowedWorkgroupIds: getEnvOrThrow('ALLOWED_WORKGROUP_IDS').split(',').map(Number),
     source: {
