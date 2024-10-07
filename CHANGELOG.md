@@ -16,7 +16,7 @@
 ### Fixed
 
 - Benutzer mit Underscore in der Email können nun auch auf die Appliation zugreifen
-- Die Trefferzahlen bei Filtern spiegeln nun dir tatsächliche Anzahl der Treffer wieder - davor wurden nicht alle Werte beachtet
+- Die Trefferzahlen bei Filtern spiegeln nun die tatsächliche Anzahl der Treffer wieder - davor wurden nicht alle Werte beachtet
 - Navigation der Applikation über vorwärts und rückwärts Buttons behält nun den Suchstatus bei
 
 ## v1.4.0
