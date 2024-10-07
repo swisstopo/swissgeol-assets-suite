@@ -37,7 +37,7 @@ import { PushModule } from '@rx-angular/template/push';
 
 import { environment } from '../environments/environment';
 
-import { adminGuard, notAnonymousGuard } from './app-guards';
+import { adminGuard } from './app-guards';
 import { AppComponent } from './app.component';
 import { AppBarComponent, MenuBarComponent, NotFoundComponent, RedirectToLangComponent } from './components';
 import { MenuBarItemComponent } from './components/menu-bar-item/menu-bar-item.component';

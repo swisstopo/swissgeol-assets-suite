@@ -43,7 +43,7 @@ export class AppBarComponent implements OnInit {
   public version = '';
 
   private readonly store = inject(Store<AppState>);
-  private authService = inject(AuthService);
+  private readonly authService = inject(AuthService);
 
   public readonly isAnonymous$ = this.store.select(fromAppShared.selectIsAnonymousMode);
 
@@ -85,7 +85,7 @@ export class AppBarComponent implements OnInit {
 
   private readonly _ngOnInit$ = new Subject<void>();
 
-  constructor(private router: Router, private readonly httpClient: HttpClient) {
+  constructor(private readonly router: Router, private readonly httpClient: HttpClient) {
     this.httpClient.get<Version>('/assets/version.json').subscribe((v) => (this.version = v.version));
     this.searchTextChanged = this.searchTextKeyDown$.pipe(
       filter((ev) => ev.keyCode === ENTER),
@@ -112,6 +112,6 @@ export class AppBarComponent implements OnInit {
   logout(): void {
     this.authService.logOut();
     this.store.dispatch(appSharedStateActions.logout());
-    void this.router.navigate(['/']);
+    this.router.navigate(['/']);
   }
 }
