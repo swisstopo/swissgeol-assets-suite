@@ -3,6 +3,9 @@ Feature: create
   Background:
     Given The user is logged in
     And User has admin permissions
+    And Test data is imported
+    And Elastic index is created
+
 
   Scenario: User creates the asset
     When A user clicks the administration menu button
