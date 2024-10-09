@@ -182,6 +182,7 @@ jobs:
           DB_PASSWORD: ${{ env.DB_PASSWORD }}
         run: |
           cd development
+          touch .env.ocr
           dos2unix ./init/elasticsearch/init.sh
           chmod +x ./init/elasticsearch/init.sh
           chmod +r ./init/elasticsearch/mappings/swissgeol_asset_asset.json

@@ -108,3 +108,20 @@ services:
       - ./init/oidc/oidc-mock-scopes.json:/tmp/config/scopes-config.json:ro
       - ./init/oidc/oidc-mock-server_options.json:/tmp/config/server_options-config.json:ro
       - ./volumes/oidc/keys:/tmp/data/keys
+
+  ocr:
+    container_name: swissgeol-assets-ocr
+    # TODO change this to `latest` once it is released.
+    image: ghcr.io/swisstopo/swissgeol-ocr-api:edge
+    restart: unless-stopped
+    ports:
+      - "5052:8000"
+    environment:
+      TMP_PATH: /tmp/ocr/
+      SKIP_PROCESSING: true
+      S3_INPUT_BUCKET: asset-sg
+      S3_INPUT_FOLDER: /
+      S3_OUTPUT_BUCKET: asset-sg
+      S3_OUTPUT_FOLDER: /
+      CONFIDENCE_THRESHOLD: 0.7
+      USE_AGGRESSIVE_STRATEGY: false

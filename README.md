@@ -89,7 +89,7 @@ Be aware that you need to manually insert the `{DB_*}` values beforehand.
 
 ```bash
 cd development
-docker compose exec db sh -c 'pg_dump --dbname=postgresql://{DB_USERNAME}:{DB_PASSWORD}@{DB_HOST}:5432/{DB_DATABASE} --data-only --exclude-table asset_user --exclude-table _prisma_migrations -n public > /dump.sql'
+docker compose exec db sh -c 'pg_dump --dbname=postgresql://{DB_USERNAME}:{DB_PASSWORD}@{DB_HOST}:5432/{DB_DATABASE} --data-only --exclude-table asset_user --exclude-table workgroups_on_users --exclude-table _prisma_migrations -n public > /dump.sql'
 ```
 
 > The export will output warnings related to circular foreign-key constraints.
@@ -105,10 +105,14 @@ Ensure to start your database service beforehand.
 ```bash
 # Reset the database:
 npm run prisma -- migrate reset -f
-npm run prisma -- migrate deploy
+
+# Switch to the directory containing the database's `docker-compose.yml`:
+cd development
+
+# Remove the initial workgroup as it will collide with the import:
+docker compose exec db sh -c 'psql --dbname=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:5432/${POSTGRES_DB} -c "DELETE FROM workgroup"'
 
 # Import example data:
-cd development
 docker compose exec db sh -c 'psql --dbname=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:5432/${POSTGRES_DB} -v ON_ERROR_STOP=1 -f /dump.sql'
 ```
 
