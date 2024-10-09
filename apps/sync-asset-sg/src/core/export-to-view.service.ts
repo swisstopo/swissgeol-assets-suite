@@ -18,7 +18,7 @@ export class ExportToViewService {
   private readonly batchSize = 500;
 
   constructor(sourcePrisma: PrismaClient, destinationPrisma: PrismaClient, config: SyncConfig) {
-    this.allowedWorkgroupIds = config.allowedWorkgroupIds;
+    this.allowedWorkgroupIds = config.source.allowedWorkgroupIds;
     this.sourcePrisma = sourcePrisma;
     this.destinationPrisma = destinationPrisma;
   }
