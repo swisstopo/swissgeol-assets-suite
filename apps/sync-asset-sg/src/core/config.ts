@@ -1,10 +1,14 @@
+export type Mode = 'view' | 'extern';
+
 export interface SyncConfig {
-  allowedWorkgroupIds: number[];
+  mode: Mode;
   source: {
     connectionString: string;
+    allowedWorkgroupIds: number[];
   };
   destination: {
     connectionString: string;
+    allowedWorkgroupIds: number[];
   };
 }
 
@@ -18,12 +22,14 @@ function getEnvOrThrow(key: string): string {
 
 export function getConfig(): SyncConfig {
   return {
-    allowedWorkgroupIds: getEnvOrThrow('ALLOWED_WORKGROUP_IDS').split(',').map(Number),
+    mode: getEnvOrThrow('MODE') as Mode,
     source: {
       connectionString: getEnvOrThrow('SOURCE_CONNECTION_STRING'),
+      allowedWorkgroupIds: process.env['SOURCE_WORKGROUP_IDS']?.split(',').map(Number) ?? [],
     },
     destination: {
       connectionString: getEnvOrThrow('DESTINATION_CONNECTION_STRING'),
+      allowedWorkgroupIds: process.env['DESTINATION_WORKGROUP_IDS']?.split(',').map(Number),
     },
   };
 }
@@ -34,6 +40,20 @@ export function prismaConfig(connectionString: string) {
       db: {
         url: connectionString,
       },
+    },
+  };
+}
+
+export function maskSecrets(config: SyncConfig): SyncConfig {
+  return {
+    ...config,
+    source: {
+      ...config.source,
+      connectionString: '****' + config.source.connectionString.split('@').pop(),
+    },
+    destination: {
+      ...config.destination,
+      connectionString: '***' + config.destination.connectionString.split('@').pop(),
     },
   };
 }

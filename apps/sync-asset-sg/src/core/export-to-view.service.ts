@@ -18,7 +18,7 @@ export class ExportToViewService {
   private readonly batchSize = 500;
 
   constructor(sourcePrisma: PrismaClient, destinationPrisma: PrismaClient, config: SyncConfig) {
-    this.allowedWorkgroupIds = config.allowedWorkgroupIds;
+    this.allowedWorkgroupIds = config.source.allowedWorkgroupIds;
     this.sourcePrisma = sourcePrisma;
     this.destinationPrisma = destinationPrisma;
   }
@@ -242,10 +242,10 @@ export class ExportToViewService {
     log(`Starting file export.`);
     // Read all unique file ids from the assetFiles which dont include 'LDoc'
     const assetFiles = await this.sourcePrisma.assetFile.findMany({
-      where: { assetId: { in: assetIds }, file: { fileName: { not: { contains: 'LDoc' } } } },
+      where: { assetId: { in: assetIds }, file: { type: { equals: 'Normal' } } },
     });
     const fileIds = [...new Set(assetFiles.map((af) => af.fileId))];
-    const files = await this.sourcePrisma.file.findMany({ where: { fileId: { in: fileIds } } });
+    const files = await this.sourcePrisma.file.findMany({ where: { id: { in: fileIds } } });
 
     // Write files to the destination database
     const fileResult = await this.destinationPrisma.file.createMany({
