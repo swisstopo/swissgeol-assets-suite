@@ -262,10 +262,10 @@ export class ExportToViewService {
     log(`Starting file export.`);
     // Read all unique file ids from the assetFiles which dont include 'LDoc'
     const assetFiles = await this.sourcePrisma.assetFile.findMany({
-      where: { assetId: { in: assetIds }, file: { type: { equals: 'Normal' } } },
+      where: { assetId: { in: assetIds }, file: { fileName: { not: { contains: 'LDoc' } } } },
     });
     const fileIds = [...new Set(assetFiles.map((af) => af.fileId))];
-    const files = await this.sourcePrisma.file.findMany({ where: { id: { in: fileIds } } });
+    const files = await this.sourcePrisma.file.findMany({ where: { fileId: { in: fileIds } } });
 
     // Write files to the destination database
     const fileResult = await this.destinationPrisma.file.createMany({
