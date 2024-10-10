@@ -50,7 +50,6 @@ export class ExportToViewService {
       await this.exportInternalProjects(assetIds);
       await this.export('assetLanguage', 'assetId', assetIds);
       await this.exportPublications(assetIds);
-      await this.exportSiblings(assetIds, publicAssetIds);
 
       await this.export('autoCat', 'assetId', assetIds);
       await this.export('manCatLabelRef', 'assetId', assetIds);
@@ -62,6 +61,12 @@ export class ExportToViewService {
 
       const timeTaken = Date.now() - time;
       log(`Exported batch of ${assetIds.length} assets in ${timeTaken} ms.`);
+    }
+
+    // only export siblings after all assets have been exported so no foreign key constraint is violated
+    for (const batch of batches) {
+      const assetIds = batch.map((item) => item.assetId);
+      await this.exportSiblings(assetIds, publicAssetIds);
     }
 
     await this.exportFiles(publicAssetIds);
@@ -291,7 +296,7 @@ export class ExportToViewService {
   }
 
   /**
-   * Export internal use.
+   * Export siblings.
    */
   private async exportSiblings(ids: number[], allPublicAssetIds: number[]) {
     const itemsX = await this.sourcePrisma.assetXAssetY.findMany({ where: { assetXId: { in: ids } } });
