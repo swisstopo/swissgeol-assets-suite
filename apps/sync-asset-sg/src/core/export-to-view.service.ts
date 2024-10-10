@@ -83,6 +83,11 @@ export class ExportToViewService {
       FROM study_area WHERE asset_id IN (${Prisma.join(assetIds)})
     `;
 
+    if (studyAreas.length === 0) {
+      log(`No study areas found. Continuing.`);
+      return;
+    }
+
     const formattedStudyAreas = studyAreas.map(
       (sa) =>
         Prisma.sql`(${sa.studyAreaId}, ${sa.assetId}, ${sa.geomQualityItemCode}, ST_GeomFromText(${sa.geom}, 2056))`
@@ -108,6 +113,11 @@ export class ExportToViewService {
       FROM study_location WHERE asset_id IN (${Prisma.join(assetIds)})
     `;
 
+    if (studyLocations.length === 0) {
+      log(`No study locations found. Continuing.`);
+      return;
+    }
+
     const formattedStudyLocations = studyLocations.map(
       (sa) =>
         Prisma.sql`(${sa.studyLocationId}, ${sa.assetId}, ${sa.geomQualityItemCode}, ST_GeomFromText(${sa.geom}, 2056))`
@@ -132,6 +142,11 @@ export class ExportToViewService {
       SELECT study_trace_id as "studyTraceId", asset_id as "assetId", geom_quality_item_code as "geomQualityItemCode", st_astext(geom, 2056) as geom
       FROM study_trace WHERE asset_id IN (${Prisma.join(assetIds)})
     `;
+
+    if (studyTraces.length === 0) {
+      log(`No study traces found. Continuing.`);
+      return;
+    }
 
     const formattedStudyTraces = studyTraces.map(
       (sa) =>
