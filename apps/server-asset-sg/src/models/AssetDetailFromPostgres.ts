@@ -1,10 +1,32 @@
 import { DT } from '@asset-sg/core';
-import { AssetContactRole, DateIdFromDate, LinkedAsset, makeUsageCode } from '@asset-sg/shared';
+import {
+  AssetContactRole,
+  AssetFileType,
+  DateIdFromDate,
+  LegalDocItemCode,
+  LinkedAsset,
+  makeUsageCode,
+} from '@asset-sg/shared';
 import { pipe } from 'fp-ts/function';
 import * as C from 'io-ts/Codec';
 import * as D from 'io-ts/Decoder';
 
 import { PostgresAllStudies } from '@/utils/postgres-studies/postgres-studies';
+
+export const AssetFilesFromPostgres = pipe(
+  D.array(
+    D.struct({
+      file: D.struct({
+        id: D.number,
+        name: D.string,
+        size: DT.numberFromBigint,
+        type: AssetFileType,
+        legalDocItemCode: D.nullable(LegalDocItemCode),
+      }),
+    })
+  ),
+  D.map((a) => a.map((b) => b.file))
+);
 
 export const AssetDetailFromPostgres = pipe(
   D.struct({
@@ -99,18 +121,7 @@ export const AssetDetailFromPostgres = pipe(
         statusWorkDate: DT.date,
       })
     ),
-    assetFiles: pipe(
-      D.array(
-        D.struct({
-          file: D.struct({
-            fileId: D.number,
-            fileName: D.string,
-            fileSize: DT.bigint,
-          }),
-        })
-      ),
-      D.map((a) => a.map((b) => b.file))
-    ),
+    assetFiles: AssetFilesFromPostgres,
     studies: PostgresAllStudies,
   }),
   D.map((a) => {

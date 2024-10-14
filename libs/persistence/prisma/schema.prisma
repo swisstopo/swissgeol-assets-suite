@@ -2,6 +2,7 @@ generator client {
   provider        = "prisma-client-js"
   output          = "../../../node_modules/.prisma/client"
   previewFeatures = ["views"]
+  binaryTargets   = ["debian-openssl-3.0.x"]
 }
 
 datasource db {
@@ -51,7 +52,6 @@ model Asset {
   assetLanguages          AssetLanguage[]
   autoCats                AutoCat[]
   ids                     Id[]
-  legalDocs               LegalDoc[]
   manCatLabelRefs         ManCatLabelRef[]
   statusWorks             StatusWork[]
   studyAreas              StudyArea[]
@@ -122,7 +122,7 @@ model AssetFile {
   assetId Int   @map("asset_id")
   asset   Asset @relation(fields: [assetId], references: [assetId])
   fileId  Int   @map("file_id")
-  file    File  @relation(fields: [fileId], references: [fileId], onDelete: Cascade)
+  file    File  @relation(fields: [fileId], references: [id], onDelete: Cascade)
 
   @@id([assetId, fileId])
   @@map("asset_file")
@@ -137,24 +137,34 @@ enum OcrState {
   success
 }
 
+enum FileType {
+  Normal @map("normal")
+  Legal  @map("legal")
+}
+
 model File {
-  fileId       Int      @id @default(autoincrement()) @map("file_id")
-  fileName     String   @map("file_name")
-  ocrStatus    OcrState @default(created) @map("ocr_status")
-  fileSize     BigInt   @map("file_size")
-  lastModified DateTime @map("file_date")
+  id             Int      @id @default(autoincrement()) @map("id")
+  name           String   @map("name")
+  ocrStatus      OcrState @default(created) @map("ocr_status")
+  size           BigInt   @map("size")
+  lastModifiedAt DateTime @map("last_modified_at")
+  type           FileType @default(Normal) @map("type")
+
+  legalDocItemCode String?       @map("legal_doc_item_code")
+  legalDocItem     LegalDocItem? @relation(fields: [legalDocItemCode], references: [legalDocItemCode])
 
   AssetObjectInfo AssetObjectInfo[]
   AssetFile       AssetFile[]
 
-  @@unique([fileName])
+  @@unique([name])
+  @@index([type])
   @@map("file")
 }
 
 model AssetObjectInfo {
   assetObjectInfoId     Int               @id @default(autoincrement()) @map("asset_object_info_id")
   fileId                Int               @map("file_id")
-  file                  File              @relation(fields: [fileId], references: [fileId])
+  file                  File              @relation(fields: [fileId], references: [id])
   autoObjectCatItemCode String            @map("auto_object_cat_item_code")
   autoObjectCatItem     AutoObjectCatItem @relation(fields: [autoObjectCatItemCode], references: [autoObjectCatItemCode])
   objectPage            String            @map("object_page")
@@ -226,17 +236,6 @@ model TypeNatRel {
   natRelItem     NatRelItem @relation(fields: [natRelItemCode], references: [natRelItemCode])
 
   @@map("type_nat_rel")
-}
-
-model LegalDoc {
-  legalDocId       Int          @id @default(autoincrement()) @map("legal_doc_id")
-  assetId          Int          @map("asset_id")
-  asset            Asset        @relation(fields: [assetId], references: [assetId])
-  title            String       @map("title")
-  legalDocItemCode String       @map("legal_doc_item_code")
-  legalDocItem     LegalDocItem @relation(fields: [legalDocItemCode], references: [legalDocItemCode])
-
-  @@map("legal_doc")
 }
 
 model Contact {
@@ -567,8 +566,7 @@ model LegalDocItem {
   descriptionRm    String @map("description_rm")
   descriptionIt    String @map("description_it")
   descriptionEn    String @map("description_en")
-
-  legalDocs LegalDoc[]
+  File             File[]
 
   @@map("legal_doc_item")
 }

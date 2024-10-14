@@ -85,6 +85,7 @@ export const enAppTranslations: AppTranslations = {
     workgroup: 'Workgroup',
     resetSearch: 'Reset search',
     file: 'File',
+    legalFile: 'Legal consent',
     openFileInNewTab: 'Open {{fileName}} in new tab',
     downloadFile: 'Download {{fileName}}',
     assetsUnderMouseCursor: '{{ assetsCount }} assets found under the mouse cursor. Please select one:',
@@ -118,7 +119,18 @@ export const enAppTranslations: AppTranslations = {
         alternativeId: 'Alternative ID',
         alternativeIdDescription: 'Alternative ID Description',
         addNewAlternativeId: 'Add new alternative ID',
-        files: 'Files',
+      },
+      files: {
+        tabName: 'Files',
+        Normal: {
+          one: 'Normal File',
+          many: 'Normal Files',
+        },
+        Legal: {
+          one: 'Legal consent',
+          many: 'Legal consents',
+        },
+        legalDocItemCode: 'Type',
         dragFileHere: 'Drag file here',
         or: 'or',
         selectFile: 'Select file',

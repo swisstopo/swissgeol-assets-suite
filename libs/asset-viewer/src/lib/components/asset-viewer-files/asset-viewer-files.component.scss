@@ -1,0 +1,32 @@
+:host {
+  list-style-type: none;
+  display: flex;
+  flex-direction: column;
+  row-gap: 6px;
+}
+
+:host > li {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  flex-wrap: wrap;
+  column-gap: 4px;
+}
+
+.legal-doc-item-code {
+  width: 100%;
+}
+
+.name {
+  max-width: calc(100% - 5.5rem);
+  word-wrap: break-word;
+}
+
+button[asset-sg-icon-button],
+button[asset-sg-icon-button] ::ng-deep svg-icon {
+  display: flex;
+  align-items: center;
+
+  width: 20px;
+  height: 20px;
+}

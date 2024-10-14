@@ -3,13 +3,9 @@
 
 :host {
   display: block;
-  padding: 0 1rem 1rem 0;
 }
 
-.form-column {
-  width: 34rem;
-}
-
-textarea {
-  resize: none;
+form {
+  display: flex;
+  max-height: 100%;
 }

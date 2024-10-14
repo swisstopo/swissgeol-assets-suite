@@ -1,8 +1,38 @@
 import { Given } from '@badeball/cypress-cucumber-preprocessor';
 import { bearerAuth } from '../../support/commands/helper.commands';
 
-const body =
-  '{"titlePublic":"CypressTestAsset","titleOriginal":"CypressTestAsset","createDate":20240902,"receiptDate":20240912,"publicUse":{"isAvailable":false,"statusAssetUseItemCode":"tobechecked","startAvailabilityDate":null},"internalUse":{"isAvailable":true,"statusAssetUseItemCode":"tobechecked","startAvailabilityDate":null},"assetKindItemCode":"basemap","assetFormatItemCode":"unknown","isNatRel":true,"manCatLabelRefs":["other"],"typeNatRels":[],"assetLanguages":[],"assetContacts":[],"ids":[],"studies":[],"assetMainId":null,"siblingAssetIds":[],"newStudies":["POINT(2661254.953 1186121.169)"],"newStatusWorkItemCode":"initiateAsset","workgroupId":1}';
+const body = JSON.stringify({
+  titlePublic: 'CypressTestAsset',
+  titleOriginal: 'CypressTestAsset',
+  createDate: 20240902,
+  receiptDate: 20240912,
+  publicUse: {
+    isAvailable: false,
+    statusAssetUseItemCode: 'tobechecked',
+    startAvailabilityDate: null,
+  },
+  internalUse: {
+    isAvailable: true,
+    statusAssetUseItemCode: 'tobechecked',
+    startAvailabilityDate: null,
+  },
+  assetKindItemCode: 'basemap',
+  assetFormatItemCode: 'unknown',
+  isNatRel: true,
+  manCatLabelRefs: ['other'],
+  typeNatRels: [],
+  assetLanguages: [],
+  assetContacts: [],
+  ids: [],
+  studies: [],
+  assetMainId: null,
+  siblingAssetIds: [],
+  newStudies: ['POINT(2661254.953 1186121.169)'],
+  newStatusWorkItemCode: 'initiateAsset',
+  assetFiles: [],
+  workgroupId: 1,
+});
+
 Given('Test asset is created', () => {
   cy.wait(3000);
   cy.window()
