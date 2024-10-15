@@ -235,17 +235,16 @@ export class ExportToViewService {
   }
 
   /**
-   * Export files.
-   * Remove files which start with 'LDoc'
+   * Export non-legal files.
    */
   private async exportFiles(assetIds: number[]) {
     log(`Starting file export.`);
-    // Read all unique file ids from the assetFiles which dont include 'LDoc'
+    // Read all unique file ids from the assetFiles which are not legal docs.
     const assetFiles = await this.sourcePrisma.assetFile.findMany({
-      where: { assetId: { in: assetIds }, file: { fileName: { not: { contains: 'LDoc' } } } },
+      where: { assetId: { in: assetIds }, file: { type: { not: 'Legal' } } },
     });
     const fileIds = [...new Set(assetFiles.map((af) => af.fileId))];
-    const files = await this.sourcePrisma.file.findMany({ where: { fileId: { in: fileIds } } });
+    const files = await this.sourcePrisma.file.findMany({ where: { id: { in: fileIds } } });
 
     // Write files to the destination database
     const fileResult = await this.destinationPrisma.file.createMany({
