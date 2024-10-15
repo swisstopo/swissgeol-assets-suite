@@ -19,7 +19,7 @@
         "assets": ["apps/client-asset-sg/src/favicon.ico", "apps/client-asset-sg/src/assets"],
         "styles": ["apps/client-asset-sg/src/styles.scss"],
         "scripts": [],
-        "allowedCommonJsDependencies": ["tsafe", "validator", "xml-utils", "pbf", "rbush", "earcut", "@prisma/client"]
+        "allowedCommonJsDependencies": ["tsafe", "xml-utils", "pbf", "rbush", "earcut", "@prisma/client"]
       },
       "configurations": {
         "production": {
