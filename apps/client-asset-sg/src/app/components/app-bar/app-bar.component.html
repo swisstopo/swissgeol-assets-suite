@@ -1,16 +1,49 @@
-<a routerLink="/">
-  <img class="logo" src="../../../assets/swissgeol_assets.svg" alt="{{ 'logoSwissGeol' | translate }}" />
+<a routerLink="/" class="logo">
+  <img src="../../../assets/swissgeol_assets.svg" alt="{{ 'logoSwissGeol' | translate }}" width="130" height="36" />
 </a>
 <ng-content />
 <div class="spacer"></div>
 <span class="version">{{ version }}</span>
-<div class="language-links" *rxLet="links$ | push; let l">
-  <a
-    asset-sg-reset
-    *rxFor="let link of l.links"
-    [routerLink]="link.params"
-    [queryParams]="link.queryParams"
-    [disabled]="link.disabled"
-    >{{ link.lang }}</a
-  >
-</div>
+
+<button mat-button type="button" class="language" [matMenuTriggerFor]="languageMenu" *rxLet="currentLang$; let lang">
+  {{ lang.lang }}
+
+  <svg-icon key="arrow-down" class="open" />
+  <svg-icon key="arrow-up" class="close" />
+</button>
+<mat-menu #languageMenu="matMenu" backdropClass="languages">
+  <ng-container *rxLet="languages$; let languages">
+    @for (language of languages; track language.lang) {
+    <a
+      asset-sg-reset
+      [routerLink]="language.params"
+      [queryParams]="language.queryParams"
+      [class.is-active]="language.isActive"
+    >
+      <span class="icon">
+        <svg-icon key="checkmark" />
+      </span>
+      <span class="name">
+        {{ language.lang }}
+      </span>
+    </a>
+    }
+  </ng-container>
+</mat-menu>
+
+<ng-container *ngIf="(isAnonymous$ | async) === false">
+  <button mat-button type="button" class="profile" [matMenuTriggerFor]="profileMenu">
+    <svg-icon key="profile" />
+  </button>
+
+  <mat-menu #profileMenu="matMenu" backdropClass="profile">
+    <ng-container *rxLet="user$; let user">
+      <div>
+        {{ user.email }}
+      </div>
+      <div>
+        <button asset-sg-primary translate (click)="logout()">logout</button>
+      </div>
+    </ng-container>
+  </mat-menu>
+</ng-container>

@@ -1,13 +1,8 @@
 import { Then, When } from '@badeball/cypress-cucumber-preprocessor';
 
-When(/^A user clicks the administration menu button$/, () => {
-  cy.get('span:contains("Verwaltung")')
-    .not(':contains("Benutzer Verwaltung")')
-    .click();
+When(/^A user clicks the Create Asset menu button$/, () => {
+  cy.get('ul.submenu > li > a[href="/de/asset-admin/new"]').click();
   cy.wait(1000);
-});
-When(/^The user clicks the Create Asset button$/, () => {
-  cy.get('a:contains("Neues Asset erstellen")').click();
 });
 When(/^The user fills out general information$/, () => {
   cy.get('mat-select[formcontrolname="workgroupId"]')

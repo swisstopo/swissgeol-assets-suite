@@ -4,8 +4,11 @@ import { CommonModule, NgOptimizedImage, registerLocaleData } from '@angular/com
 import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
 import locale_deCH from '@angular/common/locales/de-CH';
 import { inject, NgModule } from '@angular/core';
+import { MatButton } from '@angular/material/button';
 import { MAT_FORM_FIELD_DEFAULT_OPTIONS } from '@angular/material/form-field';
+import { MatMenu, MatMenuTrigger } from '@angular/material/menu';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatTooltip } from '@angular/material/tooltip';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { RouterModule } from '@angular/router';
@@ -34,9 +37,10 @@ import { PushModule } from '@rx-angular/template/push';
 
 import { environment } from '../environments/environment';
 
-import { adminGuard, notAnonymousGuard } from './app-guards';
+import { adminGuard } from './app-guards';
 import { AppComponent } from './app.component';
 import { AppBarComponent, MenuBarComponent, NotFoundComponent, RedirectToLangComponent } from './components';
+import { MenuBarItemComponent } from './components/menu-bar-item/menu-bar-item.component';
 import { SplashScreenComponent } from './components/splash-screen/splash-screen.component';
 import { appTranslations } from './i18n';
 import { AppSharedStateEffects } from './state';
@@ -51,6 +55,7 @@ registerLocaleData(locale_deCH, 'de-CH');
     NotFoundComponent,
     AppBarComponent,
     MenuBarComponent,
+    MenuBarItemComponent,
     SplashScreenComponent,
   ],
   imports: [
@@ -59,11 +64,6 @@ registerLocaleData(locale_deCH, 'de-CH');
     BrowserAnimationsModule,
     HttpClientModule,
     RouterModule.forRoot([
-      {
-        path: ':lang/profile',
-        loadChildren: () => import('@asset-sg/profile').then((m) => m.ProfileModule),
-        canActivate: [notAnonymousGuard],
-      },
       {
         path: ':lang/admin',
         loadChildren: () => import('@asset-sg/admin').then((m) => m.AdminModule),
@@ -116,6 +116,10 @@ registerLocaleData(locale_deCH, 'de-CH');
     MatProgressSpinnerModule,
     AdminOnlyDirective,
     CanCreateDirective,
+    MatTooltip,
+    MatButton,
+    MatMenuTrigger,
+    MatMenu,
   ],
   providers: [
     provideSvgIcons(icons),

@@ -7,7 +7,7 @@ Then(/^The user should see logout page$/, () => {
   cy.get('h1:contains("Logout")').should('exist');
 });
 When(/^The user clicks profile menu button$/, () => {
-  cy.get('span:contains("Profil")').click();
+  cy.get('asset-sg-app-bar button.profile').click();
 });
 When(/^The user clicks logout button$/, () => {
   cy.get('button:contains("Abmelden")').click();

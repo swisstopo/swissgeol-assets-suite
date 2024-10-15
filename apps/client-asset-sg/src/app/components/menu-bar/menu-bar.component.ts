@@ -1,12 +1,14 @@
 import { ChangeDetectionStrategy, Component, HostBinding, inject } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
-import { appSharedStateActions, assetsPageMatcher, fromAppShared } from '@asset-sg/client-shared';
+import { appSharedStateActions, fromAppShared } from '@asset-sg/client-shared';
 import { AssetEditPolicy } from '@asset-sg/shared/v2';
 import { UntilDestroy } from '@ngneat/until-destroy';
 import { Store } from '@ngrx/store';
 import { TranslateService } from '@ngx-translate/core';
-import { filter, map } from 'rxjs';
+import { filter, map, Observable, startWith } from 'rxjs';
 
+// eslint-disable-next-line @nx/enforce-module-boundaries
+import { selectIsFiltersOpen } from '../../../../../../libs/asset-viewer/src/lib/state/asset-search/asset-search.selector';
 import { AppState } from '../../state/app-state';
 
 @UntilDestroy()
@@ -17,23 +19,43 @@ import { AppState } from '../../state/app-state';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MenuBarComponent {
-  @HostBinding('attr.role') role = 'navigation';
-  private _router = inject(Router);
-  public _translateService = inject(TranslateService);
-  private _store = inject(Store<AppState>);
+  @HostBinding('attr.role')
+  readonly role = 'navigation';
 
-  public userExists$ = this._store.select(fromAppShared.selectIsAnonymousMode).pipe(map((anonymous) => !anonymous));
-  public isAssetsActive$ = this._router.events.pipe(
+  private readonly router = inject(Router);
+  private readonly store = inject(Store<AppState>);
+
+  readonly translateService = inject(TranslateService);
+
+  readonly userExists$ = this.store.select(fromAppShared.selectIsAnonymousMode).pipe(map((anonymous) => !anonymous));
+  readonly isFiltersOpen$ = this.store.select(selectIsFiltersOpen);
+
+  readonly activeItem$: Observable<MenuItem | null> = this.router.events.pipe(
     filter((event) => event instanceof NavigationEnd),
-    map(() => {
-      const segments = this._router.parseUrl(this._router.url).root.children['primary'].segments;
-      return assetsPageMatcher(segments) !== null;
-    })
+    map((): MenuItem | null => {
+      const segments = this.router.parseUrl(this.router.url).root.children['primary'].segments;
+      if (segments.length === 1) {
+        return 'home';
+      }
+      const path = segments.slice(1).join('/');
+      const isPath = (prefix: string) => path === prefix || path.startsWith(`${prefix}/`);
+
+      if (isPath('asset-admin/new')) {
+        return 'create-asset';
+      }
+      if (isPath('asset-admin') || isPath('admin')) {
+        return 'options';
+      }
+      return null;
+    }),
+    startWith('home' as const)
   );
 
-  public openAssetDrawer() {
-    this._store.dispatch(appSharedStateActions.toggleSearchFilter());
+  toggleAssetDrawer(): void {
+    this.store.dispatch(appSharedStateActions.toggleSearchFilter());
   }
 
   protected readonly AssetEditPolicy = AssetEditPolicy;
 }
+
+type MenuItem = 'home' | 'create-asset' | 'options';

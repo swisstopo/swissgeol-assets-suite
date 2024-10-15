@@ -94,6 +94,7 @@ export class AssetViewerPageComponent implements OnInit, OnDestroy {
 
   public ngOnInit() {
     this._store.dispatch(actions.initializeSearch());
+    this._store.dispatch(actions.openFilters());
     this._appPortalService.setAppBarPortalContent(null);
   }
 

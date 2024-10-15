@@ -1,8 +1,10 @@
-import { icon24x24 } from './icon';
-
 export const editIcon = {
-  data: icon24x24(
-    '<path d="M17.914 2.5a1 1 0 0 0-.707.293l-2 2-1.414 1.414L2.5 17.5v4h4L21.207 6.793a1 1 0 0 0 0-1.414l-2.586-2.586a1 1 0 0 0-.707-.293Zm0 2.414 1.172 1.172-1.293 1.293-1.172-1.172Zm-2.707 2.707 1.172 1.172L5.672 19.5H4.5v-1.172Z"/>'
-  ),
+  data: `
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg">
+      <g transform="translate(2, 2)">
+        <path d="M1 9.99997H19M10 19V1" stroke-width="1.7" stroke-linecap="round"/>
+      </g>
+    </svg>
+  `,
   name: 'edit' as const,
 };

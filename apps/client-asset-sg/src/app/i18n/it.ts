@@ -23,14 +23,14 @@ export const itAppTranslations: AppTranslations = {
     title: 'IT Arbeitsgruppe',
   },
   menuBar: {
-    assets: 'IT Assets',
+    filters: 'IT Filter',
     admin: 'IT Verwaltung',
     favourites: 'IT Favoriten',
     help: 'IT Hilfe',
     profile: 'IT Profil',
     settings: 'IT Einstellungen',
     signOut: 'IT Schliessen',
-    userManagement: 'IT Benutzer Verwaltung',
+    createAsset: 'IT Neues Asset',
   },
   map: {
     zoomIn: 'IT Hineinzoomen',
@@ -41,7 +41,7 @@ export const itAppTranslations: AppTranslations = {
     dragHandleLabel: 'IT Ziehgriff',
   },
   search: {
-    textSearchFieldPlaceholder: 'IT Suche nach Original- oder  Öffentlichem Titel und Autor oder Einlieferer',
+    textSearchFieldPlaceholder: 'IT Suche nach...',
     searchInstructionsHeading: 'IT Asset-Suche',
     searchInstructions: 'IT Suche nach einem Asset über das Suchfeld oder durch Zeichnen eines Polygons auf der Karte.',
     closeInstructions: 'IT Anleitung schliessen',
@@ -240,11 +240,9 @@ export const itAppTranslations: AppTranslations = {
       },
     },
     closeManageAsset: 'IT Asset verwalten schliessen',
+    userManagementHeading: 'IT Benutzer',
+    userManagementButton: 'IT Benutzer verwalten',
     questionDiscardChanges: 'IT Möchten Sie die Änderungen verwerfen?',
-    adminInstructionsEditHeading: 'IT Asset verwalten',
-    adminInstructionsEdit: 'IT Suche nach einem Asset über das Menü Assets, um dieses zu verwalten.',
-    adminInstructionsCreateHeading: 'IT Neues Asset',
-    adminInstructionsCreate: 'IT Neues Asset erstellen',
     adminInstructionsSyncElasticAssetsHeading: 'IT Assets mit Elasticsearch synchronisieren',
     adminInstructionsSyncElasticAssets:
       'IT Gleicht den Zustand von Elasticsearch mit der Datenbank ab.' +

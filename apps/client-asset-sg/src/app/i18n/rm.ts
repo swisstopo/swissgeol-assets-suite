@@ -23,14 +23,14 @@ export const rmAppTranslations: AppTranslations = {
     title: 'IT Arbeitsgruppe',
   },
   menuBar: {
-    assets: 'RM Assets',
+    filters: 'RM Filter',
     admin: 'RM Verwaltung',
     favourites: 'RM Favoriten',
     help: 'RM Hilfe',
-    profile: 'RM Profil',
+    profile: 'RM Einstellungen',
     settings: 'RM Einstellungen',
     signOut: 'RM Schliessen',
-    userManagement: 'RM Benutzer Verwaltung',
+    createAsset: 'RM Neues Asset',
   },
   map: {
     zoomIn: 'RM Hineinzoomen',
@@ -41,7 +41,7 @@ export const rmAppTranslations: AppTranslations = {
     dragHandleLabel: 'RM Ziehgriff',
   },
   search: {
-    textSearchFieldPlaceholder: 'RM Suche nach Original- oder  Öffentlichem Titel und Autor oder Einlieferer',
+    textSearchFieldPlaceholder: 'RM Suche nach...',
     searchInstructionsHeading: 'RM Asset-Suche',
     searchInstructions: 'RM Suche nach einem Asset über das Suchfeld oder durch Zeichnen eines Polygons auf der Karte.',
     closeInstructions: 'RM Anleitung schliessen',
@@ -240,11 +240,9 @@ export const rmAppTranslations: AppTranslations = {
       },
     },
     closeManageAsset: 'RM Asset verwalten schliessen',
+    userManagementHeading: 'RM Benutzer',
+    userManagementButton: 'RM Benutzer verwalten',
     questionDiscardChanges: 'RM Möchten Sie die Änderungen verwerfen?',
-    adminInstructionsEditHeading: 'RM Asset verwalten',
-    adminInstructionsEdit: 'RM Suche nach einem Asset über das Menü Assets, um dieses zu verwalten.',
-    adminInstructionsCreateHeading: 'RM Neues Asset',
-    adminInstructionsCreate: 'RM Neues Asset erstellen',
     adminInstructionsSyncElasticAssetsHeading: 'RM Assets mit Elasticsearch synchronisieren',
     adminInstructionsSyncElasticAssets:
       'RM Gleicht den Zustand von Elasticsearch mit der Datenbank ab.' +

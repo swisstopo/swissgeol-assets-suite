@@ -68,7 +68,7 @@ export class AuthService {
   }
 
   getUserProfile(): ORD.ObservableRemoteData<ApiError, User> {
-    return this._getUserProfile().pipe(
+    return this.getUserProfile$().pipe(
       map((it) => RD.success(it)),
       startWith(RD.pending)
     );
@@ -86,7 +86,7 @@ export class AuthService {
     });
   }
 
-  private _getUserProfile(): Observable<User> {
+  public getUserProfile$(): Observable<User> {
     return this.httpClient.get('/api/users/current').pipe(map((it) => plainToInstance(UserSchema, it)));
   }
 
