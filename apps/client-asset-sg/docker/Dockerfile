@@ -9,7 +9,7 @@ RUN apk add python3 make gcc g++
 WORKDIR /app
 COPY . .
 
-RUN npm install
+RUN npm install --no-scripts
 RUN sed -i ''s/0.0.0-local/${APP_VERSION}/g'' apps/client-asset-sg/src/assets/version.json
 RUN npx nx build client-asset-sg --configuration=production
 
