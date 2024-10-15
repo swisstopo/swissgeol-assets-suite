@@ -100,6 +100,10 @@ export class AuthInterceptor implements HttpInterceptor, OnDestroy {
         );
         break;
       default: {
+        if (error.status < 500) {
+          throw error;
+        }
+
         // In some requests, the error is returned as Blob,
         // which we then need to manually parse to JSON.
         const text =

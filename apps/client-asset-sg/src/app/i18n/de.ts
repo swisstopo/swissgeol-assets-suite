@@ -19,6 +19,9 @@ export const deAppTranslations = {
   datePlaceholder: 'JJJJ-MM-TT',
   workgroup: {
     title: 'Arbeitsgruppe',
+    errors: {
+      nameTaken: "Der Name '{{name}}' wird bereits von einer anderen Arbeitsgruppe verwendet.",
+    },
   },
   menuBar: {
     filters: 'Filter',
