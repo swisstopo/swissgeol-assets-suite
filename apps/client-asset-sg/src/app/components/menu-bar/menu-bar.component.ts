@@ -43,7 +43,7 @@ export class MenuBarComponent {
       if (isPath('asset-admin/new')) {
         return 'create-asset';
       }
-      if (isPath('asset-admin') || isPath('admin')) {
+      if (path == 'asset-admin' || isPath('admin')) {
         return 'options';
       }
       return null;
