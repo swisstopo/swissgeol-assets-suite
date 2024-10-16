@@ -18,16 +18,16 @@ const fullHdWidth = 1920;
   styleUrls: ['./app.component.scss'],
 })
 export class AppComponent {
-  private _wndw = inject(WINDOW);
-  private _httpClient = inject(HttpClient);
-  public appPortalService = inject(AppPortalService);
+  private readonly window = inject(WINDOW);
+  private readonly httpClient = inject(HttpClient);
+  public readonly appPortalService = inject(AppPortalService);
 
-  readonly errorService = inject(ErrorService);
-  readonly authService = inject(AuthService);
+  public readonly errorService = inject(ErrorService);
+  public readonly authService = inject(AuthService);
   private readonly store = inject(Store<AppState>);
 
   constructor() {
-    this._httpClient
+    this.httpClient
       .get<Record<string, unknown>>('api/oauth-config/config')
       .pipe(switchMap(async (config) => await this.authService.initialize(config)))
       .subscribe(async () => {
@@ -35,7 +35,7 @@ export class AppComponent {
         this.store.dispatch(appSharedStateActions.loadReferenceData());
       });
 
-    const wndw = this._wndw;
+    const wndw = this.window;
     assert(wndw != null);
 
     fromEvent(wndw, 'resize')
