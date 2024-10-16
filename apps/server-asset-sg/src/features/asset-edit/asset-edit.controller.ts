@@ -1,7 +1,5 @@
 import { PatchAsset } from '@asset-sg/shared';
-import { User } from '@asset-sg/shared/v2';
-import { Role } from '@asset-sg/shared/v2';
-import { AssetEditPolicy } from '@asset-sg/shared/v2';
+import { User, Role, AssetEditPolicy } from '@asset-sg/shared/v2';
 import { Controller, Get, HttpException, HttpStatus, Param, ParseIntPipe, Post, Put } from '@nestjs/common';
 import * as E from 'fp-ts/Either';
 import { authorize } from '@/core/authorize';
