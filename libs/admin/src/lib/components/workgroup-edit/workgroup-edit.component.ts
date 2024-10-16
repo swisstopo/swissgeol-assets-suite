@@ -140,7 +140,7 @@ export class WorkgroupEditComponent implements OnInit, OnDestroy {
   }
 
   public cancel() {
-    void this.router.navigate(['../'], { relativeTo: this.route });
+    this.router.navigate(['../'], { relativeTo: this.route }).then();
     this.store.dispatch(actions.resetWorkgroup());
   }
 
