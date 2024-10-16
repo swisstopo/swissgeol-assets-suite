@@ -14,7 +14,6 @@ import * as A from 'fp-ts/Array';
 import { pipe, tuple } from 'fp-ts/function';
 import * as IO from 'fp-ts/IO';
 import * as T from 'fp-ts/Task';
-import { WINDOW } from 'ngx-window-token';
 import {
   animationFrameScheduler,
   delay,
@@ -62,8 +61,6 @@ export class DrawerComponent extends RxState<DrawerState> {
   private _host = inject(ElementRef<HTMLElement>);
   private _lc = inject(LifecycleHooks);
   private _ngZone = inject(NgZone);
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  private _wndw = inject(WINDOW)!;
 
   constructor() {
     super();
@@ -98,7 +95,6 @@ export class DrawerComponent extends RxState<DrawerState> {
         switchMap((a) =>
           this._ngZone.runOutsideAngular(() =>
             program(
-              this._wndw,
               this._host.nativeElement,
               a.map(([, p, display]) => ({
                 display,
@@ -113,8 +109,7 @@ export class DrawerComponent extends RxState<DrawerState> {
   }
 }
 
-const requestAnimationFrame = (wndw: Window) => () =>
-  new Promise<void>((resolve) => wndw.requestAnimationFrame(() => resolve()));
+const requestAnimationFrame = () => () => new Promise<void>((resolve) => window.requestAnimationFrame(() => resolve()));
 
 const delayIO =
   (ms: number): T.Task<void> =>
@@ -161,7 +156,6 @@ const measurePanelsAndSetDrawerWidth =
   };
 
 const program = (
-  wndw: Window,
   drawerElement: HTMLElement,
   panels: { element: HTMLElement; display: boolean; widthPercentageOfViewPanel: number }[]
 ) =>
@@ -169,6 +163,6 @@ const program = (
     IO.of(freezeDrawerWidthAndSetPanelWidths(drawerElement, panels)),
     T.fromIO,
     T.chain(() => delayIO(0)),
-    T.chain(() => requestAnimationFrame(wndw)),
+    T.chain(() => requestAnimationFrame()),
     T.chain(() => measurePanelsAndSetDrawerWidth(drawerElement, panels))
   );
