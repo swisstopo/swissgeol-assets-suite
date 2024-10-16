@@ -13,9 +13,10 @@ RUN apk add --no-cache \
 WORKDIR /app
 COPY . .
 
-RUN npm install --no-scripts
 RUN sed -i ''s/0.0.0-local/${APP_VERSION}/g'' apps/client-asset-sg/src/assets/version.json
-RUN npx nx build client-asset-sg --configuration=production
+
+RUN npm install --no-scripts \
+ && npx nx build client-asset-sg --configuration=production
 
 # final image build
 FROM nginx:mainline-alpine

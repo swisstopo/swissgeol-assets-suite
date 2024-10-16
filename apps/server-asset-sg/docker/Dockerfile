@@ -8,8 +8,8 @@ ENV NODE_ENV=development
 WORKDIR /app
 COPY . .
 
-RUN npm install --ignore-scripts
-RUN npx nx build server-asset-sg --configuration=production
+RUN npm install --ignore-scripts \
+ && npx nx build server-asset-sg --configuration=production
 
 # final image build
 FROM node:22-alpine
