@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { ApiError, httpErrorResponseOrUnknownError } from '@asset-sg/client-shared';
-import { OE, ORD, decodeError } from '@asset-sg/core';
+import { decodeError, OE, ORD } from '@asset-sg/core';
 import { ReferenceData } from '@asset-sg/shared';
 import { SimpleWorkgroup } from '@asset-sg/shared/v2';
 import * as RD from '@devexperts/remote-data-ts';
@@ -11,10 +11,10 @@ import { map, Observable, startWith } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class AppSharedStateService {
-  constructor(private _httpClient: HttpClient) {}
+  private readonly httpClient = inject(HttpClient);
 
   public loadReferenceData(): ORD.ObservableRemoteData<ApiError, ReferenceData> {
-    return this._httpClient
+    return this.httpClient
       .get('/api/reference-data')
       .pipe(
         map(flow(ReferenceData.decode, E.mapLeft(decodeError))),
@@ -25,6 +25,6 @@ export class AppSharedStateService {
   }
 
   public loadWorkgroups(): Observable<SimpleWorkgroup[]> {
-    return this._httpClient.get<SimpleWorkgroup[]>('/api/workgroups?simple');
+    return this.httpClient.get<SimpleWorkgroup[]>('/api/workgroups?simple');
   }
 }
