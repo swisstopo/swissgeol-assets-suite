@@ -12,7 +12,6 @@ import { define } from '@/utils/define';
 export class FavoritesController {
   constructor(private readonly favoriteRepo: FavoriteRepo, private readonly assetSearchService: AssetSearchService) {}
 
-  // TODO make an alternative, new endpoint for this that does not use fp-ts.
   @Get('/')
   @Authorize.User()
   async list(@CurrentUser() user: User): Promise<SearchAssetResult> {
