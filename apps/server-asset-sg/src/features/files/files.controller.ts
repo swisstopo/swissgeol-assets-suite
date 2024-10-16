@@ -24,6 +24,7 @@ import { authorize } from '@/core/authorize';
 import { CurrentUser } from '@/core/decorators/current-user.decorator';
 import { PrismaService } from '@/core/prisma.service';
 import { AssetEditRepo } from '@/features/asset-edit/asset-edit.repo';
+import { FileOcrService } from '@/features/files/file-ocr.service';
 import { FileRepo } from '@/features/files/file.repo';
 import { getFile } from '@/utils/file/get-file';
 
@@ -31,6 +32,7 @@ import { getFile } from '@/utils/file/get-file';
 export class FilesController {
   constructor(
     private readonly fileRepo: FileRepo,
+    private readonly fileOcrService: FileOcrService,
     private readonly assetEditRepo: AssetEditRepo,
     private readonly prismaService: PrismaService
   ) {}
@@ -116,6 +118,10 @@ export class FilesController {
       assetId: asset.assetId,
       user,
     });
+
+    // Run OCR on the file in the background.
+    setTimeout(() => this.fileOcrService.process(record));
+
     return AssetFile.encode(record);
   }
 
