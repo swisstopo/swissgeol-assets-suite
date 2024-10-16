@@ -1,5 +1,4 @@
-import { User } from '@asset-sg/shared/v2';
-import { Policy } from '@asset-sg/shared/v2';
+import { Policy, User } from '@asset-sg/shared/v2';
 import { Request } from 'express';
 import * as jwt from 'jsonwebtoken';
 

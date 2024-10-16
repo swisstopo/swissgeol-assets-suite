@@ -84,7 +84,7 @@ export class UserEditComponent implements OnInit, OnDestroy {
   }
 
   public isUserPartOfWorkgroup(workgroupId: number): boolean {
-    return this.user != null && this.user.roles.has(workgroupId);
+    return this.user?.roles?.has(workgroupId) ?? false;
   }
 
   public addWorkgroupRole(event: MatOptionSelectionChange, workgroupId: number) {

@@ -88,8 +88,8 @@
             </div>
           </ng-container>
         </ng-container>
-        <div *ngIf="_rootFormGroup.invalid" class="bg-red-01 mb-6 px-3 py-1">
-          <div *ngIf="_rootFormGroup.controls['general'].invalid" class="flex items-center py-1">
+        <div *ngIf="rootFormGroup.invalid" class="bg-red-01 mb-6 px-3 py-1">
+          <div *ngIf="rootFormGroup.controls['general'].invalid" class="flex items-center py-1">
             <svg-icon key="error-filled" class="mr-3"></svg-icon>
             <span>
               {{ "edit.tabs.administration.tabValidationErrors.tab" | translate }}
@@ -97,7 +97,7 @@
               {{ "edit.tabs.administration.tabValidationErrors.hasValidationErrors" | translate }}
             </span>
           </div>
-          <div *ngIf="_rootFormGroup.controls['usage'].invalid" class="flex items-center py-1">
+          <div *ngIf="rootFormGroup.controls['usage'].invalid" class="flex items-center py-1">
             <svg-icon key="error-filled" class="mr-3"></svg-icon>
             <span>
               {{ "edit.tabs.administration.tabValidationErrors.tab" | translate }}
@@ -111,7 +111,7 @@
             asset-sg-secondary
             (click)="openConfirmDialog()"
             class="save-button"
-            [disabled]="this._rootFormGroup.invalid || this._rootFormGroup.disabled || this._rootFormGroup.pristine"
+            [disabled]="this.rootFormGroup.invalid || this.rootFormGroup.disabled || this.rootFormGroup.pristine"
             translate
           >
             delete

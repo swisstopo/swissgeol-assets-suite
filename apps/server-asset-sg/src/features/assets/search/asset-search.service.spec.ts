@@ -587,9 +587,9 @@ describe(AssetSearchService, () => {
       expect(aggs.ranges.createDate.max).toEqual(expectedMaxCreateDate);
 
       const expectedAssetKindItemCodes = makeBucket(expectedAssets, (asset) => asset.assetKindItemCode);
-      expect(aggs.buckets.assetKindItemCodes.sort(compareBuckets)).toEqual(
-        expectedAssetKindItemCodes.sort(compareBuckets)
-      );
+      aggs.buckets.assetKindItemCodes.sort(compareBuckets);
+      expectedAssetKindItemCodes.sort(compareBuckets);
+      expect(aggs.buckets.assetKindItemCodes).toEqual(expectedAssetKindItemCodes);
 
       const expectedLanguageItemCodes = makeBucket(expectedAssets, (asset) =>
         asset.assetLanguages.map((it) => it.languageItemCode)
@@ -601,14 +601,17 @@ describe(AssetSearchService, () => {
           count: assetsWithoutLanguage.length,
         });
       }
-      expect(aggs.buckets.languageItemCodes.sort(compareBuckets)).toEqual(
-        expectedLanguageItemCodes.sort(compareBuckets)
-      );
+      aggs.buckets.languageItemCodes.sort(compareBuckets);
+      expectedLanguageItemCodes.sort(compareBuckets);
+      expect(aggs.buckets.languageItemCodes).toEqual(expectedLanguageItemCodes);
 
       const expectedUsageCodes = makeBucket(expectedAssets, (asset) =>
         makeUsageCode(asset.publicUse.isAvailable, asset.internalUse.isAvailable)
       );
-      expect(aggs.buckets.usageCodes.sort(compareBuckets)).toEqual(expectedUsageCodes.sort(compareBuckets));
+
+      aggs.buckets.usageCodes.sort(compareBuckets);
+      expectedUsageCodes.sort(compareBuckets);
+      expect(aggs.buckets.usageCodes).toEqual(expectedUsageCodes);
 
       expect(aggs.buckets.manCatLabelItemCodes).toEqual([]);
       expect(aggs.buckets.authorIds).toEqual([]);
