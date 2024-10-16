@@ -1,4 +1,4 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, inject, Inject, OnInit } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { User, UserId, Workgroup, WorkgroupData } from '@asset-sg/shared/v2';
@@ -21,6 +21,8 @@ export class AddWorkgroupUserDialogComponent implements OnInit {
     role: new FormControl(Role.Viewer, { validators: [Validators.required], nonNullable: true }),
   });
 
+  private readonly store = inject(Store<AppStateWithAdmin>);
+
   public readonly roles: Role[] = Object.values(Role);
 
   public users: User[] = [];
@@ -32,8 +34,7 @@ export class AddWorkgroupUserDialogComponent implements OnInit {
 
   constructor(
     @Inject(MAT_DIALOG_DATA) public data: { workgroup: Workgroup; mode: Mode },
-    private readonly dialogRef: MatDialogRef<AddWorkgroupUserDialogComponent>,
-    private store: Store<AppStateWithAdmin>
+    private readonly dialogRef: MatDialogRef<AddWorkgroupUserDialogComponent>
   ) {
     this.workgroup = this.data.workgroup;
     this.mode = this.data.mode;
