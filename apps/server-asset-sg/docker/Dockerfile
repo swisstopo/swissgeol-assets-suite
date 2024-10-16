@@ -1,6 +1,6 @@
 ARG APP_VERSION
 
-FROM node:22-alpine as api-builder
+FROM node:22-alpine AS api-builder
 
 ENV APP_VERSION=${APP_VERSION}
 ENV NODE_ENV=development
