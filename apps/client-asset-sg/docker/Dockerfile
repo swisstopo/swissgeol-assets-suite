@@ -4,7 +4,7 @@ ARG APP_VERSION
 ENV APP_VERSION=${APP_VERSION}
 ENV CYPRESS_INSTALL_BINARY=0
 
-RUN apk add python3 make gcc g++
+RUN apk add --no-cache python3 make gcc g++
 
 WORKDIR /app
 COPY . .
