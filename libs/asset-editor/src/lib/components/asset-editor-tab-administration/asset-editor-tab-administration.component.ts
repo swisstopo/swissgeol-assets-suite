@@ -38,16 +38,16 @@ const initialTabAdministrationState: TabAdministrationState = {
   providers: [RxState],
 })
 export class AssetEditorTabAdministrationComponent implements OnInit {
-  public _rootFormGroupDirective = inject(FormGroupDirective);
-  public _rootFormGroup = this._rootFormGroupDirective.control as AssetEditorFormGroup;
-  private _state = inject<RxState<TabAdministrationState>>(RxState);
+  public readonly rootFormGroupDirective = inject(FormGroupDirective);
+  public readonly rootFormGroup = this.rootFormGroupDirective.control as AssetEditorFormGroup;
+  private readonly state = inject<RxState<TabAdministrationState>>(RxState);
 
   public _form!: AssetEditorAdministrationFormGroup;
 
-  public _referenceDataVM$ = this._state.select('referenceDataVM');
-  public _assetEditDetail$ = this._state.select('assetEditDetail');
+  public readonly _referenceDataVM$ = this.state.select('referenceDataVM');
+  public readonly _assetEditDetail$ = this.state.select('assetEditDetail');
 
-  private readonly filteredAssetEditDetail$ = this._state
+  private readonly filteredAssetEditDetail$ = this.state
     .select('assetEditDetail')
     .pipe(map(O.toNullable), filter(isNotNull));
 
@@ -64,23 +64,23 @@ export class AssetEditorTabAdministrationComponent implements OnInit {
   public save$ = new EventEmitter<void>();
 
   constructor() {
-    this._state.set(initialTabAdministrationState);
+    this.state.set(initialTabAdministrationState);
   }
 
   @Input()
   public set referenceDataVM$(value: Observable<fromAppShared.ReferenceDataVM>) {
-    this._state.connect('referenceDataVM', value);
+    this.state.connect('referenceDataVM', value);
   }
 
   @Input()
   public set assetEditDetail$(value: Observable<O.Option<AssetEditDetailVM>>) {
-    this._state.connect('assetEditDetail', value);
+    this.state.connect('assetEditDetail', value);
   }
 
   ngOnInit(): void {
-    this._form = this._rootFormGroup.get('administration') as AssetEditorAdministrationFormGroup;
-    if (this._rootFormGroup.invalid) {
-      this._rootFormGroup.markAllAsTouched();
+    this._form = this.rootFormGroup.get('administration') as AssetEditorAdministrationFormGroup;
+    if (this.rootFormGroup.invalid) {
+      this.rootFormGroup.markAllAsTouched();
     }
   }
 

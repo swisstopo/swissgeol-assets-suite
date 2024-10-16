@@ -26,24 +26,24 @@ import { TabPageBridgeService } from '../../services/tab-page-bridge.service';
 export class AssetEditorPageComponent {
   @ViewChild('templateDrawerPortalContent') _templateDrawerPortalContent!: TemplateRef<unknown>;
 
-  private _lc = inject(LifecycleHooks);
-  private _appPortalService = inject(AppPortalService);
-  private _viewContainerRef = inject(ViewContainerRef);
-  private _cd = inject(ChangeDetectorRef);
-  private _tabPageBridgeService = inject(TabPageBridgeService);
+  private readonly lc = inject(LifecycleHooks);
+  private readonly appPortalService = inject(AppPortalService);
+  private readonly viewContainerRef = inject(ViewContainerRef);
+  private readonly cd = inject(ChangeDetectorRef);
+  private readonly tabPageBridgeService = inject(TabPageBridgeService);
 
   constructor() {
-    this._lc.afterViewInit$.pipe(observeOn(asyncScheduler)).subscribe(() => {
-      this._appPortalService.setAppBarPortalContent(null);
-      this._appPortalService.setDrawerPortalContent(
-        new TemplatePortal(this._templateDrawerPortalContent, this._viewContainerRef)
+    this.lc.afterViewInit$.pipe(observeOn(asyncScheduler)).subscribe(() => {
+      this.appPortalService.setAppBarPortalContent(null);
+      this.appPortalService.setDrawerPortalContent(
+        new TemplatePortal(this._templateDrawerPortalContent, this.viewContainerRef)
       );
-      this._cd.detectChanges();
+      this.cd.detectChanges();
     });
   }
 
   public canLeave(): Observable<boolean> {
-    if (!this._tabPageBridgeService.tabPage) return of(true);
-    return this._tabPageBridgeService.tabPage.canLeave();
+    if (!this.tabPageBridgeService.tabPage) return of(true);
+    return this.tabPageBridgeService.tabPage.canLeave();
   }
 }

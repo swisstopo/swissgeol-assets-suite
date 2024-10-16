@@ -29,21 +29,21 @@ import { asyncScheduler, observeOn } from 'rxjs';
 export class AssetEditorLaunchComponent {
   @ViewChild('templateDrawerPortalContent') _templateDrawerPortalContent!: TemplateRef<unknown>;
 
-  private _lc = inject(LifecycleHooks);
-  private _appPortalService = inject(AppPortalService);
-  private _viewContainerRef = inject(ViewContainerRef);
-  private _cd = inject(ChangeDetectorRef);
-  private _store = inject<Store<AppState>>(Store);
+  private readonly lc = inject(LifecycleHooks);
+  private readonly appPortalService = inject(AppPortalService);
+  private readonly viewContainerRef = inject(ViewContainerRef);
+  private readonly cd = inject(ChangeDetectorRef);
+  private readonly store = inject<Store<AppState>>(Store);
   public readonly currentLang$ = inject(CURRENT_LANG);
 
   constructor() {
-    this._lc.afterViewInit$.pipe(observeOn(asyncScheduler)).subscribe(() => {
-      this._appPortalService.setAppBarPortalContent(null);
-      this._appPortalService.setDrawerPortalContent(
-        new TemplatePortal(this._templateDrawerPortalContent, this._viewContainerRef)
+    this.lc.afterViewInit$.pipe(observeOn(asyncScheduler)).subscribe(() => {
+      this.appPortalService.setAppBarPortalContent(null);
+      this.appPortalService.setDrawerPortalContent(
+        new TemplatePortal(this._templateDrawerPortalContent, this.viewContainerRef)
       );
-      this._cd.detectChanges();
-      this._store.dispatch(appSharedStateActions.openPanel());
+      this.cd.detectChanges();
+      this.store.dispatch(appSharedStateActions.openPanel());
     });
   }
 }
