@@ -1,5 +1,5 @@
 import { Prisma, PrismaClient } from '@prisma/client';
-import { PipelineConfig } from './config';
+import { SyncConfig } from './config';
 import { log } from './log';
 
 interface AssetInfo {
@@ -17,8 +17,8 @@ export class ExportToViewService {
 
   private readonly batchSize = 500;
 
-  constructor(sourcePrisma: PrismaClient, destinationPrisma: PrismaClient, config: PipelineConfig) {
-    this.allowedWorkgroupIds = config.allowedWorkgroupIds;
+  constructor(sourcePrisma: PrismaClient, destinationPrisma: PrismaClient, config: SyncConfig) {
+    this.allowedWorkgroupIds = config.source.allowedWorkgroupIds;
     this.sourcePrisma = sourcePrisma;
     this.destinationPrisma = destinationPrisma;
   }
@@ -50,7 +50,6 @@ export class ExportToViewService {
       await this.exportInternalProjects(assetIds);
       await this.export('assetLanguage', 'assetId', assetIds);
       await this.exportPublications(assetIds);
-      await this.exportSiblings(assetIds, publicAssetIds);
 
       await this.export('autoCat', 'assetId', assetIds);
       await this.export('manCatLabelRef', 'assetId', assetIds);
@@ -62,6 +61,12 @@ export class ExportToViewService {
 
       const timeTaken = Date.now() - time;
       log(`Exported batch of ${assetIds.length} assets in ${timeTaken} ms.`);
+    }
+
+    // only export siblings after all assets have been exported so no foreign key constraint is violated
+    for (const batch of batches) {
+      const assetIds = batch.map((item) => item.assetId);
+      await this.exportSiblings(assetIds, publicAssetIds);
     }
 
     await this.exportFiles(publicAssetIds);
@@ -77,6 +82,11 @@ export class ExportToViewService {
       SELECT study_area_id as "studyAreaId", asset_id as "assetId", geom_quality_item_code as "geomQualityItemCode", st_astext(geom, 2056) as geom
       FROM study_area WHERE asset_id IN (${Prisma.join(assetIds)})
     `;
+
+    if (studyAreas.length === 0) {
+      log(`No study areas found. Continuing.`);
+      return;
+    }
 
     const formattedStudyAreas = studyAreas.map(
       (sa) =>
@@ -103,6 +113,11 @@ export class ExportToViewService {
       FROM study_location WHERE asset_id IN (${Prisma.join(assetIds)})
     `;
 
+    if (studyLocations.length === 0) {
+      log(`No study locations found. Continuing.`);
+      return;
+    }
+
     const formattedStudyLocations = studyLocations.map(
       (sa) =>
         Prisma.sql`(${sa.studyLocationId}, ${sa.assetId}, ${sa.geomQualityItemCode}, ST_GeomFromText(${sa.geom}, 2056))`
@@ -127,6 +142,11 @@ export class ExportToViewService {
       SELECT study_trace_id as "studyTraceId", asset_id as "assetId", geom_quality_item_code as "geomQualityItemCode", st_astext(geom, 2056) as geom
       FROM study_trace WHERE asset_id IN (${Prisma.join(assetIds)})
     `;
+
+    if (studyTraces.length === 0) {
+      log(`No study traces found. Continuing.`);
+      return;
+    }
 
     const formattedStudyTraces = studyTraces.map(
       (sa) =>
@@ -291,7 +311,7 @@ export class ExportToViewService {
   }
 
   /**
-   * Export internal use.
+   * Export siblings.
    */
   private async exportSiblings(ids: number[], allPublicAssetIds: number[]) {
     const itemsX = await this.sourcePrisma.assetXAssetY.findMany({ where: { assetXId: { in: ids } } });
