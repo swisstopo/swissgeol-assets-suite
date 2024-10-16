@@ -20,7 +20,10 @@ export const rmAppTranslations: AppTranslations = {
   close: 'RM Schliessen',
   datePlaceholder: 'AAAA-MM-GG',
   workgroup: {
-    title: 'IT Arbeitsgruppe',
+    title: 'RM Arbeitsgruppe',
+    errors: {
+      nameTaken: "RM Name '{{name}}' wird bereits von einer anderen Arbeitsgruppe verwendet.",
+    },
   },
   menuBar: {
     filters: 'RM Filter',

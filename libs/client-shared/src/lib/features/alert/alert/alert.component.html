@@ -1,4 +1,4 @@
 <progress *ngIf="progress !== null" [value]="progress" [max]="1"></progress>
 <svg-icon class="icon" [key]="icon"></svg-icon>
-<p>{{ alert.text }}</p>
+<p>{{ text$ | async }}</p>
 <svg-icon class="close" key="close"></svg-icon>

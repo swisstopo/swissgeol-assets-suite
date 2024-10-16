@@ -21,6 +21,9 @@ export const enAppTranslations: AppTranslations = {
   datePlaceholder: 'YYYY-MM-DD',
   workgroup: {
     title: 'Workgroup',
+    errors: {
+      nameTaken: "The name '{{name}}' is already taken by another workgroup.",
+    },
   },
   menuBar: {
     filters: 'Filters',

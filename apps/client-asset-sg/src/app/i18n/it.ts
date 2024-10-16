@@ -21,6 +21,9 @@ export const itAppTranslations: AppTranslations = {
   datePlaceholder: 'AAAA-MM-GG',
   workgroup: {
     title: 'IT Arbeitsgruppe',
+    errors: {
+      nameTaken: "IT Der Name '{{name}}' wird bereits von einer anderen Arbeitsgruppe verwendet.",
+    },
   },
   menuBar: {
     filters: 'IT Filter',

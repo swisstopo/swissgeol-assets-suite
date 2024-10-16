@@ -1,6 +1,6 @@
-import { Component, HostBinding, HostListener, Input, OnDestroy, OnInit, inject } from '@angular/core';
+import { Component, HostBinding, HostListener, inject, Input, OnDestroy, OnInit } from '@angular/core';
 import { Store } from '@ngrx/store';
-import { Subscription, asyncScheduler, interval } from 'rxjs';
+import { asyncScheduler, interval, Observable, of, Subscription } from 'rxjs';
 
 import { hideAlert } from '../alert.actions';
 import { Alert, AlertType } from '../alert.model';
@@ -48,6 +48,11 @@ export class AlertComponent implements OnInit, OnDestroy {
   @HostListener('click')
   handleClick() {
     this.remove();
+  }
+
+  get text$(): Observable<string> {
+    const { text } = this.alert;
+    return typeof text === 'string' ? of(text) : text;
   }
 
   get icon(): string {

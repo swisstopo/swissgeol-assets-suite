@@ -21,6 +21,9 @@ export const frAppTranslations: AppTranslations = {
   datePlaceholder: 'AAAA-MM-JJ',
   workgroup: {
     title: 'groupe de travail',
+    errors: {
+      nameTaken: "Le nom '{{name}}' est déjà utilisé par un autre groupe de travail.",
+    },
   },
   menuBar: {
     filters: 'Filtres',
