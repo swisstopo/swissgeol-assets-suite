@@ -173,7 +173,6 @@ export class AssetRepo implements FindRepo<Asset, AssetId>, MutateRepo<Asset, As
     if (data.length === 0) {
       return;
     }
-    // TODO does this work?
     const cases = data.map(
       (it) => Prisma.sql`
       WHEN study_${Prisma.raw(type)}_id = ${it.id}
