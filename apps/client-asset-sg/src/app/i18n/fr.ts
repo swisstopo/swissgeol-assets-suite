@@ -21,16 +21,19 @@ export const frAppTranslations: AppTranslations = {
   datePlaceholder: 'AAAA-MM-JJ',
   workgroup: {
     title: 'groupe de travail',
+    errors: {
+      nameTaken: "Le nom '{{name}}' est déjà utilisé par un autre groupe de travail.",
+    },
   },
   menuBar: {
-    assets: 'Assets',
+    filters: 'Filtres',
     admin: 'Administration',
     favourites: 'Favoris',
     help: 'Aide',
     profile: 'Profil',
     settings: 'Paramètres',
     signOut: 'Fermer',
-    userManagement: 'Gestion des utilisateurs',
+    createAsset: 'Nouvel Asset',
   },
   map: {
     zoomIn: 'Zoom avant',
@@ -41,7 +44,7 @@ export const frAppTranslations: AppTranslations = {
     dragHandleLabel: 'Poignée de tirage',
   },
   search: {
-    textSearchFieldPlaceholder: 'Recherche par titre original ou public et auteur ou déposant',
+    textSearchFieldPlaceholder: 'Recherche par...',
     searchInstructionsHeading: "Recherche d'assets",
     searchInstructions: "Recherche d'un asset via le champ de recherche ou en dessinant un polygone sur la carte.",
     closeInstructions: "Fermer le mode d'emploi",
@@ -85,11 +88,13 @@ export const frAppTranslations: AppTranslations = {
     workgroup: 'groupe de travail',
     resetSearch: 'Réinitialiser la recherche',
     file: 'Fichier',
+    legalFile: 'Consentements légaux',
     openFileInNewTab: 'Ouvrir {{fileName}} dans un nouvel onglet',
     downloadFile: 'Télécharger {{fileName}}',
     assetsUnderMouseCursor:
       '{{ assetsCount }} ssets trouvés sous le curseur de la souris. Veuillez en sélectionner un :',
     removePolygon: 'Annuler le polygone',
+    drawPolygon: 'fr Draw polygon',
     hideTable: 'fr Tabelle verbergen',
     showTable: 'fr Tabelle anzeigen',
   },
@@ -118,7 +123,18 @@ export const frAppTranslations: AppTranslations = {
         alternativeId: 'ID alternative',
         alternativeIdDescription: "Description d'ID alternative",
         addNewAlternativeId: 'Ajouter une nouvelle ID alternative',
-        files: 'Fichiers',
+      },
+      files: {
+        tabName: 'Fichiers',
+        Normal: {
+          one: 'Fichier normal',
+          many: 'Fichiers normaux',
+        },
+        Legal: {
+          one: 'Consentement Légal',
+          many: 'Consentements Légaux',
+        },
+        legalDocItemCode: 'Type',
         dragFileHere: 'Glisser le fichier ici',
         or: 'ou',
         selectFile: 'Sélectionner un fichier',
@@ -229,10 +245,8 @@ export const frAppTranslations: AppTranslations = {
     },
     closeManageAsset: 'Fermer la gestion des asset',
     questionDiscardChanges: 'Souhaitez-vous annuler les modifications ?',
-    adminInstructionsEditHeading: 'Gérer des assets',
-    adminInstructionsEdit: 'Recherche un asset via le menu Assets pour le gérer.',
-    adminInstructionsCreateHeading: 'Nouvel asset',
-    adminInstructionsCreate: 'Créer un nouvel asset',
+    userManagementHeading: 'Utilisateurs',
+    userManagementButton: 'Gérer les utilisateurs',
     adminInstructionsSyncElasticAssetsHeading: 'Synchroniser les assets avec Elasticsearch',
     adminInstructionsSyncElasticAssets:
       "Fait correspondre l'état d'Elasticsearch avec la base de données." +

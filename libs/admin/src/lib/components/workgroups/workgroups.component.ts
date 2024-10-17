@@ -1,4 +1,3 @@
-import { KeyValue } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { UserId, UserOnWorkgroup, Workgroup } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';

@@ -1,12 +1,11 @@
 import { HttpErrorResponse, HttpEvent, HttpHandler, HttpInterceptor, HttpRequest } from '@angular/common/http';
 import { inject, Injectable, OnDestroy } from '@angular/core';
 import { NavigationCancel, NavigationEnd, NavigationError, NavigationStart, Router } from '@angular/router';
-import { AlertType, showAlert } from '@asset-sg/client-shared';
+import { AlertType, fromAppShared, showAlert } from '@asset-sg/client-shared';
 import { Store } from '@ngrx/store';
 import { TranslateService } from '@ngx-translate/core';
 import { OAuthService } from 'angular-oauth2-oidc';
 import { catchError, EMPTY, from, Observable, Subscription, switchMap } from 'rxjs';
-
 import { AuthService, AuthState } from './auth.service';
 
 @Injectable()
@@ -25,9 +24,11 @@ export class AuthInterceptor implements HttpInterceptor, OnDestroy {
    * @private
    */
   private isNavigating = false;
+  private isAnonymousMode = false;
 
   constructor() {
     this.initializeRouterSubscription();
+    this.initializeStoreSubscription();
   }
 
   intercept(req: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
@@ -36,7 +37,8 @@ export class AuthInterceptor implements HttpInterceptor, OnDestroy {
     if (
       (this._oauthService.issuer && req.url.includes(this._oauthService.issuer)) ||
       (this._oauthService.tokenEndpoint && req.url.includes(this._oauthService.tokenEndpoint)) ||
-      req.url.includes('oauth-config/config')
+      req.url.includes('oauth-config/config') ||
+      this.isAnonymousMode
     ) {
       return next.handle(req);
     } else if (token && !this._oauthService.hasValidAccessToken()) {
@@ -98,6 +100,10 @@ export class AuthInterceptor implements HttpInterceptor, OnDestroy {
         );
         break;
       default: {
+        if (error.status < 500) {
+          throw error;
+        }
+
         // In some requests, the error is returned as Blob,
         // which we then need to manually parse to JSON.
         const text =
@@ -120,6 +126,14 @@ export class AuthInterceptor implements HttpInterceptor, OnDestroy {
 
   ngOnDestroy(): void {
     this.subscription.unsubscribe();
+  }
+
+  private initializeStoreSubscription(): void {
+    this.subscription.add(
+      this.store.select(fromAppShared.selectIsAnonymousMode).subscribe((isAnonymousMode) => {
+        this.isAnonymousMode = isAnonymousMode;
+      })
+    );
   }
 
   private initializeRouterSubscription(): void {

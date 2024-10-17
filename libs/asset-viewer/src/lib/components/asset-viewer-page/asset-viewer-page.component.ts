@@ -1,19 +1,16 @@
 import { TemplatePortal } from '@angular/cdk/portal';
 import {
-  AfterViewInit,
-  ApplicationRef,
   ChangeDetectorRef,
   Component,
   ElementRef,
   inject,
-  NgZone,
   OnDestroy,
+  OnInit,
   TemplateRef,
   ViewChild,
   ViewContainerRef,
 } from '@angular/core';
 import { AppPortalService, AppState, LifecycleHooks, LifecycleHooksDirective } from '@asset-sg/client-shared';
-import { isTruthy } from '@asset-sg/core';
 import { AssetEditDetail } from '@asset-sg/shared';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { Store } from '@ngrx/store';
@@ -24,17 +21,14 @@ import * as O from 'fp-ts/Option';
 import {
   asyncScheduler,
   combineLatest,
-  delay,
   filter,
   map,
-  merge,
   Observable,
   observeOn,
   partition,
   share,
   Subject,
   switchMap,
-  take,
   withLatestFrom,
 } from 'rxjs';
 
@@ -47,7 +41,6 @@ import {
   selectCurrentAssetDetail,
   selectFilterLoadingState,
   selectIsFiltersOpen,
-  selectIsMapInitialized,
   selectSearchLoadingState,
 } from '../../state/asset-search/asset-search.selector';
 
@@ -58,7 +51,7 @@ import {
   styleUrls: ['./asset-viewer-page.component.scss'],
   hostDirectives: [LifecycleHooksDirective],
 })
-export class AssetViewerPageComponent implements AfterViewInit, OnDestroy {
+export class AssetViewerPageComponent implements OnInit, OnDestroy {
   @ViewChild('templateAppBarPortalContent') templateAppBarPortalContent!: TemplateRef<unknown>;
   @ViewChild('searchInput') searchInput!: ElementRef<HTMLInputElement>;
 
@@ -66,19 +59,15 @@ export class AssetViewerPageComponent implements AfterViewInit, OnDestroy {
   private _appPortalService = inject(AppPortalService);
   private _viewContainerRef = inject(ViewContainerRef);
   private _store = inject(Store<AppState>);
-  private _appRef = inject(ApplicationRef);
   private _cd = inject(ChangeDetectorRef);
-  private _ngZone = inject(NgZone);
 
   public isLoading$ = combineLatest(
     [
-      this._store.select(selectIsMapInitialized),
       this._store.select(selectFilterLoadingState),
       this._store.select(selectSearchLoadingState),
       this._store.select(selectAssetDetailLoadingState),
     ],
-    (isMapInitialized, filterLoadingState, searchLoadingState, detailLoadingState) =>
-      !isMapInitialized ||
+    (filterLoadingState, searchLoadingState, detailLoadingState) =>
       filterLoadingState === LoadingState.Loading ||
       searchLoadingState === LoadingState.Loading ||
       detailLoadingState === LoadingState.Loading
@@ -100,12 +89,12 @@ export class AssetViewerPageComponent implements AfterViewInit, OnDestroy {
   );
 
   public assetClicked$ = new Subject<number[]>();
-  public closeSearchResultsClicked$ = new Subject<void>();
   public assetsForPicker$: Observable<AssetEditDetail[]>;
   public highlightedAssetId: number | null = null;
 
-  public ngAfterViewInit() {
+  public ngOnInit() {
     this._store.dispatch(actions.initializeSearch());
+    this._store.dispatch(actions.openFilters());
     this._appPortalService.setAppBarPortalContent(null);
   }
 
@@ -161,31 +150,20 @@ export class AssetViewerPageComponent implements AfterViewInit, OnDestroy {
       this._store.dispatch(actions.assetClicked({ assetId: assetIds[0] }));
     });
 
-    merge(
-      this.closeSearchResultsClicked$.pipe(map(() => actions.closeRefineAndResults())),
-      this._searchTextChanged$.pipe(
+    this._searchTextChanged$
+      .pipe(
         map(
           flow(
-            O.map((text) => actions.searchByFilterConfiguration({ filterConfiguration: { text } })),
+            O.map((text) => actions.search({ query: { text } })),
             O.getOrElseW(() => actions.clearSearchText())
           )
         )
       )
-    )
       .pipe(untilDestroyed(this))
       .subscribe(this._store);
   }
 
   ngOnDestroy() {
-    this._store.dispatch(actions.closeFilters());
     this._appPortalService.setAppBarPortalContent(null);
-  }
-
-  public handleMapInitialised() {
-    this._appRef.isStable.pipe(filter(isTruthy), take(1), delay(0), untilDestroyed(this)).subscribe(() => {
-      this._ngZone.run(() => {
-        this._store.dispatch(actions.mapInitialised());
-      });
-    });
   }
 }

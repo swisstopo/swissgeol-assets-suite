@@ -8,6 +8,7 @@
   padding: 0 1rem 1rem 0;
   display: flex;
   flex-direction: column;
+  z-index: 1;
 }
 
 @include drawerPanel.draw-panel-header;

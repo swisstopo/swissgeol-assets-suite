@@ -9,6 +9,7 @@ export interface AppSharedState {
   rdReferenceData: RD.RemoteData<ApiError, ReferenceData>;
   workgroups: SimpleWorkgroup[];
   lang: Lang;
+  isAnonymousMode: boolean;
 }
 
 export interface AppState {

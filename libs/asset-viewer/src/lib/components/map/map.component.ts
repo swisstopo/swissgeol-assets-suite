@@ -12,17 +12,19 @@ import {
   SimpleChanges,
   ViewChild,
 } from '@angular/core';
-import { AppState } from '@asset-sg/client-shared';
-import { ORD } from '@asset-sg/core';
+import { arrayEqual, isNotNull } from '@asset-sg/core';
+import { filterNullish } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
-import { asapScheduler, first, identity, skip, Subscription, switchMap } from 'rxjs';
-import { AllStudyService } from '../../services/all-study.service';
+import { asapScheduler, filter, first, Subscription, withLatestFrom } from 'rxjs';
 import * as searchActions from '../../state/asset-search/asset-search.actions';
 import {
   selectAssetSearchPolygon,
   selectAssetSearchResultData,
   selectCurrentAssetDetail,
+  selectAssetSearchNoActiveFilters,
+  selectStudies,
 } from '../../state/asset-search/asset-search.selector';
+import { AppStateWithMapControl } from '../../state/map-control/map-control.reducer';
 import { DrawControl } from '../map-controls/draw-controls';
 import { ZoomControl } from '../map-controls/zoom-control';
 import { MapController } from './map-controller';
@@ -70,7 +72,7 @@ export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
   @ViewChild('mapControls', { static: true })
   controlsElement!: ElementRef<HTMLElement>;
 
-  private readonly store = inject(Store<AppState>);
+  private readonly store = inject(Store<AppStateWithMapControl>);
 
   private controller!: MapController;
 
@@ -80,8 +82,6 @@ export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
   };
 
   isInitialized = false;
-
-  private readonly allStudyService = inject(AllStudyService);
 
   private readonly subscription = new Subscription();
 
@@ -121,6 +121,7 @@ export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
       draw: new DrawControl({
         element: this.controlsElement.nativeElement,
         polygonSource: this.controller.sources.polygon,
+        store: this.store,
       }),
     };
 
@@ -142,34 +143,17 @@ export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
       this.handleHighlightedAssetIdChange();
     });
 
-    const studies$ = this.allStudyService.getAllStudies().pipe(ORD.fromFilteredSuccess);
-    this.subscription.add(
-      studies$.subscribe((studies) => {
-        this.controller.setStudies(studies);
-      })
-    );
-
-    this.controller.isInitialized$
-      .pipe(
-        first(identity),
-        switchMap(() => studies$)
-      )
-      .subscribe(() => this.initializeEnd.emit());
+    this.initializeEnd.emit();
   }
 
   private initializeStoreBindings() {
     this.subscription.add(
-      this.store.select(selectAssetSearchResultData).subscribe((assets) => {
-        if (assets.length === 0) {
-          this.controller.clearAssets();
-          this.controller.layers.studies.setVisible(true);
-          this.controller.layers.heatmap.setVisible(true);
-        } else {
-          this.controller.setAssets(assets);
-          this.controller.layers.studies.setVisible(false);
-          this.controller.layers.heatmap.setVisible(false);
-        }
+      this.store.select(selectAssetSearchNoActiveFilters).subscribe((showStudies) => {
+        this.controller.setShowHeatmap(showStudies);
       })
+    );
+    this.subscription.add(
+      this.store.select(selectAssetSearchResultData).subscribe((assets) => this.controller.setAssets(assets))
     );
 
     this.subscription.add(
@@ -177,9 +161,16 @@ export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
         if (asset == null) {
           this.controller.clearActiveAsset();
         } else {
-          this.controller.setActiveAsset(asset);
+          setTimeout(() => this.controller.setActiveAsset(asset));
         }
       })
+    );
+
+    this.subscription.add(
+      this.store
+        .select(selectStudies)
+        .pipe(filter(isNotNull))
+        .subscribe((studies) => this.controller.setStudies(studies))
     );
   }
 
@@ -189,13 +180,21 @@ export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
         this.controls.draw.setPolygon(polygon ?? null);
       })
     );
-    this.controls.draw.polygon$.pipe(skip(1)).subscribe((polygon) => {
-      this.store.dispatch(
-        searchActions.searchByFilterConfiguration({
-          filterConfiguration: { polygon: polygon ?? undefined },
-        })
-      );
-    });
+    this.subscription.add(
+      this.controls.draw.polygon$
+        .pipe(
+          filterNullish(),
+          withLatestFrom(this.store.select(selectAssetSearchPolygon)),
+          filter(([polygon, storePolygon]) => !arrayEqual(polygon, storePolygon))
+        )
+        .subscribe(([polygon, _]) =>
+          this.store.dispatch(
+            searchActions.search({
+              query: { polygon: polygon },
+            })
+          )
+        )
+    );
   }
 
   private handleHighlightedAssetIdChange() {

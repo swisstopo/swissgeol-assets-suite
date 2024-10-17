@@ -14,7 +14,7 @@ import { Cluster, Tile, Vector as VectorSource, XYZ } from 'ol/source';
 import { Circle } from 'ol/style';
 import Style from 'ol/style/Style';
 import View from 'ol/View';
-import { BehaviorSubject, distinctUntilChanged, filter, fromEventPattern, map, Observable, switchMap } from 'rxjs';
+import { distinctUntilChanged, filter, fromEventPattern, map, Observable, switchMap } from 'rxjs';
 import { AllStudyDTO } from '../../models';
 import { wktToGeoJSON } from '../../state/asset-search/asset-search.selector';
 
@@ -51,7 +51,7 @@ export class MapController {
    */
   private isClickEnabled = true;
 
-  private readonly _isInitialized$ = new BehaviorSubject(false);
+  private showHeatmap = true;
 
   constructor(element: HTMLElement) {
     const view = new View({
@@ -92,17 +92,20 @@ export class MapController {
     this.assetsHover$ = this.makeAssetsHover$();
 
     this.map.once('loadend', () => {
-      fitToSwitzerland(view, false);
-      const zoom = view.getZoom();
-      if (zoom != null) {
-        view.setMinZoom(zoom);
+      if (this.activeAsset === null) {
+        fitToSwitzerland(view, false);
+        const zoom = view.getZoom();
+        if (zoom != null) {
+          view.setMinZoom(zoom);
+        }
       }
-      this._isInitialized$.next(true);
     });
   }
 
-  get isInitialized$(): Observable<boolean> {
-    return this._isInitialized$.asObservable();
+  setShowHeatmap(showHeatmap: boolean): void {
+    this.showHeatmap = showHeatmap;
+    this.layers.heatmap.setVisible(showHeatmap);
+    this.layers.studies.setVisible(showHeatmap);
   }
 
   setClickEnabled(isEnabled: boolean): void {
@@ -145,6 +148,12 @@ export class MapController {
 
   setAssets(assets: AssetEditDetail[]): void {
     this.assetsById.clear();
+    if (this.showHeatmap) {
+      window.requestAnimationFrame(() => {
+        this.sources.assets.clear();
+      });
+      return;
+    }
 
     const features: Feature[] = [];
     const studies: Study[] = [];

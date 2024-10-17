@@ -27,6 +27,7 @@ export class AppController {
       oauth_responseType: process.env.OAUTH_RESPONSE_TYPE,
       oauth_showDebugInformation: !!process.env.OAUTH_SHOW_DEBUG_INFORMATION,
       oauth_tokenEndpoint: process.env.OAUTH_TOKEN_ENDPOINT,
+      anonymous_mode: process.env.ANONYMOUS_MODE === 'true',
     };
   }
 

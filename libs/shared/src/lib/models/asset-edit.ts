@@ -4,7 +4,14 @@ import { Eq as eqNumber } from 'fp-ts/number';
 import { Eq as eqString } from 'fp-ts/string';
 import * as C from 'io-ts/Codec';
 
-import { AssetContactRole, eqAssetContactRole, LinkedAsset, StatusWork } from './asset-detail';
+import {
+  AssetContactRole,
+  AssetFileType,
+  eqAssetContactRole,
+  LegalDocItemCode,
+  LinkedAsset,
+  StatusWork,
+} from './asset-detail';
 import { AssetUsage } from './asset-usage';
 import { DateId } from './DateStruct';
 
@@ -53,14 +60,20 @@ export const eqAssetContactEdit = struct({
   contactId: eqNumber,
 });
 
-export const AssetFile = C.struct({ fileId: C.number, fileName: C.string, fileSize: CT.BigIntFromString });
+export const AssetFile = C.struct({
+  id: C.number,
+  name: C.string,
+  size: C.number,
+  type: AssetFileType,
+  legalDocItemCode: C.nullable(LegalDocItemCode),
+});
 
 export type AssetFile = C.TypeOf<typeof AssetFile>;
 
 export const BaseAssetEditDetail = {
   assetId: C.number,
   titlePublic: C.string,
-  titleOriginal: C.string,
+  titleOriginal: C.nullable(C.string),
   createDate: DateId,
   receiptDate: DateId,
   lastProcessedDate: CT.DateFromISOString,

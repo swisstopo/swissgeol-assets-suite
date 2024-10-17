@@ -1,3 +1,5 @@
+import { Observable } from 'rxjs';
+
 export type AlertId = string;
 
 /**
@@ -20,7 +22,7 @@ export interface Alert {
   /**
    * The display text.
    */
-  text: string;
+  text: string | Observable<string>;
 
   /**
    * Whether the alert stays until manually closed by the user,

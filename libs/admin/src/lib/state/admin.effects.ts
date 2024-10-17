@@ -1,10 +1,13 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { CURRENT_LANG } from '@asset-sg/client-shared';
-import { User, Workgroup } from '@asset-sg/shared/v2';
+import { AlertType, CURRENT_LANG, showAlert } from '@asset-sg/client-shared';
+import { User, Workgroup, WorkgroupData } from '@asset-sg/shared/v2';
 import { UntilDestroy } from '@ngneat/until-destroy';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
-import { first, map, switchMap, tap, withLatestFrom } from 'rxjs';
+import { Store } from '@ngrx/store';
+import { TranslateService } from '@ngx-translate/core';
+import { catchError, EMPTY, first, map, OperatorFunction, switchMap, withLatestFrom } from 'rxjs';
 
 import { AdminService } from '../services/admin.service';
 import * as actions from './admin.actions';
@@ -16,7 +19,9 @@ export class AdminEffects {
   private readonly adminService = inject(AdminService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
+  private readonly store = inject(Store);
   private readonly currentLang$ = inject(CURRENT_LANG);
+  private readonly translate = inject(TranslateService);
 
   public findUser$ = createEffect(() =>
     this.actions$.pipe(
@@ -46,7 +51,9 @@ export class AdminEffects {
   public createWorkgroup$ = createEffect(() =>
     this.actions$.pipe(
       ofType(actions.createWorkgroup),
-      switchMap(({ workgroup }) => this.adminService.createWorkgroup(workgroup)),
+      switchMap(({ workgroup }) =>
+        this.adminService.createWorkgroup(workgroup).pipe(this.catchWorkgroupError(workgroup))
+      ),
       withLatestFrom(this.currentLang$),
       map(([workgroup, currentLang]) => {
         void this.router.navigate([`/${currentLang}/admin/workgroups/${workgroup.id}`], { relativeTo: this.route });
@@ -59,10 +66,9 @@ export class AdminEffects {
     this.actions$.pipe(
       ofType(actions.updateWorkgroup),
       switchMap(({ workgroupId, workgroup }) =>
-        this.adminService
-          .updateWorkgroup(workgroupId, workgroup)
-          .pipe(map((workgroup: Workgroup) => actions.setWorkgroup({ workgroup })))
-      )
+        this.adminService.updateWorkgroup(workgroupId, workgroup).pipe(this.catchWorkgroupError(workgroup))
+      ),
+      map((workgroup: Workgroup) => actions.setWorkgroup({ workgroup }))
     )
   );
 
@@ -83,4 +89,29 @@ export class AdminEffects {
       )
     )
   );
+
+  private readonly catchWorkgroupError = (data: WorkgroupData): OperatorFunction<Workgroup, Workgroup> =>
+    catchError((error) => {
+      if (!(error instanceof HttpErrorResponse)) {
+        throw error;
+      }
+      if (
+        error.status === 422 &&
+        error.error.message === 'Unique constraint failed' &&
+        error.error.details.fields.includes('name')
+      ) {
+        this.store.dispatch(
+          showAlert({
+            alert: {
+              id: `duplicate-workgroup-name`,
+              text: this.translate.get('workgroup.errors.nameTaken', { name: data.name }),
+              type: AlertType.Error,
+              isPersistent: false,
+            },
+          })
+        );
+        return EMPTY;
+      }
+      throw error;
+    });
 }

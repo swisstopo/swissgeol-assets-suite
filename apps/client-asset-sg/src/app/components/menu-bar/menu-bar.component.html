@@ -1,74 +1,37 @@
-<div>
-  <button
-    asset-sg-reset
-    class="menu-bar-item active"
-    *ngIf="isAssetsActive$ | async; else notAssetsActive"
-    (click)="openAssetDrawer()"
-  >
-    <svg-icon key="assets" />
-    <span translate>menuBar.assets</span>
-  </button>
-  <ng-template #notAssetsActive>
-    <a [routerLink]="[_translateService.currentLang]" asset-sg-reset class="menu-bar-item" (click)="openAssetDrawer()">
-      <svg-icon key="assets" />
-      <span translate>menuBar.assets</span>
-    </a>
-  </ng-template>
-  <a
-    asset-sg-reset
-    [disabled]="true"
-    [routerLink]="[_translateService.currentLang, 'favourites']"
-    class="menu-bar-item"
-    [ngClass]="{ active: (isFavouritesActive$ | async) }"
-  >
-    <svg-icon key="favourite" />
-    <span translate>menuBar.favourites</span>
-  </a>
-  <ng-container *canCreate="AssetEditPolicy">
-    <button
-      asset-sg-reset
-      class="menu-bar-item active"
-      *ngIf="isEditActive$ | async; else notAssetEditActive"
-      [disabled]="true"
+<ng-container *rxLet="activeItem$; let activeItem">
+  <ul class="submenu">
+    <li
+      *rxLet="activeItem === 'home'; let isActive"
+      asset-sg-menu-bar-item
+      icon="assets"
+      [link]="isActive ? null : [translateService.currentLang]"
+      [isActive]="isActive && ((isFiltersOpen$ | async) ?? false)"
+      (click)="isActive ? toggleAssetDrawer() : null"
     >
-      <svg-icon key="edit" />
-      <span translate>menuBar.admin</span>
-    </button>
-    <ng-template #notAssetEditActive>
-      <a
-        [routerLink]="[_translateService.currentLang, 'asset-admin']"
-        asset-sg-reset
-        class="menu-bar-item"
-        [ngClass]="{ active: (isEditActive$ | async) }"
-      >
-        <svg-icon key="edit" />
-        <span translate>menuBar.admin</span>
-      </a>
-    </ng-template>
-  </ng-container>
-  <a
-    *adminOnly
-    [routerLink]="[_translateService.currentLang, 'admin']"
-    asset-sg-reset
-    class="menu-bar-item"
-    [class]="{ active: (isAdminActive$ | async) }"
-  >
-    <svg-icon key="user-management" />
-    <span translate>menuBar.userManagement</span>
-  </a>
-</div>
-<div>
-  <a
-    [routerLink]="[_translateService.currentLang, 'profile']"
-    asset-sg-reset
-    class="menu-bar-item"
-    [ngClass]="{ active: (isProfileActive$ | async) }"
-  >
-    <svg-icon key="profile" />
-    <span translate>menuBar.profile</span>
-  </a>
-  <a routerLink="/help" disabled asset-sg-reset class="menu-bar-item">
-    <svg-icon key="help" />
-    <span translate>menuBar.help</span>
-  </a>
-</div>
+      menuBar.filters
+    </li>
+    <li *ngIf="userExists$ | async" asset-sg-menu-bar-item icon="favourite" disabled>menuBar.favourites</li>
+    <li
+      *canCreate="AssetEditPolicy"
+      asset-sg-menu-bar-item
+      icon="add"
+      [link]="[translateService.currentLang, 'asset-admin', 'new']"
+      [isActive]="activeItem === 'create-asset'"
+    >
+      menuBar.createAsset
+    </li>
+  </ul>
+
+  <ul class="submenu">
+    <li
+      *adminOnly
+      asset-sg-menu-bar-item
+      icon="options"
+      [link]="[translateService.currentLang, 'asset-admin']"
+      [isActive]="activeItem === 'options'"
+    >
+      menuBar.settings
+    </li>
+    <li asset-sg-menu-bar-item icon="help" disabled>menuBar.help</li>
+  </ul>
+</ng-container>

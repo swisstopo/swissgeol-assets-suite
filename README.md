@@ -1,4 +1,4 @@
-# SwissGeol Asset
+# SwissGeol Assets
 
 ## Development
 
@@ -12,16 +12,11 @@ The following components must be installed on the development computer:
 
 Follow these steps to set up the development environment on your local machine:
 
-- [1. Configure Local Systems](#1-Configure-Local-Systems)
-- [2. Install Dependencies](#2-Install-Dependencies)
-- [3. Generate Database Types](#3-Generate-Database-Types)
-- [4. Initialize MinIO](#4-Initialize-MinIO)
+- [1. Install Dependencies](#2-Install-Dependencies)
+- [2. Generate Database Types](#3-Generate-Database-Types)
+- [3. Initialize MinIO](#4-Initialize-MinIO)
 
-#### 1. Configure Local Systems
-
-Configure `development/.env` according to the [local service configuration](#Local-Service-Configuration).
-
-#### 2. Install Dependencies
+#### 1. Install Dependencies
 
 Install node modules:
 
@@ -29,7 +24,7 @@ Install node modules:
 npm install
 ```
 
-#### 3. Generate Database Types
+#### 2. Generate Database Types
 
 Generate prisma-client for database-access:
 
@@ -37,7 +32,10 @@ Generate prisma-client for database-access:
 npm run prisma -- generate
 ```
 
-#### 4. Initialize MinIO
+#### 3. Initialize MinIO
+
+> Note that this step may be skipped if you do not need to interact with uploaded files,
+> and don't want to upload files yourselves.
 
 - [Start the development services](#Starting-the-Development-Environment).
 - Open http://localhost:9001
@@ -46,7 +44,7 @@ npm run prisma -- generate
 - Navigate to [the new bucket's browser](http://localhost:9001/browser/asset-sg) and create an empty folder with the name `asset-sg`.
 - Navigate to [Configuration](http://localhost:9001/settings/configurations/region) and change the server region to `local`.
 - Navigate to [Access Keys](http://localhost:9001/access-keys) and create a new access key.
-- Open the file [`apps/server-asset-sg/.env.local`](apps/server-asset-sg/.env.local) and modify the following variables:
+- Create the file [`apps/server-asset-sg/.env.local`](apps/server-asset-sg/.env.local) and add the following variables:
   - Set `S3_ACCESS_KEY_ID` to your generated access key.
   - Set `S3_SECRET_ACCESS_KEY` to your generated access key's secret.
 
@@ -91,7 +89,7 @@ Be aware that you need to manually insert the `{DB_*}` values beforehand.
 
 ```bash
 cd development
-docker compose exec db sh -c 'pg_dump --dbname=postgresql://{DB_USERNAME}:{DB_PASSWORD}@{DB_HOST}:5432/{DB_DATABASE} --data-only --exclude-table asset_user --exclude-table _prisma_migrations -n public > /dump.sql'
+docker compose exec db sh -c 'pg_dump --dbname=postgresql://{DB_USERNAME}:{DB_PASSWORD}@{DB_HOST}:5432/{DB_DATABASE} --data-only --exclude-table asset_user --exclude-table workgroups_on_users --exclude-table _prisma_migrations -n public > /dump.sql'
 ```
 
 > The export will output warnings related to circular foreign-key constraints.
@@ -107,10 +105,14 @@ Ensure to start your database service beforehand.
 ```bash
 # Reset the database:
 npm run prisma -- migrate reset -f
-npm run prisma -- migrate deploy
+
+# Switch to the directory containing the database's `docker-compose.yml`:
+cd development
+
+# Remove the initial workgroup as it will collide with the import:
+docker compose exec db sh -c 'psql --dbname=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:5432/${POSTGRES_DB} -c "DELETE FROM workgroup"'
 
 # Import example data:
-cd development
 docker compose exec db sh -c 'psql --dbname=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:5432/${POSTGRES_DB} -v ON_ERROR_STOP=1 -f /dump.sql'
 ```
 
@@ -150,10 +152,10 @@ nx run server-asset-sg:test -t 'AssetRepo create'
 
 ## Configuration
 
-### Asset Server Configuration
+### Server Configuration
 
-The file `apps/server-asset-sg/.env.local` configures secrets for the SwissGeol Asset server.
-An empty template for the file can be found in [`apps/server-asset-sg/.env.template`](apps/server-asset-sg/.env.template).
+The file `apps/server-asset-sg/.env` configures the configuration for the SwissGeol Assets server.
+By default, it is configured to work with the Docker services found in [`development/docker-compose.yml`](development/docker-compose.yml).
 
 | Variable                | Example                                                            | Description                                                         |
 | ----------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------- |
@@ -174,30 +176,38 @@ An empty template for the file can be found in [`apps/server-asset-sg/.env.templ
 | OCR_URL                 |                                                                    | Leave empty.                                                        |
 | OCR_CALLBACK_URL        |                                                                    | Leave empty.                                                        |
 
-> The local docker configuration contains an OIDC container supporting OAuth.
-> Use the example values to use it instead of an external issuer.
+### Services Configuration
 
-### Local Service Configuration
+The file [`development/.env`](development/.env) configures secrets for the services used in local development.
+By default, these secrets align with the server's configuration.
 
-The file `development/.env` configures secrets for the services used in local development.
-An empty template for the file can be found in [`development/.env.template`](development/.env.template).
+| Variable         | Beschreibung                           |
+| ---------------- | -------------------------------------- |
+| STORAGE_USER     | Username for the MinIO container.      |
+| STORAGE_PASSWORD | Password for the MinIO container.      |
+| DB_USER          | Username for the PostgreSQL container. |
+| DB_PASSWORD      | Password for the PostgreSQL container. |
+| PGADMIN_EMAIL    | Email for the PgAdmin container.       |
+| PGADMIN_PASSWORD | Password for the PgAdmin container.    |
 
-> Make sure that your passwords have a minimal length of 8 and contain at combination of
-> upper, lower and special characters. Some of the passwords will be checked for validity during startup.
+```bash
+git update-index --no-skip-worktree development/.env
+git update-index --no-skip-worktree apps/server-asset-sg/.env.local
+```
 
-| Variable         | Wert     | Beschreibung                           |
-| ---------------- | -------- | -------------------------------------- |
-| STORAGE_USER     | _custom_ | Username for the MinIO container.      |
-| STORAGE_PASSWORD | _custom_ | Password for the MinIO container.      |
-| DB_USER          | postgres | Username for the PostgreSQL container. |
-| DB_PASSWORD      | _custom_ | Password for the PostgreSQL container. |
-| PGADMIN_EMAIL    | _custom_ | Email for the PgAdmin container.       |
-| PGADMIN_PASSWORD | _custom_ | Password for the PgAdmin container.    |
+Then, after having committed your changes, remove them again:
+
+```bash
+git update-index --skip-worktree development/.env
+git update-index --skip-worktree apps/server-asset-sg/.env.local
+```
+
+> Note that worktree modifications need to be committed, just like file changes.
 
 ## Database ORM
 
 This project uses [Prisma](https://www.prisma.io/) as its database ORM.
-The schema can be found at [apps/server-asset-sg/prisma/schema.prisma](./apps/server-asset-sg/prisma/schema.prisma).
+The schema can be found at [libs/persistence/prisma/schema.prisma](libs/persistence/prisma/schema.prisma).
 
 To run prisma commands, you can use the following shortcut:
 
@@ -222,7 +232,7 @@ npm run prisma -- migrate reset
 
 ### Creating migrations
 
-To create a new migration, first modify [the Prisma schema](./apps/server-asset-sg/prisma/schema.prisma).
+To create a new migration, first modify [the Prisma schema](libs/persistence/prisma/schema.prisma).
 Then, create a [shadow database](https://www.prisma.io/docs/orm/prisma-migrate/understanding-prisma-migrate/shadow-database):
 
 ```bash
@@ -235,7 +245,7 @@ Afterward, you can generate the new migration:
 npm run prisma -- migrate dev --create-only
 ```
 
-You can find and modify your new migration within [the `migrations/` directory](./apps/server-asset-sg/prisma/migrations/).
+You can find and modify your new migration within [the `migrations/` directory](libs/persistence/prisma/migrations/).
 The finalized migration can be applied like any other migration:
 
 ```bash

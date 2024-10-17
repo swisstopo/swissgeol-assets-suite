@@ -1,5 +1,4 @@
 import { instanceToPlain, Transform } from 'class-transformer';
-import { validate } from 'class-validator';
 import { Class } from 'type-fest';
 
 /**

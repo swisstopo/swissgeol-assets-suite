@@ -27,8 +27,9 @@ init_index() {
 
   echo "Initializing index ${INDEX_NAME}..."
 
+
   curl --silent -XPUT "${ELASTICSEARCH_URL}/${INDEX_NAME}"
-  curl --silent -XPUT "${ELASTICSEARCH_URL}/${INDEX_NAME}/_mapping" -d "@/init/mappings/${INDEX_NAME}.json"
+  curl --silent -XPUT "${ELASTICSEARCH_URL}/${INDEX_NAME}/_mapping" -H 'Content-Type: application/json' -d "@/init/mappings/${INDEX_NAME}.json"
 
   echo "Successfully initialized index ${INDEX_NAME}"
 }

@@ -1,13 +1,14 @@
 import { ChangeDetectionStrategy, Component, HostBinding, inject } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
-import { appSharedStateActions } from '@asset-sg/client-shared';
+import { appSharedStateActions, fromAppShared } from '@asset-sg/client-shared';
 import { AssetEditPolicy } from '@asset-sg/shared/v2';
-import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { UntilDestroy } from '@ngneat/until-destroy';
 import { Store } from '@ngrx/store';
 import { TranslateService } from '@ngx-translate/core';
-import queryString from 'query-string';
-import { filter, map, shareReplay } from 'rxjs';
+import { filter, map, Observable, startWith } from 'rxjs';
 
+// eslint-disable-next-line @nx/enforce-module-boundaries
+import { selectIsFiltersOpen } from '../../../../../../libs/asset-viewer/src/lib/state/asset-search/asset-search.selector';
 import { AppState } from '../../state/app-state';
 
 @UntilDestroy()
@@ -18,39 +19,43 @@ import { AppState } from '../../state/app-state';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MenuBarComponent {
-  @HostBinding('attr.role') role = 'navigation';
-  private _router = inject(Router);
-  public _translateService = inject(TranslateService);
-  private _store = inject(Store<AppState>);
+  @HostBinding('attr.role')
+  readonly role = 'navigation';
 
-  public isAssetsActive$ = this.createIsRouteActive$((url) => Boolean(url.match(/^\/\w\w$/)));
-  public isEditActive$ = this.isSegmentActive('asset-admin');
-  public isFavouritesActive$ = this.isSegmentActive('favourites');
-  public isAdminActive$ = this.isSegmentActive('admin');
-  public isProfileActive$ = this.isSegmentActive('profile');
+  private readonly router = inject(Router);
+  private readonly store = inject(Store<AppState>);
 
-  private createIsRouteActive$(fn: (url: string) => boolean) {
-    const o$ = this._router.events.pipe(
-      filter((event) => event instanceof NavigationEnd),
-      map(() => {
-        const { url } = queryString.parseUrl(this._router.url);
-        return fn(url);
-      }),
-      shareReplay({ bufferSize: 1, refCount: true })
-    );
-    o$.pipe(untilDestroyed(this)).subscribe();
-    return o$;
-  }
+  readonly translateService = inject(TranslateService);
 
-  private isSegmentActive(segment: string) {
-    return this.createIsRouteActive$((url) => {
-      return Boolean(url.match(`^/\\w\\w/${segment}`));
-    });
-  }
+  readonly userExists$ = this.store.select(fromAppShared.selectIsAnonymousMode).pipe(map((anonymous) => !anonymous));
+  readonly isFiltersOpen$ = this.store.select(selectIsFiltersOpen);
 
-  public openAssetDrawer() {
-    this._store.dispatch(appSharedStateActions.toggleSearchFilter());
+  readonly activeItem$: Observable<MenuItem | null> = this.router.events.pipe(
+    filter((event) => event instanceof NavigationEnd),
+    map((): MenuItem | null => {
+      const segments = this.router.parseUrl(this.router.url).root.children['primary'].segments;
+      if (segments.length === 1) {
+        return 'home';
+      }
+      const path = segments.slice(1).join('/');
+      const isPath = (prefix: string) => path === prefix || path.startsWith(`${prefix}/`);
+
+      if (isPath('asset-admin/new')) {
+        return 'create-asset';
+      }
+      if (path == 'asset-admin' || isPath('admin')) {
+        return 'options';
+      }
+      return null;
+    }),
+    startWith('home' as const)
+  );
+
+  toggleAssetDrawer(): void {
+    this.store.dispatch(appSharedStateActions.toggleSearchFilter());
   }
 
   protected readonly AssetEditPolicy = AssetEditPolicy;
 }
+
+type MenuItem = 'home' | 'create-asset' | 'options';

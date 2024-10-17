@@ -1,13 +1,13 @@
 import { CT } from '@asset-sg/core';
 import * as C from 'io-ts/Codec';
 
-import { AssetContactEdit, AssetLanguageEdit } from './asset-edit';
+import { AssetContactEdit, AssetFile, AssetLanguageEdit } from './asset-edit';
 import { AssetUsage } from './asset-usage';
 import { DateId } from './DateStruct';
 
 export const PatchAsset = C.struct({
   titlePublic: C.string,
-  titleOriginal: C.string,
+  titleOriginal: C.nullable(C.string),
   createDate: DateId,
   receiptDate: DateId,
   publicUse: AssetUsage,
@@ -19,6 +19,7 @@ export const PatchAsset = C.struct({
   typeNatRels: C.array(C.string),
   assetLanguages: C.array(AssetLanguageEdit),
   assetContacts: C.array(AssetContactEdit),
+  assetFiles: C.array(AssetFile),
   ids: C.array(
     C.struct({
       idId: CT.optionFromNullable(C.number),

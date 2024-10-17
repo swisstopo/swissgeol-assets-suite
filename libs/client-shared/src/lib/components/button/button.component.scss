@@ -73,6 +73,11 @@
       color: variables.$white;
     }
   }
+
+  &.asset-sg-active:focus,
+  &.asset-sg-active {
+    color: variables.$dark-red;
+  }
 }
 
 :host[asset-sg-icon-button] {

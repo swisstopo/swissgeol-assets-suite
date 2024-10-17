@@ -18,6 +18,7 @@ import * as RD from '@devexperts/remote-data-ts';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { Store } from '@ngrx/store';
 import { TranslateService } from '@ngx-translate/core';
+import { FileType } from '@prisma/client';
 import * as A from 'fp-ts/Array';
 import { pipe } from 'fp-ts/function';
 import * as O from 'fp-ts/Option';
@@ -29,7 +30,7 @@ import { TabPageBridgeService } from '../../services/tab-page-bridge.service';
 import * as actions from '../../state/asset-editor.actions';
 import { AppStateWithAssetEditor } from '../../state/asset-editor.reducer';
 import * as fromAssetEditor from '../../state/asset-editor.selectors';
-import { makeAssetEditorFormGroup } from '../asset-editor-form-group';
+import { AssetEditorFile, AssetEditorFileTypeFormGroup, makeAssetEditorFormGroup } from '../asset-editor-form-group';
 
 @UntilDestroy()
 @Component({
@@ -42,6 +43,7 @@ import { makeAssetEditorFormGroup } from '../asset-editor-form-group';
 export class AssetEditorTabPageComponent {
   @ViewChildren('tabsWrapper', { read: ElementRef }) _tabsWrapper!: QueryList<ElementRef<HTMLDivElement>>;
   @ViewChild('tabPanelGeneralContent') _tabPanelGeneralContent!: TemplateRef<unknown>;
+  @ViewChild('tabPanelFilesContent') _tabPanelFilesContent!: TemplateRef<unknown>;
   @ViewChild('tabPanelUsageContent') _tabPanelUsageContent!: TemplateRef<unknown>;
   @ViewChild('tabPanelContactsContent') _tabPanelContactsContent!: TemplateRef<unknown>;
   @ViewChild('tabPanelReferencesContent') _tabPanelReferencesContent!: TemplateRef<unknown>;
@@ -67,12 +69,12 @@ export class AssetEditorTabPageComponent {
   );
   public assetEditDetail$ = this._store.select(fromAssetEditor.selectRDAssetEditDetail).pipe(ORD.fromFilteredSuccess);
 
-  public _form = makeAssetEditorFormGroup();
+  public form = makeAssetEditorFormGroup();
 
   constructor() {
     this._tabPageBridgeService.registerTabPage(this);
 
-    this._form.disable();
+    this.form.disable();
 
     this._store
       .select(fromAssetEditor.selectRDAssetEditDetail)
@@ -89,7 +91,19 @@ export class AssetEditorTabPageComponent {
           if (this._location.path().match(/(\w+)/g)?.[3] === 'new') {
             this._location.replaceState(this._location.path().replace(/new/, String(asset.assetId)));
           }
-          this._form.patchValue({
+
+          const filesByType: Record<FileType, AssetEditorFile[]> = {
+            Normal: [],
+            Legal: [],
+          };
+          for (const file of asset.assetFiles) {
+            filesByType[file.type].push({
+              ...file,
+              willBeDeleted: false,
+            });
+          }
+
+          this.form.patchValue({
             general: {
               id: asset.assetId,
               titlePublic: asset.titlePublic,
@@ -102,10 +116,19 @@ export class AssetEditorTabPageComponent {
               assetLanguages: asset.assetLanguages,
               manCatLabelRefs: asset.manCatLabelRefs,
               ids: asset.ids,
-              filesToDelete: [],
-              newFiles: [],
-              assetFiles: asset.assetFiles.map((file) => ({ ...file, willBeDeleted: false })),
               workgroupId: asset.workgroupId,
+            },
+            files: {
+              normalFiles: {
+                newFiles: [],
+                filesToDelete: [],
+                existingFiles: filesByType.Normal,
+              },
+              legalFiles: {
+                newFiles: [],
+                filesToDelete: [],
+                existingFiles: filesByType.Legal,
+              },
             },
             usage: {
               publicUse: asset.publicUse.isAvailable,
@@ -140,17 +163,15 @@ export class AssetEditorTabPageComponent {
             },
           });
         }
-        this._form.controls.general.controls.newFiles.clear();
-        this._form.enable();
-        this._form.markAsUntouched();
-        this._form.markAsPristine();
+        this.form.controls.files.controls.normalFiles.controls.newFiles.clear();
+        this.form.controls.files.controls.legalFiles.controls.newFiles.clear();
+        this.form.enable();
+        this.form.markAsUntouched();
+        this.form.markAsPristine();
         if (O.isNone(maybeAsset)) {
-          this._form.controls.administration.controls.newStatusWorkItemCode.disable();
+          this.form.controls.administration.controls.newStatusWorkItemCode.disable();
         }
       });
-    this._form.valueChanges.subscribe(() => {
-      // console.log('value', this._form.value);
-    });
 
     this._lc.afterViewInit$
       .pipe(
@@ -174,6 +195,11 @@ export class AssetEditorTabPageComponent {
             key: 'general',
             buttonLabel: createButtonLabelTranslation('edit.tabs.general.tabName'),
             content: this._tabPanelGeneralContent,
+          },
+          {
+            key: 'files',
+            buttonLabel: createButtonLabelTranslation('edit.tabs.files.tabName'),
+            content: this._tabPanelFilesContent,
           },
           {
             key: 'usage',
@@ -241,66 +267,75 @@ export class AssetEditorTabPageComponent {
       });
   }
 
-  save() {
-    if (this._form.valid) {
-      this._form.disable();
-      const patchAsset: PatchAsset = {
-        titlePublic: this._form.getRawValue().general.titlePublic,
-        titleOriginal: this._form.getRawValue().general.titleOriginal,
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        createDate: this._form.getRawValue().general.createDate!,
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        receiptDate: this._form.getRawValue().general.receiptDate!,
-        publicUse: {
-          isAvailable: this._form.getRawValue().usage.publicUse,
-          startAvailabilityDate: O.fromNullable(this._form.getRawValue().usage.publicStartAvailabilityDate),
-          statusAssetUseItemCode: this._form.getRawValue().usage.publicUseStatusAssetUseCode,
-        },
-        internalUse: {
-          isAvailable: this._form.getRawValue().usage.internalUse,
-          startAvailabilityDate: O.fromNullable(this._form.getRawValue().usage.internalStartAvailabilityDate),
-          statusAssetUseItemCode: this._form.getRawValue().usage.internalUseStatusAssetUseCode,
-        },
-        assetKindItemCode: this._form.getRawValue().general.assetKindItemCode,
-        assetFormatItemCode: this._form.getRawValue().general.assetFormatItemCode,
-        isNatRel: this._form.getRawValue().usage.isNatRel,
-        typeNatRels: this._form.getRawValue().usage.natRelTypeItemCodes,
-        manCatLabelRefs: this._form.getRawValue().general.manCatLabelRefs,
-        assetLanguages: this._form.getRawValue().general.assetLanguages,
-        assetContacts: this._form.getRawValue().contacts.assetContacts,
-        ids: this._form.getRawValue().general.ids,
-        studies: pipe(
-          this._form.getRawValue().geometries.studies,
-          A.filter((study) => study.studyId.match('new') === null),
-          A.map((study) => ({
-            studyId: study.studyId,
-            geomText: GeomFromGeomText.encode(study.geom),
-          }))
-        ),
-        newStudies: pipe(
-          this._form.getRawValue().geometries.studies,
-          A.filter((study) => study.studyId.match('new') !== null),
-          A.map((study) => GeomFromGeomText.encode(study.geom))
-        ),
-        newStatusWorkItemCode: O.fromNullable(this._form.getRawValue().administration.newStatusWorkItemCode),
-        assetMainId: O.fromNullable(this._form.getRawValue().references.assetMain?.assetId),
-        siblingAssetIds: this._form.getRawValue().references.siblingAssets.map((asset) => asset.assetId),
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        workgroupId: this._form.getRawValue().general.workgroupId!,
-      };
-      this._showProgressBar$.next(true);
-      if (this._form.getRawValue().general.id === 0) {
-        this._store.dispatch(actions.createNewAsset({ patchAsset }));
-      } else {
-        this._store.dispatch(
-          actions.updateAssetEditDetail({
-            assetId: this._form.getRawValue().general.id,
-            patchAsset,
-            filesToDelete: this._form.getRawValue().general.filesToDelete,
-            newFiles: this._form.getRawValue().general.newFiles,
-          })
-        );
-      }
+  save(): void {
+    if (this.form.invalid) {
+      return;
+    }
+
+    const { general, files, usage, contacts, geometries, references, administration } = this.form.getRawValue();
+
+    this.form.disable();
+
+    const extractAssetFiles = (group: ReturnType<AssetEditorFileTypeFormGroup['getRawValue']>) =>
+      group.existingFiles.filter((file) => !group.filesToDelete.includes(file.id));
+
+    const patchAsset: PatchAsset = {
+      titlePublic: general.titlePublic,
+      titleOriginal: general.titleOriginal,
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      createDate: general.createDate!,
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      receiptDate: general.receiptDate!,
+      publicUse: {
+        isAvailable: usage.publicUse,
+        startAvailabilityDate: O.fromNullable(usage.publicStartAvailabilityDate),
+        statusAssetUseItemCode: usage.publicUseStatusAssetUseCode,
+      },
+      internalUse: {
+        isAvailable: usage.internalUse,
+        startAvailabilityDate: O.fromNullable(usage.internalStartAvailabilityDate),
+        statusAssetUseItemCode: usage.internalUseStatusAssetUseCode,
+      },
+      assetKindItemCode: general.assetKindItemCode,
+      assetFormatItemCode: general.assetFormatItemCode,
+      isNatRel: usage.isNatRel,
+      typeNatRels: usage.natRelTypeItemCodes,
+      manCatLabelRefs: general.manCatLabelRefs,
+      assetLanguages: general.assetLanguages,
+      assetContacts: contacts.assetContacts,
+      assetFiles: [...extractAssetFiles(files.normalFiles), ...extractAssetFiles(files.legalFiles)],
+      ids: general.ids,
+      studies: pipe(
+        geometries.studies,
+        A.filter((study) => study.studyId.match('new') === null),
+        A.map((study) => ({
+          studyId: study.studyId,
+          geomText: GeomFromGeomText.encode(study.geom),
+        }))
+      ),
+      newStudies: pipe(
+        geometries.studies,
+        A.filter((study) => study.studyId.match('new') !== null),
+        A.map((study) => GeomFromGeomText.encode(study.geom))
+      ),
+      newStatusWorkItemCode: O.fromNullable(administration.newStatusWorkItemCode),
+      assetMainId: O.fromNullable(references.assetMain?.assetId),
+      siblingAssetIds: references.siblingAssets.map((asset) => asset.assetId),
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      workgroupId: general.workgroupId!,
+    };
+    this._showProgressBar$.next(true);
+    if (general.id === 0) {
+      this._store.dispatch(actions.createNewAsset({ patchAsset }));
+    } else {
+      this._store.dispatch(
+        actions.updateAssetEditDetail({
+          assetId: general.id,
+          patchAsset,
+          filesToDelete: [...files.normalFiles.filesToDelete, ...files.legalFiles.filesToDelete],
+          newFiles: [...files.normalFiles.newFiles, ...files.legalFiles.newFiles],
+        })
+      );
     }
   }
 
@@ -313,7 +348,7 @@ export class AssetEditorTabPageComponent {
   }
 
   public canLeave(): Observable<boolean> {
-    if (this._form.pristine) return of(true);
+    if (this.form.pristine) return of(true);
     const dialogRef = (this._discardDialogRef = this._dialogService.open(this._tmplDiscardDialog, {
       disableClose: true,
     }));

@@ -14,21 +14,21 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSelectModule } from '@angular/material/select';
 import { CanActivateFn, CanDeactivateFn, RouterModule } from '@angular/router';
 import {
+  AdminOnlyDirective,
   AnchorComponent,
   ButtonComponent,
+  DatepickerToggleIconComponent,
   DatePipe,
   DateTimePipe,
-  DatepickerToggleIconComponent,
   DrawerComponent,
   DrawerPanelComponent,
+  fromAppShared,
   MatDateIdModule,
   ValueItemDescriptionPipe,
   ValueItemNamePipe,
   ViewChildMarker,
-  fromAppShared,
-  AdminOnlyDirective,
 } from '@asset-sg/client-shared';
-import { isNotNull, ORD } from '@asset-sg/core';
+import { isNotNull } from '@asset-sg/core';
 import { AssetEditPolicy } from '@asset-sg/shared/v2';
 import * as RD from '@devexperts/remote-data-ts';
 import { SvgIconComponent } from '@ngneat/svg-icon';
@@ -41,12 +41,14 @@ import { PushModule } from '@rx-angular/template/push';
 import { de } from 'date-fns/locale/de';
 
 import * as O from 'fp-ts/Option';
-import { combineLatest, filter, map, tap, withLatestFrom } from 'rxjs';
+import { combineLatest, filter, map } from 'rxjs';
+import { AssetEditorFilesComponent } from './components/asset-editor-files/asset-editor-files.component';
 import { AssetEditorLaunchComponent } from './components/asset-editor-launch';
 import { AssetEditorPageComponent } from './components/asset-editor-page';
 import { AssetEditorSyncComponent } from './components/asset-editor-sync/asset-editor-sync.component';
 import { AssetEditorTabAdministrationComponent, ReplaceBrPipe } from './components/asset-editor-tab-administration';
 import { AssetEditorTabContactsComponent } from './components/asset-editor-tab-contacts';
+import { AssetEditorTabFilesComponent } from './components/asset-editor-tab-files/asset-editor-tab-files.component';
 import { AssetEditorTabGeneralComponent } from './components/asset-editor-tab-general';
 import { AssetEditorTabGeometriesComponent } from './components/asset-editor-tab-geometries';
 import { AssetEditorTabPageComponent } from './components/asset-editor-tab-page';
@@ -56,17 +58,19 @@ import { AssetMultiselectComponent } from './components/asset-multiselect';
 import { Lv95xWithoutPrefixPipe, Lv95yWithoutPrefixPipe } from './components/lv95-without-prefix';
 import { AssetEditorEffects } from './state/asset-editor.effects';
 import { assetEditorReducer } from './state/asset-editor.reducer';
-import * as fromAssetEditor from './state/asset-editor.selectors';
+import { selectRDAssetEditDetail } from './state/asset-editor.selectors';
 
 export const canLeaveEdit: CanDeactivateFn<AssetEditorPageComponent> = (c) => c.canLeave();
 
 @NgModule({
   declarations: [
+    AssetEditorFilesComponent,
     AssetEditorLaunchComponent,
     AssetEditorSyncComponent,
     AssetEditorPageComponent,
     AssetEditorTabAdministrationComponent,
     AssetEditorTabContactsComponent,
+    AssetEditorTabFilesComponent,
     AssetEditorTabGeneralComponent,
     AssetEditorTabGeometriesComponent,
     AssetEditorTabPageComponent,
@@ -90,10 +94,7 @@ export const canLeaveEdit: CanDeactivateFn<AssetEditorPageComponent> = (c) => c.
             const store = inject(Store);
             return store.select(fromAppShared.selectUser).pipe(
               filter(isNotNull),
-              map((user) => {
-                const policy = new AssetEditPolicy(user);
-                return policy.canDoEverything() || policy.canCreate();
-              })
+              map((user) => user.isAdmin)
             );
           }) as CanActivateFn,
         ],
@@ -119,17 +120,12 @@ export const canLeaveEdit: CanDeactivateFn<AssetEditorPageComponent> = (c) => c.
           (() => {
             const store = inject(Store);
             return combineLatest([
-              store
-                .select(fromAssetEditor.selectRDAssetEditDetail)
-                .pipe(map(RD.toNullable), filter(isNotNull), map(O.toNullable)),
+              store.select(selectRDAssetEditDetail).pipe(map(RD.toNullable), filter(isNotNull), map(O.toNullable)),
               store.select(fromAppShared.selectUser).pipe(filter(isNotNull)),
             ]).pipe(
               map(([assetEditDetail, user]) => {
                 const policy = new AssetEditPolicy(user);
-                return (
-                  policy.canDoEverything() ||
-                  (assetEditDetail == null ? policy.canCreate() : policy.canUpdate(assetEditDetail))
-                );
+                return assetEditDetail == null ? policy.canCreate() : policy.canUpdate(assetEditDetail);
               })
             );
           }) as CanActivateFn,

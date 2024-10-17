@@ -62,7 +62,7 @@ const validatePatch = (user: User, patch: PatchAsset, record?: AssetEditDetail) 
 
   // Specialization of the policy where we disallow assets to be moved to another workgroup
   // if the current user is not an editor for that workgroup.
-  if (!policy.canDoEverything() && !policy.hasRole(Role.Editor, patch.workgroupId)) {
+  if (!policy.hasRole(Role.Editor, patch.workgroupId)) {
     throw new HttpException(
       "Can't move asset to a workgroup for which the user is not an editor",
       HttpStatus.FORBIDDEN

@@ -10,6 +10,7 @@ const initialState: AppSharedState = {
   rdReferenceData: RD.initial,
   workgroups: [],
   lang: 'de',
+  isAnonymousMode: false,
 };
 
 export const appSharedStateReducer = createReducer(
@@ -17,6 +18,13 @@ export const appSharedStateReducer = createReducer(
   on(
     appSharedStateActions.loadUserProfileResult,
     (state, rdUserProfile): AppSharedState => ({ ...state, rdUserProfile })
+  ),
+  on(
+    appSharedStateActions.setAnonymousMode,
+    (state): AppSharedState => ({
+      ...state,
+      isAnonymousMode: true,
+    })
   ),
   on(
     appSharedStateActions.loadReferenceDataResult,

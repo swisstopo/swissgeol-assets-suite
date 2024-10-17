@@ -14,7 +14,6 @@ import {
   ordStatusWorkByDate,
   Point,
   ReferenceData,
-  Study,
   StudyPolygon,
   UsageCode,
   usageCodes,
@@ -34,16 +33,12 @@ import { AppStateWithAssetSearch } from './asset-search.reducer';
 
 const assetSearchFeature = (state: AppStateWithAssetSearch) => state.assetSearch;
 
-export const selectAssetSearchState = createSelector(assetSearchFeature, (state) => state);
-
 export const selectSearchLoadingState = createSelector(assetSearchFeature, (state) => state.resultsLoadingState);
 export const selectFilterLoadingState = createSelector(assetSearchFeature, (state) => state.filterLoadingState);
 
-export const selectIsFiltersOpen = createSelector(assetSearchFeature, (state) => state.isFiltersOpen);
+export const selectIsFiltersOpen = createSelector(assetSearchFeature, (state) => state?.isFiltersOpen ?? false);
 
 export const selectIsResultsOpen = createSelector(assetSearchFeature, (state) => state.isResultsOpen);
-
-export const selectIsMapInitialized = createSelector(assetSearchFeature, (state) => state.isMapInitialised);
 
 export const selectAssetDetailLoadingState = createSelector(
   assetSearchFeature,
@@ -56,33 +51,24 @@ export const selectAssetSearchResultData = createSelector(assetSearchFeature, (s
 
 export const selectAssetSearchPolygon = createSelector(assetSearchFeature, (state) => state.query.polygon);
 
-export const selectStudies = createSelector(selectAssetSearchResultData, (assetEditDetails): StudyVM[] =>
-  assetEditDetails.flatMap((assetEditDetail) =>
-    assetEditDetail.studies.map((study) => {
-      return {
-        assetId: study.assetId,
-        studyId: study.studyId,
-        geom: wktToGeoJSON(study.geomText),
-      };
-    })
-  )
-);
-
 export const selectAssetsSearchStats = createSelector(assetSearchFeature, (state) => state.stats);
 
-export const selectAssetSearchPageData = createSelector(assetSearchFeature, (state) => state.results.page);
+export const selectAssetSearchTotalResults = createSelector(assetSearchFeature, (state) => state.stats.total);
 
 export const selectCurrentAssetDetail = createSelector(assetSearchFeature, (state) => state.currentAsset);
+export const selectStudies = createSelector(assetSearchFeature, (state) => state.studies);
+export const selectAssetSearchNoActiveFilters = createSelector(assetSearchFeature, ({ query }) =>
+  Object.values(query).every((value) => value === undefined)
+);
 
 export const selectCurrentAssetDetailVM = createSelector(
   fromAppShared.selectRDReferenceData,
-  fromAppShared.selectLocale,
   selectCurrentAssetDetail,
-  (referenceData, locale, currentAssetDetail) => {
+  (referenceData, currentAssetDetail) => {
     if (RD.isSuccess(referenceData) && !!currentAssetDetail) {
-      return makeAssetDetailVMNew(referenceData.value, currentAssetDetail, locale);
+      return makeAssetDetailVMNew(referenceData.value, currentAssetDetail);
     }
-    return null as ReturnType<typeof makeAssetDetailVMNew> | null;
+    return null as AssetDetailVM | null;
   }
 );
 
@@ -321,10 +307,6 @@ export const makeTranslatedValueFromItemName = (item: ValueItem): TranslatedValu
   en: item.nameEn,
 });
 
-export interface StudyVM extends Study {
-  assetId: number;
-}
-
 export interface AssetEditDetailVM {
   assetId: number;
   titlePublic: string;
@@ -335,7 +317,10 @@ export interface AssetEditDetailVM {
   manCatLabelItems: ValueItem[];
 }
 
-const makeAssetDetailVMNew = (referenceData: ReferenceData, assetDetail: AssetEditDetail, locale: string) => {
+export type AssetDetailVM = ReturnType<typeof makeAssetDetailVMNew>;
+export type AssetDetailFileVM = AssetDetailVM['assetFiles'][0];
+
+const makeAssetDetailVMNew = (referenceData: ReferenceData, assetDetail: AssetEditDetail) => {
   const {
     assetFormatItemCode,
     assetKindItemCode,
@@ -385,16 +370,16 @@ const makeAssetDetailVMNew = (referenceData: ReferenceData, assetDetail: AssetEd
         return { ...rest, statusWork: referenceData.statusWorkItems[statusWorkItemCode] };
       })
     ),
-    assetFiles: assetFiles.map((assetFile) => {
-      const _fileSize = assetFile.fileSize / 1024n / 1024n;
-      const fileSize =
-        _fileSize < 1 ? `< 1MB` : `${formatNumber(Number(bigIntRoundToMB(assetFile.fileSize)), locale)}MB`;
-      return {
-        ...assetFile,
-        fileSize,
-      };
-    }),
+    assetFiles: assetFiles.map((it) => ({
+      ...it,
+      legalDocItem: it.legalDocItemCode == null ? null : referenceData.legalDocItems[it.legalDocItemCode],
+    })),
   };
+};
+
+export const displayFileSize = (size: number, locale: string): string => {
+  const _fileSize = size / 1024 / 1024;
+  return _fileSize < 1 ? `< 1MB` : `${formatNumber(Number(roundToMB(size)), locale)}MB`;
 };
 
 const makeAssetDetailContactVM = (referenceData: ReferenceData, assetContact: AssetDetail['assetContacts'][0]) => {
@@ -411,10 +396,10 @@ const makeAssetDetailContactVM = (referenceData: ReferenceData, assetContact: As
   };
 };
 
-const bigIntRoundToMB = (value: bigint) => {
-  const n = value / 1024n / 1024n;
-  const rem = value - n * 1024n * 1024n;
-  return rem > 524288n ? n + 1n : n;
+const roundToMB = (value: number) => {
+  const n = value / 1024 / 1024;
+  const rem = value - n * 1024 * 1024;
+  return rem > 524288 ? n + 1 : n;
 };
 
 export function wktToGeoJSON(wkt: string) {

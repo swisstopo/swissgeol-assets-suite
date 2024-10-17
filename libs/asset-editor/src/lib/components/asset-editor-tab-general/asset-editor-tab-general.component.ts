@@ -1,5 +1,5 @@
 import { FocusMonitor } from '@angular/cdk/a11y';
-import { ChangeDetectionStrategy, Component, ElementRef, Input, OnInit, ViewChild, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, inject, Input, OnInit, ViewChild } from '@angular/core';
 import { FormBuilder, FormControl, FormGroupDirective } from '@angular/forms';
 import { fromAppShared } from '@asset-sg/client-shared';
 import { eqAssetLanguageEdit } from '@asset-sg/shared';
@@ -8,20 +8,14 @@ import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { Store } from '@ngrx/store';
 import { RxState } from '@rx-angular/state';
 import * as O from 'fp-ts/Option';
-import {
-  BehaviorSubject,
-  Observable,
-  ReplaySubject,
-  combineLatest,
-  distinctUntilChanged,
-  map,
-  shareReplay,
-  startWith,
-  switchMap,
-} from 'rxjs';
+import { combineLatest, map, Observable, ReplaySubject, shareReplay, startWith, switchMap } from 'rxjs';
 
 import { eqIdVM } from '../../models';
-import { AssetEditorFormGroup, AssetEditorGeneralFormGroup } from '../asset-editor-form-group';
+import {
+  AssetEditorFormGroup,
+  AssetEditorGeneralFormGroup,
+  isAssetEditorFormDisabled$,
+} from '../asset-editor-form-group';
 
 interface AssetEditorTabGeneralState {
   referenceDataVM: fromAppShared.ReferenceDataVM;
@@ -46,59 +40,60 @@ const initialAssetEditorTabGeneralState: AssetEditorTabGeneralState = {
   providers: [RxState],
 })
 export class AssetEditorTabGeneralComponent implements OnInit {
-  private _rootFormGroupDirective = inject(FormGroupDirective);
-  private rootFormGroup = this._rootFormGroupDirective.control as AssetEditorFormGroup;
-  private _formBuilder = inject(FormBuilder);
-  private _focusMonitor = inject(FocusMonitor);
+  private readonly rootFormGroupDirective = inject(FormGroupDirective);
+  private readonly rootFormGroup: AssetEditorFormGroup = this.rootFormGroupDirective.control;
+  private readonly formBuilder = inject(FormBuilder);
+  private readonly focusMonitor = inject(FocusMonitor);
 
-  @ViewChild('idFormDescription') private _idFormDescription?: ElementRef<HTMLInputElement>;
+  @ViewChild('idFormDescription')
+  private readonly idFormDescription?: ElementRef<HTMLInputElement>;
 
-  public _form!: AssetEditorGeneralFormGroup;
+  public form!: AssetEditorGeneralFormGroup;
 
-  public idForm = this._formBuilder.group({
+  public idForm = this.formBuilder.group({
     idId: new FormControl<O.Option<number>>(O.none, { nonNullable: true }),
     id: new FormControl<string>('', { nonNullable: true, updateOn: 'blur' }),
     description: new FormControl<string>('', { nonNullable: true }),
   });
 
-  public _state: RxState<AssetEditorTabGeneralState> = inject(RxState<AssetEditorTabGeneralState>);
+  public readonly state: RxState<AssetEditorTabGeneralState> = inject(RxState<AssetEditorTabGeneralState>);
 
-  public _referenceDataVM$ = this._state.select('referenceDataVM');
+  public readonly _referenceDataVM$ = this.state.select('referenceDataVM');
 
-  private _ngOnInit$ = new ReplaySubject<void>(1);
-  private idsLength$ = this._ngOnInit$.pipe(
+  private readonly ngOnInit$ = new ReplaySubject<void>(1);
+  private readonly idsLength$ = this.ngOnInit$.pipe(
     switchMap(() =>
-      this._form.valueChanges.pipe(
+      this.form.valueChanges.pipe(
         startWith(null),
-        map(() => this._form.controls['ids'].value.length)
+        map(() => this.form.controls['ids'].value.length)
       )
     ),
     startWith(0),
     shareReplay({ bufferSize: 1, refCount: true })
   );
 
-  public _userInsertMode$ = this._state.select('userInsertMode');
-  public _notMoreThanOneId$ = this.idsLength$.pipe(
+  public readonly userInsertMode$ = this.state.select('userInsertMode');
+  public readonly notMoreThanOneId$ = this.idsLength$.pipe(
     map((length) => length <= 1),
     shareReplay({ bufferSize: 1, refCount: true })
   );
-  public _showIdForm$ = combineLatest([this._userInsertMode$, this._notMoreThanOneId$]).pipe(
+  public readonly showIdForm$ = combineLatest([this.userInsertMode$, this.notMoreThanOneId$]).pipe(
     map(([userInsertMode, notMoreThanOneId]) => userInsertMode || notMoreThanOneId),
     shareReplay({ bufferSize: 1, refCount: true })
   );
-  public _showList$ = combineLatest([this._userInsertMode$, this.idsLength$]).pipe(
+  public readonly showList$ = combineLatest([this.userInsertMode$, this.idsLength$]).pipe(
     map(([userInsertMode, idsLength]) => userInsertMode || idsLength > 1)
   );
 
-  public _idFormCompleteAndValid$ = this.idForm.valueChanges.pipe(
+  public readonly idFormCompleteAndValid$ = this.idForm.valueChanges.pipe(
     startWith(null),
     map(() => this.idForm.controls['id'].value && this.idForm.valid)
   );
 
-  public _showCreateNewIdButton$ = combineLatest([
-    this._idFormCompleteAndValid$,
-    this._userInsertMode$,
-    this._showList$,
+  public readonly showCreateNewIdButton$ = combineLatest([
+    this.idFormCompleteAndValid$,
+    this.userInsertMode$,
+    this.showList$,
   ]).pipe(
     map(
       ([idFormCompleteAndValid, userInsertMode, showList]) =>
@@ -106,157 +101,125 @@ export class AssetEditorTabGeneralComponent implements OnInit {
     ),
     shareReplay({ bufferSize: 1, refCount: true })
   );
-  public _currentlyEditedIdIndex$ = this._state.select('currentlyEditedIdIndex');
+  public currentlyEditedIdIndex$ = this.state.select('currentlyEditedIdIndex');
 
-  private store = inject(Store);
+  private readonly store = inject(Store);
 
   /**
    * The workgroups to which the user is allowed to assign an asset.
    */
-  public availableWorkgroups$ = this.store
+  public readonly availableWorkgroups$ = this.store
     .select(fromAppShared.selectWorkgroups)
     .pipe(map((workgroups) => workgroups.filter((it) => it.role != Role.Viewer)));
 
   @Input()
   public set referenceDataVM$(value: Observable<fromAppShared.ReferenceDataVM>) {
-    this._state.connect('referenceDataVM', value);
+    this.state.connect('referenceDataVM', value);
   }
 
   constructor() {
-    this._state.set(initialAssetEditorTabGeneralState);
+    this.state.set(initialAssetEditorTabGeneralState);
     this.idForm.valueChanges.pipe(untilDestroyed(this)).subscribe(() => {
-      if (!this._state.get().userInsertMode && !this.idForm.controls['id'].value) {
+      if (!this.state.get().userInsertMode && !this.idForm.controls['id'].value) {
         this.idForm.controls['description'].reset(undefined, { emitEvent: false });
         this.idForm.controls['description'].disable({ emitEvent: false });
       } else if (this.idForm.controls['description'].disabled) {
         this.idForm.controls['description'].enable({ emitEvent: false });
         this.idForm.controls['description'].markAsTouched();
-        if (this._idFormDescription) {
-          this._focusMonitor.focusVia(this._idFormDescription?.nativeElement, 'program');
+        if (this.idFormDescription) {
+          this.focusMonitor.focusVia(this.idFormDescription?.nativeElement, 'program');
         }
       }
 
       // sync the idForm state with the ids control in the general form
-      if (this._state.get().currentlyEditedIdIndex !== -1) {
-        const ids = [...this._form.controls['ids'].value];
+      if (this.state.get().currentlyEditedIdIndex !== -1) {
+        const ids = [...this.form.controls['ids'].value];
         if (this.idForm.valid) {
           if (ids.length === 0) {
-            this._form.controls['ids'].setValue([...this._form.controls['ids'].value, this.idForm.getRawValue()]);
-            this._form.controls['ids'].markAsDirty();
-          } else if (!eqIdVM.equals(ids[this._state.get().currentlyEditedIdIndex], this.idForm.getRawValue())) {
-            ids[this._state.get().currentlyEditedIdIndex] = this.idForm.getRawValue();
-            this._form.controls['ids'].setValue(ids, { emitEvent: false });
-            this._form.markAsDirty();
+            this.form.controls['ids'].setValue([...this.form.controls['ids'].value, this.idForm.getRawValue()]);
+            this.form.controls['ids'].markAsDirty();
+          } else if (!eqIdVM.equals(ids[this.state.get().currentlyEditedIdIndex], this.idForm.getRawValue())) {
+            ids[this.state.get().currentlyEditedIdIndex] = this.idForm.getRawValue();
+            this.form.controls['ids'].setValue(ids, { emitEvent: false });
+            this.form.markAsDirty();
           }
         } else if (ids.length > 0) {
-          this._form.controls.ids.setValue(
-            ids.filter((_, i) => i !== this._state.get().currentlyEditedIdIndex),
+          this.form.controls.ids.setValue(
+            ids.filter((_, i) => i !== this.state.get().currentlyEditedIdIndex),
             { emitEvent: false }
           );
-          this._form.markAsDirty();
+          this.form.markAsDirty();
         }
       }
     });
   }
 
-  public _disableAll$ = this.rootFormGroup.statusChanges.pipe(
-    startWith(this.rootFormGroup.status),
-    map((status) => status === 'DISABLED'),
-    distinctUntilChanged(),
-    shareReplay({ bufferSize: 1, refCount: true })
-  );
+  public readonly isDisabled$ = isAssetEditorFormDisabled$(this.rootFormGroup);
 
   ngOnInit(): void {
-    this._form = this.rootFormGroup.get('general') as AssetEditorGeneralFormGroup;
-    this._disableAll$.pipe(untilDestroyed(this)).subscribe((disabled) => {
+    this.form = this.rootFormGroup.get('general') as AssetEditorGeneralFormGroup;
+    this.isDisabled$.pipe(untilDestroyed(this)).subscribe((disabled) => {
       if (disabled) {
         this.idForm.disable();
       } else {
         this.idForm.enable();
       }
     });
-    this._form.valueChanges.pipe(startWith(null), untilDestroyed(this)).subscribe(() => {
-      if (this._form.controls['ids'].value.length === 0) {
-        this._state.set({ currentlyEditedIdIndex: 0 });
-      } else if (this._form.controls['ids'].value.length === 1) {
-        this._state.set({ currentlyEditedIdIndex: 0 });
-        const { idId, id, description } = this._form.controls['ids'].value[0];
+    this.form.valueChanges.pipe(startWith(null), untilDestroyed(this)).subscribe(() => {
+      if (this.form.controls['ids'].value.length === 0) {
+        this.state.set({ currentlyEditedIdIndex: 0 });
+      } else if (this.form.controls['ids'].value.length === 1) {
+        this.state.set({ currentlyEditedIdIndex: 0 });
+        const { idId, id, description } = this.form.controls['ids'].value[0];
         this.idForm.patchValue({ idId, id, description });
       }
     });
-    this._ngOnInit$.next();
+    this.ngOnInit$.next();
   }
 
   public _insertNewIdClicked() {
-    this._state.set({ userInsertMode: true, currentlyEditedIdIndex: -1 });
+    this.state.set({ userInsertMode: true, currentlyEditedIdIndex: -1 });
     this.idForm.reset();
     this.idForm.markAsUntouched();
   }
 
   public _cancelIdFormClicked() {
-    this._state.set({ userInsertMode: false, currentlyEditedIdIndex: -1 });
+    this.state.set({ userInsertMode: false, currentlyEditedIdIndex: -1 });
     this.idForm.reset();
-    if (this._form.controls['ids'].value.length === 1) {
-      this._state.set({ currentlyEditedIdIndex: 0 });
-      const { id, description } = this._form.controls['ids'].value[0];
+    if (this.form.controls['ids'].value.length === 1) {
+      this.state.set({ currentlyEditedIdIndex: 0 });
+      const { id, description } = this.form.controls['ids'].value[0];
       this.idForm.patchValue({ id, description });
     }
   }
 
   public _saveIdFormClicked() {
-    const i = this._state.get().currentlyEditedIdIndex;
-    this._state.set({ userInsertMode: false, currentlyEditedIdIndex: -1 });
+    const i = this.state.get().currentlyEditedIdIndex;
+    this.state.set({ userInsertMode: false, currentlyEditedIdIndex: -1 });
     if (i >= 0) {
-      const newIds = [...this._form.controls.ids.value];
+      const newIds = [...this.form.controls.ids.value];
       newIds[i] = { ...this.idForm.getRawValue(), idId: O.none };
-      this._form.controls.ids.setValue(newIds);
-      this._form.markAsDirty();
+      this.form.controls.ids.setValue(newIds);
+      this.form.markAsDirty();
     } else {
-      this._form.controls.ids.setValue([
-        ...this._form.controls['ids'].value,
+      this.form.controls.ids.setValue([
+        ...this.form.controls['ids'].value,
         { ...this.idForm.getRawValue(), idId: O.none },
       ]);
-      this._form.markAsDirty();
+      this.form.markAsDirty();
     }
     this.idForm.reset();
   }
 
   public _deleteIdClicked(index: number) {
-    this._form.controls['ids'].setValue(this._form.controls['ids'].value.filter((_, i) => i !== index));
-    this._form.controls['ids'].markAsDirty();
+    this.form.controls['ids'].setValue(this.form.controls['ids'].value.filter((_, i) => i !== index));
+    this.form.controls['ids'].markAsDirty();
   }
 
   public _editIdClicked(index: number) {
-    this._state.set({ userInsertMode: true, currentlyEditedIdIndex: index });
-    const { id, description } = this._form.controls['ids'].value[index];
+    this.state.set({ userInsertMode: true, currentlyEditedIdIndex: index });
+    const { id, description } = this.form.controls['ids'].value[index];
     this.idForm.patchValue({ id, description });
-  }
-
-  public _fileInvalid$ = new BehaviorSubject<boolean>(false);
-  public _fileInputChange(inputElement: HTMLInputElement) {
-    const files = inputElement.files;
-    if (files && files.length > 0) {
-      if (Array.from(files).some((f) => f.size > 250 * 1024 * 1024)) {
-        this._fileInvalid$.next(true);
-      } else {
-        this._form.controls.newFiles.push(new FormControl(Array.from(files)[0], { nonNullable: true }));
-        this._form.markAsDirty();
-        this._fileInvalid$.next(false);
-        inputElement.value = '';
-      }
-    }
-  }
-
-  public _removeFileToBeUploaded(index: number) {
-    this._form.controls.newFiles.removeAt(index);
-  }
-
-  public _deleteFile(fileId: number) {
-    this._form.controls.filesToDelete.setValue([...this._form.controls.filesToDelete.value, fileId]);
-    this._form.controls.assetFiles.setValue(
-      this._form.controls.assetFiles.value.map((f) => (f.fileId !== fileId ? f : { ...f, willBeDeleted: true }))
-    );
-    this._form.markAsDirty();
   }
 
   public eqAssetLanguageEdit = eqAssetLanguageEdit;

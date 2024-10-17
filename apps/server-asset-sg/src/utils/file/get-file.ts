@@ -12,15 +12,24 @@ export const getFile = (prismaClient: PrismaClient, fileId: number) => {
     createS3Client(),
     (s3Client) =>
       pipe(
-        TE.tryCatch(() => pipe(prismaClient.file.findFirstOrThrow({ where: { fileId } })), unknownToError),
-        TE.chainW(({ fileName }) => {
-          const key = (assetFolder ? assetFolder + '/' : '') + fileName;
+        TE.tryCatch(
+          () =>
+            pipe(
+              prismaClient.file.findFirstOrThrow({
+                where: { id: fileId },
+                select: { name: true },
+              })
+            ),
+          unknownToError
+        ),
+        TE.chainW(({ name }) => {
+          const key = (assetFolder ? assetFolder + '/' : '') + name;
           return pipe(
             TE.tryCatch(
               () => s3Client.send(new GetObjectCommand({ Key: key, Bucket: bucketName })),
               (e) => new TypedError(unknownErrorTag, e, 'Unable to get file from S3 with key ' + key)
             ),
-            TE.map((a) => ({ ...a, fileName }))
+            TE.map((a) => ({ ...a, fileName: name }))
           );
         }),
         TE.map((a) => ({

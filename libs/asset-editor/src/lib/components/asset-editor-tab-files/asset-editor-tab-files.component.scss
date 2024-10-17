@@ -1,0 +1,11 @@
+@use "../../styles/variables";
+@use "../../styles/mixins";
+
+:host {
+  display: block;
+}
+
+form {
+  display: flex;
+  max-height: 100%;
+}

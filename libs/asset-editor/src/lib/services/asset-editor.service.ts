@@ -8,14 +8,15 @@ import * as E from 'fp-ts/Either';
 import { flow } from 'fp-ts/function';
 import { concat, forkJoin, map, of, startWith, toArray } from 'rxjs';
 
+import { AssetEditorNewFile } from '../components/asset-editor-form-group';
 import { AssetEditDetail } from '../models';
 
 @Injectable({ providedIn: 'root' })
 export class AssetEditorService {
-  private _httpClient = inject(HttpClient);
+  private readonly httpClient = inject(HttpClient);
 
   public loadAssetDetailData(assetId: number): ORD.ObservableRemoteData<ApiError, AssetEditDetail> {
-    return this._httpClient
+    return this.httpClient
       .get(`/api/asset-edit/${assetId}`)
       .pipe(
         map(flow(AssetEditDetail.decode, E.mapLeft(decodeError))),
@@ -26,7 +27,7 @@ export class AssetEditorService {
   }
 
   public createAsset(patchAsset: PatchAsset): ORD.ObservableRemoteData<ApiError, AssetEditDetail> {
-    return this._httpClient
+    return this.httpClient
       .post(`/api/asset-edit`, PatchAsset.encode(patchAsset))
       .pipe(
         map(flow(AssetEditDetail.decode, E.mapLeft(decodeError))),
@@ -40,7 +41,7 @@ export class AssetEditorService {
     assetId: number,
     patchAsset: PatchAsset
   ): ORD.ObservableRemoteData<ApiError, AssetEditDetail> {
-    return this._httpClient
+    return this.httpClient
       .put(`/api/asset-edit/${assetId}`, PatchAsset.encode(patchAsset))
       .pipe(
         map(flow(AssetEditDetail.decode, E.mapLeft(decodeError))),
@@ -54,8 +55,8 @@ export class AssetEditorService {
     return fileIds.length
       ? forkJoin(
           fileIds.map((fileId) => {
-            return this._httpClient
-              .delete(`/api/files/${fileId}`)
+            return this.httpClient
+              .delete(`/api/assets/${assetId}/files/${fileId}`)
               .pipe(map(E.right), OE.catchErrorW(httpErrorResponseError), map(RD.fromEither), startWith(RD.pending));
           })
         ).pipe(
@@ -70,15 +71,18 @@ export class AssetEditorService {
       : of(RD.success(undefined));
   }
 
-  public uploadFiles(assetId: number, files: File[]): ORD.ObservableRemoteData<ApiError, unknown> {
+  public uploadFiles(assetId: number, files: AssetEditorNewFile[]): ORD.ObservableRemoteData<ApiError, unknown> {
     return files.length
       ? concat(
           ...files.map((file) => {
             const formData = new FormData();
-            formData.append('file', file);
-            formData.append('assetId', `${assetId}`);
-            return this._httpClient
-              .post(`/api/files`, formData)
+            formData.append('file', file.file);
+            formData.append('type', file.type);
+            if (file.legalDocItemCode != null) {
+              formData.append('legalDocItemCode', file.legalDocItemCode);
+            }
+            return this.httpClient
+              .post(`/api/assets/${assetId}/files`, formData)
               .pipe(map(E.right), OE.catchErrorW(httpErrorResponseError));
           })
         ).pipe(
@@ -96,7 +100,7 @@ export class AssetEditorService {
   }
 
   public updateContact(contactId: number, patchContact: PatchContact): ORD.ObservableRemoteData<ApiError, Contact> {
-    return this._httpClient
+    return this.httpClient
       .put(`/api/contacts/${contactId}`, PatchContact.encode(patchContact))
       .pipe(
         map(flow(Contact.decode, E.mapLeft(decodeError))),
@@ -107,7 +111,7 @@ export class AssetEditorService {
   }
 
   public createContact(patchContact: PatchContact): ORD.ObservableRemoteData<ApiError, Contact> {
-    return this._httpClient
+    return this.httpClient
       .post(`/api/contacts`, PatchContact.encode(patchContact))
       .pipe(
         map(flow(Contact.decode, E.mapLeft(decodeError))),

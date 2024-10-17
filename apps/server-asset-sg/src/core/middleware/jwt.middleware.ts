@@ -1,5 +1,6 @@
-import { User } from '@asset-sg/shared/v2';
+import { Role, User, WorkgroupId } from '@asset-sg/shared/v2';
 import { environment } from '@environment';
+
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { HttpException, Inject, Injectable, NestMiddleware } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
@@ -12,15 +13,26 @@ import * as TE from 'fp-ts/TaskEither';
 import * as jwt from 'jsonwebtoken';
 import { Jwt, JwtPayload } from 'jsonwebtoken';
 import jwkToPem from 'jwk-to-pem';
+import { v5 as uuidv5 } from 'uuid';
 
 import { UserRepo } from '@/features/users/user.repo';
+import { WorkgroupRepo } from '@/features/workgroups/workgroup.repo';
 import { JwtRequest } from '@/models/jwt-request';
 
 @Injectable()
 export class JwtMiddleware implements NestMiddleware {
-  constructor(@Inject(CACHE_MANAGER) private cacheManager: Cache, private readonly userRepo: UserRepo) {}
+  constructor(
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
+    private readonly userRepo: UserRepo,
+    private readonly workgroupRepo: WorkgroupRepo
+  ) {}
 
   async use(req: Request, res: Response, next: NextFunction) {
+    if (process.env.ANONYMOUS_MODE === 'true') {
+      await this.handleAnonymousModeRequest(req);
+      return next();
+    }
+
     if (process.env.NODE_ENV === 'development') {
       const authentication = req.header('Authorization');
       if (authentication != null && authentication.startsWith('Impersonate ')) {
@@ -36,6 +48,17 @@ export class JwtMiddleware implements NestMiddleware {
       }
     }
 
+    const token = await this.getToken(req);
+    // Set accessToken and jwtPayload to request if verification is successful
+    if (E.isRight(token)) {
+      await this.initializeRequest(req, token.right.accessToken, token.right.jwtPayload as JwtPayload);
+      next();
+    } else {
+      res.status(403).json({ error: 'not authorized by eIAM' });
+    }
+  }
+
+  private async getToken(req: Request) {
     // Get JWK from cache if exists, otherwise fetch from issuer and set to cache for 1 minute
     const cachedJwk = await this.getJwkFromCache()();
     const jwk = E.isRight(cachedJwk) ? cachedJwk : await this.getJwkTE()();
@@ -43,7 +66,7 @@ export class JwtMiddleware implements NestMiddleware {
 
     const token = this.extractTokenFromHeaderE(req);
     // Decode token, check groups permission, get JWK, convert JWK to PEM, and verify token
-    const result = pipe(
+    return pipe(
       token,
       E.chain(this.decodeTokenE),
       E.chain(this.isAuthorizedByGroupE),
@@ -56,14 +79,6 @@ export class JwtMiddleware implements NestMiddleware {
       this.jwkToPemE,
       E.chain((pem) => this.verifyToken(token, pem))
     );
-
-    // Set accessToken and jwtPayload to request if verification is successful
-    if (E.isRight(result)) {
-      await this.initializeRequest(req, result.right.accessToken, result.right.jwtPayload as JwtPayload);
-      next();
-    } else {
-      res.status(403).json({ error: 'not authorized by eIAM' });
-    }
   }
 
   private getJwkFromCache(): TE.TaskEither<Error, JwksKey[]> {
@@ -186,11 +201,37 @@ export class JwtMiddleware implements NestMiddleware {
     Object.assign(req, authenticatedFields);
   }
 
+  private async handleAnonymousModeRequest(req: Request): Promise<void> {
+    const user = await this.createAnonymousUser();
+    const payload: JwtPayload = { sub: user.id, username: user.email };
+    // Extend the request with the fields required to make it an `AuthenticatedRequest`.
+    const authenticatedFields: Omit<JwtRequest, keyof Request> = {
+      user,
+      accessToken: 'anonymous-access-token',
+      jwtPayload: payload,
+    };
+    Object.assign(req, authenticatedFields);
+  }
+
+  private async createAnonymousUser(): Promise<User> {
+    const swisstopoAssetsNamespace = '29248768-a9ac-4ef8-9dcb-d9847753208b';
+    const id = uuidv5('anonymous', swisstopoAssetsNamespace); // a743fc8a-afec-5eab-8b9b-e4002c2a01be
+    const workgroups = await this.workgroupRepo.list();
+    const roles = new Map<WorkgroupId, Role>(workgroups.map((workgroup) => [workgroup.id, Role.Viewer]));
+    return {
+      id,
+      email: '',
+      lang: 'de',
+      isAdmin: false,
+      roles,
+    };
+  }
+
   private async initializeDefaultUser(oidcId: string, payload: JwtPayload): Promise<User> {
     if (!('username' in payload) || payload.username.length === 0) {
       throw new HttpException('invalid JWT payload: missing username', 401);
     }
-    const email = payload.username.split('_')[1];
+    const email = payload.username.split('_').slice(1).join('_');
     if (email == null || !/^.+@.+\..+$/.test(email)) {
       throw new HttpException('invalid JWT payload: username does not contain an email', 401);
     }

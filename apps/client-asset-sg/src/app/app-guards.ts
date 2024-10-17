@@ -5,7 +5,6 @@ import { isNotNull } from '@asset-sg/core';
 import { User } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
 import { filter, map } from 'rxjs';
-
 import { AppState } from './state/app-state';
 
 export const roleGuard = (testUser: (u: User) => boolean) => {

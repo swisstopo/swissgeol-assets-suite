@@ -19,16 +19,19 @@ export const deAppTranslations = {
   datePlaceholder: 'JJJJ-MM-TT',
   workgroup: {
     title: 'Arbeitsgruppe',
+    errors: {
+      nameTaken: "Der Name '{{name}}' wird bereits von einer anderen Arbeitsgruppe verwendet.",
+    },
   },
   menuBar: {
-    assets: 'Assets',
+    filters: 'Filter',
     admin: 'Verwaltung',
     favourites: 'Favoriten',
     help: 'Hilfe',
     profile: 'Profil',
     settings: 'Einstellungen',
     signOut: 'Schliessen',
-    userManagement: 'Benutzer Verwaltung',
+    createAsset: 'Neues Asset',
   },
   map: {
     zoomIn: 'Hineinzoomen',
@@ -39,7 +42,7 @@ export const deAppTranslations = {
     dragHandleLabel: 'Ziehgriff',
   },
   search: {
-    textSearchFieldPlaceholder: 'Suche nach Original- oder Öffentlichem Titel und Autor oder Einlieferer',
+    textSearchFieldPlaceholder: 'Suche nach...',
     searchInstructionsHeading: 'Asset-Suche',
     searchInstructions:
       'Suchen Sie nach einem Asset über das Suchfeld oder durch Zeichnen eines Polygons auf der Karte.',
@@ -84,10 +87,12 @@ export const deAppTranslations = {
     workgroup: 'Arbeitsgruppe',
     resetSearch: 'Suche zurücksetzen',
     file: 'Datei',
+    legalFile: 'Rechtliche Einwilligungen',
     openFileInNewTab: '{{fileName}} in neuem Tab öffnen',
     downloadFile: '{{fileName}} herunterladen',
     assetsUnderMouseCursor: '{{ assetsCount }} Assets unter dem Mauszeiger gefunden. Bitte wählen Sie eines aus:',
     removePolygon: 'Polygon aufheben',
+    drawPolygon: 'Polygon zeichnen',
     hideTable: 'Tabelle verbergen',
     showTable: 'Tabelle anzeigen',
   },
@@ -116,9 +121,20 @@ export const deAppTranslations = {
         alternativeId: 'Alternativ-ID',
         alternativeIdDescription: 'Beschreibung Alternativ-ID',
         addNewAlternativeId: 'Neue Alternativ-ID hinzufügen',
-        files: 'Dateien',
-        dragFileHere: 'Datei hierher ziehen',
+      },
+      files: {
+        tabName: 'Dateien',
+        Normal: {
+          one: 'Normale Datei',
+          many: 'Normale Dateien',
+        },
+        Legal: {
+          one: 'Rechtliche Einwilligung',
+          many: 'Rechtliche Einwilligungen',
+        },
+        legalDocItemCode: 'Typ',
         or: 'oder',
+        dragFileHere: 'Datei hierher ziehen',
         selectFile: 'Datei auswählen',
         addNewFile: 'Neue Datei hinzufügen',
         willBeDeleted: 'Wird gelöscht werden',
@@ -227,10 +243,8 @@ export const deAppTranslations = {
     },
     closeManageAsset: 'Asset verwalten schliessen',
     questionDiscardChanges: 'Möchten Sie die Änderungen verwerfen?',
-    adminInstructionsEditHeading: 'Asset verwalten',
-    adminInstructionsEdit: 'Suche nach einem Asset über das Menü Assets, um dieses zu verwalten.',
-    adminInstructionsCreateHeading: 'Neues Asset',
-    adminInstructionsCreate: 'Neues Asset erstellen',
+    userManagementHeading: 'Benutzer',
+    userManagementButton: 'Benutzer verwalten',
     adminInstructionsSyncElasticAssetsHeading: 'Assets mit Elasticsearch synchronisieren',
     adminInstructionsSyncElasticAssets:
       'Gleicht den Zustand von Elasticsearch mit der Datenbank ab.' +

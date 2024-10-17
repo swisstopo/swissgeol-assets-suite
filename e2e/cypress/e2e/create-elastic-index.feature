@@ -3,6 +3,7 @@ Feature: Elastic index
   Background:
     Given The user is logged in
     And User has admin permissions
+    And Test data is imported
     
   Scenario: User creates elastic index
     When A user clicks administration menu button

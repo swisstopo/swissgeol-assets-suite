@@ -7,7 +7,7 @@ import {
   AssetSearchStatsDTO,
 } from '@asset-sg/shared';
 import { User } from '@asset-sg/shared/v2';
-import { Body, Controller, HttpCode, HttpStatus, Post, Query, ValidationPipe } from '@nestjs/common';
+import { Controller, HttpCode, HttpStatus, Post, Query } from '@nestjs/common';
 import { plainToInstance } from 'class-transformer';
 import { Authorize } from '@/core/decorators/authorize.decorator';
 import { CurrentUser } from '@/core/decorators/current-user.decorator';

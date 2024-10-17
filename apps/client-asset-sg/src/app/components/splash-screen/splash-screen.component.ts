@@ -2,7 +2,6 @@ import { Component, inject } from '@angular/core';
 import { AuthService, AuthState } from '@asset-sg/auth';
 import { CURRENT_LANG } from '@asset-sg/client-shared';
 import { TranslateService } from '@ngx-translate/core';
-import { Observable, map, startWith } from 'rxjs';
 
 @Component({
   selector: 'app-splash-screen',
@@ -16,18 +15,6 @@ export class SplashScreenComponent {
 
   get host(): string {
     return window.location.host;
-  }
-
-  get languages$(): Observable<Array<{ name: string; isActive: boolean }>> {
-    return this.currentLang$.pipe(
-      startWith('de'),
-      map((lang) =>
-        ['de', 'fr', 'it', 'rm', 'en'].map((it) => ({
-          name: it,
-          isActive: lang === it,
-        }))
-      )
-    );
   }
 
   selectLanguage(language: string): void {

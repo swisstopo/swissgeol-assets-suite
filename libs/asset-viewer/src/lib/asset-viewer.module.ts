@@ -54,11 +54,13 @@ import { AssetSearchDetailComponent } from './components/asset-search-detail';
 import { AssetSearchFilterListComponent } from './components/asset-search-filter-list/asset-search-filter-list.component';
 import { AssetSearchRefineComponent } from './components/asset-search-refine';
 import { AssetSearchResultsComponent } from './components/asset-search-results';
+import { AssetViewerFilesComponent } from './components/asset-viewer-files/asset-viewer-files.component';
 import { AssetViewerPageComponent } from './components/asset-viewer-page';
 import { MapComponent } from './components/map/map.component';
 import { MapControlsComponent } from './components/map-controls/map-controls.component';
 import { AssetSearchEffects } from './state/asset-search/asset-search.effects';
 import { assetSearchReducer } from './state/asset-search/asset-search.reducer';
+import { mapControlReducer } from './state/map-control/map-control.reducer';
 
 @NgModule({
   declarations: [
@@ -69,6 +71,7 @@ import { assetSearchReducer } from './state/asset-search/asset-search.reducer';
     AssetSearchRefineComponent,
     AssetSearchFilterListComponent,
     AssetSearchResultsComponent,
+    AssetViewerFilesComponent,
     AssetPickerComponent,
   ],
   imports: [
@@ -81,6 +84,7 @@ import { assetSearchReducer } from './state/asset-search/asset-search.reducer';
     ]),
     TranslateModule.forChild(),
     StoreModule.forFeature('assetSearch', assetSearchReducer),
+    StoreModule.forFeature('mapControl', mapControlReducer),
     EffectsModule.forFeature(AssetSearchEffects),
     ReactiveFormsModule,
 

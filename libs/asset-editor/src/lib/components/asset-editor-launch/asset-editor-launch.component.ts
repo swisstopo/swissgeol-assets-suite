@@ -12,6 +12,7 @@ import {
   AppPortalService,
   appSharedStateActions,
   AppState,
+  CURRENT_LANG,
   LifecycleHooks,
   LifecycleHooksDirective,
 } from '@asset-sg/client-shared';
@@ -33,6 +34,7 @@ export class AssetEditorLaunchComponent {
   private _viewContainerRef = inject(ViewContainerRef);
   private _cd = inject(ChangeDetectorRef);
   private _store = inject<Store<AppState>>(Store);
+  public readonly currentLang$ = inject(CURRENT_LANG);
 
   constructor() {
     this._lc.afterViewInit$.pipe(observeOn(asyncScheduler)).subscribe(() => {

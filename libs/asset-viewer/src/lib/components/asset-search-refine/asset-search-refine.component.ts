@@ -20,6 +20,8 @@ import {
   selectUsageCodeFilters,
   selectWorkgroupFilters,
 } from '../../state/asset-search/asset-search.selector';
+import * as mapControlActions from '../../state/map-control/map-control.actions';
+import { selectMapControlIsDrawing } from '../../state/map-control/map-control.selector';
 
 const MIN_CREATE_DATE = new Date(1800, 0, 1);
 
@@ -53,6 +55,7 @@ export class AssetSearchRefineComponent implements OnInit, OnDestroy, AfterViewI
   readonly languageFilters$ = this.store.select(selectLanguageFilters);
   readonly assetKindFilters$ = this.store.select(selectAssetKindFilters);
   readonly workgroupFilters$ = this.store.select(selectWorkgroupFilters);
+  readonly isDrawActive$ = this.store.select(selectMapControlIsDrawing);
 
   private readonly subscriptions: Subscription = new Subscription();
 
@@ -93,6 +96,10 @@ export class AssetSearchRefineComponent implements OnInit, OnDestroy, AfterViewI
     this.store.dispatch(actions.removePolygon());
   }
 
+  public toggleDrawPolygon() {
+    this.store.dispatch(mapControlActions.toggleDraw());
+  }
+
   public updateAuthor(event: MatOptionSelectionChange, authorId: number) {
     if (event.isUserInput) {
       this.updateSearch({ authorId });
@@ -101,7 +108,7 @@ export class AssetSearchRefineComponent implements OnInit, OnDestroy, AfterViewI
 
   public updateSearch(filterConfiguration: Partial<AssetSearchQuery>) {
     if (this.isFiltersOpen) {
-      this.store.dispatch(actions.searchByFilterConfiguration({ filterConfiguration }));
+      this.store.dispatch(actions.search({ query: filterConfiguration }));
     }
   }
 

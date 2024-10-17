@@ -21,16 +21,19 @@ export const enAppTranslations: AppTranslations = {
   datePlaceholder: 'YYYY-MM-DD',
   workgroup: {
     title: 'Workgroup',
+    errors: {
+      nameTaken: "The name '{{name}}' is already taken by another workgroup.",
+    },
   },
   menuBar: {
-    assets: 'Assets',
+    filters: 'Filters',
     admin: 'Administration',
     favourites: 'Favourites',
     help: 'Help',
     profile: 'Profile',
     settings: 'Settings',
     signOut: 'Close',
-    userManagement: 'User Management',
+    createAsset: 'New Asset',
   },
   map: {
     zoomIn: 'Zoom in',
@@ -41,7 +44,7 @@ export const enAppTranslations: AppTranslations = {
     dragHandleLabel: 'Drag handle',
   },
   search: {
-    textSearchFieldPlaceholder: 'Search by original or public title and author or consignor',
+    textSearchFieldPlaceholder: 'Search by...',
     searchInstructionsHeading: 'Asset-Search',
     searchInstructions: 'Search for an asset using the search field or by drawing a ploygon on the map.',
     closeInstructions: 'Close instructions',
@@ -85,10 +88,12 @@ export const enAppTranslations: AppTranslations = {
     workgroup: 'Workgroup',
     resetSearch: 'Reset search',
     file: 'File',
+    legalFile: 'Legal consent',
     openFileInNewTab: 'Open {{fileName}} in new tab',
     downloadFile: 'Download {{fileName}}',
     assetsUnderMouseCursor: '{{ assetsCount }} assets found under the mouse cursor. Please select one:',
     removePolygon: 'Remove polygon',
+    drawPolygon: 'Draw polygon',
     hideTable: 'Hide table',
     showTable: 'Show table',
   },
@@ -117,7 +122,18 @@ export const enAppTranslations: AppTranslations = {
         alternativeId: 'Alternative ID',
         alternativeIdDescription: 'Alternative ID Description',
         addNewAlternativeId: 'Add new alternative ID',
-        files: 'Files',
+      },
+      files: {
+        tabName: 'Files',
+        Normal: {
+          one: 'Normal File',
+          many: 'Normal Files',
+        },
+        Legal: {
+          one: 'Legal consent',
+          many: 'Legal consents',
+        },
+        legalDocItemCode: 'Type',
         dragFileHere: 'Drag file here',
         or: 'or',
         selectFile: 'Select file',
@@ -228,10 +244,8 @@ export const enAppTranslations: AppTranslations = {
     },
     closeManageAsset: 'Close manage asset',
     questionDiscardChanges: 'Do you want to discard your changes?',
-    adminInstructionsEditHeading: 'Manage asset',
-    adminInstructionsEdit: 'Search for an asset via the assets menu, in order to manage it.',
-    adminInstructionsCreateHeading: 'New asset',
-    adminInstructionsCreate: 'Create new asset',
+    userManagementHeading: 'Users',
+    userManagementButton: 'Manage users',
     adminInstructionsSyncElasticAssetsHeading: 'Synchronize assets with Elasticsearch',
     adminInstructionsSyncElasticAssets:
       'Equalizes the state of Elasticsearch with the local database.' +

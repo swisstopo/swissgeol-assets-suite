@@ -18,12 +18,14 @@ import { AssetsController } from '@/features/assets/assets.controller';
 import { AssetSearchController } from '@/features/assets/search/asset-search.controller';
 import { AssetSearchService } from '@/features/assets/search/asset-search.service';
 import { AssetSyncController } from '@/features/assets/sync/asset-sync.controller';
+import { AssetSyncService } from '@/features/assets/sync/asset-sync.service';
 import { ContactRepo } from '@/features/contacts/contact.repo';
 import { ContactsController } from '@/features/contacts/contacts.controller';
 import { FavoriteRepo } from '@/features/favorites/favorite.repo';
 import { FavoritesController } from '@/features/favorites/favorites.controller';
+import { FileOcrService } from '@/features/files/file-ocr.service';
+import { FileRepo } from '@/features/files/file.repo';
 import { FilesController } from '@/features/files/files.controller';
-import { OcrController } from '@/features/ocr/ocr.controller';
 import { StudiesController } from '@/features/studies/studies.controller';
 import { StudyRepo } from '@/features/studies/study.repo';
 import { UserRepo } from '@/features/users/user.repo';
@@ -41,7 +43,6 @@ import { WorkgroupsController } from '@/features/workgroups/workgroups.controlle
     ContactsController,
     FavoritesController,
     FilesController,
-    OcrController,
     StudiesController,
     UsersController,
     WorkgroupsController,
@@ -54,8 +55,11 @@ import { WorkgroupsController } from '@/features/workgroups/workgroups.controlle
     AssetInfoRepo,
     AssetRepo,
     AssetSearchService,
+    AssetSyncService,
     ContactRepo,
     FavoriteRepo,
+    FileRepo,
+    FileOcrService,
     PrismaService,
     StudyRepo,
     UserRepo,
