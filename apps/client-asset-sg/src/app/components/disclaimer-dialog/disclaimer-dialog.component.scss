@@ -1,0 +1,22 @@
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+}
+
+h1 {
+  color: black;
+  font-weight: 500;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0 16px;
+  align-items: center;
+}
+
+p {
+  margin: 0;
+}

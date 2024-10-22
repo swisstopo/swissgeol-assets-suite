@@ -17,6 +17,7 @@ import {
   AdminOnlyDirective,
   AlertModule,
   AnchorComponent,
+  assetsPageMatcher,
   ButtonComponent,
   CanCreateDirective,
   CURRENT_LANG,
@@ -24,7 +25,6 @@ import {
   icons,
   TranslateTsLoader,
 } from '@asset-sg/client-shared';
-import { assetsPageMatcher } from '@asset-sg/client-shared';
 import { storeLogger } from '@asset-sg/core';
 import { provideSvgIcons, SvgIconComponent } from '@ngneat/svg-icon';
 import { EffectsModule } from '@ngrx/effects';
@@ -40,6 +40,7 @@ import { environment } from '../environments/environment';
 import { adminGuard } from './app-guards';
 import { AppComponent } from './app.component';
 import { AppBarComponent, MenuBarComponent, NotFoundComponent, RedirectToLangComponent } from './components';
+import { LanguageSelectorComponent } from './components/language-selector/language-selector.component';
 import { MenuBarItemComponent } from './components/menu-bar-item/menu-bar-item.component';
 import { SplashScreenComponent } from './components/splash-screen/splash-screen.component';
 import { appTranslations } from './i18n';
@@ -120,6 +121,7 @@ registerLocaleData(locale_deCH, 'de-CH');
     MatButton,
     MatMenuTrigger,
     MatMenu,
+    LanguageSelectorComponent,
   ],
   providers: [
     provideSvgIcons(icons),

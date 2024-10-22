@@ -1,0 +1,25 @@
+<button mat-button type="button" class="language" [matMenuTriggerFor]="languageMenu" *rxLet="currentLang$; let lang">
+  {{ lang.lang }}
+
+  <svg-icon key="arrow-down" class="open" />
+  <svg-icon key="arrow-up" class="close" />
+</button>
+<mat-menu #languageMenu="matMenu" backdropClass="languages">
+  <ng-container *rxLet="languages$; let languages">
+    @for (language of languages; track language.lang) {
+    <a
+      asset-sg-reset
+      [routerLink]="language.params"
+      [queryParams]="language.queryParams"
+      [class.is-active]="language.isActive"
+    >
+      <span class="icon">
+        <svg-icon key="checkmark" />
+      </span>
+      <span class="name">
+        {{ language.lang }}
+      </span>
+    </a>
+    }
+  </ng-container>
+</mat-menu>
