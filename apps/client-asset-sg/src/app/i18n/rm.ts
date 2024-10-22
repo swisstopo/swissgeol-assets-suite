@@ -289,4 +289,17 @@ export const rmAppTranslations: AppTranslations = {
       addUsers: 'RM Benutzer hinzufügen',
     },
   },
+  disclaimer: {
+    title: 'RM Nutzungsbedingungen',
+    subtitle: 'RM Haftung',
+    content:
+      'RM Obwohl das Bundesamt für Landestopografie swisstopo mit aller Sorgfalt auf die Richtigkeit der veröffentlichten Informationen achtet, kann hinsichtlich der inhaltlichen Richtigkeit, Genauigkeit, Aktualität, Zuverlässigkeit und Vollständigkeit dieser Informationen keine Gewährleistung übernommen werden.\n' +
+      '\n' +
+      'Swisstopo behält sich ausdrücklich vor, jederzeit Inhalte ohne Ankündigung ganz oder teilweise zu ändern, zu löschen oder zeitweise nicht zu veröffentlichen.\n' +
+      '\n' +
+      'Haftungsansprüche gegen swisstopo wegen Schäden materieller oder immaterieller Art, welche aus dem Zugriff oder der Nutzung bzw. Nichtnutzung der veröffentlichten Informationen, durch Missbrauch der Verbindung oder durch technische Störungen entstanden sind, werden ausgeschlossen.\n' +
+      '\n' +
+      'Weitere rechtliche Bestimmungen finden sie hier:',
+    accept: 'RM Akzeptieren',
+  },
 };

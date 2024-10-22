@@ -80,41 +80,51 @@ input {
 * {
   scrollbar-width: auto;
   scrollbar-color: transparent;
+
   &::-webkit-scrollbar {
     width: 1.5rem;
     height: 1.5rem;
   }
+
   &::-webkit-scrollbar-button {
     background-color: transparent;
+
     &:vertical:decrement,
     &:vertical:increment {
       height: 1px;
     }
+
     &:horizontal:decrement,
     &:horizontal:increment {
       width: 1px;
     }
   }
+
   &::-webkit-scrollbar-track {
     background-color: transparent;
     border-color: transparent;
     border-style: solid;
     background-clip: content-box;
+
     &:vertical {
       border-width: 0 0.5625rem 0 0.5625rem;
     }
+
     &:horizontal {
       border-width: 0.5625rem 0 0.5625rem 0;
     }
   }
+
   &::-webkit-scrollbar-thumb {
     background-color: #bcc1c6;
     border-color: transparent;
     border-style: solid;
     background-clip: content-box;
+
     &:vertical {
       border-width: 0 0.5625rem 0 0.5625rem;
     }
+
     &:horizontal {
       border-width: 0.5625rem 0 0.5625rem 0;
     }
@@ -133,12 +143,18 @@ input {
   position: relative;
 }
 
+.disclaimer-backdrop-color {
+  background-color: grey;
+}
+
 .button-area {
   display: flex;
   justify-content: flex-start;
+
   button {
     min-width: 6rem;
   }
+
   button + button {
     margin-left: 1.5rem;
   }
@@ -168,27 +184,34 @@ input {
 .relative {
   position: relative;
 }
+
 .absolute {
   position: absolute;
 }
+
 .\!absolute {
   position: absolute !important;
 }
+
 .inset-0 {
   top: 0;
   right: 0;
   bottom: 0;
   left: 0;
 }
+
 .left-0 {
   left: 0;
 }
+
 .top-0 {
   top: 0;
 }
+
 .right-0 {
   right: 0;
 }
+
 .opacity-0 {
   opacity: 0;
 }
@@ -196,12 +219,15 @@ input {
 .border-2 {
   border-width: 2px;
 }
+
 .border-dashed {
   border-style: dashed;
 }
+
 .border-cyan-09 {
   border-color: variables.$cyan-09;
 }
+
 .border-grey-03 {
   border-color: variables.$grey-03;
 }
@@ -209,6 +235,7 @@ input {
 .rounded {
   border-radius: 0.25rem;
 }
+
 .cursor-pointer {
   cursor: pointer;
 }
@@ -220,6 +247,7 @@ input {
 .t-1\.5 {
   top: 0.375rem;
 }
+
 .r-3 {
   right: 0.75rem;
 }
@@ -231,21 +259,27 @@ input {
 .flex {
   display: flex;
 }
+
 .flex-row {
   flex-direction: row;
 }
+
 .flex-column {
   flex-direction: column;
 }
+
 .justify-between {
   justify-content: space-between;
 }
+
 .self-start {
   align-self: flex-start;
 }
+
 .self-center {
   align-self: center;
 }
+
 .self-end {
   align-self: flex-end;
 }
@@ -257,12 +291,15 @@ input {
 .basis-full {
   flex-basis: 100%;
 }
+
 .basis-10 {
   flex-basis: 2.5rem;
 }
+
 .basis-24 {
   flex-basis: 6rem;
 }
+
 .basis-32 {
   flex-basis: 8rem;
 }
@@ -270,12 +307,15 @@ input {
 .shrink {
   flex-shrink: 1;
 }
+
 .shrink-0 {
   flex-shrink: 0;
 }
+
 .grow {
   flex-grow: 1;
 }
+
 .grow-0 {
   flex-grow: 0;
 }
@@ -283,9 +323,11 @@ input {
 .gap-3 {
   gap: 0.75rem;
 }
+
 .gap-4 {
   gap: 1rem;
 }
+
 .gap-6 {
   gap: 1.5rem;
 }
@@ -297,38 +339,49 @@ input {
 .bg-white {
   background-color: variables.$white;
 }
+
 .bg-cyan-01 {
   background-color: variables.$cyan-01;
 }
+
 .hover\:bg-cyan-06 {
   &:hover {
     background-color: variables.$cyan-06;
   }
 }
+
 .bg-cyan-09 {
   background-color: variables.$cyan-09;
 }
+
 .bg-grey-00 {
   background-color: variables.$grey-00;
 }
+
 .hover\:bg-grey-03 {
   background-color: variables.$grey-03;
 }
+
 .bg-grey-03 {
   background-color: variables.$grey-03;
 }
+
 .bg-grey-05 {
   background-color: variables.$grey-05;
 }
+
 .bg-grey-07 {
   background-color: variables.$grey-07;
 }
+
 .bg-grey-09 {
   background-color: variables.$grey-09;
 }
+
 .bg-orange-01 {
   background-color: variables.$orange-01;
 }
+
 .bg-red-01 {
   background-color: variables.$red-01;
 }
@@ -356,10 +409,12 @@ input {
 .ml-0 {
   margin-left: 0;
 }
+
 .mx-0 {
   margin-left: 0;
   margin-right: 0;
 }
+
 .my-0 {
   margin-top: 0;
   margin-bottom: 0;
@@ -372,22 +427,28 @@ input {
 .m-1 {
   margin: 0.25rem;
 }
+
 .mt-1 {
   margin-top: 0.25rem;
 }
+
 .mb-1 {
   margin-bottom: 0.25rem;
 }
+
 .mr-1 {
   margin-right: 0.25rem;
 }
+
 .ml-1 {
   margin-left: 0.25rem;
 }
+
 .mx-1 {
   margin-left: 0.25rem;
   margin-right: 0.25rem;
 }
+
 .-ml-1 {
   margin-left: -0.25rem;
 }
@@ -395,28 +456,36 @@ input {
 .m-2 {
   margin: 0.5rem;
 }
+
 .mt-2 {
   margin-top: 0.5rem;
 }
+
 .mb-2 {
   margin-bottom: 0.5rem;
 }
+
 .mr-2 {
   margin-right: 0.5rem;
 }
+
 .ml-2 {
   margin-left: 0.5rem;
 }
+
 .mx-2 {
   margin-left: 0.5rem;
   margin-right: 0.5rem;
 }
+
 .-mt-2 {
   margin-top: -0.5rem;
 }
+
 .-ml-2 {
   margin-left: -0.5rem;
 }
+
 .-mr-2 {
   margin-right: -0.5rem;
 }
@@ -428,15 +497,19 @@ input {
 .m-3 {
   margin: 0.75rem;
 }
+
 .mt-3 {
   margin-top: 0.75rem;
 }
+
 .mb-3 {
   margin-bottom: 0.75rem;
 }
+
 .mr-3 {
   margin-right: 0.75rem;
 }
+
 .ml-3 {
   margin-left: 0.75rem;
 }
@@ -444,22 +517,28 @@ input {
 .m-4 {
   margin: 1rem;
 }
+
 .mt-4 {
   margin-top: 1rem;
 }
+
 .mb-4 {
   margin-bottom: 1rem;
 }
+
 .mr-4 {
   margin-right: 1rem;
 }
+
 .ml-4 {
   margin-left: 1rem;
 }
+
 .mx-4 {
   margin-left: 1rem;
   margin-right: 1rem;
 }
+
 .my-4 {
   margin-top: 1rem;
   margin-bottom: 1rem;
@@ -468,15 +547,19 @@ input {
 .-m-4 {
   margin: -1rem;
 }
+
 .-mt-4 {
   margin-top: -1rem;
 }
+
 .-mb-4 {
   margin-bottom: -1rem;
 }
+
 .-mr-4 {
   margin-right: -1rem;
 }
+
 .-ml-4 {
   margin-left: -1rem;
 }
@@ -484,26 +567,33 @@ input {
 .m-5 {
   margin: 1.25rem;
 }
+
 .mt-5 {
   margin-top: 1.25rem;
 }
+
 .mb-5 {
   margin-bottom: 1.25rem;
 }
+
 .mr-5 {
   margin-right: 1.25rem;
 }
+
 .ml-5 {
   margin-left: 1.25rem;
 }
+
 .mx-5 {
   margin-left: 1.25rem;
   margin-right: 1.25rem;
 }
+
 .my-5 {
   margin-top: 1.25rem;
   margin-bottom: 1.25rem;
 }
+
 .-mr-5 {
   margin-right: -1.25rem;
 }
@@ -511,18 +601,23 @@ input {
 .m-6 {
   margin: 1.5rem;
 }
+
 .mt-6 {
   margin-top: 1.5rem;
 }
+
 .mb-6 {
   margin-bottom: 1.5rem;
 }
+
 .mr-6 {
   margin-right: 1.5rem;
 }
+
 .ml-6 {
   margin-left: 1.5rem;
 }
+
 .-mr-6 {
   margin-right: -1.5rem;
 }
@@ -530,15 +625,19 @@ input {
 .m-8 {
   margin: 2rem;
 }
+
 .mt-8 {
   margin-top: 2rem;
 }
+
 .mb-8 {
   margin-bottom: 2rem;
 }
+
 .mr-8 {
   margin-right: 2rem;
 }
+
 .ml-8 {
   margin-left: 2rem;
 }
@@ -546,22 +645,28 @@ input {
 .m-10 {
   margin: 2.5rem;
 }
+
 .mt-10 {
   margin-top: 2.5rem;
 }
+
 .mb-10 {
   margin-bottom: 2.5rem;
 }
+
 .mr-10 {
   margin-right: 2.5rem;
 }
+
 .ml-10 {
   margin-left: 2.5rem;
 }
+
 .mx-10 {
   margin-left: 2.5rem;
   margin-right: 2.5rem;
 }
+
 .my-10 {
   margin-top: 2.5rem;
   margin-bottom: 2.5rem;
@@ -570,22 +675,28 @@ input {
 .m-12 {
   margin: 3rem;
 }
+
 .mt-12 {
   margin-top: 3rem;
 }
+
 .mb-12 {
   margin-bottom: 3rem;
 }
+
 .mr-12 {
   margin-right: 3rem;
 }
+
 .ml-12 {
   margin-left: 3rem;
 }
+
 .mx-12 {
   margin-left: 3rem;
   margin-right: 3rem;
 }
+
 .my-12 {
   margin-top: 3rem;
   margin-bottom: 3rem;
@@ -594,22 +705,28 @@ input {
 .p-0 {
   padding: 0;
 }
+
 .pt-0 {
   padding-top: 0;
 }
+
 .pb-0 {
   padding-bottom: 0;
 }
+
 .pr-0 {
   padding-right: 0;
 }
+
 .pl-0 {
   padding-left: 0;
 }
+
 .py-0 {
   padding-top: 0;
   padding-bottom: 0;
 }
+
 .px-0 {
   padding-left: 0;
   padding-right: 0;
@@ -618,22 +735,28 @@ input {
 .p-1 {
   padding: 0.25rem;
 }
+
 .pt-1 {
   padding-top: 0.25rem;
 }
+
 .pb-1 {
   padding-bottom: 0.25rem;
 }
+
 .pr-1 {
   padding-right: 0.25rem;
 }
+
 .pl-1 {
   padding-left: 0.25rem;
 }
+
 .py-1 {
   padding-top: 0.25rem;
   padding-bottom: 0.25rem;
 }
+
 .px-1 {
   padding-left: 0.25rem;
   padding-right: 0.25rem;
@@ -642,22 +765,28 @@ input {
 .p-2 {
   padding: 0.5rem;
 }
+
 .pt-2 {
   padding-top: 0.5rem;
 }
+
 .pb-2 {
   padding-bottom: 0.5rem;
 }
+
 .pr-2 {
   padding-right: 0.5rem;
 }
+
 .pl-2 {
   padding-left: 0.5rem;
 }
+
 .py-2 {
   padding-top: 0.5rem;
   padding-bottom: 0.5rem;
 }
+
 .px-2 {
   padding-left: 0.5rem;
   padding-right: 0.5rem;
@@ -666,22 +795,28 @@ input {
 .p-3 {
   padding: 0.75rem;
 }
+
 .pt-3 {
   padding-top: 0.75rem;
 }
+
 .pb-3 {
   padding-bottom: 0.75rem;
 }
+
 .pr-3 {
   padding-right: 0.75rem;
 }
+
 .pl-3 {
   padding-left: 0.75rem;
 }
+
 .py-3 {
   padding-top: 0.75rem;
   padding-bottom: 0.75rem;
 }
+
 .px-3 {
   padding-left: 0.75rem;
   padding-right: 0.75rem;
@@ -690,22 +825,28 @@ input {
 .p-4 {
   padding: 1rem;
 }
+
 .pt-4 {
   padding-top: 1rem;
 }
+
 .pb-4 {
   padding-bottom: 1rem;
 }
+
 .pr-4 {
   padding-right: 1rem;
 }
+
 .pl-4 {
   padding-left: 1rem;
 }
+
 .py-4 {
   padding-top: 1rem;
   padding-bottom: 1rem;
 }
+
 .px-4 {
   padding-left: 1rem;
   padding-right: 1rem;
@@ -714,22 +855,28 @@ input {
 .p-6 {
   padding: 1.5rem;
 }
+
 .pt-6 {
   padding-top: 1.5rem;
 }
+
 .pb-6 {
   padding-bottom: 1.5rem;
 }
+
 .pr-6 {
   padding-right: 1.5rem;
 }
+
 .pl-6 {
   padding-left: 1.5rem;
 }
+
 .py-6 {
   padding-top: 1.5rem;
   padding-bottom: 1.5rem;
 }
+
 .px-6 {
   padding-left: 1.5rem;
   padding-right: 1.5rem;
@@ -738,22 +885,28 @@ input {
 .p-8 {
   padding: 2rem;
 }
+
 .pt-8 {
   padding-top: 2rem;
 }
+
 .pb-8 {
   padding-bottom: 2rem;
 }
+
 .pr-8 {
   padding-right: 2rem;
 }
+
 .pl-8 {
   padding-left: 2rem;
 }
+
 .py-8 {
   padding-top: 2rem;
   padding-bottom: 2rem;
 }
+
 .px-8 {
   padding-left: 2rem;
   padding-right: 2rem;
@@ -762,22 +915,28 @@ input {
 .p-10 {
   padding: 2.5rem;
 }
+
 .pt-10 {
   padding-top: 2.5rem;
 }
+
 .pb-10 {
   padding-bottom: 2.5rem;
 }
+
 .pr-10 {
   padding-right: 2.5rem;
 }
+
 .pl-10 {
   padding-left: 2.5rem;
 }
+
 .py-10 {
   padding-top: 2.5rem;
   padding-bottom: 2.5rem;
 }
+
 .px-10 {
   padding-left: 2.5rem;
   padding-right: 2.5rem;
@@ -794,12 +953,15 @@ input {
 .font-normal {
   font-weight: variables.$font-normal;
 }
+
 .font-medium {
   font-weight: variables.$font-medium;
 }
+
 .font-semibold {
   font-weight: variables.$font-semibold;
 }
+
 .font-bold {
   font-weight: variables.$font-bold;
 }
@@ -811,12 +973,15 @@ input {
 .text-red {
   color: variables.$red;
 }
+
 .text-dark-red {
   color: variables.$dark-red;
 }
+
 .text-cyan-09 {
   color: variables.$cyan-09;
 }
+
 .text-grey-08 {
   color: variables.$grey-08;
 }
@@ -824,15 +989,19 @@ input {
 .h-1 {
   height: 0.25rem;
 }
+
 .h-10 {
   height: 2.5rem;
 }
+
 .h-full {
   height: 100%;
 }
+
 .max-h-48 {
   max-height: 12rem;
 }
+
 .max-h-full {
   max-height: 100%;
 }
@@ -840,18 +1009,23 @@ input {
 .w-2 {
   width: 0.5rem;
 }
+
 .w-4 {
   width: 1rem;
 }
+
 .w-7 {
   width: 1.75rem;
 }
+
 .w-8 {
   width: 2rem;
 }
+
 .w-12 {
   width: 3rem;
 }
+
 .w-full {
   width: 100%;
 }
@@ -867,9 +1041,11 @@ input {
 .scroll-smooth {
   scroll-behavior: smooth;
 }
+
 .overflow-x-hidden {
   overflow-x: hidden;
 }
+
 .overflow-y-scroll {
   overflow-y: scroll;
 }
