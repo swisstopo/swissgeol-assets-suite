@@ -183,6 +183,7 @@ export const enAppTranslations: AppTranslations = {
         website: 'Website',
         create: 'Create',
         noContacts: 'No contacts',
+        contactPlaceholder: 'Search by name',
       },
       references: {
         tabName: 'References',
