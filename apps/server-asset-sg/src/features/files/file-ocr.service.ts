@@ -13,7 +13,7 @@ if (serviceUrl == null || serviceUrl.length == 0) {
 
 type OcrFile = Pick<AssetFile, 'id' | 'name'>;
 
-const BATCH_SIZE = 10;
+const BATCH_SIZE = 1;
 
 @Injectable()
 export class FileOcrService implements OnModuleInit {
