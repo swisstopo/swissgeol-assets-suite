@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, inject, Input, OnInit, Output } from '@angular/core';
 import { FormBuilder, FormControl, FormGroupDirective, Validators } from '@angular/forms';
+import { MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
 import { fromAppShared } from '@asset-sg/client-shared';
 import { ordStringLowerCase } from '@asset-sg/core';
 import {
@@ -19,7 +20,19 @@ import { Ord as ordNumber } from 'fp-ts/number';
 import * as O from 'fp-ts/Option';
 import { contramap } from 'fp-ts/Ord';
 import * as R from 'fp-ts/Record';
-import { distinctUntilChanged, EMPTY, identity, map, Observable, skip, switchMap, take } from 'rxjs';
+import {
+  combineLatest,
+  debounceTime,
+  distinctUntilChanged,
+  EMPTY,
+  identity,
+  map,
+  Observable,
+  skip,
+  Subject,
+  switchMap,
+  take,
+} from 'rxjs';
 
 import {
   AssetEditorContactsFormGroup,
@@ -28,6 +41,7 @@ import {
 } from '../asset-editor-form-group';
 
 type UIMode = 'view' | 'linkExisting' | 'linkNew' | 'viewContactDetails' | 'editContactDetails';
+
 interface TabContactsState {
   referenceDataVM: fromAppShared.ReferenceDataVM;
   assetContacts: AssetContactEdit[];
@@ -148,6 +162,22 @@ export class AssetEditorTabContactsComponent implements OnInit {
   public _uiMode$ = this._state.select('uiMode');
 
   public _currentContactId$ = this._state.select('currentContactId');
+
+  readonly contactQuery$ = new Subject<string>();
+
+  readonly contacts$ = combineLatest([
+    this.contactQuery$.pipe(debounceTime(300)),
+    this._state.select('referenceDataVM').pipe(map((data) => Object.values(data.contacts))),
+  ]).pipe(
+    map(([query, contacts]) => {
+      if (query.length < 3) {
+        return contacts;
+      }
+      query = query.toLocaleLowerCase();
+      console.log(query, { contacts });
+      return contacts.filter((it) => it.name.toLocaleLowerCase().includes(query));
+    })
+  );
 
   public getForm(uiMode: UIMode) {
     switch (uiMode) {
@@ -291,5 +321,13 @@ export class AssetEditorTabContactsComponent implements OnInit {
       });
 
     this.createContact$.next(rest);
+  }
+
+  displayContact(contact: Contact): string {
+    return contact.name;
+  }
+
+  onContactSelected(event: MatAutocompleteSelectedEvent) {
+    this._linkContactForm.controls.contactId.setValue((event.option.value as Contact).id);
   }
 }

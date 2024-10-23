@@ -182,6 +182,7 @@ export const deAppTranslations = {
         website: 'Website',
         create: 'Erstellen',
         noContacts: 'Keine Kontakte',
+        contactPlaceholder: 'Suche über Namen',
       },
       references: {
         tabName: 'Verweise',

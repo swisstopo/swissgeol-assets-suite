@@ -72,30 +72,37 @@
                     <mat-label translate>edit.tabs.contacts.role</mat-label>
                     <mat-select formControlName="role">
                       <mat-option value="author" class="ellipsis">{{ "contactRoles.author" | translate }}</mat-option>
-                      <mat-option value="initiator" class="ellipsis">{{
-                        "contactRoles.initiator" | translate
-                      }}</mat-option>
-                      <mat-option value="supplier" class="ellipsis">{{
-                        "contactRoles.supplier" | translate
-                      }}</mat-option>
+                      <mat-option value="initiator" class="ellipsis"
+                        >{{ "contactRoles.initiator" | translate }}
+                      </mat-option>
+                      <mat-option value="supplier" class="ellipsis"
+                        >{{ "contactRoles.supplier" | translate }}
+                      </mat-option>
                     </mat-select>
                     <mat-error *ngIf="$any(form).controls['role'].hasError('required')" translate>required</mat-error>
                   </mat-form-field>
                   <ng-container *ngIf="uiMode === 'linkExisting'">
                     <mat-form-field class="mb-2">
                       <mat-label translate>edit.tabs.contacts.contact</mat-label>
-                      <mat-select formControlName="contactId">
-                        <mat-option
-                          *rxFor="let contact of _availableContacts$ | push"
-                          [value]="contact.id"
-                          class="ellipsis"
-                        >
+                      <input
+                        matInput
+                        type="text"
+                        [placeholder]="'edit.tabs.contacts.contactPlaceholder' | translate"
+                        (input)="contactQuery$.next($any($event.target)?.value ?? '')"
+                        [matAutocomplete]="contactAutocomplete"
+                      />
+                      <mat-autocomplete
+                        #contactAutocomplete="matAutocomplete"
+                        [displayWith]="displayContact"
+                        (optionSelected)="onContactSelected($event)"
+                      >
+                        <mat-option *rxFor="let contact of contacts$" [value]="contact">
                           {{ contact.name }}
                         </mat-option>
-                      </mat-select>
-                      <mat-error *ngIf="$any(form).controls['contactId'].hasError('required')" translate
-                        >required</mat-error
-                      >
+                      </mat-autocomplete>
+                      <mat-error *ngIf="$any(form).controls['contactId'].hasError('required')" translate>
+                        required
+                      </mat-error>
                     </mat-form-field>
                     <div class="button-area">
                       <button asset-sg-primary (click)="link()" translate>edit.tabs.contacts.link</button>
