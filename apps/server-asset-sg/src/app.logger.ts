@@ -5,6 +5,10 @@ import colors from 'colors/safe';
 export class AppLogger implements LoggerService {
   levels: Set<LogLevel> | null = null;
 
+  constructor() {
+    colors.enable();
+  }
+
   log(message: unknown, ...optionalParams: unknown[]) {
     this.write(levels.log, message, optionalParams);
   }
