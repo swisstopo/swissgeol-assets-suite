@@ -16,6 +16,7 @@ import { AuthInterceptor, AuthModule, ErrorService } from '@asset-sg/auth';
 import {
   AdminOnlyDirective,
   AlertModule,
+  assetsPageMatcher,
   AnchorComponent,
   ButtonComponent,
   CanCreateDirective,
@@ -24,7 +25,6 @@ import {
   icons,
   TranslateTsLoader,
 } from '@asset-sg/client-shared';
-import { assetsPageMatcher } from '@asset-sg/client-shared';
 import { storeLogger } from '@asset-sg/core';
 import { provideSvgIcons, SvgIconComponent } from '@ngneat/svg-icon';
 import { EffectsModule } from '@ngrx/effects';
@@ -131,10 +131,10 @@ registerLocaleData(locale_deCH, 'de-CH');
   bootstrap: [AppComponent],
 })
 export class AppModule {
-  private _translateService = inject(TranslateService);
+  private readonly translateService = inject(TranslateService);
 
   constructor() {
-    this._translateService.setDefaultLang('de');
+    this.translateService.setDefaultLang('de');
   }
 }
 

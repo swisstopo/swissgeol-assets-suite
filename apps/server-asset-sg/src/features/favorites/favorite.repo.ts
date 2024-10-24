@@ -1,5 +1,4 @@
-import { Favorite } from '@asset-sg/shared/v2';
-import { UserId } from '@asset-sg/shared/v2';
+import { Favorite, UserId } from '@asset-sg/shared/v2';
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 
