@@ -260,51 +260,6 @@ export class AssetEditRepo implements Repo<AssetEditDetail, number, AssetEditDat
 
     try {
       await this.prismaService.$transaction(async () => {
-        // Delete the record's `manCatLabelRef` records.
-        await this.prismaService.manCatLabelRef.deleteMany({
-          where: { assetId: id },
-        });
-
-        // Delete the record's `assetContact` records.
-        await this.prismaService.assetContact.deleteMany({
-          where: { assetId: id },
-        });
-
-        // Delete the record's `assetLanguage` records.
-        await this.prismaService.assetLanguage.deleteMany({
-          where: { assetId: id },
-        });
-
-        // Delete the record's `id` records.
-        await this.prismaService.id.deleteMany({
-          where: { assetId: id },
-        });
-
-        // Delete the record's `typeNatRel` records.
-        await this.prismaService.typeNatRel.deleteMany({
-          where: { assetId: id },
-        });
-
-        // Delete the record's `statusWork` records.
-        await this.prismaService.statusWork.deleteMany({
-          where: { assetId: id },
-        });
-
-        // Delete the record's `siblingXAsset` and `siblingYAsset` records.
-        await this.prismaService.assetXAssetY.deleteMany({
-          where: { OR: [{ assetXId: id }, { assetYId: id }] },
-        });
-
-        // Delete the record's `favourite` records.
-        await this.prismaService.assetUserFavourite.deleteMany({
-          where: { assetId: id },
-        });
-
-        // Delete the record's `allStudy` records.
-        await this.prismaService.allStudy.deleteMany({
-          where: { assetId: id },
-        });
-
         // Delete the record's `file` records.
         const assetFileIds = await this.prismaService.assetFile.findMany({
           where: { assetId: id },
@@ -330,6 +285,18 @@ export class AssetEditRepo implements Repo<AssetEditDetail, number, AssetEditDat
         await this.prismaService.publicUse.deleteMany({
           where: {
             Asset: { none: {} },
+          },
+        });
+
+        await this.prismaService.assetFormatItem.deleteMany({
+          where: {
+            assets: { none: {} },
+          },
+        });
+
+        await this.prismaService.assetKindItem.deleteMany({
+          where: {
+            assets: { none: {} },
           },
         });
       });
