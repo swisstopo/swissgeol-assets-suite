@@ -8,6 +8,8 @@ export const rmAppTranslations: AppTranslations = {
   ok: 'OK',
   submit: 'RM Absenden',
   cancel: 'RM Abbrechen',
+  confirm: 'RM Bestätigen',
+  confirm_delete: 'RM Sind Sie sicher, dass Sie dieses Asset löschen möchten?',
   login: 'Login',
   logout: 'RM Abmelden',
   yes: 'Sì',

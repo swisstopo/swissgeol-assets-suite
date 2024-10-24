@@ -8,6 +8,8 @@ export const itAppTranslations: AppTranslations = {
   ok: 'OK',
   submit: 'IT Absenden',
   cancel: 'IT Abbrechen',
+  confirm: 'IT Bestätigen',
+  confirm_delete: 'IT Sind Sie sicher, dass Sie dieses Asset löschen möchten?',
   login: 'Login',
   logout: 'IT Abmelden',
   yes: 'Sì',

@@ -8,6 +8,8 @@ export const enAppTranslations: AppTranslations = {
   ok: 'OK',
   submit: 'Submit',
   cancel: 'Cancel',
+  confirm: 'Confirm',
+  confirm_delete: 'Are you sure you want to delete this asset?',
   login: 'Login',
   logout: 'Logout',
   yes: 'Yes',

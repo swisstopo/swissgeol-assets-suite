@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable, inject } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { ApiError, httpErrorResponseError } from '@asset-sg/client-shared';
-import { OE, ORD, decodeError, unknownError } from '@asset-sg/core';
+import { decodeError, OE, ORD, unknownError } from '@asset-sg/core';
 import { Contact, PatchAsset, PatchContact } from '@asset-sg/shared';
 import * as RD from '@devexperts/remote-data-ts';
 import * as E from 'fp-ts/Either';
@@ -49,6 +49,10 @@ export class AssetEditorService {
         map(RD.fromEither),
         startWith(RD.pending)
       );
+  }
+
+  public deleteAsset(assetId: number) {
+    return this.httpClient.delete(`/api/asset-edit/${assetId}`);
   }
 
   public deleteFiles(assetId: number, fileIds: number[]): ORD.ObservableRemoteData<ApiError, unknown> {

@@ -8,6 +8,8 @@ export const frAppTranslations: AppTranslations = {
   ok: 'OK',
   submit: 'Envoyer',
   cancel: 'Annuler',
+  confirm: 'Confirmer',
+  confirm_delete: 'Êtes-vous sûr de vouloir supprimer cet asset',
   login: 'Login',
   logout: 'Déconnecter',
   yes: 'Oui',

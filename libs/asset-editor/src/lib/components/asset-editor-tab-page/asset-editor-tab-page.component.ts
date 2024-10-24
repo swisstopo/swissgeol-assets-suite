@@ -267,6 +267,11 @@ export class AssetEditorTabPageComponent {
       });
   }
 
+  delete(): void {
+    const { general } = this.form.getRawValue();
+    this._store.dispatch(actions.deleteAsset({ assetId: general.id }));
+  }
+
   save(): void {
     if (this.form.invalid) {
       return;

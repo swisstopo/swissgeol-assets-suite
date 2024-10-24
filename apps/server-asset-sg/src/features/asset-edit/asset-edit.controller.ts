@@ -1,8 +1,17 @@
 import { PatchAsset } from '@asset-sg/shared';
-import { User } from '@asset-sg/shared/v2';
-import { Role } from '@asset-sg/shared/v2';
-import { AssetEditPolicy } from '@asset-sg/shared/v2';
-import { Controller, Get, HttpException, HttpStatus, Param, ParseIntPipe, Post, Put } from '@nestjs/common';
+import { AssetEditPolicy, Role, User } from '@asset-sg/shared/v2';
+import {
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpException,
+  HttpStatus,
+  Param,
+  ParseIntPipe,
+  Post,
+  Put,
+} from '@nestjs/common';
 import * as E from 'fp-ts/Either';
 import { authorize } from '@/core/authorize';
 import { CurrentUser } from '@/core/decorators/current-user.decorator';
@@ -54,6 +63,20 @@ export class AssetEditController {
       throw new HttpException(result.left.message, 500);
     }
     return result.right;
+  }
+
+  @Delete('/:id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async delete(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: User): Promise<void> {
+    const record = await this.assetEditRepo.find(id);
+    if (record == null) {
+      throw new HttpException('not found', HttpStatus.NOT_FOUND);
+    }
+    authorize(AssetEditPolicy, user).canDelete(record);
+    const result = await this.assetEditService.deleteAsset(record.assetId)();
+    if (E.isLeft(result)) {
+      throw new HttpException(result.left.message, 500);
+    }
   }
 }
 

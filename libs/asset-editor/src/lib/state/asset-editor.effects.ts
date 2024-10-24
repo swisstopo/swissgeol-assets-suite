@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { appSharedStateActions, filterNavigateToComponent } from '@asset-sg/client-shared';
 import { DT, ORD, partitionEither } from '@asset-sg/core';
@@ -8,7 +8,7 @@ import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { pipe } from 'fp-ts/function';
 import * as O from 'fp-ts/Option';
 import * as D from 'io-ts/Decoder';
-import { Observable, concatMap, map, partition, share, switchMap, tap } from 'rxjs';
+import { concatMap, filter, map, Observable, partition, share, switchMap, tap } from 'rxjs';
 
 import { AssetEditorPageComponent } from '../components/asset-editor-page';
 import { AssetEditorService } from '../services/asset-editor.service';
@@ -78,6 +78,26 @@ export class AssetEditorEffects {
         )
       ),
       map(actions.updateAssetEditDetailResult)
+    )
+  );
+
+  handleAssetAddedOrEdited$ = createEffect(() =>
+    this._actions$.pipe(
+      ofType(actions.updateAssetEditDetailResult),
+      filter((rd) => RD.isSuccess(rd)),
+      map(() => {
+        return appSharedStateActions.updateSearchAfterAssetEditedOrAdded({ assetId: undefined });
+      })
+    )
+  );
+
+  deleteAsset$ = createEffect(() =>
+    this._actions$.pipe(
+      ofType(actions.deleteAsset),
+      switchMap(({ assetId }) => this._assetEditorService.deleteAsset(assetId)),
+      map(() => {
+        return appSharedStateActions.updateSearchAfterAssetEditedOrAdded({ assetId: undefined });
+      })
     )
   );
 

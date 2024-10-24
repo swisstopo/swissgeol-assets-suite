@@ -1,0 +1,9 @@
+<div>
+  <div mat-dialog-content>
+    <p>{{ data.text | translate }}</p>
+  </div>
+  <div mat-dialog-actions class="actions">
+    <button asset-sg-secondary (click)="close()" translate>cancel</button>
+    <button asset-sg-primary (click)="confirm()" translate>confirm</button>
+  </div>
+</div>

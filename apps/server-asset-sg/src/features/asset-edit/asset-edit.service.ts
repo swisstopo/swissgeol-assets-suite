@@ -38,4 +38,12 @@ export class AssetEditService {
       TE.map((asset) => AssetEditDetail.encode(asset))
     );
   }
+
+  public deleteAsset(assetId: number) {
+    return pipe(
+      TE.tryCatch(() => this.assetEditRepo.delete(assetId), unknownToUnknownError),
+      TE.chainW(TE.fromPredicate((result) => result, notFoundError)),
+      TE.tap(() => TE.tryCatch(() => this.assetSearchService.deleteFromIndex(assetId), unknownToUnknownError))
+    );
+  }
 }

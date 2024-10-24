@@ -6,6 +6,8 @@ export const deAppTranslations = {
   ok: 'OK',
   submit: 'Absenden',
   cancel: 'Abbrechen',
+  confirm: 'Bestätigen',
+  confirm_delete: 'Sind Sie sicher, dass sie dieses Asset löschen wollen?',
   login: 'Anmelden',
   logout: 'Abmelden',
   yes: 'Ja',

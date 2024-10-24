@@ -64,6 +64,14 @@ export class AssetSearchService {
     return this.registerWithOptions(oneOrMore, { index: INDEX, shouldRefresh: true });
   }
 
+  async deleteFromIndex(assetId: number): Promise<void> {
+    await this.elastic.delete({
+      index: INDEX,
+      id: `${assetId}`,
+      refresh: true,
+    });
+  }
+
   async count(): Promise<number> {
     return (await this.elastic.count({ index: INDEX, ignore_unavailable: true })).count;
   }
