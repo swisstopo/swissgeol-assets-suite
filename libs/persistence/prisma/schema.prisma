@@ -76,7 +76,7 @@ model Asset {
 model Id {
   idId        Int    @id @default(autoincrement()) @map("id_id")
   assetId     Int    @map("asset_id")
-  asset       Asset  @relation(fields: [assetId], references: [assetId])
+  asset       Asset  @relation(fields: [assetId], references: [assetId], onDelete: Cascade)
   id          String @map("id")
   description String @map("description")
 
@@ -85,10 +85,10 @@ model Id {
 
 model AssetXAssetY {
   assetXId Int   @map("asset_x_id")
-  assetX   Asset @relation("sibling_x_asset", fields: [assetXId], references: [assetId])
+  assetX   Asset @relation("sibling_x_asset", fields: [assetXId], references: [assetId], onDelete: Cascade)
 
   assetYId Int   @map("asset_y_id")
-  assetY   Asset @relation("sibling_y_asset", fields: [assetYId], references: [assetId])
+  assetY   Asset @relation("sibling_y_asset", fields: [assetYId], references: [assetId], onDelete: Cascade)
 
   @@id([assetXId, assetYId])
   @@map("asset_x_asset_y")
@@ -120,7 +120,7 @@ model PublicUse {
 
 model AssetFile {
   assetId Int   @map("asset_id")
-  asset   Asset @relation(fields: [assetId], references: [assetId])
+  asset   Asset @relation(fields: [assetId], references: [assetId], onDelete: Cascade)
   fileId  Int   @map("file_id")
   file    File  @relation(fields: [fileId], references: [id], onDelete: Cascade)
 
@@ -177,7 +177,7 @@ model AssetObjectInfo {
 
 model ManCatLabelRef {
   assetId             Int             @map("asset_id")
-  asset               Asset           @relation(fields: [assetId], references: [assetId])
+  asset               Asset           @relation(fields: [assetId], references: [assetId], onDelete: Cascade)
   manCatLabelItemCode String          @map("man_cat_label_item_code")
   manCatLabelItem     ManCatLabelItem @relation(fields: [manCatLabelItemCode], references: [manCatLabelItemCode])
 
@@ -188,7 +188,7 @@ model ManCatLabelRef {
 model AssetFormatComposition {
   assetFormatCompositionId Int             @id @default(autoincrement()) @map("asset_format_composition_id")
   assetId                  Int             @map("asset_id")
-  asset                    Asset           @relation(fields: [assetId], references: [assetId])
+  asset                    Asset           @relation(fields: [assetId], references: [assetId], onDelete: Cascade)
   assetFormatItemCode      String          @map("asset_format_item_code")
   assetFormatItem          AssetFormatItem @relation(fields: [assetFormatItemCode], references: [assetFormatItemCode])
 
@@ -198,7 +198,7 @@ model AssetFormatComposition {
 model AssetKindComposition {
   assetKindCompositionId Int           @id @default(autoincrement()) @map("asset_kind_composition_id")
   assetId                Int           @map("asset_id")
-  asset                  Asset         @relation(fields: [assetId], references: [assetId])
+  asset                  Asset         @relation(fields: [assetId], references: [assetId], onDelete: Cascade)
   assetKindItemCode      String        @map("asset_kind_item_code")
   assetKindItem          AssetKindItem @relation(fields: [assetKindItemCode], references: [assetKindItemCode])
 
@@ -208,7 +208,7 @@ model AssetKindComposition {
 model StatusWork {
   statusWorkId       Int            @id @default(autoincrement()) @map("status_work_id")
   assetId            Int            @map("asset_id")
-  asset              Asset          @relation(fields: [assetId], references: [assetId])
+  asset              Asset          @relation(fields: [assetId], references: [assetId], onDelete: Cascade)
   statusWorkItemCode String         @map("status_work_item_code")
   statusWorkItem     StatusWorkItem @relation(fields: [statusWorkItemCode], references: [statusWorkItemCode])
   statusWorkDate     DateTime       @map("status_work_date")
@@ -220,7 +220,7 @@ model StatusWork {
 model AutoCat {
   autoCatId            Int              @id @default(autoincrement()) @map("auto_cat_id")
   assetId              Int              @map("asset_id")
-  asset                Asset            @relation(fields: [assetId], references: [assetId])
+  asset                Asset            @relation(fields: [assetId], references: [assetId], onDelete: Cascade)
   autoCatLabelItemCode String           @map("auto_cat_label_item_code")
   autoCatLabelItem     AutoCatLabelItem @relation(fields: [autoCatLabelItemCode], references: [autoCatLabelItemCode])
   autoCatLabelScore    Int              @map("auto_cat_label_score")
@@ -231,7 +231,7 @@ model AutoCat {
 model TypeNatRel {
   typeNatRelId   Int        @id @default(autoincrement()) @map("type_nat_rel_id")
   assetId        Int        @map("asset_id")
-  asset          Asset      @relation(fields: [assetId], references: [assetId])
+  asset          Asset      @relation(fields: [assetId], references: [assetId], onDelete: Cascade)
   natRelItemCode String     @map("nat_rel_item_code")
   natRelItem     NatRelItem @relation(fields: [natRelItemCode], references: [natRelItemCode])
 
@@ -259,7 +259,7 @@ model Contact {
 
 model AssetContact {
   assetId   Int     @map("asset_id")
-  asset     Asset   @relation(fields: [assetId], references: [assetId])
+  asset     Asset   @relation(fields: [assetId], references: [assetId], onDelete: Cascade)
   contactId Int     @map("contact_id")
   contact   Contact @relation(fields: [contactId], references: [contactId])
   role      String  @map("role")
@@ -283,7 +283,7 @@ model Publication {
 
 model AssetPublication {
   assetId       Int         @map("asset_id")
-  asset         Asset       @relation(fields: [assetId], references: [assetId])
+  asset         Asset       @relation(fields: [assetId], references: [assetId], onDelete: Cascade)
   publicationId Int         @map("publication_id")
   publication   Publication @relation(fields: [publicationId], references: [publicationId])
 
@@ -304,7 +304,7 @@ model InternalProject {
 
 model AssetInternalProject {
   assetId           Int             @map("asset_id")
-  asset             Asset           @relation(fields: [assetId], references: [assetId])
+  asset             Asset           @relation(fields: [assetId], references: [assetId], onDelete: Cascade)
   internalProjectId Int             @map("internal_project_id")
   internalProject   InternalProject @relation(fields: [internalProjectId], references: [internalProjectId])
 
@@ -315,7 +315,7 @@ model AssetInternalProject {
 model StudyArea {
   studyAreaId         Int                      @id @default(autoincrement()) @map("study_area_id")
   assetId             Int                      @map("asset_id")
-  asset               Asset                    @relation(fields: [assetId], references: [assetId])
+  asset               Asset                    @relation(fields: [assetId], references: [assetId], onDelete: Cascade)
   geomQualityItemCode String                   @map("geom_quality_item_code")
   geomQualityItem     GeomQualityItem          @relation(fields: [geomQualityItemCode], references: [geomQualityItemCode])
   geom                Unsupported("geometry")?
@@ -327,7 +327,7 @@ model StudyArea {
 model StudyLocation {
   studyLocationId     Int                      @id @default(autoincrement()) @map("study_location_id")
   assetId             Int                      @map("asset_id")
-  asset               Asset                    @relation(fields: [assetId], references: [assetId])
+  asset               Asset                    @relation(fields: [assetId], references: [assetId], onDelete: Cascade)
   geomQualityItemCode String                   @map("geom_quality_item_code")
   geomQualityItem     GeomQualityItem          @relation(fields: [geomQualityItemCode], references: [geomQualityItemCode])
   geom                Unsupported("geometry")?
@@ -339,7 +339,7 @@ model StudyLocation {
 model StudyTrace {
   studyTraceId        Int                      @id @default(autoincrement()) @map("study_trace_id")
   assetId             Int                      @map("asset_id")
-  asset               Asset                    @relation(fields: [assetId], references: [assetId])
+  asset               Asset                    @relation(fields: [assetId], references: [assetId], onDelete: Cascade)
   geomQualityItemCode String                   @map("geom_quality_item_code")
   geomQualityItem     GeomQualityItem          @relation(fields: [geomQualityItemCode], references: [geomQualityItemCode])
   geom                Unsupported("geometry")?
@@ -501,7 +501,7 @@ model LanguageItem {
 
 model AssetLanguage {
   assetId          Int          @map("asset_id")
-  asset            Asset        @relation(fields: [assetId], references: [assetId])
+  asset            Asset        @relation(fields: [assetId], references: [assetId], onDelete: Cascade)
   languageItemCode String       @map("language_item_code")
   languageItem     LanguageItem @relation(fields: [languageItemCode], references: [languageItemCode])
 
@@ -649,10 +649,10 @@ model AssetUser {
 
 model AssetUserFavourite {
   assetUserId String    @map("asset_user_id") @db.Uuid
-  AssetUser   AssetUser @relation(fields: [assetUserId], references: [id])
+  AssetUser   AssetUser @relation(fields: [assetUserId], references: [id], onDelete: Cascade)
 
   assetId Int   @map("asset_id")
-  Asset   Asset @relation(fields: [assetId], references: [assetId])
+  Asset   Asset @relation(fields: [assetId], references: [assetId], onDelete: Cascade)
 
   created_at DateTime @db.Timestamptz(6)
 
@@ -690,7 +690,7 @@ enum Role {
 
 view AllStudy {
   assetId          Int                      @map("asset_id")
-  asset            Asset                    @relation(fields: [assetId], references: [assetId])
+  asset            Asset                    @relation(fields: [assetId], references: [assetId], onDelete: Cascade)
   id               Int
   studyId          String                   @unique @map("study_id")
   geom             Unsupported("geometry")?
