@@ -71,5 +71,6 @@ Content-Type: application/json
   "titleOriginal": "My Cool Asset",
   "titlePublic": "Our Cool Asset",
   "typeNatRels": [],
-  "workgroupId": 1
+  "workgroupId": 1,
+  "assetFiles": []
 }

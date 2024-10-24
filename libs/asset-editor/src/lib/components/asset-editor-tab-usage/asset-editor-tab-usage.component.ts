@@ -1,8 +1,8 @@
 import { Dialog, DialogRef } from '@angular/cdk/dialog';
-import { ChangeDetectionStrategy, Component, Input, OnInit, TemplateRef, ViewChild, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, Input, OnInit, TemplateRef, ViewChild } from '@angular/core';
 import { FormGroupDirective } from '@angular/forms';
 import { MatCheckboxChange } from '@angular/material/checkbox';
-import { LifecycleHooks, LifecycleHooksDirective, fromAppShared } from '@asset-sg/client-shared';
+import { fromAppShared, LifecycleHooks, LifecycleHooksDirective } from '@asset-sg/client-shared';
 import { isNotNull } from '@asset-sg/core';
 import { isMasterEditor } from '@asset-sg/shared/v2';
 import * as RD from '@devexperts/remote-data-ts';
@@ -12,7 +12,7 @@ import { TranslateService } from '@ngx-translate/core';
 import { RxState } from '@rx-angular/state';
 
 import * as O from 'fp-ts/Option';
-import { Observable, map, of, startWith, switchMap, withLatestFrom, filter } from 'rxjs';
+import { filter, map, Observable, of, startWith, switchMap, withLatestFrom } from 'rxjs';
 import { AssetEditDetailVM } from '../../models';
 import { AssetEditorFormGroup, AssetEditorUsageFormGroup } from '../asset-editor-form-group';
 
