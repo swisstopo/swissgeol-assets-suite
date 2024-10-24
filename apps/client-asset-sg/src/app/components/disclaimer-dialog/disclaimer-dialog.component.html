@@ -4,10 +4,10 @@
     <asset-sg-language-selector></asset-sg-language-selector>
   </div>
   <mat-divider></mat-divider>
-  <div mat-dialog-content>
+  <div mat-dialog-content class="content">
     <h1 translate>disclaimer.subtitle</h1>
     <p [innerHTML]="'disclaimer.content' | translate | newlineToBr"></p>
-    <a *rxLet="currentLang$; let lang" [href]="lang" target="_blank" rel="noopener noreferrer">{{ lang }}</a>
+    <a *rxLet="legalUrl$; let lang" [href]="lang" target="_blank" rel="noopener nofollow">{{ lang }}</a>
   </div>
   <mat-divider></mat-divider>
   <div mat-dialog-actions class="actions">

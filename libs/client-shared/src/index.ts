@@ -6,6 +6,7 @@ export * from './lib/models';
 export * from './lib/services';
 export * from './lib/state';
 export * from './lib/utils';
+export * from './lib/pipes';
 
 // Every part of a library that should be usable outside of that library has to be exported from its entrypoint.
 // In the current setup, there does not seem to be an easy way to refer to nested files by path.

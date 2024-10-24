@@ -5,7 +5,7 @@
 <div class="spacer"></div>
 <span class="version">{{ version }}</span>
 
-<asset-sg-language-selector></asset-sg-language-selector>
+<asset-sg-language-selector />
 
 <ng-container *ngIf="(isAnonymous$ | async) === false">
   <button mat-button type="button" class="profile" [matMenuTriggerFor]="profileMenu">

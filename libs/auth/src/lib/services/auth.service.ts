@@ -47,8 +47,8 @@ export class AuthService {
           // If something else has interrupted the auth process, then we don't want to signal a success.
           if (this._state$.value === AuthState.Ongoing) {
             this._state$.next(AuthState.Success);
-            this.dialogService.open<DisclaimerDialogComponent>(DisclaimerDialogComponent, {
-              width: '450px',
+            this.dialogService.open(DisclaimerDialogComponent, {
+              width: '500px',
               disableClose: true,
             });
           }

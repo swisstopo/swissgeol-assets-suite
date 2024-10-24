@@ -1,53 +1,25 @@
-import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { MatOption } from '@angular/material/autocomplete';
-import { MatDialogActions, MatDialogContent, MatDialogRef } from '@angular/material/dialog';
-import { MatDivider } from '@angular/material/divider';
-import { MatError, MatFormField, MatLabel } from '@angular/material/form-field';
-import { MatSelect } from '@angular/material/select';
+import { Component, inject } from '@angular/core';
+import { MatDialogRef } from '@angular/material/dialog';
 import { NavigationEnd, Router } from '@angular/router';
-import { ButtonComponent } from '@asset-sg/client-shared';
 import { isNotNull, isTruthy } from '@asset-sg/core';
 import { Lang } from '@asset-sg/shared';
-import { TranslateModule } from '@ngx-translate/core';
-import { LetModule } from '@rx-angular/template/let';
 import { flow, pipe } from 'fp-ts/function';
 import * as O from 'fp-ts/Option';
 import queryString from 'query-string';
 import { filter, map, startWith } from 'rxjs';
-import { NewlineToBrPipe } from '../../../../../../libs/client-shared/src/lib/pipes/new-lline-to-br.pipe';
-import { LanguageSelectorComponent } from '../language-selector/language-selector.component';
+
+const LEGAL_BASE_URL = 'https://www.swissgeol.ch/datenschutz';
 
 @Component({
   selector: 'asset-sg-disclaimer-dialog',
-  standalone: true,
-  imports: [
-    CommonModule,
-    ButtonComponent,
-    FormsModule,
-    MatDialogActions,
-    MatDialogContent,
-    MatError,
-    MatFormField,
-    MatLabel,
-    MatOption,
-    MatSelect,
-    ReactiveFormsModule,
-    TranslateModule,
-    MatDivider,
-    LanguageSelectorComponent,
-    NewlineToBrPipe,
-    LetModule,
-  ],
   templateUrl: './disclaimer-dialog.component.html',
   styleUrl: './disclaimer-dialog.component.scss',
 })
 export class DisclaimerDialogComponent {
-  constructor(private readonly dialogRef: MatDialogRef<DisclaimerDialogComponent>, private readonly router: Router) {}
+  private readonly router = inject(Router);
+  private readonly dialogRef = inject(MatDialogRef<DisclaimerDialogComponent>);
 
-  public readonly href = 'https://www.swissgeol.ch/datenschutz';
-  public readonly currentLang$ = this.router.events.pipe(
+  public readonly legalUrl$ = this.router.events.pipe(
     filter((e): e is NavigationEnd => e instanceof NavigationEnd),
     map((e) => e.urlAfterRedirects),
     startWith(this.router.url),
@@ -63,7 +35,7 @@ export class DisclaimerDialogComponent {
     ),
     map((it) => O.toNullable(it)),
     filter(isNotNull),
-    map((lang) => (lang === 'de' ? this.href : `${this.href}-${lang}/`))
+    map((lang) => (lang === 'de' ? LEGAL_BASE_URL : `${LEGAL_BASE_URL}-${lang}/`))
   );
 
   public close() {
