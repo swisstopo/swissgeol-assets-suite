@@ -5,6 +5,8 @@ import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
 import locale_deCH from '@angular/common/locales/de-CH';
 import { inject, NgModule } from '@angular/core';
 import { MatButton } from '@angular/material/button';
+import { MatDialogActions, MatDialogContent } from '@angular/material/dialog';
+import { MatDivider } from '@angular/material/divider';
 import { MAT_FORM_FIELD_DEFAULT_OPTIONS } from '@angular/material/form-field';
 import { MatMenu, MatMenuTrigger } from '@angular/material/menu';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -17,14 +19,16 @@ import {
   AdminOnlyDirective,
   AlertModule,
   AnchorComponent,
+  assetsPageMatcher,
   ButtonComponent,
   CanCreateDirective,
   CURRENT_LANG,
   currentLangFactory,
   icons,
+  LanguageSelectorComponent,
+  NewlineToBrPipe,
   TranslateTsLoader,
 } from '@asset-sg/client-shared';
-import { assetsPageMatcher } from '@asset-sg/client-shared';
 import { storeLogger } from '@asset-sg/core';
 import { provideSvgIcons, SvgIconComponent } from '@ngneat/svg-icon';
 import { EffectsModule } from '@ngrx/effects';
@@ -34,12 +38,12 @@ import { TranslateLoader, TranslateModule, TranslateService } from '@ngx-transla
 import { ForModule } from '@rx-angular/template/for';
 import { LetModule } from '@rx-angular/template/let';
 import { PushModule } from '@rx-angular/template/push';
-
 import { environment } from '../environments/environment';
 
 import { adminGuard } from './app-guards';
 import { AppComponent } from './app.component';
 import { AppBarComponent, MenuBarComponent, NotFoundComponent, RedirectToLangComponent } from './components';
+import { DisclaimerDialogComponent } from './components/disclaimer-dialog/disclaimer-dialog.component';
 import { MenuBarItemComponent } from './components/menu-bar-item/menu-bar-item.component';
 import { SplashScreenComponent } from './components/splash-screen/splash-screen.component';
 import { appTranslations } from './i18n';
@@ -57,6 +61,7 @@ registerLocaleData(locale_deCH, 'de-CH');
     MenuBarComponent,
     MenuBarItemComponent,
     SplashScreenComponent,
+    DisclaimerDialogComponent,
   ],
   imports: [
     CommonModule,
@@ -120,6 +125,11 @@ registerLocaleData(locale_deCH, 'de-CH');
     MatButton,
     MatMenuTrigger,
     MatMenu,
+    LanguageSelectorComponent,
+    MatDivider,
+    MatDialogContent,
+    NewlineToBrPipe,
+    MatDialogActions,
   ],
   providers: [
     provideSvgIcons(icons),
