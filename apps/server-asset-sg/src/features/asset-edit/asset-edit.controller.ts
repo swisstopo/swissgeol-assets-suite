@@ -68,52 +68,27 @@ const validatePatch = (user: User, patch: PatchAsset, record?: AssetEditDetail) 
     );
   }
 
-  const checkStatusChange = (
-    hasChanged: boolean,
-    newStatus: string,
-    allowedStatus: string,
-    errorMessage: string,
-    record: AssetEditDetail | undefined,
-    policy: AssetEditPolicy,
-    patchWorkgroupId: number
-  ) => {
-    if (
+  const checkStatusChange = (key: 'internalUse' | 'publicUse', newStatus: string) => {
+    const hasChanged = record == null || record[key].statusAssetUseItemCode !== patch[key].statusAssetUseItemCode;
+    return (
       hasChanged &&
-      newStatus !== allowedStatus &&
+      newStatus !== 'tobechecked' &&
       ((record != null && !policy.hasRole(Role.MasterEditor, record.workgroupId)) ||
-        !policy.hasRole(Role.MasterEditor, patchWorkgroupId))
-    ) {
-      throw new HttpException(errorMessage, HttpStatus.FORBIDDEN);
-    }
+        !policy.hasRole(Role.MasterEditor, patch.workgroupId))
+    );
   };
 
   // Specialization of the policy where we disallow the internal status to be changed to anything else than `tobechecked`
   // if the current user is not a master-editor for the asset's current or future workgroup.
-  const hasInternalUseChanged =
-    record == null || record.internalUse.statusAssetUseItemCode !== patch.internalUse.statusAssetUseItemCode;
-  checkStatusChange(
-    hasInternalUseChanged,
-    patch.internalUse.statusAssetUseItemCode,
-    'tobechecked',
-    "Changing the asset's status is not allowed",
-    record,
-    policy,
-    patch.workgroupId
-  );
+  const hasInternalUSeChanged = checkStatusChange('internalUse', patch.internalUse.statusAssetUseItemCode);
 
   // Specialization of the policy where we disallow the public status to be changed to anything else than `tobechecked`
   // if the current user is not a master-editor for the asset's current or future workgroup.
-  const hasPublicUseChanged =
-    record == null || record.publicUse.statusAssetUseItemCode !== patch.publicUse.statusAssetUseItemCode;
-  checkStatusChange(
-    hasPublicUseChanged,
-    patch.publicUse.statusAssetUseItemCode,
-    'tobechecked',
-    "Changing the asset's status is not allowed",
-    record,
-    policy,
-    patch.workgroupId
-  );
+  const hasPublicUSeChanged = checkStatusChange('publicUse', patch.publicUse.statusAssetUseItemCode);
+
+  if (hasInternalUSeChanged || hasPublicUSeChanged) {
+    throw new HttpException("Changing the asset's status is not allowed", HttpStatus.FORBIDDEN);
+  }
 
   // Specialization of the policy where we disallow the status work item code to be changed to `published`
   // if the current user is not a master-editor for the asset's current or future workgroup.
