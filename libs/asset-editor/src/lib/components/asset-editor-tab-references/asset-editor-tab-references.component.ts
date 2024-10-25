@@ -79,7 +79,7 @@ export class AssetEditorTabReferencesComponent implements OnInit {
       this._authorSearchInput$.pipe(
         debounceTime(300),
         switchMap(
-          (value): Observable<LinkedAsset[]> =>
+          (value): Observable<AssetEditDetail[]> =>
             value.length >= 3
               ? this._httpClient
                   .post(`/api/assets/search?limit=10`, {
