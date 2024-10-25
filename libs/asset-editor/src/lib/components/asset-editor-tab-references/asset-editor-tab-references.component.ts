@@ -1,25 +1,25 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, ElementRef, OnInit, ViewChild, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, inject, OnInit, ViewChild } from '@angular/core';
 import { FormBuilder, FormControl, FormGroupDirective, Validators } from '@angular/forms';
 import { MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
 import { httpErrorResponseError } from '@asset-sg/client-shared';
 import { unknownToUnknownError } from '@asset-sg/core';
-import { AssetByTitle, LinkedAsset } from '@asset-sg/shared';
+import { AssetByTitle, AssetEditDetail, LinkedAsset } from '@asset-sg/shared';
 import { UntilDestroy } from '@ngneat/until-destroy';
 import * as A from 'fp-ts/Array';
 import * as E from 'fp-ts/Either';
 import { flow, pipe } from 'fp-ts/function';
 import * as D from 'io-ts/Decoder';
 import {
-  Observable,
-  Subject,
   catchError,
   combineLatest,
   debounceTime,
   distinctUntilChanged,
   map,
+  Observable,
   of,
   startWith,
+  Subject,
   switchMap,
 } from 'rxjs';
 
@@ -81,17 +81,23 @@ export class AssetEditorTabReferencesComponent implements OnInit {
         switchMap(
           (value): Observable<LinkedAsset[]> =>
             value.length >= 3
-              ? this._httpClient.get(`/api/asset-edit/search?title=${value}`).pipe(
-                  catchError((err: HttpErrorResponse | unknown) =>
-                    of(err instanceof HttpErrorResponse ? httpErrorResponseError(err) : unknownToUnknownError(err))
-                  ),
-                  map(
-                    flow(
-                      D.array(AssetByTitle).decode,
-                      E.getOrElseW(() => [])
+              ? this._httpClient
+                  .post(`/api/assets/search?limit=10`, {
+                    text: value,
+                    workgroupIds: [this.rootFormGroup.getRawValue().general.workgroupId],
+                  })
+                  .pipe(
+                    map((res) => (res as { data: AssetEditDetail[] }).data),
+                    catchError((err: HttpErrorResponse | unknown) =>
+                      of(err instanceof HttpErrorResponse ? httpErrorResponseError(err) : unknownToUnknownError(err))
+                    ),
+                    map(
+                      flow(
+                        D.array(AssetEditDetail).decode,
+                        E.getOrElseW(() => [])
+                      )
                     )
                   )
-                )
               : of([])
         )
       ),

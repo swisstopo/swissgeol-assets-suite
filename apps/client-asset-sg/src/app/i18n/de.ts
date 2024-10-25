@@ -124,6 +124,7 @@ export const deAppTranslations = {
         alternativeId: 'Alternativ-ID',
         alternativeIdDescription: 'Beschreibung Alternativ-ID',
         addNewAlternativeId: 'Neue Alternativ-ID hinzufügen',
+        referencesWarning: 'Um die Arbeitsgruppe zu ändern, müssen Sie erst alle Verweise entfernen.',
       },
       files: {
         tabName: 'Dateien',
