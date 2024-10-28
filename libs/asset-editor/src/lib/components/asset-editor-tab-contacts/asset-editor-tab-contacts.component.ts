@@ -174,7 +174,6 @@ export class AssetEditorTabContactsComponent implements OnInit {
         return contacts;
       }
       query = query.toLocaleLowerCase();
-      console.log(query, { contacts });
       return contacts.filter((it) => it.name.toLocaleLowerCase().includes(query));
     })
   );

@@ -96,7 +96,7 @@
                         [displayWith]="displayContact"
                         (optionSelected)="onContactSelected($event)"
                       >
-                        <mat-option *rxFor="let contact of contacts$" [value]="contact">
+                        <mat-option *rxFor="let contact of contacts$" [value]="contact" class="contact">
                           {{ contact.name }}
                         </mat-option>
                       </mat-autocomplete>
