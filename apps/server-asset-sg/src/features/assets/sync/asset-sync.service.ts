@@ -15,7 +15,7 @@ export class AssetSyncService implements OnApplicationBootstrap {
   async onApplicationBootstrap() {
     const syncFileExists = await this.isSyncRunning();
     if (syncFileExists) {
-      void fs.rm(assetSyncFile);
+      fs.rm(assetSyncFile).then();
     }
 
     if (process.env.ANONYMOUS_MODE === 'true') {

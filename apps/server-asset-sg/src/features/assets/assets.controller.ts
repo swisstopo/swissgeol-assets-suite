@@ -1,9 +1,13 @@
-import { Asset, AssetData, AssetId, UsageStatusCode } from '@asset-sg/shared/v2';
-
-import { User } from '@asset-sg/shared/v2';
-import { Role } from '@asset-sg/shared/v2';
-import { AssetPolicy } from '@asset-sg/shared/v2';
-import { AssetDataSchema } from '@asset-sg/shared/v2';
+import {
+  Asset,
+  AssetData,
+  AssetId,
+  UsageStatusCode,
+  User,
+  Role,
+  AssetPolicy,
+  AssetDataSchema,
+} from '@asset-sg/shared/v2';
 import {
   Controller,
   Delete,

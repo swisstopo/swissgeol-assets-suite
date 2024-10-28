@@ -1,6 +1,5 @@
 import { Readable } from 'stream';
-import { serializeStudyAsCsv, Study } from '@asset-sg/shared/v2';
-import { User } from '@asset-sg/shared/v2';
+import { serializeStudyAsCsv, Study, User } from '@asset-sg/shared/v2';
 import { Controller, Get, Res } from '@nestjs/common';
 import { Response } from 'express';
 import { Authorize } from '@/core/decorators/authorize.decorator';

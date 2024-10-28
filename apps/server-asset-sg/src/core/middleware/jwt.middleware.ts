@@ -22,7 +22,7 @@ import { JwtRequest } from '@/models/jwt-request';
 @Injectable()
 export class JwtMiddleware implements NestMiddleware {
   constructor(
-    @Inject(CACHE_MANAGER) private cacheManager: Cache,
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
     private readonly userRepo: UserRepo,
     private readonly workgroupRepo: WorkgroupRepo
   ) {}
@@ -35,7 +35,7 @@ export class JwtMiddleware implements NestMiddleware {
 
     if (process.env.NODE_ENV === 'development') {
       const authentication = req.header('Authorization');
-      if (authentication != null && authentication.startsWith('Impersonate ')) {
+      if (authentication?.startsWith('Impersonate ')) {
         const email = authentication.split(' ', 2)[1];
         const user = await this.userRepo.findByEmail(email);
         if (user == null) {

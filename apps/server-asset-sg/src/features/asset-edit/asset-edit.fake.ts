@@ -1,6 +1,5 @@
 import { AssetUsage, Contact, PatchAsset, dateIdFromDate } from '@asset-sg/shared';
-import { User, WorkgroupId } from '@asset-sg/shared/v2';
-import { Role } from '@asset-sg/shared/v2';
+import { User, WorkgroupId, Role } from '@asset-sg/shared/v2';
 import { fakerDE_CH as faker } from '@faker-js/faker';
 import * as O from 'fp-ts/Option';
 
