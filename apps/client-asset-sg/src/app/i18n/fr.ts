@@ -184,6 +184,7 @@ export const frAppTranslations: AppTranslations = {
         website: 'Site web',
         create: 'Créer',
         noContacts: 'Aucun contact',
+        contactPlaceholder: 'Recherche par nom',
       },
       references: {
         tabName: 'Références',

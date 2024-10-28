@@ -171,8 +171,12 @@ const makeResponseError = async (response: Response): Promise<Error> => {
     if (hasKey(data, 'message')) {
       data = data.message;
     }
+  } else if (hasKey(data, 'message')) {
+    data = data.message;
   }
-  return new Error(`${response.status} ${response.statusText} - ${data ?? body}`);
+  data = data ?? body;
+  const message = typeof data === 'string' ? data : JSON.stringify(data);
+  return new Error(`${response.status} ${response.statusText} - ${message}`);
 };
 
 const hasKey = <K extends string>(value: unknown, key: K): value is { [k in K]: unknown } => {

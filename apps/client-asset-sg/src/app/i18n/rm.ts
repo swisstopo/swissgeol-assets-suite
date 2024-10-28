@@ -183,6 +183,7 @@ export const rmAppTranslations: AppTranslations = {
         website: 'RM Website',
         create: 'RM Erstellen',
         noContacts: 'RM Keine Kontakte',
+        contactPlaceholder: 'IT Suche über Namen',
       },
       references: {
         tabName: 'RM Verweise',
