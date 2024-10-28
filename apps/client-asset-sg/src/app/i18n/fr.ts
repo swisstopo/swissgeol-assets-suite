@@ -28,6 +28,9 @@ export const frAppTranslations: AppTranslations = {
       nameTaken: "Le nom '{{name}}' est déjà utilisé par un autre groupe de travail.",
     },
   },
+  favorites: {
+    title: 'Favorites',
+  },
   menuBar: {
     filters: 'Filtres',
     admin: 'Administration',

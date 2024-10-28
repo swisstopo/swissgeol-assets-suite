@@ -6,20 +6,20 @@ import { AssetSearchQuery, AssetSearchResult, LV95, Polygon } from '@asset-sg/sh
 import * as RD from '@devexperts/remote-data-ts';
 import { UntilDestroy } from '@ngneat/until-destroy';
 import { Actions, concatLatestFrom, createEffect, ofType } from '@ngrx/effects';
-import { ROUTER_NAVIGATED } from '@ngrx/router-store';
+import { ROUTER_NAVIGATED, RouterNavigatedPayload } from '@ngrx/router-store';
 import { Store } from '@ngrx/store';
 import * as D from 'io-ts/Decoder';
-import { EMPTY, filter, map, merge, of, shareReplay, switchMap, takeUntil, withLatestFrom } from 'rxjs';
+import { EMPTY, filter, identity, map, merge, of, shareReplay, switchMap, withLatestFrom } from 'rxjs';
 
 import { AllStudyService } from '../../services/all-study.service';
 import { AssetSearchService } from '../../services/asset-search.service';
 
 import * as actions from './asset-search.actions';
 import {
-  selectAssetSearchNoActiveFilters,
   selectAssetSearchQuery,
   selectAssetSearchResultData,
   selectCurrentAssetDetail,
+  selectHasDefaultFilters,
   selectStudies,
 } from './asset-search.selector';
 
@@ -117,17 +117,16 @@ export class AssetSearchEffects {
   public openSearchResults$ = createEffect(() => {
     return this.actions$.pipe(
       ofType(actions.updateSearchResults),
-      takeUntil(this.actions$.pipe(ofType(actions.manualToggleResult))),
-      withLatestFrom(this.store.select(selectAssetSearchNoActiveFilters)),
-      map(([_, showStudies]) => (showStudies ? actions.closeResults() : actions.openResults()))
+      switchMap(() => this.store.select(selectHasDefaultFilters)),
+      map((showStudies) => (showStudies ? actions.closeResults() : actions.openResults()))
     );
   });
 
   public closeSearchResults$ = createEffect(() => {
     return this.actions$.pipe(
       ofType(actions.updateSearchResults),
-      withLatestFrom(this.store.select(selectAssetSearchNoActiveFilters)),
-      filter(([_, showStudies]) => showStudies),
+      switchMap(() => this.store.select(selectHasDefaultFilters)),
+      filter(identity),
       map(() => actions.closeResults())
     );
   });
@@ -147,8 +146,13 @@ export class AssetSearchEffects {
    */
   public queryParams$ = this.actions$.pipe(
     ofType(ROUTER_NAVIGATED),
-    filter((x) => assetsPageMatcher(x.payload.routerState.root.firstChild.url) !== null),
+    filter(
+      ({ payload }: { payload: RouterNavigatedPayload }) =>
+        assetsPageMatcher(payload.routerState.root.firstChild?.url ?? []) !== null
+    ),
     map(({ payload }) => {
+      const routerState = payload.routerState;
+      const url = routerState.root.firstChild?.url ?? [];
       const params = payload.routerState.root.queryParams;
       const query: AssetSearchQuery = {};
       const assetId: number | undefined = readNumberParam(params, QUERY_PARAM_MAPPING.assetId);
@@ -164,6 +168,7 @@ export class AssetSearchEffects {
       query.geometryCodes = readArrayParam(params, QUERY_PARAM_MAPPING.geometryCodes);
       query.languageItemCodes = readArrayParam(params, QUERY_PARAM_MAPPING.languageItemCodes);
       query.workgroupIds = readArrayParam<number>(params, QUERY_PARAM_MAPPING.workgroupIds);
+      query.favoritesOnly = url.length === 2 && url[1].path === 'favorites';
       return { query, assetId };
     }),
     shareReplay()
@@ -250,9 +255,10 @@ const QUERY_PARAM_MAPPING = {
   languageItemCodes: 'search[lang]',
   assetId: 'assetId',
   workgroupIds: 'search[workgroup]',
+  categories: 'search[categories]',
 };
 
-const updatePlainParam = (params: Params, name: string, value: string | number | undefined): void => {
+const updatePlainParam = (params: Params, name: string, value: string | number | boolean | undefined): void => {
   if (value == null) {
     delete params[name];
     return;

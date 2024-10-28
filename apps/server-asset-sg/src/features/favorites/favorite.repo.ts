@@ -13,9 +13,9 @@ export class FavoriteRepo implements ReadRepo<Favorite, Favorite>, CreateRepo<Fa
   constructor(private readonly prisma: PrismaService) {}
 
   async find(favorite: Favorite): Promise<Favorite | null> {
-    const entry = await this.prisma.assetUserFavourite.findUnique({
+    const entry = await this.prisma.favorite.findUnique({
       where: {
-        assetUserId_assetId: mapFavoriteToId(favorite),
+        userId_assetId: mapFavoriteToId(favorite),
       },
       select: favoriteSelection,
     });
@@ -23,7 +23,7 @@ export class FavoriteRepo implements ReadRepo<Favorite, Favorite>, CreateRepo<Fa
   }
 
   async list({ limit, offset, ids }: RepoListOptions<Favorite> = {}): Promise<Favorite[]> {
-    const entries = await this.prisma.assetUserFavourite.findMany({
+    const entries = await this.prisma.favorite.findMany({
       where:
         ids == null
           ? undefined
@@ -38,9 +38,9 @@ export class FavoriteRepo implements ReadRepo<Favorite, Favorite>, CreateRepo<Fa
   }
 
   async listByUserId(userId: UserId): Promise<Favorite[]> {
-    const entries = await this.prisma.assetUserFavourite.findMany({
+    const entries = await this.prisma.favorite.findMany({
       where: {
-        assetUserId: userId,
+        userId: userId,
       },
       select: favoriteSelection,
     });
@@ -49,10 +49,9 @@ export class FavoriteRepo implements ReadRepo<Favorite, Favorite>, CreateRepo<Fa
 
   async create(favorite: Favorite): Promise<Favorite> {
     try {
-      const entry = await this.prisma.assetUserFavourite.create({
+      const entry = await this.prisma.favorite.create({
         data: {
           ...mapFavoriteToId(favorite),
-          created_at: new Date(),
         },
         select: favoriteSelection,
       });
@@ -69,9 +68,9 @@ export class FavoriteRepo implements ReadRepo<Favorite, Favorite>, CreateRepo<Fa
 
   async delete(favorite: Favorite): Promise<boolean> {
     try {
-      await this.prisma.assetUserFavourite.delete({
+      await this.prisma.favorite.delete({
         where: {
-          assetUserId_assetId: mapFavoriteToId(favorite),
+          userId_assetId: mapFavoriteToId(favorite),
         },
       });
       return true;
@@ -81,19 +80,19 @@ export class FavoriteRepo implements ReadRepo<Favorite, Favorite>, CreateRepo<Fa
   }
 }
 
-const favoriteSelection = satisfy<Prisma.AssetUserFavouriteSelect>()({
-  assetUserId: true,
+const favoriteSelection = satisfy<Prisma.FavoriteSelect>()({
+  userId: true,
   assetId: true,
 });
 
-type SelectedFavorite = Prisma.AssetUserFavouriteGetPayload<{ select: typeof favoriteSelection }>;
+type SelectedFavorite = Prisma.FavoriteGetPayload<{ select: typeof favoriteSelection }>;
 
 const parse = (data: SelectedFavorite): Favorite => ({
   assetId: data.assetId,
-  userId: data.assetUserId,
+  userId: data.userId,
 });
 
-const mapFavoriteToId = (favorite: Favorite): Prisma.AssetUserFavouriteAssetUserIdAssetIdCompoundUniqueInput => ({
-  assetUserId: favorite.userId,
+const mapFavoriteToId = (favorite: Favorite): Prisma.FavoriteUserIdAssetIdCompoundUniqueInput => ({
+  userId: favorite.userId,
   assetId: favorite.assetId,
 });

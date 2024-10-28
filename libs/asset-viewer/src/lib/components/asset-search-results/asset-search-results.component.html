@@ -4,7 +4,7 @@
       {{ "search.searchResults" | translate }}:
       <asset-sg-animate-number [nextValue]="(total$ | async) ?? 0" />
     </div>
-    <button asset-sg-icon-button style="width: unset" (click)="toggleResultsOpen(isResultsOpen)">
+    <button asset-sg-icon-button style="width: unset" (click)="toggleResultsOpen()">
       <span> {{ (isResultsOpen ? "search.hideTable" : "search.showTable") | translate }} </span>
       <svg-icon [key]="isResultsOpen ? 'arrow-down' : 'arrow-up'"></svg-icon>
     </button>
@@ -16,9 +16,7 @@
           <ng-container matColumnDef="favourites">
             <th mat-header-cell *matHeaderCellDef></th>
             <td mat-cell *matCellDef="let asset">
-              <button asset-sg-reset class="asset-favourite">
-                <svg-icon key="favourite" />
-              </button>
+              <button asset-sg-favorite [assetId]="asset.assetId" (click)="$event.stopPropagation()"></button>
             </td>
           </ng-container>
           <ng-container matColumnDef="titlePublic">

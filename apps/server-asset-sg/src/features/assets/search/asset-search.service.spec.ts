@@ -145,7 +145,7 @@ describe(AssetSearchService, () => {
         await create({ patch: fakeAssetPatch(), user });
 
         // When
-        const result = await service.search({ text: `${text}` });
+        const result = await service.search({ text: `${text}` }, user);
 
         // Then
         assertSingleResult(result, asset);
@@ -194,11 +194,14 @@ describe(AssetSearchService, () => {
       });
 
       // When
-      const result = await service.search({
-        createDate: {
-          min: new Date(dateFromDateId(asset.createDate).getTime() - millisPerDay),
+      const result = await service.search(
+        {
+          createDate: {
+            min: new Date(dateFromDateId(asset.createDate).getTime() - millisPerDay),
+          },
         },
-      });
+        user
+      );
 
       // Then
       assertSingleResult(result, asset);
@@ -217,11 +220,14 @@ describe(AssetSearchService, () => {
       });
 
       // When
-      const result = await service.search({
-        createDate: {
-          max: new Date(dateFromDateId(asset.createDate).getTime() + millisPerDay),
+      const result = await service.search(
+        {
+          createDate: {
+            max: new Date(dateFromDateId(asset.createDate).getTime() + millisPerDay),
+          },
         },
-      });
+        user
+      );
 
       // Then
       assertSingleResult(result, asset);
@@ -244,14 +250,18 @@ describe(AssetSearchService, () => {
         },
         user: fakeUser(),
       });
+      const user = fakeUser();
 
       // When
-      const result = await service.search({
-        createDate: {
-          min: new Date(dateFromDateId(asset.createDate).getTime() - millisPerDay),
-          max: new Date(dateFromDateId(asset.createDate).getTime() + millisPerDay),
+      const result = await service.search(
+        {
+          createDate: {
+            min: new Date(dateFromDateId(asset.createDate).getTime() - millisPerDay),
+            max: new Date(dateFromDateId(asset.createDate).getTime() + millisPerDay),
+          },
         },
-      });
+        user
+      );
 
       // Then
       assertSingleResult(result, asset);
@@ -274,9 +284,10 @@ describe(AssetSearchService, () => {
         patch: { ...fakeAssetPatch(), assetLanguages: [{ languageItemCode: code3 }] },
         user: fakeUser(),
       });
+      const user = fakeUser();
 
       // When
-      const result = await service.search({ languageItemCodes: [code1] });
+      const result = await service.search({ languageItemCodes: [code1] }, user);
 
       // Then
       assertSingleResult(result, asset);
@@ -293,7 +304,7 @@ describe(AssetSearchService, () => {
       await create({ patch: { ...fakeAssetPatch(), assetKindItemCode: code3 }, user });
 
       // When
-      const result = await service.search({ assetKindItemCodes: [code1] });
+      const result = await service.search({ assetKindItemCodes: [code1] }, user);
 
       // Then
       assertSingleResult(result, asset);
@@ -310,7 +321,7 @@ describe(AssetSearchService, () => {
       await create({ patch: { ...fakeAssetPatch(), manCatLabelRefs: [code3] }, user });
 
       // When
-      const result = await service.search({ manCatLabelItemCodes: [code1] });
+      const result = await service.search({ manCatLabelItemCodes: [code1] }, user);
 
       // Then
       assertSingleResult(result, asset);
@@ -346,7 +357,7 @@ describe(AssetSearchService, () => {
       });
 
       // When
-      const result = await service.search({ usageCodes: [usageCode] });
+      const result = await service.search({ usageCodes: [usageCode] }, user);
 
       // Then
       assertSingleResult(result, asset);
@@ -371,7 +382,7 @@ describe(AssetSearchService, () => {
       });
 
       // When
-      const result = await service.search({ authorId: contact1.contactId });
+      const result = await service.search({ authorId: contact1.contactId }, user);
 
       // Then
       assertSingleResult(result, asset);
@@ -417,8 +428,11 @@ describe(AssetSearchService, () => {
     };
 
     it('returns empty stats when no assets are present', async () => {
+      // Given
+      const user = fakeUser();
+
       // When
-      const result = await service.aggregate({});
+      const result = await service.aggregate({}, user);
 
       // Then
       expect(result.total).toEqual(0);
@@ -436,7 +450,7 @@ describe(AssetSearchService, () => {
       const asset = await create({ patch: fakeAssetPatch(), user });
 
       // When
-      const result = await service.aggregate({});
+      const result = await service.aggregate({}, user);
 
       // Then
       assertSingleStats(result, asset);

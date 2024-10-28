@@ -8,7 +8,7 @@ import { fakeAssetFormatItemCode } from '../../../../../test/data/asset-format-i
 // eslint-disable-next-line @nx/enforce-module-boundaries
 import { fakeAssetKindItemCode } from '../../../../../test/data/asset-kind-item';
 // eslint-disable-next-line @nx/enforce-module-boundaries
-import { fakeContactKindItem } from '../../../../../test/data/contact-kind-item';
+import { fakeContactKindItemCode } from '../../../../../test/data/contact-kind-item';
 
 import { define } from '@/utils/define';
 
@@ -35,7 +35,7 @@ export const fakeUser = () => {
 
 export const fakeContact = () =>
   define<Omit<Contact, 'id'>>({
-    contactKindItemCode: fakeContactKindItem(),
+    contactKindItemCode: fakeContactKindItemCode(),
     name: faker.company.name(),
     street: faker.location.street(),
     houseNumber: faker.location.buildingNumber(),

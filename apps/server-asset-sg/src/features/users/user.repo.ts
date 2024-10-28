@@ -92,7 +92,7 @@ export class UserRepo implements Repo<User, UserId, UserData & { oidcId: string 
       await this.prisma.$transaction(async () => {
         // The schema does not define how to handle deletes on users with existing favourites,
         // so we need to delete them manually.
-        await this.prisma.assetUserFavourite.deleteMany({ where: { assetUserId: id } });
+        await this.prisma.favorite.deleteMany({ where: { userId: id } });
         await this.prisma.assetUser.delete({ where: { id } });
       });
       return true;

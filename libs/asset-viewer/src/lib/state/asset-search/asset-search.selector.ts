@@ -57,8 +57,10 @@ export const selectAssetSearchTotalResults = createSelector(assetSearchFeature, 
 
 export const selectCurrentAssetDetail = createSelector(assetSearchFeature, (state) => state.currentAsset);
 export const selectStudies = createSelector(assetSearchFeature, (state) => state.studies);
-export const selectAssetSearchNoActiveFilters = createSelector(assetSearchFeature, ({ query }) =>
-  Object.values(query).every((value) => value === undefined)
+
+export const selectHasDefaultFilters = createSelector(
+  assetSearchFeature,
+  ({ query, currentAsset }) => currentAsset == null && Object.values(query).every((value) => value === undefined)
 );
 
 export const selectCurrentAssetDetailVM = createSelector(

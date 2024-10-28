@@ -28,6 +28,9 @@ export const itAppTranslations: AppTranslations = {
       nameTaken: "IT Der Name '{{name}}' wird bereits von einer anderen Arbeitsgruppe verwendet.",
     },
   },
+  favorites: {
+    title: 'IT Favoriten',
+  },
   menuBar: {
     filters: 'IT Filter',
     admin: 'IT Verwaltung',

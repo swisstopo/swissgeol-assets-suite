@@ -4,6 +4,7 @@ import {
   ChangeDetectorRef,
   Component,
   inject,
+  OnDestroy,
   TemplateRef,
   ViewChild,
   ViewContainerRef,
@@ -26,7 +27,7 @@ import { asyncScheduler, observeOn } from 'rxjs';
   hostDirectives: [LifecycleHooksDirective],
   styleUrls: ['./asset-editor-launch.component.scss'],
 })
-export class AssetEditorLaunchComponent {
+export class AssetEditorLaunchComponent implements OnDestroy {
   @ViewChild('templateDrawerPortalContent') _templateDrawerPortalContent!: TemplateRef<unknown>;
 
   private _lc = inject(LifecycleHooks);
@@ -45,5 +46,10 @@ export class AssetEditorLaunchComponent {
       this._cd.detectChanges();
       this._store.dispatch(appSharedStateActions.openPanel());
     });
+  }
+
+  ngOnDestroy(): void {
+    this._appPortalService.setAppBarPortalContent(null);
+    this._appPortalService.setDrawerPortalContent(null);
   }
 }

@@ -28,6 +28,9 @@ export const enAppTranslations: AppTranslations = {
       nameTaken: "The name '{{name}}' is already taken by another workgroup.",
     },
   },
+  favorites: {
+    title: 'Favorites',
+  },
   menuBar: {
     filters: 'Filters',
     admin: 'Administration',

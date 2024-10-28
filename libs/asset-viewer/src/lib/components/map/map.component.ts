@@ -21,7 +21,7 @@ import {
   selectAssetSearchPolygon,
   selectAssetSearchResultData,
   selectCurrentAssetDetail,
-  selectAssetSearchNoActiveFilters,
+  selectHasDefaultFilters,
   selectStudies,
 } from '../../state/asset-search/asset-search.selector';
 import { AppStateWithMapControl } from '../../state/map-control/map-control.reducer';
@@ -128,6 +128,14 @@ export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
     this.controller.addControl(this.controls.zoom);
     this.controller.addControl(this.controls.draw);
 
+    this.subscription.add(
+      this.store.select(selectHasDefaultFilters).subscribe((hasDefaultFilters) => {
+        if (hasDefaultFilters) {
+          this.controls.zoom.resetZoom();
+        }
+      })
+    );
+
     this.controls.draw.isDrawing$.subscribe((isDrawing) => {
       this.controller.setClickEnabled(!isDrawing);
     });
@@ -142,13 +150,12 @@ export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
       this.initializeStoreBindings();
       this.handleHighlightedAssetIdChange();
     });
-
     this.initializeEnd.emit();
   }
 
   private initializeStoreBindings() {
     this.subscription.add(
-      this.store.select(selectAssetSearchNoActiveFilters).subscribe((showStudies) => {
+      this.store.select(selectHasDefaultFilters).subscribe((showStudies) => {
         this.controller.setShowHeatmap(showStudies);
       })
     );

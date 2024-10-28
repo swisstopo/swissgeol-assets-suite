@@ -5,11 +5,11 @@ import { AppStateWithAssetSearch } from '../../state/asset-search/asset-search.r
 import { Filter } from '../../state/asset-search/asset-search.selector';
 
 @Component({
-  selector: 'asset-sg-asset-search-filter-list',
-  templateUrl: './asset-search-filter-list.component.html',
-  styleUrl: './asset-search-filter-list.component.scss',
+  selector: 'asset-sg-asset-search-filter',
+  templateUrl: './asset-search-filter.component.html',
+  styleUrl: './asset-search-filter.component.scss',
 })
-export class AssetSearchFilterListComponent<T> {
+export class AssetSearchFilterComponent<T> {
   @Input({ required: true })
   filters!: Array<Filter<T>>;
 

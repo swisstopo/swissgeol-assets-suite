@@ -1,5 +1,5 @@
 {
-  "name": "@asset-sg/favourite",
+  "name": "@asset-sg/favorites",
   "version": "0.0.1",
   "peerDependencies": {
     "@angular/common": "^15.0.0",

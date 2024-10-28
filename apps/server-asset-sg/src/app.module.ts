@@ -35,12 +35,12 @@ import { WorkgroupsController } from '@/features/workgroups/workgroups.controlle
 @Module({
   controllers: [
     AppController,
+    FavoritesController,
     AssetEditController,
     AssetSearchController,
     AssetSyncController,
     AssetsController,
     ContactsController,
-    FavoritesController,
     FilesController,
     StudiesController,
     UsersController,

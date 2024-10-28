@@ -19,9 +19,10 @@ import {
   UsageCode,
   ValueCount,
 } from '@asset-sg/shared';
-import { AssetId, StudyId } from '@asset-sg/shared/v2';
+import { AssetId, StudyId, User } from '@asset-sg/shared/v2';
 import { Client as ElasticsearchClient } from '@elastic/elasticsearch';
 import {
+  AggregationsAggregationContainer,
   BulkOperationContainer,
   QueryDslNumberRangeQuery,
   QueryDslQueryContainer,
@@ -175,6 +176,7 @@ export class AssetSearchService {
    * Searches for assets using a {@link AssetSearchQuery}.
    *
    * @param query The query to match with.
+   * @param user The user that is executing the query.
    * @param limit The maximum amount of assets to load. Defaults to `100`.
    * @param offset The amount of assets being skipped before loading the assets.
    * @param decode Whether to decode the assets. If this is set to `false`, the assets should be decoded via `AssetEditDetail` before accessing them.
@@ -182,10 +184,11 @@ export class AssetSearchService {
    */
   async search(
     query: AssetSearchQuery,
+    user: User,
     { limit = 100, offset = 0, decode = true }: PageOptions & { decode?: boolean } = {}
   ): Promise<AssetSearchResult> {
     // Apply the query to find all matching ids.
-    const [serializedAssets, total] = await this.searchAssetsByQuery(query, { limit, offset });
+    const [serializedAssets, total] = await this.searchAssetsByQuery(query, user, { limit, offset });
 
     // Load the matched assets from the database.
     const data: AssetEditDetail[] = [];
@@ -209,8 +212,15 @@ export class AssetSearchService {
    * Aggregates the stats over all assets matching a specific {@link AssetSearchQuery}.
    *
    * @param query The query to match with.
+   * @param user The user that is executing the query.
    */
-  async aggregate(query: AssetSearchQuery): Promise<AssetSearchStats> {
+  async aggregate(query: AssetSearchQuery, user: User): Promise<AssetSearchStats> {
+    type NestedAggResult<T> = {
+      [K in keyof T]: {
+        a: T[K];
+      };
+    };
+
     interface Result {
       minCreateDate: { value: DateId };
       maxCreateDate: { value: DateId };
@@ -242,36 +252,37 @@ export class AssetSearchService {
       doc_count: number;
     }
 
-    const aggregateGroup = async (
-      query: AssetSearchQuery,
+    const makeAggregation = (
       operator: 'terms' | 'min' | 'max',
       groupName: string,
       fieldName?: string
-    ) => {
+    ): AggregationsAggregationContainer => {
       const NUMBER_OF_BUCKETS = 10_000;
-      const elasticDslQuery = mapQueryToElasticDsl({ ...query, [groupName]: undefined });
+      const { filter } = mapQueryToElasticDslParts({ ...query, [groupName]: undefined }, user);
       const field: { field: string; size?: number } = { field: fieldName ?? groupName, size: NUMBER_OF_BUCKETS };
       if (operator !== 'terms') {
         delete field.size;
       }
-      return (
-        await this.elastic.search({
-          index: INDEX,
-          size: 0,
-          query: elasticDslQuery,
-          track_total_hits: true,
-          aggregations: {
-            agg: { [operator]: field },
-          },
-        })
-      ).aggregations?.agg;
+      return { aggs: { a: { [operator]: field } }, filter: { bool: { filter } } };
     };
 
-    const elasticQuery = mapQueryToElasticDsl(query);
+    const { must, filter } = mapQueryToElasticDslParts(query, user);
+
+    const aggregateByQuery = async (aggs: Record<string, AggregationsAggregationContainer>) => {
+      return await this.elastic.search({
+        index: INDEX,
+        size: 0,
+        query: { bool: { must } },
+        track_total_hits: true,
+        aggregations: aggs,
+        filter_path: ['aggregations.*.a.buckets.*', 'aggregations.*.a.value'],
+      });
+    };
+
     const response = await this.elastic.search({
       index: INDEX,
       size: 0,
-      query: elasticQuery,
+      query: { bool: { must, filter } },
       track_total_hits: true,
     });
     const total = (response.hits.total as SearchTotalHits).value;
@@ -289,38 +300,19 @@ export class AssetSearchService {
       };
     }
 
-    const [
-      assetKindItemCodes,
-      authorIds,
-      languageItemCodes,
-      geometryCodes,
-      manCatLabelItemCodes,
-      usageCodes,
-      workgroupIds,
-      minCreateDate,
-      maxCreateDate,
-    ] = await Promise.all([
-      aggregateGroup(query, 'terms', 'assetKindItemCodes', 'assetKindItemCode'),
-      aggregateGroup(query, 'terms', 'authorIds'),
-      aggregateGroup(query, 'terms', 'languageItemCodes'),
-      aggregateGroup(query, 'terms', 'geometryCodes'),
-      aggregateGroup(query, 'terms', 'manCatLabelItemCodes'),
-      aggregateGroup(query, 'terms', 'usageCodes', 'usageCode'),
-      aggregateGroup(query, 'terms', 'workgroupIds', 'workgroupId'),
-      aggregateGroup(query, 'min', 'minCreateDate', 'createDate'),
-      aggregateGroup(query, 'max', 'maxCreateDate', 'createDate'),
-    ]);
-    const aggs = {
-      assetKindItemCodes,
-      authorIds,
-      languageItemCodes,
-      geometryCodes,
-      manCatLabelItemCodes,
-      usageCodes,
-      workgroupIds,
-      minCreateDate,
-      maxCreateDate,
-    } as unknown as Result;
+    const result = await aggregateByQuery({
+      assetKindItemCodes: makeAggregation('terms', 'assetKindItemCodes', 'assetKindItemCode'),
+      authorIds: makeAggregation('terms', 'authorIds'),
+      languageItemCodes: makeAggregation('terms', 'languageItemCodes'),
+      geometryCodes: makeAggregation('terms', 'geometryCodes'),
+      manCatLabelItemCodes: makeAggregation('terms', 'manCatLabelItemCodes'),
+      usageCodes: makeAggregation('terms', 'usageCodes', 'usageCode'),
+      workgroupIds: makeAggregation('terms', 'workgroupIds', 'workgroupId'),
+      minCreateDate: makeAggregation('min', 'minCreateDate', 'createDate'),
+      maxCreateDate: makeAggregation('max', 'maxCreateDate', 'createDate'),
+    });
+
+    const aggs = result.aggregations as unknown as NestedAggResult<Result>;
 
     const mapBucket = <T>(bucket: AggregationBucket<T>): ValueCount<T> => ({
       value: bucket.key,
@@ -328,16 +320,16 @@ export class AssetSearchService {
     });
     return {
       total,
-      assetKindItemCodes: aggs.assetKindItemCodes.buckets.map(mapBucket),
-      authorIds: aggs.authorIds.buckets.map(mapBucket),
-      languageItemCodes: aggs.languageItemCodes.buckets.map(mapBucket),
-      geometryCodes: aggs.geometryCodes.buckets.map(mapBucket),
-      manCatLabelItemCodes: aggs.manCatLabelItemCodes.buckets.map(mapBucket),
-      usageCodes: aggs.usageCodes.buckets.map(mapBucket),
-      workgroupIds: aggs.workgroupIds.buckets.map(mapBucket),
+      assetKindItemCodes: aggs.assetKindItemCodes?.a?.buckets?.map(mapBucket) ?? [],
+      authorIds: aggs.authorIds?.a?.buckets?.map(mapBucket) ?? [],
+      languageItemCodes: aggs.languageItemCodes?.a?.buckets?.map(mapBucket) ?? [],
+      geometryCodes: aggs.geometryCodes?.a?.buckets?.map(mapBucket) ?? [],
+      manCatLabelItemCodes: aggs.manCatLabelItemCodes?.a?.buckets?.map(mapBucket) ?? [],
+      usageCodes: aggs.usageCodes?.a?.buckets?.map(mapBucket) ?? [],
+      workgroupIds: aggs.workgroupIds?.a?.buckets?.map(mapBucket) ?? [],
       createDate: {
-        min: dateFromDateId(aggs.minCreateDate.value),
-        max: dateFromDateId(aggs.maxCreateDate.value),
+        min: dateFromDateId(aggs.minCreateDate.a.value),
+        max: dateFromDateId(aggs.maxCreateDate.a.value),
       },
     };
   }
@@ -379,11 +371,12 @@ export class AssetSearchService {
 
   private async searchAssetsByQuery(
     query: AssetSearchQuery,
+    user: User,
     page: PageOptions = {}
   ): Promise<[Map<AssetId, SerializedAssetEditDetail>, number]> {
     const BATCH_SIZE = 10_000;
 
-    const elasticQuery = mapQueryToElasticDsl(query);
+    const elasticQuery = mapQueryToElasticDsl(query, user);
     const matchedAssets = new Map<number, string>();
     let lastAssetId: number | null = null;
     let totalCount: number | null = null;
@@ -677,6 +670,20 @@ export class AssetSearchService {
 
     const languageItemCodes =
       asset.assetLanguages.length === 0 ? ['None'] : asset.assetLanguages.map((it) => it.languageItemCode);
+
+    const favoredByUsers = await this.prisma.assetUser.findMany({
+      select: {
+        id: true,
+      },
+      where: {
+        favorites: {
+          some: {
+            assetId: asset.assetId,
+          },
+        },
+      },
+    });
+
     return {
       assetId: asset.assetId,
       titlePublic: asset.titlePublic,
@@ -692,6 +699,7 @@ export class AssetSearchService {
       geometryCodes: geometryCodes.length > 0 ? [...new Set(geometryCodes)] : ['None'],
       studyLocations,
       workgroupId: asset.workgroupId,
+      favoredByUserIds: favoredByUsers.map(({ id }) => id),
       data: JSON.stringify(AssetEditDetail.encode(asset)),
     };
   }
@@ -706,7 +714,20 @@ const mapLv95ToElastic = (lv95: LV95): ElasticPoint => {
   return { lat: wgs[1], lon: wgs[0] };
 };
 
-const mapQueryToElasticDsl = (query: AssetSearchQuery): QueryDslQueryContainer => {
+const mapQueryToElasticDsl = (query: AssetSearchQuery, user: User): QueryDslQueryContainer => {
+  const { must, filter } = mapQueryToElasticDslParts(query, user);
+  return {
+    bool: {
+      must,
+      filter,
+    },
+  };
+};
+
+const mapQueryToElasticDslParts = (
+  query: AssetSearchQuery,
+  user: User
+): { must: QueryDslQueryContainer[]; filter: QueryDslQueryContainer[] } => {
   const scope = ['titlePublic', 'titleOriginal', 'contactNames', 'sgsId'];
   const queries: QueryDslQueryContainer[] = [];
   const filters: QueryDslQueryContainer[] = [];
@@ -767,6 +788,14 @@ const mapQueryToElasticDsl = (query: AssetSearchQuery): QueryDslQueryContainer =
       },
     });
   }
+  if (query.favoritesOnly) {
+    filters.push({
+      terms: {
+        favoredByUserIds: [user.id],
+      },
+    });
+  }
+
   if (query.polygon != null) {
     queries.push({
       geo_polygon: {
@@ -776,12 +805,9 @@ const mapQueryToElasticDsl = (query: AssetSearchQuery): QueryDslQueryContainer =
       },
     });
   }
-
   return {
-    bool: {
-      must: queries,
-      filter: filters,
-    },
+    must: queries,
+    filter: filters,
   };
 };
 

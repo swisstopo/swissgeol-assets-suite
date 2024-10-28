@@ -28,6 +28,9 @@ export const rmAppTranslations: AppTranslations = {
       nameTaken: "RM Name '{{name}}' wird bereits von einer anderen Arbeitsgruppe verwendet.",
     },
   },
+  favorites: {
+    title: 'RM Favoriten',
+  },
   menuBar: {
     filters: 'RM Filter',
     admin: 'RM Verwaltung',

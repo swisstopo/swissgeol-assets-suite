@@ -11,6 +11,8 @@ export * from '@prisma/client';
 const API_PREFIX = 'api';
 const API_PORT = process.env.PORT || 3333;
 
+process.on('warning', (e) => console.warn(e.stack));
+
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule, {
     logger: new AppLogger(),
