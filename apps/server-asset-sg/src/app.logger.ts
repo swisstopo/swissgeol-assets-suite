@@ -5,6 +5,10 @@ import colors from 'colors/safe';
 export class AppLogger implements LoggerService {
   levels: Set<LogLevel> | null = null;
 
+  constructor() {
+    colors.enable();
+  }
+
   log(message: unknown, ...optionalParams: unknown[]) {
     this.write(levels.log, message, optionalParams);
   }
@@ -52,11 +56,19 @@ export class AppLogger implements LoggerService {
     const nameSpacer = ' '.repeat(MAX_NAME_LENGTH - level.name.length);
     const prefix =
       colors.reset(` ${now.toISOString()} `) + nameSpacer + level.bgColor(` ${level.name} `) + '  ' + source;
-    let output = ' ' + level.color(`${message}`);
-    if (params.length !== 0) {
+    let output = ' ';
+    if (!(message instanceof Error)) {
+      output += level.color(`${message}`);
+    }
+    if (params.length !== 0 && !(params.length === 1 && params[0] === undefined)) {
+      console.log({ params });
       output += '  ' + stringify(params, level);
     }
-    console.log(`${prefix} ${output}`);
+    if (message instanceof Error) {
+      console.log(`${prefix} ${output}`, message);
+    } else {
+      console.log(`${prefix} ${output}`);
+    }
   }
 }
 

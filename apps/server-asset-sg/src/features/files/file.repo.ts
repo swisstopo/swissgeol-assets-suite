@@ -38,7 +38,7 @@ export class FileRepo implements CreateRepo<AssetFile, CreateFileData>, DeleteRe
         processor: data.user.email,
       },
     });
-    const result = await putFile(data.name, data.content, data.mediaType)();
+    const result = await putFile(name, data.content, data.mediaType)();
     if (E.isLeft(result)) {
       throw result.left;
     }
