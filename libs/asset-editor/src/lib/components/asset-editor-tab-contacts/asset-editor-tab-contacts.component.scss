@@ -7,7 +7,7 @@
   width: 34rem;
 }
 
-.contact {
+li.contact {
   display: grid;
   grid-template-areas: "role buttons" "name buttons";
   grid-template-columns: auto 5rem;
@@ -22,4 +22,13 @@
   :nth-child(3) {
     grid-area: buttons;
   }
+}
+
+::ng-deep .mat-mdc-option.contact > .mdc-list-item__primary-text {
+  flex: 1 1 100%;
+  width: 100%;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
