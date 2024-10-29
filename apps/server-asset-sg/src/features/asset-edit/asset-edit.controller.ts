@@ -68,11 +68,11 @@ const validatePatch = (user: User, patch: PatchAsset, record?: AssetEditDetail) 
     );
   }
 
-  const checkStatusChange = (key: 'internalUse' | 'publicUse', newStatus: string) => {
+  const hasStatusChanged = (key: 'internalUse' | 'publicUse') => {
     const hasChanged = record == null || record[key].statusAssetUseItemCode !== patch[key].statusAssetUseItemCode;
     return (
       hasChanged &&
-      newStatus !== 'tobechecked' &&
+      patch[key].statusAssetUseItemCode !== 'tobechecked' &&
       ((record != null && !policy.hasRole(Role.MasterEditor, record.workgroupId)) ||
         !policy.hasRole(Role.MasterEditor, patch.workgroupId))
     );
@@ -80,14 +80,14 @@ const validatePatch = (user: User, patch: PatchAsset, record?: AssetEditDetail) 
 
   // Specialization of the policy where we disallow the internal status to be changed to anything else than `tobechecked`
   // if the current user is not a master-editor for the asset's current or future workgroup.
-  const hasInternalUSeChanged = checkStatusChange('internalUse', patch.internalUse.statusAssetUseItemCode);
+  if (hasStatusChanged('internalUse')) {
+    throw new HttpException("Changing the asset's internalUse status is not allowed", HttpStatus.FORBIDDEN);
+  }
 
   // Specialization of the policy where we disallow the public status to be changed to anything else than `tobechecked`
   // if the current user is not a master-editor for the asset's current or future workgroup.
-  const hasPublicUSeChanged = checkStatusChange('publicUse', patch.publicUse.statusAssetUseItemCode);
-
-  if (hasInternalUSeChanged || hasPublicUSeChanged) {
-    throw new HttpException("Changing the asset's status is not allowed", HttpStatus.FORBIDDEN);
+  if (hasStatusChanged('publicUse')) {
+    throw new HttpException("Changing the asset's public use status is not allowed", HttpStatus.FORBIDDEN);
   }
 
   // Specialization of the policy where we disallow the status work item code to be changed to `published`
