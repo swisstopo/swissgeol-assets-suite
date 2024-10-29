@@ -120,7 +120,6 @@ export class AssetEditRepo implements Repo<AssetEditDetail, number, AssetEditDat
     await this.prismaService.$transaction(async () => {
       // Update the asset.
       // For any relation, delete the existing records, and insert the updated ones.
-      console.log(O.toUndefined(data.patch.assetMainId));
       await this.prismaService.asset.update({
         where: { assetId: id },
         data: {
