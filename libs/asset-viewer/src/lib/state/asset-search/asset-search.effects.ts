@@ -192,8 +192,7 @@ export class AssetSearchEffects {
       withLatestFrom(this.store.select(selectCurrentAssetDetail)),
       filter(([params, storeAssetDetail]) => params.assetId !== storeAssetDetail?.assetId),
       map(([params, storeAssetDetail]) => {
-        const paramsEmpty = Object.values(params.query).every((v) => v == null);
-        const assetId = paramsEmpty ? storeAssetDetail?.assetId : params.assetId;
+        const assetId = storeAssetDetail?.assetId ?? params.assetId;
         return assetId === undefined ? actions.resetAssetDetail() : actions.showAssetDetail({ assetId });
       })
     )
@@ -202,13 +201,14 @@ export class AssetSearchEffects {
   public updateQueryParams$ = createEffect(
     () =>
       this.actions$.pipe(
-        ofType(actions.updateQueryParams, actions.loadSearch, actions.updateAssetDetail, actions.resetAssetDetail),
+        ofType(actions.updateQueryParams, actions.updateAssetDetail, actions.resetAssetDetail),
         concatLatestFrom(() => [
           this.store.select(selectAssetSearchQuery),
           this.store.select(selectCurrentAssetDetail),
+          this.queryParams$,
         ]),
-        switchMap(([_, query, assetDetail]) => {
-          const params: Params = { assetId: assetDetail?.assetId };
+        switchMap(([_, query, assetDetail, queryParams]) => {
+          const params: Params = { assetId: assetDetail?.assetId ?? queryParams.assetId };
           updatePlainParam(params, QUERY_PARAM_MAPPING.text, query.text);
           updateArrayParam(
             params,

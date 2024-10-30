@@ -64,14 +64,17 @@ export class AssetViewerFilesComponent implements OnInit, OnDestroy {
     const key = `${this.assetId}/${file.id}/${downloadType}` as const;
     this.activeFileDownloads.add(key);
     this.httpClient.get(`/api/assets/${this.assetId}/files/${file.id}`, { responseType: 'blob' }).subscribe({
-      next: (blob) => {
+      next: async (blob) => {
+        const isPdf = file.name.endsWith('.pdf');
+        if (isPdf) {
+          blob = await blob.arrayBuffer().then((buffer) => new Blob([buffer], { type: 'application/pdf' }));
+        }
         const url = URL.createObjectURL(blob);
         const anchor = document.createElement('a');
 
         anchor.setAttribute('style', 'display: none');
         anchor.href = url;
-        anchor.rel = 'noopener noreferrer';
-        if (downloadType === 'save-file') {
+        if (!isPdf || downloadType === 'save-file') {
           anchor.download = file.name;
         } else {
           anchor.target = '_blank';

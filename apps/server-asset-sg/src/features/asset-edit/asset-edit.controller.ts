@@ -1,9 +1,8 @@
 import { PatchAsset } from '@asset-sg/shared';
-import { User } from '@asset-sg/shared/v2';
-import { Role } from '@asset-sg/shared/v2';
-import { AssetEditPolicy } from '@asset-sg/shared/v2';
+import { AssetEditPolicy, Role, User } from '@asset-sg/shared/v2';
 import { Controller, Get, HttpException, HttpStatus, Param, ParseIntPipe, Post, Put } from '@nestjs/common';
 import * as E from 'fp-ts/Either';
+import * as O from 'fp-ts/Option';
 import { authorize } from '@/core/authorize';
 import { CurrentUser } from '@/core/decorators/current-user.decorator';
 import { ParseBody } from '@/core/decorators/parse.decorator';
@@ -69,16 +68,35 @@ const validatePatch = (user: User, patch: PatchAsset, record?: AssetEditDetail) 
     );
   }
 
+  const hasStatusChanged = (key: 'internalUse' | 'publicUse') => {
+    const hasChanged = record == null || record[key].statusAssetUseItemCode !== patch[key].statusAssetUseItemCode;
+    return (
+      hasChanged &&
+      patch[key].statusAssetUseItemCode !== 'tobechecked' &&
+      ((record != null && !policy.hasRole(Role.MasterEditor, record.workgroupId)) ||
+        !policy.hasRole(Role.MasterEditor, patch.workgroupId))
+    );
+  };
+
   // Specialization of the policy where we disallow the internal status to be changed to anything else than `tobechecked`
   // if the current user is not a master-editor for the asset's current or future workgroup.
-  const hasInternalUseChanged =
-    record == null || record.internalUse.statusAssetUseItemCode !== patch.internalUse.statusAssetUseItemCode;
+  if (hasStatusChanged('internalUse')) {
+    throw new HttpException("Changing the asset's internalUse status is not allowed", HttpStatus.FORBIDDEN);
+  }
+
+  // Specialization of the policy where we disallow the public status to be changed to anything else than `tobechecked`
+  // if the current user is not a master-editor for the asset's current or future workgroup.
+  if (hasStatusChanged('publicUse')) {
+    throw new HttpException("Changing the asset's public use status is not allowed", HttpStatus.FORBIDDEN);
+  }
+
+  // Specialization of the policy where we disallow the status work item code to be changed to `published`
+  // if the current user is not a master-editor for the asset's current or future workgroup.
   if (
-    hasInternalUseChanged &&
-    patch.internalUse.statusAssetUseItemCode !== 'tobechecked' &&
+    O.toNullable(patch.newStatusWorkItemCode) === 'published' &&
     ((record != null && !policy.hasRole(Role.MasterEditor, record.workgroupId)) ||
       !policy.hasRole(Role.MasterEditor, patch.workgroupId))
   ) {
-    throw new HttpException("Changing the asset's status is not allowed", HttpStatus.FORBIDDEN);
+    throw new HttpException("Changing the asset's working status is not allowed", HttpStatus.FORBIDDEN);
   }
 };

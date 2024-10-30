@@ -61,7 +61,6 @@ export class AppLogger implements LoggerService {
       output += level.color(`${message}`);
     }
     if (params.length !== 0 && !(params.length === 1 && params[0] === undefined)) {
-      console.log({ params });
       output += '  ' + stringify(params, level);
     }
     if (message instanceof Error) {

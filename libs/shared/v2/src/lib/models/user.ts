@@ -19,9 +19,6 @@ const hasRole = (role: Role) => (user: User | null | undefined, workgroupId?: Wo
   if (user == null) {
     return false;
   }
-  if (user.isAdmin) {
-    return true;
-  }
   const roleIndex = getRoleIndex(role);
   if (workgroupId != null) {
     const role = user.roles.get(workgroupId);
