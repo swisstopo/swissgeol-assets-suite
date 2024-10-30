@@ -1,5 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
+import { Router } from '@angular/router';
 import { ApiError, appSharedStateActions, AppState } from '@asset-sg/client-shared';
 import { ORD } from '@asset-sg/core';
 import { User, UserSchema } from '@asset-sg/shared/v2';
@@ -14,6 +15,7 @@ export class AuthService {
   private readonly httpClient = inject(HttpClient);
   private readonly oauthService = inject(OAuthService);
   private readonly store = inject(Store<AppState>);
+  private readonly router = inject(Router);
 
   private readonly _state$ = new BehaviorSubject(AuthState.Ongoing);
 
@@ -22,6 +24,8 @@ export class AuthService {
       this.setState(AuthState.Success);
       this.store.dispatch(appSharedStateActions.setAnonymousMode());
     } else {
+      const callbackUrl = sessionStorage.getItem(CALLBACK_PATH_KEY);
+      sessionStorage.setItem(CALLBACK_PATH_KEY, this.router.url);
       this.configureOAuth(
         oAuthConfig['oauth_issuer'] as string,
         oAuthConfig['oauth_clientId'] as string,
@@ -30,6 +34,10 @@ export class AuthService {
         oAuthConfig['oauth_tokenEndpoint'] as string
       );
       await this.signIn();
+      if (callbackUrl != null) {
+        sessionStorage.removeItem(CALLBACK_PATH_KEY);
+        await this.router.navigateByUrl(callbackUrl);
+      }
       this.store.dispatch(appSharedStateActions.loadUserProfile());
     }
   }
@@ -110,6 +118,8 @@ export class AuthService {
     });
   }
 }
+
+const CALLBACK_PATH_KEY = 'session.callback_path';
 
 export enum AuthState {
   Ongoing,
