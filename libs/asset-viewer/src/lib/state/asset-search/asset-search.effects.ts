@@ -205,9 +205,10 @@ export class AssetSearchEffects {
         concatLatestFrom(() => [
           this.store.select(selectAssetSearchQuery),
           this.store.select(selectCurrentAssetDetail),
+          this.queryParams$,
         ]),
-        switchMap(([_, query, assetDetail]) => {
-          const params: Params = { assetId: assetDetail?.assetId };
+        switchMap(([_, query, assetDetail, queryParams]) => {
+          const params: Params = { assetId: assetDetail?.assetId ?? queryParams.assetId };
           updatePlainParam(params, QUERY_PARAM_MAPPING.text, query.text);
           updateArrayParam(
             params,
