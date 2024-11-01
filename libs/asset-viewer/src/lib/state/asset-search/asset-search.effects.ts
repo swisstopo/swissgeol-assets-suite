@@ -9,18 +9,18 @@ import { Actions, concatLatestFrom, createEffect, ofType } from '@ngrx/effects';
 import { ROUTER_NAVIGATED } from '@ngrx/router-store';
 import { Store } from '@ngrx/store';
 import * as D from 'io-ts/Decoder';
-import { EMPTY, filter, map, merge, of, share, switchMap, takeUntil, withLatestFrom } from 'rxjs';
+import { EMPTY, filter, map, merge, of, shareReplay, switchMap, takeUntil, withLatestFrom } from 'rxjs';
 
 import { AllStudyService } from '../../services/all-study.service';
 import { AssetSearchService } from '../../services/asset-search.service';
 
 import * as actions from './asset-search.actions';
 import {
-  selectAssetSearchQuery,
-  selectCurrentAssetDetail,
   selectAssetSearchNoActiveFilters,
-  selectStudies,
+  selectAssetSearchQuery,
   selectAssetSearchResultData,
+  selectCurrentAssetDetail,
+  selectStudies,
 } from './asset-search.selector';
 
 @UntilDestroy()
@@ -162,7 +162,7 @@ export class AssetSearchEffects {
       query.workgroupIds = readArrayParam<number>(params, QUERY_PARAM_MAPPING.workgroupIds);
       return { query, assetId };
     }),
-    share()
+    shareReplay()
   );
 
   public readSearchQueryParams$ = createEffect(() =>
@@ -201,7 +201,7 @@ export class AssetSearchEffects {
   public updateQueryParams$ = createEffect(
     () =>
       this.actions$.pipe(
-        ofType(actions.updateQueryParams, actions.updateAssetDetail, actions.resetAssetDetail),
+        ofType(actions.updateQueryParams, actions.updateAssetDetail, actions.resetAssetDetail, actions.loadSearch),
         concatLatestFrom(() => [
           this.store.select(selectAssetSearchQuery),
           this.store.select(selectCurrentAssetDetail),

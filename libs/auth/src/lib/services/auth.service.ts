@@ -18,6 +18,7 @@ export class AuthService {
   private readonly router = inject(Router);
 
   private readonly _state$ = new BehaviorSubject(AuthState.Ongoing);
+  private readonly _isInitialized$ = new BehaviorSubject(false);
 
   async initialize(oAuthConfig: Record<string, unknown>) {
     if (oAuthConfig['anonymous_mode']) {
@@ -25,7 +26,7 @@ export class AuthService {
       this.store.dispatch(appSharedStateActions.setAnonymousMode());
     } else {
       const callbackUrl = sessionStorage.getItem(CALLBACK_PATH_KEY);
-      sessionStorage.setItem(CALLBACK_PATH_KEY, this.router.url);
+      sessionStorage.setItem(CALLBACK_PATH_KEY, window.location.pathname + window.location.search);
       this.configureOAuth(
         oAuthConfig['oauth_issuer'] as string,
         oAuthConfig['oauth_clientId'] as string,
@@ -35,11 +36,14 @@ export class AuthService {
       );
       await this.signIn();
       if (callbackUrl != null) {
-        sessionStorage.removeItem(CALLBACK_PATH_KEY);
         await this.router.navigateByUrl(callbackUrl);
+      }
+      if (this.oauthService.hasValidAccessToken()) {
+        sessionStorage.removeItem(CALLBACK_PATH_KEY);
       }
       this.store.dispatch(appSharedStateActions.loadUserProfile());
     }
+    this._isInitialized$.next(true);
   }
 
   async signIn(): Promise<void> {
@@ -69,6 +73,10 @@ export class AuthService {
 
   get state$(): Observable<AuthState> {
     return this._state$.asObservable();
+  }
+
+  get isInitialized$(): Observable<boolean> {
+    return this._isInitialized$.asObservable();
   }
 
   setState(state: AuthState): void {
