@@ -17,6 +17,7 @@ import {
   AdminOnlyDirective,
   AlertModule,
   AnchorComponent,
+  assetsPageMatcher,
   ButtonComponent,
   CanCreateDirective,
   CURRENT_LANG,
@@ -24,7 +25,6 @@ import {
   icons,
   TranslateTsLoader,
 } from '@asset-sg/client-shared';
-import { assetsPageMatcher } from '@asset-sg/client-shared';
 import { storeLogger } from '@asset-sg/core';
 import { provideSvgIcons, SvgIconComponent } from '@ngneat/svg-icon';
 import { EffectsModule } from '@ngrx/effects';
@@ -78,8 +78,12 @@ registerLocaleData(locale_deCH, 'de-CH');
         loadChildren: () => import('@asset-sg/asset-viewer').then((m) => m.AssetViewerModule),
       },
       {
-        path: '**',
+        path: 'not-found',
         component: NotFoundComponent,
+      },
+      {
+        path: '**',
+        component: RedirectToLangComponent,
       },
     ]),
     TranslateModule.forRoot({
