@@ -16,11 +16,11 @@ import { AssetSearchService } from '../../services/asset-search.service';
 
 import * as actions from './asset-search.actions';
 import {
-  selectAssetSearchQuery,
-  selectCurrentAssetDetail,
   selectAssetSearchNoActiveFilters,
-  selectStudies,
+  selectAssetSearchQuery,
   selectAssetSearchResultData,
+  selectCurrentAssetDetail,
+  selectStudies,
 } from './asset-search.selector';
 
 @UntilDestroy()
@@ -205,9 +205,10 @@ export class AssetSearchEffects {
         concatLatestFrom(() => [
           this.store.select(selectAssetSearchQuery),
           this.store.select(selectCurrentAssetDetail),
-          this.queryParams$,
         ]),
-        switchMap(([_, query, assetDetail, queryParams]) => {
+        withLatestFrom(this.queryParams$),
+        switchMap(([[_, query, assetDetail], queryParams]) => {
+          console.log('updateQueryParams', query, assetDetail, queryParams);
           const params: Params = { assetId: assetDetail?.assetId ?? queryParams.assetId };
           updatePlainParam(params, QUERY_PARAM_MAPPING.text, query.text);
           updateArrayParam(
