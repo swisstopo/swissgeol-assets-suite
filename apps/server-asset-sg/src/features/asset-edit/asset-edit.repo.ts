@@ -130,7 +130,7 @@ export class AssetEditRepo implements Repo<AssetEditDetail, number, AssetEditDat
           assetKindItemCode: data.patch.assetKindItemCode,
           assetFormatItemCode: data.patch.assetFormatItemCode,
           isNatRel: data.patch.isNatRel,
-          assetMainId: O.toUndefined(data.patch.assetMainId) ?? null,
+          assetMainId: O.toNullable(data.patch.assetMainId),
           lastProcessedDate: new Date(),
           processor: data.user.email,
           manCatLabelRefs: {
@@ -326,7 +326,7 @@ export class AssetEditRepo implements Repo<AssetEditDetail, number, AssetEditDat
     for (const assetYId of data.patch.siblingAssetIds) {
       const siblingCandidate = await this.prismaService.asset.findUnique({
         where: { assetId: assetYId },
-        select: { assetId: true, workgroupId: true },
+        select: { workgroupId: true },
       });
       if (siblingCandidate?.workgroupId !== data.patch.workgroupId) {
         throw new Error('Sibling assets must be in the same workgroup as the edited asset');
@@ -338,7 +338,7 @@ export class AssetEditRepo implements Repo<AssetEditDetail, number, AssetEditDat
     if (assetMainId) {
       const assetMain = await this.prismaService.asset.findUnique({
         where: { assetId: assetMainId },
-        select: { assetId: true, workgroupId: true, titlePublic: true },
+        select: { workgroupId: true },
       });
       if (assetMain?.workgroupId !== data.patch.workgroupId) {
         throw new Error('Cannot assign parent asset from different workgroup');
@@ -349,12 +349,12 @@ export class AssetEditRepo implements Repo<AssetEditDetail, number, AssetEditDat
     if (id) {
       const childAssets = await this.prismaService.asset.findMany({
         where: { assetMainId: id },
-        select: { assetId: true, workgroupId: true, titlePublic: true },
+        select: { workgroupId: true },
       });
 
       for (const child of childAssets) {
         if (child.workgroupId !== data.patch.workgroupId) {
-          throw new Error('The subordinate assets must be in the same workgroups as the parent asset');
+          throw new Error('Child assets must be in the same workgroup as the parent asset');
         }
       }
     }

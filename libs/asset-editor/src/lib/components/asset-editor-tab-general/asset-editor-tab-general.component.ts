@@ -41,7 +41,7 @@ const initialAssetEditorTabGeneralState: AssetEditorTabGeneralState = {
 })
 export class AssetEditorTabGeneralComponent implements OnInit {
   private readonly rootFormGroupDirective = inject(FormGroupDirective);
-  protected readonly rootFormGroup: AssetEditorFormGroup = this.rootFormGroupDirective.control;
+  private readonly rootFormGroup: AssetEditorFormGroup = this.rootFormGroupDirective.control;
   private readonly formBuilder = inject(FormBuilder);
   private readonly focusMonitor = inject(FocusMonitor);
 
