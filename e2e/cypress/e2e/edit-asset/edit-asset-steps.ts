@@ -22,7 +22,7 @@ When(/^The user edits asset information$/, () => {
 When(/^The user clicks save$/, () => {
   cy.intercept('http://localhost:4200/api/asset-edit/**').as('edit');
   cy.get('button:contains("Administration")').click();
-  cy.get('button:contains(" Speichern ")').click();
+  cy.get('button:contains("Speichern")').click();
   cy.wait(1000);
 });
 Then(/^The changes are saved$/, () => {

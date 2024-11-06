@@ -11,7 +11,6 @@ import { JwtMiddleware } from '@/core/middleware/jwt.middleware';
 import { PrismaService } from '@/core/prisma.service';
 import { AssetEditController } from '@/features/asset-edit/asset-edit.controller';
 import { AssetEditRepo } from '@/features/asset-edit/asset-edit.repo';
-import { AssetEditService } from '@/features/asset-edit/asset-edit.service';
 import { AssetInfoRepo } from '@/features/assets/asset-info.repo';
 import { AssetRepo } from '@/features/assets/asset.repo';
 import { AssetsController } from '@/features/assets/assets.controller';
@@ -51,7 +50,6 @@ import { WorkgroupsController } from '@/features/workgroups/workgroups.controlle
   providers: [
     provideElasticsearch,
     AssetEditRepo,
-    AssetEditService,
     AssetInfoRepo,
     AssetRepo,
     AssetSearchService,

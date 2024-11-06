@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
-import { ActivatedRoute, Params, Router } from '@angular/router';
-import { AppState, assetsPageMatcher, fromAppShared } from '@asset-sg/client-shared';
+import { Params, Router } from '@angular/router';
+import { appSharedStateActions, AppState, assetsPageMatcher, fromAppShared } from '@asset-sg/client-shared';
 import { deepEqual, isDecodeError, isNotNull, ORD } from '@asset-sg/core';
 import { AssetSearchQuery, AssetSearchResult, LV95, Polygon } from '@asset-sg/shared';
 import * as RD from '@devexperts/remote-data-ts';
@@ -29,7 +29,6 @@ export class AssetSearchEffects {
   private readonly store = inject(Store<AppState>);
   private readonly actions$ = inject(Actions);
   private readonly router = inject(Router);
-  private readonly route = inject(ActivatedRoute);
   private readonly assetSearchService = inject(AssetSearchService);
   private readonly allStudyService = inject(AllStudyService);
 
@@ -47,7 +46,12 @@ export class AssetSearchEffects {
 
   public loadSearch$ = createEffect(() =>
     this.actions$.pipe(
-      ofType(actions.search, actions.resetSearch, actions.removePolygon),
+      ofType(
+        actions.search,
+        actions.resetSearch,
+        actions.removePolygon,
+        appSharedStateActions.updateSearchAfterAssetEditedOrAdded
+      ),
       withLatestFrom(this.store.select(selectAssetSearchQuery)),
       map(([_, query]) => actions.loadSearch({ query }))
     )
@@ -77,10 +81,10 @@ export class AssetSearchEffects {
 
   public toggleAssetDetail$ = createEffect(() => {
     return this.actions$.pipe(
-      ofType(actions.assetClicked),
+      ofType(actions.assetClicked, appSharedStateActions.updateSearchAfterAssetEditedOrAdded),
       withLatestFrom(this.store.select(selectCurrentAssetDetail)),
       switchMap(([{ assetId }, currentAssetDetail]) =>
-        assetId !== currentAssetDetail?.assetId
+        assetId && assetId !== currentAssetDetail?.assetId
           ? this.assetSearchService
               .loadAssetDetailData(assetId)
               .pipe(map((assetDetail) => actions.updateAssetDetail({ assetDetail })))

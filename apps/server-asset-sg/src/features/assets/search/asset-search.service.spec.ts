@@ -1,16 +1,17 @@
 import {
+  AssetEditDetail,
   AssetSearchResult,
   AssetSearchStats,
+  dateFromDateId,
+  dateIdFromDate,
   ElasticSearchAsset,
+  makeUsageCode,
   PageStats,
   PatchAsset,
   SearchAsset,
   SearchAssetAggregations,
   SearchAssetResultNonEmpty,
   UsageCode,
-  dateFromDateId,
-  dateIdFromDate,
-  makeUsageCode,
 } from '@asset-sg/shared';
 import { faker } from '@faker-js/faker';
 
@@ -31,13 +32,14 @@ import { openElasticsearchClient } from '@/core/elasticsearch';
 import { PrismaService } from '@/core/prisma.service';
 import { fakeAssetPatch, fakeAssetUsage, fakeContact, fakeUser } from '@/features/asset-edit/asset-edit.fake';
 import { AssetEditData, AssetEditRepo } from '@/features/asset-edit/asset-edit.repo';
-import { AssetEditDetail } from '@/features/asset-edit/asset-edit.service';
+import { FileRepo } from '@/features/files/file.repo';
 import { StudyRepo } from '@/features/studies/study.repo';
 
 describe(AssetSearchService, () => {
   const elastic = openElasticsearchClient();
   const prisma = new PrismaService();
-  const assetRepo = new AssetEditRepo(prisma);
+  const fileRepo = new FileRepo(prisma);
+  const assetRepo = new AssetEditRepo(prisma, fileRepo);
   const studyRepo = new StudyRepo(prisma);
   const service = new AssetSearchService(elastic, prisma, assetRepo, studyRepo);
 
@@ -104,6 +106,25 @@ describe(AssetSearchService, () => {
 
       const hit = response.hits.hits[0]._source as ElasticSearchAsset;
       assertHit(hit, asset);
+    });
+  });
+
+  describe('deleteFromIndex', () => {
+    it('deletes an an asset from elastic search', async () => {
+      // Given
+      const asset = await assetRepo.create({ patch: fakeAssetPatch(), user: fakeUser() });
+      await service.register(asset);
+
+      // When
+      await service.deleteFromIndex(asset.assetId);
+
+      const response = await elastic.search({
+        index: ASSET_ELASTIC_INDEX,
+        size: 10_000,
+        _source: true,
+      });
+      //Then
+      expect(response.hits.hits.length).toEqual(0);
     });
   });
 

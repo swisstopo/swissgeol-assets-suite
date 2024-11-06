@@ -1,14 +1,15 @@
-import { Injectable, inject } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { Router } from '@angular/router';
-import { appSharedStateActions, filterNavigateToComponent } from '@asset-sg/client-shared';
+import { Alert, AlertType, appSharedStateActions, filterNavigateToComponent, showAlert } from '@asset-sg/client-shared';
 import { DT, ORD, partitionEither } from '@asset-sg/core';
 import * as RD from '@devexperts/remote-data-ts';
 import { UntilDestroy } from '@ngneat/until-destroy';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
+import { TranslateService } from '@ngx-translate/core';
 import { pipe } from 'fp-ts/function';
 import * as O from 'fp-ts/Option';
 import * as D from 'io-ts/Decoder';
-import { Observable, concatMap, map, partition, share, switchMap, tap } from 'rxjs';
+import { concatMap, map, Observable, partition, share, switchMap, tap } from 'rxjs';
 
 import { AssetEditorPageComponent } from '../components/asset-editor-page';
 import { AssetEditorService } from '../services/asset-editor.service';
@@ -21,6 +22,7 @@ export class AssetEditorEffects {
   private _actions$ = inject(Actions);
   private _assetEditorService = inject(AssetEditorService);
   private _router = inject(Router);
+  private readonly translateService = inject(TranslateService);
 
   validatedQueryParams = partitionEither(
     filterNavigateToComponent(this._actions$, AssetEditorPageComponent).pipe(
@@ -78,6 +80,36 @@ export class AssetEditorEffects {
         )
       ),
       map(actions.updateAssetEditDetailResult)
+    )
+  );
+
+  deleteAsset$ = createEffect(() =>
+    this._actions$.pipe(
+      ofType(actions.deleteAsset),
+      switchMap(({ assetId }) => this._assetEditorService.deleteAsset(assetId)),
+      map(() => actions.handleSuccessfulDeletion())
+    )
+  );
+
+  displayAlertAfterSuccessfulDeletion$ = createEffect(() =>
+    this._actions$.pipe(
+      ofType(actions.handleSuccessfulDeletion),
+      map(() => {
+        const alert: Alert = {
+          type: AlertType.Success,
+          text: this.translateService.instant('deleteSuccess'),
+          id: 'asset-deleted',
+          isPersistent: false,
+        };
+        return showAlert({ alert });
+      })
+    )
+  );
+
+  updateSearchAfterAssetChanged$ = createEffect(() =>
+    this._actions$.pipe(
+      ofType(actions.handleSuccessfulDeletion, actions.updateAssetEditDetailResult),
+      map(() => appSharedStateActions.updateSearchAfterAssetEditedOrAdded({ assetId: undefined }))
     )
   );
 

@@ -1,15 +1,14 @@
 import { decodeError, isNotNull } from '@asset-sg/core';
-import { AssetUsage, dateFromDateId, DateIdFromDate, PatchAsset } from '@asset-sg/shared';
+import { AssetEditDetail, AssetUsage, dateFromDateId, DateIdFromDate, PatchAsset } from '@asset-sg/shared';
 import { User } from '@asset-sg/shared/v2';
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import * as E from 'fp-ts/Either';
 import * as O from 'fp-ts/Option';
 
-import { AssetEditDetail } from './asset-edit.service';
-
 import { PrismaService } from '@/core/prisma.service';
 import { Repo, RepoListOptions } from '@/core/repo';
+import { FileRepo } from '@/features/files/file.repo';
 import { AssetEditDetailFromPostgres } from '@/models/asset-edit-detail';
 import {
   createStudies,
@@ -17,10 +16,11 @@ import {
   postgresStudiesByAssetId,
   updateStudies,
 } from '@/utils/postgres-studies/postgres-studies';
+import { handlePrismaMutationError } from '@/utils/prisma';
 
 @Injectable()
 export class AssetEditRepo implements Repo<AssetEditDetail, number, AssetEditData> {
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(private readonly prismaService: PrismaService, private readonly fileRepo: FileRepo) {}
 
   async find(id: number): Promise<AssetEditDetail | null> {
     const asset = await this.prismaService.asset.findUnique({
@@ -256,55 +256,52 @@ export class AssetEditRepo implements Repo<AssetEditDetail, number, AssetEditDat
       return false;
     }
 
-    await this.prismaService.$transaction(async () => {
-      // Delete the record's `manCatLabelRef` records.
-      await this.prismaService.manCatLabelRef.deleteMany({
-        where: { assetId: id },
-      });
+    try {
+      await this.prismaService.$transaction(async () => {
+        // Delete the record's `file` records.
+        const assetFileIds = await this.prismaService.assetFile.findMany({
+          where: { assetId: id },
+          select: { fileId: true },
+        });
 
-      // Delete the record's `assetContact` records.
-      await this.prismaService.assetContact.deleteMany({
-        where: { assetId: id },
-      });
+        for (const { fileId } of assetFileIds) {
+          // Placeholder email
+          await this.fileRepo.delete({ id: fileId, assetId: id, user: { email: 'email@mail.com' } });
+        }
 
-      // Delete the record's `assetLanguage` records.
-      await this.prismaService.assetLanguage.deleteMany({
-        where: { assetId: id },
-      });
+        // Delete the record.
+        await this.prismaService.asset.delete({ where: { assetId: id } });
 
-      // Delete the record's `id` records.
-      await this.prismaService.id.deleteMany({
-        where: { assetId: id },
-      });
+        // Delete all `internalUse` records that are not in use anymore.
+        await this.prismaService.internalUse.deleteMany({
+          where: {
+            Asset: { none: {} },
+          },
+        });
 
-      // Delete the record's `typeNatRel` records.
-      await this.prismaService.typeNatRel.deleteMany({
-        where: { assetId: id },
-      });
+        // Delete all `publicUse` records that are not in use anymore.
+        await this.prismaService.publicUse.deleteMany({
+          where: {
+            Asset: { none: {} },
+          },
+        });
 
-      // Delete the record's `statusWork` records.
-      await this.prismaService.statusWork.deleteMany({
-        where: { assetId: id },
-      });
+        await this.prismaService.assetFormatItem.deleteMany({
+          where: {
+            assets: { none: {} },
+          },
+        });
 
-      // Delete the record.
-      await this.prismaService.asset.delete({ where: { assetId: id } });
-
-      // Delete all `internalUse` records that are not in use anymore.
-      await this.prismaService.internalUse.deleteMany({
-        where: {
-          Asset: { none: {} },
-        },
+        await this.prismaService.assetKindItem.deleteMany({
+          where: {
+            assets: { none: {} },
+          },
+        });
       });
-
-      // Delete all `publicUse` records that are not in use anymore.
-      await this.prismaService.publicUse.deleteMany({
-        where: {
-          Asset: { none: {} },
-        },
-      });
-    });
-    return true;
+      return true;
+    } catch (e) {
+      return handlePrismaMutationError(e) ?? false;
+    }
   }
 
   private async loadDetail(asset: PrismaAsset): Promise<AssetEditDetail> {
