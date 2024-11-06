@@ -49,7 +49,6 @@ export class AssetEditRepo implements Repo<AssetEditDetail, number, AssetEditDat
   }
 
   async create(data: AssetEditData): Promise<AssetEditDetail> {
-    await this.validateReferencesOrThrow(data);
     const asset = await this.prismaService.asset.create({
       select: { assetId: true },
       data: {
@@ -112,9 +111,6 @@ export class AssetEditRepo implements Repo<AssetEditDetail, number, AssetEditDat
     if (count === 0) {
       return null;
     }
-
-    await this.validateReferencesOrThrow(data, id);
-
     // Run the update in a transaction, as it consists of multiple prisma queries.
     // Note that all mutations within this transaction are no-ops if there is no asset for `id`.
     await this.prismaService.$transaction(async () => {
@@ -319,45 +315,6 @@ export class AssetEditRepo implements Repo<AssetEditDetail, number, AssetEditDat
       throw new Error(`failed to decode details from postgres for asset ${asset.assetId}: ${error}`);
     }
     return detailResult.right as AssetEditDetail;
-  }
-
-  private async validateReferencesOrThrow(data: AssetEditData, id?: number): Promise<void> {
-    // check if any of the siblings are in another workgroup
-    for (const assetYId of data.patch.siblingAssetIds) {
-      const siblingCandidate = await this.prismaService.asset.findUnique({
-        where: { assetId: assetYId },
-        select: { workgroupId: true },
-      });
-      if (siblingCandidate?.workgroupId !== data.patch.workgroupId) {
-        throw new Error('Sibling assets must be in the same workgroup as the edited asset');
-      }
-    }
-
-    // check if the parent asset is in another workgroup
-    const assetMainId = O.toUndefined(data.patch.assetMainId);
-    if (assetMainId) {
-      const assetMain = await this.prismaService.asset.findUnique({
-        where: { assetId: assetMainId },
-        select: { workgroupId: true },
-      });
-      if (assetMain?.workgroupId !== data.patch.workgroupId) {
-        throw new Error('Cannot assign parent asset from different workgroup');
-      }
-    }
-
-    // check if any of the subordinate assets are in another workgroup for exisiting assets
-    if (id) {
-      const childAssets = await this.prismaService.asset.findMany({
-        where: { assetMainId: id },
-        select: { workgroupId: true },
-      });
-
-      for (const child of childAssets) {
-        if (child.workgroupId !== data.patch.workgroupId) {
-          throw new Error('Child assets must be in the same workgroup as the parent asset');
-        }
-      }
-    }
   }
 }
 

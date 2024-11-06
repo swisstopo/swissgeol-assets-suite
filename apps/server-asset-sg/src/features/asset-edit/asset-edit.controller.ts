@@ -17,11 +17,16 @@ import { authorize } from '@/core/authorize';
 import { CurrentUser } from '@/core/decorators/current-user.decorator';
 import { ParseBody } from '@/core/decorators/parse.decorator';
 import { AssetEditRepo } from '@/features/asset-edit/asset-edit.repo';
+import { AssetEditService } from '@/features/asset-edit/asset-edit.service';
 import { AssetSearchService } from '@/features/assets/search/asset-search.service';
 
 @Controller('/asset-edit')
 export class AssetEditController {
-  constructor(private readonly assetEditRepo: AssetEditRepo, private readonly assetSearchService: AssetSearchService) {}
+  constructor(
+    private readonly assetEditRepo: AssetEditRepo,
+    private readonly assetEditService: AssetEditService,
+    private readonly assetSearchService: AssetSearchService
+  ) {}
 
   @Get('/:id')
   async show(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: User): Promise<unknown> {
@@ -37,6 +42,8 @@ export class AssetEditController {
   async create(@ParseBody(PatchAsset) patch: PatchAsset, @CurrentUser() user: User) {
     authorize(AssetEditPolicy, user).canCreate();
     validatePatch(user, patch);
+
+    await this.assetEditService.validateReferencesOrThrow({ user, patch });
 
     const asset = await this.assetEditRepo.create({ user, patch });
     await this.assetSearchService.register(asset);
@@ -56,6 +63,7 @@ export class AssetEditController {
 
     authorize(AssetEditPolicy, user).canUpdate(record);
     validatePatch(user, patch, record);
+    await this.assetEditService.validateReferencesOrThrow({ user, patch }, id);
 
     const asset = await this.assetEditRepo.update(record.assetId, { user, patch });
     if (asset === null) {
