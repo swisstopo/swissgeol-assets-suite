@@ -5,20 +5,26 @@ import { pipe } from 'fp-ts/function';
 import * as NEA from 'fp-ts/NonEmptyArray';
 import * as O from 'fp-ts/Option';
 import { Coordinate } from 'ol/coordinate';
-import { easeOut } from 'ol/easing';
-import { Extent } from 'ol/extent';
+import * as Extent from 'ol/extent';
 import Feature from 'ol/Feature';
 import { LineString, Point, Polygon, SimpleGeometry } from 'ol/geom';
 import { fromExtent as polygonFromExtent } from 'ol/geom/Polygon';
 import Map from 'ol/Map';
-import { fromLonLat } from 'ol/proj';
+import { fromLonLat, transform } from 'ol/proj';
+import { register } from 'ol/proj/proj4';
 import { Circle, Fill, RegularShape, Stroke, Style } from 'ol/style';
-import View from 'ol/View';
 
+import proj4 from 'proj4';
 import { isoWGSLat, isoWGSLng } from '../models';
 import { WindowService } from '../services';
 
 import { lv95ToWGS } from './wgs';
+
+proj4.defs(
+  'EPSG:2056',
+  '+proj=somerc +lat_0=46.95240555555556 +lon_0=7.439583333333333 +k_0=1 +x_0=2600000 +y_0=1200000 +ellps=bessel +towgs84=674.374,15.056,405.346,0,0,0,0 +units=m +no_defs'
+);
+register(proj4);
 
 export const createFeaturesFromStudy = (
   study: Study,
@@ -232,7 +238,7 @@ export const zoomToStudies = (
   }
 };
 
-const findExtentFromPoints = (coords: NEA.NonEmptyArray<Coordinate>): Extent =>
+const findExtentFromPoints = (coords: NEA.NonEmptyArray<Coordinate>): Extent.Extent =>
   pipe(
     coords,
     A.reduce(
@@ -247,17 +253,14 @@ const findExtentFromPoints = (coords: NEA.NonEmptyArray<Coordinate>): Extent =>
     ({ minX, maxX, minY, maxY }) => [minX, minY, maxX, maxY]
   );
 
-export const fitToSwitzerland = (view: View, withAnimation: boolean) => {
-  view.fit(
-    new Polygon([
-      [
-        [662739.4642028128, 6075958.039112476],
-        [658764.7387319836, 5748807.558051921],
-        [1176090.5461660565, 5747278.817486218],
-        [1172115.8206952275, 6079321.268357024],
-        [662739.4642028128, 6075958.039112476],
-      ],
-    ]),
-    withAnimation ? { duration: 250, easing: easeOut } : {}
-  );
+const getSwissExtent = (): Extent.Extent => {
+  const [minX, minY] = transform([2420000, 1030000], 'EPSG:2056', 'EPSG:3857');
+  const [maxX, maxY] = transform([2900000, 1350000], 'EPSG:2056', 'EPSG:3857');
+  return [minX, minY, maxX, maxY];
 };
+
+export const SWISS_EXTENT = getSwissExtent();
+export const SWISS_CENTER = [
+  (SWISS_EXTENT[2] - SWISS_EXTENT[0]) / 2 + SWISS_EXTENT[0],
+  (SWISS_EXTENT[3] - SWISS_EXTENT[1]) / 2 + SWISS_EXTENT[1],
+];
