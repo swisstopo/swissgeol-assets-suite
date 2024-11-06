@@ -289,4 +289,17 @@ export const enAppTranslations: AppTranslations = {
       addUsers: 'Add users',
     },
   },
+  disclaimer: {
+    title: 'Terms of service',
+    subtitle: 'Limitation of liability',
+    content:
+      'Although every care has been taken by the Federal Office of Topography swisstopo to ensure the accuracy of the information published, no guarantee can be given with regard to the accurate, reliable, up-to-date or complete nature of this information.\n' +
+      '\n' +
+      'swisstopo reserves the right to alter or remove the content, in full or in part, without prior notice.\n' +
+      '\n' +
+      'Liability claims against swisstopo for material or immaterial damage resulting from access to or use or non-use of the published information, from misuse of the connection or from technical faults are excluded.\n' +
+      '\n' +
+      'Further legal provisions can be found here:',
+    accept: 'Accept',
+  },
 };

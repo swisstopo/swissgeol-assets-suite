@@ -13,7 +13,8 @@ import { LetModule } from '@rx-angular/template/let';
 import { PushModule } from '@rx-angular/template/push';
 import { OAuthModule } from 'angular-oauth2-oidc';
 
-import { ErrorService } from './services/error.service';
+import { HttpInterceptor } from '../../services/http.interceptor';
+import { ErrorService } from './error.service';
 
 @NgModule({
   imports: [
@@ -43,6 +44,6 @@ import { ErrorService } from './services/error.service';
     }),
   ],
   exports: [OAuthModule],
-  providers: [provideSvgIcons(icons), ErrorService],
+  providers: [provideSvgIcons(icons), ErrorService, HttpInterceptor],
 })
 export class AuthModule {}

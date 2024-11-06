@@ -1,5 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
+import { MatDialog } from '@angular/material/dialog';
 import { Router } from '@angular/router';
 import { ApiError, appSharedStateActions, AppState } from '@asset-sg/client-shared';
 import { ORD } from '@asset-sg/core';
@@ -9,6 +10,8 @@ import { Store } from '@ngrx/store';
 import { OAuthService } from 'angular-oauth2-oidc';
 import { plainToInstance } from 'class-transformer';
 import { BehaviorSubject, map, Observable, startWith } from 'rxjs';
+import { environment } from '../../../environments/environment';
+import { DisclaimerDialogComponent } from '../../components/disclaimer-dialog/disclaimer-dialog.component';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -16,6 +19,7 @@ export class AuthService {
   private readonly oauthService = inject(OAuthService);
   private readonly store = inject(Store<AppState>);
   private readonly router = inject(Router);
+  private readonly dialogService = inject(MatDialog);
 
   private readonly _state$ = new BehaviorSubject(AuthState.Ongoing);
   private readonly _isInitialized$ = new BehaviorSubject(false);
@@ -56,6 +60,13 @@ export class AuthService {
           // If something else has interrupted the auth process, then we don't want to signal a success.
           if (this._state$.value === AuthState.Ongoing) {
             this._state$.next(AuthState.Success);
+
+            if (!environment.hideDisclaimer) {
+              this.dialogService.open(DisclaimerDialogComponent, {
+                width: '500px',
+                disableClose: true,
+              });
+            }
           }
         }
       } else {

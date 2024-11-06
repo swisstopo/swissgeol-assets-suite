@@ -289,4 +289,17 @@ export const itAppTranslations: AppTranslations = {
       addUsers: 'IT Benutzer hinzufügen',
     },
   },
+  disclaimer: {
+    title: 'Condizioni di utilizzo',
+    subtitle: 'Responsabilità',
+    content:
+      'Nonostante si presti grande attenzione all’esattezza delle informazioni pubblicate su questo sito, l’Ufficio federale di topografia swisstopo declina ogni responsabilità per la fedeltà, l’esattezza, l’attualità, l’affidabilità e la completezza di tali informazioni.\n' +
+      '\n' +
+      'swisstopo si riserva esplicitamente il diritto in qualsiasi momento di modificare parzialmente o completamente il contenuto del sito, di cancellarlo o di sospenderne temporaneamente la pubblicazione, senza alcun preavviso.\n' +
+      '\n' +
+      'swisstopo declina ogni responsabilità per danni materiali o immateriali derivanti dall’accesso alle informazioni diffuse, dall’uso o dal mancato uso del sito, oppure che sono riconducibili a un malfunzionamento del collegamento o a disturbi tecnici del sito.\n' +
+      '\n' +
+      'Per ulteriori informazioni legali, consultare il seguente link:',
+    accept: 'Accettare',
+  },
 };

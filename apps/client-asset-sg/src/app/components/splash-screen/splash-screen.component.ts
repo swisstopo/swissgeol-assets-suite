@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core';
-import { AuthService, AuthState } from '@asset-sg/auth';
 import { CURRENT_LANG } from '@asset-sg/client-shared';
 import { TranslateService } from '@ngx-translate/core';
+import { AuthService, AuthState } from '../../features/auth/auth.service';
 
 @Component({
   selector: 'app-splash-screen',
