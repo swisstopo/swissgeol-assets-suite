@@ -65,7 +65,6 @@ export class AuthService {
               this.dialogService.open(DisclaimerDialogComponent, {
                 width: '500px',
                 disableClose: true,
-                backdropClass: 'disclaimer-backdrop-color',
               });
             }
           }
