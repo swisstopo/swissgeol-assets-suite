@@ -125,6 +125,7 @@ export const enAppTranslations: AppTranslations = {
         alternativeId: 'Alternative ID',
         alternativeIdDescription: 'Alternative ID Description',
         addNewAlternativeId: 'Add new alternative ID',
+        referencesWarning: 'In order to change the workgroup, you must first remove all references.',
       },
       files: {
         tabName: 'Files',

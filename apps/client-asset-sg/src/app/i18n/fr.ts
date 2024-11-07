@@ -126,6 +126,7 @@ export const frAppTranslations: AppTranslations = {
         alternativeId: 'ID alternative',
         alternativeIdDescription: "Description d'ID alternative",
         addNewAlternativeId: 'Ajouter une nouvelle ID alternative',
+        referencesWarning: 'Pour changer le groupe de travail, vous devez d’abord supprimer toutes les références.',
       },
       files: {
         tabName: 'Fichiers',

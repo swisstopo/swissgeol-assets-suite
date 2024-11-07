@@ -111,7 +111,6 @@ export class AssetEditRepo implements Repo<AssetEditDetail, number, AssetEditDat
     if (count === 0) {
       return null;
     }
-
     // Run the update in a transaction, as it consists of multiple prisma queries.
     // Note that all mutations within this transaction are no-ops if there is no asset for `id`.
     await this.prismaService.$transaction(async () => {
@@ -127,7 +126,7 @@ export class AssetEditRepo implements Repo<AssetEditDetail, number, AssetEditDat
           assetKindItemCode: data.patch.assetKindItemCode,
           assetFormatItemCode: data.patch.assetFormatItemCode,
           isNatRel: data.patch.isNatRel,
-          assetMainId: O.toUndefined(data.patch.assetMainId),
+          assetMainId: O.toNullable(data.patch.assetMainId),
           lastProcessedDate: new Date(),
           processor: data.user.email,
           manCatLabelRefs: {

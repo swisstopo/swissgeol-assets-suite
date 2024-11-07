@@ -125,6 +125,7 @@ export const itAppTranslations: AppTranslations = {
         alternativeId: 'IT Alternativ-ID',
         alternativeIdDescription: 'IT Beschreibung Alternativ-ID',
         addNewAlternativeId: 'IT Neue Alternativ-ID hinzufügen',
+        referencesWarning: 'IT Um die Arbeitsgruppe zu ändern, müssen Sie erst alle Verweise entfernen.',
       },
       files: {
         tabName: 'IT Dateien',

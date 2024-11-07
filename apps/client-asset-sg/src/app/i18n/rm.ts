@@ -125,6 +125,7 @@ export const rmAppTranslations: AppTranslations = {
         alternativeId: 'RM Alternativ-ID',
         alternativeIdDescription: 'RM Beschreibung Alternativ-ID',
         addNewAlternativeId: 'RM Neue Alternativ-ID hinzufügen',
+        referencesWarning: 'RM Um die Arbeitsgruppe zu ändern, müssen Sie erst alle Verweise entfernen.',
       },
       files: {
         tabName: 'RM Dateien',
