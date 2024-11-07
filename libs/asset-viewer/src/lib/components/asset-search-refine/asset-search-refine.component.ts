@@ -93,7 +93,7 @@ export class AssetSearchRefineComponent implements OnInit, OnDestroy, AfterViewI
   }
 
   public removePolygon() {
-    this.store.dispatch(actions.removePolygon());
+    this.store.dispatch(actions.clearPolygon());
   }
 
   public toggleDrawPolygon() {
@@ -108,7 +108,7 @@ export class AssetSearchRefineComponent implements OnInit, OnDestroy, AfterViewI
 
   public updateSearch(filterConfiguration: Partial<AssetSearchQuery>) {
     if (this.isFiltersOpen) {
-      this.store.dispatch(actions.search({ query: filterConfiguration }));
+      this.store.dispatch(actions.mergeQuery({ query: filterConfiguration }));
     }
   }
 

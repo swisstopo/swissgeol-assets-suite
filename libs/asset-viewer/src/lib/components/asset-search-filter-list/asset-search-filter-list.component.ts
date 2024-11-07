@@ -23,7 +23,7 @@ export class AssetSearchFilterListComponent<T> {
       activeValues.add(filter.value);
     }
     this.store.dispatch(
-      actions.search({
+      actions.mergeQuery({
         query: { [filter.queryKey]: activeValues.size > 0 ? [...activeValues] : undefined },
       })
     );

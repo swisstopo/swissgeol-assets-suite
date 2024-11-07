@@ -1,24 +1,24 @@
 import { inject, Injectable } from '@angular/core';
 import { ActivatedRoute, Params, Router } from '@angular/router';
-import { AppState, assetsPageMatcher, fromAppShared } from '@asset-sg/client-shared';
-import { deepEqual, isDecodeError, isNotNull, ORD } from '@asset-sg/core';
-import { AssetSearchQuery, AssetSearchResult, LV95, Polygon } from '@asset-sg/shared';
-import * as RD from '@devexperts/remote-data-ts';
+import { AppState } from '@asset-sg/client-shared';
+import { isNotNull, ORD, isNull } from '@asset-sg/core';
+import { AssetSearchQuery, LV95, Polygon } from '@asset-sg/shared';
+import { AuthService } from '@asset-sg/auth';
 import { UntilDestroy } from '@ngneat/until-destroy';
-import { Actions, concatLatestFrom, createEffect, ofType } from '@ngrx/effects';
-import { ROUTER_NAVIGATED } from '@ngrx/router-store';
+import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { Store } from '@ngrx/store';
-import * as D from 'io-ts/Decoder';
-import { EMPTY, filter, map, merge, of, shareReplay, switchMap, takeUntil, withLatestFrom } from 'rxjs';
+import { combineLatest, filter, map, of, switchMap, take, withLatestFrom } from 'rxjs';
 
 import { AllStudyService } from '../../services/all-study.service';
 import { AssetSearchService } from '../../services/asset-search.service';
 
 import * as actions from './asset-search.actions';
+import { LoadingState } from './asset-search.reducer';
 import {
+  selectAssetDetailLoadingState,
+  selectAssetSearchIsInitialized,
   selectAssetSearchNoActiveFilters,
   selectAssetSearchQuery,
-  selectAssetSearchResultData,
   selectCurrentAssetDetail,
   selectStudies,
 } from './asset-search.selector';
@@ -32,183 +32,46 @@ export class AssetSearchEffects {
   private readonly route = inject(ActivatedRoute);
   private readonly assetSearchService = inject(AssetSearchService);
   private readonly allStudyService = inject(AllStudyService);
+  private readonly authService = inject(AuthService);
 
-  constructor() {
-    merge(this.store.select(fromAppShared.selectRDReferenceData))
-      .pipe(
-        filter(RD.isFailure),
-        map((e) => e.error),
-        filter(isDecodeError)
-      )
-      .subscribe((e) => {
-        console.error('DecodeError', D.draw(e.cause));
-      });
-  }
-
-  public loadSearch$ = createEffect(() =>
+  public updateQueryFromParams$ = createEffect(() =>
     this.actions$.pipe(
-      ofType(actions.search, actions.resetSearch, actions.removePolygon),
-      withLatestFrom(this.store.select(selectAssetSearchQuery)),
-      map(([_, query]) => actions.loadSearch({ query }))
-    )
-  );
-
-  public assetResults$ = createEffect(() =>
-    this.actions$.pipe(
-      ofType(actions.loadSearch),
-      switchMap(({ query }) =>
-        this.assetSearchService
-          .search(query)
-          .pipe(map((searchResults: AssetSearchResult) => actions.updateSearchResults({ searchResults })))
-      )
-    )
-  );
-
-  public assetStats$ = createEffect(() =>
-    this.actions$.pipe(
-      ofType(actions.loadSearch),
-      switchMap(({ query }) =>
-        this.assetSearchService
-          .updateSearchResultStats(query)
-          .pipe(map((searchStats) => actions.updateStats({ searchStats })))
-      )
-    )
-  );
-
-  public toggleAssetDetail$ = createEffect(() => {
-    return this.actions$.pipe(
-      ofType(actions.assetClicked),
-      withLatestFrom(this.store.select(selectCurrentAssetDetail)),
-      switchMap(([{ assetId }, currentAssetDetail]) =>
-        assetId !== currentAssetDetail?.assetId
-          ? this.assetSearchService
-              .loadAssetDetailData(assetId)
-              .pipe(map((assetDetail) => actions.updateAssetDetail({ assetDetail })))
-          : of(actions.resetAssetDetail())
-      )
-    );
-  });
-
-  public showAssetDetail$ = createEffect(() => {
-    return this.actions$.pipe(
-      ofType(actions.showAssetDetail),
-      withLatestFrom(this.store.select(selectCurrentAssetDetail)),
-      switchMap(([{ assetId }, currentAssetDetail]) =>
-        assetId !== currentAssetDetail?.assetId
-          ? this.assetSearchService
-              .loadAssetDetailData(assetId)
-              .pipe(map((assetDetail) => actions.updateAssetDetail({ assetDetail })))
-          : EMPTY
-      )
-    );
-  });
-
-  public closeDetailOnUpdateSearch$ = createEffect(() => {
-    return this.actions$.pipe(
-      ofType(actions.search, actions.resetSearch, actions.removePolygon),
-      map(() => actions.resetAssetDetail())
-    );
-  });
-
-  public openSearchResults$ = createEffect(() => {
-    return this.actions$.pipe(
-      ofType(actions.updateSearchResults),
-      takeUntil(this.actions$.pipe(ofType(actions.manualToggleResult))),
-      withLatestFrom(this.store.select(selectAssetSearchNoActiveFilters)),
-      map(([_, showStudies]) => (showStudies ? actions.closeResults() : actions.openResults()))
-    );
-  });
-
-  public closeSearchResults$ = createEffect(() => {
-    return this.actions$.pipe(
-      ofType(actions.updateSearchResults),
-      withLatestFrom(this.store.select(selectAssetSearchNoActiveFilters)),
-      filter(([_, showStudies]) => showStudies),
-      map(() => actions.closeResults())
-    );
-  });
-
-  public loadStudies$ = createEffect(() => {
-    return this.actions$.pipe(
-      ofType(actions.initializeSearch),
-      switchMap(() => this.store.select(selectStudies)),
-      filter((x) => !x),
-      switchMap(() => this.allStudyService.getAllStudies().pipe(ORD.fromFilteredSuccess)),
-      map((studies) => actions.setStudies({ studies }))
-    );
-  });
-
-  /**
-   * Query Parameter Interactions
-   */
-  public queryParams$ = this.actions$.pipe(
-    ofType(ROUTER_NAVIGATED),
-    filter((x) => assetsPageMatcher(x.payload.routerState.root.firstChild.url) !== null),
-    map(({ payload }) => {
-      const params = payload.routerState.root.queryParams;
-      const query: AssetSearchQuery = {};
-      const assetId: number | undefined = readNumberParam(params, QUERY_PARAM_MAPPING.assetId);
-      query.text = readStringParam(params, QUERY_PARAM_MAPPING.text);
-      query.polygon = readPolygonParam(params, QUERY_PARAM_MAPPING.polygon);
-      query.authorId = readNumberParam(params, QUERY_PARAM_MAPPING.authorId);
-      const min = readDateParam(params, QUERY_PARAM_MAPPING.createDate.min);
-      const max = readDateParam(params, QUERY_PARAM_MAPPING.createDate.max);
-      query.createDate = min && max ? { min, max } : undefined;
-      query.manCatLabelItemCodes = readArrayParam(params, QUERY_PARAM_MAPPING.manCatLabelItemCodes);
-      query.assetKindItemCodes = readArrayParam(params, QUERY_PARAM_MAPPING.assetKindItemCodes);
-      query.usageCodes = readArrayParam(params, QUERY_PARAM_MAPPING.usageCodes);
-      query.geometryCodes = readArrayParam(params, QUERY_PARAM_MAPPING.geometryCodes);
-      query.languageItemCodes = readArrayParam(params, QUERY_PARAM_MAPPING.languageItemCodes);
-      query.workgroupIds = readArrayParam<number>(params, QUERY_PARAM_MAPPING.workgroupIds);
-      return { query, assetId };
-    }),
-    shareReplay()
-  );
-
-  public readSearchQueryParams$ = createEffect(() =>
-    this.queryParams$.pipe(
-      withLatestFrom(
-        this.store.select(selectAssetSearchQuery),
-        this.store.select(selectAssetSearchResultData).pipe(map((r) => r.length > 0))
-      ),
-      filter(([params, storeQuery]) => !deepEqual(params.query, storeQuery)),
-      map(([params, storeQuery, searchResultsLoaded]) => {
-        const paramsEmpty = Object.values(params.query).every((v) => v == null);
-        if (paramsEmpty) {
-          if (searchResultsLoaded) {
-            return actions.updateQueryParams();
-          } else {
-            return actions.loadSearch({ query: storeQuery });
-          }
-        } else {
-          return actions.search({ query: params.query });
-        }
+      ofType(actions.initialize),
+      switchMap(() => this.route.queryParams.pipe(take(1))),
+      map((params) => {
+        const query: AssetSearchQuery = {};
+        const assetId = readNumberParam(params, QUERY_PARAM_MAPPING.assetId);
+        query.text = readStringParam(params, QUERY_PARAM_MAPPING.text);
+        query.polygon = readPolygonParam(params, QUERY_PARAM_MAPPING.polygon);
+        query.authorId = readNumberParam(params, QUERY_PARAM_MAPPING.authorId);
+        const min = readDateParam(params, QUERY_PARAM_MAPPING.createDate.min);
+        const max = readDateParam(params, QUERY_PARAM_MAPPING.createDate.max);
+        query.createDate = min && max ? { min, max } : undefined;
+        query.manCatLabelItemCodes = readArrayParam(params, QUERY_PARAM_MAPPING.manCatLabelItemCodes);
+        query.assetKindItemCodes = readArrayParam(params, QUERY_PARAM_MAPPING.assetKindItemCodes);
+        query.usageCodes = readArrayParam(params, QUERY_PARAM_MAPPING.usageCodes);
+        query.geometryCodes = readArrayParam(params, QUERY_PARAM_MAPPING.geometryCodes);
+        query.languageItemCodes = readArrayParam(params, QUERY_PARAM_MAPPING.languageItemCodes);
+        query.workgroupIds = readArrayParam<number>(params, QUERY_PARAM_MAPPING.workgroupIds);
+        return actions.runInitialSearch({ assetId, query });
       })
     )
   );
 
-  public readAssetIdQueryParam$ = createEffect(() =>
-    this.queryParams$.pipe(
-      withLatestFrom(this.store.select(selectCurrentAssetDetail)),
-      filter(([params, storeAssetDetail]) => params.assetId !== storeAssetDetail?.assetId),
-      map(([params, storeAssetDetail]) => {
-        const assetId = storeAssetDetail?.assetId ?? params.assetId;
-        return assetId === undefined ? actions.resetAssetDetail() : actions.showAssetDetail({ assetId });
-      })
-    )
-  );
-
-  public updateQueryParams$ = createEffect(
+  public updateParamsFromQuery$ = createEffect(
     () =>
-      this.actions$.pipe(
-        ofType(actions.updateQueryParams, actions.updateAssetDetail, actions.resetAssetDetail, actions.loadSearch),
-        concatLatestFrom(() => [
-          this.store.select(selectAssetSearchQuery),
-          this.store.select(selectCurrentAssetDetail),
-          this.queryParams$,
-        ]),
-        switchMap(([_, query, assetDetail, queryParams]) => {
-          const params: Params = { assetId: assetDetail?.assetId ?? queryParams.assetId };
+      combineLatest([
+        this.store.select(selectAssetSearchQuery),
+        this.store.select(selectCurrentAssetDetail),
+        this.store.select(selectAssetDetailLoadingState),
+        this.store.select(selectAssetSearchIsInitialized),
+      ]).pipe(
+        filter(([_query, _asset, _state, isInitialized]) => isInitialized),
+        withLatestFrom(this.authService.isInitialized$),
+        filter(([_search, isInitialized]) => isInitialized),
+        map(([search]) => search),
+        switchMap(([query, asset, assetLoadingState]) => {
+          const params: Params = {};
           updatePlainParam(params, QUERY_PARAM_MAPPING.text, query.text);
           updateArrayParam(
             params,
@@ -224,11 +87,113 @@ export class AssetSearchEffects {
           updateArrayParam(params, QUERY_PARAM_MAPPING.geometryCodes, query.geometryCodes);
           updateArrayParam(params, QUERY_PARAM_MAPPING.languageItemCodes, query.languageItemCodes);
           updateArrayParam(params, QUERY_PARAM_MAPPING.workgroupIds, query.workgroupIds);
-          return this.router.navigate([], { queryParams: params });
+          if (assetLoadingState !== LoadingState.Loading) {
+            updatePlainParam(params, QUERY_PARAM_MAPPING.assetId, asset?.assetId);
+          }
+          return this.router.navigate([], { queryParams: params, queryParamsHandling: 'merge' });
         })
       ),
     { dispatch: false }
   );
+
+  public initializeAsset$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(actions.runInitialSearch),
+      map(({ assetId }) => (assetId == null ? actions.clearSelectedAsset() : actions.selectAsset({ assetId })))
+    )
+  );
+
+  public initializeQuery$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(actions.runInitialSearch),
+      map(({ query }) => actions.search({ query }))
+    )
+  );
+
+  public mergeQuery$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(actions.mergeQuery),
+      withLatestFrom(this.store.select(selectAssetSearchQuery)),
+      map(([{ query: nextQuery }, currentQuery]) => {
+        return actions.search({ query: { ...currentQuery, ...nextQuery } });
+      })
+    )
+  );
+
+  public loadSelectedAsset$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(actions.selectAsset),
+      switchMap(({ assetId }) => this.assetSearchService.fetchAssetEditDetail(assetId)),
+      map((asset) => actions.setSelectedAsset({ asset }))
+    )
+  );
+
+  public loadStudies$ = createEffect(() => {
+    return this.actions$.pipe(
+      ofType(actions.initialize),
+      switchMap(() => this.store.select(selectStudies).pipe(take(1))),
+      filter(isNull),
+      switchMap(() => this.allStudyService.getAllStudies().pipe(ORD.fromFilteredSuccess)),
+      map((studies) => actions.setStudies({ studies }))
+    );
+  });
+
+  public triggerSearchExecution$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(actions.search, actions.resetSearch, actions.clearPolygon),
+      switchMap((action) => {
+        if ('query' in action) {
+          return of(action.query);
+        }
+        return this.store.select(selectAssetSearchQuery).pipe(take(1));
+      }),
+      map((query) => actions.executeSearch({ query }))
+    )
+  );
+
+  public loadResults$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(actions.executeSearch),
+      switchMap(({ query }) => this.assetSearchService.search(query)),
+      map((results) => actions.updateResults({ results }))
+    )
+  );
+
+  public loadStats$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(actions.executeSearch),
+      switchMap(({ query }) => this.assetSearchService.searchStats(query)),
+      map((stats) => actions.updateStats({ stats }))
+    )
+  );
+
+  public toggleResultsTable$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(actions.updateResults),
+      map(({ results }) => results.page.total !== 0),
+      withLatestFrom(this.store.select(selectAssetSearchNoActiveFilters)),
+      map(([hasResults, hasNoFilters]) =>
+        !hasResults || hasNoFilters ? actions.closeResults() : actions.openResults()
+      )
+    )
+  );
+
+  public handleAssetClick$ = createEffect(() => {
+    return this.actions$.pipe(
+      ofType(actions.assetClicked),
+      withLatestFrom(this.store.select(selectCurrentAssetDetail)),
+      map(([{ assetId }, currentAssetDetail]) =>
+        assetId === currentAssetDetail?.assetId ? actions.clearSelectedAsset() : actions.selectAsset({ assetId })
+      )
+    );
+  });
+
+  public closeDetailOnUpdateSearch$ = createEffect(() => {
+    return this.actions$.pipe(
+      ofType(actions.search),
+      map(() => actions.clearSelectedAsset())
+    );
+  });
 }
 
 const QUERY_PARAM_MAPPING = {
@@ -249,11 +214,7 @@ const QUERY_PARAM_MAPPING = {
 };
 
 const updatePlainParam = (params: Params, name: string, value: string | number | undefined): void => {
-  if (value == null) {
-    delete params[name];
-    return;
-  }
-  params[name] = value;
+  params[name] = value == null || value === '' ? null : value;
 };
 
 const updateDateParam = (params: Params, name: string, value: Date | undefined): void => {

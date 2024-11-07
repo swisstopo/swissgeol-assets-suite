@@ -10,6 +10,7 @@ import {
   ViewChild,
   ViewContainerRef,
 } from '@angular/core';
+import { AuthService } from '@asset-sg/auth';
 import { AppPortalService, AppState, LifecycleHooks, LifecycleHooksDirective } from '@asset-sg/client-shared';
 import { AssetEditDetail } from '@asset-sg/shared';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
@@ -22,6 +23,7 @@ import {
   asyncScheduler,
   combineLatest,
   filter,
+  identity,
   map,
   Observable,
   observeOn,
@@ -29,6 +31,7 @@ import {
   share,
   Subject,
   switchMap,
+  take,
   withLatestFrom,
 } from 'rxjs';
 
@@ -92,9 +95,14 @@ export class AssetViewerPageComponent implements OnInit, OnDestroy {
   public assetsForPicker$: Observable<AssetEditDetail[]>;
   public highlightedAssetId: number | null = null;
 
+  private readonly authService = inject(AuthService);
+
   public ngOnInit() {
-    this._store.dispatch(actions.initializeSearch());
     this._store.dispatch(actions.openFilters());
+
+    this.authService.isInitialized$.pipe(filter(identity), take(1)).subscribe(() => {
+      this._store.dispatch(actions.initialize());
+    });
     this._appPortalService.setAppBarPortalContent(null);
   }
 
@@ -154,8 +162,8 @@ export class AssetViewerPageComponent implements OnInit, OnDestroy {
       .pipe(
         map(
           flow(
-            O.map((text) => actions.search({ query: { text } })),
-            O.getOrElseW(() => actions.clearSearchText())
+            O.map((text) => actions.mergeQuery({ query: { text } })),
+            O.getOrElseW(() => actions.mergeQuery({ query: { text: '' } }))
           )
         )
       )

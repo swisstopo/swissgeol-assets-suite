@@ -4,7 +4,7 @@
       {{ "search.searchResults" | translate }}:
       <asset-sg-animate-number [nextValue]="(total$ | async) ?? 0" />
     </div>
-    <button asset-sg-icon-button style="width: unset" (click)="toggleResultsOpen(isResultsOpen)">
+    <button asset-sg-icon-button style="width: unset" (click)="toggleResultsOpen()">
       <span> {{ (isResultsOpen ? "search.hideTable" : "search.showTable") | translate }} </span>
       <svg-icon [key]="isResultsOpen ? 'arrow-down' : 'arrow-up'"></svg-icon>
     </button>
