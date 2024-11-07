@@ -1,0 +1,20 @@
+:host {
+  --stroke-color: #295969;
+  --fill-color: transparent;
+
+  color: var(--stroke-color);
+  cursor: pointer;
+}
+
+:host > ::ng-deep svg-icon svg {
+  fill: var(--fill-color);
+}
+
+:host:hover,
+:host.is-active:hover {
+  --fill-color: #{lighten(#295969, 35%)};
+}
+
+:host.is-active {
+  --fill-color: var(--stroke-color);
+}

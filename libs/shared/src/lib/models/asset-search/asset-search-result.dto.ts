@@ -21,6 +21,7 @@ export class AssetSearchStatsDTO implements AssetSearchStats {
   manCatLabelItemCodes!: ValueCount<string>[];
   usageCodes!: ValueCount<UsageCode>[];
   workgroupIds!: ValueCount<number>[];
+  categories!: ValueCount<'favorites'>[];
 
   @Type(() => DateRangeDTO)
   createDate!: DateRangeDTO | null;

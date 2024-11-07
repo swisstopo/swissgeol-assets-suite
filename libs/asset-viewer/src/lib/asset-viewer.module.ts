@@ -40,6 +40,7 @@ import {
   ValueItemNamePipe,
   ZoomControlsComponent,
 } from '@asset-sg/client-shared';
+import { FavoritesModule } from '@asset-sg/favorites';
 import { SvgIconComponent } from '@ngneat/svg-icon';
 import { EffectsModule } from '@ngrx/effects';
 import { StoreModule } from '@ngrx/store';
@@ -51,7 +52,7 @@ import { de } from 'date-fns/locale/de';
 
 import { AssetPickerComponent } from './components/asset-picker';
 import { AssetSearchDetailComponent } from './components/asset-search-detail';
-import { AssetSearchFilterListComponent } from './components/asset-search-filter-list/asset-search-filter-list.component';
+import { AssetSearchFilterComponent } from './components/asset-search-filter/asset-search-filter.component';
 import { AssetSearchRefineComponent } from './components/asset-search-refine';
 import { AssetSearchResultsComponent } from './components/asset-search-results';
 import { AssetViewerFilesComponent } from './components/asset-viewer-files/asset-viewer-files.component';
@@ -69,13 +70,14 @@ import { mapControlReducer } from './state/map-control/map-control.reducer';
     MapControlsComponent,
     AssetSearchDetailComponent,
     AssetSearchRefineComponent,
-    AssetSearchFilterListComponent,
+    AssetSearchFilterComponent,
     AssetSearchResultsComponent,
     AssetViewerFilesComponent,
     AssetPickerComponent,
   ],
   imports: [
     CommonModule,
+    FavoritesModule,
     RouterModule.forChild([
       {
         path: '',

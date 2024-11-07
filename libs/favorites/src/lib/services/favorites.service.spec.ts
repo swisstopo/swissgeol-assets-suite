@@ -1,19 +1,20 @@
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 
-import { Favourite, FavouriteService } from './favourite.service';
+import { AssetId } from '@asset-sg/shared/v2';
+import { FavoritesService } from './favorites.service';
 
-describe('FavouriteService', () => {
-  let service: FavouriteService;
+describe(FavoritesService, () => {
+  let service: FavoritesService;
   let httpMock: HttpTestingController;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [HttpClientTestingModule],
-      providers: [FavouriteService],
+      providers: [FavoritesService],
     });
 
-    service = TestBed.inject(FavouriteService);
+    service = TestBed.inject(FavoritesService);
     httpMock = TestBed.inject(HttpTestingController);
   });
 
@@ -25,16 +26,16 @@ describe('FavouriteService', () => {
     expect(service).toBeTruthy();
   });
 
-  it('should retrieve favourites from API via GET', () => {
-    const dummyFavourites: Favourite[] = [{}, {}, {}];
+  it('should retrieve favorites from API via GET', () => {
+    const ids: Array<AssetId> = [234, 34, 29];
 
-    service.getFavourites().subscribe((favourites) => {
-      expect(favourites.length).toBe(3);
-      expect(favourites).toEqual(dummyFavourites);
+    service.fetchIds().subscribe((favorites) => {
+      expect(favorites.length).toBe(3);
+      expect(favorites).toEqual(ids);
     });
 
-    const request = httpMock.expectOne(`/api/users/current/favorites`);
+    const request = httpMock.expectOne(`/api/assets/favorites/ids`);
     expect(request.request.method).toBe('GET');
-    request.flush(dummyFavourites);
+    request.flush(ids);
   });
 });

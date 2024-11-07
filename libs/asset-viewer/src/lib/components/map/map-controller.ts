@@ -56,6 +56,8 @@ export class MapController {
 
   private showHeatmap = true;
 
+  private isInitialized = false;
+
   constructor(element: HTMLElement) {
     const view = new View({
       projection: 'EPSG:3857',
@@ -97,6 +99,7 @@ export class MapController {
     this.assetsHover$ = this.makeAssetsHover$();
 
     this.map.once('loadend', () => {
+      this.isInitialized = true;
       if (this.activeAsset === null) {
         const zoom = view.getZoom();
         if (zoom != null) {
@@ -184,7 +187,9 @@ export class MapController {
       this.sources.assets.clear();
       this.sources.assets.addFeatures(features);
       this.sources.picker.clear();
-      zoomToStudies(this.map, studies);
+      if (this.isInitialized) {
+        zoomToStudies(this.map, studies);
+      }
     });
   }
 

@@ -60,14 +60,30 @@ export class AppLogger implements LoggerService {
     if (!(message instanceof Error)) {
       output += level.color(`${message}`);
     }
+    const suffix = [];
     if (params.length !== 0 && !(params.length === 1 && params[0] === undefined)) {
-      output += '  ' + stringify(params, level);
+      let i = 0;
+      while (typeof params[i] === 'string') {
+        const line = params[i] as string;
+        suffix.push(line);
+        i += 1;
+        if (i >= params.length || line.endsWith('\n')) {
+          break;
+        }
+      }
+      params = params.slice(i);
+      if (params.length !== 0) {
+        output += '  ' + stringify(params, level);
+      }
     }
+    const args: unknown[] = [`${prefix} ${output}`];
     if (message instanceof Error) {
-      console.log(`${prefix} ${output}`, message);
-    } else {
-      console.log(`${prefix} ${output}`);
+      args.push(message);
     }
+    if (suffix.length !== 0) {
+      args.push(level.color(`\n${suffix.join('\n')}`));
+    }
+    console.log(...args);
   }
 }
 

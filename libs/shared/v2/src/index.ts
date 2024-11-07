@@ -12,6 +12,7 @@ export * from './lib/policies/base/policy';
 export * from './lib/policies/asset.policy';
 export * from './lib/policies/asset-edit.policy';
 export * from './lib/policies/contact.policy';
+export * from './lib/policies/favorite.policy';
 export * from './lib/policies/workgroup.policy';
 
 export * from './lib/schemas/base/schema';

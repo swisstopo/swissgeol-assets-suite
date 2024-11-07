@@ -67,7 +67,7 @@ model Asset {
 
   assetInternalProjects AssetInternalProject[]
   subordinateAssets     Asset[]                @relation("asset")
-  AssetUserFavourite    AssetUserFavourite[]
+  favorites             Favorite[]
   allStudies            AllStudy[]
 
   @@map("asset")
@@ -636,28 +636,15 @@ model StatusWorkItem {
 }
 
 model AssetUser {
-  id                 String               @id @db.Uuid
-  email              String
-  lang               String
-  oidcId             String
-  AssetUserFavourite AssetUserFavourite[]
-  workgroups         WorkgroupsOnUsers[]
-  isAdmin            Boolean              @default(false) @map("is_admin")
+  id         String              @id @db.Uuid
+  email      String
+  lang       String
+  oidcId     String
+  favorites  Favorite[]
+  workgroups WorkgroupsOnUsers[]
+  isAdmin    Boolean             @default(false) @map("is_admin")
 
   @@map("asset_user")
-}
-
-model AssetUserFavourite {
-  assetUserId String    @map("asset_user_id") @db.Uuid
-  AssetUser   AssetUser @relation(fields: [assetUserId], references: [id], onDelete: Cascade)
-
-  assetId Int   @map("asset_id")
-  Asset   Asset @relation(fields: [assetId], references: [assetId], onDelete: Cascade)
-
-  created_at DateTime @db.Timestamptz(6)
-
-  @@id([assetUserId, assetId])
-  @@map("asset_user_favourite")
 }
 
 model Workgroup {
@@ -686,6 +673,17 @@ enum Role {
   Viewer       @map("viewer")
   Editor       @map("editor")
   MasterEditor @map("master-editor")
+}
+
+model Favorite {
+  userId String    @map("user_id") @db.Uuid
+  user   AssetUser @relation(fields: [userId], references: [id])
+
+  assetId Int   @map("asset_id")
+  Asset   Asset @relation(fields: [assetId], references: [assetId])
+
+  @@id([userId, assetId])
+  @@map("favorite")
 }
 
 view AllStudy {

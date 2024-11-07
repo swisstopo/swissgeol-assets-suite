@@ -1,10 +1,10 @@
 /* eslint-disable */
 export default {
-  displayName: 'favourite',
+  displayName: 'favorites',
   preset: '../../jest.preset.js',
   setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
   globals: {},
-  coverageDirectory: '../../coverage/libs/favourite',
+  coverageDirectory: '../../coverage/libs/favorites',
   transform: {
     '^.+\\.(ts|mjs|js|html)$': [
       'jest-preset-angular',

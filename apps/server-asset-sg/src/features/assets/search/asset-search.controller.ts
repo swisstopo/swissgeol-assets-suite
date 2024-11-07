@@ -35,7 +35,7 @@ export class AssetSearchController {
     limit = limit == null ? limit : Number(limit);
     offset = offset == null ? offset : Number(offset);
     restrictQueryForUser(query, user);
-    const result = await this.assetSearchService.search(query, { limit, offset, decode: false });
+    const result = await this.assetSearchService.search(query, user, { limit, offset, decode: false });
     return plainToInstance(AssetSearchResultDTO, result);
   }
 
@@ -48,7 +48,7 @@ export class AssetSearchController {
     @CurrentUser() user: User
   ): Promise<AssetSearchStats> {
     restrictQueryForUser(query, user);
-    const stats = await this.assetSearchService.aggregate(query);
+    const stats = await this.assetSearchService.aggregate(query, user);
     return plainToInstance(AssetSearchStatsDTO, stats);
   }
 }

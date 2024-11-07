@@ -29,17 +29,7 @@ export interface AppStateWithAssetSearch extends AppState {
 }
 
 const initialState: AssetSearchState = {
-  query: {
-    text: undefined,
-    polygon: undefined,
-    authorId: undefined,
-    createDate: undefined,
-    manCatLabelItemCodes: undefined,
-    assetKindItemCodes: undefined,
-    usageCodes: undefined,
-    geometryCodes: undefined,
-    languageItemCodes: undefined,
-  },
+  query: {},
   results: {
     page: {
       size: 0,

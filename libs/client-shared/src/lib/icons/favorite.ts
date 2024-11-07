@@ -1,4 +1,4 @@
-export const favouriteIcon = {
+export const favoriteIcon = {
   data: `
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg">
       <g transform="translate(1, 1)">
@@ -6,5 +6,5 @@ export const favouriteIcon = {
       </g>
     </svg>
   `,
-  name: 'favourite' as const,
+  name: 'favorite' as const,
 };

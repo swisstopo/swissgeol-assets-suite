@@ -26,6 +26,9 @@ export const deAppTranslations = {
       nameTaken: "Der Name '{{name}}' wird bereits von einer anderen Arbeitsgruppe verwendet.",
     },
   },
+  favorites: {
+    title: 'Favoriten',
+  },
   menuBar: {
     filters: 'Filter',
     admin: 'Verwaltung',
