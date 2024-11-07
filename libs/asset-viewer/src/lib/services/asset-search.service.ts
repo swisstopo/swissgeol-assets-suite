@@ -25,15 +25,15 @@ export class AssetSearchService {
     );
   }
 
-  public loadAssetDetailData(assetId: number): Observable<AssetEditDetail> {
-    return this._httpClient
-      .get(`/api/asset-edit/${assetId}`)
-      .pipe(map((res) => (AssetEditDetail.decode(res) as E.Right<AssetEditDetail>).right));
-  }
-
-  public updateSearchResultStats(searchQuery: AssetSearchQuery): Observable<AssetSearchStats> {
+  public searchStats(searchQuery: AssetSearchQuery): Observable<AssetSearchStats> {
     return this._httpClient
       .post('/api/assets/search/stats', searchQuery)
       .pipe(map((res) => plainToInstance(AssetSearchStatsDTO, res)));
+  }
+
+  public fetchAssetEditDetail(assetId: number): Observable<AssetEditDetail> {
+    return this._httpClient
+      .get(`/api/asset-edit/${assetId}`)
+      .pipe(map((res) => (AssetEditDetail.decode(res) as E.Right<AssetEditDetail>).right));
   }
 }

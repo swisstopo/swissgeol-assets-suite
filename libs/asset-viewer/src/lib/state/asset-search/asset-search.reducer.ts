@@ -15,6 +15,7 @@ export interface AssetSearchState {
   query: AssetSearchQuery;
   results: AssetSearchResult;
   stats: AssetSearchStats;
+  isInitialized: boolean;
   currentAsset: AssetEditDetail | undefined;
   resultsLoadingState: LoadingState;
   filterLoadingState: LoadingState;
@@ -29,17 +30,8 @@ export interface AppStateWithAssetSearch extends AppState {
 }
 
 const initialState: AssetSearchState = {
-  query: {
-    text: undefined,
-    polygon: undefined,
-    authorId: undefined,
-    createDate: undefined,
-    manCatLabelItemCodes: undefined,
-    assetKindItemCodes: undefined,
-    usageCodes: undefined,
-    geometryCodes: undefined,
-    languageItemCodes: undefined,
-  },
+  isInitialized: false,
+  query: {},
   results: {
     page: {
       size: 0,
@@ -71,6 +63,13 @@ const initialState: AssetSearchState = {
 export const assetSearchReducer = createReducer(
   initialState,
   on(
+    actions.runInitialSearch,
+    (state): AssetSearchState => ({
+      ...state,
+      isInitialized: true,
+    })
+  ),
+  on(
     actions.search,
     (state, { query }): AssetSearchState => ({
       ...state,
@@ -81,34 +80,56 @@ export const assetSearchReducer = createReducer(
     })
   ),
   on(
-    actions.loadSearch,
-    (state): AssetSearchState => ({
+    actions.updateResults,
+    (state, { results }): AssetSearchState => ({
       ...state,
-      resultsLoadingState: LoadingState.Loading,
-      filterLoadingState: LoadingState.Loading,
-    })
-  ),
-  on(
-    actions.updateSearchResults,
-    (state, { searchResults }): AssetSearchState => ({
-      ...state,
-      results: {
-        page: searchResults.page,
-        data: searchResults.data,
-      },
+      results,
       resultsLoadingState: LoadingState.Loaded,
     })
   ),
   on(
     actions.updateStats,
-    (state, { searchStats }): AssetSearchState => ({
+    (state, { stats }): AssetSearchState => ({
       ...state,
-      stats: searchStats,
+      stats,
       filterLoadingState: LoadingState.Loaded,
     })
   ),
   on(
-    actions.removePolygon,
+    actions.selectAsset,
+    (state): AssetSearchState => ({
+      ...state,
+      assetDetailLoadingState: LoadingState.Loading,
+    })
+  ),
+  on(
+    actions.setSelectedAsset,
+    (state, { asset }): AssetSearchState => ({
+      ...state,
+      currentAsset: asset,
+      assetDetailLoadingState: LoadingState.Loaded,
+    })
+  ),
+  on(
+    actions.clearSelectedAsset,
+    (state): AssetSearchState => ({
+      ...state,
+      currentAsset: initialState.currentAsset,
+      assetDetailLoadingState: initialState.assetDetailLoadingState,
+    })
+  ),
+  on(
+    appSharedStateActions.toggleSearchFilter,
+    (state): AssetSearchState => ({ ...state, isFiltersOpen: !state.isFiltersOpen })
+  ),
+  on(actions.openFilters, (state): AssetSearchState => ({ ...state, isFiltersOpen: true })),
+  on(actions.closeFilters, (state): AssetSearchState => ({ ...state, isFiltersOpen: false })),
+  on(actions.openResults, (state): AssetSearchState => ({ ...state, isResultsOpen: true })),
+  on(actions.closeResults, (state): AssetSearchState => ({ ...state, isResultsOpen: false })),
+  on(actions.toggleResults, (state): AssetSearchState => ({ ...state, isResultsOpen: !state.isResultsOpen })),
+  on(actions.setStudies, (state, { studies }): AssetSearchState => ({ ...state, studies })),
+  on(
+    actions.clearPolygon,
     (state): AssetSearchState => ({
       ...state,
       query: {
@@ -124,38 +145,5 @@ export const assetSearchReducer = createReducer(
       stats: state.stats,
     })
   ),
-  on(
-    actions.assetClicked,
-    (state): AssetSearchState => ({
-      ...state,
-      assetDetailLoadingState: LoadingState.Loading,
-    })
-  ),
-  on(
-    actions.updateAssetDetail,
-    (state, { assetDetail }): AssetSearchState => ({
-      ...state,
-      currentAsset: assetDetail,
-      assetDetailLoadingState: LoadingState.Loaded,
-    })
-  ),
-  on(
-    actions.resetAssetDetail,
-    (state): AssetSearchState => ({
-      ...state,
-      currentAsset: initialState.currentAsset,
-      assetDetailLoadingState: initialState.assetDetailLoadingState,
-    })
-  ),
-  on(appSharedStateActions.openPanel, (state): AssetSearchState => ({ ...state })),
-  on(actions.openFilters, (state): AssetSearchState => ({ ...state, isFiltersOpen: true })),
-  on(actions.closeFilters, (state): AssetSearchState => ({ ...state, isFiltersOpen: false })),
-  on(
-    appSharedStateActions.toggleSearchFilter,
-    (state): AssetSearchState => ({ ...state, isFiltersOpen: !state.isFiltersOpen })
-  ),
-  on(actions.openResults, (state): AssetSearchState => ({ ...state, isResultsOpen: true })),
-  on(actions.closeResults, (state): AssetSearchState => ({ ...state, isResultsOpen: false })),
-  on(actions.manualToggleResult, (state): AssetSearchState => ({ ...state, isResultsOpen: !state.isResultsOpen })),
-  on(actions.setStudies, (state, { studies }): AssetSearchState => ({ ...state, studies }))
+  on(appSharedStateActions.openPanel, (state): AssetSearchState => ({ ...state }))
 );

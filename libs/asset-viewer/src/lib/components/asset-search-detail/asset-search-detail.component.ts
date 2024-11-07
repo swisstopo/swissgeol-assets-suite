@@ -39,8 +39,8 @@ export class AssetSearchDetailComponent {
 
   public loadingState = this.store.select(selectAssetDetailLoadingState);
 
-  public resetAssetDetail() {
-    this.store.dispatch(actions.resetAssetDetail());
+  public clearSelectedAsset() {
+    this.store.dispatch(actions.clearSelectedAsset());
   }
 
   public searchForReferenceAsset(assetId: number) {
