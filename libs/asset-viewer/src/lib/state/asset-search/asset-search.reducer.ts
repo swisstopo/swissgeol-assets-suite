@@ -143,6 +143,7 @@ export const assetSearchReducer = createReducer(
     (state): AssetSearchState => ({
       ...initialState,
       stats: state.stats,
+      isInitialized: state.isInitialized,
     })
   ),
   on(appSharedStateActions.openPanel, (state): AssetSearchState => ({ ...state }))
