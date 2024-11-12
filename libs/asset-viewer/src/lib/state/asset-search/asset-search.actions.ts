@@ -4,8 +4,8 @@ import { createAction, props } from '@ngrx/store';
 import { AllStudyDTOs } from '../../models';
 
 export const initialize = createAction('[Asset Search] Initialize');
-export const runInitialSearch = createAction(
-  '[Asset Search] Run Initial Search',
+export const runCombinedSearch = createAction(
+  '[Asset Search] Run Combined Search',
   props<{
     assetId: number | undefined;
     query: AssetSearchQuery;

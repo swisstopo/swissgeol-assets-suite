@@ -1,5 +1,5 @@
 import { inject, Injectable } from '@angular/core';
-import { ActivatedRoute, NavigationStart, Params, Router } from '@angular/router';
+import { NavigationStart, Params, Router } from '@angular/router';
 import { AuthService } from '@asset-sg/auth';
 import { AppState, assetsPageMatcher } from '@asset-sg/client-shared';
 import { deepEqual, isNotNull, isNull, ORD } from '@asset-sg/core';
@@ -8,7 +8,7 @@ import { UntilDestroy } from '@ngneat/until-destroy';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { ROUTER_NAVIGATED } from '@ngrx/router-store';
 import { Store } from '@ngrx/store';
-import { combineLatest, filter, map, of, pairwise, switchMap, take, withLatestFrom } from 'rxjs';
+import { combineLatest, filter, map, of, switchMap, take, withLatestFrom } from 'rxjs';
 
 import { AllStudyService } from '../../services/all-study.service';
 import { AssetSearchService } from '../../services/asset-search.service';
@@ -20,7 +20,6 @@ import {
   selectAssetSearchIsInitialized,
   selectAssetSearchNoActiveFilters,
   selectAssetSearchQuery,
-  selectAssetSearchResultData,
   selectCurrentAssetDetail,
   selectStudies,
 } from './asset-search.selector';
@@ -30,8 +29,6 @@ import {
 export class AssetSearchEffects {
   private readonly store = inject(Store<AppState>);
   private readonly actions$ = inject(Actions);
-  // private readonly router = inject(Router);
-  private readonly route = inject(ActivatedRoute);
   private readonly assetSearchService = inject(AssetSearchService);
   private readonly allStudyService = inject(AllStudyService);
   private readonly authService = inject(AuthService);
@@ -39,13 +36,9 @@ export class AssetSearchEffects {
 
   constructor(private router: Router) {
     this.router.events
-      .pipe(
-        filter((event) => event instanceof NavigationStart),
-        pairwise()
-      )
-      .subscribe((events) => {
-        this.isLatestPage = (events[1] as NavigationStart).restoredState == null;
-        console.log(this.isLatestPage);
+      .pipe(filter((event): event is NavigationStart => event instanceof NavigationStart))
+      .subscribe((event) => {
+        this.isLatestPage = event.restoredState == null;
       });
   }
 
@@ -74,25 +67,21 @@ export class AssetSearchEffects {
 
   public readSearchQueryParams$ = createEffect(() =>
     this.queryParams$.pipe(
-      withLatestFrom(
-        this.store.select(selectAssetSearchQuery),
-        this.store.select(selectCurrentAssetDetail),
-        this.store.select(selectAssetSearchResultData).pipe(map((r) => r.length > 0))
-      ),
+      withLatestFrom(this.store.select(selectAssetSearchQuery), this.store.select(selectCurrentAssetDetail)),
       filter(([params, storeQuery, storeDetail]) => {
         return !deepEqual(params.query, storeQuery) || params.assetId != storeDetail?.assetId;
       }),
-      map(([params, storeQuery, storeDetail, searchResultsLoaded]) => {
+      map(([params, storeQuery, storeDetail]) => {
         const paramsEmpty = Object.values(params.query).every((v) => v == null);
-        const storeEmpty = Object.values(storeQuery).every((v) => v == null);
+        const storeQueryEmpty = Object.values(storeQuery).every((v) => v == null);
         if (paramsEmpty) {
-          if ((!storeEmpty || storeDetail) && this.isLatestPage) {
-            return actions.runInitialSearch({ query: storeQuery, assetId: storeDetail?.assetId });
+          if ((!storeQueryEmpty || storeDetail) && this.isLatestPage) {
+            return actions.runCombinedSearch({ query: storeQuery, assetId: storeDetail?.assetId });
           } else {
-            return actions.runInitialSearch({ query: params.query, assetId: params.assetId });
+            return actions.runCombinedSearch({ query: params.query, assetId: params.assetId });
           }
         } else {
-          return actions.runInitialSearch({ query: params.query, assetId: params.assetId });
+          return actions.runCombinedSearch({ query: params.query, assetId: params.assetId });
         }
       })
     )
@@ -105,13 +94,12 @@ export class AssetSearchEffects {
         this.store.select(selectCurrentAssetDetail),
         this.store.select(selectAssetDetailLoadingState),
         this.store.select(selectAssetSearchIsInitialized),
-        // this.route.queryParams,
       ]).pipe(
         filter(([_query, _asset, _state, isInitialized]) => isInitialized),
         withLatestFrom(this.authService.isInitialized$),
         filter(([_search, isInitialized]) => isInitialized),
         map(([search]) => search),
-        switchMap(([query, asset, assetLoadingState, _initialized]) => {
+        switchMap(([query, asset, assetLoadingState]) => {
           const params: Params = {};
           updatePlainParam(params, QUERY_PARAM_MAPPING.text, query.text);
           updateArrayParam(
@@ -139,14 +127,14 @@ export class AssetSearchEffects {
 
   public initializeAsset$ = createEffect(() =>
     this.actions$.pipe(
-      ofType(actions.runInitialSearch),
+      ofType(actions.runCombinedSearch),
       map(({ assetId }) => (assetId == null ? actions.clearSelectedAsset() : actions.selectAsset({ assetId })))
     )
   );
 
   public initializeQuery$ = createEffect(() =>
     this.actions$.pipe(
-      ofType(actions.runInitialSearch),
+      ofType(actions.runCombinedSearch),
       map(({ query }) => actions.search({ query }))
     )
   );
