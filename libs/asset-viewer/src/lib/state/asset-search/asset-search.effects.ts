@@ -8,7 +8,7 @@ import { UntilDestroy } from '@ngneat/until-destroy';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { ROUTER_NAVIGATED } from '@ngrx/router-store';
 import { Store } from '@ngrx/store';
-import { combineLatest, filter, map, of, switchMap, take, withLatestFrom } from 'rxjs';
+import { filter, map, of, startWith, switchMap, take, withLatestFrom } from 'rxjs';
 
 import { AllStudyService } from '../../services/all-study.service';
 import { AssetSearchService } from '../../services/asset-search.service';
@@ -21,6 +21,7 @@ import {
   selectAssetSearchNoActiveFilters,
   selectAssetSearchQuery,
   selectCurrentAssetDetail,
+  selectSearchLoadingState,
   selectStudies,
 } from './asset-search.selector';
 
@@ -32,15 +33,7 @@ export class AssetSearchEffects {
   private readonly assetSearchService = inject(AssetSearchService);
   private readonly allStudyService = inject(AllStudyService);
   private readonly authService = inject(AuthService);
-  private isLatestPage = false;
-
-  constructor(private router: Router) {
-    this.router.events
-      .pipe(filter((event): event is NavigationStart => event instanceof NavigationStart))
-      .subscribe((event) => {
-        this.isLatestPage = event.restoredState == null;
-      });
-  }
+  private readonly router = inject(Router);
 
   public queryParams$ = this.actions$.pipe(
     ofType(ROUTER_NAVIGATED),
@@ -65,41 +58,54 @@ export class AssetSearchEffects {
     })
   );
 
-  public readSearchQueryParams$ = createEffect(() =>
+  public isMostRecentPage$ = this.router.events.pipe(
+    filter((event): event is NavigationStart => event instanceof NavigationStart),
+    map((event) => event.restoredState == null),
+    startWith(false)
+  );
+
+  public readSearchQueryParams1$ = createEffect(() =>
     this.queryParams$.pipe(
-      withLatestFrom(this.store.select(selectAssetSearchQuery), this.store.select(selectCurrentAssetDetail)),
+      withLatestFrom(
+        this.store.select(selectAssetSearchQuery),
+        this.store.select(selectCurrentAssetDetail),
+        this.isMostRecentPage$
+      ),
       filter(([params, storeQuery, storeDetail]) => {
         return !deepEqual(params.query, storeQuery) || params.assetId != storeDetail?.assetId;
       }),
-      map(([params, storeQuery, storeDetail]) => {
-        const paramsEmpty = Object.values(params.query).every((v) => v == null);
-        const storeQueryEmpty = Object.values(storeQuery).every((v) => v == null);
-        if (paramsEmpty) {
-          if ((!storeQueryEmpty || storeDetail) && this.isLatestPage) {
-            return actions.runCombinedSearch({ query: storeQuery, assetId: storeDetail?.assetId });
-          } else {
-            return actions.runCombinedSearch({ query: params.query, assetId: params.assetId });
-          }
-        } else {
-          return actions.runCombinedSearch({ query: params.query, assetId: params.assetId });
+      map(([params, storeQuery, storeDetail, isMostRecentPage]) => {
+        const hasNoQueryParams = Object.values(params.query).every((v) => v == null);
+        const hasQueryOrAssetIdInStore = !Object.values(storeQuery).every((v) => v == null) || storeDetail;
+        // We only use the values from the store if all of the below are true:
+        // - There are no Url query params
+        // - There are query or assetId values in the store
+        // - The current page is the most recent page
+        if (hasNoQueryParams && hasQueryOrAssetIdInStore && isMostRecentPage) {
+          return actions.runCombinedSearch({ query: storeQuery, assetId: storeDetail?.assetId });
         }
+        return actions.runCombinedSearch({ query: params.query, assetId: params.assetId });
       })
     )
   );
 
   public updateParamsFromQuery$ = createEffect(
     () =>
-      combineLatest([
-        this.store.select(selectAssetSearchQuery),
-        this.store.select(selectCurrentAssetDetail),
-        this.store.select(selectAssetDetailLoadingState),
-        this.store.select(selectAssetSearchIsInitialized),
-      ]).pipe(
-        filter(([_query, _asset, _state, isInitialized]) => isInitialized),
+      this.actions$.pipe(
+        ofType(actions.search, actions.resetSearch, actions.setSelectedAsset, actions.clearSelectedAsset),
+        withLatestFrom(
+          this.store.select(selectAssetSearchQuery),
+          this.store.select(selectCurrentAssetDetail),
+          this.store.select(selectAssetDetailLoadingState),
+          this.store.select(selectSearchLoadingState),
+          this.store.select(selectAssetSearchIsInitialized)
+        ),
+        filter(([_, _query, _asset, _assetLoadingState, _searchLoadingState, isInitialized]) => isInitialized),
         withLatestFrom(this.authService.isInitialized$),
         filter(([_search, isInitialized]) => isInitialized),
         map(([search]) => search),
-        switchMap(([query, asset, assetLoadingState]) => {
+
+        switchMap(([_, query, asset, assetLoadingState, searchLoadingState]) => {
           const params: Params = {};
           updatePlainParam(params, QUERY_PARAM_MAPPING.text, query.text);
           updateArrayParam(
@@ -119,7 +125,16 @@ export class AssetSearchEffects {
           if (assetLoadingState !== LoadingState.Loading) {
             updatePlainParam(params, QUERY_PARAM_MAPPING.assetId, asset?.assetId);
           }
-          return this.router.navigate([], { queryParams: params, queryParamsHandling: 'merge' });
+
+          const isLoading = searchLoadingState === LoadingState.Loading || assetLoadingState === LoadingState.Loading;
+          if (!isLoading) {
+            return this.router.navigate([], {
+              queryParams: params,
+              queryParamsHandling: 'merge',
+            });
+          } else {
+            return of(null);
+          }
         })
       ),
     { dispatch: false }
