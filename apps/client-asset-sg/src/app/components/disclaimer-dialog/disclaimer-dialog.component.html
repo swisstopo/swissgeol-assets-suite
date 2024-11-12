@@ -1,0 +1,16 @@
+<div>
+  <div class="header">
+    <h2 translate>disclaimer.title</h2>
+    <asset-sg-language-selector></asset-sg-language-selector>
+  </div>
+  <mat-divider></mat-divider>
+  <div mat-dialog-content class="content">
+    <h1 translate>disclaimer.subtitle</h1>
+    <p [innerHTML]="disclaimerText$ | async"></p>
+    <a *rxLet="legalUrl$; let lang" [href]="lang" target="_blank" rel="noopener nofollow">{{ lang }}</a>
+  </div>
+  <mat-divider></mat-divider>
+  <div mat-dialog-actions class="actions">
+    <button asset-sg-primary (click)="close()" translate>disclaimer.accept</button>
+  </div>
+</div>

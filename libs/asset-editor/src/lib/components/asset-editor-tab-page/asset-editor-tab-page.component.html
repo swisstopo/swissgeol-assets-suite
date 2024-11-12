@@ -28,7 +28,8 @@
         <asset-sg-editor-tab-administration
           [referenceDataVM$]="referenceDataVM$"
           [assetEditDetail$]="assetEditDetail$"
-          (save)="save()"
+          (saveAsset)="save()"
+          (deleteAsset)="delete()"
         />
       </ng-template>
     </form>
@@ -50,5 +51,6 @@
   asset-sg-icon-button
   class="absolute t-1.5 r-3"
   [attr.alt]="'edit.closeManageAsset' | translate"
-  ><svg-icon key="close"></svg-icon
-></a>
+>
+  <svg-icon key="close"></svg-icon>
+</a>

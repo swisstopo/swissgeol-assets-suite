@@ -8,6 +8,9 @@ export const itAppTranslations: AppTranslations = {
   ok: 'OK',
   submit: 'IT Absenden',
   cancel: 'IT Abbrechen',
+  confirm: 'IT Bestätigen',
+  confirmDelete: 'IT Sind Sie sicher, dass Sie dieses Asset löschen möchten?',
+  deleteSuccess: 'IT Das Asset wurde erfolgreich gelöscht.',
   login: 'Login',
   logout: 'IT Abmelden',
   yes: 'Sì',
@@ -24,6 +27,9 @@ export const itAppTranslations: AppTranslations = {
     errors: {
       nameTaken: "IT Der Name '{{name}}' wird bereits von einer anderen Arbeitsgruppe verwendet.",
     },
+  },
+  favorites: {
+    title: 'IT Favoriten',
   },
   menuBar: {
     filters: 'IT Filter',
@@ -122,6 +128,7 @@ export const itAppTranslations: AppTranslations = {
         alternativeId: 'IT Alternativ-ID',
         alternativeIdDescription: 'IT Beschreibung Alternativ-ID',
         addNewAlternativeId: 'IT Neue Alternativ-ID hinzufügen',
+        referencesWarning: 'IT Um die Arbeitsgruppe zu ändern, müssen Sie erst alle Verweise entfernen.',
       },
       files: {
         tabName: 'IT Dateien',
@@ -285,5 +292,18 @@ export const itAppTranslations: AppTranslations = {
       chooseUsersText: 'IT Füge Nutzer hinzu, um sie zu verwalten',
       addUsers: 'IT Benutzer hinzufügen',
     },
+  },
+  disclaimer: {
+    title: 'Condizioni di utilizzo',
+    subtitle: 'Responsabilità',
+    content:
+      'Nonostante si presti grande attenzione all’esattezza delle informazioni pubblicate su questo sito, l’Ufficio federale di topografia swisstopo declina ogni responsabilità per la fedeltà, l’esattezza, l’attualità, l’affidabilità e la completezza di tali informazioni.\n' +
+      '\n' +
+      'swisstopo si riserva esplicitamente il diritto in qualsiasi momento di modificare parzialmente o completamente il contenuto del sito, di cancellarlo o di sospenderne temporaneamente la pubblicazione, senza alcun preavviso.\n' +
+      '\n' +
+      'swisstopo declina ogni responsabilità per danni materiali o immateriali derivanti dall’accesso alle informazioni diffuse, dall’uso o dal mancato uso del sito, oppure che sono riconducibili a un malfunzionamento del collegamento o a disturbi tecnici del sito.\n' +
+      '\n' +
+      'Per ulteriori informazioni legali, consultare il seguente link:',
+    accept: 'Accettare',
   },
 };

@@ -32,9 +32,11 @@ export class MenuBarComponent {
 
   readonly activeItem$: Observable<MenuItem | null> = this.router.events.pipe(
     filter((event) => event instanceof NavigationEnd),
+    startWith(() => undefined),
     map((): MenuItem | null => {
-      const segments = this.router.parseUrl(this.router.url).root.children['primary'].segments;
-      if (segments.length === 1) {
+      const segments = (this.router.getCurrentNavigation() ?? this.router.lastSuccessfulNavigation)?.finalUrl?.root
+        .children['primary'].segments;
+      if (segments == null || segments.length === 1) {
         return 'home';
       }
       const path = segments.slice(1).join('/');
@@ -42,6 +44,9 @@ export class MenuBarComponent {
 
       if (isPath('asset-admin/new')) {
         return 'create-asset';
+      }
+      if (isPath('favorites')) {
+        return 'favorites';
       }
       if (path == 'asset-admin' || isPath('admin')) {
         return 'options';
@@ -58,4 +63,4 @@ export class MenuBarComponent {
   protected readonly AssetEditPolicy = AssetEditPolicy;
 }
 
-type MenuItem = 'home' | 'create-asset' | 'options';
+type MenuItem = 'home' | 'favorites' | 'create-asset' | 'options';

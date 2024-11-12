@@ -59,6 +59,9 @@
     },
     "studyLocations": {
       "type": "geo_point"
+    },
+    "favoredByUserIds": {
+      "type": "keyword"
     }
   }
 }

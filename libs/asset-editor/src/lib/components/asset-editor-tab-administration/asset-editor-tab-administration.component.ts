@@ -1,10 +1,12 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, inject, Input, OnInit, Output } from '@angular/core';
 import { FormGroupDirective } from '@angular/forms';
-import { fromAppShared } from '@asset-sg/client-shared';
+import { MatDialog } from '@angular/material/dialog';
+import { ConfirmDialogComponent, fromAppShared } from '@asset-sg/client-shared';
 import { isNotNull } from '@asset-sg/core';
 import { DateId } from '@asset-sg/shared';
 import { isMasterEditor } from '@asset-sg/shared/v2';
 import * as RD from '@devexperts/remote-data-ts';
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { Store } from '@ngrx/store';
 import { RxState } from '@rx-angular/state';
 import * as O from 'fp-ts/Option';
@@ -28,6 +30,7 @@ const initialTabAdministrationState: TabAdministrationState = {
   assetEditDetail: O.none,
 };
 
+@UntilDestroy()
 @Component({
   selector: 'asset-sg-editor-tab-administration',
   templateUrl: './asset-editor-tab-administration.component.html',
@@ -46,6 +49,7 @@ export class AssetEditorTabAdministrationComponent implements OnInit {
 
   public _referenceDataVM$ = this._state.select('referenceDataVM');
   public _assetEditDetail$ = this._state.select('assetEditDetail');
+  private readonly dialogService = inject(MatDialog);
 
   private readonly filteredAssetEditDetail$ = this._state
     .select('assetEditDetail')
@@ -60,8 +64,8 @@ export class AssetEditorTabAdministrationComponent implements OnInit {
   );
 
   // eslint-disable-next-line @angular-eslint/no-output-rename
-  @Output('save')
-  public save$ = new EventEmitter<void>();
+  @Output() public saveAsset = new EventEmitter<void>();
+  @Output() public deleteAsset = new EventEmitter<void>();
 
   constructor() {
     this._state.set(initialTabAdministrationState);
@@ -85,6 +89,18 @@ export class AssetEditorTabAdministrationComponent implements OnInit {
   }
 
   public save() {
-    this.save$.emit();
+    this.saveAsset.emit();
+  }
+
+  public openConfirmDialog() {
+    const dialogRef = this.dialogService.open<ConfirmDialogComponent>(ConfirmDialogComponent, {
+      data: {
+        text: 'confirmDelete',
+      },
+    });
+    dialogRef.componentInstance.confirmEvent.pipe(untilDestroyed(this)).subscribe(() => {
+      this.deleteAsset.emit();
+      dialogRef.close();
+    });
   }
 }

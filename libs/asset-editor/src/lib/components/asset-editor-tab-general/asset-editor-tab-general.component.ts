@@ -56,6 +56,8 @@ export class AssetEditorTabGeneralComponent implements OnInit {
     description: new FormControl<string>('', { nonNullable: true }),
   });
 
+  public showWarningForReferences = false;
+
   public readonly state: RxState<AssetEditorTabGeneralState> = inject(RxState<AssetEditorTabGeneralState>);
 
   public readonly _referenceDataVM$ = this.state.select('referenceDataVM');
@@ -174,6 +176,10 @@ export class AssetEditorTabGeneralComponent implements OnInit {
         this.idForm.patchValue({ idId, id, description });
       }
     });
+    this.setDisabledStatusOfWorkgroup();
+    this.rootFormGroup.controls.references.valueChanges.pipe(untilDestroyed(this)).subscribe(() => {
+      this.setDisabledStatusOfWorkgroup();
+    });
     this.ngOnInit$.next();
   }
 
@@ -220,6 +226,20 @@ export class AssetEditorTabGeneralComponent implements OnInit {
     this.state.set({ userInsertMode: true, currentlyEditedIdIndex: index });
     const { id, description } = this.form.controls['ids'].value[index];
     this.idForm.patchValue({ id, description });
+  }
+
+  private setDisabledStatusOfWorkgroup() {
+    if (
+      this.rootFormGroup.getRawValue().references.siblingAssets.length > 0 ||
+      this.rootFormGroup.getRawValue().references.childAssets.length > 0 ||
+      this.rootFormGroup.getRawValue().references.assetMain
+    ) {
+      this.form.controls.workgroupId.disable({ emitEvent: false });
+      this.showWarningForReferences = true;
+    } else {
+      this.form.controls.workgroupId.enable({ emitEvent: false });
+      this.showWarningForReferences = false;
+    }
   }
 
   public eqAssetLanguageEdit = eqAssetLanguageEdit;

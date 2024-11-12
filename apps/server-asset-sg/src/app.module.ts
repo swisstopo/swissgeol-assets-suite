@@ -36,12 +36,12 @@ import { WorkgroupsController } from '@/features/workgroups/workgroups.controlle
 @Module({
   controllers: [
     AppController,
+    FavoritesController,
     AssetEditController,
     AssetSearchController,
     AssetSyncController,
     AssetsController,
     ContactsController,
-    FavoritesController,
     FilesController,
     StudiesController,
     UsersController,
@@ -51,8 +51,8 @@ import { WorkgroupsController } from '@/features/workgroups/workgroups.controlle
   providers: [
     provideElasticsearch,
     AssetEditRepo,
-    AssetEditService,
     AssetInfoRepo,
+    AssetEditService,
     AssetRepo,
     AssetSearchService,
     AssetSyncService,

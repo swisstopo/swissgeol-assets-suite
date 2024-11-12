@@ -41,9 +41,9 @@
         <mat-form-field>
           <mat-label>Typ</mat-label>
           <mat-select formControlName="assetReferenceType">
-            <mat-option *ngIf="!(_addParentDisabled$ | push)" value="parent">{{
-              "edit.tabs.references.referenceType.parent" | translate
-            }}</mat-option>
+            <mat-option *ngIf="!(_addParentDisabled$ | push)" value="parent"
+              >{{ "edit.tabs.references.referenceType.parent" | translate }}
+            </mat-option>
             <mat-option value="sibling">{{ "edit.tabs.references.referenceType.sibling" | translate }}</mat-option>
           </mat-select>
         </mat-form-field>

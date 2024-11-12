@@ -1,15 +1,15 @@
 import { inject, Injectable } from '@angular/core';
 import { NavigationStart, Params, Router } from '@angular/router';
-import { AuthService } from '@asset-sg/auth';
 import { AppState, assetsPageMatcher } from '@asset-sg/client-shared';
 import { deepEqual, isNotNull, isNull, ORD } from '@asset-sg/core';
 import { AssetSearchQuery, LV95, Polygon } from '@asset-sg/shared';
 import { UntilDestroy } from '@ngneat/until-destroy';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
-import { ROUTER_NAVIGATED } from '@ngrx/router-store';
+import { ROUTER_NAVIGATED, RouterNavigatedPayload } from '@ngrx/router-store';
 import { Store } from '@ngrx/store';
 import { filter, map, of, startWith, switchMap, take, withLatestFrom } from 'rxjs';
 
+import { AuthService } from '../../../../../../apps/client-asset-sg/src/app/features/auth/auth.service';
 import { AllStudyService } from '../../services/all-study.service';
 import { AssetSearchService } from '../../services/asset-search.service';
 
@@ -18,9 +18,9 @@ import { LoadingState } from './asset-search.reducer';
 import {
   selectAssetDetailLoadingState,
   selectAssetSearchIsInitialized,
-  selectAssetSearchNoActiveFilters,
   selectAssetSearchQuery,
   selectCurrentAssetDetail,
+  selectHasDefaultFilters,
   selectSearchLoadingState,
   selectStudies,
 } from './asset-search.selector';
@@ -37,8 +37,13 @@ export class AssetSearchEffects {
 
   public queryParams$ = this.actions$.pipe(
     ofType(ROUTER_NAVIGATED),
-    filter((x) => assetsPageMatcher(x.payload.routerState.root.firstChild.url) !== null),
+    filter(
+      ({ payload }: { payload: RouterNavigatedPayload }) =>
+        assetsPageMatcher(payload.routerState.root.firstChild?.url ?? []) !== null
+    ),
     map(({ payload }) => {
+      const routerState = payload.routerState;
+      const url = routerState.root.firstChild?.url ?? [];
       const params = payload.routerState.root.queryParams;
       const query: AssetSearchQuery = {};
       const assetId: number | undefined = readNumberParam(params, QUERY_PARAM_MAPPING.assetId);
@@ -54,6 +59,7 @@ export class AssetSearchEffects {
       query.geometryCodes = readArrayParam(params, QUERY_PARAM_MAPPING.geometryCodes);
       query.languageItemCodes = readArrayParam(params, QUERY_PARAM_MAPPING.languageItemCodes);
       query.workgroupIds = readArrayParam<number>(params, QUERY_PARAM_MAPPING.workgroupIds);
+      query.favoritesOnly = url.length === 2 && url[1].path === 'favorites';
       return { query, assetId };
     })
   );
@@ -215,7 +221,7 @@ export class AssetSearchEffects {
     this.actions$.pipe(
       ofType(actions.updateResults),
       map(({ results }) => results.page.total !== 0),
-      withLatestFrom(this.store.select(selectAssetSearchNoActiveFilters)),
+      withLatestFrom(this.store.select(selectHasDefaultFilters)),
       map(([hasResults, hasNoFilters]) =>
         !hasResults || hasNoFilters ? actions.closeResults() : actions.openResults()
       )
@@ -257,10 +263,15 @@ const QUERY_PARAM_MAPPING = {
   languageItemCodes: 'search[lang]',
   assetId: 'assetId',
   workgroupIds: 'search[workgroup]',
+  categories: 'search[categories]',
 };
 
-const updatePlainParam = (params: Params, name: string, value: string | number | undefined): void => {
-  params[name] = value == null || value === '' ? null : value;
+const updatePlainParam = (params: Params, name: string, value: string | number | boolean | undefined): void => {
+  if (value == null) {
+    delete params[name];
+    return;
+  }
+  params[name] = value;
 };
 
 const updateDateParam = (params: Params, name: string, value: Date | undefined): void => {

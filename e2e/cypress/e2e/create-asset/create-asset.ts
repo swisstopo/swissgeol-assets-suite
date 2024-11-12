@@ -52,7 +52,7 @@ When(/^The user fills out administration information$/, () => {
 });
 When(/^The user clicks the save button$/, () => {
   cy.intercept('http://localhost:4200/api/asset-edit').as('save');
-  cy.get('button:contains(" Speichern ")').click();
+  cy.get('button:contains("Speichern")').click();
 });
 Then(/^The user should see the Create Asset form$/, () => {
   cy.get('asset-sg-editor-tab-page').should('be.visible');

@@ -115,7 +115,7 @@ interface CreateFileData {
 interface DeleteFileData {
   id: number;
   assetId: AssetId;
-  user: User;
+  user: Pick<User, 'email'>;
 }
 
 export const determineUniqueFilename = async (

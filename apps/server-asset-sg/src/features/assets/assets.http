@@ -15,9 +15,7 @@ Content-Type: application/json
   "isNatRel": false,
   "links": {
     "parent": null,
-    "siblings": [
-      44382
-    ]
+    "siblings": []
   },
   "identifiers": [],
   "statuses": [],
@@ -38,10 +36,10 @@ Content-Type: application/json
     },
     "internal": {
       "isAvailable": true,
-      "statusCode": "approved"
+      "statusCode": "tobechecked"
     }
   },
-  "workgroupId": 4
+  "workgroupId": 2
 }
 
 ### Update asset
@@ -93,4 +91,9 @@ Content-Type: application/json
 
 ### Get asset
 GET {{host}}/api/assets/44383
+Authorization: Impersonate {{user}}
+
+
+### Delete asset
+DELETE {{host}}/api/assets/44382
 Authorization: Impersonate {{user}}

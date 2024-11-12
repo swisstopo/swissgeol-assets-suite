@@ -106,15 +106,18 @@
             </span>
           </div>
         </div>
-        <button
-          asset-sg-primary
-          (click)="save()"
-          class="self-start save-button mt-2"
-          [disabled]="this._rootFormGroup.invalid || this._rootFormGroup.disabled || this._rootFormGroup.pristine"
-          translate
-        >
-          save
-        </button>
+        <div class="actions">
+          <button
+            asset-sg-secondary
+            (click)="openConfirmDialog()"
+            class="save-button"
+            [disabled]="this._rootFormGroup.invalid || this._rootFormGroup.disabled || this._rootFormGroup.pristine"
+            translate
+          >
+            delete
+          </button>
+          <button asset-sg-primary (click)="save()" class="save-button" translate>save</button>
+        </div>
       </div>
     </div>
   </div>

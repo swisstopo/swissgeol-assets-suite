@@ -24,6 +24,9 @@ export const updateAssetEditDetailResult = createAction(
   props<RD.RemoteData<ApiError, AssetEditDetail>>()
 );
 
+export const deleteAsset = createAction('[Asset Editor] Delete asset', props<{ assetId: number }>());
+
+export const handleSuccessfulDeletion = createAction('[Asset Editor] Handle successful deletion');
 export const editContact = createAction('[Asset Editor] Edit contact', props<{ contact: ContactEdit }>());
 
 export const createContact = createAction('[Asset Editor] Create contact', props<{ contact: PatchContact }>());

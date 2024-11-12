@@ -15,7 +15,7 @@ import { errorIcon } from './error';
 import { errorFilledIcon } from './error-filled';
 import { extLinkIcon } from './ext-link';
 import { failureIcon } from './failure';
-import { favouriteIcon } from './favourite';
+import { favoriteIcon } from './favorite';
 import { helpIcon } from './help';
 import { infoIcon } from './info';
 import { infoFilledIcon } from './info-filled';
@@ -52,7 +52,7 @@ export const icons = [
   errorFilledIcon,
   extLinkIcon,
   failureIcon,
-  favouriteIcon,
+  favoriteIcon,
   helpIcon,
   infoFilledIcon,
   optionsIcon,
