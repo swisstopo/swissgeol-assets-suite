@@ -81,8 +81,9 @@ export class AssetSearchEffects {
         return !deepEqual(params.query, storeQuery) || params.assetId != storeDetail?.assetId;
       }),
       map(([params, storeQuery, storeDetail, isMostRecentPage]) => {
-        const hasNoQueryParams = Object.values(params.query).every((v) => v == null);
-        const hasQueryOrAssetIdInStore = !Object.values(storeQuery).every((v) => v == null) || storeDetail;
+        const hasNoQueryParams = Object.values(params.query).every((v) => v == null || v == false);
+        const hasQueryOrAssetIdInStore =
+          !Object.values(storeQuery).every((v) => v == null || v == false) || storeDetail;
         // We only use the values from the store if all of the below are true:
         // - There are no Url query params
         // - There are query or assetId values in the store
@@ -266,12 +267,8 @@ const QUERY_PARAM_MAPPING = {
   categories: 'search[categories]',
 };
 
-const updatePlainParam = (params: Params, name: string, value: string | number | boolean | undefined): void => {
-  if (value == null) {
-    delete params[name];
-    return;
-  }
-  params[name] = value;
+const updatePlainParam = (params: Params, name: string, value: string | number | undefined): void => {
+  params[name] = value == null || value === '' ? null : value;
 };
 
 const updateDateParam = (params: Params, name: string, value: Date | undefined): void => {
