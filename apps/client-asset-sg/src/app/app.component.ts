@@ -5,6 +5,7 @@ import {
   appSharedStateActions,
   AuthService,
   AuthState,
+  ConfigService,
   ErrorService,
   setCssCustomProperties,
 } from '@asset-sg/client-shared';
@@ -13,6 +14,7 @@ import { Store } from '@ngrx/store';
 import { WINDOW } from 'ngx-window-token';
 import { debounceTime, fromEvent, startWith, switchMap } from 'rxjs';
 import { assert } from 'tsafe';
+import { environment } from '../environments/environment';
 import { AppState } from './state/app-state';
 
 const fullHdWidth = 1920;
@@ -31,8 +33,10 @@ export class AppComponent {
   readonly errorService = inject(ErrorService);
   readonly authService = inject(AuthService);
   private readonly store = inject(Store<AppState>);
+  private readonly configService = inject(ConfigService);
 
   constructor() {
+    this.configService.setHideDisclaimer(environment.hideDisclaimer);
     this._httpClient
       .get<Record<string, unknown>>('api/oauth-config/config')
       .pipe(switchMap(async (config) => await this.authService.initialize(config)))

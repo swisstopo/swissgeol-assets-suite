@@ -26,5 +26,3 @@ export * from './lib/directives/can-create.directive';
 export * from './lib/directives/can-delete.directive';
 export * from './lib/directives/can-show.directive';
 export * from './lib/directives/can-update.directive';
-export * from './lib/environments/environment';
-export * from './lib/environments/environment-type';

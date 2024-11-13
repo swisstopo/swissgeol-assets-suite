@@ -10,7 +10,7 @@ import { OAuthService } from 'angular-oauth2-oidc';
 import { plainToInstance } from 'class-transformer';
 import { BehaviorSubject, map, Observable, startWith } from 'rxjs';
 import { DisclaimerDialogComponent } from '../../components/disclaimer-dialog/disclaimer-dialog.component';
-import { environment } from '../../environments/environment';
+import { ConfigService } from '../../services';
 import { appSharedStateActions, AppState } from '../../state';
 import { ApiError } from '../../utils';
 
@@ -21,6 +21,7 @@ export class AuthService {
   private readonly store = inject(Store<AppState>);
   private readonly router = inject(Router);
   private readonly dialogService = inject(MatDialog);
+  private readonly configService = inject(ConfigService);
 
   private readonly _state$ = new BehaviorSubject(AuthState.Ongoing);
   private readonly _isInitialized$ = new BehaviorSubject(false);
@@ -62,7 +63,7 @@ export class AuthService {
           if (this._state$.value === AuthState.Ongoing) {
             this._state$.next(AuthState.Success);
 
-            if (!environment.hideDisclaimer) {
+            if (!this.configService.getHideDisclaimer()) {
               this.dialogService.open(DisclaimerDialogComponent, {
                 width: '500px',
                 disableClose: true,

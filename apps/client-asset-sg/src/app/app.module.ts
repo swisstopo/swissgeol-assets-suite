@@ -29,7 +29,6 @@ import {
   LanguageSelectorComponent,
   TranslateTsLoader,
 } from '@asset-sg/client-shared';
-import { environment } from '@asset-sg/client-shared';
 import { storeLogger } from '@asset-sg/core';
 import { provideSvgIcons, SvgIconComponent } from '@ngneat/svg-icon';
 import { EffectsModule } from '@ngrx/effects';
@@ -40,6 +39,7 @@ import { ForModule } from '@rx-angular/template/for';
 import { LetModule } from '@rx-angular/template/let';
 import { PushModule } from '@rx-angular/template/push';
 
+import { environment } from '../environments/environment';
 import { adminGuard } from './app-guards';
 import { AppComponent } from './app.component';
 import { AppBarComponent, MenuBarComponent, NotFoundComponent, RedirectToLangComponent } from './components';
