@@ -1,12 +1,11 @@
 import { HttpErrorResponse, HttpEvent, HttpHandler, HttpRequest } from '@angular/common/http';
 import { inject, Injectable, OnDestroy } from '@angular/core';
 import { NavigationCancel, NavigationEnd, NavigationError, NavigationStart, Router } from '@angular/router';
-import { AlertType, fromAppShared, showAlert } from '@asset-sg/client-shared';
+import { AlertType, AuthService, AuthState, fromAppShared, showAlert } from '@asset-sg/client-shared';
 import { Store } from '@ngrx/store';
 import { TranslateService } from '@ngx-translate/core';
 import { OAuthService } from 'angular-oauth2-oidc';
 import { catchError, EMPTY, from, Observable, Subscription, switchMap } from 'rxjs';
-import { AuthService, AuthState } from '../features/auth/auth.service';
 
 @Injectable()
 export class HttpInterceptor implements HttpInterceptor, OnDestroy {

@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { NavigationStart, Params, Router } from '@angular/router';
-import { AppState, assetsPageMatcher } from '@asset-sg/client-shared';
+import { AppState, assetsPageMatcher, AuthService } from '@asset-sg/client-shared';
 import { deepEqual, isNotNull, isNull, ORD } from '@asset-sg/core';
 import { AssetSearchQuery, LV95, Polygon } from '@asset-sg/shared';
 import { UntilDestroy } from '@ngneat/until-destroy';
@@ -8,8 +8,6 @@ import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { ROUTER_NAVIGATED, RouterNavigatedPayload } from '@ngrx/router-store';
 import { Store } from '@ngrx/store';
 import { filter, map, of, startWith, switchMap, take, withLatestFrom } from 'rxjs';
-
-import { AuthService } from '../../../../../../apps/client-asset-sg/src/app/features/auth/auth.service';
 import { AllStudyService } from '../../services/all-study.service';
 import { AssetSearchService } from '../../services/asset-search.service';
 

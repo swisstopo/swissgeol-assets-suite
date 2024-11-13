@@ -11,12 +11,11 @@ import {
   ViewChild,
 } from '@angular/core';
 import { Router } from '@angular/router';
-import { appSharedStateActions, fromAppShared } from '@asset-sg/client-shared';
+import { appSharedStateActions, AuthService, fromAppShared } from '@asset-sg/client-shared';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { Store } from '@ngrx/store';
 import * as O from 'fp-ts/Option';
 import { EMPTY, filter, map, Observable, Subject, switchMap } from 'rxjs';
-import { AuthService } from '../../features/auth/auth.service';
 import { AppState } from '../../state/app-state';
 import { Version } from './version';
 

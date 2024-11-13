@@ -2,7 +2,6 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { Router } from '@angular/router';
-import { ApiError, appSharedStateActions, AppState } from '@asset-sg/client-shared';
 import { ORD } from '@asset-sg/core';
 import { User, UserSchema } from '@asset-sg/shared/v2';
 import * as RD from '@devexperts/remote-data-ts';
@@ -10,8 +9,10 @@ import { Store } from '@ngrx/store';
 import { OAuthService } from 'angular-oauth2-oidc';
 import { plainToInstance } from 'class-transformer';
 import { BehaviorSubject, map, Observable, startWith } from 'rxjs';
-import { environment } from '../../../environments/environment';
 import { DisclaimerDialogComponent } from '../../components/disclaimer-dialog/disclaimer-dialog.component';
+import { environment } from '../../environments/environment';
+import { appSharedStateActions, AppState } from '../../state';
+import { ApiError } from '../../utils';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {

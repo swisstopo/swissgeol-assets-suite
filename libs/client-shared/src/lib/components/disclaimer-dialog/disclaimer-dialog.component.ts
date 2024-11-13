@@ -1,15 +1,21 @@
+import { AsyncPipe } from '@angular/common';
 import { Component, inject } from '@angular/core';
-import { MatDialogRef } from '@angular/material/dialog';
-import { CURRENT_LANG } from '@asset-sg/client-shared';
+import { MatDialogActions, MatDialogContent, MatDialogRef } from '@angular/material/dialog';
+import { MatDivider } from '@angular/material/divider';
 import { TranslateService } from '@ngx-translate/core';
 import { map } from 'rxjs';
+import { ButtonComponent } from '../../components/button';
+import { LanguageSelectorComponent } from '../../components/language-selector';
+import { CURRENT_LANG } from '../../utils';
 
 const LEGAL_BASE_URL = 'https://www.swissgeol.ch/datenschutz';
 
 @Component({
+  standalone: true,
   selector: 'asset-sg-disclaimer-dialog',
   templateUrl: './disclaimer-dialog.component.html',
   styleUrl: './disclaimer-dialog.component.scss',
+  imports: [LanguageSelectorComponent, MatDivider, MatDialogActions, MatDialogContent, ButtonComponent, AsyncPipe],
 })
 export class DisclaimerDialogComponent {
   public text = '';

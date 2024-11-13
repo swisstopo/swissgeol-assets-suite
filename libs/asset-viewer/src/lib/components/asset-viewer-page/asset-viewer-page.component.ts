@@ -10,7 +10,13 @@ import {
   ViewChild,
   ViewContainerRef,
 } from '@angular/core';
-import { AppPortalService, AppState, LifecycleHooks, LifecycleHooksDirective } from '@asset-sg/client-shared';
+import {
+  AppPortalService,
+  AppState,
+  AuthService,
+  LifecycleHooks,
+  LifecycleHooksDirective,
+} from '@asset-sg/client-shared';
 import { AssetEditDetail } from '@asset-sg/shared';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { Store } from '@ngrx/store';
@@ -33,7 +39,6 @@ import {
   take,
   withLatestFrom,
 } from 'rxjs';
-import { AuthService } from '../../../../../../apps/client-asset-sg/src/app/features/auth/auth.service';
 
 import * as actions from '../../state/asset-search/asset-search.actions';
 import { LoadingState } from '../../state/asset-search/asset-search.reducer';
