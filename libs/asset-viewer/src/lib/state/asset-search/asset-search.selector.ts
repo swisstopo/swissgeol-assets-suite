@@ -47,6 +47,8 @@ export const selectAssetDetailLoadingState = createSelector(
 
 export const selectAssetSearchQuery = createSelector(assetSearchFeature, (state) => state.query);
 
+export const selectAssetSearchIsInitialized = createSelector(assetSearchFeature, (state) => state.isInitialized);
+
 export const selectAssetSearchResultData = createSelector(assetSearchFeature, (state) => state.results.data);
 
 export const selectAssetSearchPolygon = createSelector(assetSearchFeature, (state) => state.query.polygon);

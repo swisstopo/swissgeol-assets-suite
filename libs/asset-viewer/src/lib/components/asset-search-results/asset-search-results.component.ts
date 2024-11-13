@@ -69,7 +69,7 @@ export class AssetSearchResultsComponent implements OnInit, OnDestroy {
   }
 
   public toggleResultsOpen() {
-    this._store.dispatch(actions.manualToggleResult());
+    this._store.dispatch(actions.toggleResults());
   }
 
   public onScroll(event: Event) {

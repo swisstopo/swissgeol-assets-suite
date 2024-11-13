@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { NavigationEnd, Router, RouterStateSnapshot } from '@angular/router';
-import { appSharedStateActions, fromAppShared } from '@asset-sg/client-shared';
+import { appSharedStateActions, AuthService, fromAppShared } from '@asset-sg/client-shared';
 import { ORD } from '@asset-sg/core';
 import { eqLangRight, Lang } from '@asset-sg/shared';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
@@ -10,7 +10,6 @@ import { Store } from '@ngrx/store';
 import { TranslateService } from '@ngx-translate/core';
 import * as E from 'fp-ts/Either';
 import { combineLatest, distinctUntilChanged, filter, map, switchMap, take } from 'rxjs';
-import { AuthService } from '../features/auth/auth.service';
 
 import { AppSharedStateService } from './app-shared-state.service';
 import { AppState } from './app-state';

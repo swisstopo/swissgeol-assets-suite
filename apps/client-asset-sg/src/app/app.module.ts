@@ -19,10 +19,12 @@ import {
   AlertModule,
   AnchorComponent,
   assetsPageMatcher,
+  AuthModule,
   ButtonComponent,
   CanCreateDirective,
   CURRENT_LANG,
   currentLangFactory,
+  ErrorService,
   icons,
   LanguageSelectorComponent,
   TranslateTsLoader,
@@ -36,16 +38,13 @@ import { TranslateLoader, TranslateModule, TranslateService } from '@ngx-transla
 import { ForModule } from '@rx-angular/template/for';
 import { LetModule } from '@rx-angular/template/let';
 import { PushModule } from '@rx-angular/template/push';
-import { environment } from '../environments/environment';
 
+import { environment } from '../environments/environment';
 import { adminGuard } from './app-guards';
 import { AppComponent } from './app.component';
 import { AppBarComponent, MenuBarComponent, NotFoundComponent, RedirectToLangComponent } from './components';
-import { DisclaimerDialogComponent } from './components/disclaimer-dialog/disclaimer-dialog.component';
 import { MenuBarItemComponent } from './components/menu-bar-item/menu-bar-item.component';
 import { SplashScreenComponent } from './components/splash-screen/splash-screen.component';
-import { AuthModule } from './features/auth/auth.module';
-import { ErrorService } from './features/auth/error.service';
 import { appTranslations } from './i18n';
 import { HttpInterceptor } from './services/http.interceptor';
 import { AppSharedStateEffects } from './state';
@@ -62,7 +61,6 @@ registerLocaleData(locale_deCH, 'de-CH');
     MenuBarComponent,
     MenuBarItemComponent,
     SplashScreenComponent,
-    DisclaimerDialogComponent,
   ],
   imports: [
     CommonModule,

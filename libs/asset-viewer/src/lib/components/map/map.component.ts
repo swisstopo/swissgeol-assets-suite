@@ -196,7 +196,7 @@ export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
         )
         .subscribe(([polygon, _]) =>
           this.store.dispatch(
-            searchActions.search({
+            searchActions.mergeQuery({
               query: { polygon: polygon },
             })
           )

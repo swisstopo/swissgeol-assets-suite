@@ -4,17 +4,14 @@
 <ng-template #detail>
   <div class="header">
     <span translate="search.detailedInformation"></span>
-    <a
-      [routerLink]="['.']"
-      [queryParams]="{ assetId: undefined }"
-      (click)="resetAssetDetail()"
-      queryParamsHandling="merge"
+    <button
+      (click)="clearSelectedAsset()"
       asset-sg-icon-button
       class="close-button"
       [attr.alt]="'search.closeAssetDetails' | translate"
     >
       <svg-icon key="close"></svg-icon>
-    </a>
+    </button>
   </div>
   <div class="asset-detail-scroll-container">
     <div class="asset-detail">

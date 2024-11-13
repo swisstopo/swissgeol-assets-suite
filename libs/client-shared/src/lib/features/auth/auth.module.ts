@@ -5,15 +5,15 @@ import { NgModule } from '@angular/core';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { AnchorComponent, ButtonComponent, icons } from '@asset-sg/client-shared';
 import { provideSvgIcons } from '@ngneat/svg-icon';
 import { TranslateModule } from '@ngx-translate/core';
 import { ForModule } from '@rx-angular/template/for';
 import { LetModule } from '@rx-angular/template/let';
 import { PushModule } from '@rx-angular/template/push';
 import { OAuthModule } from 'angular-oauth2-oidc';
+import { AnchorComponent, ButtonComponent } from '../../components';
 
-import { HttpInterceptor } from '../../services/http.interceptor';
+import { icons } from '../../icons';
 import { ErrorService } from './error.service';
 
 @NgModule({
@@ -44,6 +44,6 @@ import { ErrorService } from './error.service';
     }),
   ],
   exports: [OAuthModule],
-  providers: [provideSvgIcons(icons), ErrorService, HttpInterceptor],
+  providers: [provideSvgIcons(icons), ErrorService],
 })
 export class AuthModule {}
