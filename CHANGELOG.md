@@ -8,6 +8,31 @@
 
 ### Fixed
 
+## v1.7.0
+
+### Added
+
+- Assets können nun als Favoriten markiert und wiedergefunden werden
+- Ein disclaimer wird auf der Startseite angezeigt
+- Assets können gelöscht werden
+
+### Changed
+
+- Verweise sind nur noch zu Assets in derselben Workgroups möglich
+- Die Hintergrundkarte kann weiter herausgezoomt werden
+
+### Fixed
+
+## v1.6.0
+
+### Added
+
+### Changed
+
+### Fixed
+
+- Asset Detailansicht bleibt nicht mehr bestehen nach einem Suchreset
+
 ## v1.5.0
 
 ### Added
