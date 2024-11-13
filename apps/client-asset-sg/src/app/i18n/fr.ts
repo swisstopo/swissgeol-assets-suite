@@ -8,6 +8,9 @@ export const frAppTranslations: AppTranslations = {
   ok: 'OK',
   submit: 'Envoyer',
   cancel: 'Annuler',
+  confirm: 'Confirmer',
+  confirmDelete: 'Êtes-vous sûr de vouloir supprimer cet asset',
+  deleteSuccess: "L'asset a été supprimé avec succès.",
   login: 'Login',
   logout: 'Déconnecter',
   yes: 'Oui',
@@ -24,6 +27,9 @@ export const frAppTranslations: AppTranslations = {
     errors: {
       nameTaken: "Le nom '{{name}}' est déjà utilisé par un autre groupe de travail.",
     },
+  },
+  favorites: {
+    title: 'Favorites',
   },
   menuBar: {
     filters: 'Filtres',
@@ -123,6 +129,7 @@ export const frAppTranslations: AppTranslations = {
         alternativeId: 'ID alternative',
         alternativeIdDescription: "Description d'ID alternative",
         addNewAlternativeId: 'Ajouter une nouvelle ID alternative',
+        referencesWarning: 'Pour changer le groupe de travail, vous devez d’abord supprimer toutes les références.',
       },
       files: {
         tabName: 'Fichiers',
@@ -286,5 +293,18 @@ export const frAppTranslations: AppTranslations = {
       chooseUsersText: 'Ajoutez des utilisateurs pour les gérer',
       addUsers: 'Ajouter des utilisateurs',
     },
+  },
+  disclaimer: {
+    title: "Conditions d'utilisation",
+    subtitle: 'Responsabilité',
+    content:
+      'Malgré la grande attention qu’il porte à la justesse des informations diffusées sur ce site, l’Office fédéral de topographie swisstopo ne peut endosser aucune responsabilité quant à la fidélité, à l’exactitude, à l’actualité, à la fiabilité et à l’intégralité de ces informations.\n' +
+      '\n' +
+      'swisstopo se réserve expressément le droit de modifier en partie ou en totalité le contenu de ce site, de le supprimer ou d’en suspendre temporairement la diffusion, et ce à tout moment et sans avertissement préalable.\n' +
+      '\n' +
+      'swisstopo ne saurait être tenu pour responsable des dommages matériels ou immatériels qui pourraient être causés par l’accès aux informations diffusées ou par leur utilisation ou non-utilisation, par le mauvais usage de la connexion ou par des problèmes techniques.\n' +
+      '\n' +
+      "Pour plus d'informations légales, veuillez consulter le lien suivant:",
+    accept: 'Accepter',
   },
 };

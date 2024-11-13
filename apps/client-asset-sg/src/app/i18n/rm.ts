@@ -8,6 +8,9 @@ export const rmAppTranslations: AppTranslations = {
   ok: 'OK',
   submit: 'RM Absenden',
   cancel: 'RM Abbrechen',
+  confirm: 'RM Bestätigen',
+  confirmDelete: 'RM Sind Sie sicher, dass Sie dieses Asset löschen möchten?',
+  deleteSuccess: 'RM Das Asset wurde erfolgreich gelöscht.',
   login: 'Login',
   logout: 'RM Abmelden',
   yes: 'Sì',
@@ -24,6 +27,9 @@ export const rmAppTranslations: AppTranslations = {
     errors: {
       nameTaken: "RM Name '{{name}}' wird bereits von einer anderen Arbeitsgruppe verwendet.",
     },
+  },
+  favorites: {
+    title: 'RM Favoriten',
   },
   menuBar: {
     filters: 'RM Filter',
@@ -122,6 +128,7 @@ export const rmAppTranslations: AppTranslations = {
         alternativeId: 'RM Alternativ-ID',
         alternativeIdDescription: 'RM Beschreibung Alternativ-ID',
         addNewAlternativeId: 'RM Neue Alternativ-ID hinzufügen',
+        referencesWarning: 'RM Um die Arbeitsgruppe zu ändern, müssen Sie erst alle Verweise entfernen.',
       },
       files: {
         tabName: 'RM Dateien',
@@ -285,5 +292,18 @@ export const rmAppTranslations: AppTranslations = {
       chooseUsersText: 'RM Füge Nutzer hinzu, um sie zu verwalten',
       addUsers: 'RM Benutzer hinzufügen',
     },
+  },
+  disclaimer: {
+    title: 'RM Nutzungsbedingungen',
+    subtitle: 'RM Haftung',
+    content:
+      'RM Obwohl das Bundesamt für Landestopografie swisstopo mit aller Sorgfalt auf die Richtigkeit der veröffentlichten Informationen achtet, kann hinsichtlich der inhaltlichen Richtigkeit, Genauigkeit, Aktualität, Zuverlässigkeit und Vollständigkeit dieser Informationen keine Gewährleistung übernommen werden.\n' +
+      '\n' +
+      'Swisstopo behält sich ausdrücklich vor, jederzeit Inhalte ohne Ankündigung ganz oder teilweise zu ändern, zu löschen oder zeitweise nicht zu veröffentlichen.\n' +
+      '\n' +
+      'Haftungsansprüche gegen swisstopo wegen Schäden materieller oder immaterieller Art, welche aus dem Zugriff oder der Nutzung bzw. Nichtnutzung der veröffentlichten Informationen, durch Missbrauch der Verbindung oder durch technische Störungen entstanden sind, werden ausgeschlossen.\n' +
+      '\n' +
+      'Weitere rechtliche Bestimmungen finden sie hier:',
+    accept: 'RM Akzeptieren',
   },
 };

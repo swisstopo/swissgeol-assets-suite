@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsIn, IsNumber, IsOptional, IsString, ValidateNested } from 'class-validator';
+import { IsBoolean, IsIn, IsNumber, IsOptional, IsString, ValidateNested } from 'class-validator';
 
 import { PartialDateRangeDTO } from '../date-range.dto';
 import { UsageCode } from '../usage';
@@ -41,6 +41,10 @@ export class AssetSearchQueryDTO implements AssetSearchQuery {
   @IsNumber({}, { each: true })
   @IsOptional()
   workgroupIds?: number[];
+
+  @IsBoolean()
+  @IsOptional()
+  favoritesOnly?: boolean;
 
   @IsOptional()
   @ValidateNested()

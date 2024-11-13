@@ -1,16 +1,17 @@
 import {
+  AssetEditDetail,
   AssetSearchResult,
   AssetSearchStats,
+  dateFromDateId,
+  dateIdFromDate,
   ElasticSearchAsset,
+  makeUsageCode,
   PageStats,
   PatchAsset,
   SearchAsset,
   SearchAssetAggregations,
   SearchAssetResultNonEmpty,
   UsageCode,
-  dateFromDateId,
-  dateIdFromDate,
-  makeUsageCode,
 } from '@asset-sg/shared';
 import { faker } from '@faker-js/faker';
 
@@ -31,13 +32,14 @@ import { openElasticsearchClient } from '@/core/elasticsearch';
 import { PrismaService } from '@/core/prisma.service';
 import { fakeAssetPatch, fakeAssetUsage, fakeContact, fakeUser } from '@/features/asset-edit/asset-edit.fake';
 import { AssetEditData, AssetEditRepo } from '@/features/asset-edit/asset-edit.repo';
-import { AssetEditDetail } from '@/features/asset-edit/asset-edit.service';
+import { FileRepo } from '@/features/files/file.repo';
 import { StudyRepo } from '@/features/studies/study.repo';
 
 describe(AssetSearchService, () => {
   const elastic = openElasticsearchClient();
   const prisma = new PrismaService();
-  const assetRepo = new AssetEditRepo(prisma);
+  const fileRepo = new FileRepo(prisma);
+  const assetRepo = new AssetEditRepo(prisma, fileRepo);
   const studyRepo = new StudyRepo(prisma);
   const service = new AssetSearchService(elastic, prisma, assetRepo, studyRepo);
 
@@ -107,6 +109,25 @@ describe(AssetSearchService, () => {
     });
   });
 
+  describe('deleteFromIndex', () => {
+    it('deletes an an asset from elastic search', async () => {
+      // Given
+      const asset = await assetRepo.create({ patch: fakeAssetPatch(), user: fakeUser() });
+      await service.register(asset);
+
+      // When
+      await service.deleteFromIndex(asset.assetId);
+
+      const response = await elastic.search({
+        index: ASSET_ELASTIC_INDEX,
+        size: 10_000,
+        _source: true,
+      });
+      //Then
+      expect(response.hits.hits.length).toEqual(0);
+    });
+  });
+
   describe('search', () => {
     const assertSingleResult = (result: AssetSearchResult, asset: AssetEditDetail): void => {
       expect(result.page).toEqual({ total: 1, size: 1, offset: 0 } as PageStats);
@@ -124,7 +145,7 @@ describe(AssetSearchService, () => {
         await create({ patch: fakeAssetPatch(), user });
 
         // When
-        const result = await service.search({ text: `${text}` });
+        const result = await service.search({ text: `${text}` }, user);
 
         // Then
         assertSingleResult(result, asset);
@@ -173,11 +194,14 @@ describe(AssetSearchService, () => {
       });
 
       // When
-      const result = await service.search({
-        createDate: {
-          min: new Date(dateFromDateId(asset.createDate).getTime() - millisPerDay),
+      const result = await service.search(
+        {
+          createDate: {
+            min: new Date(dateFromDateId(asset.createDate).getTime() - millisPerDay),
+          },
         },
-      });
+        user
+      );
 
       // Then
       assertSingleResult(result, asset);
@@ -196,11 +220,14 @@ describe(AssetSearchService, () => {
       });
 
       // When
-      const result = await service.search({
-        createDate: {
-          max: new Date(dateFromDateId(asset.createDate).getTime() + millisPerDay),
+      const result = await service.search(
+        {
+          createDate: {
+            max: new Date(dateFromDateId(asset.createDate).getTime() + millisPerDay),
+          },
         },
-      });
+        user
+      );
 
       // Then
       assertSingleResult(result, asset);
@@ -223,14 +250,18 @@ describe(AssetSearchService, () => {
         },
         user: fakeUser(),
       });
+      const user = fakeUser();
 
       // When
-      const result = await service.search({
-        createDate: {
-          min: new Date(dateFromDateId(asset.createDate).getTime() - millisPerDay),
-          max: new Date(dateFromDateId(asset.createDate).getTime() + millisPerDay),
+      const result = await service.search(
+        {
+          createDate: {
+            min: new Date(dateFromDateId(asset.createDate).getTime() - millisPerDay),
+            max: new Date(dateFromDateId(asset.createDate).getTime() + millisPerDay),
+          },
         },
-      });
+        user
+      );
 
       // Then
       assertSingleResult(result, asset);
@@ -253,9 +284,10 @@ describe(AssetSearchService, () => {
         patch: { ...fakeAssetPatch(), assetLanguages: [{ languageItemCode: code3 }] },
         user: fakeUser(),
       });
+      const user = fakeUser();
 
       // When
-      const result = await service.search({ languageItemCodes: [code1] });
+      const result = await service.search({ languageItemCodes: [code1] }, user);
 
       // Then
       assertSingleResult(result, asset);
@@ -272,7 +304,7 @@ describe(AssetSearchService, () => {
       await create({ patch: { ...fakeAssetPatch(), assetKindItemCode: code3 }, user });
 
       // When
-      const result = await service.search({ assetKindItemCodes: [code1] });
+      const result = await service.search({ assetKindItemCodes: [code1] }, user);
 
       // Then
       assertSingleResult(result, asset);
@@ -289,7 +321,7 @@ describe(AssetSearchService, () => {
       await create({ patch: { ...fakeAssetPatch(), manCatLabelRefs: [code3] }, user });
 
       // When
-      const result = await service.search({ manCatLabelItemCodes: [code1] });
+      const result = await service.search({ manCatLabelItemCodes: [code1] }, user);
 
       // Then
       assertSingleResult(result, asset);
@@ -325,7 +357,7 @@ describe(AssetSearchService, () => {
       });
 
       // When
-      const result = await service.search({ usageCodes: [usageCode] });
+      const result = await service.search({ usageCodes: [usageCode] }, user);
 
       // Then
       assertSingleResult(result, asset);
@@ -350,7 +382,7 @@ describe(AssetSearchService, () => {
       });
 
       // When
-      const result = await service.search({ authorId: contact1.contactId });
+      const result = await service.search({ authorId: contact1.contactId }, user);
 
       // Then
       assertSingleResult(result, asset);
@@ -396,8 +428,11 @@ describe(AssetSearchService, () => {
     };
 
     it('returns empty stats when no assets are present', async () => {
+      // Given
+      const user = fakeUser();
+
       // When
-      const result = await service.aggregate({});
+      const result = await service.aggregate({}, user);
 
       // Then
       expect(result.total).toEqual(0);
@@ -415,7 +450,7 @@ describe(AssetSearchService, () => {
       const asset = await create({ patch: fakeAssetPatch(), user });
 
       // When
-      const result = await service.aggregate({});
+      const result = await service.aggregate({}, user);
 
       // Then
       assertSingleStats(result, asset);

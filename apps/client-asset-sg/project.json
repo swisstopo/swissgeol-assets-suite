@@ -43,14 +43,6 @@
             }
           ]
         },
-        "int": {
-          "fileReplacements": [
-            {
-              "replace": "apps/client-asset-sg/src/environments/environment.ts",
-              "with": "apps/client-asset-sg/src/environments/environment.int.ts"
-            }
-          ]
-        },
         "development": {
           "buildOptimizer": false,
           "optimization": false,
@@ -67,9 +59,6 @@
       "configurations": {
         "production": {
           "buildTarget": "client-asset-sg:build:production"
-        },
-        "int": {
-          "buildTarget": "client-asset-sg:build:int"
         },
         "development": {
           "buildTarget": "client-asset-sg:build:development"

@@ -1,7 +1,7 @@
-import { fitToSwitzerland } from '@asset-sg/client-shared';
 import { Control } from 'ol/control';
 import { easeOut } from 'ol/easing';
 import View from 'ol/View';
+import { resetZoom } from '../map/map-controller';
 
 export class ZoomControl extends Control {
   zoomIn(): void {
@@ -17,7 +17,7 @@ export class ZoomControl extends Control {
     if (view == null) {
       return;
     }
-    fitToSwitzerland(view, true);
+    resetZoom(view, { isAnimated: true });
   }
 
   private changeZoom(delta: number): void {

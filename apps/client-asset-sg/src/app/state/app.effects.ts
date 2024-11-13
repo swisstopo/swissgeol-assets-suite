@@ -1,7 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { NavigationEnd, Router, RouterStateSnapshot } from '@angular/router';
-import { AuthService } from '@asset-sg/auth';
-import { appSharedStateActions, fromAppShared } from '@asset-sg/client-shared';
+import { appSharedStateActions, AuthService, fromAppShared } from '@asset-sg/client-shared';
 import { ORD } from '@asset-sg/core';
 import { eqLangRight, Lang } from '@asset-sg/shared';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';

@@ -55,6 +55,7 @@ export class AssetSearchRefineComponent implements OnInit, OnDestroy, AfterViewI
   readonly languageFilters$ = this.store.select(selectLanguageFilters);
   readonly assetKindFilters$ = this.store.select(selectAssetKindFilters);
   readonly workgroupFilters$ = this.store.select(selectWorkgroupFilters);
+
   readonly isDrawActive$ = this.store.select(selectMapControlIsDrawing);
 
   private readonly subscriptions: Subscription = new Subscription();

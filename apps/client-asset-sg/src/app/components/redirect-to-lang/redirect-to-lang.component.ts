@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
-import { AuthService } from '@asset-sg/auth';
+import { AuthService } from '@asset-sg/client-shared';
 import { UntilDestroy } from '@ngneat/until-destroy';
 
 @UntilDestroy()

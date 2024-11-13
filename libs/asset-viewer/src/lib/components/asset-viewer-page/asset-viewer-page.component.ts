@@ -10,8 +10,13 @@ import {
   ViewChild,
   ViewContainerRef,
 } from '@angular/core';
-import { AuthService } from '@asset-sg/auth';
-import { AppPortalService, AppState, LifecycleHooks, LifecycleHooksDirective } from '@asset-sg/client-shared';
+import {
+  AppPortalService,
+  AppState,
+  AuthService,
+  LifecycleHooks,
+  LifecycleHooksDirective,
+} from '@asset-sg/client-shared';
 import { AssetEditDetail } from '@asset-sg/shared';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { Store } from '@ngrx/store';

@@ -41,3 +41,10 @@ export const logout = createAction('[App Shared State] Logout');
 
 export const setLang = createAction('[App Shared State] Set Lang', props<{ lang: Lang }>());
 export const toggleSearchFilter = createAction('[App Shared State] Toggle Search Filter');
+
+export const updateSearchAfterAssetEditedOrAdded = createAction(
+  '[App Shared State] Handle Asset Changed',
+  props<{
+    assetId?: number;
+  }>()
+);

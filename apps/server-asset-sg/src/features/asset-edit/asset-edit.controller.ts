@@ -1,17 +1,32 @@
-import { PatchAsset } from '@asset-sg/shared';
+import { AssetEditDetail, PatchAsset } from '@asset-sg/shared';
 import { AssetEditPolicy, Role, User } from '@asset-sg/shared/v2';
-import { Controller, Get, HttpException, HttpStatus, Param, ParseIntPipe, Post, Put } from '@nestjs/common';
-import * as E from 'fp-ts/Either';
+import {
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpException,
+  HttpStatus,
+  Param,
+  ParseIntPipe,
+  Post,
+  Put,
+} from '@nestjs/common';
 import * as O from 'fp-ts/Option';
 import { authorize } from '@/core/authorize';
 import { CurrentUser } from '@/core/decorators/current-user.decorator';
 import { ParseBody } from '@/core/decorators/parse.decorator';
 import { AssetEditRepo } from '@/features/asset-edit/asset-edit.repo';
-import { AssetEditDetail, AssetEditService } from '@/features/asset-edit/asset-edit.service';
+import { AssetEditService } from '@/features/asset-edit/asset-edit.service';
+import { AssetSearchService } from '@/features/assets/search/asset-search.service';
 
 @Controller('/asset-edit')
 export class AssetEditController {
-  constructor(private readonly assetEditRepo: AssetEditRepo, private readonly assetEditService: AssetEditService) {}
+  constructor(
+    private readonly assetEditRepo: AssetEditRepo,
+    private readonly assetEditService: AssetEditService,
+    private readonly assetSearchService: AssetSearchService
+  ) {}
 
   @Get('/:id')
   async show(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: User): Promise<unknown> {
@@ -27,11 +42,12 @@ export class AssetEditController {
   async create(@ParseBody(PatchAsset) patch: PatchAsset, @CurrentUser() user: User) {
     authorize(AssetEditPolicy, user).canCreate();
     validatePatch(user, patch);
-    const result = await this.assetEditService.createAsset(user, patch)();
-    if (E.isLeft(result)) {
-      throw new HttpException(result.left.message, 500);
-    }
-    return result.right;
+
+    await this.assetEditService.validateReferencesOrThrow({ user, patch });
+
+    const asset = await this.assetEditRepo.create({ user, patch });
+    await this.assetSearchService.register(asset);
+    return AssetEditDetail.encode(asset);
   }
 
   @Put('/:id')
@@ -47,12 +63,29 @@ export class AssetEditController {
 
     authorize(AssetEditPolicy, user).canUpdate(record);
     validatePatch(user, patch, record);
+    await this.assetEditService.validateReferencesOrThrow({ user, patch }, id);
 
-    const result = await this.assetEditService.updateAsset(user, record.assetId, patch)();
-    if (E.isLeft(result)) {
-      throw new HttpException(result.left.message, 500);
+    const asset = await this.assetEditRepo.update(record.assetId, { user, patch });
+    if (asset === null) {
+      throw new HttpException('not found', 404);
     }
-    return result.right;
+    await this.assetSearchService.register(asset);
+    return AssetEditDetail.encode(asset);
+  }
+
+  @Delete('/:id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async delete(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: User): Promise<void> {
+    const record = await this.assetEditRepo.find(id);
+    if (record == null) {
+      throw new HttpException('not found', HttpStatus.NOT_FOUND);
+    }
+    authorize(AssetEditPolicy, user).canDelete(record);
+    const success = await this.assetEditRepo.delete(record.assetId);
+    if (!success) {
+      throw new HttpException('could not delete', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+    await this.assetSearchService.deleteFromIndex(record.assetId);
   }
 }
 

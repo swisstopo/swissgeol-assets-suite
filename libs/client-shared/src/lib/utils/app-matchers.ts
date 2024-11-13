@@ -2,7 +2,7 @@ import { UrlMatchResult, UrlSegment } from '@angular/router';
 
 import { isSupportedLang } from '../i18n';
 
-const validSegments = ['assets', 'favourites'];
+const validSegments = ['assets', 'favorites'];
 
 export function assetsPageMatcher(segments: UrlSegment[]): UrlMatchResult | null {
   if (segments.length === 0) {

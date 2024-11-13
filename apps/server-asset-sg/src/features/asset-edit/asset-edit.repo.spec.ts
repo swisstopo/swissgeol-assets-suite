@@ -7,10 +7,12 @@ import { fakeAssetPatch, fakeUser } from './asset-edit.fake';
 import { AssetEditRepo } from './asset-edit.repo';
 
 import { PrismaService } from '@/core/prisma.service';
+import { FileRepo } from '@/features/files/file.repo';
 
 describe(AssetEditRepo, () => {
   const prisma = new PrismaService();
-  const repo = new AssetEditRepo(prisma);
+  const fileRepo = new FileRepo(prisma);
+  const repo = new AssetEditRepo(prisma, fileRepo);
 
   beforeAll(async () => {
     await setupDB(prisma);

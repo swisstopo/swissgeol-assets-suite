@@ -1,11 +1,13 @@
-### Show favourites
-GET {{host}}/api/users/current/favorites
+@assetId = 12
+
+### List favourites
+GET {{host}}/api/assets/favorites
 Authorization: Impersonate {{user}}
 
 ### Add favourite
-PUT {{host}}/api/users/current/favorites/5
+POST {{host}}/api/assets/favorites/{{assetId}}
 Authorization: Impersonate {{user}}
 
 ### Remove favourite
-DELETE {{host}}/api/users/current/favorites/5
+DELETE {{host}}/api/assets/favorites/{{assetId}}
 Authorization: Impersonate {{user}}

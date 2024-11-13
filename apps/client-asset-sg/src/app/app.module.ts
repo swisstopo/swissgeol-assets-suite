@@ -5,6 +5,8 @@ import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
 import locale_deCH from '@angular/common/locales/de-CH';
 import { inject, NgModule } from '@angular/core';
 import { MatButton } from '@angular/material/button';
+import { MatDialogActions, MatDialogContent } from '@angular/material/dialog';
+import { MatDivider } from '@angular/material/divider';
 import { MAT_FORM_FIELD_DEFAULT_OPTIONS } from '@angular/material/form-field';
 import { MatMenu, MatMenuTrigger } from '@angular/material/menu';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -12,17 +14,19 @@ import { MatTooltip } from '@angular/material/tooltip';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { RouterModule } from '@angular/router';
-import { AuthInterceptor, AuthModule, ErrorService } from '@asset-sg/auth';
 import {
   AdminOnlyDirective,
   AlertModule,
   AnchorComponent,
   assetsPageMatcher,
+  AuthModule,
   ButtonComponent,
   CanCreateDirective,
   CURRENT_LANG,
   currentLangFactory,
+  ErrorService,
   icons,
+  LanguageSelectorComponent,
   TranslateTsLoader,
 } from '@asset-sg/client-shared';
 import { storeLogger } from '@asset-sg/core';
@@ -36,13 +40,13 @@ import { LetModule } from '@rx-angular/template/let';
 import { PushModule } from '@rx-angular/template/push';
 
 import { environment } from '../environments/environment';
-
 import { adminGuard } from './app-guards';
 import { AppComponent } from './app.component';
 import { AppBarComponent, MenuBarComponent, NotFoundComponent, RedirectToLangComponent } from './components';
 import { MenuBarItemComponent } from './components/menu-bar-item/menu-bar-item.component';
 import { SplashScreenComponent } from './components/splash-screen/splash-screen.component';
 import { appTranslations } from './i18n';
+import { HttpInterceptor } from './services/http.interceptor';
 import { AppSharedStateEffects } from './state';
 import { appSharedStateReducer } from './state/app-shared.reducer';
 
@@ -61,6 +65,7 @@ registerLocaleData(locale_deCH, 'de-CH');
   imports: [
     CommonModule,
     BrowserModule,
+    AuthModule,
     BrowserAnimationsModule,
     HttpClientModule,
     RouterModule.forRoot([
@@ -120,11 +125,15 @@ registerLocaleData(locale_deCH, 'de-CH');
     MatButton,
     MatMenuTrigger,
     MatMenu,
+    LanguageSelectorComponent,
+    MatDivider,
+    MatDialogContent,
+    MatDialogActions,
   ],
   providers: [
     provideSvgIcons(icons),
     ErrorService,
-    { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },
+    { provide: HTTP_INTERCEPTORS, useClass: HttpInterceptor, multi: true },
     { provide: MAT_FORM_FIELD_DEFAULT_OPTIONS, useValue: { appearance: 'fill', floatLabel: 'auto' } },
     { provide: CURRENT_LANG, useFactory: currentLangFactory },
   ],

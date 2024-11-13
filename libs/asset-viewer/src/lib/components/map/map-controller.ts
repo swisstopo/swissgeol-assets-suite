@@ -1,8 +1,9 @@
-import { featureStyles, fitToSwitzerland, makeRhombusImage, olCoordsFromLV95 } from '@asset-sg/client-shared';
+import { featureStyles, makeRhombusImage, olCoordsFromLV95, SWISS_CENTER, SWISS_EXTENT } from '@asset-sg/client-shared';
 import { isNotUndefined } from '@asset-sg/core';
 import { AssetEditDetail, getCoordsFromStudy, Study } from '@asset-sg/shared';
 import { Control } from 'ol/control';
 import { Coordinate } from 'ol/coordinate';
+import { easeOut } from 'ol/easing';
 import { containsExtent } from 'ol/extent';
 import Feature from 'ol/Feature';
 import { Geometry, LineString, Point, Polygon } from 'ol/geom';
@@ -17,6 +18,8 @@ import View from 'ol/View';
 import { distinctUntilChanged, filter, fromEventPattern, map, Observable, switchMap } from 'rxjs';
 import { AllStudyDTO } from '../../models';
 import { wktToGeoJSON } from '../../state/asset-search/asset-search.selector';
+
+export const INITIAL_RESOLUTION = 500;
 
 export class MapController {
   private readonly map: OlMap;
@@ -53,12 +56,16 @@ export class MapController {
 
   private showHeatmap = true;
 
+  private isInitialized = false;
+
   constructor(element: HTMLElement) {
     const view = new View({
-      center: [900000, 5900000],
-      zoom: 9,
       projection: 'EPSG:3857',
-      minZoom: 8.5,
+      minResolution: 0.1,
+      resolution: INITIAL_RESOLUTION,
+      center: SWISS_CENTER,
+      extent: SWISS_EXTENT,
+      showFullExtent: true,
     });
 
     this.layers = this.makeLayers();
@@ -92,8 +99,8 @@ export class MapController {
     this.assetsHover$ = this.makeAssetsHover$();
 
     this.map.once('loadend', () => {
+      this.isInitialized = true;
       if (this.activeAsset === null) {
-        fitToSwitzerland(view, false);
         const zoom = view.getZoom();
         if (zoom != null) {
           view.setMinZoom(zoom);
@@ -180,7 +187,9 @@ export class MapController {
       this.sources.assets.clear();
       this.sources.assets.addFeatures(features);
       this.sources.picker.clear();
-      zoomToStudies(this.map, studies);
+      if (this.isInitialized) {
+        zoomToStudies(this.map, studies);
+      }
     });
   }
 
@@ -262,7 +271,7 @@ export class MapController {
     this.layers.assets.setOpacity(1);
     this.layers.studies.setOpacity(1);
     window.requestAnimationFrame(() => {
-      fitToSwitzerland(this.map.getView(), true);
+      resetZoom(this.map.getView(), { isAnimated: true });
     });
   }
 
@@ -601,4 +610,18 @@ const zoomToCenter = (map: OlMap, { center, zoom }: { center: Coordinate; zoom: 
   window.requestAnimationFrame(() => {
     map.getView().animate({ center, zoom, duration: 600 });
   });
+};
+
+export const resetZoom = (view: View, options: { isAnimated?: boolean } = {}): void => {
+  if (options.isAnimated) {
+    view.animate({
+      resolution: INITIAL_RESOLUTION,
+      center: SWISS_CENTER,
+      duration: 250,
+      easing: easeOut,
+    });
+  } else {
+    view.setResolution(INITIAL_RESOLUTION);
+    view.setCenter(SWISS_CENTER);
+  }
 };

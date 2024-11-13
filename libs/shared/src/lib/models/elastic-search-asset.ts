@@ -18,6 +18,7 @@ export interface ElasticSearchAsset {
   geometryCodes: GeometryCode[] | ['None'];
   studyLocations: ElasticPoint[];
   workgroupId: number;
+  favoredByUserIds: string[];
   data: SerializedAssetEditDetail;
 }
 

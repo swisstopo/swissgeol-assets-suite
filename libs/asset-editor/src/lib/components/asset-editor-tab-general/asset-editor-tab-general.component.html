@@ -3,6 +3,10 @@
     <div class="flex flex-column form-column mr-8">
       <div class="flex flex-column bg-white mb-4 py-4 px-6 overflow-y-scroll">
         <div class="font-bold mb-4" translate>workgroup.title</div>
+        <div *ngIf="showWarningForReferences" class="flex mb-2 bg-orange-01 px-3 py-2">
+          <svg-icon key="warning-filled" class="mr-3"></svg-icon>
+          {{ "edit.tabs.general.referencesWarning" | translate }}
+        </div>
         <mat-form-field class="mb-2">
           <mat-label translate>workgroup.title</mat-label>
           <mat-select formControlName="workgroupId">

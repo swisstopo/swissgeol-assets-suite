@@ -6,6 +6,9 @@ export const deAppTranslations = {
   ok: 'OK',
   submit: 'Absenden',
   cancel: 'Abbrechen',
+  confirm: 'Bestätigen',
+  confirmDelete: 'Sind Sie sicher, dass Sie dieses Asset löschen wollen?',
+  deleteSuccess: 'Das Asset wurde erfolgreich gelöscht.',
   login: 'Anmelden',
   logout: 'Abmelden',
   yes: 'Ja',
@@ -22,6 +25,9 @@ export const deAppTranslations = {
     errors: {
       nameTaken: "Der Name '{{name}}' wird bereits von einer anderen Arbeitsgruppe verwendet.",
     },
+  },
+  favorites: {
+    title: 'Favoriten',
   },
   menuBar: {
     filters: 'Filter',
@@ -121,6 +127,7 @@ export const deAppTranslations = {
         alternativeId: 'Alternativ-ID',
         alternativeIdDescription: 'Beschreibung Alternativ-ID',
         addNewAlternativeId: 'Neue Alternativ-ID hinzufügen',
+        referencesWarning: 'Um die Arbeitsgruppe zu ändern, müssen Sie erst alle Verweise entfernen.',
       },
       files: {
         tabName: 'Dateien',
@@ -284,5 +291,18 @@ export const deAppTranslations = {
       chooseUsersText: 'Füge Benutzer hinzu, um sie zu verwalten',
       addUsers: 'Benutzer hinzufügen',
     },
+  },
+  disclaimer: {
+    title: 'Nutzungsbedingungen',
+    subtitle: 'Haftung',
+    content:
+      'Obwohl das Bundesamt für Landestopografie swisstopo mit aller Sorgfalt auf die Richtigkeit der veröffentlichten Informationen achtet, kann hinsichtlich der inhaltlichen Richtigkeit, Genauigkeit, Aktualität, Zuverlässigkeit und Vollständigkeit dieser Informationen keine Gewährleistung übernommen werden.\n' +
+      '\n' +
+      'Swisstopo behält sich ausdrücklich vor, jederzeit Inhalte ohne Ankündigung ganz oder teilweise zu ändern, zu löschen oder zeitweise nicht zu veröffentlichen.\n' +
+      '\n' +
+      'Haftungsansprüche gegen swisstopo wegen Schäden materieller oder immaterieller Art, welche aus dem Zugriff oder der Nutzung bzw. Nichtnutzung der veröffentlichten Informationen, durch Missbrauch der Verbindung oder durch technische Störungen entstanden sind, werden ausgeschlossen.\n' +
+      '\n' +
+      'Weitere rechtliche Bestimmungen finden sie hier:',
+    accept: 'Akzeptieren',
   },
 };

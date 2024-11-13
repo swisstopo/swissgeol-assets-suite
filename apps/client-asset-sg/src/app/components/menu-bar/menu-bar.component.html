@@ -5,12 +5,23 @@
       asset-sg-menu-bar-item
       icon="assets"
       [link]="isActive ? null : [translateService.currentLang]"
-      [isActive]="isActive && ((isFiltersOpen$ | async) ?? false)"
+      [isActive]="isActive"
       (click)="isActive ? toggleAssetDrawer() : null"
     >
       menuBar.filters
     </li>
-    <li *ngIf="userExists$ | async" asset-sg-menu-bar-item icon="favourite" disabled>menuBar.favourites</li>
+    @if (userExists$ | async) {
+    <li
+      *rxLet="activeItem === 'favorites'; let isActive"
+      asset-sg-menu-bar-item
+      icon="favorite"
+      [link]="isActive ? null : [translateService.currentLang, 'favorites']"
+      [isActive]="isActive"
+      (click)="isActive ? toggleAssetDrawer() : null"
+    >
+      menuBar.favourites
+    </li>
+    }
     <li
       *canCreate="AssetEditPolicy"
       asset-sg-menu-bar-item

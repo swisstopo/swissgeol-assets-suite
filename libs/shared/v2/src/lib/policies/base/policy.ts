@@ -46,7 +46,7 @@ export abstract class Policy<T> {
     return this.canCreate();
   }
 
-  canDelete(_value: T): boolean {
-    return this.canCreate();
+  canDelete(value: T): boolean {
+    return this.canUpdate(value);
   }
 }
