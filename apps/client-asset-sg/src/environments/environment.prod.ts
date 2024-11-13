@@ -1,4 +1,4 @@
-import { CompileTimeEnvironment } from './environment-type';
+import { CompileTimeEnvironment } from '@asset-sg/client-shared';
 
 export const environment: CompileTimeEnvironment = {
   ngrxStoreLoggerEnabled: false,
