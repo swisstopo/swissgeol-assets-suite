@@ -62,7 +62,8 @@ export const selectStudies = createSelector(assetSearchFeature, (state) => state
 
 export const selectHasDefaultFilters = createSelector(
   assetSearchFeature,
-  ({ query, currentAsset }) => currentAsset == null && Object.values(query).every((value) => value === undefined)
+  ({ query, currentAsset }) =>
+    currentAsset == null && Object.values(query).every((value) => value === undefined || value == false)
 );
 
 export const selectCurrentAssetDetailVM = createSelector(
