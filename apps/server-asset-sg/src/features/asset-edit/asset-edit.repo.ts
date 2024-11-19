@@ -284,18 +284,6 @@ export class AssetEditRepo implements Repo<AssetEditDetail, number, AssetEditDat
             Asset: { none: {} },
           },
         });
-
-        await this.prismaService.assetFormatItem.deleteMany({
-          where: {
-            assets: { none: {} },
-          },
-        });
-
-        await this.prismaService.assetKindItem.deleteMany({
-          where: {
-            assets: { none: {} },
-          },
-        });
       });
       return true;
     } catch (e) {
