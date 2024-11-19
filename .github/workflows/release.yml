@@ -21,6 +21,9 @@ on:
           Assign the `release-candidate` tag to this release.
         default: true
 
+concurrency:
+  group: "release"
+
 permissions: write-all
 
 env:
