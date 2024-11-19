@@ -3,6 +3,7 @@ import { Component, inject } from '@angular/core';
 import { MatDialogActions, MatDialogContent, MatDialogRef } from '@angular/material/dialog';
 import { MatDivider } from '@angular/material/divider';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { LetModule } from '@rx-angular/template/let';
 import { map } from 'rxjs';
 import { ButtonComponent } from '../../components/button';
 import { LanguageSelectorComponent } from '../../components/language-selector';
@@ -23,6 +24,7 @@ const LEGAL_BASE_URL = 'https://www.swissgeol.ch/datenschutz';
     ButtonComponent,
     AsyncPipe,
     TranslateModule,
+    LetModule,
   ],
 })
 export class DisclaimerDialogComponent {
