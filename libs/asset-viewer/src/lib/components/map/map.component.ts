@@ -21,7 +21,8 @@ import {
   selectAssetSearchPolygon,
   selectAssetSearchResultData,
   selectCurrentAssetDetail,
-  selectHasDefaultFilters,
+  selectHasNoActiveFilters,
+  selectIsSearchQueryEmpty,
   selectStudies,
 } from '../../state/asset-search/asset-search.selector';
 import { AppStateWithMapControl } from '../../state/map-control/map-control.reducer';
@@ -129,8 +130,8 @@ export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
     this.controller.addControl(this.controls.draw);
 
     this.subscription.add(
-      this.store.select(selectHasDefaultFilters).subscribe((hasDefaultFilters) => {
-        if (hasDefaultFilters) {
+      this.store.select(selectIsSearchQueryEmpty).subscribe((isSearchQueryEmpty) => {
+        if (isSearchQueryEmpty) {
           this.controls.zoom.resetZoom();
         }
       })
@@ -155,8 +156,8 @@ export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
 
   private initializeStoreBindings() {
     this.subscription.add(
-      this.store.select(selectHasDefaultFilters).subscribe((showStudies) => {
-        this.controller.setShowHeatmap(showStudies);
+      this.store.select(selectHasNoActiveFilters).subscribe((hasNoActiveFilters) => {
+        this.controller.setShowHeatmap(hasNoActiveFilters);
       })
     );
     this.subscription.add(
