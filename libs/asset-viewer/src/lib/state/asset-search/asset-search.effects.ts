@@ -18,7 +18,7 @@ import {
   selectAssetSearchIsInitialized,
   selectAssetSearchQuery,
   selectCurrentAssetDetail,
-  selectHasDefaultFilters,
+  selectIsDefaultFilterState,
   selectSearchLoadingState,
   selectStudies,
 } from './asset-search.selector';
@@ -221,7 +221,7 @@ export class AssetSearchEffects {
     this.actions$.pipe(
       ofType(actions.updateResults),
       map(({ results }) => results.page.total !== 0),
-      withLatestFrom(this.store.select(selectHasDefaultFilters)),
+      withLatestFrom(this.store.select(selectIsDefaultFilterState)),
       map(([hasResults, hasNoFilters]) =>
         !hasResults || hasNoFilters ? actions.closeResults() : actions.openResults()
       )
