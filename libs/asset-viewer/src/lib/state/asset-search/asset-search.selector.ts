@@ -60,10 +60,15 @@ export const selectAssetSearchTotalResults = createSelector(assetSearchFeature, 
 export const selectCurrentAssetDetail = createSelector(assetSearchFeature, (state) => state.currentAsset);
 export const selectStudies = createSelector(assetSearchFeature, (state) => state.studies);
 
-export const selectHasDefaultFilters = createSelector(
+export const selectHasNoActiveFilters = createSelector(assetSearchFeature, ({ query }) => hasNoActiveFilters(query));
+
+export const selectIsSearchQueryEmpty = createSelector(
   assetSearchFeature,
-  ({ query, currentAsset }) => currentAsset == null && Object.values(query).every((value) => value === undefined)
+  ({ query, currentAsset }) => currentAsset == null && hasNoActiveFilters(query)
 );
+
+const hasNoActiveFilters = (query: AssetSearchQuery): boolean =>
+  Object.values(query).every((value) => value === undefined || value == false);
 
 export const selectCurrentAssetDetailVM = createSelector(
   fromAppShared.selectRDReferenceData,

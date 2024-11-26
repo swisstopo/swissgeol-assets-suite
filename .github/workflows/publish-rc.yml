@@ -15,6 +15,9 @@ on:
         required: false
         default: "edge"
 
+concurrency:
+  group: "publish-rc"
+
 permissions: write-all
 
 env:

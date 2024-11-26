@@ -18,7 +18,7 @@ import {
   selectAssetSearchIsInitialized,
   selectAssetSearchQuery,
   selectCurrentAssetDetail,
-  selectHasDefaultFilters,
+  selectIsSearchQueryEmpty,
   selectSearchLoadingState,
   selectStudies,
 } from './asset-search.selector';
@@ -79,7 +79,8 @@ export class AssetSearchEffects {
         return !deepEqual(params.query, storeQuery) || params.assetId != storeDetail?.assetId;
       }),
       map(([params, storeQuery, storeDetail, isMostRecentPage]) => {
-        const hasNoQueryParams = Object.values(params.query).every((v) => v == null || v == false);
+        const { favoritesOnly, ...query } = params.query;
+        const hasNoQueryParams = Object.values(query).every((v) => v == null);
         const hasQueryOrAssetIdInStore =
           !Object.values(storeQuery).every((v) => v == null || v == false) || storeDetail;
         // We only use the values from the store if all of the below are true:
@@ -87,7 +88,7 @@ export class AssetSearchEffects {
         // - There are query or assetId values in the store
         // - The current page is the most recent page
         if (hasNoQueryParams && hasQueryOrAssetIdInStore && isMostRecentPage) {
-          return actions.runCombinedSearch({ query: storeQuery, assetId: storeDetail?.assetId });
+          return actions.runCombinedSearch({ query: { ...storeQuery, favoritesOnly }, assetId: storeDetail?.assetId });
         }
         return actions.runCombinedSearch({ query: params.query, assetId: params.assetId });
       })
@@ -220,9 +221,9 @@ export class AssetSearchEffects {
     this.actions$.pipe(
       ofType(actions.updateResults),
       map(({ results }) => results.page.total !== 0),
-      withLatestFrom(this.store.select(selectHasDefaultFilters)),
-      map(([hasResults, hasNoFilters]) =>
-        !hasResults || hasNoFilters ? actions.closeResults() : actions.openResults()
+      withLatestFrom(this.store.select(selectIsSearchQueryEmpty)),
+      map(([hasResults, isSearchQueryEmpty]) =>
+        !hasResults || isSearchQueryEmpty ? actions.closeResults() : actions.openResults()
       )
     )
   );

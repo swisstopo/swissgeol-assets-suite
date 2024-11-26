@@ -19,6 +19,9 @@ on:
         description: "Tag the commit and published image with `edge`."
         default: true
 
+concurrency:
+  group: "publish-edge"
+
 permissions: write-all
 
 env:
