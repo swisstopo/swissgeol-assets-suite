@@ -27,7 +27,8 @@ export class AuthService {
   private readonly _isInitialized$ = new BehaviorSubject(false);
 
   async initialize(oAuthConfig: Record<string, unknown>) {
-    if (oAuthConfig['anonymous_mode']) {
+    const isAnonymous = oAuthConfig['anonymous_mode'];
+    if (isAnonymous) {
       this.setState(AuthState.Success);
       this.store.dispatch(appSharedStateActions.setAnonymousMode());
     } else {
@@ -50,6 +51,14 @@ export class AuthService {
       this.store.dispatch(appSharedStateActions.loadUserProfile());
     }
     this._isInitialized$.next(true);
+
+    const isLoggedIn = isAnonymous || this._state$.value === AuthState.Success;
+    if (isLoggedIn && !this.configService.getHideDisclaimer()) {
+      this.dialogService.open(DisclaimerDialogComponent, {
+        width: '500px',
+        disableClose: true,
+      });
+    }
   }
 
   async signIn(): Promise<void> {
@@ -62,13 +71,6 @@ export class AuthService {
           // If something else has interrupted the auth process, then we don't want to signal a success.
           if (this._state$.value === AuthState.Ongoing) {
             this._state$.next(AuthState.Success);
-
-            if (!this.configService.getHideDisclaimer()) {
-              this.dialogService.open(DisclaimerDialogComponent, {
-                width: '500px',
-                disableClose: true,
-              });
-            }
           }
         }
       } else {
