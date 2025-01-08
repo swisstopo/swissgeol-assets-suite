@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - "develop"
+      - "feature/assets-292-benutzer-löschen"
 
   workflow_dispatch:
     inputs:
