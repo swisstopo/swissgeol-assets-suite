@@ -70,8 +70,7 @@ export class UserService {
     }
     const ids = new Set<UserId>();
     for (const user of response.Users) {
-      console.log(user);
-      const subAttribute = user.Attributes?.find((it) => it.Value === 'sub');
+      const subAttribute = user.Attributes?.find((it) => it.Name === 'sub');
       if (subAttribute == null || subAttribute.Value == null) {
         continue;
       }
