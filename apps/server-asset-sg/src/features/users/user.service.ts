@@ -2,7 +2,6 @@ import { CognitoIdentityProviderClient, ListUsersCommand } from '@aws-sdk/client
 import { Injectable, Logger } from '@nestjs/common';
 import { SchedulerRegistry } from '@nestjs/schedule';
 import { CronJob } from 'cron';
-import { region } from '@/utils/file/common';
 import { readEnv } from '@/utils/requireEnv';
 
 @Injectable()
@@ -13,7 +12,7 @@ export class UserService {
   private readonly _poolId: string | null;
 
   constructor(private readonly schedulerRegistry: SchedulerRegistry) {
-    this.client = new CognitoIdentityProviderClient({ region });
+    this.client = new CognitoIdentityProviderClient({ region: readEnv('COGNITO_REGION') ?? 'local' });
     this._poolId = readEnv('COGNITO_POOL_ID');
 
     if (this._poolId === null) {
