@@ -2,6 +2,7 @@ import { unknownToError } from '@asset-sg/core';
 import { S3Client } from '@aws-sdk/client-s3';
 import * as E from 'fp-ts/Either';
 import * as TE from 'fp-ts/TaskEither';
+import { readEnv, requireEnv } from '@/utils/requireEnv';
 
 interface S3ClientConfig {
   region: string;
@@ -13,34 +14,21 @@ interface S3ClientConfig {
   forcePathStyle: boolean;
 }
 
-const maybeEnv = (name: string): string | undefined => {
-  const value = process.env[name];
-  return value == null || value.length === 0 ? undefined : value;
-};
-
-const env = (name: string): string => {
-  const value = maybeEnv(name);
-  if (value == null) {
-    console.error(`missing environment variable '${name}'`);
-    process.exit(1);
-  }
-  return value;
-};
-
-export const bucketName = env('S3_BUCKET_NAME');
-export const assetFolder = env('S3_ASSET_FOLDER');
+export const bucketName = requireEnv('S3_BUCKET_NAME');
+export const assetFolder = requireEnv('S3_ASSET_FOLDER');
+export const region = requireEnv('S3_REGION');
 
 const s3ClientConfig: S3ClientConfig = {
-  region: env('S3_REGION'),
-  endpoint: env('S3_ENDPOINT'),
+  region,
+  endpoint: requireEnv('S3_ENDPOINT'),
 
   // Disables the client automatically appending the hostname to the bucket name.
   forcePathStyle: true,
 };
 
 const credentials: Partial<S3ClientConfig['credentials']> = {
-  accessKeyId: maybeEnv('S3_ACCESS_KEY_ID'),
-  secretAccessKey: maybeEnv('S3_SECRET_ACCESS_KEY'),
+  accessKeyId: readEnv('S3_ACCESS_KEY_ID') ?? undefined,
+  secretAccessKey: readEnv('S3_SECRET_ACCESS_KEY') ?? undefined,
 };
 
 if (credentials.accessKeyId != null && credentials.secretAccessKey != null) {

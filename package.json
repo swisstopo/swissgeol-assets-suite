@@ -32,6 +32,7 @@
     "@angular/platform-browser": "17.3.10",
     "@angular/platform-browser-dynamic": "17.3.10",
     "@angular/router": "17.3.10",
+    "@aws-sdk/client-cognito-identity-provider": "^3.723.0",
     "@aws-sdk/client-s3": "^3.637.0",
     "@devexperts/remote-data-ts": "^2.1.1",
     "@elastic/elasticsearch": "^8.5.0",
