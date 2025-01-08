@@ -1,4 +1,6 @@
-# SwissGeol Assets
+# assets.swissgeol.ch
+
+Web application for the simple, structured and harmonized recording of geological assets.
 
 ## Development
 
