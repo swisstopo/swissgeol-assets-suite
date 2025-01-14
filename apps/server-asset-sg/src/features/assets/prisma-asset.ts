@@ -7,10 +7,9 @@ import {
   AssetStudy,
   AssetStudyId,
   UsageStatusCode,
+  LocalDate,
+  StudyType,
 } from '@asset-sg/shared/v2';
-import { LocalDate } from '@asset-sg/shared/v2';
-
-import { StudyType } from '@asset-sg/shared/v2';
 import { Prisma } from '@prisma/client';
 import { satisfy } from '@/utils/define';
 

@@ -76,7 +76,7 @@ export const postgresStudiesByAssetIds = (
   );
 
 const parseStudyId = (studyId: string) => {
-  const match = studyId.match(/^study_(area|location|trace)_([0-9]+)$/);
+  const match = /^study_(area|location|trace)_(\d+)$/.exec(studyId);
   return match === null
     ? E.left(new Error(`Invalid studyId: ${studyId}`))
     : E.right({ type: match[1], studyId: parseInt(match[2]) });

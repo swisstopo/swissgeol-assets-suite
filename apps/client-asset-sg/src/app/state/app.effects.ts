@@ -31,12 +31,10 @@ export class AppSharedStateEffects {
     ])
       .pipe(take(1), untilDestroyed(this))
       .subscribe(([user]) => {
+        // Change the URL to the current user's language.
         const url = this.router.url;
-        const match = /^\/(\w\w)/.exec(url);
-        if (!match || (match && match[1] && match[1] !== user.lang)) {
-          const newUrl = `/${user.lang}${url.slice(3)}`;
-          this.router.navigateByUrl(newUrl);
-        }
+        const newUrl = `/${user.lang}${url.slice(3)}`;
+        this.router.navigateByUrl(newUrl).then();
       });
 
     this.actions$.pipe(ofType(appSharedStateActions.logout), untilDestroyed(this)).subscribe(() => {
@@ -47,23 +45,24 @@ export class AppSharedStateEffects {
     this.actions$
       .pipe(
         ofType<RouterNavigationAction<RouterStateSnapshot>>(ROUTER_NAVIGATION),
-        map((a) => a.payload.routerState.url.match(/^\/(\w\w)/)),
-        map((match) => match && match[1]),
+        map((a) => a.payload.routerState.url.match(/^\/(\w\w)/)?.[1]),
         filter(Boolean),
         map(Lang.decode),
         distinctUntilChanged(eqLangRight.equals),
         untilDestroyed(this)
       )
-      .subscribe((lang) => {
-        if (E.isRight(lang)) {
-          if (this.translateService.currentLang !== lang.right) {
-            this.translateService.use(lang.right);
-            this.store.dispatch(appSharedStateActions.setLang({ lang: lang.right as Lang }));
-          }
-        } else {
-          console.error('Invalid lang in URL:', lang.left);
-          this.router.navigate(['/']);
+      .subscribe((result) => {
+        if (E.isLeft(result)) {
+          console.error('Invalid lang in URL:', result.left);
+          this.router.navigate(['/']).then();
+          return;
         }
+        const { right: lang } = result;
+        if (this.translateService.currentLang === lang) {
+          return;
+        }
+        this.translateService.use(lang);
+        this.store.dispatch(appSharedStateActions.setLang({ lang: lang as Lang }));
       });
   }
 

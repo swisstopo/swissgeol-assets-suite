@@ -140,10 +140,10 @@ registerLocaleData(locale_deCH, 'de-CH');
   bootstrap: [AppComponent],
 })
 export class AppModule {
-  private _translateService = inject(TranslateService);
+  private readonly translateService = inject(TranslateService);
 
   constructor() {
-    this._translateService.setDefaultLang('de');
+    this.translateService.setDefaultLang('de');
   }
 }
 

@@ -15,7 +15,6 @@ import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { Store } from '@ngrx/store';
 import { RxState } from '@rx-angular/state';
 import * as O from 'fp-ts/Option';
-import { WINDOW } from 'ngx-window-token';
 import {
   distinctUntilChanged,
   filter,
@@ -55,7 +54,6 @@ export class AssetPickerComponent extends RxState<AssetPickerState> {
   public show$ = this.select('show');
   public assets$ = this.select('assets');
   public currentAssetId$ = this.select('currentAssetId');
-  private _wndw = inject<Window>(WINDOW);
 
   public closePicker$ = new Subject<void>();
   public dragHandleOffset$$ = new Subject<Observable<DragHandleOffset>>();
@@ -82,9 +80,8 @@ export class AssetPickerComponent extends RxState<AssetPickerState> {
     this.set(initialState);
 
     const getTransformXY = () => {
-      const [, x, y] = this._wndw
-        .getComputedStyle(this._pickerContainer.nativeElement)
-        .transform.match(/matrix\([^,]*,[^,]*,[^,]*,[^,]*,\s*(-?\d+),\s*(-?\d+)\)/) || [0, 0, 0];
+      const REGEX = /matrix\([^,]*,[^,]*,[^,]*,[^,]*,\s*(-?\d+),\s*(-?\d+)\)/;
+      const [, x, y] = REGEX.exec(window.getComputedStyle(this._pickerContainer.nativeElement).transform) || [0, 0, 0];
       return { transformX: +x, transformY: +y };
     };
 
@@ -101,7 +98,7 @@ export class AssetPickerComponent extends RxState<AssetPickerState> {
                 ? {
                     hostRect: this._host.nativeElement.getBoundingClientRect(),
                     pickerContainerRect: this._pickerContainer.nativeElement.getBoundingClientRect(),
-                    fontSizePx: getCssCustomPropertyNumberValue(this._wndw, this._host.nativeElement, 'font-size') * 16,
+                    fontSizePx: getCssCustomPropertyNumberValue(window, this._host.nativeElement, 'font-size') * 16,
                     ...getTransformXY(),
                   }
                 : acc;

@@ -8,7 +8,7 @@ import { Observable, take } from 'rxjs';
   styleUrls: ['./asset-editor-sync.component.scss'],
 })
 export class AssetEditorSyncComponent implements OnInit {
-  private _httpClient = inject(HttpClient);
+  private readonly httpClient = inject(HttpClient);
 
   syncProgress: number | null = null;
 
@@ -25,7 +25,7 @@ export class AssetEditorSyncComponent implements OnInit {
       return;
     }
     this.syncProgress = 0;
-    await resolveFirst(this._httpClient.post('/api/assets/sync', null));
+    await resolveFirst(this.httpClient.post('/api/assets/sync', null));
     await this.loopAssetSyncProgress();
   }
 
@@ -38,7 +38,7 @@ export class AssetEditorSyncComponent implements OnInit {
 
   private async refreshAssetSyncProgress() {
     type Progress = { progress: number } | null | undefined;
-    const progress = await resolveFirst(this._httpClient.get<Progress>('/api/assets/sync'));
+    const progress = await resolveFirst(this.httpClient.get<Progress>('/api/assets/sync'));
     this.syncProgress = progress == null ? null : Math.round(progress.progress * 100);
   }
 }
