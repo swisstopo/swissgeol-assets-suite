@@ -272,7 +272,6 @@ export const deAppTranslations = {
       en: 'Englisch',
       fr: 'Französisch',
       it: 'Italienisch',
-      rm: 'Rätoromanisch',
     },
     userPage: {
       admin: 'Admin',

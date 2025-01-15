@@ -1,7 +1,7 @@
 import { TranslateLoader } from '@ngx-translate/core';
 import { Observable, of } from 'rxjs';
 
-export const supportedLangs = ['de', 'en', 'fr', 'it', 'rm'] as const;
+export const supportedLangs = ['de', 'en', 'fr', 'it'] as const;
 export type Langs = (typeof supportedLangs)[number];
 
 export function isSupportedLang(lang: string): lang is Langs {
@@ -13,7 +13,6 @@ export interface TranslationsStruct<T> {
   en: T;
   fr: T;
   it: T;
-  rm: T;
 }
 
 export class TranslateTsLoader<T, U extends TranslationsStruct<T>> implements TranslateLoader {

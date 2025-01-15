@@ -17,13 +17,11 @@ export const ValueItem = C.struct({
   name: C.string,
   nameDe: C.string,
   nameFr: C.string,
-  nameRm: C.string,
   nameIt: C.string,
   nameEn: C.string,
   description: C.string,
   descriptionDe: C.string,
   descriptionFr: C.string,
-  descriptionRm: C.string,
   descriptionIt: C.string,
   descriptionEn: C.string,
 });
@@ -34,13 +32,11 @@ export const emptyValueItem: ValueItem = {
   name: '',
   nameDe: '',
   nameFr: '',
-  nameRm: '',
   nameIt: '',
   nameEn: '',
   description: '',
   descriptionDe: '',
   descriptionFr: '',
-  descriptionRm: '',
   descriptionIt: '',
   descriptionEn: '',
 };
@@ -96,7 +92,7 @@ export const valueItemRecordToSortedArray = (valueItemRecord: ValueItemRecord, k
     A.sort(contramap((a: ValueItem) => a[key])(OrdStringCaseInsensitive))
   );
 
-export const getValueItemNameKey = (lang: Lang): 'nameDe' | 'nameFr' | 'nameIt' | 'nameRm' | 'nameEn' => {
+export const getValueItemNameKey = (lang: Lang): 'nameDe' | 'nameFr' | 'nameIt' | 'nameEn' => {
   switch (lang) {
     case 'de':
       return 'nameDe';
@@ -104,8 +100,6 @@ export const getValueItemNameKey = (lang: Lang): 'nameDe' | 'nameFr' | 'nameIt' 
       return 'nameFr';
     case 'it':
       return 'nameIt';
-    case 'rm':
-      return 'nameRm';
     case 'en':
       return 'nameEn';
   }
@@ -113,7 +107,7 @@ export const getValueItemNameKey = (lang: Lang): 'nameDe' | 'nameFr' | 'nameIt' 
 
 export const getValueItemDescriptionKey = (
   lang: Lang
-): 'descriptionDe' | 'descriptionFr' | 'descriptionIt' | 'descriptionRm' | 'descriptionEn' => {
+): 'descriptionDe' | 'descriptionFr' | 'descriptionIt' | 'descriptionEn' => {
   switch (lang) {
     case 'de':
       return 'descriptionDe';
@@ -121,8 +115,6 @@ export const getValueItemDescriptionKey = (
       return 'descriptionFr';
     case 'it':
       return 'descriptionIt';
-    case 'rm':
-      return 'descriptionRm';
     case 'en':
       return 'descriptionEn';
   }
