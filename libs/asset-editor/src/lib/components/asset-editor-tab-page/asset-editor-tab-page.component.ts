@@ -90,7 +90,7 @@ export class AssetEditorTabPageComponent {
         this._showProgressBar$.next(false);
         if (O.isSome(maybeAsset)) {
           const asset = maybeAsset.value;
-          if (this.location.path().match(/(\w+)/g)?.[3] === 'new') {
+          if (this.location.path().match(/(\w{3})/g)?.[3] === 'new') {
             this.location.replaceState(this.location.path().replace(/new/, String(asset.assetId)));
           }
 
@@ -183,7 +183,7 @@ export class AssetEditorTabPageComponent {
         untilDestroyed(this)
       )
       .subscribe((element) => {
-        const tabKey = this.location.path().match(/(\w+)$/)?.[1];
+        const tabKey = this.urlPath.substring(this.indexOfLastSlashInUrlPath + 1);
         const createButtonLabelTranslation = (key: string) =>
           from(
             this._translateService.onLangChange.pipe(
@@ -247,8 +247,11 @@ export class AssetEditorTabPageComponent {
         let lastTabValue: string | undefined = undefined;
         const onValueChange = (value: string) => {
           if (value === lastTabValue) return;
+          console.log('reroute', value);
           lastTabValue = value;
-          this.location.replaceState(this.location.path().replace(/\w+$/, value));
+
+          const pathPrefix = this.urlPath.substring(0, this.indexOfLastSlashInUrlPath);
+          this.location.replaceState(`${pathPrefix}/${value}`);
           changeToTab(value);
         };
         KobalteTabs(
@@ -364,5 +367,13 @@ export class AssetEditorTabPageComponent {
       disableClose: true,
     }));
     return dialogRef.closed.pipe(map(isTruthy));
+  }
+
+  private get urlPath(): string {
+    return this.location.path().split('?', 2)[0];
+  }
+
+  private get indexOfLastSlashInUrlPath(): number {
+    return this.urlPath.lastIndexOf('/');
   }
 }
