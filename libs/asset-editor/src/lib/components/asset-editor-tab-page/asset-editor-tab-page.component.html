@@ -46,11 +46,11 @@
 </ng-template>
 
 <mat-progress-bar mode="indeterminate" *ngIf="_showProgressBar$ | push" />
-<a
-  [routerLink]="['../..']"
+<button
   asset-sg-icon-button
   class="absolute t-1.5 r-3"
   [attr.alt]="'edit.closeManageAsset' | translate"
+  (click)="close()"
 >
   <svg-icon key="close"></svg-icon>
-</a>
+</button>
