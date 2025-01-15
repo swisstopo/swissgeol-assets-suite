@@ -189,7 +189,7 @@ export const itAppTranslations: AppTranslations = {
         phone: 'IT Telefon',
         website: 'IT Website',
         create: 'IT Erstellen',
-        noContacts: 'RM Keine Kontakte',
+        noContacts: 'IT Keine Kontakte',
         contactPlaceholder: 'IT Suche über Namen',
       },
       references: {
@@ -273,7 +273,6 @@ export const itAppTranslations: AppTranslations = {
       en: 'IT Englisch',
       fr: 'IT Französisch',
       it: 'IT Italienisch',
-      rm: 'IT Rätoromanisch',
     },
     userPage: {
       admin: 'IT Admin',

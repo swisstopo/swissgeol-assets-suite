@@ -274,7 +274,6 @@ export const frAppTranslations: AppTranslations = {
       en: 'Anglais',
       fr: 'Français',
       it: 'Italien',
-      rm: 'Romanche',
     },
     userPage: {
       admin: 'Admin',
