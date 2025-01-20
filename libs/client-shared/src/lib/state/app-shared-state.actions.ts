@@ -1,5 +1,5 @@
 import { AssetEditDetail, Contact, Lang, ReferenceData } from '@asset-sg/shared';
-import { AssetId, SimpleWorkgroup, User } from '@asset-sg/shared/v2';
+import { SimpleWorkgroup, User } from '@asset-sg/shared/v2';
 import * as RD from '@devexperts/remote-data-ts';
 import { createAction, props } from '@ngrx/store';
 
@@ -46,12 +46,5 @@ export const updateAssetInSearch = createAction(
   '[App Shared State] Update Asset In Search',
   props<{
     asset: AssetEditDetail;
-  }>()
-);
-
-export const removeAssetFromSearch = createAction(
-  '[App Shared State] Remove Asset From Search',
-  props<{
-    assetId: AssetId;
   }>()
 );

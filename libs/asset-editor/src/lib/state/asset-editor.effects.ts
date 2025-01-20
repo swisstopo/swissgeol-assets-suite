@@ -92,7 +92,7 @@ export class AssetEditorEffects {
     )
   );
 
-  displayAlertAfterSuccessfulDeletion$ = createEffect(() =>
+  displayAlertAfterDeletion$ = createEffect(() =>
     this._actions$.pipe(
       ofType(actions.handleSuccessfulDeletion),
       map(() => {
@@ -107,11 +107,13 @@ export class AssetEditorEffects {
     )
   );
 
-  updateSearchAfterAssetDeleted$ = createEffect(() =>
-    this._actions$.pipe(
-      ofType(actions.handleSuccessfulDeletion),
-      map(({ assetId }) => appSharedStateActions.removeAssetFromSearch({ assetId }))
-    )
+  redirectToViewerAfterDeletion = createEffect(
+    () =>
+      this._actions$.pipe(
+        ofType(actions.handleSuccessfulDeletion),
+        switchMap(() => this._router.navigate(['']))
+      ),
+    { dispatch: false }
   );
 
   updateSearchAfterAssetChanged$ = createEffect(() =>

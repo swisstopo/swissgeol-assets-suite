@@ -161,27 +161,7 @@ export const assetSearchReducer = createReducer(
   ),
   on(appSharedStateActions.openPanel, (state): AssetSearchState => ({ ...state })),
 
-  on(
-    appSharedStateActions.removeAssetFromSearch,
-    (state, { assetId }): AssetSearchState => ({
-      ...state,
-      currentAsset: state.currentAsset?.assetId === assetId ? undefined : state.currentAsset,
-      results: {
-        ...state.results,
-        data: (() => {
-          const data = [...state.results.data];
-          const i = data.findIndex((asset) => asset.assetId === assetId);
-          if (i >= 0) {
-            data.splice(i, 1);
-          }
-          return data;
-        })(),
-      },
-      studies: state.studies && state.studies.filter((study) => study.assetId !== assetId),
-    })
-  ),
   on(appSharedStateActions.updateAssetInSearch, (state, { asset }): AssetSearchState => {
-    console.log(asset);
     const mapAsset = (it: AssetEditDetail): AssetEditDetail => (it.assetId === asset.assetId ? asset : it);
     return {
       ...state,
