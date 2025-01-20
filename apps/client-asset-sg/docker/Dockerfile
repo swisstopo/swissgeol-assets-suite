@@ -15,6 +15,7 @@ COPY . .
 
 RUN sed -i ''s/0.0.0-local/${APP_VERSION}/g'' apps/client-asset-sg/src/assets/version.json \
  && npm install --ignore-scripts \
+ && npm run prisma -- generate   \
  && npx nx build client-asset-sg --configuration=production
 
 # final image build
