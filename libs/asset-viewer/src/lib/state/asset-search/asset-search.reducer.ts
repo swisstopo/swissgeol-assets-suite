@@ -1,8 +1,21 @@
 import { appSharedStateActions, AppState } from '@asset-sg/client-shared';
-import { AssetEditDetail, AssetSearchQuery, AssetSearchResult, AssetSearchStats } from '@asset-sg/shared';
+import {
+  AssetEditDetail,
+  AssetSearchQuery,
+  AssetSearchResult,
+  AssetSearchStats,
+  GeomFromGeomText,
+  LineString,
+  LV95,
+  Point,
+  StudyPolygon,
+} from '@asset-sg/shared';
 import { createReducer, on } from '@ngrx/store';
+import * as E from 'fp-ts/Either';
 
-import { AllStudyDTOs } from '../../models';
+import { getCenter } from 'ol/extent';
+import { LineString as OlLineString, Polygon } from 'ol/geom';
+import { AllStudyDTO, AllStudyDTOs } from '../../models';
 import * as actions from './asset-search.actions';
 
 export enum LoadingState {
@@ -146,5 +159,68 @@ export const assetSearchReducer = createReducer(
       isInitialized: state.isInitialized,
     })
   ),
-  on(appSharedStateActions.openPanel, (state): AssetSearchState => ({ ...state }))
+  on(appSharedStateActions.openPanel, (state): AssetSearchState => ({ ...state })),
+
+  on(
+    appSharedStateActions.removeAssetFromSearch,
+    (state, { assetId }): AssetSearchState => ({
+      ...state,
+      currentAsset: state.currentAsset?.assetId === assetId ? undefined : state.currentAsset,
+      results: {
+        ...state.results,
+        data: (() => {
+          const data = [...state.results.data];
+          const i = data.findIndex((asset) => asset.assetId === assetId);
+          if (i >= 0) {
+            data.splice(i, 1);
+          }
+          return data;
+        })(),
+      },
+      studies: state.studies && state.studies.filter((study) => study.assetId !== assetId),
+    })
+  ),
+  on(appSharedStateActions.updateAssetInSearch, (state, { asset }): AssetSearchState => {
+    console.log(asset);
+    const mapAsset = (it: AssetEditDetail): AssetEditDetail => (it.assetId === asset.assetId ? asset : it);
+    return {
+      ...state,
+      currentAsset: state.currentAsset == undefined ? undefined : mapAsset(state.currentAsset),
+      results: {
+        ...state.results,
+        data: state.results.data.map(mapAsset),
+      },
+      studies:
+        state.studies &&
+        state.studies
+          .filter((study) => study.assetId !== asset.assetId)
+          .concat(
+            asset.studies.map((study): AllStudyDTO => {
+              const centroid = (() => {
+                const { right: geom } = GeomFromGeomText.decode(study.geomText) as E.Right<
+                  Point | StudyPolygon | LineString
+                >;
+                switch (geom._tag) {
+                  case 'Point':
+                    return geom.coord;
+                  case 'Polygon': {
+                    const [x, y] = getCenter(new Polygon([geom.coords.map((it) => [it.x, it.y])]).getExtent());
+                    return { x, y } as LV95;
+                  }
+                  case 'LineString': {
+                    const [x, y] = getCenter(new OlLineString(geom.coords.map((it) => [it.x, it.y])).getExtent());
+                    return { x, y } as LV95;
+                  }
+                }
+              })();
+              return {
+                assetId: study.assetId,
+                studyId: study.studyId,
+                isPoint: study.geomText.startsWith('POINT'),
+                centroid,
+              };
+            })
+          ),
+    };
+  })
 );

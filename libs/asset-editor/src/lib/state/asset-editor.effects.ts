@@ -1,7 +1,8 @@
 import { inject, Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { Alert, AlertType, appSharedStateActions, filterNavigateToComponent, showAlert } from '@asset-sg/client-shared';
-import { DT, ORD, partitionEither } from '@asset-sg/core';
+import { DT, isNotNull, ORD, partitionEither } from '@asset-sg/core';
+import { GeomFromGeomText } from '@asset-sg/shared';
 import * as RD from '@devexperts/remote-data-ts';
 import { UntilDestroy } from '@ngneat/until-destroy';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
@@ -9,7 +10,7 @@ import { TranslateService } from '@ngx-translate/core';
 import { pipe } from 'fp-ts/function';
 import * as O from 'fp-ts/Option';
 import * as D from 'io-ts/Decoder';
-import { concatMap, map, Observable, partition, share, switchMap, tap } from 'rxjs';
+import { concatMap, filter, map, Observable, partition, share, switchMap, tap } from 'rxjs';
 
 import { AssetEditorPageComponent } from '../components/asset-editor-page';
 import { AssetEditorService } from '../services/asset-editor.service';
@@ -66,7 +67,7 @@ export class AssetEditorEffects {
     this._actions$.pipe(
       ofType(actions.createNewAsset),
       switchMap(({ patchAsset }) => this._assetEditorService.createAsset(patchAsset)),
-      map(actions.updateAssetEditDetailResult)
+      map((data) => actions.updateAssetEditDetailResult({ data }))
     )
   );
 
@@ -79,15 +80,15 @@ export class AssetEditorEffects {
           ORD.chainSwitchMapW(() => this._assetEditorService.updateAssetDetail(assetId, patchAsset))
         )
       ),
-      map(actions.updateAssetEditDetailResult)
+      map((data) => actions.updateAssetEditDetailResult({ data }))
     )
   );
 
   deleteAsset$ = createEffect(() =>
     this._actions$.pipe(
       ofType(actions.deleteAsset),
-      switchMap(({ assetId }) => this._assetEditorService.deleteAsset(assetId)),
-      map(() => actions.handleSuccessfulDeletion())
+      switchMap(({ assetId }) => this._assetEditorService.deleteAsset(assetId).pipe(map(() => assetId))),
+      map((assetId) => actions.handleSuccessfulDeletion({ assetId }))
     )
   );
 
@@ -106,10 +107,30 @@ export class AssetEditorEffects {
     )
   );
 
+  updateSearchAfterAssetDeleted$ = createEffect(() =>
+    this._actions$.pipe(
+      ofType(actions.handleSuccessfulDeletion),
+      map(({ assetId }) => appSharedStateActions.removeAssetFromSearch({ assetId }))
+    )
+  );
+
   updateSearchAfterAssetChanged$ = createEffect(() =>
     this._actions$.pipe(
-      ofType(actions.handleSuccessfulDeletion, actions.updateAssetEditDetailResult),
-      map(() => appSharedStateActions.updateSearchAfterAssetEditedOrAdded({ assetId: undefined }))
+      ofType(actions.updateAssetEditDetailResult),
+      map(({ data }) => (RD.isSuccess(data) ? data.value : null)),
+      filter(isNotNull),
+      map((asset) =>
+        appSharedStateActions.updateAssetInSearch({
+          asset: {
+            ...asset,
+            studies: asset.studies.map((it) => ({
+              assetId: asset.assetId,
+              studyId: it.studyId,
+              geomText: GeomFromGeomText.encode(it.geom),
+            })),
+          },
+        })
+      )
     )
   );
 
