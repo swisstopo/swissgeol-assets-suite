@@ -654,7 +654,7 @@ model Favorite {
   user   AssetUser @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   assetId Int   @map("asset_id")
-  Asset   Asset @relation(fields: [assetId], references: [assetId])
+  Asset   Asset @relation(fields: [assetId], references: [assetId], onDelete: Cascade)
 
   @@id([userId, assetId])
   @@map("favorite")
