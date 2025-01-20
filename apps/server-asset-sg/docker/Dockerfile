@@ -9,6 +9,7 @@ WORKDIR /app
 COPY . .
 
 RUN npm install --ignore-scripts \
+ && npm run prisma -- generate   \
  && npx nx build server-asset-sg --configuration=production
 
 # final image build
