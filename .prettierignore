@@ -9,3 +9,6 @@
 /tmp
 /.idea
 /development/volumes
+
+# Prettier breaks Go templates.
+/k8s/**/*.yaml

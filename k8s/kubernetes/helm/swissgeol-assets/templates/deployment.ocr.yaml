@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-ocr
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    keel.sh/policy: force
+    keel.sh/match-tag: 'true'
+    keel.sh/trigger: poll
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-ocr
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-ocr
+    spec:
+      serviceAccountName: ocr
+      containers:
+      - name: {{ .Release.Name }}-ocr
+        image: {{ .Values.image_ocr }}
+        imagePullPolicy: Always
+        ports:
+          - containerPort: 8000
+        env:
+          - name: TMP_PATH
+            value: /tmp/ocr/
+          - name: S3_INPUT_BUCKET
+            value: {{ .Values.s3_bucket_name }}
+          - name: S3_INPUT_FOLDER
+            value: {{ .Values.s3_asset_folder }}/
+          - name: S3_OUTPUT_BUCKET
+            value: {{ .Values.s3_bucket_name }}
+          - name: S3_OUTPUT_FOLDER
+            value: {{ .Values.s3_asset_folder }}/
+          - name: CONFIDENCE_THRESHOLD
+            value: '0.7'
+        resources:
+          limits:
+            cpu: '0.5'
+            memory: '2Gi'
+      imagePullSecrets:
+      - name: {{ .Release.Namespace }}-registry

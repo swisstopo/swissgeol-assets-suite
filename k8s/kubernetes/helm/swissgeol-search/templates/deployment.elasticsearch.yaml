@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-elasticsearch
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    keel.sh/policy: force
+    keel.sh/match-tag: 'true'
+    keel.sh/trigger: poll
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-elasticsearch
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-elasticsearch
+    spec:
+      volumes:
+        - name: {{ .Release.Name }}-elasticsearch-volume
+          persistentVolumeClaim:
+            claimName: {{ .Release.Name }}-elasticsearch-volume-claim
+      containers:
+        - name: {{ .Release.Name }}-elasticsearch
+          image: {{ .Values.image_elasticsearch }}
+          ports:
+            - containerPort: 9200
+          env:
+            - name: discovery.type
+              value: single-node
+            - name: ES_JAVA_OPTS
+              value: '-Xms1024m -Xmx1024m'
+            - name: ELASTIC_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-secrets
+                  key: elasticPassword
+            - name: xpack.security.enabled
+              value: 'true'
+            - name: xpack.encryptedSavedObjects.encryptionKey
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-secrets
+                  key: elasticEncryptionKey
+            - name: bootstrap.memory_lock
+              value: 'true'
+          resources:
+            limits:
+              cpu: '4'
+              memory: 4Gi
+            requests:
+              cpu: '0.5'
+              memory: 2Gi
+          volumeMounts:
+            - name: {{ .Release.Name }}-elasticsearch-volume
+              mountPath: /usr/share/elasticsearch/data  
+      restartPolicy: Always
+      securityContext:
+        fsGroup: 0
+      imagePullSecrets:
+      - name: {{ .Release.Namespace }}-registry
