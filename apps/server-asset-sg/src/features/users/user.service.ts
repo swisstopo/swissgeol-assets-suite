@@ -1,5 +1,5 @@
 import { UserId } from '@asset-sg/shared/v2';
-import { CognitoIdentityProviderClient, ListUsersCommand } from '@aws-sdk/client-cognito-identity-provider';
+import { CognitoIdentityProviderClient, ListUsersInGroupCommand } from '@aws-sdk/client-cognito-identity-provider';
 import { Injectable, Logger } from '@nestjs/common';
 import { SchedulerRegistry } from '@nestjs/schedule';
 import { CronJob } from 'cron';
@@ -13,6 +13,7 @@ export class UserService {
 
   private readonly client: CognitoIdentityProviderClient;
   private readonly _poolId: string | null;
+  private readonly _group: string | null;
 
   constructor(
     private readonly schedulerRegistry: SchedulerRegistry,
@@ -21,12 +22,17 @@ export class UserService {
   ) {
     this.client = new CognitoIdentityProviderClient({ region: readEnv('COGNITO_REGION') ?? 'local' });
     this._poolId = readEnv('COGNITO_POOL_ID');
+    this._group = readEnv('COGNITO_GROUP');
     this.startSync();
   }
 
   private startSync(): void {
     if (this._poolId === null) {
       this.logger.warn('Users will not be synced with Cognito as COGNITO_POOL_ID is not set.');
+      return;
+    }
+    if (this._group === null) {
+      this.logger.warn('Users will not be synced with Cognito as COGNITO_GROUP is not set.');
       return;
     }
 
@@ -39,7 +45,7 @@ export class UserService {
 
   private async syncUsers() {
     this.logger.log('Syncing users with Cognito.');
-    const unknownUserIds = await this.findUnknownUserIds();
+    const unknownUserIds = await this.listUnknownUserIds();
     if (unknownUserIds.size === 0) {
       this.logger.log('All users are known to Cognito.');
       this.logger.log('Done syncing users with Cognito.');
@@ -53,8 +59,8 @@ export class UserService {
     this.logger.log('Done syncing users with Cognito.');
   }
 
-  private async findUnknownUserIds(): Promise<Set<UserId>> {
-    const cognitoUserIds = await this.listUserIds();
+  private async listUnknownUserIds(): Promise<Set<UserId>> {
+    const cognitoUserIds = await this.listKnownUserIds();
     const localUsers = await this.prismaService.assetUser.findMany({ select: { id: true } });
     const unknownUserIds = new Set<UserId>();
     for (const { id } of localUsers) {
@@ -65,9 +71,13 @@ export class UserService {
     return unknownUserIds;
   }
 
-  private async listUserIds(): Promise<Set<UserId>> {
-    const command = new ListUsersCommand({ UserPoolId: this.poolId });
-    const response = await this.client.send(command);
+  private async listKnownUserIds(): Promise<Set<UserId>> {
+    const response = await this.client.send(
+      new ListUsersInGroupCommand({
+        UserPoolId: this.poolId,
+        GroupName: this.group,
+      })
+    );
     if (response.Users == null) {
       return new Set();
     }
@@ -87,5 +97,12 @@ export class UserService {
       throw new Error('unable to use UserService as COGNITO_POOL_ID is missing');
     }
     return this._poolId;
+  }
+
+  private get group(): string {
+    if (this._group === null) {
+      throw new Error('unable to use UserService as COGNITO_GROUP is missing');
+    }
+    return this._group;
   }
 }
