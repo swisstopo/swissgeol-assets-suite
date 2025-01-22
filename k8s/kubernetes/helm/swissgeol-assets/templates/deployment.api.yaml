@@ -63,6 +63,8 @@ spec:
             value: {{ .Values.cognito_region }}
           - name: COGNITO_POOL_ID
             value: {{ .Values.cognito_pool_id }}
+          - name: COGNITO_GROUP
+            value: {{ .Values.cognito_group }}
           - name: OAUTH_ISSUER
             value: {{ .Values.oauth_issuer }}
           - name: OAUTH_CLIENT_ID
