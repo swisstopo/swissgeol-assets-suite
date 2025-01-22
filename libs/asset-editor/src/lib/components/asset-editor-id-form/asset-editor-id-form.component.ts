@@ -105,6 +105,7 @@ export class AssetEditorIdFormComponent implements OnInit, OnChanges, OnDestroy 
 
     this.form.reset();
     if (value == null) {
+      this._valueAsVM = null;
       return;
     }
     this.form.setValue({
