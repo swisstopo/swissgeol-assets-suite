@@ -404,13 +404,11 @@ type ValueList = {
   Name: string;
   NameDe: string;
   NameFr: string;
-  NameRm: string;
   NameIt: string;
   NameEn: string;
   Description: string;
   DescriptionDe: string;
   DescriptionFr: string;
-  DescriptionRm: string;
   DescriptionIt: string;
   DescriptionEn: string;
 };
@@ -429,13 +427,11 @@ const makeImportValueList =
         name: parsed[3],
         nameDe: parsed[4],
         nameFr: parsed[5],
-        nameRm: parsed[6],
         nameIt: parsed[7],
         nameEn: parsed[8],
         description: parsed[9],
         descriptionDe: parsed[10],
         descriptionFr: parsed[11],
-        descriptionRm: parsed[12],
         descriptionIt: parsed[13],
         descriptionEn: parsed[14],
       };

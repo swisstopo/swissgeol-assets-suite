@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-app
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    keel.sh/policy: force
+    keel.sh/match-tag: 'true'
+    keel.sh/trigger: poll
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-app
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-app
+    spec:
+      containers:
+      - name: {{ .Release.Name }}-app
+        image: {{ .Values.image_app }}
+        imagePullPolicy: Always
+        ports:
+          - containerPort: 80
+      imagePullSecrets:
+      - name: {{ .Release.Namespace }}-registry
+      
+
+
+      

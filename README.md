@@ -1,4 +1,6 @@
-# SwissGeol Assets
+# assets.swissgeol.ch
+
+Web application for the simple, structured and harmonized recording of geological assets.
 
 ## Development
 
@@ -236,7 +238,7 @@ To create a new migration, first modify [the Prisma schema](libs/persistence/pri
 Then, create a [shadow database](https://www.prisma.io/docs/orm/prisma-migrate/understanding-prisma-migrate/shadow-database):
 
 ```bash
-docker compose exec db sh -c 'psql --dbname=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:5432/${POSTGRES_DB} -c "CREATE DATABASE postgres_shadow;"
+docker compose exec db sh -c 'psql --dbname=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:5432/${POSTGRES_DB} -c "CREATE DATABASE postgres_shadow;"'
 ```
 
 Afterward, you can generate the new migration:

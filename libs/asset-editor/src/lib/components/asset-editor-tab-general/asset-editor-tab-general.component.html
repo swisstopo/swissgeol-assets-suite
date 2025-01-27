@@ -103,66 +103,8 @@
           pluralLabel="{{ 'edit.tabs.general.topics' | translate }}"
           [items]="vm.manCatLabelItems"
         ></asset-sg-multiselect>
-        <ng-container *rxLet="currentlyEditedIdIndex$ | push; let currentlyEditedIdIndex">
-          <div class="font-bold mb-4 mt-2" translate>edit.tabs.general.alternativeId</div>
-          <ul *ngIf="showList$ | push" class="mt-0 mb-4 p-0">
-            <ng-container *ngFor="let id of form.controls['ids'].value; let index = index; let last = last">
-              <li
-                *ngIf="currentlyEditedIdIndex !== index"
-                class="flex items-center list-none h-10 bg-grey-00 pl-4"
-                [ngClass]="{ 'mb-2': !last }"
-              >
-                <span class="basis-full"> {{ id.id }} [{{ id.description }}] </span>
-                <button
-                  asset-sg-icon-button
-                  class="basis-10"
-                  [matMenuTriggerFor]="idListMenu"
-                  [ngClass]="{ invisible: showIdForm$ | push }"
-                >
-                  <svg-icon key="action-menu"></svg-icon>
-                </button>
-                <mat-menu #idListMenu="matMenu">
-                  <button mat-menu-item (click)="_editIdClicked(index)">
-                    <svg-icon key="edit" matMenuItemIcon class="mr-3 text-cyan-09"></svg-icon>
-                    {{ "labelEdit" | translate }}
-                  </button>
-                  <button mat-menu-item (click)="_deleteIdClicked(index)">
-                    <svg-icon key="delete" matMenuItemIcon class="mr-3 text-cyan-09"></svg-icon>
-                    {{ "delete" | translate }}
-                  </button>
-                </mat-menu>
-              </li>
-            </ng-container>
-          </ul>
-          <form [formGroup]="idForm" class="flex flex-column" *ngIf="showIdForm$ | push">
-            <mat-form-field class="mb-2">
-              <mat-label translate>edit.tabs.general.alternativeId</mat-label>
-              <input matInput formControlName="id" [required]="userInsertMode$ | push" />
-              <mat-error *ngIf="idForm.controls['id'].hasError('required')" translate>required</mat-error>
-            </mat-form-field>
-            <mat-form-field class="mb-2">
-              <mat-label translate>edit.tabs.general.alternativeIdDescription</mat-label>
-              <input matInput formControlName="description" required="true" #idFormDescription />
-              <mat-error *ngIf="idForm.controls['description'].hasError('required')" translate>required</mat-error>
-            </mat-form-field>
-            <div class="self-end" *ngIf="userInsertMode$ | push">
-              <button asset-sg-primary class="mr-4" [disabled]="idForm.invalid" (click)="_saveIdFormClicked()">
-                {{ (currentlyEditedIdIndex !== -1 ? "save" : "add") | translate }}
-              </button>
-              <button asset-sg-secondary (click)="_cancelIdFormClicked()">Abbrechen</button>
-            </div>
-          </form>
-          <button
-            *ngIf="showCreateNewIdButton$ | push"
-            asset-sg-secondary
-            class="mb-2 -mt-2 self-start"
-            (click)="_insertNewIdClicked()"
-            translate
-          >
-            <svg-icon key="zoom-plus" class="mr-4"></svg-icon>
-            edit.tabs.general.addNewAlternativeId
-          </button>
-        </ng-container>
+
+        <asset-sg-asset-editor-id-list [control]="this.form.controls.ids" />
       </div>
     </div>
   </form>

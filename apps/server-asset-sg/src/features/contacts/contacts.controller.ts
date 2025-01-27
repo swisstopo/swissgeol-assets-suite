@@ -1,7 +1,4 @@
-import { Contact, ContactData } from '@asset-sg/shared/v2';
-import { User } from '@asset-sg/shared/v2';
-import { ContactPolicy } from '@asset-sg/shared/v2';
-import { ContactDataSchema } from '@asset-sg/shared/v2';
+import { Contact, ContactData, ContactDataSchema, ContactPolicy, User } from '@asset-sg/shared/v2';
 import { Controller, HttpCode, HttpException, HttpStatus, Param, ParseIntPipe, Post, Put } from '@nestjs/common';
 import { authorize } from '@/core/authorize';
 import { CurrentUser } from '@/core/decorators/current-user.decorator';

@@ -1,7 +1,16 @@
-import { Asset, AssetData, AssetId, AssetStudy, AssetStudyId, AssetUsage, StudyData } from '@asset-sg/shared/v2';
-import { isNotPersisted, isPersisted } from '@asset-sg/shared/v2';
-import { StudyType } from '@asset-sg/shared/v2';
-import { User } from '@asset-sg/shared/v2';
+import {
+  Asset,
+  AssetData,
+  AssetId,
+  AssetStudy,
+  AssetStudyId,
+  AssetUsage,
+  StudyData,
+  StudyType,
+  User,
+  isNotPersisted,
+  isPersisted,
+} from '@asset-sg/shared/v2';
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '@/core/prisma.service';
@@ -164,7 +173,6 @@ export class AssetRepo implements FindRepo<Asset, AssetId>, MutateRepo<Asset, As
     if (data.length === 0) {
       return;
     }
-    // TODO does this work?
     const cases = data.map(
       (it) => Prisma.sql`
       WHEN study_${Prisma.raw(type)}_id = ${it.id}

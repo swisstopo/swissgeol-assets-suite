@@ -22,8 +22,8 @@ export interface AppStateWithAssetEditor extends AppState {
 export const assetEditorReducer = createReducer(
   initialState,
   on(actions.loadAssetEditDetailResult, (state, rdAssetEditDetail) => ({ ...state, rdAssetEditDetail })),
-  on(actions.updateAssetEditDetailResult, (state, rdAssetEditDetail) => ({
+  on(actions.updateAssetEditDetailResult, (state, { data }) => ({
     ...state,
-    rdAssetEditDetail: pipe(rdAssetEditDetail, RD.map(O.some)),
+    rdAssetEditDetail: pipe(data, RD.map(O.some)),
   }))
 );

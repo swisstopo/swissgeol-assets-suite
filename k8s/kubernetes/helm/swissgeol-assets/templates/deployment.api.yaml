@@ -1,0 +1,98 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-api
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    keel.sh/policy: force
+    keel.sh/match-tag: 'true'
+    keel.sh/trigger: poll
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-api
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-api
+    spec:
+      serviceAccountName: cognito
+      containers:
+      - name: {{ .Release.Name }}-api
+        image: {{ .Values.image_api }}
+        imagePullPolicy: Always
+        ports:
+          - containerPort: 3333
+        env:
+          - name: DATABASE_URL
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Release.Name }}-secrets
+                key: apiDbCon
+          - name: FRONTEND_URL
+            value: https://{{ .Values.host }}
+          - name: ELASTICSEARCH_URL
+            value: {{ .Values.elasticsearch_url }}
+          - name: ELASTICSEARCH_USERNAME
+            value: elastic
+          - name: ELASTICSEARCH_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Release.Name }}-secrets
+                key: elasticPassword
+          - name: S3_BUCKET_NAME
+            value: {{ .Values.s3_bucket_name }}
+          - name: S3_REGION
+            value: {{ .Values.s3_region }}
+          - name: S3_ENDPOINT
+            value: {{ .Values.s3_endpoint }}
+          - name: S3_ACCESS_KEY_ID
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Release.Name }}-secrets
+                key: s3AccessKeyId
+          - name: S3_SECRET_ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Release.Name }}-secrets
+                key: s3SecretAccessKey
+          - name: S3_ASSET_FOLDER
+            value: {{ .Values.s3_asset_folder }}
+          - name: COGNITO_REGION
+            value: {{ .Values.cognito_region }}
+          - name: COGNITO_POOL_ID
+            value: {{ .Values.cognito_pool_id }}
+          - name: COGNITO_GROUP
+            value: {{ .Values.cognito_group }}
+          - name: OAUTH_ISSUER
+            value: {{ .Values.oauth_issuer }}
+          - name: OAUTH_CLIENT_ID
+            value: {{ .Values.oauth_client_id }}
+          - name: OAUTH_SCOPE
+            value: {{ .Values.oauth_scope }}
+          - name: OAUTH_SHOW_DEBUG_INFO
+            value: 'true'
+          - name: OAUTH_TOKEN_ENDPOINT
+            value: {{ .Values.oauth_token_endpoint }}
+          - name: OAUTH_AUTHORIZED_GROUPS
+            value: {{ .Values.oauth_authorized_groups }}
+          - name: ANONYMOUS_MODE
+            value: "{{ .Values.anonymous_mode }}"
+          - name: OCR_SERVICE_URL
+            value: http://{{ .Release.Name }}-ocr:8000
+
+          # Remove this when the new OCR is ready.
+          - name: OCR_URL
+            value: ''
+          - name: OCR_CALLBACK_URL
+            value: ''
+#        resources:
+#          limits:
+#            cpu: '0.6'
+#            memory: 1Gi
+#          requests:
+#            cpu: '0.6'
+#            memory: 500Mi
+      imagePullSecrets:
+      - name: {{ .Release.Namespace }}-registry

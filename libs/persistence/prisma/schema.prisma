@@ -2,7 +2,7 @@ generator client {
   provider        = "prisma-client-js"
   output          = "../../../node_modules/.prisma/client"
   previewFeatures = ["views"]
-  binaryTargets   = ["native", "debian-openssl-3.0.x"]
+  binaryTargets   = ["native", "debian-openssl-3.0.x", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
@@ -354,13 +354,11 @@ model AssetFormatItem {
   name                String @map("name")
   nameDe              String @map("name_de")
   nameFr              String @map("name_fr")
-  nameRm              String @map("name_rm")
   nameIt              String @map("name_it")
   nameEn              String @map("name_en")
   description         String @map("description")
   descriptionDe       String @map("description_de")
   descriptionFr       String @map("description_fr")
-  descriptionRm       String @map("description_rm")
   descriptionIt       String @map("description_it")
   descriptionEn       String @map("description_en")
 
@@ -376,13 +374,11 @@ model AssetKindItem {
   name              String @map("name")
   nameDe            String @map("name_de")
   nameFr            String @map("name_fr")
-  nameRm            String @map("name_rm")
   nameIt            String @map("name_it")
   nameEn            String @map("name_en")
   description       String @map("description")
   descriptionDe     String @map("description_de")
   descriptionFr     String @map("description_fr")
-  descriptionRm     String @map("description_rm")
   descriptionIt     String @map("description_it")
   descriptionEn     String @map("description_en")
 
@@ -398,13 +394,11 @@ model AutoCatLabelItem {
   name                 String @map("name")
   nameDe               String @map("name_de")
   nameFr               String @map("name_fr")
-  nameRm               String @map("name_rm")
   nameIt               String @map("name_it")
   nameEn               String @map("name_en")
   description          String @map("description")
   descriptionDe        String @map("description_de")
   descriptionFr        String @map("description_fr")
-  descriptionRm        String @map("description_rm")
   descriptionIt        String @map("description_it")
   descriptionEn        String @map("description_en")
 
@@ -419,13 +413,11 @@ model AutoObjectCatItem {
   name                  String @map("name")
   nameDe                String @map("name_de")
   nameFr                String @map("name_fr")
-  nameRm                String @map("name_rm")
   nameIt                String @map("name_it")
   nameEn                String @map("name_en")
   description           String @map("description")
   descriptionDe         String @map("description_de")
   descriptionFr         String @map("description_fr")
-  descriptionRm         String @map("description_rm")
   descriptionIt         String @map("description_it")
   descriptionEn         String @map("description_en")
 
@@ -440,13 +432,11 @@ model ContactKindItem {
   name                String @map("name")
   nameDe              String @map("name_de")
   nameFr              String @map("name_fr")
-  nameRm              String @map("name_rm")
   nameIt              String @map("name_it")
   nameEn              String @map("name_en")
   description         String @map("description")
   descriptionDe       String @map("description_de")
   descriptionFr       String @map("description_fr")
-  descriptionRm       String @map("description_rm")
   descriptionIt       String @map("description_it")
   descriptionEn       String @map("description_en")
 
@@ -461,13 +451,11 @@ model GeomQualityItem {
   name                String @map("name")
   nameDe              String @map("name_de")
   nameFr              String @map("name_fr")
-  nameRm              String @map("name_rm")
   nameIt              String @map("name_it")
   nameEn              String @map("name_en")
   description         String @map("description")
   descriptionDe       String @map("description_de")
   descriptionFr       String @map("description_fr")
-  descriptionRm       String @map("description_rm")
   descriptionIt       String @map("description_it")
   descriptionEn       String @map("description_en")
 
@@ -484,13 +472,11 @@ model LanguageItem {
   name             String @map("name")
   nameDe           String @map("name_de")
   nameFr           String @map("name_fr")
-  nameRm           String @map("name_rm")
   nameIt           String @map("name_it")
   nameEn           String @map("name_en")
   description      String @map("description")
   descriptionDe    String @map("description_de")
   descriptionFr    String @map("description_fr")
-  descriptionRm    String @map("description_rm")
   descriptionIt    String @map("description_it")
   descriptionEn    String @map("description_en")
 
@@ -515,13 +501,11 @@ model ManCatLabelItem {
   name                String @map("name")
   nameDe              String @map("name_de")
   nameFr              String @map("name_fr")
-  nameRm              String @map("name_rm")
   nameIt              String @map("name_it")
   nameEn              String @map("name_en")
   description         String @map("description")
   descriptionDe       String @map("description_de")
   descriptionFr       String @map("description_fr")
-  descriptionRm       String @map("description_rm")
   descriptionIt       String @map("description_it")
   descriptionEn       String @map("description_en")
 
@@ -536,13 +520,11 @@ model NatRelItem {
   name           String @map("name")
   nameDe         String @map("name_de")
   nameFr         String @map("name_fr")
-  nameRm         String @map("name_rm")
   nameIt         String @map("name_it")
   nameEn         String @map("name_en")
   description    String @map("description")
   descriptionDe  String @map("description_de")
   descriptionFr  String @map("description_fr")
-  descriptionRm  String @map("description_rm")
   descriptionIt  String @map("description_it")
   descriptionEn  String @map("description_en")
 
@@ -557,13 +539,11 @@ model LegalDocItem {
   name             String @map("name")
   nameDe           String @map("name_de")
   nameFr           String @map("name_fr")
-  nameRm           String @map("name_rm")
   nameIt           String @map("name_it")
   nameEn           String @map("name_en")
   description      String @map("description")
   descriptionDe    String @map("description_de")
   descriptionFr    String @map("description_fr")
-  descriptionRm    String @map("description_rm")
   descriptionIt    String @map("description_it")
   descriptionEn    String @map("description_en")
   File             File[]
@@ -577,13 +557,11 @@ model PubChannelItem {
   name               String @map("name")
   nameDe             String @map("name_de")
   nameFr             String @map("name_fr")
-  nameRm             String @map("name_rm")
   nameIt             String @map("name_it")
   nameEn             String @map("name_en")
   description        String @map("description")
   descriptionDe      String @map("description_de")
   descriptionFr      String @map("description_fr")
-  descriptionRm      String @map("description_rm")
   descriptionIt      String @map("description_it")
   descriptionEn      String @map("description_en")
 
@@ -598,13 +576,11 @@ model StatusAssetUseItem {
   name                   String @map("name")
   nameDe                 String @map("name_de")
   nameFr                 String @map("name_fr")
-  nameRm                 String @map("name_rm")
   nameIt                 String @map("name_it")
   nameEn                 String @map("name_en")
   description            String @map("description")
   descriptionDe          String @map("description_de")
   descriptionFr          String @map("description_fr")
-  descriptionRm          String @map("description_rm")
   descriptionIt          String @map("description_it")
   descriptionEn          String @map("description_en")
 
@@ -620,13 +596,11 @@ model StatusWorkItem {
   name               String @map("name")
   nameDe             String @map("name_de")
   nameFr             String @map("name_fr")
-  nameRm             String @map("name_rm")
   nameIt             String @map("name_it")
   nameEn             String @map("name_en")
   description        String @map("description")
   descriptionDe      String @map("description_de")
   descriptionFr      String @map("description_fr")
-  descriptionRm      String @map("description_rm")
   descriptionIt      String @map("description_it")
   descriptionEn      String @map("description_en")
 
@@ -659,9 +633,9 @@ model Workgroup {
 }
 
 model WorkgroupsOnUsers {
-  workgroup   Workgroup @relation(fields: [workgroupId], references: [id])
+  workgroup   Workgroup @relation(fields: [workgroupId], references: [id], onDelete: Cascade)
   workgroupId Int       @map("workgroup_id")
-  user        AssetUser @relation(fields: [userId], references: [id])
+  user        AssetUser @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId      String    @map("user_id") @db.Uuid
   role        Role
 
@@ -677,10 +651,10 @@ enum Role {
 
 model Favorite {
   userId String    @map("user_id") @db.Uuid
-  user   AssetUser @relation(fields: [userId], references: [id])
+  user   AssetUser @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   assetId Int   @map("asset_id")
-  Asset   Asset @relation(fields: [assetId], references: [assetId])
+  Asset   Asset @relation(fields: [assetId], references: [assetId], onDelete: Cascade)
 
   @@id([userId, assetId])
   @@map("favorite")

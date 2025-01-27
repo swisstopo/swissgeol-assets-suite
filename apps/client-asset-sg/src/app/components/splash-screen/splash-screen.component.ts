@@ -21,5 +21,4 @@ export class SplashScreenComponent {
   }
 
   protected readonly AuthState = AuthState;
-  protected readonly console = console;
 }

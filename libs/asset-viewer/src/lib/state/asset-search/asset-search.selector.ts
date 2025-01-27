@@ -311,7 +311,6 @@ type FilterConfig<T> = Pick<Filter<T>, 'name' | 'value'>;
 export const makeTranslatedValueFromItemName = (item: ValueItem): TranslatedValue => ({
   de: item.nameDe,
   fr: item.nameFr,
-  rm: item.nameRm,
   it: item.nameIt,
   en: item.nameEn,
 });

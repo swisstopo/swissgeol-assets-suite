@@ -26,6 +26,7 @@ import {
   BulkOperationContainer,
   QueryDslNumberRangeQuery,
   QueryDslQueryContainer,
+  SearchResponse,
   SearchTotalHits,
 } from '@elastic/elasticsearch/lib/api/types';
 import { Injectable, Logger } from '@nestjs/common';
@@ -51,6 +52,8 @@ interface ElasticSearchResult {
   scoresByAssetId: Map<AssetId, number>;
   aggs: SearchAssetAggregations;
 }
+
+const SEARCH_BATCH_SIZE = 10_000;
 
 @Injectable()
 export class AssetSearchService {
@@ -374,70 +377,130 @@ export class AssetSearchService {
     user: User,
     page: PageOptions = {}
   ): Promise<[Map<AssetId, SerializedAssetEditDetail>, number]> {
-    const BATCH_SIZE = 10_000;
-
     const elasticQuery = mapQueryToElasticDsl(query, user);
-    const matchedAssets = new Map<number, string>();
-    let lastAssetId: number | null = null;
-    let totalCount: number | null = null;
 
-    let remainingOffset = page.offset ?? 0;
+    const state: SearchState = {
+      matchedAssets: new Map(),
+      lastAssetId: null,
+      totalCount: null,
+    };
+    const hasMore = await this.doOffsetForSearch(elasticQuery, page, state);
+    if (hasMore) {
+      await this.doSearchByOffset(elasticQuery, page, state);
+    }
+    return [state.matchedAssets, state.totalCount ?? 0];
+  }
+
+  /**
+   * Find which assets need to be skipped when paginating with an offset.
+   *
+   * Elasticsearch only supports offset by id/cursor, but not by a fixed number.
+   * This means that we need to execute search queries for all skipped assets as well.
+   *
+   * This method will update {@link state.totalCount} and {@link state.lastAssetId}.
+   *
+   * @param elasticQuery The query to search with.
+   * @param page The page options.
+   * @param state The state of the current search.
+   * @return Whether there are any more assets after the offset.
+   * @private
+   */
+  private async doOffsetForSearch(
+    elasticQuery: QueryDslQueryContainer,
+    page: PageOptions,
+    state: SearchState
+  ): Promise<boolean> {
+    const offset = page.offset ?? 0;
+    let remainingOffset = offset;
     while (remainingOffset > 0) {
-      const remainingLimit = Math.min(BATCH_SIZE, remainingOffset);
+      const remainingLimit = Math.min(SEARCH_BATCH_SIZE, remainingOffset);
       if (remainingLimit <= 0) {
         break;
       }
-      const response = await this.elastic.search({
-        index: INDEX,
-        query: elasticQuery,
+      const response = await this.executeSearchQuery(elasticQuery, state, {
+        limit: remainingLimit,
         fields: ['assetId'],
-        size: remainingLimit,
-        sort: {
-          assetId: 'desc',
-        },
-        _source: false,
-        track_total_hits: totalCount == null,
-        search_after: lastAssetId == null ? undefined : [lastAssetId],
       });
-      totalCount ??= (response.hits.total as SearchTotalHits).value as number;
+      if (state.lastAssetId == null && state.totalCount != null && state.totalCount < offset) {
+        return false;
+      }
       if (response.hits.hits.length < remainingLimit) {
-        return [matchedAssets, totalCount];
+        return false;
       }
       remainingOffset -= response.hits.hits.length;
-      lastAssetId = response.hits.hits[response.hits.hits.length - 1].fields!['assetId'][0] as number;
+      state.lastAssetId = response.hits.hits[response.hits.hits.length - 1].fields!['assetId'][0] as number;
     }
+    return state.totalCount == null || state.totalCount > offset;
+  }
 
+  /**
+   * Execute a search for assets after a specific offset has already been determined via {@link doOffsetForSearch}.
+   *
+   * This method will update {@link state.totalCount}, {@link state.lastAssetId} and {@link state.matchedAssets}.
+   *
+   * @param elasticQuery The query to search with.
+   * @param page The page options.
+   * @param state The state of the current search.
+   * @private
+   */
+  private async doSearchByOffset(elasticQuery: QueryDslQueryContainer, page: PageOptions, state: SearchState) {
     for (;;) {
-      const remainingLimit = page.limit == null ? BATCH_SIZE : Math.min(BATCH_SIZE, page.limit - matchedAssets.size);
-      if (remainingLimit <= 0 && totalCount != null) {
-        return [matchedAssets, totalCount];
+      const remainingLimit =
+        page.limit == null ? SEARCH_BATCH_SIZE : Math.min(SEARCH_BATCH_SIZE, page.limit - state.matchedAssets.size);
+      if (remainingLimit <= 0 && state.totalCount != null) {
+        return;
       }
-      const response = await this.elastic.search({
-        index: INDEX,
-        query: elasticQuery,
+      const response = await this.executeSearchQuery(elasticQuery, state, {
+        limit: remainingLimit,
         fields: ['assetId', 'data'],
-        size: remainingLimit,
-        sort: {
-          assetId: 'desc',
-        },
-        track_total_hits: totalCount == null,
-        _source: false,
-        search_after: lastAssetId == null ? undefined : [lastAssetId],
       });
-      totalCount ??= (response.hits.total as SearchTotalHits).value as number;
       if (response.hits.hits.length === 0) {
-        return [matchedAssets, totalCount];
+        return;
       }
       for (const hit of response.hits.hits) {
         const assetId: number = hit.fields!['assetId'][0];
         const data = hit.fields!['data'][0];
-        matchedAssets.set(assetId, data);
-        lastAssetId = assetId;
+        state.matchedAssets.set(assetId, data);
+        state.lastAssetId = assetId;
       }
-      if (totalCount <= (page.offset ?? 0) + matchedAssets.size) {
-        return [matchedAssets, totalCount];
+      if (state.totalCount != null && state.totalCount <= (page.offset ?? 0) + state.matchedAssets.size) {
+        return;
       }
     }
+  }
+
+  /**
+   * Execute an elastic query in the context of a @link SearchState}.
+   *
+   * This method will update {@link state.totalCount}.
+   *
+   * @param elasticQuery The query to execute.
+   * @param state The search state.
+   * @param options Describes how to execute the query.
+   * @param options.limit How many documents will be queried at most.
+   * @param options.fields The document fields that will be included in the response.
+   * @returns The Elasticsearch response.
+   * @private
+   */
+  private async executeSearchQuery(
+    elasticQuery: QueryDslQueryContainer,
+    state: SearchState,
+    options: { limit: number; fields: string[] }
+  ): Promise<SearchResponse> {
+    const response = await this.elastic.search({
+      index: INDEX,
+      query: elasticQuery,
+      size: options.limit,
+      fields: options.fields,
+      sort: {
+        assetId: 'desc',
+      },
+      _source: false,
+      track_total_hits: state.totalCount == null,
+      search_after: state.lastAssetId == null ? undefined : [state.lastAssetId],
+    });
+    state.totalCount ??= (response.hits.total as SearchTotalHits).value as number;
+    return response;
   }
 
   private async searchElasticOld(query: string, { scope, assetIds }: SearchOptions): Promise<ElasticSearchResult> {
@@ -869,3 +932,29 @@ const normalizeFieldQuery = (query: string): string =>
     .replace(/title(_*)original:/gi, 'titleOriginal:')
     .replace(/contact(_*)ame:/gi, 'contactNames:')
     .replace(/sgs(_*)id:/gi, 'sgsId:');
+
+/**
+ * The state of a multistep asset search.
+ */
+interface SearchState {
+  /**
+   * The assets that match the search.
+   * This is a mapping from the assets' id to their serialized JSON string.
+   */
+  matchedAssets: Map<AssetId, SerializedAssetEditDetail>;
+
+  /**
+   * The id of the last asset that has been matched.
+   * This is used to enable paginated search results with Elasticsearch.
+   *
+   * This is `null` if no query has been executed yet.
+   */
+  lastAssetId: number | null;
+
+  /**
+   * The total number of assets, including the ones that were skipped due to offset and limit.
+   *
+   * This is `null` if no query has been executed yet.
+   */
+  totalCount: number | null;
+}

@@ -1,0 +1,8 @@
+# file containing sensitive data
+.env
+secrets-*.yaml
+values-*.yaml
+registry.yaml
+
+# JetBrains IDE files
+.idea

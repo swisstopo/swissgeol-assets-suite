@@ -1,6 +1,6 @@
 ARG APP_VERSION
 
-FROM node:22-alpine as sync-builder
+FROM node:22-alpine AS sync-builder
 
 ENV APP_VERSION=${APP_VERSION}
 ENV NODE_ENV=development
@@ -8,8 +8,8 @@ ENV NODE_ENV=development
 WORKDIR /app
 COPY . .
 
-RUN npm install --no-scripts
-RUN npx nx build sync-asset-sg --configuration=production
+RUN npm install --ignore-scripts \
+ && npx nx build sync-asset-sg --configuration=production
 
 # final image build
 FROM node:22-alpine

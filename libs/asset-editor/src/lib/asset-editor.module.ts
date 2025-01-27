@@ -43,6 +43,8 @@ import { de } from 'date-fns/locale/de';
 import * as O from 'fp-ts/Option';
 import { combineLatest, filter, map } from 'rxjs';
 import { AssetEditorFilesComponent } from './components/asset-editor-files/asset-editor-files.component';
+import { AssetEditorIdFormComponent } from './components/asset-editor-id-form/asset-editor-id-form.component';
+import { AssetEditorIdListComponent } from './components/asset-editor-id-list/asset-editor-id-list.component';
 import { AssetEditorLaunchComponent } from './components/asset-editor-launch';
 import { AssetEditorPageComponent } from './components/asset-editor-page';
 import { AssetEditorSyncComponent } from './components/asset-editor-sync/asset-editor-sync.component';
@@ -65,6 +67,8 @@ export const canLeaveEdit: CanDeactivateFn<AssetEditorPageComponent> = (c) => c.
 @NgModule({
   declarations: [
     AssetEditorFilesComponent,
+    AssetEditorIdFormComponent,
+    AssetEditorIdListComponent,
     AssetEditorLaunchComponent,
     AssetEditorSyncComponent,
     AssetEditorPageComponent,

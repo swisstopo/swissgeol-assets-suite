@@ -8,6 +8,22 @@
 
 ### Fixed
 
+## v1.8.0
+
+### Added
+
+- Benutzer, die nicht mehr in der entsprechenden Cognito-Gruppe existieren, werden nächtlich aus der Datenbank gelöscht und können sich nicht mehr einloggen.
+
+### Changed
+
+- Wenn man das Bearbeitungsformular eines Assets schliesst, landet man neu auf der Startseite der Applikation.
+- Rätoromanisch wurde als Sprache entfernt.
+
+### Fixed
+
+- Alternativ-Ids im Bearbeitungsformular können nun korrekt bearbeiten werden.
+- Bearbeitete Assets werden nun korrekt im UI angezeigt, ohne dass ein Neuladen der Seite notwendig ist.
+
 ## v1.7.0
 
 ### Added

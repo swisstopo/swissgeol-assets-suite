@@ -52,7 +52,6 @@ export interface TranslationKey {
 export interface TranslatedValue {
   de: string;
   fr: string;
-  rm: string;
   it: string;
   en: string;
 }

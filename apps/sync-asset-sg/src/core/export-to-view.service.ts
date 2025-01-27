@@ -9,13 +9,13 @@ interface AssetInfo {
   workgroupId: number;
 }
 
+const BATCH_SIZE = 500;
+
 export class ExportToViewService {
   private readonly allowedWorkgroupIds: number[];
 
   private readonly sourcePrisma: PrismaClient;
   private readonly destinationPrisma: PrismaClient;
-
-  private readonly batchSize = 500;
 
   constructor(sourcePrisma: PrismaClient, destinationPrisma: PrismaClient, config: SyncConfig) {
     this.allowedWorkgroupIds = config.source.allowedWorkgroupIds;
@@ -29,7 +29,7 @@ export class ExportToViewService {
     log(`Found ${publicAssetIds.length} public assets.`);
 
     const batches = this.batchList(publicAssets);
-    log(`Created ${batches.length} batches with batchsize ${this.batchSize}.`);
+    log(`Created ${batches.length} batches with batch size ${BATCH_SIZE}.`);
 
     await this.exportItems();
 
@@ -247,7 +247,7 @@ export class ExportToViewService {
   /**
    * Export table with ids.
    */
-  private async export(table: string, idField = 'id', ids: number[]) {
+  private async export(table: string, idField: string, ids: number[]) {
     const items = await this.sourcePrisma[table].findMany({ where: { [idField]: { in: ids } } });
     const result = await this.destinationPrisma[table].createMany({ data: items, skipDuplicates: true });
 
@@ -347,10 +347,9 @@ export class ExportToViewService {
    * Batch list.
    */
   private batchList<T>(list: T[]): T[][] {
-    let skip = 0;
     const batches = [];
-    while (skip < list.length) {
-      batches.push(list.slice(skip, (skip += this.batchSize)));
+    for (let i = 0; i < list.length; i += BATCH_SIZE) {
+      batches.push(list.slice(i, i + BATCH_SIZE));
     }
     return batches;
   }

@@ -1,0 +1,27 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: {{ .Release.Name }}-routes
+  namespace: {{ .Release.Namespace }}  
+spec:
+  entryPoints:
+    - web
+  routes:
+    - kind: Rule
+      match: Host(`{{ .Values.host }}`) && PathPrefix(`/kibana`)
+      middlewares:
+        - name: {{ .Release.Name }}-kibana-rewrite
+      priority: 1000
+      services:
+        - name: {{ .Release.Name }}-kibana
+          port: 5601
+    - kind: Rule
+      match: Host(`{{ .Values.host }}`) && PathPrefix(`/elasticsearch`)
+      middlewares:
+        - name: {{ .Release.Name }}-elasticsearch-rewrite
+      priority: 2000
+      services:
+        - name: {{ .Release.Name }}-elasticsearch
+          port: 9200
+
+

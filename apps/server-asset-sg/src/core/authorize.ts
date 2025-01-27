@@ -1,5 +1,4 @@
-import { User } from '@asset-sg/shared/v2';
-import { Policy } from '@asset-sg/shared/v2';
+import { User, Policy } from '@asset-sg/shared/v2';
 import { HttpException, HttpStatus } from '@nestjs/common';
 import { Class } from 'type-fest';
 

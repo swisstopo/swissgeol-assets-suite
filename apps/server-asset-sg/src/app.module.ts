@@ -29,6 +29,7 @@ import { FilesController } from '@/features/files/files.controller';
 import { StudiesController } from '@/features/studies/studies.controller';
 import { StudyRepo } from '@/features/studies/study.repo';
 import { UserRepo } from '@/features/users/user.repo';
+import { UserService } from '@/features/users/user.service';
 import { UsersController } from '@/features/users/users.controller';
 import { WorkgroupRepo } from '@/features/workgroups/workgroup.repo';
 import { WorkgroupsController } from '@/features/workgroups/workgroups.controller';
@@ -63,6 +64,7 @@ import { WorkgroupsController } from '@/features/workgroups/workgroups.controlle
     PrismaService,
     StudyRepo,
     UserRepo,
+    UserService,
     WorkgroupRepo,
     {
       provide: APP_GUARD,

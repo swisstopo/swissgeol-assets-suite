@@ -1,6 +1,6 @@
 ARG APP_VERSION
 
-FROM node:22-alpine as api-builder
+FROM node:22-alpine AS api-builder
 
 ENV APP_VERSION=${APP_VERSION}
 ENV NODE_ENV=development
@@ -8,11 +8,14 @@ ENV NODE_ENV=development
 WORKDIR /app
 COPY . .
 
-RUN npm install --no-scripts
-RUN npx nx build server-asset-sg --configuration=production
+RUN npm install --ignore-scripts \
+ && npm run prisma -- generate   \
+ && npx nx build server-asset-sg --configuration=production
 
 # final image build
 FROM node:22-alpine
+
+RUN apk add --no-cache openssl
 
 ENV APP_VERSION=${APP_VERSION}
 ENV NODE_ENV=production

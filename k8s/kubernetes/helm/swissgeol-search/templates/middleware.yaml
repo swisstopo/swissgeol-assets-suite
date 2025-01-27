@@ -1,0 +1,25 @@
+#--------------------------------------
+# rewrite kibana
+#--------------------------------------
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:  
+  name: {{ .Release.Name }}-kibana-rewrite
+  namespace: {{ .Release.Namespace }}
+spec:
+  stripPrefix:
+    prefixes:
+      - /kibana
+---
+#--------------------------------------
+# rewrite elasticsearch
+#--------------------------------------
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:  
+  name: {{ .Release.Name }}-elasticsearch-rewrite
+  namespace: {{ .Release.Namespace }}
+spec:
+  stripPrefix:
+    prefixes:
+      - /elasticsearch

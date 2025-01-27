@@ -11,7 +11,7 @@ import {
   ViewChildren,
   ViewContainerRef,
 } from '@angular/core';
-import { fromAppShared, LifecycleHooks, LifecycleHooksDirective } from '@asset-sg/client-shared';
+import { fromAppShared, LifecycleHooks, LifecycleHooksDirective, RoutingService } from '@asset-sg/client-shared';
 import { isNotNil, isTruthy, ORD } from '@asset-sg/core';
 import { ContactEdit, GeomFromGeomText, PatchAsset, PatchContact } from '@asset-sg/shared';
 import * as RD from '@devexperts/remote-data-ts';
@@ -55,9 +55,11 @@ export class AssetEditorTabPageComponent {
   private _viewContainerRef = inject(ViewContainerRef);
   private _translateService = inject(TranslateService);
   private _store = inject(Store<AppStateWithAssetEditor>);
-  private _location = inject(Location);
   private _tabPageBridgeService = inject(TabPageBridgeService);
   private _dialogService = inject(Dialog);
+
+  private readonly routingService = inject(RoutingService);
+  private readonly location = inject(Location);
 
   public _discardDialogRef?: DialogRef<boolean>;
 
@@ -88,8 +90,8 @@ export class AssetEditorTabPageComponent {
         this._showProgressBar$.next(false);
         if (O.isSome(maybeAsset)) {
           const asset = maybeAsset.value;
-          if (this._location.path().match(/(\w+)/g)?.[3] === 'new') {
-            this._location.replaceState(this._location.path().replace(/new/, String(asset.assetId)));
+          if (this.location.path().match(/(\w{3})/g)?.[3] === 'new') {
+            this.location.replaceState(this.location.path().replace(/new/, String(asset.assetId)));
           }
 
           const filesByType: Record<FileType, AssetEditorFile[]> = {
@@ -181,7 +183,7 @@ export class AssetEditorTabPageComponent {
         untilDestroyed(this)
       )
       .subscribe((element) => {
-        const tabKey = this._location.path().match(/(\w+)$/)?.[1];
+        const tabKey = this.urlPath.substring(this.indexOfLastSlashInUrlPath + 1);
         const createButtonLabelTranslation = (key: string) =>
           from(
             this._translateService.onLangChange.pipe(
@@ -245,8 +247,11 @@ export class AssetEditorTabPageComponent {
         let lastTabValue: string | undefined = undefined;
         const onValueChange = (value: string) => {
           if (value === lastTabValue) return;
+          console.log('reroute', value);
           lastTabValue = value;
-          this._location.replaceState(this._location.path().replace(/\w+$/, value));
+
+          const pathPrefix = this.urlPath.substring(0, this.indexOfLastSlashInUrlPath);
+          this.location.replaceState(`${pathPrefix}/${value}`);
           changeToTab(value);
         };
         KobalteTabs(
@@ -352,11 +357,23 @@ export class AssetEditorTabPageComponent {
     this._store.dispatch(actions.createContact({ contact }));
   }
 
+  public close(): void {
+    this.routingService.navigateBack(['/']);
+  }
+
   public canLeave(): Observable<boolean> {
     if (this.form.pristine) return of(true);
     const dialogRef = (this._discardDialogRef = this._dialogService.open(this._tmplDiscardDialog, {
       disableClose: true,
     }));
     return dialogRef.closed.pipe(map(isTruthy));
+  }
+
+  private get urlPath(): string {
+    return this.location.path().split('?', 2)[0];
+  }
+
+  private get indexOfLastSlashInUrlPath(): number {
+    return this.urlPath.lastIndexOf('/');
   }
 }

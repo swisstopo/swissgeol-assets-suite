@@ -1,0 +1,2 @@
+# By default text files use native line endings for the platform
+* text=auto
