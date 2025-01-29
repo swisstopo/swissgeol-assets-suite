@@ -11,6 +11,7 @@ export class UserDataSchema extends Schema implements UserData {
   @IsBoolean()
   isAdmin!: boolean;
 
+  // TODO: add @IsNotEmpty() to firstname and lastname once all users have them
   @IsString()
   firstName!: string;
 

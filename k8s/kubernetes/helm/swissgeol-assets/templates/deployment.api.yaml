@@ -1,8 +1,8 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: { { .Release.Name } }-api
-  namespace: { { .Release.Namespace } }
+  name: {{ .Release.Name }}-api
+  namespace: {{ .Release.Namespace }}
   annotations:
     keel.sh/policy: force
     keel.sh/match-tag: 'true'
@@ -11,16 +11,16 @@ spec:
   replicas: 1
   selector:
     matchLabels:
-      app: { { .Release.Name } }-api
+      app: {{ .Release.Name }}-api
   template:
     metadata:
       labels:
-        app: { { .Release.Name } }-api
+        app: {{ .Release.Name }}-api
     spec:
       serviceAccountName: cognito
       containers:
-        - name: { { .Release.Name } }-api
-          image: { { .Values.image_api } }
+        - name: {{ .Release.Name }}-api
+          image: {{ .Values.image_api }}
           imagePullPolicy: Always
           ports:
             - containerPort: 3333
@@ -28,57 +28,57 @@ spec:
             - name: DATABASE_URL
               valueFrom:
                 secretKeyRef:
-                  name: { { .Release.Name } }-secrets
+                  name: {{ .Release.Name }}-secrets
                   key: apiDbCon
             - name: FRONTEND_URL
               value: https://{{ .Values.host }}
             - name: ELASTICSEARCH_URL
-              value: { { .Values.elasticsearch_url } }
+              value: {{ .Values.elasticsearch_url }}
             - name: ELASTICSEARCH_USERNAME
               value: elastic
             - name: ELASTICSEARCH_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: { { .Release.Name } }-secrets
+                  name: {{ .Release.Name }}-secrets
                   key: elasticPassword
             - name: S3_BUCKET_NAME
-              value: { { .Values.s3_bucket_name } }
+              value: {{ .Values.s3_bucket_name }}
             - name: S3_REGION
-              value: { { .Values.s3_region } }
+              value: {{ .Values.s3_region }}
             - name: S3_ENDPOINT
-              value: { { .Values.s3_endpoint } }
+              value: {{ .Values.s3_endpoint }}
             - name: S3_ACCESS_KEY_ID
               valueFrom:
                 secretKeyRef:
-                  name: { { .Release.Name } }-secrets
+                  name: {{ .Release.Name }}-secrets
                   key: s3AccessKeyId
             - name: S3_SECRET_ACCESS_KEY
               valueFrom:
                 secretKeyRef:
-                  name: { { .Release.Name } }-secrets
+                  name: {{ .Release.Name }}-secrets
                   key: s3SecretAccessKey
             - name: S3_ASSET_FOLDER
-              value: { { .Values.s3_asset_folder } }
+              value: {{ .Values.s3_asset_folder }}
             - name: COGNITO_REGION
-              value: { { .Values.cognito_region } }
+              value: {{ .Values.cognito_region }}
             - name: COGNITO_POOL_ID
-              value: { { .Values.cognito_pool_id } }
+              value: {{ .Values.cognito_pool_id }}
             - name: COGNITO_GROUP
-              value: { { .Values.cognito_group } }
+              value: {{ .Values.cognito_group }}
             - name: OAUTH_ISSUER
-              value: { { .Values.oauth_issuer } }
+              value: {{ .Values.oauth_issuer }}
             - name: OAUTH_CLIENT_ID
-              value: { { .Values.oauth_client_id } }
+              value: {{ .Values.oauth_client_id }}
             - name: OAUTH_SCOPE
-              value: { { .Values.oauth_scope } }
+              value: {{ .Values.oauth_scope }}
             - name: OAUTH_SHOW_DEBUG_INFO
               value: 'true'
             - name: OAUTH_TOKEN_ENDPOINT
-              value: { { .Values.oauth_token_endpoint } }
+              value: {{ .Values.oauth_token_endpoint }}
             - name: OAUTH_USER_INFO_ENDPOINT
-              value: { { .Values.oauth_user_info_endpoint } }
+              value: {{ .Values.oauth_user_info_endpoint }}
             - name: OAUTH_AUTHORIZED_GROUPS
-              value: { { .Values.oauth_authorized_groups } }
+              value: {{ .Values.oauth_authorized_groups }}
             - name: ANONYMOUS_MODE
               value: "{{ .Values.anonymous_mode }}"
             - name: OCR_SERVICE_URL
@@ -97,4 +97,4 @@ spec:
       #            cpu: '0.6'
       #            memory: 500Mi
       imagePullSecrets:
-        - name: { { .Release.Namespace } }-registry
+        - name: {{ .Release.Namespace }}-registry
