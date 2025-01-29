@@ -23,7 +23,7 @@ model Asset {
   processor           String?         @map("processor")
   lastProcessedDate   DateTime        @map("last_processed_date")
   textBody            String?         @map("text_body")
-  sgsId               Int?            @map("sgs_id")
+  sgsId               Int?            @unique @map("sgs_id")
   geolDataInfo        String?         @map("geol_data_info")
   geolContactDataInfo String?         @map("geol_contact_data_info")
   geolAuxDataInfo     String?         @map("geol_aux_data_info")
