@@ -54,6 +54,8 @@ export class AdminService {
           lang: user.lang,
           roles: user.roles,
           isAdmin: user.isAdmin,
+          firstName: user.firstName,
+          lastName: user.lastName,
         } as UserData)
       )
       .pipe(map((it) => plainToInstance(UserSchema, it)));

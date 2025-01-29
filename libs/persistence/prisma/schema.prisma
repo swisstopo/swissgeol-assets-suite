@@ -617,6 +617,8 @@ model AssetUser {
   favorites  Favorite[]
   workgroups WorkgroupsOnUsers[]
   isAdmin    Boolean             @default(false) @map("is_admin")
+  firstName  String              @default("") @map("first_name")
+  lastName   String              @default("") @map("last_name")
 
   @@map("asset_user")
 }

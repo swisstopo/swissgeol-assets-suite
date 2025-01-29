@@ -33,20 +33,20 @@ export class JwtMiddleware implements NestMiddleware {
       return next();
     }
 
-    if (process.env.NODE_ENV === 'development') {
-      const authentication = req.header('Authorization');
-      if (authentication?.startsWith('Impersonate ')) {
-        const email = authentication.split(' ', 2)[1];
-        const user = await this.userRepo.findByEmail(email);
-        if (user == null) {
-          res.status(401).json({ error: `no user with email '${email}' found` });
-          return;
-        }
-        const payload: JwtPayload = { sub: user.id, username: `???_${user.email}` };
-        await this.initializeRequest(req, 'impersonated-access-token', payload);
-        return next();
-      }
-    }
+    // if (process.env.NODE_ENV === 'development') {
+    //   const authentication = req.header('Authorization');
+    //   if (authentication?.startsWith('Impersonate ')) {
+    //     const email = authentication.split(' ', 2)[1];
+    //     const user = await this.userRepo.findByEmail(email);
+    //     if (user == null) {
+    //       res.status(401).json({ error: `no user with email '${email}' found` });
+    //       return;
+    //     }
+    //     const payload: JwtPayload = { sub: user.id, username: `???_${user.email}` };
+    //     await this.initializeRequest(req, 'impersonated-access-token', payload);
+    //     return next();
+    //   }
+    // }
 
     const token = await this.getToken(req);
     // Set accessToken and jwtPayload to request if verification is successful
@@ -125,7 +125,7 @@ export class JwtMiddleware implements NestMiddleware {
   }
 
   private getJwkTE(): TE.TaskEither<Error, JwksKey[]> {
-    const jwksPath = environment.production ? '/.well-known/jwks.json' : '/.well-known/openid-configuration/jwks';
+    const jwksPath = '/.well-known/jwks.json';
     return pipe(
       TE.tryCatch(
         () => axios.get(`${process.env.OAUTH_ISSUER}${jwksPath}`),
@@ -190,7 +190,11 @@ export class JwtMiddleware implements NestMiddleware {
     }
 
     // Load the JWT's user, or create it if it does not exist yet.
-    const user = (await this.userRepo.find(oidcId)) ?? (await this.initializeDefaultUser(oidcId, payload));
+    let user = (await this.userRepo.find(oidcId)) ?? (await this.initializeDefaultUser(accessToken));
+
+    if (user.firstName === '' || user.lastName === '') {
+      user = (await this.updateExistingUser(accessToken, user)) ?? user;
+    }
 
     // Extend the request with the fields required to make it an `AuthenticatedRequest`.
     const authenticatedFields: Omit<JwtRequest, keyof Request> = {
@@ -221,27 +225,52 @@ export class JwtMiddleware implements NestMiddleware {
     return {
       id,
       email: '',
+      lastName: '',
+      firstName: '',
       lang: 'de',
       isAdmin: false,
       roles,
     };
   }
 
-  private async initializeDefaultUser(oidcId: string, payload: JwtPayload): Promise<User> {
-    if (!('username' in payload) || payload.username.length === 0) {
+  private getUserInfo(token: string): TE.TaskEither<Error, UserInfo> {
+    return pipe(
+      TE.tryCatch(
+        () =>
+          axios.get(`${process.env.OAUTH_USER_INFO_ENDPOINT}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+        (reason) => {
+          console.error(process.env.OAUTH_USER_INFO_ENDPOINT, reason);
+          return new Error(`${reason}`);
+        }
+      ),
+      TE.map((response) => {
+        return {
+          email: response.data.email,
+          firstName: response.data.given_name,
+          lastName: response.data.family_name,
+          id: response.data.sub,
+        };
+      })
+    );
+  }
+
+  private async initializeDefaultUser(accessToken: string): Promise<User> {
+    const userData = await this.getUserInfo(accessToken)();
+    if (E.isLeft(userData)) {
       throw new HttpException('invalid JWT payload: missing username', 401);
     }
-    const email = payload.username.split('_').slice(1).join('_');
-    if (email == null || !/^.+@.+\..+$/.test(email)) {
-      throw new HttpException('invalid JWT payload: username does not contain an email', 401);
-    }
+    const data = userData.right;
     try {
       return await this.userRepo.create({
-        oidcId,
-        email,
+        oidcId: data.id,
+        email: data.email,
         lang: 'de',
         isAdmin: false,
         roles: new Map(),
+        firstName: data.firstName,
+        lastName: data.lastName,
       });
     } catch (e) {
       // If two requests of the same user overlap, it is possible that the user creation collides.
@@ -249,15 +278,33 @@ export class JwtMiddleware implements NestMiddleware {
       if (!(e instanceof Prisma.PrismaClientKnownRequestError) || e.code !== 'P2002') {
         throw e;
       }
-      const user = await this.userRepo.find(oidcId);
+      const user = await this.userRepo.find(data.id);
       if (user == null) {
         throw e;
       }
       return user;
     }
   }
+
+  private async updateExistingUser(accessToken: string, user: User): Promise<User | null> {
+    const userData = await this.getUserInfo(accessToken)();
+    if (E.isLeft(userData)) {
+      throw new HttpException('invalid JWT payload: missing username', 401);
+    }
+    const data = userData.right;
+    user.firstName = data.firstName;
+    user.lastName = data.lastName;
+    return await this.userRepo.update(user.id, user);
+  }
 }
 
 interface JwksKey {
   kid: string | undefined;
+}
+
+interface UserInfo {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
 }
