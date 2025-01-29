@@ -40,6 +40,7 @@ export class UserService {
       const at2AM = '0 2 * * *';
       const job = new CronJob(at2AM, () => this.syncUsers());
       this.schedulerRegistry.addCronJob('userSync', job);
+      job.start();
     });
   }
 
