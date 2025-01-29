@@ -1,4 +1,4 @@
-import { WorkgroupData, Role } from '@asset-sg/shared/v2';
+import { Role, WorkgroupData } from '@asset-sg/shared/v2';
 import { faker } from '@faker-js/faker';
 // eslint-disable-next-line @nx/enforce-module-boundaries
 import { clearPrismaAssets, setupDB, setupDefaultWorkgroup } from '../../../../../test/setup-db';
@@ -104,6 +104,8 @@ describe('WorkgroupRepo', () => {
       await setupDefaultWorkgroup(prisma);
       const user = await userRepo.create({
         email: faker.internet.email(),
+        lastName: faker.person.lastName(),
+        firstName: faker.person.firstName(),
         lang: 'de',
         oidcId: faker.string.uuid(),
         isAdmin: false,
@@ -149,6 +151,8 @@ describe('WorkgroupRepo', () => {
       await setupDefaultWorkgroup(prisma);
       const user = await userRepo.create({
         email: faker.internet.email(),
+        lastName: faker.person.lastName(),
+        firstName: faker.person.firstName(),
         lang: 'de',
         oidcId: faker.string.uuid(),
         isAdmin: false,
@@ -192,6 +196,8 @@ describe('WorkgroupRepo', () => {
       await setupDefaultWorkgroup(prisma);
       const user = await userRepo.create({
         email: faker.internet.email(),
+        lastName: faker.person.lastName(),
+        firstName: faker.person.firstName(),
         lang: 'de',
         oidcId: faker.string.uuid(),
         isAdmin: false,

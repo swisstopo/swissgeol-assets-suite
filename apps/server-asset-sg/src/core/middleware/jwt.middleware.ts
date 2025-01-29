@@ -1,6 +1,5 @@
 import { Role, User, WorkgroupId } from '@asset-sg/shared/v2';
 import { environment } from '@environment';
-
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { HttpException, Inject, Injectable, NestMiddleware } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
@@ -33,20 +32,20 @@ export class JwtMiddleware implements NestMiddleware {
       return next();
     }
 
-    // if (process.env.NODE_ENV === 'development') {
-    //   const authentication = req.header('Authorization');
-    //   if (authentication?.startsWith('Impersonate ')) {
-    //     const email = authentication.split(' ', 2)[1];
-    //     const user = await this.userRepo.findByEmail(email);
-    //     if (user == null) {
-    //       res.status(401).json({ error: `no user with email '${email}' found` });
-    //       return;
-    //     }
-    //     const payload: JwtPayload = { sub: user.id, username: `???_${user.email}` };
-    //     await this.initializeRequest(req, 'impersonated-access-token', payload);
-    //     return next();
-    //   }
-    // }
+    if (process.env.NODE_ENV === 'development') {
+      const authentication = req.header('Authorization');
+      if (authentication?.startsWith('Impersonate ')) {
+        const email = authentication.split(' ', 2)[1];
+        const user = await this.userRepo.findByEmail(email);
+        if (user == null) {
+          res.status(401).json({ error: `no user with email '${email}' found` });
+          return;
+        }
+        const payload: JwtPayload = { sub: user.id, username: `???_${user.email}` };
+        await this.initializeRequest(req, 'impersonated-access-token', payload);
+        return next();
+      }
+    }
 
     const token = await this.getToken(req);
     // Set accessToken and jwtPayload to request if verification is successful
@@ -125,7 +124,7 @@ export class JwtMiddleware implements NestMiddleware {
   }
 
   private getJwkTE(): TE.TaskEither<Error, JwksKey[]> {
-    const jwksPath = '/.well-known/jwks.json';
+    const jwksPath = environment.production ? '/.well-known/jwks.json' : '/.well-known/openid-configuration/jwks';
     return pipe(
       TE.tryCatch(
         () => axios.get(`${process.env.OAUTH_ISSUER}${jwksPath}`),
@@ -241,7 +240,6 @@ export class JwtMiddleware implements NestMiddleware {
             headers: { Authorization: `Bearer ${token}` },
           }),
         (reason) => {
-          console.error(process.env.OAUTH_USER_INFO_ENDPOINT, reason);
           return new Error(`${reason}`);
         }
       ),
