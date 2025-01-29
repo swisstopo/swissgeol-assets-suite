@@ -240,7 +240,6 @@ export class JwtMiddleware implements NestMiddleware {
             headers: { Authorization: `Bearer ${token}` },
           }),
         (reason) => {
-          console.error(process.env.OAUTH_USER_INFO_ENDPOINT, reason);
           return new Error(`${reason}`);
         }
       ),
