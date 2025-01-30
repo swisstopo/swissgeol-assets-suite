@@ -1,6 +1,5 @@
 import { Role, User, WorkgroupId } from '@asset-sg/shared/v2';
 import { environment } from '@environment';
-
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { HttpException, Inject, Injectable, NestMiddleware } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
@@ -190,7 +189,11 @@ export class JwtMiddleware implements NestMiddleware {
     }
 
     // Load the JWT's user, or create it if it does not exist yet.
-    const user = (await this.userRepo.find(oidcId)) ?? (await this.initializeDefaultUser(oidcId, payload));
+    let user = (await this.userRepo.find(oidcId)) ?? (await this.initializeDefaultUser(accessToken));
+
+    if (user.firstName === '' || user.lastName === '') {
+      user = (await this.updateExistingUser(accessToken, user)) ?? user;
+    }
 
     // Extend the request with the fields required to make it an `AuthenticatedRequest`.
     const authenticatedFields: Omit<JwtRequest, keyof Request> = {
@@ -221,27 +224,51 @@ export class JwtMiddleware implements NestMiddleware {
     return {
       id,
       email: '',
+      lastName: '',
+      firstName: '',
       lang: 'de',
       isAdmin: false,
       roles,
     };
   }
 
-  private async initializeDefaultUser(oidcId: string, payload: JwtPayload): Promise<User> {
-    if (!('username' in payload) || payload.username.length === 0) {
+  private getUserInfo(token: string): TE.TaskEither<Error, UserInfo> {
+    return pipe(
+      TE.tryCatch(
+        () =>
+          axios.get(`${process.env.OAUTH_USER_INFO_ENDPOINT}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+        (reason) => {
+          return new Error(`${reason}`);
+        }
+      ),
+      TE.map((response) => {
+        return {
+          email: response.data.email,
+          firstName: response.data.given_name,
+          lastName: response.data.family_name,
+          id: response.data.sub,
+        };
+      })
+    );
+  }
+
+  private async initializeDefaultUser(accessToken: string): Promise<User> {
+    const userData = await this.getUserInfo(accessToken)();
+    if (E.isLeft(userData)) {
       throw new HttpException('invalid JWT payload: missing username', 401);
     }
-    const email = payload.username.split('_').slice(1).join('_');
-    if (email == null || !/^.+@.+\..+$/.test(email)) {
-      throw new HttpException('invalid JWT payload: username does not contain an email', 401);
-    }
+    const data = userData.right;
     try {
       return await this.userRepo.create({
-        oidcId,
-        email,
+        oidcId: data.id,
+        email: data.email,
         lang: 'de',
         isAdmin: false,
         roles: new Map(),
+        firstName: data.firstName,
+        lastName: data.lastName,
       });
     } catch (e) {
       // If two requests of the same user overlap, it is possible that the user creation collides.
@@ -249,15 +276,33 @@ export class JwtMiddleware implements NestMiddleware {
       if (!(e instanceof Prisma.PrismaClientKnownRequestError) || e.code !== 'P2002') {
         throw e;
       }
-      const user = await this.userRepo.find(oidcId);
+      const user = await this.userRepo.find(data.id);
       if (user == null) {
         throw e;
       }
       return user;
     }
   }
+
+  private async updateExistingUser(accessToken: string, user: User): Promise<User | null> {
+    const userData = await this.getUserInfo(accessToken)();
+    if (E.isLeft(userData)) {
+      throw new HttpException('invalid JWT payload: missing username', 401);
+    }
+    const data = userData.right;
+    user.firstName = data.firstName;
+    user.lastName = data.lastName;
+    return await this.userRepo.update(user.id, user);
+  }
 }
 
 interface JwksKey {
   kid: string | undefined;
+}
+
+interface UserInfo {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
 }

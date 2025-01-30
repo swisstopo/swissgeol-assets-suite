@@ -5,6 +5,8 @@ export interface User extends Model<UserId> {
   email: string;
   lang: string;
   isAdmin: boolean;
+  firstName: string;
+  lastName: string;
 
   /**
    * The user's roles, mapped by the id of the workgroup to which they apply.

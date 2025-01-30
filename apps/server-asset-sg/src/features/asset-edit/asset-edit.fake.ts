@@ -26,6 +26,8 @@ export const fakeUser = () => {
   roles.set(1, Role.Viewer);
   return define<User>({
     email: faker.internet.email(),
+    lastName: faker.person.lastName(),
+    firstName: faker.person.firstName(),
     id: faker.string.uuid(),
     lang: faker.helpers.fromRegExp(/[a-z]{2}/),
     isAdmin: false,

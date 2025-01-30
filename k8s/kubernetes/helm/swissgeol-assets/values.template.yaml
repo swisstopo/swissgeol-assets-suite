@@ -13,6 +13,7 @@ oauth_client_id:
 oauth_scope:
 oauth_show_debug_info:
 oauth_token_endpoint:
+oauth_user_info_endpoint:
 ocr_service_account_role:
 cognito_pool_id:
 cognito_group:
