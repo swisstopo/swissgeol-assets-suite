@@ -44,7 +44,7 @@ jobs:
         id: get_base_tags
         run: |
           git fetch --tags
-          BASE_COMMIT=$(git rev-list -n 1 release-candidate)
+          BASE_COMMIT=$(git rev-list -n 1 $BASE)
           BASE_TAGS=$(printf "%s," $(git tag --contains $BASE_COMMIT))
           BASE_TAGS=${BASE_TAGS%,}
           echo "base_tags=$BASE_TAGS" >> "$GITHUB_OUTPUT"
