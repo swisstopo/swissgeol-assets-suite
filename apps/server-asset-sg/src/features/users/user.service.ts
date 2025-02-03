@@ -1,5 +1,9 @@
 import { UserId } from '@asset-sg/shared/v2';
-import { CognitoIdentityProviderClient, ListUsersInGroupCommand } from '@aws-sdk/client-cognito-identity-provider';
+import {
+  CognitoIdentityProviderClient,
+  ListUsersInGroupCommand,
+  ListUsersInGroupCommandOutput,
+} from '@aws-sdk/client-cognito-identity-provider';
 import { Injectable, Logger } from '@nestjs/common';
 import { SchedulerRegistry } from '@nestjs/schedule';
 import { CronJob } from 'cron';
@@ -73,24 +77,28 @@ export class UserService {
   }
 
   private async listKnownUserIds(): Promise<Set<UserId>> {
-    const response = await this.client.send(
-      new ListUsersInGroupCommand({
-        UserPoolId: this.poolId,
-        GroupName: this.group,
-      })
-    );
-    if (response.Users == null) {
-      return new Set();
-    }
+    let nextToken: string | undefined = undefined;
     const ids = new Set<UserId>();
-    for (const user of response.Users) {
-      const subAttribute = user.Attributes?.find((it) => it.Name === 'sub');
-      if (subAttribute?.Value == null) {
-        continue;
+    for (;;) {
+      const response: ListUsersInGroupCommandOutput = await this.client.send(
+        new ListUsersInGroupCommand({
+          UserPoolId: this.poolId,
+          GroupName: this.group,
+          NextToken: nextToken,
+        })
+      );
+      if (response.Users == null || response.Users.length === 0) {
+        return ids;
       }
-      ids.add(subAttribute.Value);
+      for (const user of response.Users) {
+        const subAttribute = user.Attributes?.find((it) => it.Name === 'sub');
+        if (subAttribute?.Value == null) {
+          continue;
+        }
+        ids.add(subAttribute.Value);
+      }
+      nextToken = response.NextToken;
     }
-    return ids;
   }
 
   private get poolId(): string {
