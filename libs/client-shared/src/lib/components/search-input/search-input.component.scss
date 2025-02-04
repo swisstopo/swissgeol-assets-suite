@@ -1,0 +1,16 @@
+.search-input {
+  padding: 8px 12px 8px 48px;
+  border: none;
+  outline: none;
+  width: 500px;
+  height: 56px;
+
+  border-bottom: 2px solid #337083;
+  color: #1c2834;
+  background-color: #f8f9fa;
+  border-radius: 6px;
+
+  &::placeholder {
+    color: #1c2834;
+  }
+}

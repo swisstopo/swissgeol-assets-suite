@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { Component, HostBinding, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
 import {
   AppPortalService,
@@ -34,11 +34,6 @@ export class AppComponent {
   private readonly store = inject(Store<AppState>);
   private readonly configService = inject(ConfigService);
   private readonly router = inject(Router);
-
-  @HostBinding('class.alternative-grid')
-  get alternativeGridClass() {
-    return this.showMenuBar;
-  }
 
   constructor() {
     this.configService.setHideDisclaimer(environment.hideDisclaimer);

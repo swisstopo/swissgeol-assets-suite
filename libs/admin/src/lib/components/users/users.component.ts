@@ -2,7 +2,7 @@ import { AfterViewInit, Component, inject, OnDestroy, OnInit, ViewChild } from '
 import { MatCheckboxChange } from '@angular/material/checkbox';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
-import { fromAppShared } from '@asset-sg/client-shared';
+import { FilterChangedEvent, fromAppShared } from '@asset-sg/client-shared';
 import { isNotNull } from '@asset-sg/core';
 import { Role, User, Workgroup, WorkgroupId } from '@asset-sg/shared/v2';
 import * as RD from '@devexperts/remote-data-ts';
@@ -19,6 +19,7 @@ import { selectUsers, selectWorkgroups } from '../../state/admin.selector';
 })
 export class UsersComponent implements OnInit, OnDestroy, AfterViewInit {
   public workgroups = new Map<WorkgroupId, Workgroup>();
+  public activeFilters = new Map<keyof User, (string | number | boolean)[]>();
 
   protected readonly COLUMNS = [
     'firstName',
@@ -34,6 +35,10 @@ export class UsersComponent implements OnInit, OnDestroy, AfterViewInit {
 
   protected dataSource: MatTableDataSource<User> = new MatTableDataSource<User>();
   @ViewChild(MatPaginator) protected paginator!: MatPaginator;
+
+  private users: User[] = [];
+  public names: string[] = [];
+  public showFilters = false;
 
   private readonly store = inject(Store<AppStateWithAdmin>);
   public readonly users$ = this.store.select(selectUsers);
@@ -55,6 +60,40 @@ export class UsersComponent implements OnInit, OnDestroy, AfterViewInit {
 
   public ngOnDestroy(): void {
     this.subscriptions.unsubscribe();
+  }
+
+  public test(filterValues: FilterChangedEvent) {
+    this.activeFilters.set(
+      filterValues.field,
+      filterValues.selectedValues.map((it) => it.value)
+    );
+    this.dataSource.data = this.users.filter((user) => {
+      // Check all filter conditions against the user
+      for (const [key, values] of this.activeFilters) {
+        if (values.length === 0) {
+          continue;
+        }
+        const userValue = user[key];
+        switch (typeof userValue) {
+          case 'string':
+            console.log(values, userValue);
+            if (!values.map((it) => (it as string).toLowerCase()).includes(userValue.toLowerCase())) {
+              return false;
+            }
+            break;
+          case 'boolean':
+            return values.some((it) => it === userValue);
+          case 'object':
+            // if (Array.isArray(userValue)) {
+            //   if (!values.map((it) => it.value.toLowerCase()).includes(userValue.join(',').toLowerCase())) {
+            //     return false;
+            //   }
+            // }
+            break;
+        }
+      }
+      return true;
+    });
   }
 
   public *getUserWorkgroups(user: User): Iterable<Workgroup & { role: Role }> {
@@ -103,6 +142,15 @@ export class UsersComponent implements OnInit, OnDestroy, AfterViewInit {
     );
     this.subscriptions.add(
       this.users$.subscribe((users) => {
+        this.users = users;
+        users.forEach((user) => {
+          const userWorkgroups = [];
+          for (const workgroup of this.getUserWorkgroups(user)) {
+            userWorkgroups.push(workgroup);
+          }
+          console.log(user.roles);
+          console.log(userWorkgroups);
+        });
         this.dataSource.data = users;
       })
     );

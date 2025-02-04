@@ -1,0 +1,8 @@
+<h4>{{ title }}</h4>
+<mat-form-field>
+  <mat-select [formControl]="form" multiple>
+    @for (topping of values; track topping) {
+    <mat-option [value]="topping">{{ topping.displayValue }}</mat-option>
+    }
+  </mat-select>
+</mat-form-field>

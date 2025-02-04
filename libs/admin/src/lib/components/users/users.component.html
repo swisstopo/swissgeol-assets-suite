@@ -1,7 +1,38 @@
 <div class="users">
-  <div class="header">
-    <h1 translate>admin.users</h1>
+  <div class="search">
+    <asset-sg-search-input></asset-sg-search-input>
+    <button asset-sg-secondary (click)="showFilters = !showFilters">Filter</button>
   </div>
+  @if (showFilters) {
+  <div class="filters">
+    <asset-sg-filter-selector-input
+      (filterChanged)="test($event)"
+      [title]="'Name'"
+      [field]="'lastName'"
+    ></asset-sg-filter-selector-input>
+    <asset-sg-filter-selector-input
+      (filterChanged)="test($event)"
+      [title]="'Admin'"
+      [field]="'isAdmin'"
+      [values]="[
+        { displayValue: 'Admin', value: true },
+        { displayValue: 'Nicht Admin', value: false }
+      ]"
+    ></asset-sg-filter-selector-input>
+    <asset-sg-filter-selector-input
+      (filterChanged)="test($event)"
+      [title]="'Sprache'"
+      [field]="'lang'"
+      [values]="[
+        { displayValue: 'DE', value: 'de' },
+        { displayValue: 'EN', value: 'en' },
+        { displayValue: 'FR', value: 'fr' },
+        { displayValue: 'IT', value: 'en' }
+      ]"
+    ></asset-sg-filter-selector-input>
+  </div>
+  }
+
   <div *rxLet="currentUser$; let currentUser">
     <table mat-table [dataSource]="dataSource" class="mat-elevation-z8">
       <ng-container matColumnDef="firstName">
@@ -65,7 +96,7 @@
     </table>
   </div>
   <mat-paginator
-    [pageSizeOptions]="[1, 10, 20]"
+    [pageSizeOptions]="[5, 10, 20]"
     [showFirstLastButtons]="true"
     aria-label="Select page of periodic elements"
   ></mat-paginator>
