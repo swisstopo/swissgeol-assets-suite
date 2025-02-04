@@ -1,11 +1,16 @@
 <mat-progress-bar *rxIf="isLoading$" mode="indeterminate" class="loading-bar" />
-<div class="admin-page">
+<div class="header" *rxLet="currentLang$; let currentLang">
+  <button asset-sg-primary (click)="navigateToAdmin(currentLang)">
+    <svg-icon key="arrow-up" class="close" />
+  </button>
+  <h3>Einstellungen</h3>
+</div>
+<div class="main">
   @if (!isDetailPage) {
   <div class="navigation">
     <a routerLink="users" class="navigation__link" routerLinkActive="navigation__link--active">{{
       "admin.users" | translate
     }}</a>
-    <span> | </span>
     <a routerLink="workgroups" class="navigation__link" routerLinkActive="navigation__link--active">{{
       "admin.workgroups" | translate
     }}</a>

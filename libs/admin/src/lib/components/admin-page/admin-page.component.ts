@@ -41,4 +41,8 @@ export class AdminPageComponent implements OnInit {
     }
     return [`/${lang}/admin/users`];
   }
+
+  navigateToAdmin(lang: string): void {
+    this.router.navigate([lang, 'asset-admin']);
+  }
 }
