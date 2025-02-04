@@ -266,6 +266,8 @@ export const enAppTranslations: AppTranslations = {
     name: 'Name',
     role: 'Role',
     actions: 'Actions',
+    firstName: 'First name',
+    lastName: 'Last name',
     email: 'Email',
     back: 'Back',
     languages: {
@@ -276,6 +278,7 @@ export const enAppTranslations: AppTranslations = {
     },
     userPage: {
       admin: 'Admin',
+      noAdmin: 'No admin',
       lang: 'Language',
       addWorkgroups: 'Add workgroups',
       more: 'more',
@@ -291,6 +294,9 @@ export const enAppTranslations: AppTranslations = {
       chooseUsersText: 'Add users to manage',
       addUsers: 'Add users',
     },
+  },
+  paginator: {
+    itemsPerPage: 'Items per page',
   },
   disclaimer: {
     title: 'Terms of service',

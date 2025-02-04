@@ -266,6 +266,8 @@ export const itAppTranslations: AppTranslations = {
     name: 'IT Name',
     role: 'IT Rolle',
     actions: 'IT Aktionen',
+    firstName: 'IT Vorname',
+    lastName: 'IT Nachname',
     email: 'IT E-Mail',
     back: 'IT Zurück',
     languages: {
@@ -276,6 +278,7 @@ export const itAppTranslations: AppTranslations = {
     },
     userPage: {
       admin: 'IT Admin',
+      noAdmin: 'IT Kein Admin',
       lang: 'IT Sprache',
       addWorkgroups: 'IT Arbeitsgruppen hinzufügen',
       more: 'IT weitere',
@@ -291,6 +294,9 @@ export const itAppTranslations: AppTranslations = {
       chooseUsersText: 'IT Füge Nutzer hinzu, um sie zu verwalten',
       addUsers: 'IT Benutzer hinzufügen',
     },
+  },
+  paginator: {
+    itemsPerPage: 'IT Elemente pro Seite',
   },
   disclaimer: {
     title: 'Condizioni di utilizzo',

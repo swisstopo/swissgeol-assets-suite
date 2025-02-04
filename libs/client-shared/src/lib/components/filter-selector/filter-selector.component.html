@@ -1,0 +1,10 @@
+<h5>{{ title | translate }}</h5>
+<mat-form-field class="select">
+  <svg-icon key="chevron-down" class="icon" />
+
+  <mat-select [formControl]="form" multiple>
+    @for (value of values; track value) {
+    <mat-option [value]="value">{{ value.displayValue }}</mat-option>
+    }
+  </mat-select>
+</mat-form-field>

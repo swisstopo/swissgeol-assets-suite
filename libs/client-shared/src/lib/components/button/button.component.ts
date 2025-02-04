@@ -7,14 +7,16 @@ import {
   Component,
   ElementRef,
   HostBinding,
+  inject,
   Input,
   OnDestroy,
-  inject,
 } from '@angular/core';
 
 @Component({
   standalone: true,
   selector:
+    // eslint-disable-next-line @angular-eslint/component-selector
+    'button[asset-sg-reset], button[asset-sg-icon-button], button[asset-sg-primary], button[asset-sg-warn], button[asset-sg-secondary], button[asset-sg-tertiary], button[asset-sg-icon-button-tw]',
     'button[asset-sg-reset], button[asset-sg-icon-button], button[asset-sg-primary], button[asset-sg-warn], button[asset-sg-secondary], button[asset-sg-icon-button-tw]',
   template: '<ng-content></ng-content>',
   styleUrls: ['./button.component.scss'],
@@ -52,9 +54,14 @@ export class ButtonComponent implements AfterViewInit, OnDestroy {
   get disabled(): true | false | undefined {
     return this._disabled;
   }
+
   set disabled(value: BooleanInput) {
     this._disabled = coerceBooleanProperty(value) || undefined;
   }
+
+  @HostBinding('attr.active')
+  @Input()
+  public isActive = false;
 
   @HostBinding('attr.type')
   @Input()

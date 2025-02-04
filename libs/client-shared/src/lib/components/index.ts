@@ -10,3 +10,7 @@ export * from './view-child-marker';
 export * from './smart-translate.pipe';
 export * from './language-selector';
 export * from './confirm-dialog';
+export * from './search-input';
+export * from './filter-selector';
+export * from './chip';
+export * from './table';
