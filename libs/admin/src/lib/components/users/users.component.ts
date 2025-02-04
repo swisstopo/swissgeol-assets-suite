@@ -1,5 +1,7 @@
-import { Component, inject, OnDestroy, OnInit } from '@angular/core';
+import { AfterViewInit, Component, inject, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { MatCheckboxChange } from '@angular/material/checkbox';
+import { MatPaginator } from '@angular/material/paginator';
+import { MatTableDataSource } from '@angular/material/table';
 import { fromAppShared } from '@asset-sg/client-shared';
 import { isNotNull } from '@asset-sg/core';
 import { Role, User, Workgroup, WorkgroupId } from '@asset-sg/shared/v2';
@@ -15,11 +17,23 @@ import { selectUsers, selectWorkgroups } from '../../state/admin.selector';
   templateUrl: './users.component.html',
   styleUrls: ['./users.component.scss'],
 })
-export class UsersComponent implements OnInit, OnDestroy {
+export class UsersComponent implements OnInit, OnDestroy, AfterViewInit {
   public workgroups = new Map<WorkgroupId, Workgroup>();
 
-  protected readonly COLUMNS = ['email', 'isAdmin', 'languages', 'workgroups', 'actions'];
+  protected readonly COLUMNS = [
+    'firstName',
+    'lastName',
+    'email',
+    'workgroups',
+    'status',
+    'isAdmin',
+    'languages',
+    'actions',
+  ];
   protected readonly WORKGROUP_DISPLAY_COUNT = 3;
+
+  protected dataSource: MatTableDataSource<User> = new MatTableDataSource<User>();
+  @ViewChild(MatPaginator) protected paginator!: MatPaginator;
 
   private readonly store = inject(Store<AppStateWithAdmin>);
   public readonly users$ = this.store.select(selectUsers);
@@ -33,6 +47,10 @@ export class UsersComponent implements OnInit, OnDestroy {
 
   public ngOnInit(): void {
     this.initSubscriptions();
+  }
+
+  ngAfterViewInit() {
+    this.dataSource.paginator = this.paginator;
   }
 
   public ngOnDestroy(): void {
@@ -81,6 +99,11 @@ export class UsersComponent implements OnInit, OnDestroy {
         for (const workgroup of workgroups) {
           this.workgroups.set(workgroup.id, workgroup);
         }
+      })
+    );
+    this.subscriptions.add(
+      this.users$.subscribe((users) => {
+        this.dataSource.data = users;
       })
     );
   }

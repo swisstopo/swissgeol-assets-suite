@@ -9,6 +9,7 @@ import { MatCheckbox } from '@angular/material/checkbox';
 import { MatDialogActions, MatDialogContent, MatDialogTitle } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatPaginator } from '@angular/material/paginator';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatRadioModule } from '@angular/material/radio';
 import { MatSelectModule } from '@angular/material/select';
@@ -107,6 +108,7 @@ import { adminReducer } from './state/admin.reducer';
     MatCard,
     MatSlideToggle,
     IfModule,
+    MatPaginator,
   ],
 })
 export class AdminModule {}
