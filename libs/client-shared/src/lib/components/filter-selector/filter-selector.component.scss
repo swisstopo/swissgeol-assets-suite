@@ -1,0 +1,39 @@
+:host ::ng-deep {
+  .mat-mdc-text-field-wrapper {
+    border: 1px solid black;
+  }
+
+  .mat-mdc-select-arrow {
+    display: none;
+  }
+
+  .mdc-text-field--filled {
+    border-radius: 4px;
+  }
+
+  .mdc-text-field--filled:not(.mdc-text-field--disabled) {
+    background-color: transparent;
+  }
+
+  .mdc-text-field--filled:not(.mdc-text-field--disabled) .mdc-line-ripple::after,
+  .mdc-text-field--filled:not(.mdc-text-field--disabled) .mdc-line-ripple::before {
+    border: none;
+  }
+}
+
+:host,
+mat-form-field {
+  width: 100%;
+}
+
+h5 {
+  margin: 0 0 12px 12px;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+}
+
+.icon {
+  position: absolute;
+  right: 0;
+}

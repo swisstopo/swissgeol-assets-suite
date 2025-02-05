@@ -28,6 +28,36 @@
 
 .table__header {
   background-color: variables.$grey-03;
+  border-radius: 4px;
+  height: 44px;
+
+  th {
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 20px;
+    letter-spacing: 0.0025em;
+
+    &:first-of-type {
+      border-top-left-radius: 4px;
+    }
+
+    &:last-of-type {
+      border-top-right-radius: 4px;
+    }
+  }
+}
+
+.mat-mdc-standard-chip.mdc-evolution-chip--disabled {
+  background-color: #596978;
+  opacity: unset;
+}
+
+.chip-text {
+  color: white;
+  font-weight: 500;
+  font-size: 12px;
+  line-height: 16px;
+  letter-spacing: 0.0125em;
 }
 
 .mat-mdc-row:hover .mat-mdc-cell {

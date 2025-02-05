@@ -1,5 +1,7 @@
-<h4>{{ title }}</h4>
-<mat-form-field>
+<h5>{{ title }}</h5>
+<mat-form-field class="select">
+  <svg-icon key="chevron-down" class="icon" />
+
   <mat-select [formControl]="form" multiple>
     @for (topping of values; track topping) {
     <mat-option [value]="topping">{{ topping.displayValue }}</mat-option>

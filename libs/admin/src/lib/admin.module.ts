@@ -6,6 +6,7 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatCard } from '@angular/material/card';
 import { MatCheckbox } from '@angular/material/checkbox';
+import { MatChip, MatChipSet } from '@angular/material/chips';
 import { MatDialogActions, MatDialogContent, MatDialogTitle } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -113,6 +114,8 @@ import { adminReducer } from './state/admin.reducer';
     MatPaginator,
     SearchInputComponent,
     FilterSelectorComponent,
+    MatChipSet,
+    MatChip,
   ],
 })
 export class AdminModule {}

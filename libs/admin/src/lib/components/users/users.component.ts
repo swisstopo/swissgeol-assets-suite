@@ -21,16 +21,7 @@ export class UsersComponent implements OnInit, OnDestroy, AfterViewInit {
   public workgroups = new Map<WorkgroupId, Workgroup>();
   public activeFilters = new Map<keyof User, (string | number | boolean)[]>();
 
-  protected readonly COLUMNS = [
-    'firstName',
-    'lastName',
-    'email',
-    'workgroups',
-    'status',
-    'isAdmin',
-    'languages',
-    'actions',
-  ];
+  protected readonly COLUMNS = ['firstName', 'lastName', 'email', 'workgroups', 'isAdmin', 'languages', 'actions'];
   protected readonly WORKGROUP_DISPLAY_COUNT = 3;
 
   protected dataSource: MatTableDataSource<User> = new MatTableDataSource<User>();
@@ -38,7 +29,7 @@ export class UsersComponent implements OnInit, OnDestroy, AfterViewInit {
 
   private users: User[] = [];
   public names: string[] = [];
-  public showFilters = false;
+  public showFilters = true;
 
   private readonly store = inject(Store<AppStateWithAdmin>);
   public readonly users$ = this.store.select(selectUsers);
@@ -118,7 +109,7 @@ export class UsersComponent implements OnInit, OnDestroy, AfterViewInit {
 
   public formatWorkgroupsTooltip(roles: User['roles']): string {
     let tooltip = '';
-    for (const [workgroupId, workgroupRole] of roles) {
+    for (const [workgroupId] of roles) {
       const workgroup = this.workgroups.get(workgroupId);
       if (workgroup == null) {
         continue;
@@ -126,7 +117,7 @@ export class UsersComponent implements OnInit, OnDestroy, AfterViewInit {
       if (tooltip.length !== 0) {
         tooltip += ',\n';
       }
-      tooltip += `${workgroup.name}.${workgroupRole}`;
+      tooltip += `${workgroup.name}`;
     }
     return tooltip;
   }
