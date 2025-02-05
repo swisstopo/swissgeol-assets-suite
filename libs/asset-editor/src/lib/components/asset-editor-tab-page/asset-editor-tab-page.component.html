@@ -1,40 +1,46 @@
-<ng-container *rxLet="referenceDataVM$">
-  <ng-container *rxLet="assetEditDetail$">
-    <form [formGroup]="form">
-      <div #tabsWrapper class="tabs-wrapper"></div>
-      <ng-template #tabPanelGeneralContent>
-        <asset-sg-editor-tab-general [referenceDataVM$]="referenceDataVM$" />
-      </ng-template>
-      <ng-template #tabPanelFilesContent>
-        <asset-sg-editor-tab-files [referenceDataVM$]="referenceDataVM$" />
-      </ng-template>
-      <ng-template #tabPanelUsageContent>
-        <asset-sg-editor-tab-usage [referenceDataVM$]="referenceDataVM$" [assetEditDetail$]="assetEditDetail$" />
-      </ng-template>
-      <ng-template #tabPanelContactsContent>
-        <asset-sg-editor-tab-contacts
-          [referenceDataVM$]="referenceDataVM$"
-          (editContact)="editContact($event)"
-          (createContact)="createContact($event)"
-        />
-      </ng-template>
-      <ng-template #tabPanelReferencesContent>
-        <asset-sg-editor-tab-references />
-      </ng-template>
-      <ng-template #tabPanelGeometriesContent>
-        <asset-sg-editor-tab-geometries />
-      </ng-template>
-      <ng-template #tabPanelAdministrationContent>
-        <asset-sg-editor-tab-administration
-          [referenceDataVM$]="referenceDataVM$"
-          [assetEditDetail$]="assetEditDetail$"
-          (saveAsset)="save()"
-          (deleteAsset)="delete()"
-        />
-      </ng-template>
-    </form>
-  </ng-container>
-</ng-container>
+<nav role="tablist">
+  @for (tab of tabs; track tab) {
+  <button role="tab" attr.aria-selected="{{ activeTab === tab }}" translate (click)="selectTab(tab)">
+    edit.tabs.{{ tab }}.tabName
+  </button>
+  }
+</nav>
+
+<form [formGroup]="form">
+  <ul class="tabs" *ngIf="isFormReady">
+    <li role="tabpanel" [class.is-active]="activeTab === Tab.General">
+      <asset-sg-editor-tab-general [referenceDataVM$]="referenceDataVM$" />
+    </li>
+    <li role="tabpanel" [class.is-active]="activeTab === Tab.Files">
+      <asset-sg-editor-tab-files [referenceDataVM$]="referenceDataVM$" />
+    </li>
+    <li role="tabpanel" [class.is-active]="activeTab === Tab.Usage">
+      <asset-sg-editor-tab-usage [referenceDataVM$]="referenceDataVM$" [assetEditDetail$]="assetEditDetail$" />
+    </li>
+    <li role="tabpanel" [class.is-active]="activeTab === Tab.Contacts">
+      <asset-sg-editor-tab-contacts
+        [referenceDataVM$]="referenceDataVM$"
+        (editContact)="editContact($event)"
+        (createContact)="createContact($event)"
+      />
+    </li>
+    <li role="tabpanel" [class.is-active]="activeTab === Tab.References">
+      <asset-sg-editor-tab-references />
+    </li>
+    <li role="tabpanel" [class.is-active]="activeTab === Tab.Geometries">
+      <asset-sg-editor-tab-geometries />
+    </li>
+    <li role="tabpanel" [class.is-active]="activeTab === Tab.Administration">
+      <asset-sg-editor-tab-administration
+        [referenceDataVM$]="referenceDataVM$"
+        [assetEditDetail$]="assetEditDetail$"
+        (saveAsset)="save()"
+        (deleteAsset)="delete()"
+      />
+    </li>
+  </ul>
+</form>
+
 <ng-template #tmplDiscardDialog>
   <div class="asset-sg-dialog" cdkTrapFocus [cdkTrapFocusAutoCapture]="true">
     <div translate>edit.questionDiscardChanges</div>
