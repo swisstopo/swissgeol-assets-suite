@@ -1,7 +1,10 @@
 <div class="users">
   <div class="search">
     <asset-sg-search-input></asset-sg-search-input>
-    <button asset-sg-secondary (click)="showFilters = !showFilters">Filter</button>
+    <button asset-sg-secondary (click)="showFilters = !showFilters">
+      Filter
+      <svg-icon key="assets" />
+    </button>
   </div>
   @if (showFilters) {
   <div class="filters">
@@ -34,7 +37,7 @@
   }
 
   <div *rxLet="currentUser$; let currentUser">
-    <table mat-table [dataSource]="dataSource" class="mat-elevation-z8">
+    <table mat-table [dataSource]="dataSource" class="mat-elevation-z8 table">
       <ng-container matColumnDef="firstName">
         <th mat-header-cell *matHeaderCellDef translate>admin.email</th>
         <td mat-cell *matCellDef="let user">{{ user.firstName }}</td>

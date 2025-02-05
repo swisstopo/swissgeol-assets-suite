@@ -13,6 +13,7 @@
     cursor: default;
   }
 }
+
 :host[asset-sg-reset] {
   @extend %reset;
 }
@@ -27,6 +28,7 @@
 :host[asset-sg-secondary] {
   color: variables.$cyan-09;
   background-color: transparent;
+  border: 1px solid variables.$cyan-09;
 }
 
 :host[asset-sg-primary],
@@ -37,6 +39,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 6px;
   height: 2.5rem;
   padding: 0 1rem;
 
@@ -62,11 +65,13 @@
       background-color: #d0f5f9;
       color: #357183;
     }
+
     &:focus {
       box-shadow: 0px 1px 3px #00000033;
       background-color: #87d7e6;
       color: #357183;
     }
+
     &:active:not(:focus) {
       box-shadow: none;
       background-color: variables.$cyan-06;
@@ -116,6 +121,7 @@
     &:focus {
       color: variables.$red;
     }
+
     &:active:not(:focus) {
       color: variables.$dark-red;
     }
@@ -141,6 +147,7 @@
     &:focus {
       color: variables.$red;
     }
+
     &:active:not(:focus) {
       color: variables.$dark-red;
     }

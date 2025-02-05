@@ -1,6 +1,7 @@
 import { actionMenuIcon } from './action-menu';
 import { addIcon } from './add';
 import { arrowDownIcon } from './arrow-down';
+import { arrowLeftIcon } from './arrow-left';
 import { arrowUpIcon } from './arrow-up';
 import { assetsIcon } from './assets';
 import { calendarIcon } from './calendar';
@@ -39,6 +40,7 @@ export const icons = [
   addIcon,
   arrowDownIcon,
   arrowUpIcon,
+  arrowLeftIcon,
   assetsIcon,
   calendarIcon,
   checkIcon,

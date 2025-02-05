@@ -1,9 +1,15 @@
 <mat-progress-bar *rxIf="isLoading$" mode="indeterminate" class="loading-bar" />
 <div class="header" *rxLet="currentLang$; let currentLang">
-  <button asset-sg-primary (click)="navigateToAdmin(currentLang)">
-    <svg-icon key="arrow-up" class="close" />
+  <button asset-sg-primary (click)="navigateBack(currentLang)" class="back-button">
+    <svg-icon key="arrow-left" class="close" />
   </button>
-  <h3>Einstellungen</h3>
+  @if (isWorkgroupsPage) {
+  <h3>{{ (selectedWorkgroup$ | async)?.name }}</h3>
+  } @else if (isUsersPage) {
+  <h3>{{ (selectedUser$ | async)?.email }}</h3>
+  } @else {
+  <h3>{{ "menuBar.settings" | translate }}</h3>
+  }
 </div>
 <div class="main">
   @if (!isDetailPage) {
@@ -15,12 +21,12 @@
       "admin.workgroups" | translate
     }}</a>
   </div>
-  } @else {
-  <div class="navigation" *rxLet="currentLang$; let currentLang">
-    <a [routerLink]="getBackPath(currentLang)" class="navigation__link pointer" translate>admin.back</a>
-  </div>
-  }
   <div class="content">
     <router-outlet></router-outlet>
   </div>
+  } @else {
+  <div>
+    <router-outlet></router-outlet>
+  </div>
+  }
 </div>
