@@ -20,11 +20,11 @@ export class RoutingService {
       });
   }
 
-  public navigateBack(fallback: string[]): void {
+  public async navigateBack(fallback: string[]): Promise<void> {
     if (this.canGoBack) {
       this.location.back();
     } else {
-      this.router.navigate(fallback).then();
+      await this.router.navigate(fallback);
     }
   }
 }

@@ -83,10 +83,6 @@ registerLocaleData(locale_deCH, 'de-CH');
         loadChildren: () => import('@asset-sg/asset-viewer').then((m) => m.AssetViewerModule),
       },
       {
-        path: 'not-found',
-        component: NotFoundComponent,
-      },
-      {
         path: '**',
         component: RedirectToLangComponent,
       },

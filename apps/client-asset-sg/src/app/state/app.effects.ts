@@ -54,7 +54,6 @@ export class AppSharedStateEffects {
       .subscribe((result) => {
         if (E.isLeft(result)) {
           console.error('Invalid lang in URL:', result.left);
-          this.router.navigate(['/']).then();
           return;
         }
         const { right: lang } = result;
