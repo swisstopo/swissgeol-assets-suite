@@ -13,8 +13,8 @@
     "build:client": "npx nx build client-asset-sg --configuration=production",
     "prisma": "dotenv -e apps/server-asset-sg/.env -e apps/server-asset-sg/.env.local -- npx prisma",
     "test": "npx nx run-many --target=test --all",
-    "lint": "npx prettier --check . && npx nx run-many --target=lint --all",
-    "lint:fix": "npm run lint -- --fix && npx prettier . --write",
+    "lint": "npx nx run-many --target=lint --all && npx prettier --check .",
+    "lint:fix": "npx nx run-many --target=list --all -- --fix && npx prettier . --write",
     "prepare": "husky"
   },
   "private": true,
