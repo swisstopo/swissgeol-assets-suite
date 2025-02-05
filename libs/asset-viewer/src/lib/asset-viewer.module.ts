@@ -59,6 +59,7 @@ import { AssetViewerFilesComponent } from './components/asset-viewer-files/asset
 import { AssetViewerPageComponent } from './components/asset-viewer-page';
 import { MapComponent } from './components/map/map.component';
 import { MapControlsComponent } from './components/map-controls/map-controls.component';
+import { ViewerParamsService } from './services/viewer-params.service';
 import { AssetSearchEffects } from './state/asset-search/asset-search.effects';
 import { assetSearchReducer } from './state/asset-search/asset-search.reducer';
 import { mapControlReducer } from './state/map-control/map-control.reducer';
@@ -134,6 +135,7 @@ import { mapControlReducer } from './state/map-control/map-control.reducer';
   ],
   providers: [
     TranslatePipe,
+    ViewerParamsService,
     { provide: MAT_DATE_LOCALE, useValue: de },
     {
       provide: MAT_DATE_FORMATS,

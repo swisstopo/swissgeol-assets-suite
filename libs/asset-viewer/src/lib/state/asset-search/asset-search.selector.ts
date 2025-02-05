@@ -67,7 +67,7 @@ export const selectIsSearchQueryEmpty = createSelector(
   ({ query, currentAsset }) => currentAsset == null && hasNoActiveFilters(query)
 );
 
-const hasNoActiveFilters = (query: AssetSearchQuery): boolean =>
+export const hasNoActiveFilters = (query: AssetSearchQuery): boolean =>
   Object.values(query).every((value) => value === undefined || value == false);
 
 export const selectCurrentAssetDetailVM = createSelector(
