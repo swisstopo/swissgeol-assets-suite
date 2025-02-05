@@ -42,7 +42,7 @@
                     </button>
                     <button
                       asset-sg-icon-button
-                      (click)="unlinkContact(assetContact.contactId)"
+                      (click)="unlinkContact(assetContact)"
                       [attr.aria-label]="'edit.tabs.contacts.unlinkContact' | translate"
                       [disabled]="(disableAll$ | push) || (uiMode !== 'view' && uiMode !== 'viewContactDetails')"
                     >

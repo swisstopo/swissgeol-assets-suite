@@ -244,13 +244,13 @@ export class AssetEditorTabContactsComponent implements OnInit {
     this._currentContactForm.enable();
   }
 
-  unlinkContact(contactId: number) {
+  unlinkContact(contact: AssetContact): void {
     this._state.set((s) => ({
       ...s,
-      assetContacts: s.assetContacts.filter((c) => c.contactId !== contactId),
+      assetContacts: s.assetContacts.filter((c) => c.contactId !== contact.contact.id || c.role !== contact.role),
       ...pipe(
         s.currentContactId,
-        O.filter((c) => c === contactId),
+        O.filter((c) => c === contact.contact.id),
         O.map(() => ({ currentContactId: O.none, uiMode: 'view' as UIMode })),
         O.getOrElse(() => ({ currentContactId: s.currentContactId, uiMode: s.uiMode }))
       ),
