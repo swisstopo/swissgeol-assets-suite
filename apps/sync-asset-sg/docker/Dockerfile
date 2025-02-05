@@ -14,6 +14,8 @@ RUN npm install --ignore-scripts \
 # final image build
 FROM node:22-alpine
 
+RUN apk add --no-cache openssl
+
 ENV APP_VERSION=${APP_VERSION}
 ENV NODE_ENV=production
 
