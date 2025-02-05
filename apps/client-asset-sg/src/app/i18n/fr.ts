@@ -277,6 +277,7 @@ export const frAppTranslations: AppTranslations = {
     },
     userPage: {
       admin: 'Admin',
+      noAdmin: "Pas d'admin",
       lang: 'Langue',
       addWorkgroups: 'Ajouter des groupes de travail',
       more: 'en plus',

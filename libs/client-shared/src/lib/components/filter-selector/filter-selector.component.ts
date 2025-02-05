@@ -4,6 +4,7 @@ import { MatFormField } from '@angular/material/form-field';
 import { MatOption, MatSelect } from '@angular/material/select';
 import { User } from '@asset-sg/shared/v2';
 import { SvgIconComponent } from '@ngneat/svg-icon';
+import { TranslateModule } from '@ngx-translate/core';
 
 export interface PossibleValue {
   value: string | number | boolean;
@@ -20,7 +21,7 @@ export interface FilterChangedEvent {
   templateUrl: './filter-selector.component.html',
   styleUrls: ['./filter-selector.component.scss'],
   standalone: true,
-  imports: [MatFormField, MatSelect, MatOption, ReactiveFormsModule, SvgIconComponent],
+  imports: [MatFormField, MatSelect, MatOption, ReactiveFormsModule, SvgIconComponent, TranslateModule],
 })
 export class FilterSelectorComponent implements OnInit {
   form = new FormControl<PossibleValue[]>([]);
@@ -31,7 +32,7 @@ export class FilterSelectorComponent implements OnInit {
     },
   ];
   @Input() public field: keyof User = 'lang';
-  @Input() public title = 'Filter';
+  @Input() public title = 'admin.workgroups';
   @Output() public filterChanged = new EventEmitter<FilterChangedEvent>();
 
   public ngOnInit() {

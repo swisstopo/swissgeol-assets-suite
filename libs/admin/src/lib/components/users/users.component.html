@@ -1,6 +1,6 @@
 <div class="users">
   <div class="search">
-    <asset-sg-search-input></asset-sg-search-input>
+    <asset-sg-search-input (searchTermChanged)="setSearchTerm($event)"></asset-sg-search-input>
     <button asset-sg-secondary (click)="showFilters = !showFilters">
       Filter
       <svg-icon key="assets" />
@@ -9,29 +9,22 @@
   @if (showFilters) {
   <div class="filters">
     <asset-sg-filter-selector-input
-      (filterChanged)="test($event)"
-      [title]="'Name'"
-      [field]="'lastName'"
+      (filterChanged)="setFilters($event)"
+      [title]="'admin.workgroups'"
+      [field]="'roles'"
+      [values]="workgroupFilterValues"
     ></asset-sg-filter-selector-input>
     <asset-sg-filter-selector-input
-      (filterChanged)="test($event)"
-      [title]="'Admin'"
+      (filterChanged)="setFilters($event)"
+      [title]="'admin.userPage.admin'"
       [field]="'isAdmin'"
-      [values]="[
-        { displayValue: 'Admin', value: true },
-        { displayValue: 'Nicht Admin', value: false }
-      ]"
+      [values]="isAdminFilterValues"
     ></asset-sg-filter-selector-input>
     <asset-sg-filter-selector-input
-      (filterChanged)="test($event)"
-      [title]="'Sprache'"
+      (filterChanged)="setFilters($event)"
+      [title]="'admin.userPage.lang'"
       [field]="'lang'"
-      [values]="[
-        { displayValue: 'DE', value: 'de' },
-        { displayValue: 'EN', value: 'en' },
-        { displayValue: 'FR', value: 'fr' },
-        { displayValue: 'IT', value: 'en' }
-      ]"
+      [values]="langFilterValues"
     ></asset-sg-filter-selector-input>
   </div>
   }

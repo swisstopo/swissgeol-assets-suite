@@ -275,6 +275,7 @@ export const deAppTranslations = {
     },
     userPage: {
       admin: 'Admin',
+      noAdmin: 'Nicht Admin',
       lang: 'Sprache',
       addWorkgroups: 'Arbeitsgruppen hinzufügen',
       more: 'weitere',

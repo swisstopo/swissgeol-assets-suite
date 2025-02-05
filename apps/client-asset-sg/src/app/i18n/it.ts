@@ -276,6 +276,7 @@ export const itAppTranslations: AppTranslations = {
     },
     userPage: {
       admin: 'IT Admin',
+      noAdmin: 'IT Kein Admin',
       lang: 'IT Sprache',
       addWorkgroups: 'IT Arbeitsgruppen hinzufügen',
       more: 'IT weitere',

@@ -2,12 +2,12 @@ import { AfterViewInit, Component, inject, OnDestroy, OnInit, ViewChild } from '
 import { MatCheckboxChange } from '@angular/material/checkbox';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
-import { FilterChangedEvent, fromAppShared } from '@asset-sg/client-shared';
+import { FilterChangedEvent, fromAppShared, PossibleValue } from '@asset-sg/client-shared';
 import { isNotNull } from '@asset-sg/core';
 import { Role, User, Workgroup, WorkgroupId } from '@asset-sg/shared/v2';
 import * as RD from '@devexperts/remote-data-ts';
 import { Store } from '@ngrx/store';
-import { filter, map, Observable, Subscription } from 'rxjs';
+import { BehaviorSubject, combineLatestWith, filter, map, Observable, Subscription, tap } from 'rxjs';
 import * as actions from '../../state/admin.actions';
 import { AppStateWithAdmin } from '../../state/admin.reducer';
 import { selectUsers, selectWorkgroups } from '../../state/admin.selector';
@@ -18,8 +18,22 @@ import { selectUsers, selectWorkgroups } from '../../state/admin.selector';
   styleUrls: ['./users.component.scss'],
 })
 export class UsersComponent implements OnInit, OnDestroy, AfterViewInit {
+  private users: User[] = [];
+  public names: string[] = [];
+  public showFilters = true;
+
   public workgroups = new Map<WorkgroupId, Workgroup>();
-  public activeFilters = new Map<keyof User, (string | number | boolean)[]>();
+  public workgroupFilterValues: PossibleValue[] = [];
+  public readonly langFilterValues: PossibleValue[] = [
+    { displayValue: 'DE', value: 'de' },
+    { displayValue: 'EN', value: 'en' },
+    { displayValue: 'FR', value: 'fr' },
+    { displayValue: 'IT', value: 'en' },
+  ];
+  public readonly isAdminFilterValues: PossibleValue[] = [
+    { displayValue: 'Admin', value: true },
+    { displayValue: 'Nicht Admin', value: false },
+  ];
 
   protected readonly COLUMNS = ['firstName', 'lastName', 'email', 'workgroups', 'isAdmin', 'languages', 'actions'];
   protected readonly WORKGROUP_DISPLAY_COUNT = 3;
@@ -27,9 +41,8 @@ export class UsersComponent implements OnInit, OnDestroy, AfterViewInit {
   protected dataSource: MatTableDataSource<User> = new MatTableDataSource<User>();
   @ViewChild(MatPaginator) protected paginator!: MatPaginator;
 
-  private users: User[] = [];
-  public names: string[] = [];
-  public showFilters = true;
+  private readonly searchTerm$ = new BehaviorSubject<string>('');
+  private readonly activeFilters$ = new BehaviorSubject<Map<keyof User, (string | number | boolean)[]>>(new Map());
 
   private readonly store = inject(Store<AppStateWithAdmin>);
   public readonly users$ = this.store.select(selectUsers);
@@ -53,37 +66,41 @@ export class UsersComponent implements OnInit, OnDestroy, AfterViewInit {
     this.subscriptions.unsubscribe();
   }
 
-  public test(filterValues: FilterChangedEvent) {
-    this.activeFilters.set(
+  public setSearchTerm(term: string) {
+    this.searchTerm$.next(term);
+  }
+
+  public setFilters(filterValues: FilterChangedEvent) {
+    const activeFilters = this.activeFilters$.value.set(
       filterValues.field,
       filterValues.selectedValues.map((it) => it.value)
     );
-    this.dataSource.data = this.users.filter((user) => {
-      // Check all filter conditions against the user
-      for (const [key, values] of this.activeFilters) {
-        if (values.length === 0) {
-          continue;
-        }
-        const userValue = user[key];
-        switch (typeof userValue) {
-          case 'string':
-            console.log(values, userValue);
-            if (!values.map((it) => (it as string).toLowerCase()).includes(userValue.toLowerCase())) {
-              return false;
-            }
-            break;
-          case 'boolean':
-            return values.some((it) => it === userValue);
-          case 'object':
-            // if (Array.isArray(userValue)) {
-            //   if (!values.map((it) => it.value.toLowerCase()).includes(userValue.join(',').toLowerCase())) {
-            //     return false;
-            //   }
-            // }
-            break;
-        }
+    this.activeFilters$.next(activeFilters);
+  }
+
+  private filterUsersBySearchTerm(user: User, searchTerm: string) {
+    return Object.entries(user).some(([key, value]) => {
+      if (key === 'roles') {
+        return Array.from((value as Map<number, string>).keys()).some((id) =>
+          this.workgroups.get(id)?.name.toLowerCase().includes(searchTerm.toLowerCase())
+        );
       }
-      return true;
+      return value.toString().toLowerCase().includes(searchTerm.toLowerCase());
+    });
+  }
+
+  private filterUsersByAttribute(user: User, filters: Map<keyof User, (string | number | boolean)[]>) {
+    return Array.from(filters.entries()).every(([key, values]) => {
+      if (values.length === 0) {
+        return true;
+      }
+      const userValue = user[key];
+      return values.some((value) => {
+        if (key === 'roles') {
+          return (userValue as Map<number, string>).has(value as number);
+        }
+        return value === userValue;
+      });
     });
   }
 
@@ -126,6 +143,11 @@ export class UsersComponent implements OnInit, OnDestroy, AfterViewInit {
     this.subscriptions.add(
       this.workgroups$.subscribe((workgroups) => {
         this.workgroups.clear();
+        this.workgroupFilterValues = workgroups.map((workgroup) => ({
+          value: workgroup.id,
+          displayValue: workgroup.name,
+        }));
+
         for (const workgroup of workgroups) {
           this.workgroups.set(workgroup.id, workgroup);
         }
@@ -144,6 +166,18 @@ export class UsersComponent implements OnInit, OnDestroy, AfterViewInit {
         });
         this.dataSource.data = users;
       })
+    );
+    this.subscriptions.add(
+      this.searchTerm$
+        .pipe(
+          combineLatestWith(this.activeFilters$),
+          tap(([term, filters]) => {
+            this.dataSource.data = this.users.filter((user) => {
+              return this.filterUsersBySearchTerm(user, term) && this.filterUsersByAttribute(user, filters);
+            });
+          })
+        )
+        .subscribe()
     );
   }
 }

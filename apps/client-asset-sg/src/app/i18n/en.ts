@@ -276,6 +276,7 @@ export const enAppTranslations: AppTranslations = {
     },
     userPage: {
       admin: 'Admin',
+      noAdmin: 'No admin',
       lang: 'Language',
       addWorkgroups: 'Add workgroups',
       more: 'more',
