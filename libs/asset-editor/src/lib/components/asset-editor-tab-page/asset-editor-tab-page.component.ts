@@ -358,7 +358,7 @@ export class AssetEditorTabPageComponent {
   }
 
   public close(): void {
-    this.routingService.navigateBack(['/']);
+    this.routingService.navigateBack(['/']).then();
   }
 
   public canLeave(): Observable<boolean> {

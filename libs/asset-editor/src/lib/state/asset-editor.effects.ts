@@ -1,6 +1,13 @@
 import { inject, Injectable } from '@angular/core';
 import { Router } from '@angular/router';
-import { Alert, AlertType, appSharedStateActions, filterNavigateToComponent, showAlert } from '@asset-sg/client-shared';
+import {
+  Alert,
+  AlertType,
+  appSharedStateActions,
+  filterNavigateToComponent,
+  RoutingService,
+  showAlert,
+} from '@asset-sg/client-shared';
 import { DT, isNotNull, ORD, partitionEither } from '@asset-sg/core';
 import { GeomFromGeomText } from '@asset-sg/shared';
 import * as RD from '@devexperts/remote-data-ts';
@@ -24,6 +31,7 @@ export class AssetEditorEffects {
   private _assetEditorService = inject(AssetEditorService);
   private _router = inject(Router);
   private readonly translateService = inject(TranslateService);
+  private readonly routingService = inject(RoutingService);
 
   validatedQueryParams = partitionEither(
     filterNavigateToComponent(this._actions$, AssetEditorPageComponent).pipe(
@@ -107,13 +115,19 @@ export class AssetEditorEffects {
     )
   );
 
-  redirectToViewerAfterDeletion = createEffect(
-    () =>
-      this._actions$.pipe(
-        ofType(actions.handleSuccessfulDeletion),
-        switchMap(() => this._router.navigate(['']))
-      ),
-    { dispatch: false }
+  redirectToViewerAfterDeletion = createEffect(() =>
+    this._actions$.pipe(
+      ofType(actions.handleSuccessfulDeletion),
+      switchMap(async ({ assetId }) => {
+        await this.routingService.navigateBack(['/']);
+        await this._router.navigate([], {
+          queryParams: { assetId: null },
+          queryParamsHandling: 'merge',
+        });
+        return assetId;
+      }),
+      map((assetId) => appSharedStateActions.removeAssetFromSearch({ assetId }))
+    )
   );
 
   updateSearchAfterAssetChanged$ = createEffect(() =>
