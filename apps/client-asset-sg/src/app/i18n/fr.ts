@@ -267,6 +267,8 @@ export const frAppTranslations: AppTranslations = {
     name: 'Nom',
     role: 'Rôle',
     actions: 'Actions',
+    firstName: 'Prénom',
+    lastName: 'Nom de famille',
     email: 'E-mail',
     back: 'Retour',
     languages: {

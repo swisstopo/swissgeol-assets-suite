@@ -266,6 +266,8 @@ export const itAppTranslations: AppTranslations = {
     name: 'IT Name',
     role: 'IT Rolle',
     actions: 'IT Aktionen',
+    firstName: 'IT Vorname',
+    lastName: 'IT Nachname',
     email: 'IT E-Mail',
     back: 'IT Zurück',
     languages: {

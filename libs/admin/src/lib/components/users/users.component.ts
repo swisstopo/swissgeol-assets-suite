@@ -1,6 +1,7 @@
 import { AfterViewInit, Component, inject, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { MatCheckboxChange } from '@angular/material/checkbox';
 import { MatPaginator } from '@angular/material/paginator';
+import { Sort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import { FilterChangedEvent, fromAppShared, PossibleValue } from '@asset-sg/client-shared';
 import { isNotNull } from '@asset-sg/core';
@@ -19,9 +20,8 @@ import { selectUsers, selectWorkgroups } from '../../state/admin.selector';
 })
 export class UsersComponent implements OnInit, OnDestroy, AfterViewInit {
   private users: User[] = [];
-  public names: string[] = [];
-  public showFilters = true;
 
+  public showFilters = false;
   public workgroups = new Map<WorkgroupId, Workgroup>();
   public workgroupFilterValues: PossibleValue[] = [];
   public readonly langFilterValues: PossibleValue[] = [
@@ -102,6 +102,33 @@ export class UsersComponent implements OnInit, OnDestroy, AfterViewInit {
         return value === userValue;
       });
     });
+  }
+
+  public sortChange(sort: Sort) {
+    const data = this.dataSource.data.slice();
+    if (!sort.active || sort.direction === '') {
+      return;
+    }
+
+    this.dataSource.data = data.sort((a, b) => {
+      const isAsc = sort.direction === 'asc';
+      switch (sort.active) {
+        case 'firstName':
+          return this.compare(a.firstName, b.firstName, isAsc);
+        case 'lastName':
+          return this.compare(a.lastName, b.lastName, isAsc);
+        case 'email':
+          return this.compare(a.email, b.email, isAsc);
+        case 'lang':
+          return this.compare(a.lang, b.lang, isAsc);
+        default:
+          return 0;
+      }
+    });
+  }
+
+  private compare(a: string, b: string, isAsc: boolean) {
+    return (a < b ? -1 : 1) * (isAsc ? 1 : -1);
   }
 
   public *getUserWorkgroups(user: User): Iterable<Workgroup & { role: Role }> {

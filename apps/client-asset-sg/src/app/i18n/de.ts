@@ -265,6 +265,8 @@ export const deAppTranslations = {
     name: 'Name',
     role: 'Rolle',
     actions: 'Aktionen',
+    firstName: 'Vorname',
+    lastName: 'Nachname',
     email: 'E-Mail',
     back: 'Zurück',
     languages: {

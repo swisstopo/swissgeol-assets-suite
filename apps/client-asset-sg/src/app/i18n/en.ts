@@ -266,6 +266,8 @@ export const enAppTranslations: AppTranslations = {
     name: 'Name',
     role: 'Role',
     actions: 'Actions',
+    firstName: 'First name',
+    lastName: 'Last name',
     email: 'Email',
     back: 'Back',
     languages: {

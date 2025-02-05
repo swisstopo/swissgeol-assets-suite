@@ -15,6 +15,7 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatRadioModule } from '@angular/material/radio';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggle } from '@angular/material/slide-toggle';
+import { MatSort, MatSortHeader } from '@angular/material/sort';
 import {
   MatCell,
   MatCellDef,
@@ -116,6 +117,8 @@ import { adminReducer } from './state/admin.reducer';
     FilterSelectorComponent,
     MatChipSet,
     MatChip,
+    MatSort,
+    MatSortHeader,
   ],
 })
 export class AdminModule {}
