@@ -161,6 +161,19 @@ export const assetSearchReducer = createReducer(
   ),
   on(appSharedStateActions.openPanel, (state): AssetSearchState => ({ ...state })),
 
+  on(
+    appSharedStateActions.removeAssetFromSearch,
+    (state, { assetId }): AssetSearchState => ({
+      ...state,
+      currentAsset: state.currentAsset?.assetId === assetId ? undefined : state.currentAsset,
+      results: {
+        ...state.results,
+        data: state.results.data.filter((it) => it.assetId !== assetId),
+      },
+      studies: state.studies?.filter((study) => study.assetId !== assetId) ?? null,
+    })
+  ),
+
   on(appSharedStateActions.updateAssetInSearch, (state, { asset }): AssetSearchState => {
     const mapAsset = (it: AssetEditDetail): AssetEditDetail => (it.assetId === asset.assetId ? asset : it);
     return {
@@ -171,9 +184,8 @@ export const assetSearchReducer = createReducer(
         data: state.results.data.map(mapAsset),
       },
       studies:
-        state.studies &&
         state.studies
-          .filter((study) => study.assetId !== asset.assetId)
+          ?.filter((study) => study.assetId !== asset.assetId)
           .concat(
             asset.studies.map((study): AllStudyDTO => {
               const centroid = (() => {
@@ -200,7 +212,7 @@ export const assetSearchReducer = createReducer(
                 centroid,
               };
             })
-          ),
+          ) ?? null,
     };
   })
 );
