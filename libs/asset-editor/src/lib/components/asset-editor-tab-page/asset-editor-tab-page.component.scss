@@ -9,53 +9,41 @@
 
 form {
   height: 100%;
-}
-
-.tabs-wrapper {
-  height: 100%;
   width: 100%;
   overflow: hidden;
-  ::ng-deep {
-    & > * {
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-    }
+}
+
+[role="tabpanel"] {
+  height: calc(100% - 4rem);
+  & > * {
+    height: calc(100% - 1rem);
   }
 }
 
-::ng-deep {
-  [role="tabpanel"] {
-    height: calc(100% - 4rem);
-    & > * {
-      height: calc(100% - 1rem);
-    }
-  }
-  button[role="tab"] {
-    font-size: 0.875rem;
-    font-weight: variables.$font-bold;
-    color: variables.$cyan-09;
-    height: calc(3rem - 0.375rem);
-    outline: none;
+button[role="tab"] {
+  font-size: 0.875rem;
+  font-weight: variables.$font-bold;
+  color: variables.$cyan-09;
+  height: calc(3rem - 0.375rem);
+  outline: none;
 
-    &:hover {
-      color: variables.$red;
-    }
-
-    &:not(:last-child) {
-      padding-right: 1.5rem;
-    }
-
-    &[aria-selected="true"] {
-      color: variables.$dark-red;
-    }
+  &:hover {
+    color: variables.$red;
   }
 
-  div[role="tablist"] {
-    margin-top: 0.375rem;
-    border-bottom: 2px solid #dee2e6;
-    margin-bottom: 1rem;
+  &:not(:last-child) {
+    padding-right: 1.5rem;
   }
+
+  &[aria-selected="true"] {
+    color: variables.$dark-red;
+  }
+}
+
+nav[role="tablist"] {
+  margin-top: 0.375rem;
+  border-bottom: 2px solid #dee2e6;
+  margin-bottom: 1rem;
 }
 
 .asset-sg-dialog {
@@ -72,4 +60,18 @@ mat-progress-bar {
   right: 1rem;
   width: calc(100% - 1rem - 1px);
   z-index: 1;
+}
+
+// tabs
+ul.tabs {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+ul.tabs > li:not(.is-active) {
+  display: none;
 }
