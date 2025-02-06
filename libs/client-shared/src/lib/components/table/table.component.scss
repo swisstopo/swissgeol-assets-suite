@@ -35,6 +35,10 @@
   }
 }
 
+mat-paginator {
+  box-shadow: 0px -4px 4px -5px;
+}
+
 .mat-mdc-row:hover .mat-mdc-cell {
   background-color: variables.$grey-01;
 }
