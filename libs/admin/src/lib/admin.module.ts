@@ -38,6 +38,7 @@ import {
   DrawerPanelComponent,
   FilterSelectorComponent,
   SearchInputComponent,
+  TableComponent,
   ViewChildMarker,
 } from '@asset-sg/client-shared';
 import { SvgIconComponent } from '@ngneat/svg-icon';
@@ -128,6 +129,7 @@ import { adminReducer } from './state/admin.reducer';
     MatSort,
     MatSortHeader,
     ChipComponent,
+    TableComponent,
   ],
 })
 export class AdminModule {}

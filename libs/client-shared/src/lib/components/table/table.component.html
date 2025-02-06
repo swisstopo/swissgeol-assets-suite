@@ -1,0 +1,15 @@
+<table mat-table [dataSource]="dataSource" class="mat-elevation-z8 table" matSort (matSortChange)="sortChange($event)">
+  @for (column of COLUMNS; track column; let index = $index) {
+  <ng-container matColumnDef="{{ column }}">
+    <th mat-header-cell mat-sort-header="{{ column }}" *matHeaderCellDef>
+      <ng-container *ngTemplateOutlet="headerTemplates[index]"></ng-container>
+    </th>
+    <td mat-cell *matCellDef="let user">
+      <ng-container *ngTemplateOutlet="contentTemplates[index]; context: { $implicit: user }"></ng-container>
+    </td>
+  </ng-container>
+  }
+  <tr mat-header-row *matHeaderRowDef="COLUMNS; sticky: true" class="table__header"></tr>
+  <tr mat-row *matRowDef="let row; columns: COLUMNS"></tr>
+</table>
+<mat-paginator [pageSizeOptions]="[5, 10, 20]" [showFirstLastButtons]="true"></mat-paginator>

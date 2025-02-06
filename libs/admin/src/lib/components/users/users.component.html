@@ -30,6 +30,64 @@
   }
 
   <div *rxLet="currentUser$; let currentUser">
+    <asset-sg-table
+      [COLUMNS]="COLUMNS"
+      [dataSource]="dataSource"
+      [headerTemplates]="[
+        firstNameHeader,
+        lastNameHeader,
+        emailHeader,
+        workgroupHeader,
+        isAdminHeader,
+        langHeader,
+        actionHeader
+      ]"
+      [contentTemplates]="[
+        firstNameContent,
+        lastNameContent,
+        emailContent,
+        workgroupContent,
+        isAdminContent,
+        langContent,
+        actionContent
+      ]"
+    >
+    </asset-sg-table>
+
+    <ng-template #firstNameHeader><span translate>admin.firstName</span></ng-template>
+    <ng-template #firstNameContent let-user> {{ user.firstName }}</ng-template>
+    <ng-template #lastNameHeader><span translate>admin.lastName</span></ng-template>
+    <ng-template #lastNameContent let-user> {{ user.lastName }}</ng-template>
+    <ng-template #emailHeader><span translate>admin.email</span></ng-template>
+    <ng-template #emailContent let-user> {{ user.email }}</ng-template>
+    <ng-template #workgroupHeader><span translate>admin.workgroups</span></ng-template>
+    <ng-template #workgroupContent let-user>
+      <mat-chip-set>
+        @for (workgroup of getUserWorkgroups(user); track workgroup.id) {
+        <asset-sg-chip [text]="workgroup.name"></asset-sg-chip>
+        } @if (user.roles.size > WORKGROUP_DISPLAY_COUNT) {
+        <asset-sg-chip [text]="'+' + (user.roles.size - WORKGROUP_DISPLAY_COUNT)"></asset-sg-chip>
+        }
+      </mat-chip-set>
+    </ng-template>
+    <ng-template #isAdminHeader><span translate>admin.userPage.admin</span></ng-template>
+    <ng-template #isAdminContent let-user>
+      <mat-checkbox
+        [checked]="user.isAdmin"
+        (change)="updateIsAdminStatus(user, $event)"
+        [disabled]="user.id === currentUser?.id"
+        color="primary"
+      ></mat-checkbox>
+    </ng-template>
+    <ng-template #langHeader><span translate>admin.userPage.lang</span></ng-template>
+    <ng-template #langContent let-user> {{ user.lang }}</ng-template>
+    <ng-template #actionHeader><span translate></span></ng-template>
+    <ng-template #actionContent let-user>
+      <button [routerLink]="[user.id]">
+        <svg-icon key="edit"></svg-icon>
+      </button>
+    </ng-template>
+
     <table
       mat-table
       [dataSource]="dataSource"

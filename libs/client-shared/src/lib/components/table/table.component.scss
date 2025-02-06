@@ -1,0 +1,30 @@
+@use "../../styles/variables";
+
+.table {
+  box-shadow: none;
+}
+
+.table__header {
+  background-color: variables.$grey-03;
+  border-radius: 4px;
+  height: 44px;
+
+  th {
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 20px;
+    letter-spacing: 0.0025em;
+
+    &:first-of-type {
+      border-top-left-radius: 4px;
+    }
+
+    &:last-of-type {
+      border-top-right-radius: 4px;
+    }
+  }
+}
+
+.mat-mdc-row:hover .mat-mdc-cell {
+  background-color: variables.$grey-01;
+}
