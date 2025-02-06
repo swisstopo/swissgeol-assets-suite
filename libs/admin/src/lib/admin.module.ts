@@ -33,6 +33,7 @@ import { MatTooltip } from '@angular/material/tooltip';
 import {
   AnchorComponent,
   ButtonComponent,
+  ChipComponent,
   DrawerComponent,
   DrawerPanelComponent,
   FilterSelectorComponent,
@@ -119,6 +120,7 @@ import { adminReducer } from './state/admin.reducer';
     MatChip,
     MatSort,
     MatSortHeader,
+    ChipComponent,
   ],
 })
 export class AdminModule {}

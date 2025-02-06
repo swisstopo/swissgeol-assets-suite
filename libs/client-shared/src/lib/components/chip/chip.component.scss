@@ -1,0 +1,14 @@
+:host {
+  .mat-mdc-standard-chip.mdc-evolution-chip--disabled {
+    background-color: #596978;
+    opacity: unset;
+  }
+
+  .chip-text {
+    color: white;
+    font-weight: 500;
+    font-size: 12px;
+    line-height: 16px;
+    letter-spacing: 0.0125em;
+  }
+}
