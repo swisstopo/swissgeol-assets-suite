@@ -1,11 +1,18 @@
 import { Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { MatCheckboxChange } from '@angular/material/checkbox';
 import { MatTableDataSource } from '@angular/material/table';
-import { ColumnDefinition, FilterChangedEvent, fromAppShared, PossibleValue } from '@asset-sg/client-shared';
+import {
+  ColumnDefinition,
+  CURRENT_LANG,
+  FilterChangedEvent,
+  fromAppShared,
+  PossibleValue,
+} from '@asset-sg/client-shared';
 import { isNotNull } from '@asset-sg/core';
 import { Role, User, Workgroup, WorkgroupId } from '@asset-sg/shared/v2';
 import * as RD from '@devexperts/remote-data-ts';
 import { Store } from '@ngrx/store';
+import { TranslateService } from '@ngx-translate/core';
 import { BehaviorSubject, combineLatestWith, filter, map, Observable, Subscription, tap } from 'rxjs';
 import * as actions from '../../state/admin.actions';
 import { AppStateWithAdmin } from '../../state/admin.reducer';
@@ -28,10 +35,7 @@ export class UsersComponent implements OnInit, OnDestroy {
     { displayValue: 'FR', value: 'fr' },
     { displayValue: 'IT', value: 'en' },
   ];
-  public readonly isAdminFilterValues: PossibleValue[] = [
-    { displayValue: 'Admin', value: true },
-    { displayValue: 'Nicht Admin', value: false },
-  ];
+  public isAdminFilterValues: PossibleValue[] = [];
 
   public COLUMNS: ColumnDefinition[] = [
     { key: 'firstName', header: 'admin.firstName', name: 'firstName', type: 'string', sortable: true },
@@ -59,6 +63,8 @@ export class UsersComponent implements OnInit, OnDestroy {
   private readonly store = inject(Store<AppStateWithAdmin>);
   public readonly users$ = this.store.select(selectUsers);
   private readonly workgroups$ = this.store.select(selectWorkgroups);
+  public readonly currentLang$ = inject(CURRENT_LANG);
+  private readonly translateService = inject(TranslateService);
   private readonly subscriptions: Subscription = new Subscription();
 
   public readonly currentUser$: Observable<User> = this.store.select(fromAppShared.selectRDUserProfile).pipe(
@@ -174,6 +180,14 @@ export class UsersComponent implements OnInit, OnDestroy {
           })
         )
         .subscribe()
+    );
+    this.subscriptions.add(
+      this.currentLang$.subscribe(() => {
+        this.isAdminFilterValues = [
+          { displayValue: this.translateService.instant('admin.userPage.admin'), value: true },
+          { displayValue: this.translateService.instant('admin.userPage.noAdmin'), value: false },
+        ];
+      })
     );
   }
 }
