@@ -1,7 +1,13 @@
 @use "../../styles/variables";
 
-:host ::ng-deep .cell-tooltip {
-  font-size: 12px;
+:host ::ng-deep {
+  .cell-tooltip {
+    font-size: 12px;
+  }
+
+  .mat-mdc-paginator-icon {
+    fill: #828e9a;
+  }
 }
 
 .table {
