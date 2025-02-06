@@ -74,7 +74,6 @@ export class UsersComponent implements OnInit, OnDestroy {
 
   public ngOnInit(): void {
     this.initSubscriptions();
-    console.log(this.COLUMNS);
   }
 
   public ngOnDestroy(): void {
@@ -160,12 +159,6 @@ export class UsersComponent implements OnInit, OnDestroy {
     this.subscriptions.add(
       this.users$.subscribe((users) => {
         this.users = users;
-        users.forEach((user) => {
-          const userWorkgroups = [];
-          for (const workgroup of this.getUserWorkgroups(user)) {
-            userWorkgroups.push(workgroup);
-          }
-        });
         this.dataSource.data = users;
       })
     );

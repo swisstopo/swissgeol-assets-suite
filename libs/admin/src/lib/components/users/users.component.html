@@ -2,7 +2,7 @@
   <div class="search">
     <asset-sg-search-input (searchTermChanged)="setSearchTerm($event)"></asset-sg-search-input>
     <button asset-sg-secondary (click)="showFilters = !showFilters" [isActive]="showFilters">
-      Filter
+      <span translate>menuBar.filters</span>
       <svg-icon key="assets" />
     </button>
   </div>

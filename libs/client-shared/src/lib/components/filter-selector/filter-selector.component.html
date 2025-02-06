@@ -3,8 +3,8 @@
   <svg-icon key="chevron-down" class="icon" />
 
   <mat-select [formControl]="form" multiple>
-    @for (topping of values; track topping) {
-    <mat-option [value]="topping">{{ topping.displayValue }}</mat-option>
+    @for (value of values; track value) {
+    <mat-option [value]="value">{{ value.displayValue }}</mat-option>
     }
   </mat-select>
 </mat-form-field>
