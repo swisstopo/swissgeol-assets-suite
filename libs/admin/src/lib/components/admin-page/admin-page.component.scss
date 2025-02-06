@@ -2,7 +2,7 @@
 
 $sub-navigation-bar-height: 84px;
 
-::ng-deep .navigation .navigation__link {
+:host ::ng-deep .navigation .navigation__link {
   .mdc-tab__text-label {
     color: variables.$cyan-09;
   }
@@ -36,7 +36,7 @@ $sub-navigation-bar-height: 84px;
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  gap: 12px;
+  gap: 18px;
   padding-left: 24px;
 
   .back-button {
@@ -44,6 +44,12 @@ $sub-navigation-bar-height: 84px;
     width: 36px;
     padding: 0;
   }
+}
+
+h2 {
+  margin: 0;
+  font-size: 26px;
+  line-height: 28px;
 }
 
 .main {

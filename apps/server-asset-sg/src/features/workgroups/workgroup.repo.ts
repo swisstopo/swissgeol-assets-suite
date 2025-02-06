@@ -144,5 +144,6 @@ const parse = (data: SelectedWorkgroup): Workgroup => {
     name: data.name,
     users,
     disabledAt: data.disabled_at,
+    numberOfAssets: data.assets.length,
   };
 };

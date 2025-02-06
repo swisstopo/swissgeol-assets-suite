@@ -1,0 +1,27 @@
+.container {
+  border-radius: 8px;
+  border: 1px solid #acb4bd;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+  background-color: #f1f3f5;
+  padding: 24px 24px 24px 35px;
+}
+
+h2 {
+  margin: 0;
+  line-height: 36px;
+  font-size: 16px;
+}
+
+.content {
+  background-color: white;
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
+  padding: 24px 24px 24px 35px;
+}

@@ -1,0 +1,5 @@
+<asset-sg-search-input (searchTermChanged)="changeSearchTerm($event)"></asset-sg-search-input>
+<button asset-sg-secondary (click)="toggleFilters()" [class.active]="shouldShowFilters">
+  <span translate>menuBar.filters</span>
+  <svg-icon key="assets" />
+</button>

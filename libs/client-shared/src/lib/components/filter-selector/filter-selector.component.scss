@@ -3,12 +3,24 @@
     border: 1px solid black;
   }
 
+  .mat-mdc-select {
+    font-size: 16px;
+    line-height: 24px;
+    font-weight: 400;
+  }
+
   .mat-mdc-select-arrow {
     display: none;
   }
 
   .mdc-text-field--filled {
     border-radius: 4px;
+    height: 44px;
+  }
+
+  .mat-mdc-form-field .mat-mdc-text-field-wrapper:not(.mdc-text-field--outlined) .mat-mdc-form-field-infix {
+    padding: 0;
+    align-content: center;
   }
 
   .mdc-text-field--filled:not(.mdc-text-field--disabled) {
@@ -21,8 +33,25 @@
   }
 }
 
+:host([small]) ::ng-deep {
+  .mdc-text-field--filled {
+    border-radius: 4px;
+    height: 28px;
+  }
+
+  .mat-mdc-form-field .mat-mdc-text-field-wrapper:not(.mdc-text-field--outlined) .mat-mdc-form-field-infix {
+    padding-top: 2px;
+    align-content: unset;
+  }
+
+  .mat-mdc-form-field-subscript-wrapper {
+    display: none;
+  }
+}
+
 :host,
 mat-form-field {
+  max-width: 400px;
   width: 100%;
 }
 

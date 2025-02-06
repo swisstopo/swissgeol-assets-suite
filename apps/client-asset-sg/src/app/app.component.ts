@@ -74,8 +74,7 @@ export class AppComponent {
           }
           const path = segments.slice(1).join('/');
           return !(path === 'admin' || path.startsWith(`admin/`));
-        }),
-        startWith(true)
+        })
       )
       .subscribe((showMenuBar) => {
         this.shouldShowMenuBar = showMenuBar;

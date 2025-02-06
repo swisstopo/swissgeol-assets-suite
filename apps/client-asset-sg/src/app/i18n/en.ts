@@ -262,6 +262,7 @@ export const enAppTranslations: AppTranslations = {
   },
   admin: {
     users: 'Users',
+    user: 'User',
     workgroups: 'Workgroups',
     name: 'Name',
     role: 'Role',
@@ -280,9 +281,12 @@ export const enAppTranslations: AppTranslations = {
       admin: 'Admin',
       noAdmin: 'No admin',
       lang: 'Language',
-      addWorkgroups: 'Add workgroups',
+      addWorkgroups: 'Add workgroup',
+      general: 'General',
       more: 'more',
       userAddError: 'Add at least one user',
+      workgroupAddError: 'Add at least one workgroup',
+      amount: 'Number of Assets',
     },
     workgroupPage: {
       name: 'Name',
@@ -297,6 +301,7 @@ export const enAppTranslations: AppTranslations = {
   },
   paginator: {
     itemsPerPage: 'Items per page',
+    range: '{{start}} – {{end}} of {{length}}',
   },
   disclaimer: {
     title: 'Terms of service',

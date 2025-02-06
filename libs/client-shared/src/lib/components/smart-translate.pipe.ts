@@ -1,6 +1,6 @@
 import { inject, OnDestroy, Pipe, PipeTransform } from '@angular/core';
 import { Lang } from '@asset-sg/shared';
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslateService } from '@ngx-translate/core';
 import { Subscription } from 'rxjs';
 import { CURRENT_LANG } from '../utils';
 
@@ -15,7 +15,7 @@ import { CURRENT_LANG } from '../utils';
   pure: false,
 })
 export class SmartTranslatePipe implements PipeTransform, OnDestroy {
-  private readonly translationPipe = inject(TranslatePipe);
+  private readonly translateService = inject(TranslateService);
   private readonly currentLang$ = inject(CURRENT_LANG);
   private currentLang: Lang = 'de';
   private readonly subscription = new Subscription();
@@ -37,7 +37,7 @@ export class SmartTranslatePipe implements PipeTransform, OnDestroy {
       return value;
     }
     if (isTranslationKey(value)) {
-      return this.translationPipe.transform(value.key);
+      return this.translateService.instant(value.key);
     }
     return value[this.currentLang];
   }

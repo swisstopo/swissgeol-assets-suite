@@ -159,6 +159,7 @@ export class WorkgroupEditComponent implements OnInit, OnDestroy {
     } else {
       this.workgroup$.next({
         id: workgroupId,
+        numberOfAssets: 0,
         ...workgroup,
       });
     }
@@ -178,6 +179,7 @@ export class WorkgroupEditComponent implements OnInit, OnDestroy {
             name: '',
             users: new Map(),
             disabledAt: null,
+            numberOfAssets: 0,
           });
         }
       })

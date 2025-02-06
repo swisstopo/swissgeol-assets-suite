@@ -6,6 +6,7 @@ export interface Workgroup extends Model<WorkgroupId> {
   name: string;
   users: Map<UserId, UserOnWorkgroup>;
   disabledAt: Date | null;
+  numberOfAssets: number;
 }
 
 export interface UserOnWorkgroup {
@@ -14,7 +15,7 @@ export interface UserOnWorkgroup {
 }
 
 export type WorkgroupId = number;
-export type WorkgroupData = Omit<Data<Workgroup>, 'assets'>;
+export type WorkgroupData = Data<Omit<Workgroup, 'numberOfAssets'>>;
 export type SimpleWorkgroup = Pick<Workgroup, 'id' | 'name'> & {
   /**
    * The role of the current user within this workgroup.

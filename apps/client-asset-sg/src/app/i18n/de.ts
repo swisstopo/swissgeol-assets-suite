@@ -261,6 +261,7 @@ export const deAppTranslations = {
   },
   admin: {
     users: 'Benutzer',
+    user: 'Benutzer',
     workgroups: 'Arbeitsgruppen',
     name: 'Name',
     role: 'Rolle',
@@ -279,9 +280,12 @@ export const deAppTranslations = {
       admin: 'Admin',
       noAdmin: 'Nicht Admin',
       lang: 'Sprache',
-      addWorkgroups: 'Arbeitsgruppen hinzufügen',
+      general: 'Allgemein',
+      addWorkgroups: 'Arbeitsgruppe hinzufügen',
       more: 'weitere',
       userAddError: 'Füge mindestens einen Benutzer hinzu',
+      workgroupAddError: 'Wähle mindestens eine Arbeitsgruppe aus',
+      amount: 'Anz. Assets',
     },
     workgroupPage: {
       name: 'Name',
@@ -296,6 +300,7 @@ export const deAppTranslations = {
   },
   paginator: {
     itemsPerPage: 'Elemente pro Seite',
+    range: '{{start}} – {{end}} von {{length}}',
   },
   disclaimer: {
     title: 'Nutzungsbedingungen',

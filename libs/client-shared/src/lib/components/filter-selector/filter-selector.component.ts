@@ -1,12 +1,13 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { coerceBooleanProperty } from '@angular/cdk/coercion';
+import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { MatFormField, MatOption, MatSelect } from '@angular/material/select';
+import { MatFormField, MatHint, MatOption, MatSelect } from '@angular/material/select';
 import { SvgIconComponent } from '@ngneat/svg-icon';
 import { TranslateModule } from '@ngx-translate/core';
-import { Translation } from '../smart-translate.pipe';
+import { SmartTranslatePipe, Translation } from '../smart-translate.pipe';
 
-export interface Filter {
-  value: string | number | boolean;
+export interface Filter<T> {
+  value: T;
   displayValue: Translation;
 }
 
@@ -15,16 +16,38 @@ export interface Filter {
   templateUrl: './filter-selector.component.html',
   styleUrls: ['./filter-selector.component.scss'],
   standalone: true,
-  imports: [MatSelect, MatOption, ReactiveFormsModule, SvgIconComponent, TranslateModule, FormsModule, MatFormField],
+  providers: [TranslateModule, SmartTranslatePipe],
+  imports: [
+    MatSelect,
+    MatOption,
+    ReactiveFormsModule,
+    SvgIconComponent,
+    TranslateModule,
+    FormsModule,
+    MatFormField,
+    SmartTranslatePipe,
+    MatHint,
+  ],
 })
-export class FilterSelectorComponent {
-  @Input() public values: Filter[] = [];
+export class FilterSelectorComponent<T> implements OnInit {
+  @Input() public values: Filter<T>[] = [];
   @Input() public title = '';
-  @Output() public filterChanged = new EventEmitter<Filter[]>();
+  @Input({ transform: coerceBooleanProperty }) public multiple = false;
+  @Input() public initialValues: Array<T> = [];
+  @Input() public shouldShowError = false;
+  @Input() public errorMessage = '';
+  @Output() public filterChanged = new EventEmitter<Filter<T>[]>();
 
-  public selectedFilters: Filter[] = [];
+  public selectedFilters?: Filter<T> | Filter<T>[] = this.multiple ? [] : undefined;
 
-  public onFilterChange(selectedValues: Filter[]): void {
-    this.filterChanged.emit(selectedValues);
+  public ngOnInit(): void {
+    if (this.initialValues.length > 0) {
+      const filteredValues = this.values.filter((value) => this.initialValues.includes(value.value));
+      this.selectedFilters = this.multiple ? filteredValues : filteredValues[0] || null;
+    }
+  }
+
+  public onFilterChange(selectedValues: Filter<T> | Filter<T>[]): void {
+    this.filterChanged.emit(Array.isArray(selectedValues) ? selectedValues : [selectedValues]);
   }
 }

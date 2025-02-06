@@ -1,11 +1,15 @@
+@if (title) {
 <h5>{{ title }}</h5>
-
+}
 <mat-form-field class="select">
   <svg-icon key="chevron-down" class="icon" />
 
-  <mat-select [(ngModel)]="selectedFilters" (ngModelChange)="onFilterChange($event)" multiple>
+  <mat-select [(ngModel)]="selectedFilters" (ngModelChange)="onFilterChange($event)" [multiple]="multiple">
     @for (value of values; track value) {
-    <mat-option [value]="value">{{ value.displayValue }}</mat-option>
+    <mat-option [value]="value">{{ value.displayValue | smartTranslate }}</mat-option>
     }
   </mat-select>
+  @if (shouldShowError) {
+  <mat-hint class="mat-mdc-form-field-error">{{ errorMessage }}</mat-hint>
+  }
 </mat-form-field>

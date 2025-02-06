@@ -1,62 +1,39 @@
 @use "../../styles/variables";
 
-.card {
-  margin: 1rem;
-}
-
-.user-edit {
-  padding: 1.5rem;
-  height: 100%;
-  overflow-y: scroll;
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
 }
 
 .user-data {
   display: flex;
-  gap: 0.5rem;
+  gap: 24px;
+  align-items: center;
 
-  .user-data__group {
-    display: flex;
-    gap: 1rem;
-    align-items: center;
+  .filter-container {
+    width: 400px;
+  }
+
+  mat-checkbox {
+    margin-top: 12px;
   }
 }
 
-.workgroups {
-  & > .workgroups__header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+.mat-column-amount {
+  width: 147px;
+}
 
-    & > *:last-child > mat-form-field {
-      width: 20rem;
-    }
-  }
+.mat-column-role {
+  width: 223px;
+}
 
-  .mat-column-name {
-    width: auto;
-  }
+.mat-column-isActive {
+  width: 97px;
+}
 
-  .mat-column-role {
-    width: 12rem;
-  }
-
-  .mat-column-actions {
-    width: 6rem;
-  }
-
-  .workgroups__table__form-field {
-    padding: 0.5rem 0;
-  }
-
-  .workgroups__table__header {
-    background-color: variables.$grey-03;
-  }
-
-  .mat-mdc-header-row .mat-mdc-cell {
-    background-color: variables.$grey-01;
-  }
-
-  .mat-mdc-row:hover .mat-mdc-cell {
-    background-color: variables.$grey-01;
-  }
+.mat-column-actions {
+  width: 52px;
+  text-align: right;
+  padding-left: 0;
 }

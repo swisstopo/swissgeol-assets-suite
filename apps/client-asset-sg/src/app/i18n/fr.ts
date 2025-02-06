@@ -263,6 +263,7 @@ export const frAppTranslations: AppTranslations = {
   },
   admin: {
     users: 'Utilisateurs',
+    user: 'Utilisateur',
     workgroups: 'Groupes de travail',
     name: 'Nom',
     role: 'Rôle',
@@ -281,9 +282,12 @@ export const frAppTranslations: AppTranslations = {
       admin: 'Admin',
       noAdmin: "Pas d'admin",
       lang: 'Langue',
-      addWorkgroups: 'Ajouter des groupes de travail',
+      addWorkgroups: 'Ajouter une groupe de travail',
+      general: 'Général',
       more: 'en plus',
       userAddError: 'Ajoute au moins un utilisateur',
+      workgroupAddError: 'Ajoute au moins un groupe de travail',
+      amount: 'Nombre des assets',
     },
     workgroupPage: {
       name: 'Nom',
@@ -298,6 +302,7 @@ export const frAppTranslations: AppTranslations = {
   },
   paginator: {
     itemsPerPage: 'Éléments par page',
+    range: '{{start}} – {{end}} de {{length}}',
   },
   disclaimer: {
     title: "Conditions d'utilisation",

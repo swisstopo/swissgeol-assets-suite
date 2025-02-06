@@ -4,11 +4,12 @@
     <svg-icon key="arrow-left" class="close" />
   </button>
   @if (isWorkgroupsPage) {
-  <h3>{{ (selectedWorkgroup$ | async)?.name }}</h3>
+  <h2>{{ (selectedWorkgroup$ | async)?.name }}</h2>
   } @else if (isUsersPage) {
-  <h3>{{ (selectedUser$ | async)?.email }}</h3>
+  <h2>{{ (selectedUser$ | async)?.email }}</h2>
+  <asset-sg-chip type="secondary"><span translate>admin.user</span></asset-sg-chip>
   } @else {
-  <h3>{{ "menuBar.settings" | translate }}</h3>
+  <h2 translate="">menuBar.settings</h2>
   }
 </div>
 <div class="main">
