@@ -1,7 +1,7 @@
 <div class="users">
   <div class="search">
     <asset-sg-search-input (searchTermChanged)="setSearchTerm($event)"></asset-sg-search-input>
-    <button asset-sg-secondary (click)="showFilters = !showFilters">
+    <button asset-sg-secondary (click)="showFilters = !showFilters" [isActive]="showFilters">
       Filter
       <svg-icon key="assets" />
     </button>

@@ -294,6 +294,9 @@ export const deAppTranslations = {
       addUsers: 'Benutzer hinzufügen',
     },
   },
+  paginator: {
+    itemsPerPage: 'Elemente pro Seite',
+  },
   disclaimer: {
     title: 'Nutzungsbedingungen',
     subtitle: 'Haftung',

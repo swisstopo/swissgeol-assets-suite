@@ -296,6 +296,9 @@ export const frAppTranslations: AppTranslations = {
       addUsers: 'Ajouter des utilisateurs',
     },
   },
+  paginator: {
+    itemsPerPage: 'Éléments par page',
+  },
   disclaimer: {
     title: "Conditions d'utilisation",
     subtitle: 'Responsabilité',

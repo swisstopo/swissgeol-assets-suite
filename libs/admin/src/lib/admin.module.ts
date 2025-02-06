@@ -10,7 +10,7 @@ import { MatChip, MatChipSet } from '@angular/material/chips';
 import { MatDialogActions, MatDialogContent, MatDialogTitle } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatPaginator } from '@angular/material/paginator';
+import { MatPaginator, MatPaginatorIntl } from '@angular/material/paginator';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatRadioModule } from '@angular/material/radio';
 import { MatSelectModule } from '@angular/material/select';
@@ -55,6 +55,7 @@ import { UserEditComponent } from './components/user-edit/user-edit.component';
 import { UsersComponent } from './components/users/users.component';
 import { WorkgroupEditComponent } from './components/workgroup-edit/workgroup-edit.component';
 import { WorkgroupsComponent } from './components/workgroups/workgroups.component';
+import { CustomPaginatorIntl } from './services/custom-paginator-intl';
 import { AdminEffects } from './state/admin.effects';
 import { adminReducer } from './state/admin.reducer';
 
@@ -66,6 +67,12 @@ import { adminReducer } from './state/admin.reducer';
     UsersComponent,
     UserEditComponent,
     AddWorkgroupUserDialogComponent,
+  ],
+  providers: [
+    {
+      provide: MatPaginatorIntl,
+      useClass: CustomPaginatorIntl,
+    },
   ],
   imports: [
     CommonModule,

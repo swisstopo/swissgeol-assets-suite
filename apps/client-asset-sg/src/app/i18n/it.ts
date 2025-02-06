@@ -295,6 +295,9 @@ export const itAppTranslations: AppTranslations = {
       addUsers: 'IT Benutzer hinzufügen',
     },
   },
+  paginator: {
+    itemsPerPage: 'IT Elemente pro Seite',
+  },
   disclaimer: {
     title: 'Condizioni di utilizzo',
     subtitle: 'Responsabilità',

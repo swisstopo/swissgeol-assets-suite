@@ -295,6 +295,9 @@ export const enAppTranslations: AppTranslations = {
       addUsers: 'Add users',
     },
   },
+  paginator: {
+    itemsPerPage: 'Items per page',
+  },
   disclaimer: {
     title: 'Terms of service',
     subtitle: 'Limitation of liability',
