@@ -1,5 +1,9 @@
 @use "../../styles/variables";
 
+:host ::ng-deep .cell-tooltip {
+  font-size: 12px;
+}
+
 .table {
   box-shadow: none;
 }
