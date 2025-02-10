@@ -16,6 +16,7 @@ import {
   selector: 'asset-sg-asset-search-detail',
   templateUrl: './asset-search-detail.component.html',
   styleUrls: ['./asset-search-detail.component.scss'],
+  standalone: false,
 })
 export class AssetSearchDetailComponent {
   private readonly store = inject(Store<AppState>);

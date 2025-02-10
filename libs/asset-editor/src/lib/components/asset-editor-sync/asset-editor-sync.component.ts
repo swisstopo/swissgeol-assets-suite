@@ -6,6 +6,7 @@ import { Observable, take } from 'rxjs';
   selector: 'asset-sg-editor-sync',
   templateUrl: './asset-editor-sync.component.html',
   styleUrls: ['./asset-editor-sync.component.scss'],
+  standalone: false,
 })
 export class AssetEditorSyncComponent implements OnInit {
   private readonly httpClient = inject(HttpClient);

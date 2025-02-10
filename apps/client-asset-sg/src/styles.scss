@@ -1,7 +1,7 @@
 @use "app/styles/mixins";
 @use "app/styles/variables";
 @use "./open-layers";
-@import "mat-styles";
+@use "mat-styles" as *;
 
 @font-face {
   font-family: "Inter";

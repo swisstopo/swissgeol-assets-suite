@@ -57,6 +57,7 @@ import {
   selector: 'asset-sg-viewer-page',
   templateUrl: './asset-viewer-page.component.html',
   styleUrls: ['./asset-viewer-page.component.scss'],
+  standalone: false,
   hostDirectives: [LifecycleHooksDirective],
 })
 export class AssetViewerPageComponent implements OnInit, OnDestroy {

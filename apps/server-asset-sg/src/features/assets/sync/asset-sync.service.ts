@@ -7,6 +7,8 @@ import { AssetSearchService } from '@/features/assets/search/asset-search.servic
 
 @Injectable()
 export class AssetSyncService implements OnApplicationBootstrap {
+  private readonly logger = new Logger(AssetSyncService.name);
+
   constructor(
     private readonly assetSearchService: AssetSearchService,
     private readonly schedulerRegistry: SchedulerRegistry,
@@ -19,7 +21,7 @@ export class AssetSyncService implements OnApplicationBootstrap {
     }
 
     if (process.env.ANONYMOUS_MODE === 'true') {
-      Logger.log('Anonymous Mode is activated. Search Index will be automatically synced.');
+      this.logger.log('Anonymous Mode is activated. Search Index will be automatically synced.');
       await this.startSyncIfIndexOutOfSync();
 
       const every20Minutes = '*/20 * * * *';
@@ -32,11 +34,10 @@ export class AssetSyncService implements OnApplicationBootstrap {
   async show(): Promise<AssetSyncState | null> {
     try {
       const data = await fs.readFile(assetSyncFile, { encoding: 'utf-8' });
-      Logger.debug(`AssetSyncService.show: Sync in progress: ${data}`);
-      return JSON.parse(data);
+      const state = JSON.parse(data);
+      return state;
     } catch (e) {
       if ((e as { code?: string }).code === 'ENOENT') {
-        Logger.debug('AssetSyncService.show: No sync in progress.');
         return null;
       }
       throw e;
@@ -52,7 +53,7 @@ export class AssetSyncService implements OnApplicationBootstrap {
 
   async start(): Promise<void> {
     if (await this.isSyncRunning()) {
-      Logger.debug('AssetSyncService.start: Sync already running.');
+      this.logger.debug('Sync already running.');
       return;
     }
 
@@ -70,10 +71,9 @@ export class AssetSyncService implements OnApplicationBootstrap {
   }
 
   private async startSyncIfIndexOutOfSync() {
-    Logger.debug(`startSyncIfIndexOutOfSync.`);
     const numberOfAssets = await this.assetRepo.count();
     const numberOfIndexedAssets = await this.assetSearchService.count();
-    Logger.debug(`Found ${numberOfAssets} Assets and ${numberOfIndexedAssets} Indexed documents.`);
+    this.logger.debug('startSyncIfIndexOutOfSync', { assets: numberOfAssets, indexedAssets: numberOfIndexedAssets });
     if (numberOfAssets !== numberOfIndexedAssets) {
       await this.start();
     }

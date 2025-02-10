@@ -1,4 +1,5 @@
-/* eslint-disable */
+import { Config } from 'jest';
+
 export default {
   displayName: 'admin',
   preset: '../../jest.preset.js',
@@ -20,4 +21,4 @@ export default {
     'jest-preset-angular/build/serializers/ng-snapshot',
     'jest-preset-angular/build/serializers/html-comment',
   ],
-};
+} satisfies Config;

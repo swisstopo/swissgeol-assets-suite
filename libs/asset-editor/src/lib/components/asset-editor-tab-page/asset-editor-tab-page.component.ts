@@ -34,6 +34,7 @@ import { AssetEditorFile, AssetEditorFileTypeFormGroup, makeAssetEditorFormGroup
   styleUrls: ['./asset-editor-tab-page.component.scss'],
   templateUrl: './asset-editor-tab-page.component.html',
   hostDirectives: [LifecycleHooksDirective],
+  standalone: false,
 })
 export class AssetEditorTabPageComponent implements AfterViewInit {
   @ViewChildren('tabsWrapper', { read: ElementRef }) _tabsWrapper!: QueryList<ElementRef<HTMLDivElement>>;

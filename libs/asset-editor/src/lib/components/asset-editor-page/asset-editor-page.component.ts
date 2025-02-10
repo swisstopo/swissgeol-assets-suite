@@ -22,6 +22,7 @@ import { TabPageBridgeService } from '../../services/tab-page-bridge.service';
   hostDirectives: [LifecycleHooksDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [TabPageBridgeService],
+  standalone: false,
 })
 export class AssetEditorPageComponent {
   @ViewChild('templateDrawerPortalContent') _templateDrawerPortalContent!: TemplateRef<unknown>;

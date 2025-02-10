@@ -36,9 +36,9 @@ const initialTabAdministrationState: TabAdministrationState = {
   templateUrl: './asset-editor-tab-administration.component.html',
   styleUrls: ['./asset-editor-tab-administration.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  // eslint-disable-next-line @angular-eslint/no-host-metadata-property
   host: { class: 'edit-area' },
   providers: [RxState],
+  standalone: false,
 })
 export class AssetEditorTabAdministrationComponent implements OnInit {
   public readonly rootFormGroupDirective = inject(FormGroupDirective);
@@ -63,7 +63,6 @@ export class AssetEditorTabAdministrationComponent implements OnInit {
     map(([user, assetEditDetail]) => isMasterEditor(user, assetEditDetail.workgroupId))
   );
 
-  // eslint-disable-next-line @angular-eslint/no-output-rename
   @Output() public saveAsset = new EventEmitter<void>();
   @Output() public deleteAsset = new EventEmitter<void>();
 

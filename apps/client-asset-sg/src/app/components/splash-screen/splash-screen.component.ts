@@ -6,6 +6,7 @@ import { TranslateService } from '@ngx-translate/core';
   selector: 'app-splash-screen',
   templateUrl: './splash-screen.component.html',
   styleUrls: ['./splash-screen.component.scss'],
+  standalone: false,
 })
 export class SplashScreenComponent {
   readonly authService = inject(AuthService);

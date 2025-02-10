@@ -46,8 +46,8 @@
   border-radius: 4px;
   width: 100%;
 
-  color: mat.get-contrast-color-from-palette($asset-sg-warn, 200);
-  background-color: mat.get-color-from-palette($asset-sg-warn, 200);
+  color: mat.m2-get-contrast-color-from-palette($asset-sg-warn, 200);
+  background-color: mat.m2-get-color-from-palette($asset-sg-warn, 200);
 }
 
 p {
@@ -69,6 +69,6 @@ ul.languages {
 
   li.is-active > button {
     text-decoration: underline;
-    color: mat.get-color-from-palette($asset-sg-primary, 600);
+    color: mat.m2-get-color-from-palette($asset-sg-primary, 600);
   }
 }

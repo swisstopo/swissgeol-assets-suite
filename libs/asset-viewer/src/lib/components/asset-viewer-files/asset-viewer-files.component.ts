@@ -10,7 +10,8 @@ import { AssetDetailFileVM, displayFileSize } from '../../state/asset-search/ass
 @Component({
   selector: 'ul[asset-sg-asset-viewer-files]',
   templateUrl: './asset-viewer-files.component.html',
-  styleUrl: './asset-viewer-files.component.scss',
+  styleUrls: ['./asset-viewer-files.component.scss'],
+  standalone: false,
 })
 export class AssetViewerFilesComponent implements OnInit, OnDestroy {
   @Input({ required: true })

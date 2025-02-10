@@ -14,6 +14,7 @@ import { selectUsers, selectWorkgroups } from '../../state/admin.selector';
   selector: 'asset-sg-users',
   templateUrl: './users.component.html',
   styleUrls: ['./users.component.scss'],
+  standalone: false,
 })
 export class UsersComponent implements OnInit, OnDestroy {
   public workgroups = new Map<WorkgroupId, Workgroup>();

@@ -31,8 +31,8 @@ const initialAssetEditorTabUsageState: AssetEditorTabUsageState = {
   selector: 'asset-sg-editor-tab-usage',
   templateUrl: './asset-editor-tab-usage.component.html',
   styleUrls: ['./asset-editor-tab-usage.component.scss'],
+  standalone: false,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  // eslint-disable-next-line @angular-eslint/no-host-metadata-property
   host: { class: 'edit-area' },
   providers: [RxState],
   hostDirectives: [LifecycleHooksDirective],

@@ -18,6 +18,7 @@ export type Mode = 'edit' | 'create';
   selector: 'asset-sg-workgroup-edit',
   templateUrl: './workgroup-edit.component.html',
   styleUrls: ['./workgroup-edit.component.scss'],
+  standalone: false,
 })
 export class WorkgroupEditComponent implements OnInit, OnDestroy {
   public workgroup$ = new BehaviorSubject<Workgroup | null>(null);

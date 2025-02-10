@@ -1,4 +1,3 @@
-/* eslint-disable */
 export default {
   displayName: 'sync-asset-sg',
   preset: '../../jest.preset.js',

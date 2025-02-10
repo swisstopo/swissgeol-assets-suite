@@ -1,7 +1,6 @@
 import { Directive, Input, ViewContainerRef, inject } from '@angular/core';
 
 @Directive({
-  // eslint-disable-next-line @angular-eslint/directive-selector
   selector: '[viewChildMarker]',
   standalone: true,
 })

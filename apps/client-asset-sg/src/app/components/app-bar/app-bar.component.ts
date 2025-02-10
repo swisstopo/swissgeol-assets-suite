@@ -15,6 +15,7 @@ import { Version } from './version';
   selector: 'asset-sg-app-bar',
   templateUrl: './app-bar.component.html',
   styleUrls: ['./app-bar.component.scss'],
+  standalone: false,
 })
 export class AppBarComponent implements OnInit {
   // TODO use new pattern here

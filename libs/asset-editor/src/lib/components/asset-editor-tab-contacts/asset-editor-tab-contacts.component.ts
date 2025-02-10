@@ -67,9 +67,9 @@ interface AssetContact {
   templateUrl: './asset-editor-tab-contacts.component.html',
   styleUrls: ['./asset-editor-tab-contacts.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  // eslint-disable-next-line @angular-eslint/no-host-metadata-property
   host: { class: 'edit-area' },
   providers: [RxState],
+  standalone: false,
 })
 export class AssetEditorTabContactsComponent implements OnInit {
   private _rootFormGroupDirective = inject(FormGroupDirective);

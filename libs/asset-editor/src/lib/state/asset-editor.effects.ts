@@ -55,8 +55,10 @@ export class AssetEditorEffects {
   loadAssetEditDetail$ = createEffect(() =>
     this.newOrAssetId[1].pipe(
       switchMap((params) => this._assetEditorService.loadAssetDetailData(params.assetId)),
-      tap((rd) => {
-        RD.isFailure(rd) && this._router.navigate(['/'], { queryParams: undefined });
+      tap(async (rd) => {
+        if (RD.isFailure(rd)) {
+          await this._router.navigate(['/'], { queryParams: undefined });
+        }
       }),
       ORD.map(O.some),
       map(actions.loadAssetEditDetailResult)

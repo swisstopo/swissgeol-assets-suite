@@ -8,6 +8,7 @@ import { fromEvent, take } from 'rxjs';
 @UntilDestroy()
 @Pipe({
   name: 'lv95xWithoutPrefix',
+  standalone: false,
 })
 export class Lv95xWithoutPrefixPipe implements PipeTransform {
   private _host = inject<ElementRef<HTMLInputElement>>(ElementRef);

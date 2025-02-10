@@ -2,7 +2,7 @@
 @use "app/styles/mixins" as mixins;
 @use "@angular/material" as mat;
 
-@import "theme";
+@use "theme" as *;
 
 @include mat.core();
 

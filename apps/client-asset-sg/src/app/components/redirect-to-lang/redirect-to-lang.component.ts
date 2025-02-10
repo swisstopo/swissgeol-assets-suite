@@ -7,6 +7,7 @@ import { UntilDestroy } from '@ngneat/until-destroy';
 @Component({
   selector: 'asset-sg-redirect-to-lang',
   template: 'Redirect to main page...',
+  standalone: false,
 })
 export class RedirectToLangComponent {
   constructor(router: Router, authService: AuthService) {

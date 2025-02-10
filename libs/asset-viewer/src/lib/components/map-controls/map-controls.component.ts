@@ -4,7 +4,8 @@ import { ZoomControl } from './zoom-control';
 @Component({
   selector: 'asset-sg-map-controls',
   templateUrl: './map-controls.component.html',
-  styleUrl: './map-controls.component.scss',
+  styleUrls: ['./map-controls.component.scss'],
+  standalone: false,
 })
 export class MapControlsComponent {
   @Input({ required: true })

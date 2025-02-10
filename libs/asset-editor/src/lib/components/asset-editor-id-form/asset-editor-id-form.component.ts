@@ -7,7 +7,8 @@ import { eqIdVM, IdVM } from '../../models';
 @Component({
   selector: 'asset-sg-asset-editor-id-form',
   templateUrl: './asset-editor-id-form.component.html',
-  styleUrl: './asset-editor-id-form.component.scss',
+  styleUrls: ['./asset-editor-id-form.component.scss'],
+  standalone: false,
 })
 export class AssetEditorIdFormComponent implements OnInit, OnChanges, OnDestroy {
   @Input({ required: true })

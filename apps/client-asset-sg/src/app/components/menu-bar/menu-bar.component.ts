@@ -17,6 +17,7 @@ import { AppState } from '../../state/app-state';
   templateUrl: './menu-bar.component.html',
   styleUrls: ['./menu-bar.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: false,
 })
 export class MenuBarComponent {
   @HostBinding('attr.role')

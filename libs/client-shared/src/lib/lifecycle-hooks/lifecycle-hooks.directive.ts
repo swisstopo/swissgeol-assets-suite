@@ -12,7 +12,6 @@ import {
 import { LifecycleHooks } from './lifecycle-hooks.service';
 
 @Directive({
-  // eslint-disable-next-line @angular-eslint/directive-selector
   selector: '[lifecycleHooks]',
   standalone: true,
   providers: [LifecycleHooks],

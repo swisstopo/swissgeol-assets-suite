@@ -9,6 +9,7 @@ import { selectAlerts } from '../alert.selectors';
   selector: 'ul[app-alert-list]',
   templateUrl: './alert-list.component.html',
   styleUrls: ['./alert-list.component.scss'],
+  standalone: false,
 })
 export class AlertListComponent {
   private readonly store = inject(Store<AlertState>);

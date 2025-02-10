@@ -15,7 +15,6 @@ import {
 @Component({
   standalone: true,
   selector:
-    // eslint-disable-next-line @angular-eslint/component-selector
     'button[asset-sg-reset], button[asset-sg-icon-button], button[asset-sg-primary], button[asset-sg-warn], button[asset-sg-secondary], button[asset-sg-icon-button-tw]',
   template: '<ng-content></ng-content>',
   styleUrls: ['./button.component.scss'],
