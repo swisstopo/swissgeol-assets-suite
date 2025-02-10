@@ -1,7 +1,7 @@
 import { Dialog, DialogRef } from '@angular/cdk/dialog';
 import { Location } from '@angular/common';
 import {
-  ChangeDetectionStrategy,
+  AfterViewInit,
   Component,
   ElementRef,
   inject,
@@ -9,22 +9,18 @@ import {
   TemplateRef,
   ViewChild,
   ViewChildren,
-  ViewContainerRef,
 } from '@angular/core';
-import { fromAppShared, LifecycleHooks, LifecycleHooksDirective, RoutingService } from '@asset-sg/client-shared';
-import { isNotNil, isTruthy, ORD } from '@asset-sg/core';
+import { fromAppShared, LifecycleHooksDirective, RoutingService } from '@asset-sg/client-shared';
+import { isTruthy, ORD } from '@asset-sg/core';
 import { ContactEdit, GeomFromGeomText, PatchAsset, PatchContact } from '@asset-sg/shared';
 import * as RD from '@devexperts/remote-data-ts';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { Store } from '@ngrx/store';
-import { TranslateService } from '@ngx-translate/core';
 import { FileType } from '@prisma/client';
 import * as A from 'fp-ts/Array';
 import { pipe } from 'fp-ts/function';
 import * as O from 'fp-ts/Option';
-import { KobalteTabs } from 'ngx-kobalte';
-import { BehaviorSubject, filter, map, Observable, of, startWith, switchMap } from 'rxjs';
-import { from } from 'solid-js';
+import { BehaviorSubject, filter, map, Observable, of, take } from 'rxjs';
 
 import { TabPageBridgeService } from '../../services/tab-page-bridge.service';
 import * as actions from '../../state/asset-editor.actions';
@@ -38,9 +34,8 @@ import { AssetEditorFile, AssetEditorFileTypeFormGroup, makeAssetEditorFormGroup
   styleUrls: ['./asset-editor-tab-page.component.scss'],
   templateUrl: './asset-editor-tab-page.component.html',
   hostDirectives: [LifecycleHooksDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class AssetEditorTabPageComponent {
+export class AssetEditorTabPageComponent implements AfterViewInit {
   @ViewChildren('tabsWrapper', { read: ElementRef }) _tabsWrapper!: QueryList<ElementRef<HTMLDivElement>>;
   @ViewChild('tabPanelGeneralContent') _tabPanelGeneralContent!: TemplateRef<unknown>;
   @ViewChild('tabPanelFilesContent') _tabPanelFilesContent!: TemplateRef<unknown>;
@@ -51,15 +46,16 @@ export class AssetEditorTabPageComponent {
   @ViewChild('tabPanelAdministrationContent') _tabPanelAdministrationContent!: TemplateRef<unknown>;
   @ViewChild('tmplDiscardDialog') _tmplDiscardDialog!: TemplateRef<unknown>;
 
-  private _lc = inject(LifecycleHooks);
-  private _viewContainerRef = inject(ViewContainerRef);
-  private _translateService = inject(TranslateService);
-  private _store = inject(Store<AppStateWithAssetEditor>);
-  private _tabPageBridgeService = inject(TabPageBridgeService);
-  private _dialogService = inject(Dialog);
+  private readonly _store = inject(Store<AppStateWithAssetEditor>);
+  private readonly _tabPageBridgeService = inject(TabPageBridgeService);
+  private readonly _dialogService = inject(Dialog);
 
   private readonly routingService = inject(RoutingService);
   private readonly location = inject(Location);
+
+  public isFormReady = false;
+
+  public activeTab = Tab.General;
 
   public _discardDialogRef?: DialogRef<boolean>;
 
@@ -174,102 +170,21 @@ export class AssetEditorTabPageComponent {
           this.form.controls.administration.controls.newStatusWorkItemCode.disable();
         }
       });
+  }
 
-    this._lc.afterViewInit$
-      .pipe(
-        switchMap(() => this._tabsWrapper.changes.pipe(startWith(null))),
-        map(() => this._tabsWrapper.first?.nativeElement),
-        filter(isNotNil),
-        untilDestroyed(this)
-      )
-      .subscribe((element) => {
-        const tabKey = this.urlPath.substring(this.indexOfLastSlashInUrlPath + 1);
-        const createButtonLabelTranslation = (key: string) =>
-          from(
-            this._translateService.onLangChange.pipe(
-              startWith(null),
-              map(() => this._translateService.instant(key))
-            )
-          );
+  ngAfterViewInit(): void {
+    this.referenceDataVM$.pipe(take(1)).subscribe(() => {
+      this.isFormReady = true;
+    });
+  }
 
-        const tabs = [
-          {
-            key: 'general',
-            buttonLabel: createButtonLabelTranslation('edit.tabs.general.tabName'),
-            content: this._tabPanelGeneralContent,
-          },
-          {
-            key: 'files',
-            buttonLabel: createButtonLabelTranslation('edit.tabs.files.tabName'),
-            content: this._tabPanelFilesContent,
-          },
-          {
-            key: 'usage',
-            buttonLabel: createButtonLabelTranslation('edit.tabs.usage.tabName'),
-            content: this._tabPanelUsageContent,
-          },
-          {
-            key: 'contacts',
-            buttonLabel: createButtonLabelTranslation('edit.tabs.contacts.tabName'),
-            content: this._tabPanelContactsContent,
-          },
-          {
-            key: 'references',
-            buttonLabel: createButtonLabelTranslation('edit.tabs.references.tabName'),
-            content: this._tabPanelReferencesContent,
-          },
-          {
-            key: 'geometries',
-            buttonLabel: createButtonLabelTranslation('edit.tabs.geometries.tabName'),
-            content: this._tabPanelGeometriesContent,
-          },
-          {
-            key: 'administration',
-            buttonLabel: createButtonLabelTranslation('edit.tabs.administration.tabName'),
-            content: this._tabPanelAdministrationContent,
-          },
-        ];
-
-        const changeToTab = (key: string | undefined) => {
-          if (!key) return;
-          setTimeout(() => {
-            const panel = element.querySelector('div[role="tabpanel"]');
-            const tab = tabs.find((tab) => tab.key === key);
-            if (panel && tab) {
-              const viewRef = this._viewContainerRef.createEmbeddedView(tab.content, undefined);
-              for (const node of viewRef.rootNodes) {
-                panel.appendChild(node);
-              }
-            }
-          });
-        };
-
-        let lastTabValue: string | undefined = undefined;
-        const onValueChange = (value: string) => {
-          if (value === lastTabValue) return;
-          console.log('reroute', value);
-          lastTabValue = value;
-
-          const pathPrefix = this.urlPath.substring(0, this.indexOfLastSlashInUrlPath);
-          this.location.replaceState(`${pathPrefix}/${value}`);
-          changeToTab(value);
-        };
-        KobalteTabs(
-          element,
-          { onValueChange, defaultValue: tabKey },
-          of(
-            tabs.map((tab) => ({
-              value: tab.key,
-              triggerProps: {
-                children: tab.buttonLabel,
-              },
-              contentProps: {},
-            }))
-          )
-        );
-
-        changeToTab(tabKey);
-      });
+  selectTab(tab: Tab): void {
+    if (this.activeTab === tab) {
+      return;
+    }
+    this.activeTab = tab;
+    const pathPrefix = this.urlPath.substring(0, this.indexOfLastSlashInUrlPath);
+    this.location.replaceState(`${pathPrefix}/${tab}`);
   }
 
   delete(): void {
@@ -376,4 +291,20 @@ export class AssetEditorTabPageComponent {
   private get indexOfLastSlashInUrlPath(): number {
     return this.urlPath.lastIndexOf('/');
   }
+
+  public get tabs(): Tab[] {
+    return Object.values(Tab);
+  }
+
+  protected readonly Tab = Tab;
+}
+
+enum Tab {
+  General = 'general',
+  Files = 'files',
+  Usage = 'usage',
+  Contacts = 'contacts',
+  References = 'references',
+  Geometries = 'geometries',
+  Administration = 'administration',
 }
