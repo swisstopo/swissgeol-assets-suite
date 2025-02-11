@@ -7,7 +7,8 @@ import { Filter } from '../../state/asset-search/asset-search.selector';
 @Component({
   selector: 'asset-sg-asset-search-filter',
   templateUrl: './asset-search-filter.component.html',
-  styleUrl: './asset-search-filter.component.scss',
+  styleUrls: ['./asset-search-filter.component.scss'],
+  standalone: false,
 })
 export class AssetSearchFilterComponent<T> {
   @Input({ required: true })

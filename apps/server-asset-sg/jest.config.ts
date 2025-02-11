@@ -1,4 +1,3 @@
-/* eslint-disable */
 export default {
   displayName: 'server-asset-sg',
   preset: '../../jest.preset.js',

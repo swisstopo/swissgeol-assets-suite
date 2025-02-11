@@ -55,7 +55,7 @@ const toJSON = (from) => {
 
 const getErrorConstructor = (name) => errorConstructors.get(name) ?? Error;
 
-const destroyCircular = ({ from, seen, to, forceEnumerable, maxDepth, depth, useToJSON, serialize }: any) => {
+const destroyCircular = ({ from, seen, to, forceEnumerable, maxDepth, depth, useToJSON, serialize }) => {
   if (!to) {
     if (Array.isArray(from)) {
       to = [];

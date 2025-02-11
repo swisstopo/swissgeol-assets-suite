@@ -8,6 +8,7 @@ import { selectWorkgroups } from '../../state/admin.selector';
   selector: 'asset-sg-workgroups',
   templateUrl: './workgroups.component.html',
   styleUrls: ['./workgroups.component.scss'],
+  standalone: false,
 })
 export class WorkgroupsComponent {
   protected readonly COLUMNS = ['name', 'users', 'status', 'actions'];

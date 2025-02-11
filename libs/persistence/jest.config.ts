@@ -1,4 +1,5 @@
-/* eslint-disable */
+import { Config } from 'jest';
+
 export default {
   displayName: 'persistence',
   preset: '../../jest.preset.js',
@@ -8,4 +9,4 @@ export default {
   },
   moduleFileExtensions: ['ts', 'js', 'html'],
   coverageDirectory: '../../coverage/libs/persistence',
-};
+} satisfies Config;

@@ -132,9 +132,9 @@ const initialTabGeometriesState: TabGeometriesState = {
   templateUrl: './asset-editor-tab-geometries.component.html',
   styleUrls: ['./asset-editor-tab-geometries.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  // eslint-disable-next-line @angular-eslint/no-host-metadata-property
   host: { class: 'edit-area' },
   providers: [RxState],
+  standalone: false,
 })
 export class AssetEditorTabGeometriesComponent implements OnInit {
   private _rootFormGroupDirective = inject(FormGroupDirective);
@@ -779,7 +779,9 @@ export class AssetEditorTabGeometriesComponent implements OnInit {
         }
         if (geometryType === 'Polygon' && currentPointIndex > 1) {
           const finalFeature = this._vectorSourceDraw.getFeatureById(`line_final`);
-          finalFeature && this._vectorSourceDraw.removeFeature(finalFeature);
+          if (finalFeature) {
+            this._vectorSourceDraw.removeFeature(finalFeature);
+          }
           const lineFeature = decorateFeature(
             new Feature({
               geometry: new LineString([
@@ -807,18 +809,26 @@ export class AssetEditorTabGeometriesComponent implements OnInit {
       .subscribe(() => {
         olMap.addInteraction(draw);
         const finalFeature = this._vectorSourceDraw.getFeatureById(`line_final`);
-        finalFeature && finalFeature.setStyle(featureStyles.polygonAssetNotSelected);
+        if (finalFeature) {
+          finalFeature.setStyle(featureStyles.polygonAssetNotSelected);
+        }
       });
 
     fromEvent(this.mapDiv.nativeElement, 'mouseout')
       .pipe(takeUntil(merge(cancelInsert$, drawEnd$)), untilDestroyed(this))
       .subscribe(() => {
         const preview1LineFeature = this._vectorSourceDraw.getFeatureById(`line_preview1`);
-        preview1LineFeature && this._vectorSourceDraw.removeFeature(preview1LineFeature);
+        if (preview1LineFeature) {
+          this._vectorSourceDraw.removeFeature(preview1LineFeature);
+        }
         const preview2LineFeature = this._vectorSourceDraw.getFeatureById(`line_preview2`);
-        preview2LineFeature && this._vectorSourceDraw.removeFeature(preview2LineFeature);
+        if (preview2LineFeature) {
+          this._vectorSourceDraw.removeFeature(preview2LineFeature);
+        }
         const finalFeature = this._vectorSourceDraw.getFeatureById(`line_final`);
-        finalFeature && finalFeature.setStyle(featureStyles.polygonAsset);
+        if (finalFeature) {
+          finalFeature.setStyle(featureStyles.polygonAsset);
+        }
 
         olMap.removeInteraction(draw);
 
@@ -897,7 +907,9 @@ export class AssetEditorTabGeometriesComponent implements OnInit {
             }));
             if (currentPointIndex > 0) {
               const preview1LineFeature = this._vectorSourceDraw.getFeatureById(`line_preview1`);
-              preview1LineFeature && this._vectorSourceDraw.removeFeature(preview1LineFeature);
+              if (preview1LineFeature) {
+                this._vectorSourceDraw.removeFeature(preview1LineFeature);
+              }
               const feature1 = decorateFeature(
                 new Feature({
                   geometry: new LineString([
@@ -910,7 +922,9 @@ export class AssetEditorTabGeometriesComponent implements OnInit {
               this._vectorSourceDraw.addFeature(feature1);
               if (geometryType === 'Polygon') {
                 const preview2LineFeature = this._vectorSourceDraw.getFeatureById(`line_preview2`);
-                preview2LineFeature && this._vectorSourceDraw.removeFeature(preview2LineFeature);
+                if (preview2LineFeature) {
+                  this._vectorSourceDraw.removeFeature(preview2LineFeature);
+                }
                 const feature2 = decorateFeature(
                   new Feature({
                     geometry: new LineString([
@@ -1111,8 +1125,7 @@ export class AssetEditorTabGeometriesComponent implements OnInit {
   }
 
   createZoomControlsComponent() {
-    const zoomControlsComponent = this._viewContainerRef.createComponent(ZoomControlsComponent);
-    return zoomControlsComponent;
+    return this._viewContainerRef.createComponent(ZoomControlsComponent);
   }
 }
 
@@ -1143,7 +1156,9 @@ const setCoordinateMarkers = (vectorSource: VectorSource<Geometry>, study: Study
     } else {
       study.geom.coords.forEach((_, index) => {
         const feature = vectorSource.getFeatureById(makeCoordFeatureId(study, index));
-        feature && vectorSource.removeFeature(feature);
+        if (feature) {
+          vectorSource.removeFeature(feature);
+        }
       });
     }
   }

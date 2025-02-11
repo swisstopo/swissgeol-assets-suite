@@ -14,6 +14,7 @@ import { Mode } from '../workgroup-edit/workgroup-edit.component';
   selector: 'asset-sg-add-workgroup-user-dialog',
   templateUrl: './add-workgroup-user-dialog.component.html',
   styleUrls: ['./add-workgroup-user-dialog.component.scss'],
+  standalone: false,
 })
 export class AddWorkgroupUserDialogComponent implements OnInit {
   public formGroup = new FormGroup({

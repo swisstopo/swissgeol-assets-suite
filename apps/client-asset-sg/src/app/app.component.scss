@@ -56,7 +56,7 @@ asset-sg-menu-bar {
   font-size: 24px;
   font-weight: bolder;
 
-  color: mat.get-color-from-palette($asset-sg-warn, 600);
+  color: mat.m2-get-color-from-palette($asset-sg-warn, 600);
 }
 
 .alerts {
@@ -83,13 +83,13 @@ asset-sg-menu-bar {
   h1 {
     font-size: 4rem;
     margin: 0;
-    color: mat.get-color-from-palette($asset-sg-warn, 300);
+    color: mat.m2-get-color-from-palette($asset-sg-warn, 300);
   }
 
   p {
     font-size: 1.5rem;
     margin: 0;
     padding: 1rem 0 0 0;
-    color: mat.get-color-from-palette($asset-sg-warn, 200);
+    color: mat.m2-get-color-from-palette($asset-sg-warn, 200);
   }
 }

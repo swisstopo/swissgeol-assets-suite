@@ -29,6 +29,7 @@ const MIN_CREATE_DATE = new Date(1800, 0, 1);
   selector: 'asset-sg-asset-search-refine',
   templateUrl: './asset-search-refine.component.html',
   styleUrls: ['./asset-search-refine.component.scss'],
+  standalone: false,
 })
 export class AssetSearchRefineComponent implements OnInit, OnDestroy, AfterViewInit {
   private readonly store = inject(Store);

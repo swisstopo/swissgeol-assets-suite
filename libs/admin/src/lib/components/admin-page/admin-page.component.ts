@@ -10,6 +10,7 @@ import { selectIsLoading } from '../../state/admin.selector';
   templateUrl: './admin-page.component.html',
   styleUrls: ['./admin-page.component.scss'],
   hostDirectives: [LifecycleHooksDirective],
+  standalone: false,
 })
 export class AdminPageComponent implements OnInit {
   @ViewChild('templateDrawerPortalContent') templateDrawerPortalContent!: TemplateRef<unknown>;

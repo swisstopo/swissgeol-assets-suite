@@ -61,7 +61,6 @@ export const createFeaturesFromStudies = (
   );
 
 export const decorateFeature = (
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   feature: Feature,
   attributes: { style: Style; id: string | number },
   properties: Record<string, string | number> = {}
@@ -229,8 +228,12 @@ export const zoomToStudies = (
       }
       const newCenter = view.getCenter();
       const newZoom = view.getZoom();
-      oldCenter && view.setCenter(oldCenter);
-      oldZoom && view.setZoom(oldZoom);
+      if (oldCenter) {
+        view.setCenter(oldCenter);
+      }
+      if (oldZoom) {
+        view.setZoom(oldZoom);
+      }
       window.requestAnimationFrame(() => {
         view.animate({ zoom: newZoom, center: newCenter, duration: 600 });
       });

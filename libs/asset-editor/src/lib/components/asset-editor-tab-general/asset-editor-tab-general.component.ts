@@ -24,9 +24,9 @@ const initialAssetEditorTabGeneralState: AssetEditorTabGeneralState = {
   templateUrl: './asset-editor-tab-general.component.html',
   styleUrls: ['./asset-editor-tab-general.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  // eslint-disable-next-line @angular-eslint/no-host-metadata-property
   host: { class: 'edit-area' },
   providers: [RxState],
+  standalone: false,
 })
 export class AssetEditorTabGeneralComponent implements OnInit {
   private readonly rootFormGroupDirective = inject(FormGroupDirective);

@@ -61,16 +61,16 @@ svg-icon.close {
 }
 
 @mixin colored($palette, $main-weight, $light-weight) {
-  color: mat.get-contrast-color-from-palette($palette, $main-weight);
-  background-color: mat.get-color-from-palette($palette, $main-weight);
+  color: mat.m2-get-contrast-color-from-palette($palette, $main-weight);
+  background-color: mat.m2-get-color-from-palette($palette, $main-weight);
 
   progress {
-    background-color: mat.get-color-from-palette($palette, $light-weight);
+    background-color: mat.m2-get-color-from-palette($palette, $light-weight);
   }
 
   progress::-webkit-progress-bar,
   progress::-moz-progress-bar {
-    background-color: mat.get-color-from-palette($palette, $main-weight);
+    background-color: mat.m2-get-color-from-palette($palette, $main-weight);
   }
 }
 

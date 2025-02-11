@@ -1,4 +1,10 @@
-import { HttpErrorResponse, HttpEvent, HttpHandler, HttpRequest } from '@angular/common/http';
+import {
+  HttpErrorResponse,
+  HttpEvent,
+  HttpHandler,
+  HttpInterceptor as AngularHttpInterceptor,
+  HttpRequest,
+} from '@angular/common/http';
 import { inject, Injectable, OnDestroy } from '@angular/core';
 import { NavigationCancel, NavigationEnd, NavigationError, NavigationStart, Router } from '@angular/router';
 import { AlertType, AuthService, AuthState, fromAppShared, showAlert } from '@asset-sg/client-shared';
@@ -8,7 +14,7 @@ import { OAuthService } from 'angular-oauth2-oidc';
 import { catchError, EMPTY, from, Observable, Subscription, switchMap } from 'rxjs';
 
 @Injectable()
-export class HttpInterceptor implements HttpInterceptor, OnDestroy {
+export class HttpInterceptor implements AngularHttpInterceptor, OnDestroy {
   private _oauthService = inject(OAuthService);
   private readonly store = inject(Store);
   private readonly authService = inject(AuthService);

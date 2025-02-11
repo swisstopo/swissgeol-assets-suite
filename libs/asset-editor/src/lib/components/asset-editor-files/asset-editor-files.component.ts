@@ -10,7 +10,8 @@ import { AssetEditorFile, AssetEditorFileTypeFormGroup, AssetEditorNewFile } fro
 @Component({
   selector: '[asset-sg-editor-files]',
   templateUrl: './asset-editor-files.component.html',
-  styleUrl: './asset-editor-files.component.scss',
+  styleUrls: ['./asset-editor-files.component.scss'],
+  standalone: false,
 })
 export class AssetEditorFilesComponent {
   @Input({ required: true })

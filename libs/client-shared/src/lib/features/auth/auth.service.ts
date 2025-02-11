@@ -77,7 +77,7 @@ export class AuthService {
         this._state$.next(AuthState.Ongoing);
         this.oauthService.initLoginFlow();
       }
-    } catch (e) {
+    } catch (_e) {
       this._state$.next(AuthState.Aborted);
     }
   }

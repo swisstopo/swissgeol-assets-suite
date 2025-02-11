@@ -18,6 +18,7 @@ import { selectSelectedUser } from '../../state/admin.selector';
   selector: 'asset-sg-user-edit',
   templateUrl: './user-edit.component.html',
   styleUrls: ['./user-edit.component.scss'],
+  standalone: false,
 })
 export class UserEditComponent implements OnInit, OnDestroy {
   public roles = Object.values(Role);

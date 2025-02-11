@@ -11,7 +11,8 @@ import {
 @Component({
   selector: 'asset-sg-editor-tab-files',
   templateUrl: './asset-editor-tab-files.component.html',
-  styleUrl: './asset-editor-tab-files.component.scss',
+  styleUrls: ['./asset-editor-tab-files.component.scss'],
+  standalone: false,
 })
 export class AssetEditorTabFilesComponent implements OnInit {
   @Input({ required: true })

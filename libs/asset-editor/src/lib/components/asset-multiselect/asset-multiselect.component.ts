@@ -24,7 +24,6 @@ import { noop } from 'rxjs';
     SvgIconComponent,
   ],
   providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => AssetMultiselectComponent), multi: true }],
-  // eslint-disable-next-line @angular-eslint/no-host-metadata-property
   host: { class: 'flex flex-column' },
 })
 export class AssetMultiselectComponent implements ControlValueAccessor {

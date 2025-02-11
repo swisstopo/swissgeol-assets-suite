@@ -22,6 +22,7 @@ const fullHdWidth = 1920;
   selector: 'asset-sg-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss'],
+  standalone: false,
 })
 export class AppComponent {
   private readonly httpClient = inject(HttpClient);

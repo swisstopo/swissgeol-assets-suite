@@ -48,6 +48,7 @@ const initialState: AssetPickerState = {
   selector: 'asset-sg-asset-picker',
   templateUrl: './asset-picker.component.html',
   styleUrls: ['./asset-picker.component.scss'],
+  standalone: false,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AssetPickerComponent extends RxState<AssetPickerState> {

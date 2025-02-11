@@ -87,20 +87,14 @@ const validateUsageDates: ValidatorFn = (control: AbstractControl) => {
       internalPublicUsageDateError: true,
     });
   } else {
-    const {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      internalPublicUsageDateError: _internalPublicUsageDateError1,
-      ...restInternalUseStatusStartAvailability
-    } = internalUseStatusStartAvailability.errors || {};
+    const { internalPublicUsageDateError: _internalPublicUsageDateError1, ...restInternalUseStatusStartAvailability } =
+      internalUseStatusStartAvailability.errors || {};
     internalUseStatusStartAvailability.setErrors(
       Object.keys(restInternalUseStatusStartAvailability).length === 0 ? null : restInternalUseStatusStartAvailability
     );
 
-    const {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      internalPublicUsageDateError: _internalPublicUsageDateError2,
-      ...restPublicUseStatusStartAvailability
-    } = publicUseStatusStartAvailability.errors || {};
+    const { internalPublicUsageDateError: _internalPublicUsageDateError2, ...restPublicUseStatusStartAvailability } =
+      publicUseStatusStartAvailability.errors || {};
     publicUseStatusStartAvailability.setErrors(
       Object.keys(restPublicUseStatusStartAvailability).length === 0 ? null : restPublicUseStatusStartAvailability
     );

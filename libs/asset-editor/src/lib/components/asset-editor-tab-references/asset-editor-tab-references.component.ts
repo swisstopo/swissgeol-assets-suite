@@ -33,8 +33,8 @@ type AssetReferenceType = 'parent' | 'sibling';
   templateUrl: './asset-editor-tab-references.component.html',
   styleUrls: ['./asset-editor-tab-references.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  // eslint-disable-next-line @angular-eslint/no-host-metadata-property
   host: { class: 'edit-area' },
+  standalone: false,
 })
 export class AssetEditorTabReferencesComponent implements OnInit {
   @ViewChild('authorInput') private _authorInput!: ElementRef<HTMLInputElement>;

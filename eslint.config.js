@@ -23,11 +23,11 @@ module.exports = [
   },
   ...compat.config({ extends: ['plugin:@nx/typescript'] }).map((config) => ({
     ...config,
-    files: ['**/*.ts', '**/*.tsx'],
+    files: ['**/*.ts', '**/*.tsx', '**/*.cts', '**/*.mts'],
   })),
   ...compat.config({ extends: ['plugin:@nx/javascript'] }).map((config) => ({
     ...config,
-    files: ['**/*.js', '**/*.jsx'],
+    files: ['**/*.js', '**/*.jsx', '**/*.cjs', '**/*.mjs'],
   })),
   ...compat.config({ env: { jest: true } }).map((config) => ({
     ...config,
@@ -61,6 +61,8 @@ module.exports = [
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
     rules: {
+      '@angular-eslint/prefer-standalone': 'off',
+
       // Enforce imports of NX modules to go through the module's entrypoint.
       '@nx/enforce-module-boundaries': [
         'error',
@@ -88,7 +90,7 @@ module.exports = [
       ],
       'sort-imports': 'off',
 
-      'no-unused-vars': 'off', // or "@typescript-eslint/no-unused-vars": "off",
+      '@typescript-eslint/no-unused-vars': 'off',
       'unused-imports/no-unused-imports': 'error',
       'unused-imports/no-unused-vars': [
         'warn',

@@ -4,7 +4,8 @@ import { Component, HostBinding, Input } from '@angular/core';
 @Component({
   selector: 'li[asset-sg-menu-bar-item]',
   templateUrl: './menu-bar-item.component.html',
-  styleUrl: './menu-bar-item.component.scss',
+  styleUrls: ['./menu-bar-item.component.scss'],
+  standalone: false,
 })
 export class MenuBarItemComponent {
   @Input({ required: true })

@@ -57,6 +57,8 @@ const SEARCH_BATCH_SIZE = 10_000;
 
 @Injectable()
 export class AssetSearchService {
+  private readonly logger = new Logger(AssetSearchService.name);
+
   constructor(
     private readonly elastic: ElasticsearchClient,
     private readonly prisma: PrismaService,
@@ -84,7 +86,7 @@ export class AssetSearchService {
     // Write all Prisma assets into the sync index.
     const total = await this.prisma.asset.count();
     if (total === 0) {
-      Logger.debug('no assets to sync');
+      this.logger.debug('No assets to sync');
       if (onProgress != null) {
         onProgress(1);
       }
@@ -106,7 +108,7 @@ export class AssetSearchService {
 
     let offset = 0;
     for (;;) {
-      Logger.debug(`synced ${offset} of ${total} assets`);
+      this.logger.debug('Assets synced', { total, offset });
       const records = await this.assetRepo.list({ limit: 1000, offset });
       if (records.length === 0) {
         break;
@@ -117,7 +119,7 @@ export class AssetSearchService {
         await onProgress(Math.min(offset / total, 1));
       }
     }
-    Logger.debug(`synced ${total} of ${total} assets`);
+    this.logger.debug('Assets synced', { total, offset: total });
 
     // Delete the existing asset index.
     await this.elastic.indices.delete({ index: INDEX, ignore_unavailable: true });
