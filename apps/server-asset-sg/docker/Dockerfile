@@ -2,6 +2,8 @@ ARG APP_VERSION
 
 FROM node:22-alpine AS api-builder
 
+RUN apk add --no-cache openssl
+
 ENV APP_VERSION=${APP_VERSION}
 ENV NODE_ENV=development
 
