@@ -1,4 +1,6 @@
 import { addCucumberPreprocessorPlugin } from '@badeball/cypress-cucumber-preprocessor';
+
+//@ts-expect-error module does not have typings
 import createEsbuildPlugin from '@badeball/cypress-cucumber-preprocessor/esbuild';
 import * as createBundler from '@bahmutov/cypress-esbuild-preprocessor';
 import { defineConfig } from 'cypress';
@@ -26,10 +28,12 @@ export default defineConfig({
   viewportWidth: 1920,
   viewportHeight: 1280,
   e2e: {
+    baseUrl: process.env.CYPRESS_BASE_URL ?? 'http://localhost:4200/',
     specPattern: '**/*.feature',
     chromeWebSecurity: false,
     supportFile: false,
     setupNodeEvents,
+    watchForFileChanges: true,
   },
   reporter: 'junit',
   reporterOptions: {
@@ -45,7 +49,6 @@ export default defineConfig({
      * So e.g. copy the username and password env vars and add the credentials you want to use for the local tests.
      * (Don't worry, the cypress.env.json fill will not be committed as it is added to the .gitignore file)
      */
-    assetsBaseUrl: 'http://localhost:4200/de', //keep this naming pattern as username and password will be replaced in the pipeline
     basicAuthUsername: 'admin', //keep this naming pattern as username and password will be replaced in the pipeline
     basicAuthPassword: 'admin', //keep this naming pattern as username and password will be replaced in the pipeline
   },

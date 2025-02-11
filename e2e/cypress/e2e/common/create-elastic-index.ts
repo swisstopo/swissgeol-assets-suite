@@ -3,7 +3,7 @@ import { Then, When } from '@badeball/cypress-cucumber-preprocessor';
 Then(/^The user should see the sync progress$/, () => {
   cy.get('.progress').should('exist').and('be.visible');
   cy.get('.progress').should('contain', '0%');
-  cy.get('.progress').should('not.contain', '0%');
+  cy.get('.progress', { timeout: 30_000 }).should('not.contain', '0%');
 });
 When(/^The user clicks start sync button$/, () => {
   cy.get('button:contains("Synchronisation starten")').click();

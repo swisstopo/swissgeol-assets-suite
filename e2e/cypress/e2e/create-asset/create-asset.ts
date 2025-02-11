@@ -44,7 +44,11 @@ When(/^The user fills out contacts information$/, () => {
 When(/^The user fills out geometry information$/, () => {
   cy.get('button:contains("Geometrien")').click();
   cy.get('button:contains(" Neue Geometrie erfassen ")').click();
-  cy.get('mat-select').click().get('mat-option').contains('Punkt').click();
+  cy.get('asset-sg-editor-tab-geometries mat-select')
+    .click()
+    .get('mat-option')
+    .contains('Punkt')
+    .click();
   cy.get('button:contains(" Geometrie erstellen ")', { timeout: 1000 }).click();
 });
 When(/^The user fills out administration information$/, () => {
