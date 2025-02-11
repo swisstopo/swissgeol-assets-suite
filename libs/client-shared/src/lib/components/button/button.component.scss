@@ -47,7 +47,7 @@
   background-color: variables.$cyan-09;
   box-shadow: 0px 1px 3px #00000033;
 
-  &:not([disabled="true"]) {
+  &:not([disabled]) {
     &:hover {
       background-color: #295969;
       color: white;
@@ -56,13 +56,13 @@
     &:active {
       background-color: #1f444f;
     }
-
-    &[active="true"] {
-      background-color: #2e859d;
-    }
   }
 
-  &[disabled="true"] {
+  &.active {
+    background-color: #dee2e6;
+  }
+
+  &[disabled] {
     background-color: #c1d3d9;
     cursor: default;
   }
@@ -74,7 +74,7 @@
   background-color: transparent;
   border: 1px solid variables.$cyan-09;
 
-  &:not([disabled="true"]) {
+  &:not([disabled]) {
     &:hover {
       border-color: #2f4356;
       background-color: #d6e2e6;
@@ -89,13 +89,13 @@
     }
   }
 
-  &[active="true"] {
+  &.active {
     background-color: #bed7df;
     border: none;
     color: #2f4356;
   }
 
-  &[disabled="true"] {
+  &[disabled] {
     color: #828e9a;
     border-color: #828e9a;
     cursor: default;

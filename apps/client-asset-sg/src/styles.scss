@@ -131,6 +131,47 @@ input {
   }
 }
 
+.table {
+  box-shadow: none;
+
+  .mat-mdc-row:hover .mat-mdc-cell {
+    background-color: variables.$grey-01;
+  }
+
+  .cell-tooltip {
+    font-size: 12px;
+  }
+
+  .table__header {
+    background-color: variables.$grey-03;
+    border-radius: 4px;
+    height: 44px;
+
+    th {
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 20px;
+      letter-spacing: 0.0025em;
+
+      &:first-of-type {
+        border-top-left-radius: 4px;
+      }
+
+      &:last-of-type {
+        border-top-right-radius: 4px;
+      }
+    }
+  }
+}
+
+mat-paginator {
+  box-shadow: 0px -4px 4px -5px;
+
+  .mat-mdc-paginator-icon {
+    fill: #828e9a;
+  }
+}
+
 .asset-sg-dialog {
   display: block;
   border-radius: 8px;

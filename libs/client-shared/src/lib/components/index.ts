@@ -13,4 +13,3 @@ export * from './confirm-dialog';
 export * from './search-input';
 export * from './filter-selector';
 export * from './chip';
-export * from './table';

@@ -1,31 +1,30 @@
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { MatFormField } from '@angular/material/form-field';
-import { MatOption, MatSelect } from '@angular/material/select';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { MatFormField, MatOption, MatSelect } from '@angular/material/select';
 import { SvgIconComponent } from '@ngneat/svg-icon';
 import { TranslateModule } from '@ngx-translate/core';
+import { Translation } from '../smart-translate.pipe';
 
-export interface PossibleValue {
+export interface Filter {
   value: string | number | boolean;
-  displayValue: string;
+  displayValue: Translation;
 }
 
 @Component({
-  selector: 'asset-sg-filter-selector-input',
+  selector: 'asset-sg-filter-selector',
   templateUrl: './filter-selector.component.html',
   styleUrls: ['./filter-selector.component.scss'],
   standalone: true,
-  imports: [MatFormField, MatSelect, MatOption, ReactiveFormsModule, SvgIconComponent, TranslateModule],
+  imports: [MatSelect, MatOption, ReactiveFormsModule, SvgIconComponent, TranslateModule, FormsModule, MatFormField],
 })
-export class FilterSelectorComponent implements OnInit {
-  form = new FormControl<PossibleValue[]>([]);
-  @Input() public values: PossibleValue[] = [];
+export class FilterSelectorComponent {
+  @Input() public values: Filter[] = [];
   @Input() public title = '';
-  @Output() public filterChanged = new EventEmitter<PossibleValue[]>();
+  @Output() public filterChanged = new EventEmitter<Filter[]>();
 
-  public ngOnInit() {
-    this.form.valueChanges.subscribe((selectedValues) => {
-      this.filterChanged.emit(selectedValues ?? []);
-    });
+  public selectedFilters: Filter[] = [];
+
+  public onFilterChange(selectedValues: Filter[]): void {
+    this.filterChanged.emit(selectedValues);
   }
 }

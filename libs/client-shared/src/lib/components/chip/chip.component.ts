@@ -10,5 +10,4 @@ import { MatChip } from '@angular/material/chips';
 })
 export class ChipComponent {
   @Input() type: 'primary' | 'secondary' = 'primary';
-  @Input() text = '';
 }

@@ -1,10 +1,11 @@
-import { Component, inject, OnDestroy, OnInit } from '@angular/core';
+import { AfterViewInit, Component, inject, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { MatCheckboxChange } from '@angular/material/checkbox';
+import { MatPaginator } from '@angular/material/paginator';
 import { Sort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
-import { ColumnDefinition, CURRENT_LANG, fromAppShared, PossibleValue } from '@asset-sg/client-shared';
+import { CURRENT_LANG, Filter, fromAppShared } from '@asset-sg/client-shared';
 import { isNotNull } from '@asset-sg/core';
-import { User, Workgroup, WorkgroupId } from '@asset-sg/shared/v2';
+import { Role, User, Workgroup, WorkgroupId } from '@asset-sg/shared/v2';
 import * as RD from '@devexperts/remote-data-ts';
 import { Store } from '@ngrx/store';
 import { TranslateService } from '@ngx-translate/core';
@@ -19,42 +20,27 @@ import { selectUsers, selectWorkgroups } from '../../state/admin.selector';
   styleUrls: ['./users.component.scss'],
   standalone: false,
 })
-export class UsersComponent implements OnInit, OnDestroy {
+export class UsersComponent implements OnInit, OnDestroy, AfterViewInit {
   private users: User[] = [];
 
   public showFilters = false;
   public workgroups = new Map<WorkgroupId, Workgroup>();
-  public workgroupFilterValues: PossibleValue[] = [];
-  public readonly langFilterValues: PossibleValue[] = [
+  public workgroupFilterValues: Filter[] = [];
+  public readonly langFilterValues: Filter[] = [
     { displayValue: 'DE', value: 'de' },
     { displayValue: 'EN', value: 'en' },
     { displayValue: 'FR', value: 'fr' },
     { displayValue: 'IT', value: 'en' },
   ];
-  public isAdminFilterValues: PossibleValue[] = [];
+  public isAdminFilterValues: Filter[] = [];
 
-  public COLUMNS: ColumnDefinition[] = [
-    { key: 'firstName', header: 'admin.firstName', name: 'firstName', type: 'string', sortable: true },
-    { key: 'lastName', header: 'admin.lastName', name: 'lastName', type: 'string', sortable: true },
-    { key: 'email', header: 'admin.email', name: 'email', type: 'string', sortable: true },
-    {
-      key: 'roles',
-      header: 'admin.workgroups',
-      name: 'workgroups',
-      type: 'workgroups',
-      sortable: false,
-      hasTooltip: true,
-    },
-    { key: 'isAdmin', header: 'admin.userPage.admin', name: 'isAdmin', type: 'checkbox', sortable: true },
-    { key: 'lang', header: 'admin.userPage.lang', name: 'languages', type: 'string', sortable: true },
-    { key: 'id', header: '', name: 'actions', type: 'action', sortable: false, icon: 'edit' },
-  ];
+  protected readonly COLUMNS = ['firstName', 'lastName', 'email', 'workgroups', 'isAdmin', 'languages', 'actions'];
   protected readonly WORKGROUP_DISPLAY_COUNT = 3;
 
   protected dataSource: MatTableDataSource<User> = new MatTableDataSource<User>();
-
+  @ViewChild(MatPaginator) protected paginator!: MatPaginator;
   private readonly searchTerm$ = new BehaviorSubject<string>('');
-  private readonly activeFilters$ = new BehaviorSubject<Map<keyof User, (string | number | boolean)[]>>(new Map());
+  private readonly activeFilters$ = new BehaviorSubject<Map<keyof User, Array<string | number | boolean>>>(new Map());
 
   private readonly store = inject(Store<AppStateWithAdmin>);
   public readonly users$ = this.store.select(selectUsers);
@@ -72,6 +58,10 @@ export class UsersComponent implements OnInit, OnDestroy {
     this.initSubscriptions();
   }
 
+  public ngAfterViewInit() {
+    this.dataSource.paginator = this.paginator;
+  }
+
   public ngOnDestroy(): void {
     this.subscriptions.unsubscribe();
   }
@@ -87,7 +77,7 @@ export class UsersComponent implements OnInit, OnDestroy {
     }
   }
 
-  public setFilters(selectedValues: PossibleValue[], key: keyof User) {
+  public setFilters(selectedValues: Filter[], key: keyof User) {
     const activeFilters = this.activeFilters$.value.set(
       key,
       selectedValues.map((it) => it.value)
@@ -95,18 +85,19 @@ export class UsersComponent implements OnInit, OnDestroy {
     this.activeFilters$.next(activeFilters);
   }
 
-  private filterUsersBySearchTerm(user: User, searchTerm: string) {
+  private matchUsersBySearchTerm(user: User, searchTerm: string): boolean {
+    searchTerm = searchTerm.toLowerCase();
     return Object.entries(user).some(([key, value]) => {
       if (key === 'roles') {
         return Array.from((value as Map<number, string>).keys()).some((id) =>
-          this.workgroups.get(id)?.name.toLowerCase().includes(searchTerm.toLowerCase())
+          this.workgroups.get(id)?.name.toLowerCase().includes(searchTerm)
         );
       }
-      return value.toString().toLowerCase().includes(searchTerm.toLowerCase());
+      return value.toString().toLowerCase().includes(searchTerm);
     });
   }
 
-  private filterUsersByAttribute(user: User, filters: Map<keyof User, (string | number | boolean)[]>) {
+  private filterUsersByAttribute(user: User, filters: Map<keyof User, (string | number | boolean)[]>): boolean {
     return Array.from(filters.entries()).every(([key, values]) => {
       if (values.length === 0) {
         return true;
@@ -121,15 +112,7 @@ export class UsersComponent implements OnInit, OnDestroy {
     });
   }
 
-  public updateIsAdminStatus(event: { id: string; event: MatCheckboxChange }) {
-    const user = this.users.find((user) => user.id === event.id);
-    if (user == null) {
-      return;
-    }
-    this.store.dispatch(actions.updateUser({ user: { ...user, isAdmin: event.event.checked } }));
-  }
-
-  sortTable(sort: Sort) {
+  public sortChange(sort: Sort) {
     const data = this.dataSource.data.slice();
     if (!sort.active || sort.direction === '') {
       return;
@@ -144,10 +127,8 @@ export class UsersComponent implements OnInit, OnDestroy {
           return this.compare(a.lastName, b.lastName, isAsc);
         case 'email':
           return this.compare(a.email, b.email, isAsc);
-        case 'languages':
+        case 'lang':
           return this.compare(a.lang, b.lang, isAsc);
-        case 'isAdmin':
-          return this.compare(a.isAdmin.toString(), b.isAdmin.toString(), isAsc);
         default:
           return 0;
       }
@@ -156,6 +137,40 @@ export class UsersComponent implements OnInit, OnDestroy {
 
   private compare(a: string, b: string, isAsc: boolean) {
     return (a < b ? -1 : 1) * (isAsc ? 1 : -1);
+  }
+
+  public updateIsAdminStatus(user: User, event: MatCheckboxChange) {
+    this.store.dispatch(actions.updateUser({ user: { ...user, isAdmin: event.checked } }));
+  }
+
+  public formatWorkgroupsTooltip(roles: User['roles']): string {
+    let tooltip = '';
+    for (const workgroupId of roles.keys()) {
+      const workgroup = this.workgroups.get(workgroupId);
+      if (workgroup == null) {
+        continue;
+      }
+      if (tooltip.length !== 0) {
+        tooltip += ', ';
+      }
+      tooltip += `${workgroup.name}`;
+    }
+    return tooltip;
+  }
+
+  public *getWorkgroupsOfUser(user: User): Iterable<Workgroup & { role: Role }> {
+    let i = 0;
+    for (const [workgroupId, role] of user.roles) {
+      i += 1;
+      if (i > this.WORKGROUP_DISPLAY_COUNT) {
+        break;
+      }
+      const workgroup = this.workgroups.get(workgroupId);
+      if (workgroup == null) {
+        continue;
+      }
+      yield { ...workgroup, role };
+    }
   }
 
   private initSubscriptions(): void {
@@ -184,7 +199,7 @@ export class UsersComponent implements OnInit, OnDestroy {
           combineLatestWith(this.activeFilters$),
           tap(([term, filters]) => {
             this.dataSource.data = this.users.filter((user) => {
-              return this.filterUsersBySearchTerm(user, term) && this.filterUsersByAttribute(user, filters);
+              return this.matchUsersBySearchTerm(user, term) && this.filterUsersByAttribute(user, filters);
             });
           })
         )

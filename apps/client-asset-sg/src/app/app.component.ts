@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { Component, inject } from '@angular/core';
+import { Component, HostBinding, inject } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
 import {
   AppPortalService,
@@ -28,7 +28,7 @@ const fullHdWidth = 1920;
 export class AppComponent {
   private readonly httpClient = inject(HttpClient);
   public readonly appPortalService = inject(AppPortalService);
-  public showMenuBar = true;
+  public shouldShowMenuBar = true;
 
   public readonly errorService = inject(ErrorService);
   public readonly authService = inject(AuthService);
@@ -73,14 +73,17 @@ export class AppComponent {
             return true;
           }
           const path = segments.slice(1).join('/');
-          const isPath = (prefix: string): boolean => path === prefix || path.startsWith(`${prefix}/`);
-          return !isPath('admin');
+          return !(path === 'admin' || path.startsWith(`admin/`));
         }),
         startWith(true)
       )
       .subscribe((showMenuBar) => {
-        this.showMenuBar = showMenuBar;
+        this.shouldShowMenuBar = showMenuBar;
       });
+  }
+
+  @HostBinding('class.menu-hidden') get isMenuHidden() {
+    return !this.shouldShowMenuBar;
   }
 
   protected readonly AuthState = AuthState;

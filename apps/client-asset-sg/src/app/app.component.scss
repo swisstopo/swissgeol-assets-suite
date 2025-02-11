@@ -5,7 +5,7 @@
 $app-bar-height: 88px;
 $menu-bar-width: 80px;
 
-.main {
+:host {
   display: grid;
   background-color: white;
   position: relative;
@@ -36,7 +36,7 @@ asset-sg-menu-bar {
 }
 
 @media screen and (min-width: 1194px) {
-  .main {
+  :host {
     margin: 0 auto;
     grid-template-areas: "app-bar app-bar" "menu-bar router-outlet";
     grid-template-rows: $app-bar-height calc(100vh - $app-bar-height);
@@ -44,7 +44,7 @@ asset-sg-menu-bar {
     box-shadow: 0 0 60px 0 rgb(0 0 0 / 60%);
     --viewport-width: min(calc(100vw - #{$menu-bar-width}), calc(1920px - #{$menu-bar-width}));
 
-    &--hide-menu-bar {
+    &.menu-hidden {
       grid-template-areas: "app-bar app-bar" "router-outlet router-outlet";
       grid-template-columns: 1fr;
       --viewport-width: min(calc(100vw - #{$menu-bar-width}), calc(1920px - #{$menu-bar-width}));
