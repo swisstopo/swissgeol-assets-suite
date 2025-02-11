@@ -26,8 +26,6 @@ SET row_security = off;
 CREATE SCHEMA auth;
 
 
-ALTER SCHEMA auth OWNER TO "asset-swissgeol";
-
 --
 -- TOC entry 2 (class 3079 OID 16387)
 -- Name: postgis; Type: EXTENSION; Schema: -; Owner: -
@@ -39,7 +37,7 @@ CREATE EXTENSION IF NOT EXISTS postgis WITH SCHEMA public;
 --
 -- TOC entry 4715 (class 0 OID 0)
 -- Dependencies: 2
--- Name: EXTENSION postgis; Type: COMMENT; Schema: -; Owner: 
+-- Name: EXTENSION postgis; Type: COMMENT; Schema: -; Owner:
 --
 
 COMMENT ON EXTENSION postgis IS 'PostGIS geometry and geography spatial types and functions';
@@ -80,8 +78,6 @@ CREATE TABLE auth.audit_log_entries (
 );
 
 
-ALTER TABLE auth.audit_log_entries OWNER TO "asset-swissgeol";
-
 --
 -- TOC entry 223 (class 1259 OID 17485)
 -- Name: identities; Type: TABLE; Schema: auth; Owner: asset-swissgeol
@@ -98,8 +94,6 @@ CREATE TABLE auth.identities (
 );
 
 
-ALTER TABLE auth.identities OWNER TO "asset-swissgeol";
-
 --
 -- TOC entry 224 (class 1259 OID 17490)
 -- Name: instances; Type: TABLE; Schema: auth; Owner: asset-swissgeol
@@ -113,8 +107,6 @@ CREATE TABLE auth.instances (
     updated_at timestamp(6) with time zone
 );
 
-
-ALTER TABLE auth.instances OWNER TO "asset-swissgeol";
 
 --
 -- TOC entry 225 (class 1259 OID 17495)
@@ -133,8 +125,6 @@ CREATE TABLE auth.refresh_tokens (
 );
 
 
-ALTER TABLE auth.refresh_tokens OWNER TO "asset-swissgeol";
-
 --
 -- TOC entry 226 (class 1259 OID 17500)
 -- Name: refresh_tokens_id_seq; Type: SEQUENCE; Schema: auth; Owner: asset-swissgeol
@@ -147,8 +137,6 @@ CREATE SEQUENCE auth.refresh_tokens_id_seq
     NO MAXVALUE
     CACHE 1;
 
-
-ALTER SEQUENCE auth.refresh_tokens_id_seq OWNER TO "asset-swissgeol";
 
 --
 -- TOC entry 4716 (class 0 OID 0)
@@ -168,8 +156,6 @@ CREATE TABLE auth.schema_migrations (
     version character varying(14) NOT NULL
 );
 
-
-ALTER TABLE auth.schema_migrations OWNER TO "asset-swissgeol";
 
 --
 -- TOC entry 228 (class 1259 OID 17504)
@@ -212,8 +198,6 @@ CREATE TABLE auth.users (
 );
 
 
-ALTER TABLE auth.users OWNER TO "asset-swissgeol";
-
 --
 -- TOC entry 229 (class 1259 OID 17515)
 -- Name: _prisma_migrations; Type: TABLE; Schema: public; Owner: asset-swissgeol
@@ -231,8 +215,6 @@ CREATE TABLE public._prisma_migrations (
 );
 
 
-ALTER TABLE public._prisma_migrations OWNER TO "asset-swissgeol";
-
 --
 -- TOC entry 230 (class 1259 OID 17522)
 -- Name: study_area; Type: TABLE; Schema: public; Owner: asset-swissgeol
@@ -245,8 +227,6 @@ CREATE TABLE public.study_area (
     geom public.geometry
 );
 
-
-ALTER TABLE public.study_area OWNER TO "asset-swissgeol";
 
 --
 -- TOC entry 231 (class 1259 OID 17527)
@@ -261,8 +241,6 @@ CREATE TABLE public.study_location (
 );
 
 
-ALTER TABLE public.study_location OWNER TO "asset-swissgeol";
-
 --
 -- TOC entry 232 (class 1259 OID 17532)
 -- Name: study_trace; Type: TABLE; Schema: public; Owner: asset-swissgeol
@@ -275,8 +253,6 @@ CREATE TABLE public.study_trace (
     geom public.geometry
 );
 
-
-ALTER TABLE public.study_trace OWNER TO "asset-swissgeol";
 
 --
 -- TOC entry 233 (class 1259 OID 17537)
@@ -311,8 +287,6 @@ UNION ALL
     public.st_astext(study_trace.geom) AS geom_text
    FROM public.study_trace;
 
-
-ALTER VIEW public.all_study OWNER TO "asset-swissgeol";
 
 --
 -- TOC entry 234 (class 1259 OID 17542)
@@ -350,8 +324,6 @@ CREATE TABLE public.asset (
 );
 
 
-ALTER TABLE public.asset OWNER TO "asset-swissgeol";
-
 --
 -- TOC entry 235 (class 1259 OID 17547)
 -- Name: asset_asset_id_seq; Type: SEQUENCE; Schema: public; Owner: asset-swissgeol
@@ -365,8 +337,6 @@ CREATE SEQUENCE public.asset_asset_id_seq
     NO MAXVALUE
     CACHE 1;
 
-
-ALTER SEQUENCE public.asset_asset_id_seq OWNER TO "asset-swissgeol";
 
 --
 -- TOC entry 4717 (class 0 OID 0)
@@ -389,8 +359,6 @@ CREATE TABLE public.asset_contact (
 );
 
 
-ALTER TABLE public.asset_contact OWNER TO "asset-swissgeol";
-
 --
 -- TOC entry 237 (class 1259 OID 17553)
 -- Name: asset_file; Type: TABLE; Schema: public; Owner: asset-swissgeol
@@ -401,8 +369,6 @@ CREATE TABLE public.asset_file (
     file_id integer NOT NULL
 );
 
-
-ALTER TABLE public.asset_file OWNER TO "asset-swissgeol";
 
 --
 -- TOC entry 238 (class 1259 OID 17556)
@@ -415,8 +381,6 @@ CREATE TABLE public.asset_format_composition (
     asset_format_item_code text NOT NULL
 );
 
-
-ALTER TABLE public.asset_format_composition OWNER TO "asset-swissgeol";
 
 --
 -- TOC entry 239 (class 1259 OID 17561)
@@ -431,8 +395,6 @@ CREATE SEQUENCE public.asset_format_composition_asset_format_composition_id_seq
     NO MAXVALUE
     CACHE 1;
 
-
-ALTER SEQUENCE public.asset_format_composition_asset_format_composition_id_seq OWNER TO "asset-swissgeol";
 
 --
 -- TOC entry 4718 (class 0 OID 0)
@@ -466,8 +428,6 @@ CREATE TABLE public.asset_format_item (
 );
 
 
-ALTER TABLE public.asset_format_item OWNER TO "asset-swissgeol";
-
 --
 -- TOC entry 241 (class 1259 OID 17567)
 -- Name: asset_internal_project; Type: TABLE; Schema: public; Owner: asset-swissgeol
@@ -478,8 +438,6 @@ CREATE TABLE public.asset_internal_project (
     internal_project_id integer NOT NULL
 );
 
-
-ALTER TABLE public.asset_internal_project OWNER TO "asset-swissgeol";
 
 --
 -- TOC entry 242 (class 1259 OID 17570)
@@ -492,8 +450,6 @@ CREATE TABLE public.asset_kind_composition (
     asset_kind_item_code text NOT NULL
 );
 
-
-ALTER TABLE public.asset_kind_composition OWNER TO "asset-swissgeol";
 
 --
 -- TOC entry 243 (class 1259 OID 17575)
@@ -508,8 +464,6 @@ CREATE SEQUENCE public.asset_kind_composition_asset_kind_composition_id_seq
     NO MAXVALUE
     CACHE 1;
 
-
-ALTER SEQUENCE public.asset_kind_composition_asset_kind_composition_id_seq OWNER TO "asset-swissgeol";
 
 --
 -- TOC entry 4719 (class 0 OID 0)
@@ -543,8 +497,6 @@ CREATE TABLE public.asset_kind_item (
 );
 
 
-ALTER TABLE public.asset_kind_item OWNER TO "asset-swissgeol";
-
 --
 -- TOC entry 245 (class 1259 OID 17581)
 -- Name: asset_object_info; Type: TABLE; Schema: public; Owner: asset-swissgeol
@@ -561,8 +513,6 @@ CREATE TABLE public.asset_object_info (
 );
 
 
-ALTER TABLE public.asset_object_info OWNER TO "asset-swissgeol";
-
 --
 -- TOC entry 246 (class 1259 OID 17586)
 -- Name: asset_object_info_asset_object_info_id_seq; Type: SEQUENCE; Schema: public; Owner: asset-swissgeol
@@ -576,8 +526,6 @@ CREATE SEQUENCE public.asset_object_info_asset_object_info_id_seq
     NO MAXVALUE
     CACHE 1;
 
-
-ALTER SEQUENCE public.asset_object_info_asset_object_info_id_seq OWNER TO "asset-swissgeol";
 
 --
 -- TOC entry 4720 (class 0 OID 0)
@@ -599,8 +547,6 @@ CREATE TABLE public.asset_publication (
 );
 
 
-ALTER TABLE public.asset_publication OWNER TO "asset-swissgeol";
-
 --
 -- TOC entry 248 (class 1259 OID 17590)
 -- Name: asset_user; Type: TABLE; Schema: public; Owner: asset-swissgeol
@@ -611,8 +557,6 @@ CREATE TABLE public.asset_user (
     role text NOT NULL
 );
 
-
-ALTER TABLE public.asset_user OWNER TO "asset-swissgeol";
 
 --
 -- TOC entry 249 (class 1259 OID 17595)
@@ -626,8 +570,6 @@ CREATE TABLE public.asset_user_favourite (
 );
 
 
-ALTER TABLE public.asset_user_favourite OWNER TO "asset-swissgeol";
-
 --
 -- TOC entry 250 (class 1259 OID 17598)
 -- Name: asset_x_asset_y; Type: TABLE; Schema: public; Owner: asset-swissgeol
@@ -638,8 +580,6 @@ CREATE TABLE public.asset_x_asset_y (
     asset_y_id integer NOT NULL
 );
 
-
-ALTER TABLE public.asset_x_asset_y OWNER TO "asset-swissgeol";
 
 --
 -- TOC entry 251 (class 1259 OID 17601)
@@ -654,8 +594,6 @@ CREATE TABLE public.auto_cat (
 );
 
 
-ALTER TABLE public.auto_cat OWNER TO "asset-swissgeol";
-
 --
 -- TOC entry 252 (class 1259 OID 17606)
 -- Name: auto_cat_auto_cat_id_seq; Type: SEQUENCE; Schema: public; Owner: asset-swissgeol
@@ -669,8 +607,6 @@ CREATE SEQUENCE public.auto_cat_auto_cat_id_seq
     NO MAXVALUE
     CACHE 1;
 
-
-ALTER SEQUENCE public.auto_cat_auto_cat_id_seq OWNER TO "asset-swissgeol";
 
 --
 -- TOC entry 4721 (class 0 OID 0)
@@ -704,8 +640,6 @@ CREATE TABLE public.auto_cat_label_item (
 );
 
 
-ALTER TABLE public.auto_cat_label_item OWNER TO "asset-swissgeol";
-
 --
 -- TOC entry 254 (class 1259 OID 17612)
 -- Name: auto_object_cat_item; Type: TABLE; Schema: public; Owner: asset-swissgeol
@@ -729,8 +663,6 @@ CREATE TABLE public.auto_object_cat_item (
 );
 
 
-ALTER TABLE public.auto_object_cat_item OWNER TO "asset-swissgeol";
-
 --
 -- TOC entry 255 (class 1259 OID 17617)
 -- Name: contact; Type: TABLE; Schema: public; Owner: asset-swissgeol
@@ -751,8 +683,6 @@ CREATE TABLE public.contact (
 );
 
 
-ALTER TABLE public.contact OWNER TO "asset-swissgeol";
-
 --
 -- TOC entry 256 (class 1259 OID 17622)
 -- Name: contact_contact_id_seq; Type: SEQUENCE; Schema: public; Owner: asset-swissgeol
@@ -766,8 +696,6 @@ CREATE SEQUENCE public.contact_contact_id_seq
     NO MAXVALUE
     CACHE 1;
 
-
-ALTER SEQUENCE public.contact_contact_id_seq OWNER TO "asset-swissgeol";
 
 --
 -- TOC entry 4722 (class 0 OID 0)
@@ -801,8 +729,6 @@ CREATE TABLE public.contact_kind_item (
 );
 
 
-ALTER TABLE public.contact_kind_item OWNER TO "asset-swissgeol";
-
 --
 -- TOC entry 258 (class 1259 OID 17628)
 -- Name: file; Type: TABLE; Schema: public; Owner: asset-swissgeol
@@ -817,8 +743,6 @@ CREATE TABLE public.file (
 );
 
 
-ALTER TABLE public.file OWNER TO "asset-swissgeol";
-
 --
 -- TOC entry 259 (class 1259 OID 17634)
 -- Name: file_file_id_seq; Type: SEQUENCE; Schema: public; Owner: asset-swissgeol
@@ -832,8 +756,6 @@ CREATE SEQUENCE public.file_file_id_seq
     NO MAXVALUE
     CACHE 1;
 
-
-ALTER SEQUENCE public.file_file_id_seq OWNER TO "asset-swissgeol";
 
 --
 -- TOC entry 4723 (class 0 OID 0)
@@ -867,8 +789,6 @@ CREATE TABLE public.geom_quality_item (
 );
 
 
-ALTER TABLE public.geom_quality_item OWNER TO "asset-swissgeol";
-
 --
 -- TOC entry 261 (class 1259 OID 17640)
 -- Name: id; Type: TABLE; Schema: public; Owner: asset-swissgeol
@@ -881,8 +801,6 @@ CREATE TABLE public.id (
     description text NOT NULL
 );
 
-
-ALTER TABLE public.id OWNER TO "asset-swissgeol";
 
 --
 -- TOC entry 262 (class 1259 OID 17645)
@@ -897,8 +815,6 @@ CREATE SEQUENCE public.id_id_id_seq
     NO MAXVALUE
     CACHE 1;
 
-
-ALTER SEQUENCE public.id_id_id_seq OWNER TO "asset-swissgeol";
 
 --
 -- TOC entry 4724 (class 0 OID 0)
@@ -922,8 +838,6 @@ CREATE TABLE public.internal_project (
 );
 
 
-ALTER TABLE public.internal_project OWNER TO "asset-swissgeol";
-
 --
 -- TOC entry 264 (class 1259 OID 17651)
 -- Name: internal_project_internal_project_id_seq; Type: SEQUENCE; Schema: public; Owner: asset-swissgeol
@@ -937,8 +851,6 @@ CREATE SEQUENCE public.internal_project_internal_project_id_seq
     NO MAXVALUE
     CACHE 1;
 
-
-ALTER SEQUENCE public.internal_project_internal_project_id_seq OWNER TO "asset-swissgeol";
 
 --
 -- TOC entry 4725 (class 0 OID 0)
@@ -962,8 +874,6 @@ CREATE TABLE public.internal_use (
 );
 
 
-ALTER TABLE public.internal_use OWNER TO "asset-swissgeol";
-
 --
 -- TOC entry 266 (class 1259 OID 17657)
 -- Name: internal_use_internal_use_id_seq; Type: SEQUENCE; Schema: public; Owner: asset-swissgeol
@@ -977,8 +887,6 @@ CREATE SEQUENCE public.internal_use_internal_use_id_seq
     NO MAXVALUE
     CACHE 1;
 
-
-ALTER SEQUENCE public.internal_use_internal_use_id_seq OWNER TO "asset-swissgeol";
 
 --
 -- TOC entry 4726 (class 0 OID 0)
@@ -1012,8 +920,6 @@ CREATE TABLE public.language_item (
 );
 
 
-ALTER TABLE public.language_item OWNER TO "asset-swissgeol";
-
 --
 -- TOC entry 268 (class 1259 OID 17663)
 -- Name: legal_doc; Type: TABLE; Schema: public; Owner: asset-swissgeol
@@ -1026,8 +932,6 @@ CREATE TABLE public.legal_doc (
     legal_doc_item_code text NOT NULL
 );
 
-
-ALTER TABLE public.legal_doc OWNER TO "asset-swissgeol";
 
 --
 -- TOC entry 269 (class 1259 OID 17668)
@@ -1052,8 +956,6 @@ CREATE TABLE public.legal_doc_item (
 );
 
 
-ALTER TABLE public.legal_doc_item OWNER TO "asset-swissgeol";
-
 --
 -- TOC entry 270 (class 1259 OID 17673)
 -- Name: legal_doc_legal_doc_id_seq; Type: SEQUENCE; Schema: public; Owner: asset-swissgeol
@@ -1067,8 +969,6 @@ CREATE SEQUENCE public.legal_doc_legal_doc_id_seq
     NO MAXVALUE
     CACHE 1;
 
-
-ALTER SEQUENCE public.legal_doc_legal_doc_id_seq OWNER TO "asset-swissgeol";
 
 --
 -- TOC entry 4727 (class 0 OID 0)
@@ -1102,8 +1002,6 @@ CREATE TABLE public.man_cat_label_item (
 );
 
 
-ALTER TABLE public.man_cat_label_item OWNER TO "asset-swissgeol";
-
 --
 -- TOC entry 272 (class 1259 OID 17679)
 -- Name: man_cat_label_ref; Type: TABLE; Schema: public; Owner: asset-swissgeol
@@ -1114,8 +1012,6 @@ CREATE TABLE public.man_cat_label_ref (
     man_cat_label_item_code text NOT NULL
 );
 
-
-ALTER TABLE public.man_cat_label_ref OWNER TO "asset-swissgeol";
 
 --
 -- TOC entry 273 (class 1259 OID 17684)
@@ -1140,8 +1036,6 @@ CREATE TABLE public.nat_rel_item (
 );
 
 
-ALTER TABLE public.nat_rel_item OWNER TO "asset-swissgeol";
-
 --
 -- TOC entry 274 (class 1259 OID 17689)
 -- Name: pub_channel_item; Type: TABLE; Schema: public; Owner: asset-swissgeol
@@ -1165,8 +1059,6 @@ CREATE TABLE public.pub_channel_item (
 );
 
 
-ALTER TABLE public.pub_channel_item OWNER TO "asset-swissgeol";
-
 --
 -- TOC entry 275 (class 1259 OID 17694)
 -- Name: public_use; Type: TABLE; Schema: public; Owner: asset-swissgeol
@@ -1179,8 +1071,6 @@ CREATE TABLE public.public_use (
     start_availability_date timestamp(3) without time zone
 );
 
-
-ALTER TABLE public.public_use OWNER TO "asset-swissgeol";
 
 --
 -- TOC entry 276 (class 1259 OID 17699)
@@ -1195,8 +1085,6 @@ CREATE SEQUENCE public.public_use_public_use_id_seq
     NO MAXVALUE
     CACHE 1;
 
-
-ALTER SEQUENCE public.public_use_public_use_id_seq OWNER TO "asset-swissgeol";
 
 --
 -- TOC entry 4728 (class 0 OID 0)
@@ -1221,8 +1109,6 @@ CREATE TABLE public.publication (
 );
 
 
-ALTER TABLE public.publication OWNER TO "asset-swissgeol";
-
 --
 -- TOC entry 278 (class 1259 OID 17705)
 -- Name: publication_publication_id_seq; Type: SEQUENCE; Schema: public; Owner: asset-swissgeol
@@ -1236,8 +1122,6 @@ CREATE SEQUENCE public.publication_publication_id_seq
     NO MAXVALUE
     CACHE 1;
 
-
-ALTER SEQUENCE public.publication_publication_id_seq OWNER TO "asset-swissgeol";
 
 --
 -- TOC entry 4729 (class 0 OID 0)
@@ -1271,8 +1155,6 @@ CREATE TABLE public.status_asset_use_item (
 );
 
 
-ALTER TABLE public.status_asset_use_item OWNER TO "asset-swissgeol";
-
 --
 -- TOC entry 280 (class 1259 OID 17711)
 -- Name: status_work; Type: TABLE; Schema: public; Owner: asset-swissgeol
@@ -1286,8 +1168,6 @@ CREATE TABLE public.status_work (
     processor text
 );
 
-
-ALTER TABLE public.status_work OWNER TO "asset-swissgeol";
 
 --
 -- TOC entry 281 (class 1259 OID 17716)
@@ -1312,8 +1192,6 @@ CREATE TABLE public.status_work_item (
 );
 
 
-ALTER TABLE public.status_work_item OWNER TO "asset-swissgeol";
-
 --
 -- TOC entry 282 (class 1259 OID 17721)
 -- Name: status_work_status_work_id_seq; Type: SEQUENCE; Schema: public; Owner: asset-swissgeol
@@ -1327,8 +1205,6 @@ CREATE SEQUENCE public.status_work_status_work_id_seq
     NO MAXVALUE
     CACHE 1;
 
-
-ALTER SEQUENCE public.status_work_status_work_id_seq OWNER TO "asset-swissgeol";
 
 --
 -- TOC entry 4730 (class 0 OID 0)
@@ -1353,8 +1229,6 @@ CREATE SEQUENCE public.study_area_study_area_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.study_area_study_area_id_seq OWNER TO "asset-swissgeol";
-
 --
 -- TOC entry 4731 (class 0 OID 0)
 -- Dependencies: 283
@@ -1377,8 +1251,6 @@ CREATE SEQUENCE public.study_location_study_location_id_seq
     NO MAXVALUE
     CACHE 1;
 
-
-ALTER SEQUENCE public.study_location_study_location_id_seq OWNER TO "asset-swissgeol";
 
 --
 -- TOC entry 4732 (class 0 OID 0)
@@ -1403,8 +1275,6 @@ CREATE SEQUENCE public.study_trace_study_trace_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.study_trace_study_trace_id_seq OWNER TO "asset-swissgeol";
-
 --
 -- TOC entry 4733 (class 0 OID 0)
 -- Dependencies: 285
@@ -1426,8 +1296,6 @@ CREATE TABLE public.type_nat_rel (
 );
 
 
-ALTER TABLE public.type_nat_rel OWNER TO "asset-swissgeol";
-
 --
 -- TOC entry 287 (class 1259 OID 17730)
 -- Name: type_nat_rel_type_nat_rel_id_seq; Type: SEQUENCE; Schema: public; Owner: asset-swissgeol
@@ -1441,8 +1309,6 @@ CREATE SEQUENCE public.type_nat_rel_type_nat_rel_id_seq
     NO MAXVALUE
     CACHE 1;
 
-
-ALTER SEQUENCE public.type_nat_rel_type_nat_rel_id_seq OWNER TO "asset-swissgeol";
 
 --
 -- TOC entry 4734 (class 0 OID 0)
@@ -1612,8 +1478,8 @@ ALTER TABLE ONLY public.type_nat_rel ALTER COLUMN type_nat_rel_id SET DEFAULT ne
 --
 
 COPY auth.audit_log_entries (instance_id, id, payload, created_at, ip_address) FROM stdin;
-00000000-0000-0000-0000-000000000000	9176a1dc-0b48-451c-a8c6-237a01a0c6d4	{"action":"logout","actor_id":"10f95aa3-fb95-41eb-b754-5f729a092e30","actor_username":"admin@swissgeol.assets","log_type":"account"}	2024-02-29 18:43:07.688568+00	
-00000000-0000-0000-0000-000000000000	7a180e80-e484-4a00-9948-c05de08d3bc0	{"action":"login","actor_id":"10f95aa3-fb95-41eb-b754-5f729a092e30","actor_username":"admin@swissgeol.assets","log_type":"account","traits":{"provider":"email"}}	2024-02-29 18:43:10.920386+00	
+00000000-0000-0000-0000-000000000000	9176a1dc-0b48-451c-a8c6-237a01a0c6d4	{"action":"logout","actor_id":"10f95aa3-fb95-41eb-b754-5f729a092e30","actor_username":"admin@swissgeol.assets","log_type":"account"}	2024-02-29 18:43:07.688568+00
+00000000-0000-0000-0000-000000000000	7a180e80-e484-4a00-9948-c05de08d3bc0	{"action":"login","actor_id":"10f95aa3-fb95-41eb-b754-5f729a092e30","actor_username":"admin@swissgeol.assets","log_type":"account","traits":{"provider":"email"}}	2024-02-29 18:43:10.920386+00
 \.
 
 
@@ -15906,7 +15772,7 @@ COPY public.legal_doc (legal_doc_id, asset_id, title, legal_doc_item_code) FROM 
 --
 
 COPY public.legal_doc_item (legal_doc_item_code, geol_code, name, name_de, name_fr, name_rm, name_it, name_en, description, description_de, description_fr, description_rm, description_it, description_en) FROM stdin;
-federalData	No-GeolCode-specified	Federal data	Bundesdaten	Données fédérales		Dati federali	Federal data	Data to which the Confederation holds the rights 	Daten, an welchen der Bund die Rechte besitzt 	Données pour lesquelles la Confédération possède des droits 		Dati di cui la Confederazione detiene i diritti 	Data to which the Confederation holds the rights 
+federalData	No-GeolCode-specified	Federal data	Bundesdaten	Données fédérales		Dati federali	Federal data	Data to which the Confederation holds the rights 	Daten, an welchen der Bund die Rechte besitzt 	Données pour lesquelles la Confédération possède des droits 		Dati di cui la Confederazione detiene i diritti 	Data to which the Confederation holds the rights
 permissionForm	No-GeolCode-specified	permissionForm	Einwilligungsformular	Formulaire de consentement		Modulo di consenso	Consent form	Legally binding consent form	Rechtlich verbindliches Einwilligungsformular	Formulaire de consentement juridiquement contraignant		Modulo di consenso legalmente vincolante	Legally binding consent form
 contract	No-GeolCode-specified	contract	Vertrag	Contrat		Contratto	Contract	Legally binding contract	Rechtlich verbindlicher Vertrag	Contrat juridiquement contraignant		Contratto legalmente vincolante	Legally binding contract
 other	No-GeolCode-specified	other	Andere	Autres		Altro	Other	Other legally binding document (e.g. e-mail)	Anderes rechtsgültiges Dokument (z.B. E-Mail)	Autre document juridiquement valable (par ex. e-mail)		Altro documento giuridicamente vincolante (ad es. e-mail)	Other legally binding document (e.g. e-mail)

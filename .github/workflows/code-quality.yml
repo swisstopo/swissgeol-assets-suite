@@ -192,11 +192,19 @@ jobs:
           chmod +x ./init/elasticsearch/init.sh
           chmod +r ./init/elasticsearch/mappings/swissgeol_asset_asset.json
           sed -i 's/- \.\/volumes\/elasticsearch\/data:\/usr\/share\/elasticsearch\/data//g' ./docker-compose.yaml
-          docker compose up -d db oidc elasticsearch
+          docker compose up -d --quiet-pull db oidc elasticsearch
           sleep 120
-          docker logs $(docker ps --filter "name=elasticsearch" --format "{{.ID}}")
+          # docker logs $(docker ps --filter "name=elasticsearch" --format "{{.ID}}")
       - name: Migrate database
-        run: npm run prisma -- migrate deploy
+        run: |
+          set -e
+          npm run prisma -- migrate reset --force
+          cd development
+          docker compose exec db sh -c '
+            for file in /docker-entrypoint-initdb.d/*.sql; do
+              psql --dbname=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:5432/${POSTGRES_DB} -v ON_ERROR_STOP=1 -f $file
+            done
+          '
       - name: Restore cached e2e node modules
         uses: actions/cache/restore@v4
         with:
@@ -221,6 +229,7 @@ jobs:
           TZ: Europe/Zurich
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Stop services
+        if: always()
         run: |
           cd development
           docker compose down

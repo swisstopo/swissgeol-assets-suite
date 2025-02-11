@@ -18,6 +18,18 @@ spec:
         app: {{ .Release.Name }}-api
     spec:
       serviceAccountName: cognito
+      initContainers:
+        - name: {{ .Release.Name }}-api--migration
+          image: {{ .Values.image_api }}
+          imagePullPolicy: Always
+          command: ["npx", "prisma", "migrate", "deploy"]
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-secrets
+                  key: apiDbMigrationCon
+
       containers:
         - name: {{ .Release.Name }}-api
           image: {{ .Values.image_api }}
