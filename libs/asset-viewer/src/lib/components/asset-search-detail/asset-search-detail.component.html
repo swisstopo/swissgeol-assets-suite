@@ -19,7 +19,7 @@
         <div class="flex flex-row justify-between mb-4">
           <div class="text-dark-red break-word font-bold mt-2.5" [innerHTML]="assetDetail.titlePublic"></div>
           <ng-container *canUpdate="AssetEditPolicy; with: assetDetail">
-            <a asset-sg-icon-button [routerLink]="['/', 'asset-admin', assetDetail.assetId]">
+            <a asset-sg-icon-button [routerLink]="['/', currentLang$ | async, 'asset-admin', assetDetail.assetId]">
               <svg-icon key="edit" data-testid="edit-asset-button"></svg-icon>
             </a>
           </ng-container>
