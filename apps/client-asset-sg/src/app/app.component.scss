@@ -43,6 +43,12 @@ asset-sg-menu-bar {
     grid-template-columns: $menu-bar-width 1fr;
     box-shadow: 0 0 60px 0 rgb(0 0 0 / 60%);
     --viewport-width: min(calc(100vw - #{$menu-bar-width}), calc(1920px - #{$menu-bar-width}));
+
+    &.menu-hidden {
+      grid-template-areas: "app-bar app-bar" "router-outlet router-outlet";
+      grid-template-columns: 1fr;
+      --viewport-width: min(calc(100vw - #{$menu-bar-width}), calc(1920px - #{$menu-bar-width}));
+    }
   }
 }
 

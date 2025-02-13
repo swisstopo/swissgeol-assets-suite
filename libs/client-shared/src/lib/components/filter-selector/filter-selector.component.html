@@ -1,0 +1,11 @@
+<h5>{{ title }}</h5>
+
+<mat-form-field class="select">
+  <svg-icon key="chevron-down" class="icon" />
+
+  <mat-select [(ngModel)]="selectedFilters" (ngModelChange)="onFilterChange($event)" multiple>
+    @for (value of values; track value) {
+    <mat-option [value]="value">{{ value.displayValue }}</mat-option>
+    }
+  </mat-select>
+</mat-form-field>

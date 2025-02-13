@@ -1,30 +1,53 @@
 <div class="users">
-  <div class="header">
-    <h1 translate>admin.users</h1>
+  <div class="search">
+    <asset-sg-search-input (searchTermChanged)="setSearchTerm($event)"></asset-sg-search-input>
+    <button asset-sg-secondary (click)="toggleFilters()" [class.active]="showFilters">
+      <span translate>menuBar.filters</span>
+      <svg-icon key="assets" />
+    </button>
   </div>
+  @if (showFilters) {
+  <div class="filters">
+    <asset-sg-filter-selector
+      (filterChanged)="setFilters($event, 'roles')"
+      title="{{ 'admin.workgroups' | translate }}"
+      [values]="workgroupFilterValues"
+    ></asset-sg-filter-selector>
+    <asset-sg-filter-selector
+      (filterChanged)="setFilters($event, 'isAdmin')"
+      title="{{ 'admin.userPage.admin' | translate }}"
+      [values]="isAdminFilterValues"
+    ></asset-sg-filter-selector>
+    <asset-sg-filter-selector
+      (filterChanged)="setFilters($event, 'lang')"
+      title="{{ 'admin.userPage.lang' | translate }}"
+      [values]="langFilterValues"
+    ></asset-sg-filter-selector>
+  </div>
+  }
+
   <div *rxLet="currentUser$; let currentUser">
-    <table mat-table [dataSource]="users$" class="mat-elevation-z8">
+    <table
+      mat-table
+      [dataSource]="dataSource"
+      class="mat-elevation-z8 table"
+      matSort
+      (matSortChange)="sortChange($event)"
+    >
+      <ng-container matColumnDef="firstName">
+        <th mat-header-cell mat-sort-header="firstName" *matHeaderCellDef><span translate>admin.firstName</span></th>
+        <td mat-cell *matCellDef="let user">{{ user.firstName }}</td>
+      </ng-container>
+      <ng-container matColumnDef="lastName">
+        <th mat-header-cell mat-sort-header="lastName" *matHeaderCellDef><span translate>admin.lastName</span></th>
+        <td mat-cell *matCellDef="let user">{{ user.lastName }}</td>
+      </ng-container>
       <ng-container matColumnDef="email">
-        <th mat-header-cell *matHeaderCellDef translate>admin.email</th>
+        <th mat-header-cell mat-sort-header="email" *matHeaderCellDef><span translate>admin.email</span></th>
         <td mat-cell *matCellDef="let user">{{ user.email }}</td>
       </ng-container>
-      <ng-container matColumnDef="isAdmin">
-        <th mat-header-cell *matHeaderCellDef translate>admin.userPage.admin</th>
-
-        <td mat-cell *matCellDef="let user">
-          <mat-checkbox
-            [checked]="user.isAdmin"
-            (change)="updateIsAdminStatus(user, $event)"
-            [disabled]="user.id === currentUser.id"
-          ></mat-checkbox>
-        </td>
-      </ng-container>
-      <ng-container matColumnDef="languages">
-        <th mat-header-cell *matHeaderCellDef translate>admin.userPage.lang</th>
-        <td mat-cell *matCellDef="let user">{{ user.lang }}</td>
-      </ng-container>
       <ng-container matColumnDef="workgroups">
-        <th mat-header-cell *matHeaderCellDef translate>admin.workgroups</th>
+        <th mat-header-cell *matHeaderCellDef><span translate>admin.workgroups</span></th>
         <td
           mat-cell
           *matCellDef="let user"
@@ -32,16 +55,33 @@
           matTooltipClass="workgroups-tooltip"
           matTooltipPosition="left"
         >
-          @for (workgroup of getUserWorkgroups(user); track workgroup.id; let isLast = $last) {
-          <span>{{ workgroup.name }}.{{ workgroup.role }}</span>
-          <ng-container *ngIf="!isLast">,</ng-container>
-          } @if (user.roles.size > WORKGROUP_DISPLAY_COUNT) {
-          <span>, +{{ user.roles.size - WORKGROUP_DISPLAY_COUNT }} <span translate>admin.userPage.more</span> </span>
-          }
+          <mat-chip-set>
+            @for (workgroup of getWorkgroupsOfUser(user); track workgroup.id) {
+            <asset-sg-chip>{{ workgroup.name }}</asset-sg-chip>
+            } @if (user.roles.size > WORKGROUP_DISPLAY_COUNT) {
+            <asset-sg-chip>+{{ user.roles.size - WORKGROUP_DISPLAY_COUNT }}</asset-sg-chip>
+            }
+          </mat-chip-set>
         </td>
       </ng-container>
+      <ng-container matColumnDef="isAdmin">
+        <th mat-header-cell *matHeaderCellDef><span translate>admin.userPage.admin</span></th>
+        <td mat-cell *matCellDef="let user">
+          <mat-checkbox
+            [checked]="user.isAdmin"
+            (change)="updateIsAdminStatus(user, $event)"
+            [disabled]="user.id === currentUser?.id"
+            color="primary"
+          ></mat-checkbox>
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="languages">
+        <th mat-header-cell mat-sort-header="lang" *matHeaderCellDef><span translate>admin.userPage.lang</span></th>
+        <td mat-cell *matCellDef="let user">{{ user.lang }}</td>
+      </ng-container>
+
       <ng-container matColumnDef="actions">
-        <th mat-header-cell *matHeaderCellDef translate>admin.actions</th>
+        <th mat-header-cell *matHeaderCellDef></th>
         <td mat-cell *matCellDef="let user">
           <button [routerLink]="[user.id]">
             <svg-icon key="edit"></svg-icon>
@@ -52,4 +92,5 @@
       <tr mat-row *matRowDef="let row; columns: COLUMNS"></tr>
     </table>
   </div>
+  <mat-paginator [pageSizeOptions]="[25, 50, 100]" [showFirstLastButtons]="true"></mat-paginator>
 </div>

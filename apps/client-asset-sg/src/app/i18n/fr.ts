@@ -267,6 +267,8 @@ export const frAppTranslations: AppTranslations = {
     name: 'Nom',
     role: 'Rôle',
     actions: 'Actions',
+    firstName: 'Prénom',
+    lastName: 'Nom de famille',
     email: 'E-mail',
     back: 'Retour',
     languages: {
@@ -277,6 +279,7 @@ export const frAppTranslations: AppTranslations = {
     },
     userPage: {
       admin: 'Admin',
+      noAdmin: "Pas d'admin",
       lang: 'Langue',
       addWorkgroups: 'Ajouter des groupes de travail',
       more: 'en plus',
@@ -292,6 +295,9 @@ export const frAppTranslations: AppTranslations = {
       chooseUsersText: 'Ajoutez des utilisateurs pour les gérer',
       addUsers: 'Ajouter des utilisateurs',
     },
+  },
+  paginator: {
+    itemsPerPage: 'Éléments par page',
   },
   disclaimer: {
     title: "Conditions d'utilisation",

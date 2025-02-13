@@ -1,11 +1,15 @@
-import { Component, inject, OnDestroy, OnInit } from '@angular/core';
+import { AfterViewInit, Component, inject, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { MatCheckboxChange } from '@angular/material/checkbox';
-import { fromAppShared } from '@asset-sg/client-shared';
+import { MatPaginator } from '@angular/material/paginator';
+import { Sort } from '@angular/material/sort';
+import { MatTableDataSource } from '@angular/material/table';
+import { CURRENT_LANG, Filter, fromAppShared } from '@asset-sg/client-shared';
 import { isNotNull } from '@asset-sg/core';
 import { Role, User, Workgroup, WorkgroupId } from '@asset-sg/shared/v2';
 import * as RD from '@devexperts/remote-data-ts';
 import { Store } from '@ngrx/store';
-import { filter, map, Observable, Subscription } from 'rxjs';
+import { TranslateService } from '@ngx-translate/core';
+import { BehaviorSubject, combineLatestWith, filter, map, Observable, Subscription, tap } from 'rxjs';
 import * as actions from '../../state/admin.actions';
 import { AppStateWithAdmin } from '../../state/admin.reducer';
 import { selectUsers, selectWorkgroups } from '../../state/admin.selector';
@@ -16,15 +20,33 @@ import { selectUsers, selectWorkgroups } from '../../state/admin.selector';
   styleUrls: ['./users.component.scss'],
   standalone: false,
 })
-export class UsersComponent implements OnInit, OnDestroy {
-  public workgroups = new Map<WorkgroupId, Workgroup>();
+export class UsersComponent implements OnInit, OnDestroy, AfterViewInit {
+  private users: User[] = [];
 
-  protected readonly COLUMNS = ['email', 'isAdmin', 'languages', 'workgroups', 'actions'];
+  public showFilters = false;
+  public workgroups = new Map<WorkgroupId, Workgroup>();
+  public workgroupFilterValues: Filter[] = [];
+  public readonly langFilterValues: Filter[] = [
+    { displayValue: 'DE', value: 'de' },
+    { displayValue: 'EN', value: 'en' },
+    { displayValue: 'FR', value: 'fr' },
+    { displayValue: 'IT', value: 'en' },
+  ];
+  public isAdminFilterValues: Filter[] = [];
+
+  protected readonly COLUMNS = ['firstName', 'lastName', 'email', 'workgroups', 'isAdmin', 'languages', 'actions'];
   protected readonly WORKGROUP_DISPLAY_COUNT = 3;
+
+  protected dataSource: MatTableDataSource<User> = new MatTableDataSource<User>();
+  @ViewChild(MatPaginator) protected paginator!: MatPaginator;
+  private readonly searchTerm$ = new BehaviorSubject<string>('');
+  private readonly activeFilters$ = new BehaviorSubject<Map<keyof User, Array<string | number | boolean>>>(new Map());
 
   private readonly store = inject(Store<AppStateWithAdmin>);
   public readonly users$ = this.store.select(selectUsers);
   private readonly workgroups$ = this.store.select(selectWorkgroups);
+  public readonly currentLang$ = inject(CURRENT_LANG);
+  private readonly translateService = inject(TranslateService);
   private readonly subscriptions: Subscription = new Subscription();
 
   public readonly currentUser$: Observable<User> = this.store.select(fromAppShared.selectRDUserProfile).pipe(
@@ -36,24 +58,85 @@ export class UsersComponent implements OnInit, OnDestroy {
     this.initSubscriptions();
   }
 
+  public ngAfterViewInit() {
+    this.dataSource.paginator = this.paginator;
+  }
+
   public ngOnDestroy(): void {
     this.subscriptions.unsubscribe();
   }
 
-  public *getUserWorkgroups(user: User): Iterable<Workgroup & { role: Role }> {
-    const iter = user.roles.entries();
-    for (let i = 0; i < this.WORKGROUP_DISPLAY_COUNT; i++) {
-      const { value, done } = iter.next();
-      if (done) {
-        break;
-      }
-      const [workgroupId, role] = value;
-      const workgroup = this.workgroups.get(workgroupId);
-      if (workgroup == null) {
-        continue;
-      }
-      yield { ...workgroup, role };
+  public setSearchTerm(term: string) {
+    this.searchTerm$.next(term);
+  }
+
+  public toggleFilters() {
+    this.showFilters = !this.showFilters;
+    if (!this.showFilters) {
+      this.activeFilters$.next(new Map());
     }
+  }
+
+  public setFilters(selectedValues: Filter[], key: keyof User) {
+    const activeFilters = this.activeFilters$.value.set(
+      key,
+      selectedValues.map((it) => it.value)
+    );
+    this.activeFilters$.next(activeFilters);
+  }
+
+  private matchUsersBySearchTerm(user: User, searchTerm: string): boolean {
+    searchTerm = searchTerm.toLowerCase();
+    return Object.entries(user).some(([key, value]) => {
+      if (key === 'roles') {
+        return Array.from((value as Map<number, string>).keys()).some((id) =>
+          this.workgroups.get(id)?.name.toLowerCase().includes(searchTerm)
+        );
+      }
+      return value.toString().toLowerCase().includes(searchTerm);
+    });
+  }
+
+  private filterUsersByAttribute(user: User, filters: Map<keyof User, (string | number | boolean)[]>): boolean {
+    return Array.from(filters.entries()).every(([key, values]) => {
+      if (values.length === 0) {
+        return true;
+      }
+      const userValue = user[key];
+      return values.some((value) => {
+        if (key === 'roles') {
+          return (userValue as Map<number, string>).has(value as number);
+        }
+        return value === userValue;
+      });
+    });
+  }
+
+  public sortChange(sort: Sort) {
+    const data = this.dataSource.data.slice();
+    if (!sort.active || sort.direction === '') {
+      return;
+    }
+
+    this.dataSource.data = data.sort((a, b) => {
+      const isAsc = sort.direction === 'asc';
+      switch (sort.active) {
+        case 'firstName':
+          return this.compare(a.firstName, b.firstName, isAsc);
+        case 'lastName':
+          return this.compare(a.lastName, b.lastName, isAsc);
+        case 'email':
+          return this.compare(a.email, b.email, isAsc);
+        case 'lang':
+          return this.compare(a.lang, b.lang, isAsc);
+        default:
+          return 0;
+      }
+    });
+  }
+
+  private compare(a: string, b: string, isAsc: boolean) {
+    return (a < b ? -1 : 1) * (isAsc ? 1 : -1);
   }
 
   public updateIsAdminStatus(user: User, event: MatCheckboxChange) {
@@ -62,26 +145,72 @@ export class UsersComponent implements OnInit, OnDestroy {
 
   public formatWorkgroupsTooltip(roles: User['roles']): string {
     let tooltip = '';
-    for (const [workgroupId, workgroupRole] of roles) {
+    for (const workgroupId of roles.keys()) {
       const workgroup = this.workgroups.get(workgroupId);
       if (workgroup == null) {
         continue;
       }
       if (tooltip.length !== 0) {
-        tooltip += ',\n';
+        tooltip += ', ';
       }
-      tooltip += `${workgroup.name}.${workgroupRole}`;
+      tooltip += `${workgroup.name}`;
     }
     return tooltip;
+  }
+
+  public *getWorkgroupsOfUser(user: User): Iterable<Workgroup & { role: Role }> {
+    let i = 0;
+    for (const [workgroupId, role] of user.roles) {
+      i += 1;
+      if (i > this.WORKGROUP_DISPLAY_COUNT) {
+        break;
+      }
+      const workgroup = this.workgroups.get(workgroupId);
+      if (workgroup == null) {
+        continue;
+      }
+      yield { ...workgroup, role };
+    }
   }
 
   private initSubscriptions(): void {
     this.subscriptions.add(
       this.workgroups$.subscribe((workgroups) => {
         this.workgroups.clear();
+        this.workgroupFilterValues = workgroups.map((workgroup) => ({
+          value: workgroup.id,
+          displayValue: workgroup.name,
+        }));
+
         for (const workgroup of workgroups) {
           this.workgroups.set(workgroup.id, workgroup);
         }
+      })
+    );
+    this.subscriptions.add(
+      this.users$.subscribe((users) => {
+        this.users = users;
+        this.dataSource.data = users;
+      })
+    );
+    this.subscriptions.add(
+      this.searchTerm$
+        .pipe(
+          combineLatestWith(this.activeFilters$),
+          tap(([term, filters]) => {
+            this.dataSource.data = this.users.filter((user) => {
+              return this.matchUsersBySearchTerm(user, term) && this.filterUsersByAttribute(user, filters);
+            });
+          })
+        )
+        .subscribe()
+    );
+    this.subscriptions.add(
+      this.currentLang$.subscribe(() => {
+        this.isAdminFilterValues = [
+          { displayValue: this.translateService.instant('admin.userPage.admin'), value: true },
+          { displayValue: this.translateService.instant('admin.userPage.noAdmin'), value: false },
+        ];
       })
     );
   }

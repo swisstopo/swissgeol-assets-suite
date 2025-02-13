@@ -6,13 +6,16 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatCard } from '@angular/material/card';
 import { MatCheckbox } from '@angular/material/checkbox';
+import { MatChip, MatChipSet } from '@angular/material/chips';
 import { MatDialogActions, MatDialogContent, MatDialogTitle } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatPaginator, MatPaginatorIntl } from '@angular/material/paginator';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatRadioModule } from '@angular/material/radio';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggle } from '@angular/material/slide-toggle';
+import { MatSort, MatSortHeader } from '@angular/material/sort';
 import {
   MatCell,
   MatCellDef,
@@ -30,8 +33,11 @@ import { MatTooltip } from '@angular/material/tooltip';
 import {
   AnchorComponent,
   ButtonComponent,
+  ChipComponent,
   DrawerComponent,
   DrawerPanelComponent,
+  FilterSelectorComponent,
+  SearchInputComponent,
   ViewChildMarker,
 } from '@asset-sg/client-shared';
 import { SvgIconComponent } from '@ngneat/svg-icon';
@@ -49,6 +55,7 @@ import { UserEditComponent } from './components/user-edit/user-edit.component';
 import { UsersComponent } from './components/users/users.component';
 import { WorkgroupEditComponent } from './components/workgroup-edit/workgroup-edit.component';
 import { WorkgroupsComponent } from './components/workgroups/workgroups.component';
+import { CustomPaginatorIntl } from './services/custom-paginator-intl';
 import { AdminEffects } from './state/admin.effects';
 import { adminReducer } from './state/admin.reducer';
 
@@ -60,6 +67,12 @@ import { adminReducer } from './state/admin.reducer';
     UsersComponent,
     UserEditComponent,
     AddWorkgroupUserDialogComponent,
+  ],
+  providers: [
+    {
+      provide: MatPaginatorIntl,
+      useClass: CustomPaginatorIntl,
+    },
   ],
   imports: [
     CommonModule,
@@ -107,6 +120,14 @@ import { adminReducer } from './state/admin.reducer';
     MatCard,
     MatSlideToggle,
     IfModule,
+    MatPaginator,
+    SearchInputComponent,
+    FilterSelectorComponent,
+    MatChipSet,
+    MatChip,
+    MatSort,
+    MatSortHeader,
+    ChipComponent,
   ],
 })
 export class AdminModule {}

@@ -265,6 +265,8 @@ export const deAppTranslations = {
     name: 'Name',
     role: 'Rolle',
     actions: 'Aktionen',
+    firstName: 'Vorname',
+    lastName: 'Nachname',
     email: 'E-Mail',
     back: 'Zurück',
     languages: {
@@ -275,6 +277,7 @@ export const deAppTranslations = {
     },
     userPage: {
       admin: 'Admin',
+      noAdmin: 'Nicht Admin',
       lang: 'Sprache',
       addWorkgroups: 'Arbeitsgruppen hinzufügen',
       more: 'weitere',
@@ -290,6 +293,9 @@ export const deAppTranslations = {
       chooseUsersText: 'Füge Benutzer hinzu, um sie zu verwalten',
       addUsers: 'Benutzer hinzufügen',
     },
+  },
+  paginator: {
+    itemsPerPage: 'Elemente pro Seite',
   },
   disclaimer: {
     title: 'Nutzungsbedingungen',

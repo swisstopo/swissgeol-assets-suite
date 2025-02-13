@@ -13,30 +13,21 @@
     cursor: default;
   }
 }
+
 :host[asset-sg-reset] {
   @extend %reset;
 }
 
-:host[asset-sg-primary] {
-  color: variables.$white;
-  background-color: variables.$cyan-09;
-  box-shadow: 0px 1px 3px #00000033;
-}
-
-// todo delete secondary?
-:host[asset-sg-secondary] {
-  color: variables.$cyan-09;
-  background-color: transparent;
-}
-
 :host[asset-sg-primary],
 :host[asset-sg-secondary],
+:host[asset-sg-tertiary],
 :host[asset-sg-warn] {
   @extend %reset;
 
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 6px;
   height: 2.5rem;
   padding: 0 1rem;
 
@@ -49,35 +40,70 @@
   &.cdk-keyboard-focused {
     outline: 2px solid #4d90fe;
   }
+}
 
-  &[aria-disabled="true"] {
-    color: variables.$grey-08;
-    background-color: variables.$grey-03;
+:host[asset-sg-primary] {
+  color: variables.$white;
+  background-color: variables.$cyan-09;
+  box-shadow: 0px 1px 3px #00000033;
+
+  &:not([disabled]) {
+    &:hover {
+      background-color: #295969;
+      color: white;
+    }
+
+    &:active {
+      background-color: #1f444f;
+    }
+  }
+
+  &.active {
+    background-color: #dee2e6;
+  }
+
+  &[disabled] {
+    background-color: #c1d3d9;
     cursor: default;
   }
+}
 
-  &:not([aria-disabled="true"]) {
+:host[asset-sg-secondary],
+:host[asset-sg-tertiary] {
+  color: variables.$cyan-09;
+  background-color: transparent;
+  border: 1px solid variables.$cyan-09;
+
+  &:not([disabled]) {
     &:hover {
-      box-shadow: 0px 1px 3px #00000033;
-      background-color: #d0f5f9;
-      color: #357183;
-    }
-    &:focus {
-      box-shadow: 0px 1px 3px #00000033;
-      background-color: #87d7e6;
-      color: #357183;
-    }
-    &:active:not(:focus) {
-      box-shadow: none;
-      background-color: variables.$cyan-06;
-      color: variables.$white;
+      border-color: #2f4356;
+      background-color: #d6e2e6;
+      color: #2f4356;
+
+      &:active {
+        box-shadow: none;
+        border: none;
+        background-color: #adc6cd;
+        color: #2f4356;
+      }
     }
   }
 
-  &.asset-sg-active:focus,
-  &.asset-sg-active {
-    color: variables.$dark-red;
+  &.active {
+    background-color: #bed7df;
+    border: none;
+    color: #2f4356;
   }
+
+  &[disabled] {
+    color: #828e9a;
+    border-color: #828e9a;
+    cursor: default;
+  }
+}
+
+:host[asset-sg-tertiary] {
+  border: none;
 }
 
 :host[asset-sg-icon-button] {
@@ -116,31 +142,7 @@
     &:focus {
       color: variables.$red;
     }
-    &:active:not(:focus) {
-      color: variables.$dark-red;
-    }
-  }
-}
 
-:host[asset-sg-link] {
-  color: variables.$cyan-09;
-  font-weight: variables.$font-bold;
-  text-decoration: none;
-
-  &.cdk-keyboard-focused {
-    outline: 2px solid #4d90fe;
-  }
-
-  &[aria-disabled="true"] {
-    color: variables.$grey-06;
-    cursor: default;
-  }
-
-  &:not([aria-disabled="true"]) {
-    &:hover,
-    &:focus {
-      color: variables.$red;
-    }
     &:active:not(:focus) {
       color: variables.$dark-red;
     }
