@@ -41,6 +41,7 @@ export class ViewerParamsService {
 
   private async initialize(): Promise<void> {
     const paramsFromUrl = this.parseParamsFromUrl();
+
     const paramsFromStore = await firstValueFrom(this.paramsFromStore$);
 
     // We only use the values from the store if:
@@ -75,11 +76,14 @@ export class ViewerParamsService {
     let lastUrl = document.location.pathname.split('?', 2)[0];
     this.subscription.add(
       this.router.events.subscribe(async (event) => {
-        if (this.isUpdatingUrl || !(event instanceof NavigationEnd)) {
+        if (!(event instanceof NavigationEnd)) {
           return;
         }
-
         const url = event.url.split('?', 2)[0];
+        if (this.isUpdatingUrl) {
+          lastUrl = url;
+          return;
+        }
         if (url === lastUrl) {
           this.params = this.parseParamsFromUrl();
           this.writeParamsToStore();
