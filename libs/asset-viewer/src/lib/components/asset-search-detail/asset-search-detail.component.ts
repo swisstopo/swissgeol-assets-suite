@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { AppState } from '@asset-sg/client-shared';
+import { AppState, CURRENT_LANG } from '@asset-sg/client-shared';
 import { AssetFileType } from '@asset-sg/shared';
 import { AssetEditPolicy } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
@@ -20,6 +20,7 @@ import {
 })
 export class AssetSearchDetailComponent {
   private readonly store = inject(Store<AppState>);
+  public readonly currentLang$ = inject(CURRENT_LANG);
 
   public readonly assetDetail$ = this.store.select(selectCurrentAssetDetailVM);
   public readonly filesByType$: Observable<Record<AssetFileType, AssetDetailFileVM[]>> = this.assetDetail$.pipe(

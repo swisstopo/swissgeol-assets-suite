@@ -175,7 +175,9 @@ export class AssetEditorTabPageComponent implements AfterViewInit {
 
   ngAfterViewInit(): void {
     this.referenceDataVM$.pipe(take(1)).subscribe(() => {
-      this.isFormReady = true;
+      setTimeout(() => {
+        this.isFormReady = true;
+      });
     });
   }
 
@@ -274,7 +276,7 @@ export class AssetEditorTabPageComponent implements AfterViewInit {
   }
 
   public close(): void {
-    this.routingService.navigateBack(['/']);
+    this.routingService.navigateBack(['/']).then();
   }
 
   public canLeave(): Observable<boolean> {
