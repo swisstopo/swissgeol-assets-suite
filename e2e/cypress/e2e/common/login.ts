@@ -5,6 +5,8 @@ Given('The user is logged in', () => {
   const password: string = Cypress.env('basicAuthPassword') as string;
   cy.login(userName, password);
   cy.visit('/de');
+  // cy.visit('/de');
+  cy.wait(5000);
 });
 
 Then('The assets application is visible', () => {
