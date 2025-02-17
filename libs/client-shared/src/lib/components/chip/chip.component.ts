@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, HostBinding, Input } from '@angular/core';
 import { MatChip } from '@angular/material/chips';
 
 @Component({
@@ -10,4 +10,9 @@ import { MatChip } from '@angular/material/chips';
 })
 export class ChipComponent {
   @Input() type: 'primary' | 'secondary' = 'primary';
+
+  @HostBinding('class.secondary')
+  get isSecondary() {
+    return this.type === 'secondary';
+  }
 }

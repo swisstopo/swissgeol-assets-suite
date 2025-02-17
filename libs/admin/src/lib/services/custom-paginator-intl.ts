@@ -12,6 +12,15 @@ export class CustomPaginatorIntl extends MatPaginatorIntl {
     });
   }
 
+  override getRangeLabel = (page: number, pageSize: number, length: number): string => {
+    if (length === 0 || pageSize === 0) {
+      return this.translate.instant('paginator.range', { start: 0, end: 0, length });
+    }
+    const startIndex = page * pageSize;
+    const endIndex = Math.min(startIndex + pageSize, length);
+    return this.translate.instant('paginator.range', { start: startIndex + 1, end: endIndex, length });
+  };
+
   private initTranslations(): void {
     this.itemsPerPageLabel = this.translate.instant('paginator.itemsPerPage');
     this.changes.next();

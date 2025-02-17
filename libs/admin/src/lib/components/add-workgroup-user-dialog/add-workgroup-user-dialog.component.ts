@@ -72,7 +72,7 @@ export class AddWorkgroupUserDialogComponent implements OnInit {
     if (this.mode === 'edit') {
       this.store.dispatch(actions.updateWorkgroup({ workgroupId: this.workgroup.id, workgroup }));
     } else {
-      this.store.dispatch(actions.setWorkgroup({ workgroup: { ...workgroup, id: -1 } }));
+      this.store.dispatch(actions.setWorkgroup({ workgroup: { ...workgroup, id: -1, numberOfAssets: 0 } }));
     }
     this.dialogRef.close();
   }

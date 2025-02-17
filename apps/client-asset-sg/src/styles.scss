@@ -131,6 +131,10 @@ input {
   }
 }
 
+.mdc-checkbox .mdc-checkbox__background {
+  border-color: variables.$cyan-09;
+}
+
 .table {
   box-shadow: none;
 

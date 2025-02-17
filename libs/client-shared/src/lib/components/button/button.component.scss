@@ -28,12 +28,14 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
-  height: 2.5rem;
+  height: 36px;
   padding: 0 1rem;
 
   border-radius: 4px;
-  font-weight: variables.$font-bold;
-  font-size: 0.875rem;
+  font-weight: variables.$font-medium;
+  font-size: 14px;
+  line-height: 20px;
+  letter-spacing: 0.015em;
 
   outline: none;
 
@@ -45,7 +47,7 @@
 :host[asset-sg-primary] {
   color: variables.$white;
   background-color: variables.$cyan-09;
-  box-shadow: 0px 1px 3px #00000033;
+  box-shadow: 0 1px 3px #00000033;
 
   &:not([disabled]) {
     &:hover {
@@ -104,6 +106,12 @@
 
 :host[asset-sg-tertiary] {
   border: none;
+}
+
+:host([isIcon]) {
+  padding: 0;
+  height: 28px;
+  width: 28px;
 }
 
 :host[asset-sg-icon-button] {

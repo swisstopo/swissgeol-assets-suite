@@ -21,7 +21,10 @@ export class AdminService {
   private readonly httpClient = inject(HttpClient);
 
   public getUsers(): Observable<User[]> {
-    return this.httpClient.get<object[]>('/api/users').pipe(map((it) => plainToInstance(UserSchema, it)));
+    return this.httpClient.get<object[]>('/api/users').pipe(
+      map((it) => plainToInstance(UserSchema, it)),
+      map((it) => it.sort((a, b) => a.firstName.localeCompare(b.firstName)))
+    );
   }
 
   public getUser(id: string): Observable<User> {
@@ -29,7 +32,10 @@ export class AdminService {
   }
 
   public getWorkgroups(): Observable<Workgroup[]> {
-    return this.httpClient.get<object[]>('/api/workgroups').pipe(map((it) => plainToInstance(WorkgroupSchema, it)));
+    return this.httpClient.get<object[]>('/api/workgroups').pipe(
+      map((it) => plainToInstance(WorkgroupSchema, it)),
+      map((it) => it.sort((a, b) => a.name.localeCompare(b.name)))
+    );
   }
 
   public getWorkgroup(id: string): Observable<Workgroup> {

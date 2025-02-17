@@ -1,27 +1,27 @@
 <div class="users">
-  <div class="search">
-    <asset-sg-search-input (searchTermChanged)="setSearchTerm($event)"></asset-sg-search-input>
-    <button asset-sg-secondary (click)="toggleFilters()" [class.active]="showFilters">
-      <span translate>menuBar.filters</span>
-      <svg-icon key="assets" />
-    </button>
-  </div>
+  <asset-sg-search-and-filter
+    (searchTermChanged)="setSearchTerm($event)"
+    (shouldShowFiltersChanged)="toggleFilters()"
+  ></asset-sg-search-and-filter>
   @if (showFilters) {
   <div class="filters">
     <asset-sg-filter-selector
       (filterChanged)="setFilters($event, 'roles')"
       title="{{ 'admin.workgroups' | translate }}"
       [values]="workgroupFilterValues"
+      multiple
     ></asset-sg-filter-selector>
     <asset-sg-filter-selector
       (filterChanged)="setFilters($event, 'isAdmin')"
       title="{{ 'admin.userPage.admin' | translate }}"
       [values]="isAdminFilterValues"
+      multiple
     ></asset-sg-filter-selector>
     <asset-sg-filter-selector
       (filterChanged)="setFilters($event, 'lang')"
       title="{{ 'admin.userPage.lang' | translate }}"
       [values]="langFilterValues"
+      multiple
     ></asset-sg-filter-selector>
   </div>
   }
@@ -83,7 +83,7 @@
       <ng-container matColumnDef="actions">
         <th mat-header-cell *matHeaderCellDef></th>
         <td mat-cell *matCellDef="let user">
-          <button [routerLink]="[user.id]">
+          <button asset-sg-secondary isIcon [routerLink]="[user.id]">
             <svg-icon key="edit"></svg-icon>
           </button>
         </td>

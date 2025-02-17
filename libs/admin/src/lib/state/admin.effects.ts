@@ -7,7 +7,7 @@ import { UntilDestroy } from '@ngneat/until-destroy';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { Store } from '@ngrx/store';
 import { TranslateService } from '@ngx-translate/core';
-import { catchError, EMPTY, first, map, OperatorFunction, switchMap, withLatestFrom } from 'rxjs';
+import { catchError, EMPTY, map, OperatorFunction, switchMap, withLatestFrom } from 'rxjs';
 
 import { AdminService } from '../services/admin.service';
 import * as actions from './admin.actions';
@@ -74,16 +74,14 @@ export class AdminEffects {
 
   public listUsers$ = createEffect(() =>
     this.actions$.pipe(
-      ofType(actions.listUsers, actions.setUser, actions.setWorkgroup),
-      first(),
+      ofType(actions.listUsers, actions.setUser),
       switchMap(() => this.adminService.getUsers().pipe(map((users: User[]) => actions.setUsers({ users }))))
     )
   );
 
   public listWorkgroups$ = createEffect(() =>
     this.actions$.pipe(
-      ofType(actions.listWorkgroups, actions.setWorkgroup, actions.setUser),
-      first(),
+      ofType(actions.listWorkgroups, actions.setWorkgroup),
       switchMap(() =>
         this.adminService.getWorkgroups().pipe(map((workgroups: Workgroup[]) => actions.setWorkgroups({ workgroups })))
       )

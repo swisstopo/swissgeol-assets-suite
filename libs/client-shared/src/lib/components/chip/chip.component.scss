@@ -12,3 +12,9 @@
     letter-spacing: 0.0125em;
   }
 }
+
+:host(.secondary) {
+  .mat-mdc-standard-chip.mdc-evolution-chip--disabled {
+    background-color: #1c2834;
+  }
+}

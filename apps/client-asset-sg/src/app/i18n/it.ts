@@ -262,6 +262,7 @@ export const itAppTranslations: AppTranslations = {
   },
   admin: {
     users: 'IT Benutzer',
+    user: 'IT Benutzer',
     workgroups: 'IT Arbeitsgruppen',
     name: 'IT Name',
     role: 'IT Rolle',
@@ -280,9 +281,12 @@ export const itAppTranslations: AppTranslations = {
       admin: 'IT Admin',
       noAdmin: 'IT Kein Admin',
       lang: 'IT Sprache',
-      addWorkgroups: 'IT Arbeitsgruppen hinzufügen',
+      addWorkgroups: 'IT Arbeitsgruppe hinzufügen',
+      general: 'IT Allgemein',
       more: 'IT weitere',
       userAddError: 'IT Füge mindestens einen Benutzer hinzu',
+      workgroupAddError: 'IT Füge mindestens eine Arbeitsgruppe hinzu',
+      amount: 'IT Anz. Assets',
     },
     workgroupPage: {
       name: 'IT Name',
@@ -297,6 +301,7 @@ export const itAppTranslations: AppTranslations = {
   },
   paginator: {
     itemsPerPage: 'IT Elemente pro Seite',
+    range: ' IT {{start}} – {{end}} von {{length}}',
   },
   disclaimer: {
     title: 'Condizioni di utilizzo',

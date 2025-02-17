@@ -24,6 +24,9 @@ export class WorkgroupDataSchema extends Schema implements WorkgroupData {
 export class WorkgroupSchema extends WorkgroupDataSchema implements Workgroup {
   @IsNumber()
   id!: WorkgroupId;
+
+  @IsNumber()
+  numberOfAssets!: number;
 }
 
 export class UserOnWorkgroupSchema implements UserOnWorkgroup {
