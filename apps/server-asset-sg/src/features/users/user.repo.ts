@@ -70,6 +70,8 @@ export class UserRepo implements Repo<User, UserId, UserData & { oidcId: string 
         where: { id },
         data: {
           lang: data.lang,
+          firstName: data.firstName,
+          lastName: data.lastName,
           isAdmin: data.isAdmin,
           workgroups: {
             deleteMany: {
