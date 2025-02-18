@@ -18,6 +18,11 @@
     height: 44px;
   }
 
+  .mat-mdc-form-field-flex {
+    align-items: center;
+    height: 100%;
+  }
+
   .mat-mdc-form-field .mat-mdc-text-field-wrapper:not(.mdc-text-field--outlined) .mat-mdc-form-field-infix {
     padding: 0;
     align-content: center;
@@ -41,7 +46,6 @@
 
   .mat-mdc-form-field .mat-mdc-text-field-wrapper:not(.mdc-text-field--outlined) .mat-mdc-form-field-infix {
     padding-top: 2px;
-    align-content: unset;
   }
 
   .mat-mdc-form-field-subscript-wrapper {

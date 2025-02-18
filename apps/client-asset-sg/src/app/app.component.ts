@@ -8,11 +8,10 @@ import {
   AuthState,
   ConfigService,
   ErrorService,
-  setCssCustomProperties,
 } from '@asset-sg/client-shared';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { Store } from '@ngrx/store';
-import { debounceTime, filter, fromEvent, map, startWith, switchMap } from 'rxjs';
+import { filter, map, startWith, switchMap } from 'rxjs';
 import { environment } from '../environments/environment';
 import { AppState } from './state/app-state';
 
@@ -44,21 +43,6 @@ export class AppComponent {
       .subscribe(async () => {
         this.store.dispatch(appSharedStateActions.loadWorkgroups());
         this.store.dispatch(appSharedStateActions.loadReferenceData());
-      });
-
-    fromEvent(window, 'resize')
-      .pipe(debounceTime(50), startWith(null), untilDestroyed(this))
-      .subscribe(() => {
-        let fontSize;
-        const width = window.innerWidth;
-        if (width >= fullHdWidth) {
-          fontSize = '1rem';
-        } else if (width >= 0.8 * fullHdWidth) {
-          fontSize = `${width / fullHdWidth}rem`;
-        } else {
-          fontSize = '0.8rem';
-        }
-        setCssCustomProperties(document.documentElement, ['font-size', fontSize]);
       });
 
     this.router.events
