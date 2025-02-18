@@ -1,10 +1,9 @@
 import { inject, Injectable } from '@angular/core';
-import { Router } from '@angular/router';
 import { AppState } from '@asset-sg/client-shared';
 import { isNull, ORD } from '@asset-sg/core';
 import { UntilDestroy } from '@ngneat/until-destroy';
-import { Actions, createEffect, ofType } from '@ngrx/effects';
-import { Store } from '@ngrx/store';
+import { Actions, createEffect, ofType, OnInitEffects } from '@ngrx/effects';
+import { Action, Store } from '@ngrx/store';
 import { filter, map, of, switchMap, take, withLatestFrom } from 'rxjs';
 import { AllStudyService } from '../../services/all-study.service';
 import { AssetSearchService } from '../../services/asset-search.service';
@@ -21,12 +20,15 @@ import {
 
 @UntilDestroy()
 @Injectable()
-export class AssetSearchEffects {
+export class AssetSearchEffects implements OnInitEffects {
   private readonly store = inject(Store<AppState>);
   private readonly actions$ = inject(Actions);
   private readonly assetSearchService = inject(AssetSearchService);
   private readonly allStudyService = inject(AllStudyService);
-  private readonly router = inject(Router);
+
+  ngrxOnInitEffects(): Action {
+    return actions.initialize();
+  }
 
   public initializeAsset$ = createEffect(() =>
     this.actions$.pipe(
