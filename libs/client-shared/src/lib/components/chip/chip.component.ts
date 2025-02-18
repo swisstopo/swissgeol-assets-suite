@@ -11,6 +11,10 @@ import { MatChip } from '@angular/material/chips';
 export class ChipComponent {
   @Input() type: 'primary' | 'secondary' = 'primary';
 
+  @HostBinding('class.disabled')
+  @Input()
+  disabled = false;
+
   @HostBinding('class.secondary')
   get isSecondary() {
     return this.type === 'secondary';

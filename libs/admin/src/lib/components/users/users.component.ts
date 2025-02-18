@@ -214,6 +214,6 @@ export class UsersComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 }
 
-export function compare(a: string, b: string, isAsc: boolean) {
+export function compare<T extends number | string>(a: T, b: T, isAsc: boolean) {
   return (a < b ? -1 : 1) * (isAsc ? 1 : -1);
 }

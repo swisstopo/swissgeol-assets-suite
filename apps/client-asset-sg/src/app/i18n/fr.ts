@@ -292,12 +292,15 @@ export const frAppTranslations: AppTranslations = {
     workgroupPage: {
       name: 'Nom',
       isActive: 'Actif',
-      create: 'Créer',
+      create: 'Nouveau groupe de travail',
       activate: 'Activer',
       deactivate: 'Désactiver',
       isDisabled: 'Désactivé',
       chooseUsersText: 'Ajoutez des utilisateurs pour les gérer',
       addUsers: 'Ajouter des utilisateurs',
+      usersPerRole: 'Utilisateurs par Rôle',
+      delete: 'Supprimer',
+      unableToDelete: 'Le groupe de travail ne peut pas être supprimé car des assets lui sont encore attribués.',
     },
   },
   paginator: {

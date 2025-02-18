@@ -1,27 +1,13 @@
-@use "../../styles/variables";
-
-.workgroups {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  padding: 0 1rem;
+.mat-column-numberOfAssets {
+  width: 147px;
 }
 
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
+.mat-column-status {
+  width: 97px;
 }
 
-.table__header {
-  background-color: variables.$grey-03;
-}
-
-.mat-mdc-header-row .mat-mdc-cell {
-  background-color: variables.$grey-01;
-}
-
-.mat-mdc-row:hover .mat-mdc-cell {
-  background-color: variables.$grey-01;
+.mat-column-actions {
+  width: 52px;
+  text-align: right;
+  padding-left: 0;
 }

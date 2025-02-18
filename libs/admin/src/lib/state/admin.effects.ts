@@ -72,6 +72,17 @@ export class AdminEffects {
     )
   );
 
+  public deleteWorkgroup$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(actions.deleteWorkgroup),
+      switchMap(({ workgroupId }) =>
+        this.adminService
+          .deleteWorkgroup(workgroupId)
+          .pipe(map(() => actions.removeWorkgroupAfterDelete({ workgroupId })))
+      )
+    )
+  );
+
   public listUsers$ = createEffect(() =>
     this.actions$.pipe(
       ofType(actions.listUsers, actions.setUser),

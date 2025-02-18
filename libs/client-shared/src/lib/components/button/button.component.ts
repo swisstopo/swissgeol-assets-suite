@@ -46,8 +46,7 @@ export class ButtonComponent implements AfterViewInit, OnDestroy {
   private _classes: string | undefined;
 
   private _disabled: true | undefined;
-  @HostBinding('[attr.disabled]')
-  @HostBinding('[attr.aria-disabled]')
+  @HostBinding('attr.disabled')
   @Input()
   get disabled(): true | false | undefined {
     return this._disabled;

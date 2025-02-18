@@ -13,8 +13,10 @@
   }
 }
 
-:host(.secondary) {
-  .mat-mdc-standard-chip.mdc-evolution-chip--disabled {
-    background-color: #1c2834;
-  }
+:host(.disabled) .mat-mdc-standard-chip.mdc-evolution-chip--disabled {
+  background-color: #acb4bd;
+}
+
+:host(.secondary) .mat-mdc-standard-chip.mdc-evolution-chip--disabled {
+  background-color: #1c2834;
 }
