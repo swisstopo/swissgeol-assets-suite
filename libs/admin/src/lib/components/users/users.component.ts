@@ -35,7 +35,7 @@ export class UsersComponent implements OnInit, OnDestroy, AfterViewInit {
   ];
   public isAdminFilterValues: Filter<boolean>[] = [];
 
-  protected readonly COLUMNS = ['firstName', 'lastName', 'email', 'workgroups', 'isAdmin', 'languages', 'actions'];
+  protected readonly COLUMNS = ['firstName', 'lastName', 'email', 'workgroups', 'isAdmin', 'languages'];
   protected readonly WORKGROUP_DISPLAY_COUNT = 3;
 
   protected dataSource: MatTableDataSource<User> = new MatTableDataSource<User>();
