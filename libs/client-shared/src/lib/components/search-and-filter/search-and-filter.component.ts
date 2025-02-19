@@ -2,14 +2,14 @@ import { Component, ElementRef, EventEmitter, Output, ViewChild } from '@angular
 import { SvgIconComponent } from '@ngneat/svg-icon';
 import { TranslateModule } from '@ngx-translate/core';
 import { ButtonComponent } from '../button';
-import { SearchInputComponent } from '../search-input';
+import { TextInputComponent } from '../search-input';
 
 @Component({
   selector: 'asset-sg-search-and-filter',
   templateUrl: './search-and-filter.component.html',
   styleUrls: ['./search-and-filter.component.scss'],
   standalone: true,
-  imports: [SvgIconComponent, TranslateModule, SearchInputComponent, ButtonComponent],
+  imports: [SvgIconComponent, TranslateModule, TextInputComponent, ButtonComponent],
 })
 export class SearchAndFilterComponent {
   public shouldShowFilters = false;

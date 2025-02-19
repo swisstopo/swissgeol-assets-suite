@@ -299,7 +299,7 @@ export const frAppTranslations: AppTranslations = {
       chooseUsersText: 'Ajoutez des utilisateurs pour les gérer',
       addUsers: 'Ajouter des utilisateurs',
       usersPerRole: 'Utilisateurs par Rôle',
-      delete: 'Supprimer',
+      delete: 'Supprimer le groupe de travail',
       unableToDelete: 'Le groupe de travail ne peut pas être supprimé car des assets lui sont encore attribués.',
     },
   },

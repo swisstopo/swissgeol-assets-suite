@@ -12,6 +12,8 @@ export interface Workgroup extends Model<WorkgroupId> {
 export interface UserOnWorkgroup {
   email: string;
   role: Role;
+  firstName: string;
+  lastName: string;
 }
 
 export type WorkgroupId = number;

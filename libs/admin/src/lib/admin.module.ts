@@ -38,8 +38,9 @@ import {
   DrawerPanelComponent,
   FilterSelectorComponent,
   SearchAndFilterComponent,
-  SearchInputComponent,
   SmartTranslatePipe,
+  TextInputComponent,
+  ToggleStatusComponent,
   ViewChildMarker,
 } from '@asset-sg/client-shared';
 import { SvgIconComponent } from '@ngneat/svg-icon';
@@ -51,8 +52,8 @@ import { IfModule } from '@rx-angular/template/if';
 import { LetModule } from '@rx-angular/template/let';
 import { PushModule } from '@rx-angular/template/push';
 import { AdminPageRoutingModule } from './admin-routing.module';
+import { AddUsersToWorkgroupDialogComponent } from './components/add-users-to-workgroup-dialog/add-users-to-workgroup-dialog.component';
 import { AddWorkgroupToUserDialogComponent } from './components/add-workgroup-to-user-dialog/add-workgroup-to-user-dialog.component';
-import { AddWorkgroupUserDialogComponent } from './components/add-workgroup-user-dialog/add-workgroup-user-dialog.component';
 import { AdminPageComponent } from './components/admin-page';
 import { DetailSectionComponent } from './components/detail-section/detail-section.component';
 import { UserEditComponent } from './components/user-edit/user-edit.component';
@@ -70,7 +71,7 @@ import { adminReducer } from './state/admin.reducer';
     WorkgroupEditComponent,
     UsersComponent,
     UserEditComponent,
-    AddWorkgroupUserDialogComponent,
+    AddUsersToWorkgroupDialogComponent,
     AddWorkgroupToUserDialogComponent,
     DetailSectionComponent,
   ],
@@ -129,7 +130,7 @@ import { adminReducer } from './state/admin.reducer';
     MatSlideToggle,
     IfModule,
     MatPaginator,
-    SearchInputComponent,
+    TextInputComponent,
     FilterSelectorComponent,
     MatChipSet,
     MatChip,
@@ -137,6 +138,7 @@ import { adminReducer } from './state/admin.reducer';
     MatSortHeader,
     ChipComponent,
     SearchAndFilterComponent,
+    ToggleStatusComponent,
   ],
 })
 export class AdminModule {}

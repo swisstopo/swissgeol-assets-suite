@@ -298,7 +298,7 @@ export const itAppTranslations: AppTranslations = {
       chooseUsersText: 'IT Füge Nutzer hinzu, um sie zu verwalten',
       addUsers: 'IT Benutzer hinzufügen',
       usersPerRole: 'IT Benutzer pro Rolle',
-      delete: 'IT Löschen',
+      delete: 'IT Arbeitsgruppe löschen',
       unableToDelete: 'IT Die Arbeitsgruppe kann nicht gelöscht werden, da ihr noch Assets zugewiesen sind.',
     },
   },

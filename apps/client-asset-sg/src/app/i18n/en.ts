@@ -298,7 +298,7 @@ export const enAppTranslations: AppTranslations = {
       chooseUsersText: 'Add users to manage',
       addUsers: 'Add users',
       usersPerRole: 'Users per Role',
-      delete: 'Delete',
+      delete: 'Delete workgroup',
       unableToDelete: 'The workgroup can not be deleted because it still has assets assigned to it.',
     },
   },

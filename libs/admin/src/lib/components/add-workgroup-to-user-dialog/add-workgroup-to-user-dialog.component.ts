@@ -22,7 +22,7 @@ export class AddWorkgroupToUserDialogComponent {
   private readonly dialogRef = inject(MatDialogRef<AddWorkgroupToUserDialogComponent>);
   private readonly data = inject<{ workgroups: Workgroup[]; user: User | null }>(MAT_DIALOG_DATA);
   private selectedWorkgroupIds: WorkgroupId[] = [];
-  private selectedRole: Role = Role.Viewer;
+  public selectedRole: Role = Role.Viewer;
 
   constructor() {
     this.user = this.data.user ?? undefined;

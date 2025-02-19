@@ -1,1 +1,1 @@
-export * from './search-input.component';
+export * from './text-input.component';

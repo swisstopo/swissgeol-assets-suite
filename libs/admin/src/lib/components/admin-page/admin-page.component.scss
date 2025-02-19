@@ -37,7 +37,7 @@ $sub-navigation-bar-height: 84px;
   align-items: center;
   justify-content: flex-start;
   gap: 18px;
-  padding-left: 24px;
+  padding: 0 24px;
 
   .back-button {
     height: 36px;
@@ -56,6 +56,18 @@ h2 {
   padding: 40px;
   background-color: variables.$grey-01;
   height: calc(100% - $sub-navigation-bar-height);
+}
+
+.inactive-overlay {
+  height: calc(100vh - $sub-navigation-bar-height - 88px);
+  width: 100%;
+  pointer-events: all;
+  position: absolute;
+  background-color: #f5f6f8;
+  opacity: 50%;
+  left: 0;
+  top: calc($sub-navigation-bar-height + 88px);
+  z-index: 1000;
 }
 
 .content {

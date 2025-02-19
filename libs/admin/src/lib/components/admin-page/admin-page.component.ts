@@ -1,8 +1,11 @@
-import { Component, inject, OnInit, TemplateRef, ViewChild } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit, TemplateRef, ViewChild } from '@angular/core';
 import { Router } from '@angular/router';
 import { AppPortalService, AppState, CURRENT_LANG, LifecycleHooksDirective } from '@asset-sg/client-shared';
+import { Workgroup, WorkgroupId } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
+import { Subscription } from 'rxjs';
 import * as actions from '../../state/admin.actions';
+import { deleteWorkgroup } from '../../state/admin.actions';
 import { selectIsLoading, selectSelectedUser, selectSelectedWorkgroup } from '../../state/admin.selector';
 
 @Component({
@@ -12,9 +15,10 @@ import { selectIsLoading, selectSelectedUser, selectSelectedWorkgroup } from '..
   hostDirectives: [LifecycleHooksDirective],
   standalone: false,
 })
-export class AdminPageComponent implements OnInit {
+export class AdminPageComponent implements OnInit, OnDestroy {
   @ViewChild('templateDrawerPortalContent') templateDrawerPortalContent!: TemplateRef<unknown>;
 
+  public workgroup?: Workgroup = undefined;
   private readonly store = inject(Store<AppState>);
   public readonly isLoading$ = this.store.select(selectIsLoading);
   public readonly selectedUser$ = this.store.select(selectSelectedUser);
@@ -22,12 +26,18 @@ export class AdminPageComponent implements OnInit {
   public readonly currentLang$ = inject(CURRENT_LANG);
   private readonly appPortalService = inject(AppPortalService);
   private readonly router = inject(Router);
+  private readonly subscriptions = new Subscription();
 
-  ngOnInit(): void {
+  public ngOnInit(): void {
     this.store.dispatch(actions.listWorkgroups());
     this.store.dispatch(actions.listUsers());
     this.appPortalService.setAppBarPortalContent(null);
     this.appPortalService.setDrawerPortalContent(null);
+    this.initSubscriptions();
+  }
+
+  public ngOnDestroy() {
+    this.subscriptions.unsubscribe();
   }
 
   public get isDetailPage(): boolean {
@@ -46,6 +56,16 @@ export class AdminPageComponent implements OnInit {
     return this.router.url.endsWith('/workgroups');
   }
 
+  public toggleActiveStatus(workgroup: Workgroup): void {
+    const disabledAt = workgroup.disabledAt ? null : new Date();
+    this.store.dispatch(
+      actions.updateWorkgroup({
+        workgroupId: workgroup.id,
+        workgroup: { disabledAt, name: workgroup.name, users: workgroup.users },
+      })
+    );
+  }
+
   getBackPath(lang: string): string[] {
     if (this.router.url.includes('/workgroups/')) {
       return [`/${lang}/admin/workgroups`];
@@ -59,5 +79,17 @@ export class AdminPageComponent implements OnInit {
       return;
     }
     this.router.navigate([lang, 'asset-admin']);
+  }
+
+  public deleteWorkgroup(workgroupId: WorkgroupId): void {
+    this.store.dispatch(deleteWorkgroup({ workgroupId }));
+  }
+
+  private initSubscriptions(): void {
+    this.subscriptions.add(
+      this.selectedWorkgroup$.subscribe((workgroup) => {
+        this.workgroup = workgroup ?? undefined;
+      })
+    );
   }
 }

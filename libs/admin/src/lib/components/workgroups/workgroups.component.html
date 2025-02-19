@@ -1,7 +1,7 @@
 <div>
   <asset-sg-search-and-filter
     (searchTermChanged)="setSearchTerm($event)"
-    (shouldShowFiltersChanged)="toggleFilters()"
+    (shouldShowFiltersChanged)="toggleFilters($event)"
   ></asset-sg-search-and-filter>
   @if (shouldShowFilters) {
   <div>

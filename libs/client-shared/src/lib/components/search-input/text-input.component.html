@@ -1,0 +1,10 @@
+<input
+  class="search-input"
+  [class.hasSearchIcon]="hasSearchIcon"
+  [(ngModel)]="term"
+  (input)="changeTerm()"
+  [placeholder]="placeholder"
+/>
+@if (hasSearchIcon) {
+<svg-icon key="search" class="search-icon" />
+}

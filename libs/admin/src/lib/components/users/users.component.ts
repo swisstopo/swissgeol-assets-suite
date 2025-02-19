@@ -1,8 +1,5 @@
-import { AfterViewInit, Component, inject, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { MatCheckboxChange } from '@angular/material/checkbox';
-import { MatPaginator } from '@angular/material/paginator';
-import { Sort } from '@angular/material/sort';
-import { MatTableDataSource } from '@angular/material/table';
 import { CURRENT_LANG, Filter, fromAppShared } from '@asset-sg/client-shared';
 import { isNotNull } from '@asset-sg/core';
 import { Lang } from '@asset-sg/shared';
@@ -10,10 +7,11 @@ import { Role, User, Workgroup, WorkgroupId } from '@asset-sg/shared/v2';
 import * as RD from '@devexperts/remote-data-ts';
 import { Store } from '@ngrx/store';
 import { TranslateService } from '@ngx-translate/core';
-import { BehaviorSubject, combineLatestWith, filter, map, Observable, Subscription, tap } from 'rxjs';
+import { combineLatestWith, filter, map, Observable, Subscription, tap } from 'rxjs';
 import * as actions from '../../state/admin.actions';
 import { AppStateWithAdmin } from '../../state/admin.reducer';
 import { selectUsers, selectWorkgroups } from '../../state/admin.selector';
+import { AbstractAdminTableComponent } from '../abstract-admin-table/abstract-admin-table.component';
 
 @Component({
   selector: 'asset-sg-users',
@@ -21,10 +19,12 @@ import { selectUsers, selectWorkgroups } from '../../state/admin.selector';
   styleUrls: ['./users.component.scss'],
   standalone: false,
 })
-export class UsersComponent implements OnInit, OnDestroy, AfterViewInit {
+export class UsersComponent
+  extends AbstractAdminTableComponent<User, User, string | number | boolean>
+  implements OnInit, OnDestroy, AfterViewInit
+{
   private users: User[] = [];
 
-  public showFilters = false;
   public workgroups = new Map<WorkgroupId, Workgroup>();
   public workgroupFilterValues: Filter<number>[] = [];
   public readonly langFilterValues: Filter<Lang>[] = [
@@ -37,11 +37,6 @@ export class UsersComponent implements OnInit, OnDestroy, AfterViewInit {
 
   protected readonly COLUMNS = ['firstName', 'lastName', 'email', 'workgroups', 'isAdmin', 'languages'];
   protected readonly WORKGROUP_DISPLAY_COUNT = 3;
-
-  protected dataSource: MatTableDataSource<User> = new MatTableDataSource<User>();
-  @ViewChild(MatPaginator) protected paginator!: MatPaginator;
-  private readonly searchTerm$ = new BehaviorSubject<string>('');
-  private readonly activeFilters$ = new BehaviorSubject<Map<keyof User, Array<string | number | boolean>>>(new Map());
 
   private readonly store = inject(Store<AppStateWithAdmin>);
   public readonly users$ = this.store.select(selectUsers);
@@ -60,34 +55,15 @@ export class UsersComponent implements OnInit, OnDestroy, AfterViewInit {
     this.initSubscriptions();
   }
 
-  public ngAfterViewInit() {
-    this.dataSource.paginator = this.paginator;
+  public override ngAfterViewInit() {
+    super.ngAfterViewInit();
   }
 
   public ngOnDestroy(): void {
     this.subscriptions.unsubscribe();
   }
 
-  public setSearchTerm(term: string) {
-    this.searchTerm$.next(term);
-  }
-
-  public toggleFilters() {
-    this.showFilters = !this.showFilters;
-    if (!this.showFilters) {
-      this.activeFilters$.next(new Map());
-    }
-  }
-
-  public setFilters(selectedValues: Filter<string | number | boolean>[], key: keyof User) {
-    const activeFilters = this.activeFilters$.value.set(
-      key,
-      selectedValues.map((it) => it.value)
-    );
-    this.activeFilters$.next(activeFilters);
-  }
-
-  private matchUserBySearchTerm(user: User, searchTerm: string): boolean {
+  protected override matchBySearchTerm(user: User, searchTerm: string): boolean {
     searchTerm = searchTerm.toLowerCase();
     return Object.entries(user).some(([key, value]) => {
       if (key === 'roles') {
@@ -99,7 +75,7 @@ export class UsersComponent implements OnInit, OnDestroy, AfterViewInit {
     });
   }
 
-  private matchUserByFilters(user: User, filters: Map<keyof User, (string | number | boolean)[]>): boolean {
+  protected matchByFilters(user: User, filters: Map<keyof User, (string | number | boolean)[]>): boolean {
     return Array.from(filters.entries()).every(([key, values]) => {
       if (values.length === 0) {
         return true;
@@ -111,29 +87,6 @@ export class UsersComponent implements OnInit, OnDestroy, AfterViewInit {
         }
         return value === userValue;
       });
-    });
-  }
-
-  public sortChange(sort: Sort) {
-    const data = this.dataSource.data.slice();
-    if (!sort.active || sort.direction === '') {
-      return;
-    }
-
-    this.dataSource.data = data.sort((a, b) => {
-      const isAsc = sort.direction === 'asc';
-      switch (sort.active) {
-        case 'firstName':
-          return compare(a.firstName, b.firstName, isAsc);
-        case 'lastName':
-          return compare(a.lastName, b.lastName, isAsc);
-        case 'email':
-          return compare(a.email, b.email, isAsc);
-        case 'lang':
-          return compare(a.lang, b.lang, isAsc);
-        default:
-          return 0;
-      }
     });
   }
 
@@ -197,7 +150,7 @@ export class UsersComponent implements OnInit, OnDestroy, AfterViewInit {
           combineLatestWith(this.activeFilters$),
           tap(([term, filters]) => {
             this.dataSource.data = this.users.filter((user) => {
-              return this.matchUserBySearchTerm(user, term) && this.matchUserByFilters(user, filters);
+              return this.matchBySearchTerm(user, term) && this.matchByFilters(user, filters);
             });
           })
         )
@@ -212,8 +165,4 @@ export class UsersComponent implements OnInit, OnDestroy, AfterViewInit {
       })
     );
   }
-}
-
-export function compare<T extends number | string>(a: T, b: T, isAsc: boolean) {
-  return (a < b ? -1 : 1) * (isAsc ? 1 : -1);
 }

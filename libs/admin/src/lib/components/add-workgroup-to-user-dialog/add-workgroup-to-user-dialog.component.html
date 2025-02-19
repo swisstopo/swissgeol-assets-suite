@@ -16,7 +16,7 @@
     title="{{ 'admin.role' | translate }}"
     [values]="roleSelectors"
     (filterChanged)="setSelectedRole($event)"
-    [initialValues]="[Role.Viewer]"
+    [initialValues]="[selectedRole]"
   ></asset-sg-filter-selector>
 </div>
 <hr />

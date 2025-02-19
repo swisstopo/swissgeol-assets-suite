@@ -1,9 +1,6 @@
-import { AfterViewInit, Component, inject, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { MatCheckboxChange } from '@angular/material/checkbox';
 import { MatDialog } from '@angular/material/dialog';
-import { MatPaginator } from '@angular/material/paginator';
-import { Sort } from '@angular/material/sort';
-import { MatTableDataSource } from '@angular/material/table';
 import { ActivatedRoute, ParamMap } from '@angular/router';
 import { Filter, fromAppShared } from '@asset-sg/client-shared';
 import { isNotNull } from '@asset-sg/core';
@@ -12,12 +9,12 @@ import { SimpleWorkgroup, User, Workgroup, WorkgroupId } from '@asset-sg/shared/
 import * as RD from '@devexperts/remote-data-ts';
 import { Store } from '@ngrx/store';
 import { Role } from '@prisma/client';
-import { BehaviorSubject, combineLatestWith, filter, map, Observable, Subscription, tap } from 'rxjs';
+import { combineLatestWith, filter, map, Observable, Subscription, tap } from 'rxjs';
 import * as actions from '../../state/admin.actions';
 import { AppStateWithAdmin } from '../../state/admin.reducer';
 import { selectSelectedUser, selectWorkgroups } from '../../state/admin.selector';
+import { AbstractAdminTableComponent } from '../abstract-admin-table/abstract-admin-table.component';
 import { AddWorkgroupToUserDialogComponent } from '../add-workgroup-to-user-dialog/add-workgroup-to-user-dialog.component';
-import { compare } from '../users/users.component';
 
 export type WorkgroupOfUser = SimpleWorkgroup & { role: Role; isActive: boolean; numberOfAssets: number };
 
@@ -27,19 +24,16 @@ export type WorkgroupOfUser = SimpleWorkgroup & { role: Role; isActive: boolean;
   styleUrls: ['./user-edit.component.scss'],
   standalone: false,
 })
-export class UserEditComponent implements OnInit, OnDestroy, AfterViewInit {
+export class UserEditComponent
+  extends AbstractAdminTableComponent<WorkgroupOfUser, User, Role>
+  implements OnInit, OnDestroy, AfterViewInit
+{
   public roles = Object.values(Role);
   public user: User | null = null;
   public workgroups: Workgroup[] = [];
   public isCurrentUser = false;
   public userWorkgroups: WorkgroupOfUser[] = [];
-  @ViewChild(MatPaginator) protected paginator!: MatPaginator;
 
-  protected dataSource: MatTableDataSource<WorkgroupOfUser> = new MatTableDataSource<WorkgroupOfUser>();
-  private readonly searchTerm$ = new BehaviorSubject<string>('');
-  private readonly activeFilters$ = new BehaviorSubject<Map<keyof User, Array<Role>>>(new Map());
-
-  public shouldShowFilters = false;
   protected readonly COLUMNS = ['name', 'numberOfAssets', 'role', 'isActive', 'actions'];
   languageSelector: Filter<Lang>[] = [
     { displayValue: { key: 'admin.languages.de' }, value: 'de' },
@@ -99,8 +93,8 @@ export class UserEditComponent implements OnInit, OnDestroy, AfterViewInit {
     this.subscriptions.unsubscribe();
   }
 
-  public ngAfterViewInit() {
-    this.dataSource.paginator = this.paginator;
+  public override ngAfterViewInit() {
+    super.ngAfterViewInit();
   }
 
   public openAddWorkgroupToUserDialog() {
@@ -114,39 +108,16 @@ export class UserEditComponent implements OnInit, OnDestroy, AfterViewInit {
     });
   }
 
-  public toggleFilters(showFilters: boolean) {
-    this.shouldShowFilters = showFilters;
-    if (!this.shouldShowFilters) {
-      this.activeFilters$.next(new Map());
-    }
-  }
-
-  public setSearchTerm(term: string) {
-    this.searchTerm$.next(term);
-  }
-
-  public setFilters(selectedValues: Filter<Role>[], key: keyof User) {
-    const activeFilters = this.activeFilters$.value.set(
-      key,
-      selectedValues.map((it) => it.value)
-    );
-    this.activeFilters$.next(activeFilters);
-  }
-
-  private matchWorkgroupsBySearchTerm(userWorkgroup: WorkgroupOfUser, searchTerm: string): boolean {
-    const searchTermLowerCase = searchTerm.toLowerCase();
-    return Object.values(userWorkgroup).some((value) => {
-      return value.toString().toLowerCase().includes(searchTermLowerCase);
-    });
-  }
-
-  private matchRoleByFilters(role: Role, filters: Map<keyof User, (string | number | boolean)[]>): boolean {
+  protected matchByFilters(
+    workgroup: WorkgroupOfUser,
+    filters: Map<keyof User, (string | number | boolean)[]>
+  ): boolean {
     return Array.from(filters.values()).every((values) => {
       if (values.length === 0) {
         return true;
       }
       return values.some((value) => {
-        return value === role;
+        return value === workgroup.role;
       });
     });
   }
@@ -167,25 +138,6 @@ export class UserEditComponent implements OnInit, OnDestroy, AfterViewInit {
     const roles = new Map(this.user.roles);
     roles.delete(workgroupId);
     this.updateUser({ ...this.user, roles });
-  }
-
-  public sortChange(sort: Sort) {
-    const data = this.dataSource.data.slice();
-    if (!sort.active || sort.direction === '') {
-      return;
-    }
-
-    this.dataSource.data = data.sort((a, b) => {
-      const isAsc = sort.direction === 'asc';
-      switch (sort.active) {
-        case 'name':
-          return compare(a.name, b.name, isAsc);
-        case 'numberOfAssets':
-          return compare(a.numberOfAssets, b.numberOfAssets, isAsc);
-        default:
-          return 0;
-      }
-    });
   }
 
   public handleLanguageChanged(updatedValue: Filter<string>[]) {
@@ -249,9 +201,7 @@ export class UserEditComponent implements OnInit, OnDestroy, AfterViewInit {
           combineLatestWith(this.activeFilters$),
           tap(([term, filters]) => {
             this.dataSource.data = this.userWorkgroups.filter((workgroup) => {
-              return (
-                this.matchWorkgroupsBySearchTerm(workgroup, term) && this.matchRoleByFilters(workgroup.role, filters)
-              );
+              return this.matchBySearchTerm(workgroup, term) && this.matchByFilters(workgroup, filters);
             });
           })
         )

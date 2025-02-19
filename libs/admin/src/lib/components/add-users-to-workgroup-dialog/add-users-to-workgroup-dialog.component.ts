@@ -1,6 +1,6 @@
 import { Component, inject, Inject, OnInit } from '@angular/core';
-import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { Filter } from '@asset-sg/client-shared';
 import { User, UserId, Workgroup, WorkgroupData } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
 import { Role } from '@prisma/client';
@@ -11,34 +11,32 @@ import { selectUsers } from '../../state/admin.selector';
 import { Mode } from '../workgroup-edit/workgroup-edit.component';
 
 @Component({
-  selector: 'asset-sg-add-workgroup-user-dialog',
-  templateUrl: './add-workgroup-user-dialog.component.html',
-  styleUrls: ['./add-workgroup-user-dialog.component.scss'],
+  selector: 'asset-sg-add-users-to-workgroup-dialog',
+  templateUrl: './add-users-to-workgroup-dialog.component.html',
+  styleUrls: ['./add-users-to-workgroup-dialog.component.scss'],
   standalone: false,
 })
-export class AddWorkgroupUserDialogComponent implements OnInit {
-  public formGroup = new FormGroup({
-    users: new FormControl<UserId[]>([], { validators: [Validators.required], nonNullable: true }),
-    role: new FormControl(Role.Viewer, { validators: [Validators.required], nonNullable: true }),
-  });
-
-  private readonly store = inject(Store<AppStateWithAdmin>);
-
-  public readonly roles: Role[] = Object.values(Role);
-
-  public users: User[] = [];
+export class AddUsersToWorkgroupDialogComponent implements OnInit {
+  public users: Filter<UserId>[] = [];
+  public usersOnWorkgroup: User[] = [];
   public workgroup: Workgroup;
   public mode: Mode;
+  public roleSelectors: Filter<Role>[] = [];
+  public shouldShowError = false;
+  private selectedUserIds: UserId[] = [];
+  public selectedRole: Role = Role.Viewer;
 
+  private readonly store = inject(Store<AppStateWithAdmin>);
   private readonly users$: Observable<User[]> = this.store.select(selectUsers);
   private readonly subscriptions: Subscription = new Subscription();
 
   constructor(
     @Inject(MAT_DIALOG_DATA) public data: { workgroup: Workgroup; mode: Mode },
-    private readonly dialogRef: MatDialogRef<AddWorkgroupUserDialogComponent>
+    private readonly dialogRef: MatDialogRef<AddUsersToWorkgroupDialogComponent>
   ) {
     this.workgroup = this.data.workgroup;
     this.mode = this.data.mode;
+    this.roleSelectors = Object.values(Role).map((role) => ({ displayValue: role, value: role }));
   }
 
   public ngOnInit() {
@@ -49,19 +47,30 @@ export class AddWorkgroupUserDialogComponent implements OnInit {
     this.dialogRef.close();
   }
 
-  public addUsers() {
-    if (this.formGroup.invalid) {
+  public setSelectedRole(role: Filter<Role>[]) {
+    this.selectedRole = role[0].value;
+  }
+
+  public setSelectedUsers(selectedUsers: Filter<UserId>[]) {
+    this.selectedUserIds = selectedUsers.map((user) => user.value);
+  }
+
+  public addUsersToWorkgroup() {
+    if (this.selectedUserIds.length === 0) {
+      this.shouldShowError = true;
       return;
     }
     const users = new Map(this.workgroup.users);
-    const newUserIds = new Set(this.formGroup.controls.users.value);
-    for (const user of this.users) {
-      if (!newUserIds.has(user.id)) {
+    const newUserIds = this.selectedUserIds;
+    for (const user of this.usersOnWorkgroup) {
+      if (!newUserIds.includes(user.id)) {
         continue;
       }
       users.set(user.id, {
         email: user.email,
-        role: this.formGroup.controls['role'].value,
+        role: this.selectedRole,
+        firstName: user.firstName,
+        lastName: user.lastName,
       });
     }
     const workgroup: WorkgroupData = {
@@ -77,11 +86,17 @@ export class AddWorkgroupUserDialogComponent implements OnInit {
     this.dialogRef.close();
   }
 
-  public isUserInWorkgroup(userId: string): boolean {
-    return this.workgroup.users.has(userId);
-  }
-
   private initSubscriptions() {
-    this.subscriptions.add(this.users$.subscribe((users) => (this.users = users)));
+    this.subscriptions.add(
+      this.users$.subscribe((users) => {
+        this.usersOnWorkgroup = users;
+        this.users = users
+          .filter((user) => !this.workgroup.users.has(user.id))
+          .map((user) => ({
+            displayValue: `${user.firstName} ${user.lastName}`,
+            value: user.id,
+          }));
+      })
+    );
   }
 }
