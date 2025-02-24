@@ -3,10 +3,10 @@ import {
   ChangeDetectionStrategy,
   Component,
   HostBinding,
+  inject,
   Input,
   NgZone,
   OnDestroy,
-  inject,
 } from '@angular/core';
 
 import { ButtonComponent } from './button.component';
@@ -43,6 +43,7 @@ export class AnchorComponent extends ButtonComponent implements AfterViewInit, O
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private _tabIndex: any;
+
   @Input()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   set tabindex(value: any) {

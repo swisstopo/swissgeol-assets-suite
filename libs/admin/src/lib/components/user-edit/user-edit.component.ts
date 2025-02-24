@@ -40,7 +40,7 @@ export class UserEditComponent implements OnInit, OnDestroy, AfterViewInit {
   private readonly activeFilters$ = new BehaviorSubject<Map<keyof User, Array<Role>>>(new Map());
 
   public shouldShowFilters = false;
-  protected readonly COLUMNS = ['name', 'amount', 'role', 'isActive', 'actions'];
+  protected readonly COLUMNS = ['name', 'numberOfAssets', 'role', 'isActive', 'actions'];
   languageSelector: Filter<Lang>[] = [
     { displayValue: { key: 'admin.languages.de' }, value: 'de' },
     { displayValue: { key: 'admin.languages.en' }, value: 'en' },
@@ -180,6 +180,8 @@ export class UserEditComponent implements OnInit, OnDestroy, AfterViewInit {
       switch (sort.active) {
         case 'name':
           return compare(a.name, b.name, isAsc);
+        case 'numberOfAssets':
+          return compare(a.numberOfAssets, b.numberOfAssets, isAsc);
         default:
           return 0;
       }

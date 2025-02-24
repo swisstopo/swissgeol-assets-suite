@@ -138,9 +138,22 @@ input {
 .table {
   box-shadow: none;
 
-  .mat-mdc-row:hover .mat-mdc-cell {
+  tr .mat-mdc-cell {
+    font-size: 16px;
+    font-weight: 400;
+    font-family: Inter, sans-serif;
+  }
+
+  tr:hover:not([disabled]) .mat-mdc-cell {
     background-color: variables.$grey-01;
+  }
+
+  tr[clickable]:hover:not([disabled]) .mat-mdc-cell {
     cursor: pointer;
+  }
+
+  tr[disabled] {
+    color: #acb4bd;
   }
 
   .cell-tooltip {
@@ -157,6 +170,7 @@ input {
       font-weight: 700;
       line-height: 20px;
       letter-spacing: 0.0025em;
+      font-family: Inter, sans-serif;
 
       &:first-of-type {
         border-top-left-radius: 4px;

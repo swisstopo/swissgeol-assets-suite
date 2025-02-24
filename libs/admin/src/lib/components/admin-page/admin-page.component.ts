@@ -31,15 +31,19 @@ export class AdminPageComponent implements OnInit {
   }
 
   public get isDetailPage(): boolean {
-    return this.isWorkgroupsPage || this.isUsersPage || this.router.url.includes('/new');
+    return this.isWorkgroupDetailPage || this.isUsersPage || this.router.url.includes('/new');
   }
 
   public get isUsersPage(): boolean {
     return this.router.url.includes('/users/');
   }
 
-  public get isWorkgroupsPage(): boolean {
+  public get isWorkgroupDetailPage(): boolean {
     return this.router.url.includes('/workgroups/');
+  }
+
+  public get isWorkgroupPage(): boolean {
+    return this.router.url.endsWith('/workgroups');
   }
 
   getBackPath(lang: string): string[] {

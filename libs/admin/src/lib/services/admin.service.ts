@@ -52,6 +52,10 @@ export class AdminService {
       .pipe(map((it) => plainToInstance(WorkgroupSchema, it)));
   }
 
+  public deleteWorkgroup(id: number): Observable<void> {
+    return this.httpClient.delete<void>(`/api/workgroups/${id}`);
+  }
+
   public updateUser(user: User): Observable<User> {
     return this.httpClient
       .put<User>(

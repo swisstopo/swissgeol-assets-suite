@@ -66,6 +66,13 @@ h2 {
   border: 1px solid #dfe4e9;
 }
 
+.navigation-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-right: 16px;
+}
+
 .navigation {
   display: flex;
   font-size: 16px;
