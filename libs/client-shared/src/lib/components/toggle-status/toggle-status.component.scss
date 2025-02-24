@@ -1,10 +1,11 @@
-.toggle {
+:host {
   display: flex;
   background: #f1f3f5;
   height: 48px;
   align-items: center;
   border-radius: 6px;
   gap: 6px;
+  padding-inline: 6px;
 
   button {
     padding: 8px 12px;
@@ -12,13 +13,5 @@
 
   button:not(:hover):not(:active) {
     transition: background-color 0.3s;
-  }
-
-  button:first-of-type {
-    margin-left: 6px;
-  }
-
-  button:last-of-type {
-    margin-right: 6px;
   }
 }

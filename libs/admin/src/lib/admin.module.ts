@@ -2,7 +2,7 @@ import { A11yModule } from '@angular/cdk/a11y';
 import { DialogModule } from '@angular/cdk/dialog';
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { ReactiveFormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatCard } from '@angular/material/card';
 import { MatCheckbox } from '@angular/material/checkbox';
@@ -38,6 +38,7 @@ import {
   DrawerPanelComponent,
   FilterSelectorComponent,
   SearchAndFilterComponent,
+  SelectComponent,
   SmartTranslatePipe,
   TextInputComponent,
   ToggleStatusComponent,
@@ -139,6 +140,8 @@ import { adminReducer } from './state/admin.reducer';
     ChipComponent,
     SearchAndFilterComponent,
     ToggleStatusComponent,
+    FormsModule,
+    SelectComponent,
   ],
 })
 export class AdminModule {}

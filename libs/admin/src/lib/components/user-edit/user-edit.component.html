@@ -2,12 +2,12 @@
   <div content class="user-data">
     @if (user) {
     <div class="filter-container">
-      <asset-sg-filter-selector
+      <asset-sg-select
         [title]="'admin.userPage.lang' | translate"
-        [initialValues]="[user.lang]"
         [values]="languageSelector"
-        (filterChanged)="handleLanguageChanged($event)"
-      ></asset-sg-filter-selector>
+        [initialValues]="[lang]"
+        (selectionChanged)="handleLanguageChanged($event)"
+      ></asset-sg-select>
     </div>
     <mat-checkbox
       [checked]="user.isAdmin"
@@ -37,8 +37,9 @@
     <div class="filters">
       <asset-sg-filter-selector
         [title]="'admin.role' | translate"
-        [values]="roleSelectors"
-        (filterChanged)="setFilters($event, 'roles')"
+        [filters]="roleSelectors"
+        (filterAdded)="addFilter($event)"
+        (filterRemoved)="removeFilter($event)"
         multiple
       ></asset-sg-filter-selector>
     </div>
@@ -70,13 +71,13 @@
       <ng-container matColumnDef="role">
         <th mat-header-cell *matHeaderCellDef translate>admin.role</th>
         <td mat-cell *matCellDef="let workgroup">
-          <asset-sg-filter-selector
+          <asset-sg-select
             [initialValues]="[workgroup.role]"
-            [values]="roleSelectors"
-            (filterChanged)="updateWorkgroupRole($event, workgroup.id)"
+            [values]="roles"
+            (selectionChanged)="updateWorkgroupRole($event, workgroup.id)"
             small
           >
-          </asset-sg-filter-selector>
+          </asset-sg-select>
         </td>
       </ng-container>
 

@@ -3,21 +3,21 @@
 </div>
 <hr />
 <div mat-dialog-content>
-  <asset-sg-filter-selector
+  <asset-sg-select
     title="{{ 'admin.workgroups' | translate }}"
-    [values]="workgroups"
-    (filterChanged)="setSelectedWorkgroups($event)"
+    [values]="workgroupValues"
+    (selectionChanged)="setSelectedWorkgroups($event)"
     [shouldShowError]="shouldShowError"
     errorMessage="{{ 'admin.userPage.workgroupAddError' | translate }}"
     multiple
   >
-  </asset-sg-filter-selector>
-  <asset-sg-filter-selector
+  </asset-sg-select>
+  <asset-sg-select
     title="{{ 'admin.role' | translate }}"
-    [values]="roleSelectors"
-    (filterChanged)="setSelectedRole($event)"
+    [values]="roles"
+    (selectionChanged)="setSelectedRole($event)"
     [initialValues]="[selectedRole]"
-  ></asset-sg-filter-selector>
+  ></asset-sg-select>
 </div>
 <hr />
 <div mat-dialog-actions class="actions">

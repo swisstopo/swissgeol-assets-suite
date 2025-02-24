@@ -1,6 +1,6 @@
 <asset-sg-text-input
-  (termChanged)="changeSearchTerm($event)"
-  [hasSearchIcon]="true"
+  (valueChange)="changeSearchTerm($event)"
+  icon="search"
   [placeholder]="'search.textSearchFieldPlaceholder' | translate"
 ></asset-sg-text-input>
 <button asset-sg-secondary (click)="toggleFilters()" [class.active]="shouldShowFilters">

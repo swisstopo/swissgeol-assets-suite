@@ -1,6 +1,5 @@
 import { Component, inject, Inject, OnInit } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { Filter } from '@asset-sg/client-shared';
 import { User, UserId, Workgroup, WorkgroupData } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
 import { Role } from '@prisma/client';
@@ -17,11 +16,12 @@ import { Mode } from '../workgroup-edit/workgroup-edit.component';
   standalone: false,
 })
 export class AddUsersToWorkgroupDialogComponent implements OnInit {
-  public users: Filter<UserId>[] = [];
+  public users: User[] = [];
+  public userValues: string[] = [];
   public usersOnWorkgroup: User[] = [];
   public workgroup: Workgroup;
   public mode: Mode;
-  public roleSelectors: Filter<Role>[] = [];
+  public roles = Object.values(Role);
   public shouldShowError = false;
   private selectedUserIds: UserId[] = [];
   public selectedRole: Role = Role.Viewer;
@@ -36,7 +36,6 @@ export class AddUsersToWorkgroupDialogComponent implements OnInit {
   ) {
     this.workgroup = this.data.workgroup;
     this.mode = this.data.mode;
-    this.roleSelectors = Object.values(Role).map((role) => ({ displayValue: role, value: role }));
   }
 
   public ngOnInit() {
@@ -47,12 +46,12 @@ export class AddUsersToWorkgroupDialogComponent implements OnInit {
     this.dialogRef.close();
   }
 
-  public setSelectedRole(role: Filter<Role>[]) {
-    this.selectedRole = role[0].value;
+  public setSelectedRole(role: Role[]) {
+    this.selectedRole = role[0];
   }
 
-  public setSelectedUsers(selectedUsers: Filter<UserId>[]) {
-    this.selectedUserIds = selectedUsers.map((user) => user.value);
+  public setSelectedUsers(selectedUsers: string[]) {
+    this.selectedUserIds = this.users.filter((user) => selectedUsers.includes(user.email)).map((user) => user.id);
   }
 
   public addUsersToWorkgroup() {
@@ -83,6 +82,7 @@ export class AddUsersToWorkgroupDialogComponent implements OnInit {
     } else {
       this.store.dispatch(actions.setWorkgroup({ workgroup: { ...workgroup, id: -1, numberOfAssets: 0 } }));
     }
+    this.shouldShowError = false;
     this.dialogRef.close();
   }
 
@@ -90,12 +90,8 @@ export class AddUsersToWorkgroupDialogComponent implements OnInit {
     this.subscriptions.add(
       this.users$.subscribe((users) => {
         this.usersOnWorkgroup = users;
-        this.users = users
-          .filter((user) => !this.workgroup.users.has(user.id))
-          .map((user) => ({
-            displayValue: `${user.firstName} ${user.lastName}`,
-            value: user.id,
-          }));
+        this.users = users.filter((user) => !this.workgroup.users.has(user.id));
+        this.userValues = this.users.map((user) => user.email);
       })
     );
   }

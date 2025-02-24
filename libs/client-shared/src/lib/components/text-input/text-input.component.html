@@ -1,0 +1,11 @@
+<input
+  class="search-input"
+  [class.has-icon]="icon"
+  [ngModel]="value"
+  (ngModelChange)="changeTerm($event)"
+  (blur)="onBlur()"
+  [placeholder]="placeholder"
+/>
+@if (icon) {
+<svg-icon [key]="icon" class="icon" />
+}

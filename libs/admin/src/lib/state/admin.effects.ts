@@ -1,7 +1,7 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { AlertType, CURRENT_LANG, showAlert } from '@asset-sg/client-shared';
+import { AlertType, appSharedStateActions, AuthService, CURRENT_LANG, showAlert } from '@asset-sg/client-shared';
 import { User, Workgroup, WorkgroupData } from '@asset-sg/shared/v2';
 import { UntilDestroy } from '@ngneat/until-destroy';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
@@ -17,6 +17,7 @@ import * as actions from './admin.actions';
 export class AdminEffects {
   private readonly actions$ = inject(Actions);
   private readonly adminService = inject(AdminService);
+  private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly store = inject(Store);
@@ -97,6 +98,10 @@ export class AdminEffects {
         this.adminService.getWorkgroups().pipe(map((workgroups: Workgroup[]) => actions.setWorkgroups({ workgroups })))
       )
     )
+  );
+
+  public loadUser$ = createEffect(() =>
+    this.actions$.pipe(ofType(actions.setUser, actions.setWorkgroup), map(appSharedStateActions.loadUserProfile))
   );
 
   private readonly catchWorkgroupError = (data: WorkgroupData): OperatorFunction<Workgroup, Workgroup> =>

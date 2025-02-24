@@ -6,21 +6,24 @@
   @if (shouldShowFilters) {
   <div class="filters">
     <asset-sg-filter-selector
-      (filterChanged)="setFilters($event, 'roles')"
+      (filterAdded)="addFilter($event)"
+      (filterRemoved)="removeFilter($event)"
       title="{{ 'admin.workgroups' | translate }}"
-      [values]="workgroupFilterValues"
+      [filters]="workgroupFilters"
       multiple
     ></asset-sg-filter-selector>
     <asset-sg-filter-selector
-      (filterChanged)="setFilters($event, 'isAdmin')"
+      (filterAdded)="addFilter($event)"
+      (filterRemoved)="removeFilter($event)"
       title="{{ 'admin.userPage.admin' | translate }}"
-      [values]="isAdminFilterValues"
+      [filters]="filterForIsAdmin"
       multiple
     ></asset-sg-filter-selector>
     <asset-sg-filter-selector
-      (filterChanged)="setFilters($event, 'lang')"
+      (filterAdded)="addFilter($event)"
+      (filterRemoved)="removeFilter($event)"
       title="{{ 'admin.userPage.lang' | translate }}"
-      [values]="langFilterValues"
+      [filters]="langFilters"
       multiple
     ></asset-sg-filter-selector>
   </div>

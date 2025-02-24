@@ -1,6 +1,5 @@
 import { Component, inject } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { Filter } from '@asset-sg/client-shared';
 import { User, Workgroup, WorkgroupId } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
 import { Role } from '@prisma/client';
@@ -15,8 +14,9 @@ import { AppStateWithAdmin } from '../../state/admin.reducer';
 })
 export class AddWorkgroupToUserDialogComponent {
   public user?: User;
-  public workgroups: Filter<WorkgroupId>[] = [];
-  public roleSelectors: Filter<Role>[] = [];
+  public workgroups: Workgroup[] = [];
+  public workgroupValues: string[] = [];
+  public roles = Object.values(Role);
   public shouldShowError = false;
   private readonly store = inject(Store<AppStateWithAdmin>);
   private readonly dialogRef = inject(MatDialogRef<AddWorkgroupToUserDialogComponent>);
@@ -26,21 +26,19 @@ export class AddWorkgroupToUserDialogComponent {
 
   constructor() {
     this.user = this.data.user ?? undefined;
-    this.workgroups = this.data.workgroups
-      .filter((workgroup) => !this.user?.roles.has(workgroup.id))
-      .map((workgroup) => ({
-        displayValue: workgroup.name,
-        value: workgroup.id,
-      }));
-    this.roleSelectors = Object.values(Role).map((role) => ({ displayValue: role, value: role }));
+    this.workgroups = this.data.workgroups.filter((workgroup) => !this.user?.roles.has(workgroup.id));
+
+    this.workgroupValues = this.workgroups.map((workgroup) => workgroup.name);
   }
 
-  public setSelectedRole(role: Filter<Role>[]) {
-    this.selectedRole = role[0].value;
+  public setSelectedRole(role: Role[]) {
+    this.selectedRole = role[0];
   }
 
-  public setSelectedWorkgroups(selectedWorkgroups: Filter<WorkgroupId>[]) {
-    this.selectedWorkgroupIds = selectedWorkgroups.map((workgroup) => workgroup.value);
+  public setSelectedWorkgroups(selectedWorkgroups: string[]) {
+    this.selectedWorkgroupIds = this.workgroups
+      .filter((workgroup) => selectedWorkgroups.includes(workgroup.name))
+      .map((workgroup) => workgroup.id);
   }
 
   public close() {
@@ -63,6 +61,4 @@ export class AddWorkgroupToUserDialogComponent {
     this.shouldShowError = false;
     this.dialogRef.close();
   }
-
-  protected readonly Role = Role;
 }

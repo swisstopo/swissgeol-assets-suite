@@ -3,22 +3,22 @@
 </div>
 <hr />
 <div mat-dialog-content>
-  <asset-sg-filter-selector
+  <asset-sg-select
     title="{{ 'admin.users' | translate }}"
-    [values]="users"
-    (filterChanged)="setSelectedUsers($event)"
+    [values]="userValues"
+    (selectionChanged)="setSelectedUsers($event)"
     [shouldShowError]="shouldShowError"
     errorMessage="{{ 'admin.userPage.userAddError' | translate }}"
     multiple
   >
-  </asset-sg-filter-selector>
-  <asset-sg-filter-selector
+  </asset-sg-select>
+  <asset-sg-select
     title="{{ 'admin.role' | translate }}"
-    [values]="roleSelectors"
-    (filterChanged)="setSelectedRole($event)"
+    [values]="roles"
+    (selectionChanged)="setSelectedRole($event)"
     [initialValues]="[selectedRole]"
   >
-  </asset-sg-filter-selector>
+  </asset-sg-select>
 </div>
 <hr />
 <div mat-dialog-actions class="actions">

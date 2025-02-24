@@ -120,6 +120,8 @@ describe('WorkgroupRepo', () => {
             {
               role: Role.MasterEditor,
               email: user.email,
+              firstName: user.firstName,
+              lastName: user.lastName,
             },
           ],
         ]),
@@ -169,6 +171,8 @@ describe('WorkgroupRepo', () => {
             {
               role: Role.MasterEditor,
               email: user.email,
+              lastName: user.lastName,
+              firstName: user.firstName,
             },
           ],
         ]),
@@ -212,6 +216,8 @@ describe('WorkgroupRepo', () => {
             {
               role: Role.MasterEditor,
               email: user.email,
+              firstName: user.firstName,
+              lastName: user.lastName,
             },
           ],
         ]),

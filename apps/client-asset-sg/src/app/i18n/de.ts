@@ -263,7 +263,6 @@ export const deAppTranslations = {
     users: 'Benutzer',
     user: 'Benutzer',
     workgroups: 'Arbeitsgruppen',
-    // workgroup: 'Arbeitsgruppe',
     name: 'Name',
     role: 'Rolle',
     actions: 'Aktionen',

@@ -1,10 +1,8 @@
-import { AfterViewInit, Component, inject, OnDestroy, OnInit } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { Filter } from '@asset-sg/client-shared';
-import { User, UserOnWorkgroupSchema, Workgroup } from '@asset-sg/shared/v2';
+import { User, Workgroup } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
-import { TranslateService } from '@ngx-translate/core';
 import { Role } from '@prisma/client';
-import { combineLatestWith, Subscription, tap } from 'rxjs';
 import * as actions from '../../state/admin.actions';
 import { AppStateWithAdmin } from '../../state/admin.reducer';
 import { selectUsers, selectWorkgroups } from '../../state/admin.selector';
@@ -19,75 +17,36 @@ type UsersPerRole = Array<[Role, number]>;
   standalone: false,
 })
 export class WorkgroupsComponent
-  extends AbstractAdminTableComponent<Workgroup, Workgroup, boolean>
-  implements OnInit, OnDestroy, AfterViewInit
+  extends AbstractAdminTableComponent<
+    Workgroup & {
+      usersPerRole: UsersPerRole;
+    }
+  >
+  implements OnInit
 {
   protected readonly COLUMNS = ['name', 'numberOfAssets', 'users', 'status', 'actions'];
-  public workgroups: Array<Workgroup & { usersPerRole: UsersPerRole }> = [];
   public users: User[] = [];
 
-  private readonly translateService = inject(TranslateService);
   private readonly store = inject(Store<AppStateWithAdmin>);
-  public isActiveFilterValues = [
-    { displayValue: this.translateService.instant('admin.workgroupPage.isActive'), value: true },
-    { displayValue: this.translateService.instant('admin.workgroupPage.isDisabled'), value: false },
+  public filterForIsActive: Filter<Workgroup>[] = [
+    { displayValue: { key: 'admin.workgroupPage.isActive' }, key: 'disabledAt', match: (value) => !value.disabledAt },
+    {
+      displayValue: { key: 'admin.workgroupPage.isDisabled' },
+      key: 'disabledAt',
+      match: (value) => !!value.disabledAt,
+    },
   ];
   private readonly users$ = this.store.select(selectUsers);
   readonly workgroups$ = this.store.select(selectWorkgroups);
-  private readonly subscriptions: Subscription = new Subscription();
 
-  public ngOnInit(): void {
+  public override ngOnInit(): void {
+    super.ngOnInit();
+    this.store.dispatch(actions.listWorkgroups());
     this.initSubscriptions();
   }
 
-  public override ngAfterViewInit() {
-    super.ngAfterViewInit();
-  }
-
-  public ngOnDestroy(): void {
-    this.subscriptions.unsubscribe();
-  }
-
-  public override setFilters(selectedValues: Filter<boolean>[], key: keyof Workgroup) {
-    const activeFilters = this.activeFilters$.value.set(
-      key,
-      selectedValues.map((it) => it.value)
-    );
-    this.activeFilters$.next(activeFilters);
-  }
-
-  protected matchByFilters(workgroup: Workgroup, filters: Map<keyof Workgroup, boolean[]>): boolean {
-    return Array.from(filters.entries()).every(([key, values]) => {
-      if (values.length === 0) {
-        return true;
-      }
-      const workgroupValue = workgroup[key];
-      return values.some((value) => {
-        if (key === 'disabledAt') {
-          return !!workgroupValue !== value;
-        }
-        return false;
-      });
-    });
-  }
-
   protected override matchBySearchTerm(workgroup: Workgroup, searchTerm: string): boolean {
-    searchTerm = searchTerm.toLowerCase();
-    return Object.entries(workgroup).some(([key, value]) => {
-      if (key === 'users') {
-        return Array.from((value as Map<string, UserOnWorkgroupSchema>).keys()).some((id) => {
-          const userRoles = this.users.find((user) => user.id === id)?.roles.values();
-          if (!userRoles) {
-            return false;
-          }
-          return Array.from(userRoles).some((role) => role.toLowerCase().includes(searchTerm));
-        });
-      }
-      if (key === 'disabledAt') {
-        return false;
-      }
-      return value.toString().toLowerCase().includes(searchTerm);
-    });
+    return workgroup.name.toLowerCase().includes(searchTerm.toLowerCase());
   }
 
   getNumberOfUsersPerRoleForWorkgroup(workgroup: Workgroup): UsersPerRole {
@@ -109,25 +68,12 @@ export class WorkgroupsComponent
 
   private initSubscriptions() {
     this.subscriptions.add(
-      this.searchTerm$
-        .pipe(
-          combineLatestWith(this.activeFilters$),
-          tap(([searchTerm, activeFilters]) => {
-            this.dataSource.data = this.workgroups.filter((workgroup) => {
-              return this.matchBySearchTerm(workgroup, searchTerm) && this.matchByFilters(workgroup, activeFilters);
-            });
-          })
-        )
-        .subscribe()
-    );
-
-    this.subscriptions.add(
       this.workgroups$.subscribe((workgroups) => {
-        this.workgroups = workgroups.map((workgroup) => {
+        this.data = workgroups.map((workgroup) => {
           const usersPerRole = this.getNumberOfUsersPerRoleForWorkgroup(workgroup);
           return { ...workgroup, usersPerRole };
         });
-        this.dataSource.data = this.workgroups;
+        this.dataSource.data = this.data;
       })
     );
     this.subscriptions.add(
