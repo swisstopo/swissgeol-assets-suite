@@ -4,7 +4,7 @@
   <svg-icon key="arrow-down" class="open" />
   <svg-icon key="arrow-up" class="close" />
 </button>
-<mat-menu #languageMenu="matMenu" backdropClass="languages">
+<mat-menu #languageMenu="matMenu" backdropClass="languages" xPosition="before">
   <ng-container *rxLet="languages$; let languages">
     @for (language of languages; track language.lang) {
     <a
