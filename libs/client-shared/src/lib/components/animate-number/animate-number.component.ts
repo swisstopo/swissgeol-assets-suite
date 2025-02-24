@@ -1,10 +1,11 @@
 import { NumberInput } from '@angular/cdk/coercion';
+import { DecimalPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { PushModule } from '@rx-angular/template/push';
 
 import {
-  BehaviorSubject,
   animationFrameScheduler,
+  BehaviorSubject,
   distinctUntilChanged,
   endWith,
   interval,
@@ -17,9 +18,9 @@ import {
 @Component({
   standalone: true,
   selector: 'asset-sg-animate-number',
-  template: '{{ value$ | push }}',
+  template: '{{ value$ | push | number:"1." }}',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [PushModule],
+  imports: [PushModule, DecimalPipe],
 })
 export class AnimateNumberComponent {
   private _nextValue$ = new BehaviorSubject<number>(0);

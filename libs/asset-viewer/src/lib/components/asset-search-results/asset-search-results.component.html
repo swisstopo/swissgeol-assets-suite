@@ -1,10 +1,10 @@
 <ng-container *rxLet="isResultsOpen$; let isResultsOpen">
   <div class="header">
     <div>
-      {{ "search.searchResults" | translate }}:
       <asset-sg-animate-number [nextValue]="(total$ | async) ?? 0" />
+      {{ "search.searchResults" | translate }}
     </div>
-    <button asset-sg-icon-button style="width: unset" (click)="toggleResultsOpen()">
+    <button asset-sg-tertiary (click)="toggleResultsOpen()">
       <span> {{ (isResultsOpen ? "search.hideTable" : "search.showTable") | translate }} </span>
       <svg-icon [key]="isResultsOpen ? 'arrow-down' : 'arrow-up'"></svg-icon>
     </button>
@@ -67,8 +67,9 @@
               {{ asset.createDate | assetSgDate }}
             </td>
           </ng-container>
-          <tr mat-header-row *matHeaderRowDef="COLUMNS; sticky: true" class="table-header"></tr>
+          <tr mat-header-row *matHeaderRowDef="COLUMNS; sticky: true" class="table__header"></tr>
           <tr
+            clickable
             mat-row
             *matRowDef="let row; columns: COLUMNS"
             (click)="searchForAsset(row.assetId)"
