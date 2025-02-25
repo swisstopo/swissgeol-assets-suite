@@ -24,7 +24,9 @@ import { ContactsController } from '@/features/contacts/contacts.controller';
 import { FavoriteRepo } from '@/features/favorites/favorite.repo';
 import { FavoritesController } from '@/features/favorites/favorites.controller';
 import { FileOcrService } from '@/features/files/file-ocr.service';
+import { FileS3Service } from '@/features/files/file-s3.service';
 import { FileRepo } from '@/features/files/file.repo';
+import { FileService } from '@/features/files/file.service';
 import { FilesController } from '@/features/files/files.controller';
 import { StudiesController } from '@/features/studies/studies.controller';
 import { StudyRepo } from '@/features/studies/study.repo';
@@ -61,6 +63,8 @@ import { WorkgroupsController } from '@/features/workgroups/workgroups.controlle
     FavoriteRepo,
     FileRepo,
     FileOcrService,
+    FileS3Service,
+    FileService,
     PrismaService,
     StudyRepo,
     UserRepo,

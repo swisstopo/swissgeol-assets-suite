@@ -1,25 +1,48 @@
 import { AssetFile, AssetFileType, LegalDocItemCode } from '@asset-sg/shared';
 import { AssetId, User } from '@asset-sg/shared/v2';
 import { Injectable } from '@nestjs/common';
+import { OcrState } from '@prisma/client';
 import * as E from 'fp-ts/Either';
+import * as D from 'io-ts/Decoder';
 import { PrismaService } from '@/core/prisma.service';
-import { CreateRepo, DeleteRepo } from '@/core/repo';
-import { deleteFile } from '@/utils/file/delete-file';
-import { putFile } from '@/utils/file/put-file';
+import { CreateRepo, DeleteRepo, FindRepo } from '@/core/repo';
 
 @Injectable()
-export class FileRepo implements CreateRepo<AssetFile, CreateFileData>, DeleteRepo<DeleteFileData> {
+export class FileRepo
+  implements FindRepo<AssetFile, FileIdentifier>, CreateRepo<AssetFile, CreateFileData>, DeleteRepo<FileIdentifier>
+{
   constructor(private readonly prisma: PrismaService) {}
+
+  async find({ id, assetId }: FileIdentifier): Promise<AssetFile | null> {
+    const entry = await this.prisma.file.findFirst({
+      where: { id, AssetFile: { some: { assetId } } },
+      select: {
+        id: true,
+        name: true,
+        size: true,
+        type: true,
+        legalDocItemCode: true,
+      },
+    });
+    if (entry == null) {
+      return null;
+    }
+    return {
+      ...entry,
+      size: Number(entry.size),
+      legalDocItemCode: (D.nullable(LegalDocItemCode).decode(entry.legalDocItemCode) as E.Right<LegalDocItemCode>)
+        .right,
+    };
+  }
 
   async create(data: CreateFileData): Promise<AssetFile> {
     const name = await determineUniqueFilename(data.name, data.assetId, this.prisma);
-    const isOcrCompatible = data.type !== 'Legal' && data.mediaType == 'application/pdf';
     const { id } = await this.prisma.file.create({
       select: { id: true },
       data: {
         name,
         size: data.size,
-        ocrStatus: isOcrCompatible ? 'waiting' : 'willNotBeProcessed',
+        ocrStatus: data.ocrStatus,
         type: data.type,
         legalDocItemCode: data.legalDocItemCode,
         lastModifiedAt: new Date(),
@@ -38,10 +61,6 @@ export class FileRepo implements CreateRepo<AssetFile, CreateFileData>, DeleteRe
         processor: data.user.email,
       },
     });
-    const result = await putFile(name, data.content, data.mediaType)();
-    if (E.isLeft(result)) {
-      throw result.left;
-    }
     return {
       id,
       name,
@@ -51,11 +70,11 @@ export class FileRepo implements CreateRepo<AssetFile, CreateFileData>, DeleteRe
     };
   }
 
-  delete({ id, assetId, user }: DeleteFileData): Promise<boolean> {
+  async delete(file: FileIdentifier): Promise<boolean> {
     return this.prisma.$transaction(async () => {
       const fileName = (
         await this.prisma.file.findUnique({
-          where: { id },
+          where: { id: file.id },
           select: { name: true },
         })
       )?.name;
@@ -64,7 +83,7 @@ export class FileRepo implements CreateRepo<AssetFile, CreateFileData>, DeleteRe
       }
       await this.prisma.assetFile.delete({
         where: {
-          assetId_fileId: { assetId, fileId: id },
+          assetId_fileId: { assetId: file.assetId, fileId: file.id },
         },
         select: { fileId: true },
       });
@@ -75,47 +94,34 @@ export class FileRepo implements CreateRepo<AssetFile, CreateFileData>, DeleteRe
       const isFileUnused =
         null !=
         this.prisma.assetFile.findFirst({
-          where: { fileId: id, assetId: { not: assetId } },
+          where: { fileId: file.id, assetId: { not: file.assetId } },
           select: { fileId: true },
         });
-      if (isFileUnused) {
-        await this.prisma.file.delete({
-          where: { id },
-          select: { id: true },
-        });
-        const result = await deleteFile(fileName)();
-        if (E.isLeft(result)) {
-          throw result.left;
-        }
+      if (!isFileUnused) {
+        return false;
       }
-
-      // Update the processor fields on the file's asset.
-      this.prisma.asset.update({
-        where: { assetId },
-        data: { lastProcessedDate: new Date(), processor: user.email },
-        select: { assetId: true },
+      await this.prisma.file.delete({
+        where: { id: file.id },
+        select: { id: true },
       });
-
       return true;
     });
   }
 }
 
-interface CreateFileData {
+export interface FileIdentifier {
+  id: number;
+  assetId: AssetId;
+}
+
+export interface CreateFileData {
   name: string;
   size: number;
   type: AssetFileType;
   legalDocItemCode: LegalDocItemCode | null;
-  mediaType: string;
-  content: Buffer;
+  ocrStatus: OcrState;
   assetId: AssetId;
   user: User;
-}
-
-interface DeleteFileData {
-  id: number;
-  assetId: AssetId;
-  user: Pick<User, 'email'>;
 }
 
 export const determineUniqueFilename = async (

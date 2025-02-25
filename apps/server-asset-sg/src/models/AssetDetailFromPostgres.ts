@@ -13,16 +13,18 @@ import * as D from 'io-ts/Decoder';
 
 import { PostgresAllStudies } from '@/utils/postgres-studies/postgres-studies';
 
+export const AssetFileFromPostgres = D.struct({
+  id: D.number,
+  name: D.string,
+  size: DT.numberFromBigint,
+  type: AssetFileType,
+  legalDocItemCode: D.nullable(LegalDocItemCode),
+});
+
 export const AssetFilesFromPostgres = pipe(
   D.array(
     D.struct({
-      file: D.struct({
-        id: D.number,
-        name: D.string,
-        size: DT.numberFromBigint,
-        type: AssetFileType,
-        legalDocItemCode: D.nullable(LegalDocItemCode),
-      }),
+      file: AssetFileFromPostgres,
     })
   ),
   D.map((a) => a.map((b) => b.file))

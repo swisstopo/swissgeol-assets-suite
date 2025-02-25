@@ -25,16 +25,19 @@ import { CurrentUser } from '@/core/decorators/current-user.decorator';
 import { PrismaService } from '@/core/prisma.service';
 import { AssetEditRepo } from '@/features/asset-edit/asset-edit.repo';
 import { FileOcrService } from '@/features/files/file-ocr.service';
+import { FileS3Service } from '@/features/files/file-s3.service';
 import { FileRepo } from '@/features/files/file.repo';
-import { getFile } from '@/utils/file/get-file';
+import { FileService } from '@/features/files/file.service';
 
 @Controller('/assets/:assetId/files')
 export class FilesController {
   constructor(
     private readonly fileRepo: FileRepo,
     private readonly fileOcrService: FileOcrService,
+    private readonly fileS3Service: FileS3Service,
     private readonly assetEditRepo: AssetEditRepo,
-    private readonly prismaService: PrismaService
+    private readonly prismaService: PrismaService,
+    private readonly fileService: FileService
   ) {}
 
   @Get('/:id')
@@ -50,19 +53,24 @@ export class FilesController {
     }
     authorize(AssetEditPolicy, user).canShow(asset);
 
-    const result = await getFile(this.prismaService, id)();
-    if (E.isLeft(result)) {
-      throw new HttpException(result.left.message, 500);
+    const record = await this.fileRepo.find({ assetId, id });
+    if (record == null) {
+      throw new HttpException('not found', HttpStatus.NOT_FOUND);
     }
-    const file = result.right;
-    if (file.contentType) {
-      res.setHeader('Content-Type', file.contentType);
+
+    const file = await this.fileS3Service.load(record.name);
+    if (file == null) {
+      throw new HttpException('not found', HttpStatus.NOT_FOUND);
     }
-    if (file.contentLength != null) {
-      res.setHeader('Content-Length', file.contentLength.toString());
+
+    if (file.mediaType) {
+      res.setHeader('Content-Type', file.mediaType);
     }
-    res.setHeader('Content-Disposition', `filename="${file.fileName}"`);
-    file.stream.pipe(res);
+    if (file.byteCount != null) {
+      res.setHeader('Content-Length', file.byteCount.toString());
+    }
+    res.setHeader('Content-Disposition', `filename="${file.name}"`);
+    file.content.pipe(res);
   }
 
   @Post('/')
@@ -108,19 +116,16 @@ export class FilesController {
         break;
     }
 
-    const record = await this.fileRepo.create({
+    const record = await this.fileService.create({
       name: file.originalname,
       type: type,
       size: file.size,
       legalDocItemCode,
-      mediaType: file.mimetype,
-      content: file.buffer,
       assetId: asset.assetId,
       user,
+      content: file.buffer,
+      mediaType: file.mimetype,
     });
-
-    // Run OCR on the file in the background.
-    setTimeout(() => this.fileOcrService.process(record));
 
     return AssetFile.encode(record);
   }
@@ -138,6 +143,6 @@ export class FilesController {
     }
     authorize(AssetEditPolicy, user).canDelete(asset);
 
-    await this.fileRepo.delete({ id, assetId: asset.assetId, user });
+    await this.fileService.delete({ id, assetId: asset.assetId }, user);
   }
 }
