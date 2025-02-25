@@ -31,8 +31,10 @@ export class FileService {
     // Upload file to S3.
     await this.saveFileOrDeleteRecord(record, data.assetId, content, { mediaType });
 
-    // Run OCR on the file in the background.
-    setTimeout(() => this.fileOcrService.process(record));
+    if (isOcrCompatible) {
+      // Run OCR on the file in the background.
+      setTimeout(() => this.fileOcrService.process(record));
+    }
 
     return record;
   }
@@ -42,19 +44,23 @@ export class FileService {
     if (file === null) {
       return false;
     }
-    const ok = (await this.fileRepo.delete(id)) && (await this.fileS3Service.delete(file.name));
-    if (!ok) {
-      return false;
-    }
+
+    const isDbOk = await this.fileRepo.delete(id);
 
     // Update the processor fields on the file's asset.
+    //
+    // Note that we do this regardless of `isDbOk`, as in some cases,
+    // that value is `false` due to the file still being in use in other assets.
     this.prisma.asset.update({
       where: { assetId: id.assetId },
       data: { lastProcessedDate: new Date(), processor: user.email },
       select: { assetId: true },
     });
 
-    return true;
+    if (!isDbOk) {
+      return false;
+    }
+    return await this.fileS3Service.delete(file.name);
   }
 
   private async saveFileOrDeleteRecord(

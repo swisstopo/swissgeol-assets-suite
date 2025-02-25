@@ -1,6 +1,7 @@
 import {
   DeleteObjectCommand,
   GetObjectCommand,
+  HeadObjectCommand,
   PutObjectCommand,
   S3Client,
   S3ClientConfig,
@@ -32,7 +33,7 @@ export class FileS3Service {
     );
   }
 
-  async load(name: string): Promise<LoadedFile | null> {
+  async load(name: string): Promise<FileS3 | null> {
     try {
       const output = await this.client.send(
         new GetObjectCommand({
@@ -41,16 +42,33 @@ export class FileS3Service {
         })
       );
       return {
-        name,
         content: output.Body as NodeJS.ReadableStream,
+        metadata: {
+          name,
+          byteCount: output.ContentLength ?? null,
+          mediaType: output.ContentType ?? null,
+        },
+      };
+    } catch (e) {
+      return handleS3Error(e);
+    }
+  }
+
+  async loadMetadata(name: string): Promise<FileS3Metadata | null> {
+    try {
+      const output = await this.client.send(
+        new HeadObjectCommand({
+          Key: this.getKey(name),
+          Bucket: this.bucket,
+        })
+      );
+      return {
+        name,
         byteCount: output.ContentLength ?? null,
         mediaType: output.ContentType ?? null,
       };
     } catch (e) {
-      if (e instanceof S3ServiceException && e.name === 'NoSuchKey') {
-        return null;
-      }
-      throw e;
+      return handleS3Error(e);
     }
   }
 
@@ -64,10 +82,7 @@ export class FileS3Service {
       );
       return true;
     } catch (e) {
-      if (e instanceof S3ServiceException && e.name === 'NoSuchKey') {
-        return false;
-      }
-      throw e;
+      return handleS3Error(e) ?? false;
     }
   }
 
@@ -80,9 +95,13 @@ export interface SaveFileS3Options {
   mediaType: string;
 }
 
-interface LoadedFile {
-  name: string;
+interface FileS3 {
   content: NodeJS.ReadableStream;
+  metadata: FileS3Metadata;
+}
+
+interface FileS3Metadata {
+  name: string;
   byteCount: number | null;
   mediaType: string | null;
 }
@@ -109,4 +128,11 @@ const loadS3ClientCredentials = (): S3ClientConfig['credentials'] => {
   }
   console.error(`Either both or none of 'S3_ACCESS_KEY_ID' and 'S3_SECRET_ACCESS_KEY' must be set.`);
   process.exit(1);
+};
+
+const handleS3Error = (e: unknown): null | never => {
+  if (e instanceof S3ServiceException && e.name === 'NoSuchKey') {
+    return null;
+  }
+  throw e;
 };

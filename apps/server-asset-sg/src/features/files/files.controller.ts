@@ -63,13 +63,13 @@ export class FilesController {
       throw new HttpException('not found', HttpStatus.NOT_FOUND);
     }
 
-    if (file.mediaType) {
-      res.setHeader('Content-Type', file.mediaType);
+    if (file.metadata.mediaType) {
+      res.setHeader('Content-Type', file.metadata.mediaType);
     }
-    if (file.byteCount != null) {
-      res.setHeader('Content-Length', file.byteCount.toString());
+    if (file.metadata.byteCount != null) {
+      res.setHeader('Content-Length', file.metadata.byteCount.toString());
     }
-    res.setHeader('Content-Disposition', `filename="${file.name}"`);
+    res.setHeader('Content-Disposition', `filename="${file.metadata.name}"`);
     file.content.pipe(res);
   }
 
