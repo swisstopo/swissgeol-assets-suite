@@ -386,8 +386,8 @@ const makeAssetDetailVMNew = (referenceData: ReferenceData, assetDetail: AssetEd
 };
 
 export const displayFileSize = (size: number, locale: string): string => {
-  const _fileSize = size / 1024 / 1024;
-  return _fileSize < 1 ? `< 1MB` : `${formatNumber(Number(roundToMB(size)), locale)}MB`;
+  const _fileSize = Math.round((size / 1024 / 1024) * 10) / 10;
+  return _fileSize < 0.1 ? `< 0.1 MB` : `${formatNumber(Number(_fileSize), locale)} MB`;
 };
 
 const makeAssetDetailContactVM = (referenceData: ReferenceData, assetContact: AssetDetail['assetContacts'][0]) => {
@@ -402,12 +402,6 @@ const makeAssetDetailContactVM = (referenceData: ReferenceData, assetContact: As
     ...contactRest,
     contactKindItem: referenceData.contactKindItems[contactKindItemCode],
   };
-};
-
-const roundToMB = (value: number) => {
-  const n = value / 1024 / 1024;
-  const rem = value - n * 1024 * 1024;
-  return rem > 524288 ? n + 1 : n;
 };
 
 export function wktToGeoJSON(wkt: string) {
