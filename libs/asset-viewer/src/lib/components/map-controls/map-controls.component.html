@@ -1,6 +1,6 @@
 <button
+  class="map-control-button"
   asset-sg-tertiary
-  isMapControl
   [matTooltip]="'map.zoomIn' | translate"
   matTooltipPosition="left"
   (click)="zoom.zoomIn()"
@@ -8,8 +8,8 @@
   <svg-icon key="zoom-plus" />
 </button>
 <button
+  class="map-control-button"
   asset-sg-tertiary
-  isMapControl
   [matTooltip]="'map.zoomToOrigin' | translate"
   matTooltipPosition="left"
   (click)="zoom.resetZoom()"
@@ -17,8 +17,8 @@
   <svg-icon key="zoom-origin" />
 </button>
 <button
+  class="map-control-button"
   asset-sg-tertiary
-  isMapControl
   [matTooltip]="'map.zoomOut' | translate"
   matTooltipPosition="left"
   (click)="zoom.zoomOut()"

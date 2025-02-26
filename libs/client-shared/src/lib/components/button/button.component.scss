@@ -114,13 +114,6 @@
   width: 28px;
 }
 
-:host([isMapControl]) {
-  padding: 0;
-  height: 36px;
-  width: 36px;
-  margin: 4px;
-}
-
 :host[asset-sg-icon-button] {
   @extend %reset;
 
