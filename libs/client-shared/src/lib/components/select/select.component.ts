@@ -49,10 +49,8 @@ export class SelectComponent<T> implements OnInit, ControlValueAccessor {
   private onTouched: () => void = noop;
 
   public ngOnInit(): void {
-    if (this.initialValues.length > 0) {
-      const filteredValues = this.values.filter((value) => this.initialValues.includes(value));
-      this.selectedValues = this.multiple ? filteredValues : filteredValues[0];
-    }
+    const filteredValues = this.values.filter((value) => this.initialValues.includes(value));
+    this.selectedValues = this.multiple ? filteredValues : filteredValues[0];
   }
 
   public onFilterChange(selectedValues: T | T[]): void {
