@@ -1,4 +1,3 @@
-import { formatNumber } from '@angular/common';
 import { fromAppShared, TranslatedValue, Translation } from '@asset-sg/client-shared';
 import {
   AssetContactRole,
@@ -385,11 +384,6 @@ const makeAssetDetailVMNew = (referenceData: ReferenceData, assetDetail: AssetEd
   };
 };
 
-export const displayFileSize = (size: number, locale: string): string => {
-  const _fileSize = size / 1024 / 1024;
-  return _fileSize < 1 ? `< 1MB` : `${formatNumber(Number(roundToMB(size)), locale)}MB`;
-};
-
 const makeAssetDetailContactVM = (referenceData: ReferenceData, assetContact: AssetDetail['assetContacts'][0]) => {
   const {
     role,
@@ -402,12 +396,6 @@ const makeAssetDetailContactVM = (referenceData: ReferenceData, assetContact: As
     ...contactRest,
     contactKindItem: referenceData.contactKindItems[contactKindItemCode],
   };
-};
-
-const roundToMB = (value: number) => {
-  const n = value / 1024 / 1024;
-  const rem = value - n * 1024 * 1024;
-  return rem > 524288 ? n + 1 : n;
 };
 
 export function wktToGeoJSON(wkt: string) {
