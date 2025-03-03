@@ -1,5 +1,5 @@
 import { CdkMonitorFocus } from '@angular/cdk/a11y';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DecimalPipe } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
@@ -56,7 +56,7 @@ import { AssetSearchFilterComponent } from './components/asset-search-filter/ass
 import { AssetSearchRefineComponent } from './components/asset-search-refine';
 import { AssetSearchResultsComponent } from './components/asset-search-results';
 import { AssetViewerFilesComponent } from './components/asset-viewer-files/asset-viewer-files.component';
-import { FileSizeDisplayPipe } from './components/asset-viewer-files/file-size-display.pipe';
+import { FileSizePipe } from './components/asset-viewer-files/file-size-display.pipe';
 import { AssetViewerPageComponent } from './components/asset-viewer-page';
 import { MapComponent } from './components/map/map.component';
 import { MapControlsComponent } from './components/map-controls/map-controls.component';
@@ -76,7 +76,7 @@ import { mapControlReducer } from './state/map-control/map-control.reducer';
     AssetSearchResultsComponent,
     AssetViewerFilesComponent,
     AssetPickerComponent,
-    FileSizeDisplayPipe,
+    FileSizePipe,
   ],
   imports: [
     CommonModule,
@@ -137,6 +137,7 @@ import { mapControlReducer } from './state/map-control/map-control.reducer';
   ],
   providers: [
     TranslatePipe,
+    DecimalPipe,
     ViewerParamsService,
     { provide: MAT_DATE_LOCALE, useValue: de },
     {

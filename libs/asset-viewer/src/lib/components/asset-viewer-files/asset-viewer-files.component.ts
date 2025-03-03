@@ -5,7 +5,7 @@ import { AssetFile, AssetFileType } from '@asset-sg/shared';
 import { AssetId } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
 import { Subscription } from 'rxjs';
-import { AssetDetailFileVM, displayFileSize } from '../../state/asset-search/asset-search.selector';
+import { AssetDetailFileVM } from '../../state/asset-search/asset-search.selector';
 
 @Component({
   selector: 'ul[asset-sg-asset-viewer-files]',
@@ -51,10 +51,6 @@ export class AssetViewerFilesComponent implements OnInit, OnDestroy {
 
   get isLegal(): boolean {
     return this.type === 'Legal';
-  }
-
-  public displayFileSize(size: number): string {
-    return displayFileSize(size, this.locale);
   }
 
   public isActiveFileDownload(file: Omit<AssetFile, 'fileSize'>, downloadType: DownloadType): boolean {

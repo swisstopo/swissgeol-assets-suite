@@ -1,4 +1,3 @@
-import { formatNumber } from '@angular/common';
 import { fromAppShared, TranslatedValue, Translation } from '@asset-sg/client-shared';
 import {
   AssetContactRole,
@@ -383,11 +382,6 @@ const makeAssetDetailVMNew = (referenceData: ReferenceData, assetDetail: AssetEd
       legalDocItem: it.legalDocItemCode == null ? null : referenceData.legalDocItems[it.legalDocItemCode],
     })),
   };
-};
-
-export const displayFileSize = (size: number, locale: string): string => {
-  const _fileSize = Math.round((size / 1024 / 1024) * 10) / 10;
-  return _fileSize < 0.1 ? `< 0.1 MB` : `${formatNumber(Number(_fileSize), locale)} MB`;
 };
 
 const makeAssetDetailContactVM = (referenceData: ReferenceData, assetContact: AssetDetail['assetContacts'][0]) => {
