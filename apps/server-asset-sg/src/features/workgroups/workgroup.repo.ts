@@ -115,6 +115,8 @@ export const workgroupSelection = satisfy<Prisma.WorkgroupSelect>()({
         select: {
           email: true,
           id: true,
+          firstName: true,
+          lastName: true,
         },
       },
     },
@@ -137,6 +139,8 @@ const parse = (data: SelectedWorkgroup): Workgroup => {
     users.set(user.user.id, {
       email: user.user.email,
       role: user.role,
+      firstName: user.user.firstName,
+      lastName: user.user.lastName,
     });
   }
   return {

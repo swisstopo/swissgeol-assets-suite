@@ -3,7 +3,7 @@
 }
 
 .search-input {
-  padding: 8px 12px 8px 48px;
+  padding: 8px 12px;
   border: 1px solid #596978;
   width: 360px;
   height: 44px;
@@ -14,7 +14,11 @@
   }
 }
 
-.search-icon {
+.has-icon {
+  padding-left: 48px;
+}
+
+.icon {
   position: absolute;
   left: 12px;
   top: 0;

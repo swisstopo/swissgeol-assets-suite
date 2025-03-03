@@ -1,19 +1,19 @@
-import { Component, ElementRef, EventEmitter, Output, ViewChild } from '@angular/core';
+import { Component, EventEmitter, Output } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { SvgIconComponent } from '@ngneat/svg-icon';
 import { TranslateModule } from '@ngx-translate/core';
 import { ButtonComponent } from '../button';
-import { SearchInputComponent } from '../search-input';
+import { TextInputComponent } from '../text-input';
 
 @Component({
   selector: 'asset-sg-search-and-filter',
   templateUrl: './search-and-filter.component.html',
   styleUrls: ['./search-and-filter.component.scss'],
   standalone: true,
-  imports: [SvgIconComponent, TranslateModule, SearchInputComponent, ButtonComponent],
+  imports: [SvgIconComponent, TranslateModule, TextInputComponent, ButtonComponent, FormsModule],
 })
 export class SearchAndFilterComponent {
   public shouldShowFilters = false;
-  @ViewChild('searchInput') public readonly inputRef!: ElementRef<HTMLInputElement>;
   @Output() searchTermChanged = new EventEmitter<string>();
   @Output() shouldShowFiltersChanged = new EventEmitter<boolean>();
 

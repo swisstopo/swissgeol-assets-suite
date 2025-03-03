@@ -144,11 +144,11 @@ input {
     font-family: Inter, sans-serif;
   }
 
-  tr:hover:not([disabled]) .mat-mdc-cell {
+  tr:hover .mat-mdc-cell {
     background-color: variables.$grey-01;
   }
 
-  tr[clickable]:hover:not([disabled]) .mat-mdc-cell {
+  tr[clickable]:hover .mat-mdc-cell {
     cursor: pointer;
   }
 

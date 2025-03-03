@@ -297,7 +297,7 @@ export const deAppTranslations = {
       chooseUsersText: 'Füge Benutzer hinzu, um sie zu verwalten',
       addUsers: 'Benutzer hinzufügen',
       usersPerRole: 'Benutzer pro Rolle',
-      delete: 'Löschen',
+      delete: 'Arbeitsgruppe löschen',
       unableToDelete: 'Die Arbeitsgruppe kann nicht gelöscht werden, da ihr noch Assets zugewiesen sind.',
     },
   },

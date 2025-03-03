@@ -1,16 +1,16 @@
 import { Component, inject, OnDestroy, OnInit } from '@angular/core';
-import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
-import { MatSelectChange } from '@angular/material/select';
 import { ActivatedRoute, ParamMap, Router } from '@angular/router';
-import { UserId, UserOnWorkgroup, Workgroup, WorkgroupData } from '@asset-sg/shared/v2';
+import { Filter } from '@asset-sg/client-shared';
+import { User, UserId, UserOnWorkgroup, Workgroup, WorkgroupData } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
 import { Role } from '@prisma/client';
-import { BehaviorSubject, map, share, startWith, Subscription } from 'rxjs';
+import { BehaviorSubject, map } from 'rxjs';
 import * as actions from '../../state/admin.actions';
 import { AppStateWithAdmin } from '../../state/admin.reducer';
 import { selectSelectedWorkgroup } from '../../state/admin.selector';
-import { AddWorkgroupUserDialogComponent } from '../add-workgroup-user-dialog/add-workgroup-user-dialog.component';
+import { AbstractAdminTableComponent } from '../abstract-admin-table/abstract-admin-table.component';
+import { AddUsersToWorkgroupDialogComponent } from '../add-users-to-workgroup-dialog/add-users-to-workgroup-dialog.component';
 
 export type Mode = 'edit' | 'create';
 
@@ -20,96 +20,60 @@ export type Mode = 'edit' | 'create';
   styleUrls: ['./workgroup-edit.component.scss'],
   standalone: false,
 })
-export class WorkgroupEditComponent implements OnInit, OnDestroy {
+export class WorkgroupEditComponent
+  extends AbstractAdminTableComponent<
+    UserOnWorkgroup & {
+      id: UserId;
+    }
+  >
+  implements OnInit, OnDestroy
+{
+  public roles: Role[] = Object.values(Role);
+  public roleSelectors: Filter<
+    UserOnWorkgroup & {
+      id: UserId;
+    }
+  >[] = [];
+  public readonly COLUMNS = ['firstName', 'lastName', 'email', 'role', 'actions'];
   public workgroup$ = new BehaviorSubject<Workgroup | null>(null);
   public mode: Mode = 'edit';
 
-  public readonly roles: Role[] = Object.values(Role);
-  public readonly formGroup = new FormGroup({
-    name: new FormControl('', { validators: Validators.required, updateOn: 'blur', nonNullable: true }),
-    isDisabled: new FormControl(false, { nonNullable: true }),
-    users: new FormControl<Map<UserId, UserOnWorkgroup>>(new Map(), { nonNullable: true }),
-  });
-
   private readonly route = inject(ActivatedRoute);
   private readonly dialogService = inject(MatDialog);
-  private readonly subscriptions: Subscription = new Subscription();
   private readonly store = inject(Store<AppStateWithAdmin>);
   private readonly router = inject(Router);
   private readonly selectedWorkgroup$ = this.store.select(selectSelectedWorkgroup);
 
-  public readonly users$ = this.workgroup$.pipe(
-    map((workgroup) => {
-      if (workgroup == null) {
-        return [];
-      }
-      const users: Array<UserOnWorkgroup & { id: UserId }> = [];
-      for (const [id, user] of workgroup.users) {
-        users.push({ ...user, id });
-      }
-      return users;
-    }),
-    startWith([]),
-    share()
-  );
-
-  public ngOnInit() {
+  public override ngOnInit() {
+    super.ngOnInit();
+    this.roleSelectors = Object.values(Role).map((role) => ({
+      displayValue: role,
+      key: 'role',
+      match: (value) => value.role === role,
+    }));
     this.loadWorkgroupFromRouteParams();
     this.initializeSubscriptions();
   }
 
-  public ngOnDestroy() {
+  public override ngOnDestroy() {
     this.store.dispatch(actions.resetWorkgroup());
-    this.subscriptions.unsubscribe();
+    super.ngOnDestroy();
   }
 
-  private get workgroup(): Workgroup | null {
+  public get workgroup(): Workgroup | null {
     return this.workgroup$.value;
   }
 
-  public initializeForm(workgroup: Workgroup) {
-    this.formGroup.patchValue(
-      {
-        name: workgroup.name,
-        isDisabled: workgroup.disabledAt != null,
-        users: workgroup.users,
-      },
-      { emitEvent: false }
-    );
-  }
-
-  private initializeSubscriptions() {
-    this.subscriptions.add(
-      this.selectedWorkgroup$.subscribe((workgroup) => {
-        if (workgroup) {
-          this.workgroup$.next(workgroup);
-          this.initializeForm(workgroup);
-        }
-      })
-    );
-
-    this.subscriptions.add(
-      this.formGroup.valueChanges.subscribe(() => {
-        if (this.workgroup == null || this.formGroup.pristine) {
-          return;
-        }
-        this.updateWorkgroup(this.workgroup.id, {
-          name: this.formGroup.controls.name.value ?? '',
-          disabledAt: this.formGroup.controls.isDisabled.value ? this.workgroup?.disabledAt ?? new Date() : null,
-          users: this.workgroup.users,
-        });
-      })
-    );
-  }
-
-  public updateRoleForUser(event: MatSelectChange, userId: UserId, user: UserOnWorkgroup) {
-    if (this.workgroup == null) {
+  public updateWorkgroupRole(role: string[], userId: UserId, user: User) {
+    if (!this.workgroup) {
       return;
     }
     const users = new Map(this.workgroup.users);
     users.set(userId, {
       email: user.email,
-      role: event.value as Role,
+      role: role[0] as Role,
+      firstName: user.firstName,
+      lastName: user.lastName,
     });
     this.updateWorkgroup(this.workgroup.id, {
       ...this.workgroup,
@@ -117,12 +81,23 @@ export class WorkgroupEditComponent implements OnInit, OnDestroy {
     });
   }
 
+  public updateWorkgroupName(name: string) {
+    if (!this.workgroup) {
+      return;
+    }
+    this.updateWorkgroup(this.workgroup.id, {
+      ...this.workgroup,
+      name,
+    });
+  }
+
   public addUsersToWorkgroup() {
-    this.dialogService.open<AddWorkgroupUserDialogComponent>(AddWorkgroupUserDialogComponent, {
+    this.dialogService.open<AddUsersToWorkgroupDialogComponent>(AddUsersToWorkgroupDialogComponent, {
       width: '400px',
       restoreFocus: false,
       data: {
         workgroup: this.workgroup,
+        users: this.data,
         mode: this.mode,
       },
     });
@@ -140,13 +115,31 @@ export class WorkgroupEditComponent implements OnInit, OnDestroy {
     });
   }
 
+  public readonly users$ = this.workgroup$.pipe(
+    map((workgroup) => {
+      if (workgroup == null) {
+        return [];
+      }
+      const users: Array<UserOnWorkgroup & { id: UserId }> = [];
+      for (const [id, user] of workgroup.users) {
+        users.push({ ...user, id });
+      }
+      this.data = users;
+      this.dataSource.data = users;
+      setTimeout(() => {
+        this.dataSource.paginator = this.paginator;
+      });
+      return users;
+    })
+  );
+
   public cancel() {
     this.router.navigate(['../'], { relativeTo: this.route }).then();
     this.store.dispatch(actions.resetWorkgroup());
   }
 
   public createWorkgroup() {
-    if (this.workgroup == null || !this.formGroup.valid) {
+    if (this.workgroup == null) {
       return;
     }
     const { id: _id, ...workgroup } = this.workgroup;
@@ -163,6 +156,17 @@ export class WorkgroupEditComponent implements OnInit, OnDestroy {
         ...workgroup,
       });
     }
+  }
+
+  private initializeSubscriptions() {
+    this.subscriptions.add(this.users$.subscribe());
+    this.subscriptions.add(
+      this.selectedWorkgroup$.subscribe((workgroup) => {
+        if (workgroup) {
+          this.workgroup$.next(workgroup);
+        }
+      })
+    );
   }
 
   private loadWorkgroupFromRouteParams() {

@@ -1,14 +1,15 @@
 <div>
   <asset-sg-search-and-filter
     (searchTermChanged)="setSearchTerm($event)"
-    (shouldShowFiltersChanged)="toggleFilters()"
+    (shouldShowFiltersChanged)="toggleFilters($event)"
   ></asset-sg-search-and-filter>
   @if (shouldShowFilters) {
   <div>
     <asset-sg-filter-selector
-      (filterChanged)="setFilters($event, 'disabledAt')"
+      (filterAdded)="addFilter($event)"
+      (filterRemoved)="removeFilter($event)"
       title="{{ 'search.status' | translate }}"
-      [values]="isActiveFilterValues"
+      [filters]="filterForIsActive"
       multiple
     ></asset-sg-filter-selector>
   </div>
