@@ -15,8 +15,9 @@
 @include drawerPanel.draw-panel-header;
 
 .header {
-  padding: 0 1rem;
+  padding: 16px;
   margin: 0;
+  font-weight: 400;
 }
 
 .search-results {
@@ -25,22 +26,13 @@
   height: 400px;
 }
 
-.mat-mdc-header-row .mat-mdc-cell {
-  background-color: variables.$grey-01;
-}
-
-.mat-mdc-row:hover .mat-mdc-cell {
-  background-color: variables.$grey-01;
-  cursor: pointer;
-}
-
 .table-container {
   max-height: 400px;
   overflow-y: auto;
   overflow-x: auto;
   display: block;
   width: 100%;
-  padding-left: 22px;
+  padding-left: 16px;
 
   .mat-table {
     width: max-content;
@@ -51,8 +43,8 @@
   .table {
     box-shadow: none;
 
-    .table-header {
-      background-color: variables.$grey-03;
+    .table__header {
+      height: 40px;
     }
 
     .mat-column-titlePublic {
