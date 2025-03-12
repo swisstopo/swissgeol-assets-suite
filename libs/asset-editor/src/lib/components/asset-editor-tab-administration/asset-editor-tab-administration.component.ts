@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, EventEmitter, inject, Input, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, inject, Input, OnInit, Output } from '@angular/core';
 import { FormGroupDirective } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { ConfirmDialogComponent, fromAppShared } from '@asset-sg/client-shared';
@@ -35,7 +35,6 @@ const initialTabAdministrationState: TabAdministrationState = {
   selector: 'asset-sg-editor-tab-administration',
   templateUrl: './asset-editor-tab-administration.component.html',
   styleUrls: ['./asset-editor-tab-administration.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'edit-area' },
   providers: [RxState],
   standalone: false,
