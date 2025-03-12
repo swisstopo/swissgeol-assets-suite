@@ -21,3 +21,8 @@
   text-align: right;
   padding-left: 0;
 }
+
+.table-container {
+  max-height: calc(100vh - 700px);
+  overflow: scroll;
+}
