@@ -97,6 +97,7 @@ export class UserService {
         }
         ids.add(subAttribute.Value);
       }
+      this.logger.error('found users', { count: response.Users.length, next: response.NextToken });
       nextToken = response.NextToken;
     }
   }
