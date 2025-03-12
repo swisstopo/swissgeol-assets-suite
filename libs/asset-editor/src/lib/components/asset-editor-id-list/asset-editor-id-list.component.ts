@@ -6,7 +6,8 @@ import { IdVM } from '../../models';
 @Component({
   selector: 'asset-sg-asset-editor-id-list',
   templateUrl: './asset-editor-id-list.component.html',
-  styleUrl: './asset-editor-id-list.component.scss',
+  styleUrls: ['./asset-editor-id-list.component.scss'],
+  standalone: false,
 })
 export class AssetEditorIdListComponent {
   @Input({ required: true })

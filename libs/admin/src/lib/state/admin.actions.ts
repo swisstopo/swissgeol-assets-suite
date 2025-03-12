@@ -71,4 +71,18 @@ export const createWorkgroup = createAction(
   }>()
 );
 
+export const deleteWorkgroup = createAction(
+  '[Admin] Delete Workgroup',
+  props<{
+    workgroupId: number;
+  }>()
+);
+
+export const removeWorkgroupAfterDelete = createAction(
+  '[Admin] Remove Workgroup After Delete',
+  props<{
+    workgroupId: number;
+  }>()
+);
+
 export const listWorkgroups = createAction('[Admin] List Workgroups');

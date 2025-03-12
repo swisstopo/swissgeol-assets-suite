@@ -10,6 +10,7 @@ import { AlertMetadata, AlertState } from '../alert.reducer';
   selector: 'li[app-alert]',
   templateUrl: './alert.component.html',
   styleUrls: ['./alert.component.scss'],
+  standalone: false,
 })
 export class AlertComponent implements OnInit, OnDestroy {
   @Input()

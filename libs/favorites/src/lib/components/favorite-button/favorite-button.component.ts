@@ -7,7 +7,8 @@ import { actions, selectFavoriteAssetIds } from '../../state';
 @Component({
   selector: 'button[asset-sg-favorite]',
   templateUrl: './favorite-button.component.html',
-  styleUrl: './favorite-button.component.scss',
+  styleUrls: ['./favorite-button.component.scss'],
+  standalone: false,
 })
 export class FavoriteButtonComponent implements OnInit, OnDestroy {
   @Input({ required: true })

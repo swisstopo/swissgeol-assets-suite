@@ -1,11 +1,13 @@
 import { actionMenuIcon } from './action-menu';
 import { addIcon } from './add';
 import { arrowDownIcon } from './arrow-down';
+import { arrowLeftIcon } from './arrow-left';
 import { arrowUpIcon } from './arrow-up';
 import { assetsIcon } from './assets';
 import { calendarIcon } from './calendar';
 import { checkIcon } from './check';
 import { checkmarkIcon } from './checkmark';
+import { chevronDownIcon } from './chevron-down';
 import { closeIcon } from './close';
 import { closeNavIcon } from './close-nav';
 import { deleteIcon } from './delete';
@@ -39,10 +41,12 @@ export const icons = [
   addIcon,
   arrowDownIcon,
   arrowUpIcon,
+  arrowLeftIcon,
   assetsIcon,
   calendarIcon,
   checkIcon,
   checkmarkIcon,
+  chevronDownIcon,
   closeIcon,
   closeNavIcon,
   deleteIcon,

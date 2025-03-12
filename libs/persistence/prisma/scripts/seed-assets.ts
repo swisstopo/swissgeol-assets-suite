@@ -16,8 +16,6 @@ import { pipe } from 'fp-ts/function';
 import * as O from 'fp-ts/Option';
 import * as TE from 'fp-ts/TaskEither';
 
-// eslint-disable-next-line @nx/enforce-module-boundaries
-
 import { queryFiles } from './seed-files';
 
 const exec = promisify(cp.exec);
@@ -446,7 +444,6 @@ const makeImportValueList =
       await importToTable(tableName, buildPath(`wertelisten/${valueListFileName}`), createModelFromParsedCsv(false));
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return (
       (await readFromFileToModel(buildPath(`${path}/${valueListFileName}`), createModelFromParsedCsv(true))) as any
     ).models;

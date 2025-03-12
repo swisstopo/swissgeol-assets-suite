@@ -1,4 +1,4 @@
-import { ActionReducer } from '@ngrx/store';
+import { Action, ActionReducer } from '@ngrx/store';
 
 import { storeLogger } from './ngrx-store-logger';
 
@@ -8,8 +8,8 @@ describe('storeLogger', () => {
       /* noop */
     });
     const metaReducer = storeLogger<string>();
-    const actionReducer: ActionReducer<string, any> = (state: string | undefined, action: any) => {
-      return state || '';
+    const actionReducer: ActionReducer<string, Action<string>> = (state) => {
+      return state ?? '';
     };
 
     metaReducer(actionReducer)('state', { type: 'test' });

@@ -11,7 +11,9 @@
     <asset-sg-app-bar>
       <ng-template [cdkPortalOutlet]="(appPortalService.appBarPortalContent$ | push) ?? ''"></ng-template>
     </asset-sg-app-bar>
+    @if (shouldShowMenuBar) {
     <asset-sg-menu-bar />
+    }
     <div class="router-outlet">
       @if (authState === AuthState.Success) {
       <router-outlet />
@@ -30,7 +32,6 @@
     }
   </ng-container>
 </ng-template>
-
 <div class="alerts">
   <ul app-alert-list></ul>
 </div>

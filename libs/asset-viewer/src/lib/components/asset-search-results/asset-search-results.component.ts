@@ -26,6 +26,7 @@ import {
   selector: 'asset-sg-asset-search-results',
   templateUrl: './asset-search-results.component.html',
   styleUrls: ['./asset-search-results.component.scss'],
+  standalone: false,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AssetSearchResultsComponent implements OnInit, OnDestroy {

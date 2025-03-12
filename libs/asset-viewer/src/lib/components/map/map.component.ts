@@ -33,7 +33,8 @@ import { MapController } from './map-controller';
 @Component({
   selector: 'asset-sg-map',
   templateUrl: './map.component.html',
-  styleUrl: './map.component.scss',
+  styleUrls: ['./map.component.scss'],
+  standalone: false,
 })
 export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
   /**

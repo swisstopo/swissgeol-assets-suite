@@ -1,7 +1,7 @@
 @use "app/styles/mixins";
 @use "app/styles/variables";
 @use "./open-layers";
-@import "mat-styles";
+@use "mat-styles" as *;
 
 @font-face {
   font-family: "Inter";
@@ -128,6 +128,66 @@ input {
     &:horizontal {
       border-width: 0.5625rem 0 0.5625rem 0;
     }
+  }
+}
+
+.mdc-checkbox .mdc-checkbox__background {
+  border-color: variables.$cyan-09;
+}
+
+.table {
+  box-shadow: none;
+
+  tr .mat-mdc-cell {
+    font-size: 16px;
+    font-weight: 400;
+    font-family: Inter, sans-serif;
+  }
+
+  tr:hover .mat-mdc-cell {
+    background-color: variables.$grey-01;
+  }
+
+  tr[clickable]:hover .mat-mdc-cell {
+    cursor: pointer;
+  }
+
+  tr[disabled] {
+    color: #acb4bd;
+  }
+
+  .cell-tooltip {
+    font-size: 12px;
+  }
+
+  .table__header {
+    background-color: variables.$grey-03;
+    border-radius: 4px;
+    height: 44px;
+
+    th {
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 20px;
+      letter-spacing: 0.0025em;
+      font-family: Inter, sans-serif;
+
+      &:first-of-type {
+        border-top-left-radius: 4px;
+      }
+
+      &:last-of-type {
+        border-top-right-radius: 4px;
+      }
+    }
+  }
+}
+
+mat-paginator {
+  box-shadow: 0px -4px 4px -5px;
+
+  .mat-mdc-paginator-icon {
+    fill: #828e9a;
   }
 }
 

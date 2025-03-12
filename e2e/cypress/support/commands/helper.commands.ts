@@ -2,7 +2,6 @@
 
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
-import { assetsBaseUrl } from '../config/config';
 
 //login Eam
 /*Cypress.Commands.add('login', (username: string, password: string) => {
@@ -20,7 +19,7 @@ Cypress.Commands.add('login', (username: string, password: string) => {
   cy.session(
     ['login', username, password],
     () => {
-      cy.visit(assetsBaseUrl);
+      cy.visit('/de');
       cy.wait(5000);
       cy.intercept('http://localhost:4011/connect/token').as('token');
       cy.get('#Input_Username').type(username);

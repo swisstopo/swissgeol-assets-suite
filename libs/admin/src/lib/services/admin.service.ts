@@ -21,7 +21,10 @@ export class AdminService {
   private readonly httpClient = inject(HttpClient);
 
   public getUsers(): Observable<User[]> {
-    return this.httpClient.get<object[]>('/api/users').pipe(map((it) => plainToInstance(UserSchema, it)));
+    return this.httpClient.get<object[]>('/api/users').pipe(
+      map((it) => plainToInstance(UserSchema, it)),
+      map((it) => it.sort((a, b) => a.firstName.localeCompare(b.firstName)))
+    );
   }
 
   public getUser(id: string): Observable<User> {
@@ -29,7 +32,10 @@ export class AdminService {
   }
 
   public getWorkgroups(): Observable<Workgroup[]> {
-    return this.httpClient.get<object[]>('/api/workgroups').pipe(map((it) => plainToInstance(WorkgroupSchema, it)));
+    return this.httpClient.get<object[]>('/api/workgroups').pipe(
+      map((it) => plainToInstance(WorkgroupSchema, it)),
+      map((it) => it.sort((a, b) => a.name.localeCompare(b.name)))
+    );
   }
 
   public getWorkgroup(id: string): Observable<Workgroup> {
@@ -46,6 +52,10 @@ export class AdminService {
       .pipe(map((it) => plainToInstance(WorkgroupSchema, it)));
   }
 
+  public deleteWorkgroup(id: number): Observable<void> {
+    return this.httpClient.delete<void>(`/api/workgroups/${id}`);
+  }
+
   public updateUser(user: User): Observable<User> {
     return this.httpClient
       .put<User>(
@@ -54,6 +64,8 @@ export class AdminService {
           lang: user.lang,
           roles: user.roles,
           isAdmin: user.isAdmin,
+          firstName: user.firstName,
+          lastName: user.lastName,
         } as UserData)
       )
       .pipe(map((it) => plainToInstance(UserSchema, it)));

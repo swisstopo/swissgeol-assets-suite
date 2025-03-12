@@ -1,8 +1,8 @@
-import { icon24x24 } from './icon';
-
 export const deleteIcon = {
-  data: icon24x24(
-    '<path d="M10.667 2A1.6 1.6 0 0 0 9 3.667V4.5H4v1.667h.833V19.5a2.513 2.513 0 0 0 2.5 2.5h10a2.513 2.513 0 0 0 2.5-2.5V6.167h.833V4.5h-5v-.833A1.6 1.6 0 0 0 14 2Zm0 1.667H14V4.5h-3.333ZM6.5 6.167h11.667V19.5a.831.831 0 0 1-.833.833h-10A.831.831 0 0 1 6.5 19.5Zm1.667 2.5v9.167h1.667V8.667Zm3.333 0v9.167h1.667V8.667Zm3.333 0v9.167H16.5V8.667Z"/>'
-  ),
+  data: `
+<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M3.33325 5.5H16.6666M15.1851 5.5V16C15.1851 16.75 14.4444 17.5 13.7036 17.5H6.29621C5.55547 17.5 4.81473 16.75 4.81473 16V5.5M7.03696 5.5V4C7.03696 3.25 7.7777 2.5 8.51844 2.5H11.4814C12.2221 2.5 12.9629 3.25 12.9629 4V5.5M8.51844 9.25V13.75M11.4814 9.25V13.75" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
+  `,
   name: 'delete' as const,
 };

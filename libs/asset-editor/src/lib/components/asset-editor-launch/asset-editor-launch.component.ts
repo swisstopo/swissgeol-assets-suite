@@ -26,6 +26,7 @@ import { asyncScheduler, observeOn } from 'rxjs';
   changeDetection: ChangeDetectionStrategy.OnPush,
   hostDirectives: [LifecycleHooksDirective],
   styleUrls: ['./asset-editor-launch.component.scss'],
+  standalone: false,
 })
 export class AssetEditorLaunchComponent implements OnDestroy {
   @ViewChild('templateDrawerPortalContent') _templateDrawerPortalContent!: TemplateRef<unknown>;

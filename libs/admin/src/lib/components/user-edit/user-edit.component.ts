@@ -1,108 +1,110 @@
-import { Component, inject, OnDestroy, OnInit } from '@angular/core';
-import { FormControl, FormGroup } from '@angular/forms';
-import { MatOptionSelectionChange } from '@angular/material/core';
-import { MatSelectChange } from '@angular/material/select';
+import { Component, inject, OnInit } from '@angular/core';
+import { MatCheckboxChange } from '@angular/material/checkbox';
+import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, ParamMap } from '@angular/router';
-import { fromAppShared } from '@asset-sg/client-shared';
+import { Filter, fromAppShared, TranslationKey } from '@asset-sg/client-shared';
 import { isNotNull } from '@asset-sg/core';
-import { SimpleWorkgroup, User, WorkgroupId } from '@asset-sg/shared/v2';
+import { SimpleWorkgroup, User, Workgroup, WorkgroupId } from '@asset-sg/shared/v2';
 import * as RD from '@devexperts/remote-data-ts';
 import { Store } from '@ngrx/store';
 import { Role } from '@prisma/client';
-import { asapScheduler, filter, map, Observable, startWith, Subscription, withLatestFrom } from 'rxjs';
+import { combineLatestWith, filter, map, Observable } from 'rxjs';
 import * as actions from '../../state/admin.actions';
 import { AppStateWithAdmin } from '../../state/admin.reducer';
-import { selectSelectedUser } from '../../state/admin.selector';
+import { selectSelectedUser, selectWorkgroups } from '../../state/admin.selector';
+import { AbstractAdminTableComponent } from '../abstract-admin-table/abstract-admin-table.component';
+import { AddWorkgroupToUserDialogComponent } from '../add-workgroup-to-user-dialog/add-workgroup-to-user-dialog.component';
+
+export type WorkgroupOfUser = SimpleWorkgroup & { role: Role; isActive: boolean; numberOfAssets: number; lang: string };
 
 @Component({
   selector: 'asset-sg-user-edit',
   templateUrl: './user-edit.component.html',
   styleUrls: ['./user-edit.component.scss'],
+  standalone: false,
 })
-export class UserEditComponent implements OnInit, OnDestroy {
+export class UserEditComponent extends AbstractAdminTableComponent<WorkgroupOfUser> implements OnInit {
   public roles = Object.values(Role);
+  public languageSelector: TranslationKey[] = [
+    { key: 'admin.languages.de' },
+    { key: 'admin.languages.en' },
+    { key: 'admin.languages.fr' },
+    { key: 'admin.languages.it' },
+  ];
   public user: User | null = null;
-  public workgroups: SimpleWorkgroup[] = [];
-  public filteredWorkgroups: SimpleWorkgroup[] = [];
-
-  public workgroupAutoCompleteControl = new FormControl('');
-  public formGroup = new FormGroup({
-    isAdmin: new FormControl(false),
-    lang: new FormControl('de'),
-  });
-
-  protected readonly COLUMNS = ['name', 'role', 'actions'];
+  public lang: TranslationKey = this.languageSelector[0];
+  public workgroups: Workgroup[] = [];
+  public isCurrentUser = false;
+  protected readonly COLUMNS = ['name', 'numberOfAssets', 'role', 'isActive', 'actions'];
+  public roleSelectors: Filter<WorkgroupOfUser>[] = [];
 
   private readonly route = inject(ActivatedRoute);
+  private readonly dialogService = inject(MatDialog);
   private readonly store = inject(Store<AppStateWithAdmin>);
-  private readonly workgroups$ = this.store.select(fromAppShared.selectWorkgroups);
+  private readonly workgroups$ = this.store.select(selectWorkgroups);
   private readonly user$ = this.store.select(selectSelectedUser);
-  private readonly subscriptions: Subscription = new Subscription();
 
   public readonly isCurrentUser$: Observable<boolean> = this.store.select(fromAppShared.selectRDUserProfile).pipe(
     map((currentUser) => (RD.isSuccess(currentUser) ? currentUser.value : null)),
     filter(isNotNull),
-    withLatestFrom(this.user$.pipe(filter(isNotNull))),
-    map(([currentUser, user]) => currentUser.id === user.id),
-    startWith(true)
+    combineLatestWith(this.user$.pipe(filter(isNotNull))),
+    map(([currentUser, user]) => currentUser.id === user.id)
   );
 
-  public readonly userWorkgroups$: Observable<Array<SimpleWorkgroup & { role: Role }>> = this.user$.pipe(
-    withLatestFrom(this.workgroups$),
+  public readonly userWorkgroups$: Observable<WorkgroupOfUser[]> = this.user$.pipe(
+    combineLatestWith(this.workgroups$),
     map(([user, workgroups]) => {
       if (user == null) {
         return [];
       }
-      const result: Array<SimpleWorkgroup & { role: Role }> = [];
+
+      const result: WorkgroupOfUser[] = [];
       for (const workgroup of workgroups) {
         const role = user.roles.get(workgroup.id);
         if (role == null) {
           continue;
         }
-        result.push({ ...workgroup, role });
+        result.push({
+          name: workgroup.name,
+          id: workgroup.id,
+          role,
+          isActive: workgroup.disabledAt === null,
+          numberOfAssets: workgroup.numberOfAssets,
+          lang: user.lang,
+        });
       }
       return result;
     })
   );
 
-  public ngOnInit() {
+  public override ngOnInit() {
+    super.ngOnInit();
+    this.roleSelectors = Object.values(Role).map((role) => ({
+      displayValue: role,
+      key: 'role',
+      match: (value) => value.role === role,
+    }));
     this.getUserFromRoute();
     this.initSubscriptions();
   }
 
-  public ngOnDestroy() {
-    this.subscriptions.unsubscribe();
-  }
-
-  public resetWorkgroupSearch() {
-    this.workgroupAutoCompleteControl.setValue('');
-
-    // Redo the reset a tick later, as the input seems to fall back to its previous value.
-    asapScheduler.schedule(() => {
-      this.workgroupAutoCompleteControl.setValue('');
+  public openAddWorkgroupToUserDialog() {
+    this.dialogService.open<AddWorkgroupToUserDialogComponent>(AddWorkgroupToUserDialogComponent, {
+      width: '400px',
+      restoreFocus: false,
+      data: {
+        workgroups: this.workgroups,
+        user: structuredClone(this.user),
+      },
     });
   }
 
-  public isUserPartOfWorkgroup(workgroupId: number): boolean {
-    return this.user?.roles?.has(workgroupId) ?? false;
-  }
-
-  public addWorkgroupRole(event: MatOptionSelectionChange, workgroupId: number) {
-    if (this.user == null || !event.isUserInput) {
-      return;
-    }
-    const roles = new Map(this.user.roles);
-    roles.set(workgroupId, Role.Viewer);
-    this.store.dispatch(actions.updateUser({ user: { ...this.user, roles } }));
-    this.resetWorkgroupSearch();
-  }
-
-  public updateWorkgroupRole(event: MatSelectChange, workgroupId: WorkgroupId) {
+  public updateWorkgroupRole(role: Role[], workgroupId: WorkgroupId) {
     if (!this.user) {
       return;
     }
     const roles = new Map(this.user.roles);
-    roles.set(workgroupId, event.value as Role);
+    roles.set(workgroupId, role[0]);
     this.updateUser({ ...this.user, roles });
   }
 
@@ -113,6 +115,18 @@ export class UserEditComponent implements OnInit, OnDestroy {
     const roles = new Map(this.user.roles);
     roles.delete(workgroupId);
     this.updateUser({ ...this.user, roles });
+  }
+
+  public handleLanguageChanged(updatedValue: TranslationKey[]) {
+    if (this.user) {
+      this.updateUser({ ...this.user, lang: updatedValue[0].key.split('.')[2] });
+    }
+  }
+
+  public handleIsAdminChanged(event: MatCheckboxChange) {
+    if (this.user) {
+      this.updateUser({ ...this.user, isAdmin: event.checked });
+    }
   }
 
   private updateUser(user: User) {
@@ -130,66 +144,34 @@ export class UserEditComponent implements OnInit, OnDestroy {
     );
   }
 
-  private initializeForm() {
-    this.formGroup.patchValue(
-      {
-        isAdmin: this.user?.isAdmin ?? false,
-        lang: this.user?.lang ?? 'de',
-      },
-      { emitEvent: false }
-    );
-  }
-
   private initSubscriptions() {
     this.subscriptions.add(
       this.user$.subscribe((user) => {
         this.user = user;
-        this.initializeForm();
+        this.lang = user
+          ? this.languageSelector.find((lang) => lang.key.includes(user.lang))!
+          : this.languageSelector[0];
       })
     );
+
     this.subscriptions.add(
       this.workgroups$.subscribe((workgroups) => {
         if (workgroups) {
           this.workgroups = workgroups;
-          this.filteredWorkgroups = workgroups;
         }
-      })
-    );
-
-    this.subscriptions.add(
-      this.workgroupAutoCompleteControl.valueChanges
-        .pipe(
-          map((it) => it ?? ''),
-          startWith(''),
-          map((value) =>
-            this.workgroups.filter((workgroup) => workgroup.name.toLowerCase().includes(value.toLowerCase().trim()))
-          )
-        )
-        .subscribe((workgroups) => {
-          this.filteredWorkgroups = workgroups;
-        })
-    );
-
-    this.subscriptions.add(
-      this.formGroup.valueChanges.subscribe(() => {
-        if (this.user == null || this.formGroup.pristine) {
-          return;
-        }
-        this.updateUser({
-          ...this.user,
-          isAdmin: this.formGroup.controls.isAdmin.value ?? false,
-          lang: this.formGroup.controls.lang.value ?? 'de',
-        });
       })
     );
 
     this.subscriptions.add(
       this.isCurrentUser$.subscribe((isCurrentUser) => {
-        if (isCurrentUser) {
-          this.formGroup.controls.isAdmin.disable();
-        } else {
-          this.formGroup.controls.isAdmin.enable();
-        }
+        this.isCurrentUser = isCurrentUser;
+      })
+    );
+
+    this.subscriptions.add(
+      this.userWorkgroups$.subscribe((userWorkgroups) => {
+        this.data = userWorkgroups;
+        this.dataSource.data = userWorkgroups;
       })
     );
   }

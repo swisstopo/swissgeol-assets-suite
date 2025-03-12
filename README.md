@@ -50,6 +50,14 @@ npm run prisma -- generate
   - Set `S3_ACCESS_KEY_ID` to your generated access key.
   - Set `S3_SECRET_ACCESS_KEY` to your generated access key's secret.
 
+#### 4. Define Admin User
+
+Per default, our user is not an admin and cannot access admin functionality. In order to so, login once and then manually set the user to admin in the database directly:
+
+```bash
+docker compose exec db sh -c 'psql --dbname=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:5432/${POSTGRES_DB} -c "UPDATE asset_user SET is_admin = true WHERE email = '\''admin@assets.swissgeol.ch'\''"'
+```
+
 ### Starting the Development Environment
 
 Start development services:
@@ -58,6 +66,8 @@ Start development services:
 cd development
 docker compose up
 ```
+
+> **Important:** make sure that both `development/volumes/elasticsearch` and `development/volumes/pgadmin` are writable by the container user, otherwise the elasticsearch and pgadmin container will be stuck in an infinite boot loop.
 
 Start the application:
 
@@ -115,10 +125,10 @@ cd development
 docker compose exec db sh -c 'psql --dbname=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:5432/${POSTGRES_DB} -c "DELETE FROM workgroup"'
 
 # Import example data:
-docker compose exec db sh -c 'psql --dbname=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:5432/${POSTGRES_DB} -v ON_ERROR_STOP=1 -f /dump.sql'
+docker compose exec db sh -c 'psql --dbname=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:5432/${POSTGRES_DB} -v ON_ERROR_STOP=1 -f /docker-entrypoint-initdb.d/01_roles.sql -f /dump.sql'
 ```
 
-> You will need to manually sync the data to Elasticsearch via the admin panel in the web UI.
+> You will need to manually sync the data to Elasticsearch via the admin panel in the web UI via the cogwheel symbol in the bottom left of the GUI (requires `is_admin` to be true for the given user).
 
 ## Testing
 

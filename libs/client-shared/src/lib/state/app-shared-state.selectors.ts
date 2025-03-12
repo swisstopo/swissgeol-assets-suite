@@ -22,7 +22,7 @@ export const selectUser = createSelector(selectRDUserProfile, RD.toNullable);
 
 export const selectWorkgroups = createSelector(appSharedFeature, (state) => state.workgroups);
 
-const makeReferenceDataVM = (referenceData: ReferenceData) => ({
+const _makeReferenceDataVM = (referenceData: ReferenceData) => ({
   ...referenceData,
   assetFormItemArray: valueItemRecordToArray(referenceData.assetFormatItems),
   assetKindItemArray: valueItemRecordToArray(referenceData.assetKindItems),
@@ -39,7 +39,7 @@ const makeReferenceDataVM = (referenceData: ReferenceData) => ({
     A.map((a) => a[1])
   ),
 });
-export type ReferenceDataVM = ReturnType<typeof makeReferenceDataVM>;
+export type ReferenceDataVM = ReturnType<typeof _makeReferenceDataVM>;
 
 export const emptyReferenceDataVM: ReferenceDataVM = {
   assetFormatItems: {},

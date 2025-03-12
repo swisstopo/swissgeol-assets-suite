@@ -1,0 +1,11 @@
+<div class="container">
+  <div class="header">
+    <h2>
+      {{ title }}
+    </h2>
+    <ng-content select="[actions]"></ng-content>
+  </div>
+  <div class="content">
+    <ng-content select="[content]"></ng-content>
+  </div>
+</div>

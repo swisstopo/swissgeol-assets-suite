@@ -1,7 +1,6 @@
-import { getJestProjects } from '@nx/jest';
+import { getJestProjectsAsync } from '@nx/jest';
 import { Config } from 'jest';
 
-const config: Config = {
-  projects: [...getJestProjects(), 'lib/shared/v2'],
-};
-export default config;
+export default async (): Promise<Config> => ({
+  projects: [...(await getJestProjectsAsync()), 'lib/shared/v2'],
+});

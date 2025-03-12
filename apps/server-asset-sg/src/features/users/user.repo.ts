@@ -48,6 +48,8 @@ export class UserRepo implements Repo<User, UserId, UserData & { oidcId: string 
         id: data.oidcId,
         oidcId: data.oidcId,
         email: data.email,
+        firstName: data.firstName,
+        lastName: data.lastName,
         lang: data.lang,
         isAdmin: false,
         workgroups: {
@@ -68,6 +70,8 @@ export class UserRepo implements Repo<User, UserId, UserData & { oidcId: string 
         where: { id },
         data: {
           lang: data.lang,
+          firstName: data.firstName,
+          lastName: data.lastName,
           isAdmin: data.isAdmin,
           workgroups: {
             deleteMany: {
@@ -101,6 +105,8 @@ export const userSelection = satisfy<Prisma.AssetUserSelect>()({
   id: true,
   email: true,
   lang: true,
+  firstName: true,
+  lastName: true,
   isAdmin: true,
   workgroups: {
     select: {
@@ -120,6 +126,8 @@ const parse = (data: SelectedUser): User => {
   return {
     id: data.id,
     email: data.email,
+    firstName: data.firstName,
+    lastName: data.lastName,
     isAdmin: data.isAdmin,
     lang: data.lang,
     roles,

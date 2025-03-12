@@ -1,7 +1,7 @@
 import { A11yModule } from '@angular/cdk/a11y';
 import { DialogModule } from '@angular/cdk/dialog';
 import { CommonModule, NgOptimizedImage, registerLocaleData } from '@angular/common';
-import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
+import { HTTP_INTERCEPTORS, provideHttpClient, withFetch, withInterceptorsFromDi } from '@angular/common/http';
 import locale_deCH from '@angular/common/locales/de-CH';
 import { inject, NgModule } from '@angular/core';
 import { MatButton } from '@angular/material/button';
@@ -67,7 +67,6 @@ registerLocaleData(locale_deCH, 'de-CH');
     BrowserModule,
     AuthModule,
     BrowserAnimationsModule,
-    HttpClientModule,
     RouterModule.forRoot([
       {
         path: ':lang/admin',
@@ -81,10 +80,6 @@ registerLocaleData(locale_deCH, 'de-CH');
       {
         matcher: assetsPageMatcher,
         loadChildren: () => import('@asset-sg/asset-viewer').then((m) => m.AssetViewerModule),
-      },
-      {
-        path: 'not-found',
-        component: NotFoundComponent,
       },
       {
         path: '**',
@@ -132,10 +127,11 @@ registerLocaleData(locale_deCH, 'de-CH');
   ],
   providers: [
     provideSvgIcons(icons),
+    provideHttpClient(withFetch(), withInterceptorsFromDi()),
     ErrorService,
+    { provide: CURRENT_LANG, useFactory: currentLangFactory },
     { provide: HTTP_INTERCEPTORS, useClass: HttpInterceptor, multi: true },
     { provide: MAT_FORM_FIELD_DEFAULT_OPTIONS, useValue: { appearance: 'fill', floatLabel: 'auto' } },
-    { provide: CURRENT_LANG, useFactory: currentLangFactory },
   ],
   bootstrap: [AppComponent],
 })

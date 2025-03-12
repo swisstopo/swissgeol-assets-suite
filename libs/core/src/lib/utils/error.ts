@@ -6,7 +6,9 @@ export const unknownToError = (e: unknown): Error =>
 export class TypedError<T extends string, C> extends Error {
   constructor(public readonly _tag: T, public readonly cause: C, message?: string) {
     super();
-    message && (this.message = message);
+    if (message) {
+      this.message = message;
+    }
   }
 }
 

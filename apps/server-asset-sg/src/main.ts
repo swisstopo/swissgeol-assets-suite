@@ -1,4 +1,4 @@
-import { Logger, ValidationPipe } from '@nestjs/common';
+import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 
 import { AppModule } from './app.module';
@@ -14,14 +14,13 @@ const API_PORT = process.env.PORT || 3333;
 process.on('warning', (e) => console.warn(e.stack));
 
 async function bootstrap(): Promise<void> {
-  const app = await NestFactory.create(AppModule, {
-    logger: new AppLogger(),
-  });
+  const logger = new AppLogger();
+  const app = await NestFactory.create(AppModule, { logger });
   app.setGlobalPrefix(API_PREFIX);
   app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true, forbidNonWhitelisted: true }));
   app.useGlobalFilters(new PrismaExceptionFilter());
   await app.listen(API_PORT);
-  Logger.log('🚀 application is running!', { url: new URL(`http://localhost:${API_PORT}/${API_PREFIX}`) });
+  logger.log('🚀 application is running!', { url: new URL(`http://localhost:${API_PORT}/${API_PREFIX}`) });
 }
 
 bootstrap().catch((err: unknown) => {

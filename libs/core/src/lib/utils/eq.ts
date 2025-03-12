@@ -37,7 +37,7 @@ export function getEqArrayUnordered<A>(E: Eq<A>): Eq<ReadonlyArray<A>> {
  * @param obj1
  * @param obj2
  */
-export function deepEqual(obj1: any, obj2: any): boolean {
+export function deepEqual(obj1: unknown, obj2: unknown): boolean {
   // Base case: If both objects are identical, return true.
   if (obj1 === obj2) {
     return true;
@@ -55,7 +55,7 @@ export function deepEqual(obj1: any, obj2: any): boolean {
   }
   // Iterate through the keys and compare their values recursively.
   for (const key of keys1) {
-    if (!keys2.includes(key) || !deepEqual(obj1[key], obj2[key])) {
+    if (!keys2.includes(key) || !deepEqual(obj1[key as keyof object], obj2[key as keyof object])) {
       return false;
     }
   }

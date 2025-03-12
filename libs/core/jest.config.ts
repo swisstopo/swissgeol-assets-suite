@@ -1,4 +1,5 @@
-/* eslint-disable */
+import { Config } from 'jest';
+
 export default {
   displayName: 'core',
   preset: '../../jest.preset.js',
@@ -13,4 +14,4 @@ export default {
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
   coverageDirectory: '../../coverage/libs/core',
-};
+} satisfies Config;

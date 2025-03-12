@@ -1,8 +1,7 @@
 import { ENTER } from '@angular/cdk/keycodes';
 import { HttpClient } from '@angular/common/http';
 import { Component, ElementRef, inject, Input, OnInit, Output, ViewChild } from '@angular/core';
-import { Router } from '@angular/router';
-import { appSharedStateActions, AuthService, fromAppShared } from '@asset-sg/client-shared';
+import { appSharedStateActions, AuthService, fromAppShared, RoutingService } from '@asset-sg/client-shared';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { Store } from '@ngrx/store';
 import * as O from 'fp-ts/Option';
@@ -15,6 +14,7 @@ import { Version } from './version';
   selector: 'asset-sg-app-bar',
   templateUrl: './app-bar.component.html',
   styleUrls: ['./app-bar.component.scss'],
+  standalone: false,
 })
 export class AppBarComponent implements OnInit {
   // TODO use new pattern here
@@ -29,6 +29,7 @@ export class AppBarComponent implements OnInit {
 
   private readonly store = inject(Store<AppState>);
   private readonly authService = inject(AuthService);
+  private readonly routingService = inject(RoutingService);
 
   public readonly isAnonymous$ = this.store.select(fromAppShared.selectIsAnonymousMode);
 
@@ -36,7 +37,7 @@ export class AppBarComponent implements OnInit {
 
   private readonly _ngOnInit$ = new Subject<void>();
 
-  constructor(private readonly router: Router, private readonly httpClient: HttpClient) {
+  constructor(private readonly httpClient: HttpClient) {
     this.httpClient.get<Version>('/assets/version.json').subscribe((v) => (this.version = v.version));
     this.searchTextChanged = this.searchTextKeyDown$.pipe(
       filter((ev) => ev.keyCode === ENTER),
@@ -60,9 +61,9 @@ export class AppBarComponent implements OnInit {
     this._ngOnInit$.next();
   }
 
-  logout(): void {
+  async logout(): Promise<void> {
     this.authService.logOut();
     this.store.dispatch(appSharedStateActions.logout());
-    this.router.navigate(['/']);
+    await this.routingService.navigateToRoot();
   }
 }

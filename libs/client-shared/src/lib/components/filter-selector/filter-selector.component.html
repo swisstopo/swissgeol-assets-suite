@@ -1,0 +1,9 @@
+<asset-sg-select
+  [values]="filters"
+  [bindLabel]="'displayValue'"
+  [initialValues]="selectedFilters"
+  [multiple]="multiple"
+  [title]="title"
+  (selectionChanged)="onFilterChange($event)"
+>
+</asset-sg-select>

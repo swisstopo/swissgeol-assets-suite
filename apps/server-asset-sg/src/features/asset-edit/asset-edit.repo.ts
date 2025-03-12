@@ -264,8 +264,7 @@ export class AssetEditRepo implements Repo<AssetEditDetail, number, AssetEditDat
         });
 
         for (const { fileId } of assetFileIds) {
-          // Placeholder email
-          await this.fileRepo.delete({ id: fileId, assetId: id, user: { email: 'email@mail.com' } });
+          await this.fileRepo.delete({ id: fileId, assetId: id });
         }
 
         // Delete the record.

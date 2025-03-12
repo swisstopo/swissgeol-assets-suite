@@ -1,0 +1,26 @@
+<div class="header">
+  <h2 translate>admin.userPage.addWorkgroups</h2>
+</div>
+<hr />
+<div mat-dialog-content>
+  <asset-sg-select
+    title="{{ 'admin.workgroups' | translate }}"
+    [values]="workgroupValues"
+    (selectionChanged)="setSelectedWorkgroups($event)"
+    [shouldShowError]="shouldShowError"
+    errorMessage="{{ 'admin.userPage.workgroupAddError' | translate }}"
+    multiple
+  >
+  </asset-sg-select>
+  <asset-sg-select
+    title="{{ 'admin.role' | translate }}"
+    [values]="roles"
+    (selectionChanged)="setSelectedRole($event)"
+    [initialValues]="[selectedRole]"
+  ></asset-sg-select>
+</div>
+<hr />
+<div mat-dialog-actions class="actions">
+  <button asset-sg-secondary (click)="close()" translate>cancel</button>
+  <button asset-sg-primary (click)="updateWorkgroupsOfUser()" translate>admin.userPage.addWorkgroups</button>
+</div>

@@ -8,20 +8,15 @@
   height: 100%;
   display: flex;
   flex-direction: column;
-  padding: 0 1rem;
 }
 
-.header {
+.filters {
   display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  margin-bottom: 1rem;
+  gap: 12px;
 }
 
-.table__header {
-  background-color: variables.$grey-03;
-}
-
-.mat-mdc-row:hover .mat-mdc-cell {
-  background-color: variables.$grey-01;
+.mat-column-isAdmin,
+.mat-column-languages {
+  width: 97px;
+  padding: 0;
 }

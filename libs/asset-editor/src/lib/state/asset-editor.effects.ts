@@ -1,6 +1,13 @@
 import { inject, Injectable } from '@angular/core';
 import { Router } from '@angular/router';
-import { Alert, AlertType, appSharedStateActions, filterNavigateToComponent, showAlert } from '@asset-sg/client-shared';
+import {
+  Alert,
+  AlertType,
+  appSharedStateActions,
+  filterNavigateToComponent,
+  RoutingService,
+  showAlert,
+} from '@asset-sg/client-shared';
 import { DT, isNotNull, ORD, partitionEither } from '@asset-sg/core';
 import { GeomFromGeomText } from '@asset-sg/shared';
 import * as RD from '@devexperts/remote-data-ts';
@@ -20,9 +27,10 @@ import * as actions from './asset-editor.actions';
 @UntilDestroy()
 @Injectable()
 export class AssetEditorEffects {
-  private _actions$ = inject(Actions);
-  private _assetEditorService = inject(AssetEditorService);
-  private _router = inject(Router);
+  private readonly _actions$ = inject(Actions);
+  private readonly _assetEditorService = inject(AssetEditorService);
+  private readonly _router = inject(Router);
+  private readonly routingService = inject(RoutingService);
   private readonly translateService = inject(TranslateService);
 
   validatedQueryParams = partitionEither(
@@ -55,8 +63,10 @@ export class AssetEditorEffects {
   loadAssetEditDetail$ = createEffect(() =>
     this.newOrAssetId[1].pipe(
       switchMap((params) => this._assetEditorService.loadAssetDetailData(params.assetId)),
-      tap((rd) => {
-        RD.isFailure(rd) && this._router.navigate(['/'], { queryParams: undefined });
+      tap(async (rd) => {
+        if (RD.isFailure(rd)) {
+          await this._router.navigate(['/'], { queryParams: undefined });
+        }
       }),
       ORD.map(O.some),
       map(actions.loadAssetEditDetailResult)
@@ -107,13 +117,15 @@ export class AssetEditorEffects {
     )
   );
 
-  redirectToViewerAfterDeletion = createEffect(
-    () =>
-      this._actions$.pipe(
-        ofType(actions.handleSuccessfulDeletion),
-        switchMap(() => this._router.navigate(['']))
-      ),
-    { dispatch: false }
+  redirectToViewerAfterDeletion = createEffect(() =>
+    this._actions$.pipe(
+      ofType(actions.handleSuccessfulDeletion),
+      switchMap(async ({ assetId }) => {
+        await this.routingService.navigateToRoot();
+        return assetId;
+      }),
+      map((assetId) => appSharedStateActions.removeAssetFromSearch({ assetId }))
+    )
   );
 
   updateSearchAfterAssetChanged$ = createEffect(() =>

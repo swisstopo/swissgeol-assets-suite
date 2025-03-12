@@ -1,3 +1,5 @@
+@use "sass:color";
+
 :host {
   --stroke-color: #295969;
   --fill-color: transparent;
@@ -12,7 +14,7 @@
 
 :host:hover,
 :host.is-active:hover {
-  --fill-color: #{lighten(#295969, 35%)};
+  --fill-color: #{color.adjust(#295969, $lightness: 35%)};
 }
 
 :host.is-active {

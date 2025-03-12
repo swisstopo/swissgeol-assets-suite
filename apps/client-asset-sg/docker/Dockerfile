@@ -1,5 +1,7 @@
 FROM node:22-alpine AS app-builder
 
+RUN apk add --no-cache openssl
+
 ARG APP_VERSION
 ENV APP_VERSION=${APP_VERSION}
 ENV CYPRESS_INSTALL_BINARY=0

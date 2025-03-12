@@ -17,6 +17,7 @@ import { AppState } from '../../state/app-state';
   templateUrl: './menu-bar.component.html',
   styleUrls: ['./menu-bar.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: false,
 })
 export class MenuBarComponent {
   @HostBinding('attr.role')
@@ -35,7 +36,7 @@ export class MenuBarComponent {
     startWith(() => undefined),
     map((): MenuItem | null => {
       const segments = (this.router.getCurrentNavigation() ?? this.router.lastSuccessfulNavigation)?.finalUrl?.root
-        .children['primary'].segments;
+        .children?.['primary'].segments;
       if (segments == null || segments.length === 1) {
         return 'home';
       }

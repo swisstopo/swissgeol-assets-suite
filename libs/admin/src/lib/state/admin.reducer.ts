@@ -126,5 +126,13 @@ export const adminReducer = createReducer(
       workgroups,
       isLoading: false,
     })
+  ),
+  on(
+    actions.removeWorkgroupAfterDelete,
+    (state, { workgroupId }): AdminState => ({
+      ...state,
+      workgroups: state.workgroups.filter((workgroup) => workgroup.id !== workgroupId),
+      isLoading: false,
+    })
   )
 );

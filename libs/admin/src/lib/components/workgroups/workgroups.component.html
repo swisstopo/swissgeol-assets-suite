@@ -1,36 +1,82 @@
-<div class="workgroups">
-  <div class="header">
-    <h1 translate>admin.workgroups</h1>
-    <button asset-sg-primary routerLink="new" translate>admin.workgroupPage.create</button>
+<div>
+  <asset-sg-search-and-filter
+    (searchTermChanged)="setSearchTerm($event)"
+    (shouldShowFiltersChanged)="toggleFilters($event)"
+  ></asset-sg-search-and-filter>
+  @if (shouldShowFilters) {
+  <div>
+    <asset-sg-filter-selector
+      (filterAdded)="addFilter($event)"
+      (filterRemoved)="removeFilter($event)"
+      title="{{ 'search.status' | translate }}"
+      [filters]="filterForIsActive"
+      multiple
+    ></asset-sg-filter-selector>
   </div>
-  <div class="table">
-    <table mat-table [dataSource]="workgroups$" class="mat-elevation-z8">
-      <ng-container matColumnDef="name">
-        <th mat-header-cell *matHeaderCellDef translate>admin.name</th>
-        <td mat-cell *matCellDef="let workgroup">{{ workgroup.name }}</td>
-      </ng-container>
-      <ng-container matColumnDef="users">
-        <th mat-header-cell *matHeaderCellDef translate>admin.users</th>
-        <td mat-cell *matCellDef="let workgroup">
-          @for (user of getWorkgroupUsers(workgroup); track user.id) {
-          <span>{{ user.email }}, </span>
+  }
+
+  <table
+    mat-table
+    [dataSource]="dataSource"
+    class="mat-elevation-z8 table"
+    matSort
+    (matSortChange)="sortChange($event)"
+  >
+    <ng-container matColumnDef="name">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header="name"><span translate>search.workgroup</span></th>
+      <td mat-cell *matCellDef="let workgroup">{{ workgroup.name }}</td>
+    </ng-container>
+    <ng-container matColumnDef="numberOfAssets">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header="numberOfAssets">
+        <span translate>admin.userPage.amount</span>
+      </th>
+      <td mat-cell *matCellDef="let workgroup">{{ workgroup.numberOfAssets }}</td>
+    </ng-container>
+    <ng-container matColumnDef="users">
+      <th mat-header-cell *matHeaderCellDef translate>admin.workgroupPage.usersPerRole</th>
+      <td mat-cell *matCellDef="let workgroup">
+        <mat-chip-set>
+          @for (usersPerRole of workgroup.usersPerRole; track usersPerRole) {
+          <asset-sg-chip [disabled]="workgroup.disabledAt"
+            >{{ usersPerRole[0] }} ({{ usersPerRole[1] }})
+          </asset-sg-chip>
           }
-        </td>
-      </ng-container>
-      <ng-container matColumnDef="status">
-        <th mat-header-cell *matHeaderCellDef translate>admin.workgroupPage.isActive</th>
-        <td mat-cell *matCellDef="let workgroup">{{ workgroup.disabled_at ? "inaktiv" : "aktiv" }}</td>
-      </ng-container>
-      <ng-container matColumnDef="actions">
-        <th mat-header-cell *matHeaderCellDef translate>admin.actions</th>
-        <td mat-cell *matCellDef="let workgroup">
-          <button [routerLink]="[workgroup.id]">
-            <svg-icon key="edit"></svg-icon>
-          </button>
-        </td>
-      </ng-container>
-      <tr mat-header-row *matHeaderRowDef="COLUMNS; sticky: true" class="table__header"></tr>
-      <tr mat-row *matRowDef="let row; columns: COLUMNS"></tr>
-    </table>
-  </div>
+        </mat-chip-set>
+      </td>
+    </ng-container>
+    <ng-container matColumnDef="status">
+      <th mat-header-cell *matHeaderCellDef translate>search.status</th>
+      <td mat-cell *matCellDef="let workgroup" translate>
+        {{ workgroup.disabledAt ? "admin.workgroupPage.isDisabled" : "admin.workgroupPage.isActive" }}
+      </td>
+    </ng-container>
+    <ng-container matColumnDef="actions">
+      <th mat-header-cell *matHeaderCellDef translate></th>
+      <td mat-cell *matCellDef="let workgroup">
+        <button
+          [disabled]="workgroup.numberOfAssets > 0"
+          asset-sg-secondary
+          isIcon
+          (click)="deleteWorkgroup($event, workgroup.id)"
+          [matTooltip]="
+            workgroup.numberOfAssets > 0
+              ? ('admin.workgroupPage.unableToDelete' | translate)
+              : ('admin.workgroupPage.delete' | translate)
+          "
+          matTooltipPosition="left"
+        >
+          <svg-icon key="delete"></svg-icon>
+        </button>
+      </td>
+    </ng-container>
+    <tr mat-header-row *matHeaderRowDef="COLUMNS; sticky: true" class="table__header"></tr>
+    <tr
+      mat-row
+      *matRowDef="let row; columns: COLUMNS"
+      [routerLink]="[row.id]"
+      [attr.disabled]="row.disabledAt"
+      clickable
+    ></tr>
+  </table>
+  <mat-paginator [pageSizeOptions]="[25, 50, 100]" [showFirstLastButtons]="true"></mat-paginator>
 </div>

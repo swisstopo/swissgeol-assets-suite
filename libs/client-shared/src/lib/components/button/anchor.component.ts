@@ -3,19 +3,17 @@ import {
   ChangeDetectionStrategy,
   Component,
   HostBinding,
+  inject,
   Input,
   NgZone,
   OnDestroy,
-  inject,
 } from '@angular/core';
 
 import { ButtonComponent } from './button.component';
 
 @Component({
   standalone: true,
-  selector:
-    // eslint-disable-next-line @angular-eslint/component-selector
-    'a[asset-sg-reset], a[asset-sg-icon-button], a[asset-sg-primary], a[asset-sg-secondary], a[asset-sg-link]',
+  selector: 'a[asset-sg-reset], a[asset-sg-icon-button], a[asset-sg-primary], a[asset-sg-secondary], a[asset-sg-link]',
   template: '<ng-content></ng-content>',
   styleUrls: ['./button.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -45,6 +43,7 @@ export class AnchorComponent extends ButtonComponent implements AfterViewInit, O
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private _tabIndex: any;
+
   @Input()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   set tabindex(value: any) {

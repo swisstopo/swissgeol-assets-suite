@@ -1,4 +1,4 @@
-@workgroupId = 5
+@workgroupId = 12
 
 ### Show specific workgroup
 GET {{host}}/api/workgroups/{{workgroupId}}

@@ -1,4 +1,4 @@
-import { WorkgroupData, Role } from '@asset-sg/shared/v2';
+import { Role, WorkgroupData } from '@asset-sg/shared/v2';
 import { faker } from '@faker-js/faker';
 // eslint-disable-next-line @nx/enforce-module-boundaries
 import { clearPrismaAssets, setupDB, setupDefaultWorkgroup } from '../../../../../test/setup-db';
@@ -104,6 +104,8 @@ describe('WorkgroupRepo', () => {
       await setupDefaultWorkgroup(prisma);
       const user = await userRepo.create({
         email: faker.internet.email(),
+        lastName: faker.person.lastName(),
+        firstName: faker.person.firstName(),
         lang: 'de',
         oidcId: faker.string.uuid(),
         isAdmin: false,
@@ -118,6 +120,8 @@ describe('WorkgroupRepo', () => {
             {
               role: Role.MasterEditor,
               email: user.email,
+              firstName: user.firstName,
+              lastName: user.lastName,
             },
           ],
         ]),
@@ -149,6 +153,8 @@ describe('WorkgroupRepo', () => {
       await setupDefaultWorkgroup(prisma);
       const user = await userRepo.create({
         email: faker.internet.email(),
+        lastName: faker.person.lastName(),
+        firstName: faker.person.firstName(),
         lang: 'de',
         oidcId: faker.string.uuid(),
         isAdmin: false,
@@ -165,6 +171,8 @@ describe('WorkgroupRepo', () => {
             {
               role: Role.MasterEditor,
               email: user.email,
+              lastName: user.lastName,
+              firstName: user.firstName,
             },
           ],
         ]),
@@ -192,6 +200,8 @@ describe('WorkgroupRepo', () => {
       await setupDefaultWorkgroup(prisma);
       const user = await userRepo.create({
         email: faker.internet.email(),
+        lastName: faker.person.lastName(),
+        firstName: faker.person.firstName(),
         lang: 'de',
         oidcId: faker.string.uuid(),
         isAdmin: false,
@@ -206,6 +216,8 @@ describe('WorkgroupRepo', () => {
             {
               role: Role.MasterEditor,
               email: user.email,
+              firstName: user.firstName,
+              lastName: user.lastName,
             },
           ],
         ]),

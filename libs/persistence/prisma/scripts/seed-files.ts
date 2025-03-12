@@ -1,4 +1,3 @@
-/* eslint-disable @nx/enforce-module-boundaries */
 import { DT, unknownToError } from '@asset-sg/core';
 import { ListObjectsCommand, ListObjectsCommandOutput, S3Client } from '@aws-sdk/client-s3';
 import * as A from 'fp-ts/Array';

@@ -1,6 +1,8 @@
 @use "../../styles/variables";
 
-::ng-deep .navigation .navigation__link {
+$sub-navigation-bar-height: 84px;
+
+:host ::ng-deep .navigation .navigation__link {
   .mdc-tab__text-label {
     color: variables.$cyan-09;
   }
@@ -12,10 +14,6 @@
 
 :host {
   background-color: variables.$grey-03;
-  position: relative;
-  height: calc(100vh - 88px);
-  width: 100%;
-  padding: 1rem;
 }
 
 .loading-bar {
@@ -32,24 +30,80 @@
   height: 100%;
 }
 
+.header {
+  height: $sub-navigation-bar-height;
+  background-color: variables.$white;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 18px;
+  padding: 0 24px;
+
+  .back-button {
+    height: 36px;
+    width: 36px;
+    padding: 0;
+  }
+}
+
+h2 {
+  margin: 0;
+  font-size: 26px;
+  line-height: 28px;
+}
+
+.main {
+  padding: 40px;
+  background-color: variables.$grey-01;
+  height: calc(100% - $sub-navigation-bar-height);
+}
+
+.inactive-overlay {
+  height: calc(100vh - $sub-navigation-bar-height - 88px);
+  width: 100%;
+  pointer-events: all;
+  position: absolute;
+  background-color: #f5f6f8;
+  opacity: 50%;
+  left: 0;
+  top: calc($sub-navigation-bar-height + 88px);
+  z-index: 1000;
+}
+
 .content {
   flex-grow: 1;
   overflow-y: auto;
+  background-color: variables.$white;
+  padding: 24px;
+  border: 1px solid #dfe4e9;
+}
+
+.navigation-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-right: 16px;
 }
 
 .navigation {
   display: flex;
-  gap: 1rem;
-  padding: 0 1rem;
   font-size: 16px;
 
   .navigation__link {
-    color: variables.$cyan-09;
-    text-decoration: underline;
+    position: relative;
+    bottom: -1px;
+    color: black;
+    text-decoration: none;
+    padding: 24px;
+    font-weight: 400;
 
     &--active {
-      text-decoration: none;
-      color: black;
+      color: variables.$cyan-09;
+      background-color: white;
+      border-top-left-radius: 4px;
+      border-top-right-radius: 4px;
+      border: 1px solid #dfe4e9;
+      border-bottom: none;
     }
   }
 

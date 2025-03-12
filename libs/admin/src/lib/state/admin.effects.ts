@@ -1,13 +1,13 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { AlertType, CURRENT_LANG, showAlert } from '@asset-sg/client-shared';
+import { AlertType, appSharedStateActions, AuthService, CURRENT_LANG, showAlert } from '@asset-sg/client-shared';
 import { User, Workgroup, WorkgroupData } from '@asset-sg/shared/v2';
 import { UntilDestroy } from '@ngneat/until-destroy';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { Store } from '@ngrx/store';
 import { TranslateService } from '@ngx-translate/core';
-import { catchError, EMPTY, first, map, OperatorFunction, switchMap, withLatestFrom } from 'rxjs';
+import { catchError, EMPTY, map, OperatorFunction, switchMap, withLatestFrom } from 'rxjs';
 
 import { AdminService } from '../services/admin.service';
 import * as actions from './admin.actions';
@@ -17,6 +17,7 @@ import * as actions from './admin.actions';
 export class AdminEffects {
   private readonly actions$ = inject(Actions);
   private readonly adminService = inject(AdminService);
+  private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly store = inject(Store);
@@ -72,22 +73,35 @@ export class AdminEffects {
     )
   );
 
+  public deleteWorkgroup$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(actions.deleteWorkgroup),
+      switchMap(({ workgroupId }) =>
+        this.adminService
+          .deleteWorkgroup(workgroupId)
+          .pipe(map(() => actions.removeWorkgroupAfterDelete({ workgroupId })))
+      )
+    )
+  );
+
   public listUsers$ = createEffect(() =>
     this.actions$.pipe(
-      ofType(actions.listUsers, actions.setUser, actions.setWorkgroup),
-      first(),
+      ofType(actions.listUsers, actions.setUser),
       switchMap(() => this.adminService.getUsers().pipe(map((users: User[]) => actions.setUsers({ users }))))
     )
   );
 
   public listWorkgroups$ = createEffect(() =>
     this.actions$.pipe(
-      ofType(actions.listWorkgroups, actions.setWorkgroup, actions.setUser),
-      first(),
+      ofType(actions.listWorkgroups, actions.setWorkgroup),
       switchMap(() =>
         this.adminService.getWorkgroups().pipe(map((workgroups: Workgroup[]) => actions.setWorkgroups({ workgroups })))
       )
     )
+  );
+
+  public loadUser$ = createEffect(() =>
+    this.actions$.pipe(ofType(actions.setUser, actions.setWorkgroup), map(appSharedStateActions.loadUserProfile))
   );
 
   private readonly catchWorkgroupError = (data: WorkgroupData): OperatorFunction<Workgroup, Workgroup> =>

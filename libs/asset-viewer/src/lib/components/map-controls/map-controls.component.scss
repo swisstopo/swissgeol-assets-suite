@@ -18,8 +18,16 @@
     &.is-active {
       color: variables.$red;
     }
+
     &:not(is-active) {
       color: #357183;
     }
   }
+}
+
+.map-control-button {
+  padding: 0;
+  height: 36px;
+  width: 36px;
+  margin: 4px;
 }

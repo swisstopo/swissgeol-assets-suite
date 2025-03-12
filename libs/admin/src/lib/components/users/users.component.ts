@@ -1,58 +1,57 @@
-import { Component, inject, OnDestroy, OnInit } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { MatCheckboxChange } from '@angular/material/checkbox';
-import { fromAppShared } from '@asset-sg/client-shared';
+import { CURRENT_LANG, Filter, fromAppShared } from '@asset-sg/client-shared';
 import { isNotNull } from '@asset-sg/core';
 import { Role, User, Workgroup, WorkgroupId } from '@asset-sg/shared/v2';
 import * as RD from '@devexperts/remote-data-ts';
 import { Store } from '@ngrx/store';
-import { filter, map, Observable, Subscription } from 'rxjs';
+import { filter, map, Observable } from 'rxjs';
 import * as actions from '../../state/admin.actions';
 import { AppStateWithAdmin } from '../../state/admin.reducer';
 import { selectUsers, selectWorkgroups } from '../../state/admin.selector';
+import { AbstractAdminTableComponent } from '../abstract-admin-table/abstract-admin-table.component';
 
 @Component({
   selector: 'asset-sg-users',
   templateUrl: './users.component.html',
   styleUrls: ['./users.component.scss'],
+  standalone: false,
 })
-export class UsersComponent implements OnInit, OnDestroy {
+export class UsersComponent extends AbstractAdminTableComponent<User> implements OnInit {
   public workgroups = new Map<WorkgroupId, Workgroup>();
+  public workgroupFilters: Filter<User>[] = [];
+  public readonly langFilters: Filter<User>[] = [
+    { displayValue: 'DE', key: 'lang', match: (value) => value.lang === 'de' },
+    { displayValue: 'EN', key: 'lang', match: (value) => value.lang === 'en' },
+    { displayValue: 'FR', key: 'lang', match: (value) => value.lang === 'fr' },
+    { displayValue: 'IT', key: 'lang', match: (value) => value.lang === 'en' },
+  ];
+  public filterForIsAdmin: Filter<User>[] = [];
 
-  protected readonly COLUMNS = ['email', 'isAdmin', 'languages', 'workgroups', 'actions'];
+  protected readonly COLUMNS = ['firstName', 'lastName', 'email', 'workgroups', 'isAdmin', 'languages'];
+  private readonly searchableFields: Array<keyof User> = ['firstName', 'lastName', 'email'];
   protected readonly WORKGROUP_DISPLAY_COUNT = 3;
 
   private readonly store = inject(Store<AppStateWithAdmin>);
   public readonly users$ = this.store.select(selectUsers);
   private readonly workgroups$ = this.store.select(selectWorkgroups);
-  private readonly subscriptions: Subscription = new Subscription();
+  public readonly currentLang$ = inject(CURRENT_LANG);
 
   public readonly currentUser$: Observable<User> = this.store.select(fromAppShared.selectRDUserProfile).pipe(
     map((currentUser) => (RD.isSuccess(currentUser) ? currentUser.value : null)),
     filter(isNotNull)
   );
 
-  public ngOnInit(): void {
+  public override ngOnInit(): void {
+    super.ngOnInit();
+    this.store.dispatch(actions.listUsers());
     this.initSubscriptions();
   }
 
-  public ngOnDestroy(): void {
-    this.subscriptions.unsubscribe();
-  }
-
-  public *getUserWorkgroups(user: User): Iterable<Workgroup & { role: Role }> {
-    const iter = user.roles.entries();
-    for (let i = 0; i < this.WORKGROUP_DISPLAY_COUNT; i++) {
-      const { value, done } = iter.next();
-      if (done) {
-        break;
-      }
-      const [workgroupId, role] = value;
-      const workgroup = this.workgroups.get(workgroupId);
-      if (workgroup == null) {
-        continue;
-      }
-      yield { ...workgroup, role };
-    }
+  protected override matchBySearchTerm(user: User, searchTerm: string): boolean {
+    return this.searchableFields.some((field) =>
+      user[field].toString().toLowerCase().includes(searchTerm.toLowerCase())
+    );
   }
 
   public updateIsAdminStatus(user: User, event: MatCheckboxChange) {
@@ -61,26 +60,61 @@ export class UsersComponent implements OnInit, OnDestroy {
 
   public formatWorkgroupsTooltip(roles: User['roles']): string {
     let tooltip = '';
-    for (const [workgroupId, workgroupRole] of roles) {
+    for (const workgroupId of roles.keys()) {
       const workgroup = this.workgroups.get(workgroupId);
       if (workgroup == null) {
         continue;
       }
       if (tooltip.length !== 0) {
-        tooltip += ',\n';
+        tooltip += ', ';
       }
-      tooltip += `${workgroup.name}.${workgroupRole}`;
+      tooltip += `${workgroup.name}`;
     }
     return tooltip;
+  }
+
+  public *getWorkgroupsOfUser(user: User): Iterable<Workgroup & { role: Role }> {
+    let i = 0;
+    for (const [workgroupId, role] of user.roles) {
+      i += 1;
+      if (i > this.WORKGROUP_DISPLAY_COUNT) {
+        break;
+      }
+      const workgroup = this.workgroups.get(workgroupId);
+      if (workgroup == null) {
+        continue;
+      }
+      yield { ...workgroup, role };
+    }
   }
 
   private initSubscriptions(): void {
     this.subscriptions.add(
       this.workgroups$.subscribe((workgroups) => {
         this.workgroups.clear();
+        this.workgroupFilters = workgroups.map((workgroup) => ({
+          key: 'roles',
+          displayValue: workgroup.name,
+          match: (value) => value.roles.has(workgroup.id),
+        }));
+
         for (const workgroup of workgroups) {
           this.workgroups.set(workgroup.id, workgroup);
         }
+      })
+    );
+    this.subscriptions.add(
+      this.users$.subscribe((users) => {
+        this.data = users;
+        this.dataSource.data = users;
+      })
+    );
+    this.subscriptions.add(
+      this.currentLang$.subscribe(() => {
+        this.filterForIsAdmin = [
+          { displayValue: { key: 'admin.userPage.admin' }, key: 'isAdmin', match: (value) => value.isAdmin },
+          { displayValue: { key: 'admin.userPage.noAdmin' }, key: 'isAdmin', match: (value) => !value.isAdmin },
+        ];
       })
     );
   }

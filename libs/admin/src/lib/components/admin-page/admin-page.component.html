@@ -1,21 +1,65 @@
 <mat-progress-bar *rxIf="isLoading$" mode="indeterminate" class="loading-bar" />
-<div class="admin-page">
-  @if (!isDetailPage) {
-  <div class="navigation">
-    <a routerLink="users" class="navigation__link" routerLinkActive="navigation__link--active">{{
-      "admin.users" | translate
-    }}</a>
-    <span> | </span>
-    <a routerLink="workgroups" class="navigation__link" routerLinkActive="navigation__link--active">{{
-      "admin.workgroups" | translate
-    }}</a>
-  </div>
+<div class="header" *rxLet="currentLang$; let currentLang">
+  <button asset-sg-primary (click)="navigateBack(currentLang)" class="back-button">
+    <svg-icon key="arrow-left" class="close" />
+  </button>
+  @if (isWorkgroupDetailPage && workgroup) {
+
+  <h2>{{ workgroup.name }}</h2>
+  <asset-sg-chip type="secondary"><span translate>workgroup.title</span></asset-sg-chip>
+  <div style="flex: 1"></div>
+  <button
+    asset-sg-secondary
+    (click)="deleteWorkgroup(workgroup.id)"
+    [disabled]="workgroup.numberOfAssets > 0"
+    [matTooltip]="
+      workgroup.numberOfAssets > 0
+        ? ('admin.workgroupPage.unableToDelete' | translate)
+        : ('admin.workgroupPage.delete' | translate)
+    "
+    matTooltipPosition="left"
+    translate
+  >
+    admin.workgroupPage.delete
+    <svg-icon key="delete"></svg-icon>
+  </button>
+  <asset-sg-toggle-status
+    [isActive]="!workgroup.disabledAt"
+    (toggleIsActive)="toggleActiveStatus(workgroup)"
+  ></asset-sg-toggle-status>
+  } @else if (isUsersPage) {
+  <h2>{{ (selectedUser$ | async)?.email }}</h2>
+  <asset-sg-chip type="secondary"><span translate>admin.user</span></asset-sg-chip>
   } @else {
-  <div class="navigation" *rxLet="currentLang$; let currentLang">
-    <a [routerLink]="getBackPath(currentLang)" class="navigation__link pointer" translate>admin.back</a>
-  </div>
+  <h2 translate="">menuBar.settings</h2>
   }
+</div>
+<div class="main">
+  @if (workgroup && workgroup.disabledAt) {
+  <div class="inactive-overlay"></div>
+  } @if (!isDetailPage) {
+  <div class="navigation-container">
+    <div class="navigation">
+      <a routerLink="users" class="navigation__link" routerLinkActive="navigation__link--active">{{
+        "admin.users" | translate
+      }}</a>
+      <a routerLink="workgroups" class="navigation__link" routerLinkActive="navigation__link--active">{{
+        "admin.workgroups" | translate
+      }}</a>
+    </div>
+    @if (isWorkgroupPage) {
+    <button asset-sg-primary [routerLink]="['workgroups', 'new']" translate>
+      admin.workgroupPage.create
+      <svg-icon key="add"></svg-icon>
+    </button>
+    }
+  </div>
   <div class="content">
     <router-outlet></router-outlet>
   </div>
+  } @else {
+  <div>
+    <router-outlet></router-outlet>
+  </div>
+  }
 </div>

@@ -40,6 +40,7 @@ import {
   withLatestFrom,
 } from 'rxjs';
 
+import { ViewerParamsService } from '../../services/viewer-params.service';
 import * as actions from '../../state/asset-search/asset-search.actions';
 import { LoadingState } from '../../state/asset-search/asset-search.reducer';
 import {
@@ -57,6 +58,7 @@ import {
   selector: 'asset-sg-viewer-page',
   templateUrl: './asset-viewer-page.component.html',
   styleUrls: ['./asset-viewer-page.component.scss'],
+  standalone: false,
   hostDirectives: [LifecycleHooksDirective],
 })
 export class AssetViewerPageComponent implements OnInit, OnDestroy {
@@ -102,14 +104,7 @@ export class AssetViewerPageComponent implements OnInit, OnDestroy {
 
   private readonly authService = inject(AuthService);
 
-  public ngOnInit() {
-    this._store.dispatch(actions.openFilters());
-
-    this.authService.isInitialized$.pipe(filter(identity), take(1)).subscribe(() => {
-      this._store.dispatch(actions.initialize());
-    });
-    this._appPortalService.setAppBarPortalContent(null);
-  }
+  private readonly viewerParamsService = inject(ViewerParamsService);
 
   constructor() {
     const setupPortals$ = this._lc.afterViewInit$.pipe(
@@ -176,7 +171,17 @@ export class AssetViewerPageComponent implements OnInit, OnDestroy {
       .subscribe(this._store);
   }
 
+  public ngOnInit() {
+    this._store.dispatch(actions.openFilters());
+
+    this.authService.isInitialized$.pipe(filter(identity), take(1)).subscribe(() => {
+      this.viewerParamsService.start();
+    });
+    this._appPortalService.setAppBarPortalContent(null);
+  }
+
   ngOnDestroy() {
     this._appPortalService.setAppBarPortalContent(null);
+    this.viewerParamsService.stop();
   }
 }

@@ -1,0 +1,27 @@
+:host {
+  position: relative;
+}
+
+.search-input {
+  padding: 8px 12px;
+  border: 1px solid #596978;
+  width: 360px;
+  height: 44px;
+  border-radius: 3px;
+
+  &::placeholder {
+    color: #1c2834;
+  }
+}
+
+.has-icon {
+  padding-left: 48px;
+}
+
+.icon {
+  position: absolute;
+  left: 12px;
+  top: 0;
+  bottom: 0;
+  margin: auto 0;
+}
