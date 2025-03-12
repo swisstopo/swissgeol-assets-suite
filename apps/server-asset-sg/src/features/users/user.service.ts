@@ -98,6 +98,9 @@ export class UserService {
         ids.add(subAttribute.Value);
       }
       nextToken = response.NextToken;
+      if (nextToken === undefined) {
+        return ids;
+      }
     }
   }
 
