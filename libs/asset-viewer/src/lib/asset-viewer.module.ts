@@ -64,6 +64,7 @@ import { ViewerParamsService } from './services/viewer-params.service';
 import { AssetSearchEffects } from './state/asset-search/asset-search.effects';
 import { assetSearchReducer } from './state/asset-search/asset-search.reducer';
 import { mapControlReducer } from './state/map-control/map-control.reducer';
+import { MapLegendComponent } from './components/map-legend/map-legend.component';
 
 @NgModule({
   declarations: [
@@ -134,6 +135,7 @@ import { mapControlReducer } from './state/map-control/map-control.reducer';
     MatTooltip,
     CanCreateDirective,
     CanUpdateDirective,
+    MapLegendComponent,
   ],
   providers: [
     TranslatePipe,

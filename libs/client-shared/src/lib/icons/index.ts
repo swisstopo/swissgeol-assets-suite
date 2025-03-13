@@ -28,6 +28,7 @@ import { searchIcon } from './search';
 import { settingsIcon } from './settings';
 import { successIcon } from './success';
 import { successFilledIcon } from './success-filled';
+import { changeIcon } from './change';
 import { userManagementIcon } from './user-management';
 import { viewExtendedIcon } from './view-extended';
 import { warnIcon } from './warn';
@@ -67,6 +68,7 @@ export const icons = [
   settingsIcon,
   successIcon,
   successFilledIcon,
+  changeIcon,
   userManagementIcon,
   viewExtendedIcon,
   warningFilledIcon,
