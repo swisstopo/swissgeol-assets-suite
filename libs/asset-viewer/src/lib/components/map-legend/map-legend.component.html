@@ -1,10 +1,11 @@
+@if(activeStyle$ | async; as activeStyle) {
 <cdk-accordion class="map-legend">
   <cdk-accordion-item #legend="cdkAccordionItem" class="map-legend__content">
     <div [attr.aria-expanded]="legend.expanded" [attr.id]="'legend-header'" class="map-legend__content__header">
       <button (click)="handleChange()" asset-sg-icon-button class="map-legend__content__header__button">
         <svg-icon [key]="'change'"></svg-icon>
       </button>
-      <span class="map-legend__content__header__title"> Titel </span>
+      <span class="map-legend__content__header__title">{{ activeStyle.name }}</span>
       <button
         (click)="legend.toggle()"
         [attr.aria-controls]="'legend-body'"
@@ -22,8 +23,14 @@
       [attr.id]="'legend-body'"
       [attr.aria-labelledby]="'legend-header'"
     >
-      Content
+      @for(styleItem of activeStyle.styleItems; track $index) {
+      <div class="map-legend__content__body__item">
+        <svg-icon [key]="styleItem.iconKey"></svg-icon>
+        <span>{{ styleItem.translationKey | translate }}</span>
+      </div>
+      }
     </div>
     }
   </cdk-accordion-item>
 </cdk-accordion>
+}
