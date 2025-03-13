@@ -71,6 +71,9 @@ export class ViewerParamsService {
     this.subscription.add(
       this.paramsFromStore$.pipe(skip(1)).subscribe((params) => {
         this.params = params;
+        // We need the value from the URL for 'favoritesOnly' as it is removed from the state after resetting the search
+        const paramsFromUrl = this.parseParamsFromUrl();
+        this.params.query.favoritesOnly = paramsFromUrl.query.favoritesOnly;
         this.writeParamsToUrl({ shouldReplaceUrl });
         shouldReplaceUrl = false;
       })
