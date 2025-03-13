@@ -1,10 +1,10 @@
 import { CdkAccordion, CdkAccordionItem } from '@angular/cdk/accordion';
+import { AsyncPipe } from '@angular/common';
 import { Component } from '@angular/core';
 import { ButtonComponent } from '@asset-sg/client-shared';
 import { SvgIconComponent } from '@ngneat/svg-icon';
-import { BehaviorSubject } from 'rxjs/internal/BehaviorSubject';
-import { AsyncPipe } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
+import { BehaviorSubject } from 'rxjs/internal/BehaviorSubject';
 
 interface MapStyle {
   name: string;
@@ -24,15 +24,15 @@ const mapStyles: MapStyle[] = [
     styleItems: [
       {
         translationKey: 'Asset Punkt',
-        iconKey: 'arrow-up',
+        iconKey: 'geometry-point',
       },
       {
         translationKey: 'Asset Linie',
-        iconKey: 'arrow-down',
+        iconKey: 'geometry-line',
       },
       {
         translationKey: 'Asset Fläche',
-        iconKey: 'settings',
+        iconKey: 'geometry-polygon',
       },
     ],
   },
@@ -42,15 +42,15 @@ const mapStyles: MapStyle[] = [
     styleItems: [
       {
         translationKey: 'Öffentlich',
-        iconKey: 'settings',
+        iconKey: 'access-public',
       },
       {
         translationKey: 'Intern',
-        iconKey: 'arrow-up',
+        iconKey: 'access-internal',
       },
       {
         translationKey: 'gesperrt',
-        iconKey: 'arrow-down',
+        iconKey: 'access-locked',
       },
     ],
   },
