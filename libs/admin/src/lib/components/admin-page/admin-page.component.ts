@@ -18,8 +18,8 @@ import { selectIsLoading, selectSelectedUser, selectSelectedWorkgroup } from '..
 export class AdminPageComponent implements OnInit, OnDestroy {
   @ViewChild('templateDrawerPortalContent') templateDrawerPortalContent!: TemplateRef<unknown>;
 
-  public workgroup?: Workgroup = undefined;
-  public user?: User = undefined;
+  public workgroup: Workgroup | null = null;
+  public user: User | null = null;
   private readonly store = inject(Store<AppState>);
   public readonly isLoading$ = this.store.select(selectIsLoading);
   public readonly selectedUser$ = this.store.select(selectSelectedUser);
@@ -89,13 +89,13 @@ export class AdminPageComponent implements OnInit, OnDestroy {
   private initSubscriptions(): void {
     this.subscriptions.add(
       this.selectedWorkgroup$.subscribe((workgroup) => {
-        this.workgroup = workgroup ?? undefined;
+        this.workgroup = workgroup;
       })
     );
 
     this.subscriptions.add(
       this.selectedUser$.subscribe((user) => {
-        this.user = user ?? undefined;
+        this.user = user;
       })
     );
   }
