@@ -98,6 +98,13 @@ export const adminReducer = createReducer(
     })
   ),
   on(
+    actions.resetUser,
+    (state): AdminState => ({
+      ...state,
+      selectedUser: null,
+    })
+  ),
+  on(
     actions.listUsers,
     (state): AdminState => ({
       ...state,

@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { MatCheckboxChange } from '@angular/material/checkbox';
 import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, ParamMap } from '@angular/router';
@@ -23,7 +23,7 @@ export type WorkgroupOfUser = SimpleWorkgroup & { role: Role; isActive: boolean;
   styleUrls: ['./user-edit.component.scss'],
   standalone: false,
 })
-export class UserEditComponent extends AbstractAdminTableComponent<WorkgroupOfUser> implements OnInit {
+export class UserEditComponent extends AbstractAdminTableComponent<WorkgroupOfUser> implements OnInit, OnDestroy {
   public roles = Object.values(Role);
   public languageSelector: TranslationKey[] = [
     { key: 'admin.languages.de' },
@@ -86,6 +86,11 @@ export class UserEditComponent extends AbstractAdminTableComponent<WorkgroupOfUs
     }));
     this.getUserFromRoute();
     this.initSubscriptions();
+  }
+
+  public override ngOnDestroy() {
+    this.store.dispatch(actions.resetUser());
+    super.ngOnDestroy();
   }
 
   public openAddWorkgroupToUserDialog() {

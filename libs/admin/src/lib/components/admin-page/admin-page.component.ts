@@ -1,7 +1,7 @@
 import { Component, inject, OnDestroy, OnInit, TemplateRef, ViewChild } from '@angular/core';
 import { Router } from '@angular/router';
 import { AppPortalService, AppState, CURRENT_LANG, LifecycleHooksDirective } from '@asset-sg/client-shared';
-import { Workgroup, WorkgroupId } from '@asset-sg/shared/v2';
+import { User, Workgroup, WorkgroupId } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
 import { Subscription } from 'rxjs';
 import * as actions from '../../state/admin.actions';
@@ -19,6 +19,7 @@ export class AdminPageComponent implements OnInit, OnDestroy {
   @ViewChild('templateDrawerPortalContent') templateDrawerPortalContent!: TemplateRef<unknown>;
 
   public workgroup?: Workgroup = undefined;
+  public user?: User = undefined;
   private readonly store = inject(Store<AppState>);
   public readonly isLoading$ = this.store.select(selectIsLoading);
   public readonly selectedUser$ = this.store.select(selectSelectedUser);
@@ -89,6 +90,12 @@ export class AdminPageComponent implements OnInit, OnDestroy {
     this.subscriptions.add(
       this.selectedWorkgroup$.subscribe((workgroup) => {
         this.workgroup = workgroup ?? undefined;
+      })
+    );
+
+    this.subscriptions.add(
+      this.selectedUser$.subscribe((user) => {
+        this.user = user ?? undefined;
       })
     );
   }

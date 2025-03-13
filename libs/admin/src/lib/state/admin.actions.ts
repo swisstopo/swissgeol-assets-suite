@@ -47,6 +47,7 @@ export const addWorkgroup = createAction(
   }>()
 );
 
+export const resetUser = createAction('[Admin] Reset User');
 export const resetWorkgroup = createAction('[Admin] Reset Workgroup');
 
 export const setWorkgroups = createAction(
