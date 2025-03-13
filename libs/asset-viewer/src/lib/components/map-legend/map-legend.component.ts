@@ -1,11 +1,12 @@
 import { CdkAccordion, CdkAccordionItem } from '@angular/cdk/accordion';
 import { AsyncPipe } from '@angular/common';
 import { Component } from '@angular/core';
-import { ButtonComponent } from '@asset-sg/client-shared';
+import { ButtonComponent, SmartTranslatePipe } from '@asset-sg/client-shared';
 import { SvgIconComponent } from '@ngneat/svg-icon';
 import { TranslateModule } from '@ngx-translate/core';
 import { BehaviorSubject } from 'rxjs/internal/BehaviorSubject';
 
+// todo assets-300, assets-420: finalize interface to be used with styling; add translation keys in proper places
 interface MapStyle {
   name: string;
   type: 'geometry' | 'access';
@@ -58,7 +59,15 @@ const mapStyles: MapStyle[] = [
 
 @Component({
   selector: 'asset-sg-map-legend',
-  imports: [CdkAccordion, CdkAccordionItem, SvgIconComponent, ButtonComponent, AsyncPipe, TranslateModule],
+  imports: [
+    CdkAccordion,
+    CdkAccordionItem,
+    SvgIconComponent,
+    ButtonComponent,
+    AsyncPipe,
+    TranslateModule,
+    SmartTranslatePipe,
+  ],
   templateUrl: './map-legend.component.html',
   styleUrl: './map-legend.component.scss',
 })
