@@ -47,9 +47,13 @@ export class ViewerParamsService {
     // We only use the values from the store if:
     // - There are no URL query params
     // - There are query or assetId values in the store
+    // - We always take the value for 'favoritesOnly' from the URL
     if (isEmptyParams(paramsFromUrl) && !isEmptyParams(paramsFromStore)) {
       this.params = paramsFromStore;
+      this.params.query.favoritesOnly = paramsFromUrl.query.favoritesOnly;
       this.writeParamsToUrl({ shouldReplaceUrl: true });
+      // When navigating from 'Favorites' to 'Create Asset' to 'Filter', we need to override the 'favoritesOnly' property in the state and trigger a new search
+      this.writeParamsToStore();
     } else {
       this.params = paramsFromUrl;
       this.writeParamsToStore();

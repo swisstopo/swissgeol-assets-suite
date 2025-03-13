@@ -35,12 +35,12 @@ export class MenuBarComponent {
     filter((event) => event instanceof NavigationEnd),
     startWith(() => undefined),
     map((): MenuItem | null => {
-      const segments = (this.router.getCurrentNavigation() ?? this.router.lastSuccessfulNavigation)?.finalUrl?.root
-        .children?.['primary'].segments;
-      if (segments == null || segments.length === 1) {
+      const segmentGroup = (this.router.getCurrentNavigation() ?? this.router.lastSuccessfulNavigation)?.finalUrl?.root
+        .children['primary'];
+      if (segmentGroup?.segments == null || segmentGroup.segments.length === 1) {
         return 'home';
       }
-      const path = segments.slice(1).join('/');
+      const path = segmentGroup.segments.slice(1).join('/');
       const isPath = (prefix: string) => path === prefix || path.startsWith(`${prefix}/`);
 
       if (isPath('asset-admin/new')) {
