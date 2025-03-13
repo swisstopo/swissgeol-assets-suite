@@ -54,6 +54,7 @@
     "@rx-angular/state": "^1.7.0",
     "@rx-angular/template": "^1.0.0-rc.5",
     "@turf/boolean-within": "^6.5.0",
+    "@turf/buffer": "^7.2.0",
     "@turf/helpers": "^6.5.0",
     "@turf/midpoint": "^6.5.0",
     "angular-oauth2-oidc": "^17.0.1",

@@ -1,7 +1,7 @@
 import { AssetEditDetail, AssetSearchQuery, AssetSearchResult, AssetSearchStats } from '@asset-sg/shared';
 import { createAction, props } from '@ngrx/store';
 import { MapPosition } from '../../components/map/map-controller';
-import { AllStudyDTOs } from '../../models';
+import { AllStudyDTO } from '../../models';
 
 export const setQuery = createAction(
   '[Asset Search] Set Query',
@@ -35,7 +35,7 @@ export const setStats = createAction(
 export const setStudies = createAction(
   '[Asset Search] Set Studies',
   props<{
-    studies?: AllStudyDTOs;
+    studies?: AllStudyDTO[];
     isLoading?: boolean;
   }>()
 );

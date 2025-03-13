@@ -6,6 +6,7 @@ import { arrowUpIcon } from './arrow-up';
 import { assetsIcon } from './assets';
 import { calendarIcon } from './calendar';
 import { cancelIcon } from './cancel';
+import { changeIcon } from './change';
 import { checkIcon } from './check';
 import { checkmarkIcon } from './checkmark';
 import { chevronDownIcon } from './chevron-down';
@@ -22,6 +23,14 @@ import { favoriteIcon } from './favorite';
 import { helpIcon } from './help';
 import { infoIcon } from './info';
 import { infoFilledIcon } from './info-filled';
+import { accessInternalIcon, accessLockedIcon, accessPublicIcon } from './map-styles/access';
+import {
+  geometryLineGeneralizedIcon,
+  geometryLineIcon,
+  geometryPointIcon,
+  geometryPolygonGeneralizedIcon,
+  geometryPolygonIcon,
+} from './map-styles/geometry';
 import { optionsIcon } from './options';
 import { polygonIcon } from './polygon';
 import { polygonDraw } from './polygon-draw';
@@ -71,6 +80,7 @@ export const icons = [
   settingsIcon,
   successIcon,
   successFilledIcon,
+  changeIcon,
   userManagementIcon,
   viewExtendedIcon,
   warningFilledIcon,
@@ -78,6 +88,14 @@ export const icons = [
   zoomMinusIcon,
   zoomOriginIcon,
   zoomPlusIcon,
+  geometryPointIcon,
+  geometryLineIcon,
+  geometryLineGeneralizedIcon,
+  geometryPolygonIcon,
+  geometryPolygonGeneralizedIcon,
+  accessPublicIcon,
+  accessInternalIcon,
+  accessLockedIcon,
 ];
 
 export { icon24x24 } from './icon';

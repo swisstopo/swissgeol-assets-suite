@@ -16,6 +16,7 @@ import { arrayEqual, isNotNull } from '@asset-sg/core';
 import { isEmptySearchQuery } from '@asset-sg/shared';
 import { filterNullish } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
+import { StyleFunction } from 'ol/style/Style';
 import { distinctUntilChanged, filter, first, map, skip, Subscription, switchMap, take, withLatestFrom } from 'rxjs';
 import { ViewerControllerService } from '../../services/viewer-controller.service';
 import * as searchActions from '../../state/asset-search/asset-search.actions';
@@ -252,5 +253,9 @@ export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
   @HostBinding('class.is-loading')
   get isLoading(): boolean {
     return !this.isInitialized;
+  }
+
+  handleStyleChange(event: StyleFunction) {
+    this.controller.handleStyleChange(event);
   }
 }

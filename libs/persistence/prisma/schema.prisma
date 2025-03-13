@@ -668,9 +668,17 @@ view AllStudy {
   id               Int
   studyId          String                   @unique @map("study_id")
   geom             Unsupported("geometry")?
-  isPoint          Boolean                  @map("is_point")
+  geometry_type    StudyGeometryType        @map("geometry_type")
   centroidGeomText String                   @map("centroid_geom_text")
   geomText         String                   @map("geom_text")
 
   @@map("all_study")
+}
+
+enum StudyGeometryType {
+  Point
+  Line
+  Polygon
+
+  @@map("study_geometry_type")
 }

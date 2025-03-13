@@ -327,4 +327,22 @@ export const enAppTranslations: AppTranslations = {
     },
     accept: 'Accept',
   },
+  mapLayers: {
+    geometry: {
+      name: 'Geometry',
+      items: {
+        point: 'Asset Point',
+        line: 'Asset Line',
+        polygon: 'Asset Area',
+      },
+    },
+    access: {
+      name: 'Access',
+      items: {
+        public: 'Public',
+        internal: 'Internal',
+        restricted: 'Restricted',
+      },
+    },
+  },
 };
