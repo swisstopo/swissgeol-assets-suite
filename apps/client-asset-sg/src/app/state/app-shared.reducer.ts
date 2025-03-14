@@ -11,6 +11,7 @@ const initialState: AppSharedState = {
   workgroups: [],
   lang: 'de',
   isAnonymousMode: false,
+  hasConsentedToTracking: false,
 };
 
 export const appSharedStateReducer = createReducer(
@@ -24,6 +25,13 @@ export const appSharedStateReducer = createReducer(
     (state): AppSharedState => ({
       ...state,
       isAnonymousMode: true,
+    })
+  ),
+  on(
+    appSharedStateActions.setTrackingConsent,
+    (state, { hasConsented }): AppSharedState => ({
+      ...state,
+      hasConsentedToTracking: hasConsented,
     })
   ),
   on(

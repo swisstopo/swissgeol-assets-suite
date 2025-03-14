@@ -8,14 +8,14 @@ import {
   AuthState,
   ConfigService,
   ErrorService,
+  fromAppShared,
 } from '@asset-sg/client-shared';
+import { AppConfig } from '@asset-sg/shared/v2';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { Store } from '@ngrx/store';
-import { filter, map, startWith, switchMap } from 'rxjs';
+import { BehaviorSubject, filter, identity, map, startWith, switchMap } from 'rxjs';
 import { environment } from '../environments/environment';
 import { AppState } from './state/app-state';
-
-const fullHdWidth = 1920;
 
 @UntilDestroy()
 @Component({
@@ -35,12 +35,28 @@ export class AppComponent {
   private readonly configService = inject(ConfigService);
   private readonly router = inject(Router);
 
+  private readonly hasConsentedToTracking$ = this.store.select(fromAppShared.selectHasConsentedToTracking);
+  private readonly config$ = new BehaviorSubject<AppConfig | null>(null);
+  readonly googleAnalyticsId$ = this.hasConsentedToTracking$.pipe(
+    filter(identity),
+    switchMap(() => this.config$),
+    map((config) => config?.googleAnalyticsId),
+    filter((id) => id != null)
+  );
+
   constructor() {
     this.configService.setHideDisclaimer(environment.hideDisclaimer);
+
     this.httpClient
-      .get<Record<string, unknown>>('api/oauth-config/config')
-      .pipe(switchMap(async (config) => await this.authService.initialize(config)))
-      .subscribe(async () => {
+      .get<AppConfig>('api/config')
+      .pipe(
+        switchMap(async (config) => {
+          await this.authService.initialize(config);
+          return config;
+        })
+      )
+      .subscribe(async (config) => {
+        this.config$.next(config);
         this.store.dispatch(appSharedStateActions.loadWorkgroups());
         this.store.dispatch(appSharedStateActions.loadReferenceData());
       });
@@ -52,7 +68,7 @@ export class AppComponent {
         startWith(() => undefined),
         map(() => {
           const segments = (this.router.getCurrentNavigation() ?? this.router.lastSuccessfulNavigation)?.finalUrl?.root
-            .children['primary'].segments;
+            .children['primary']?.segments;
           if (segments == null || segments.length === 1) {
             return true;
           }
@@ -65,7 +81,8 @@ export class AppComponent {
       });
   }
 
-  @HostBinding('class.menu-hidden') get isMenuHidden() {
+  @HostBinding('class.menu-hidden')
+  get isMenuHidden() {
     return !this.shouldShowMenuBar;
   }
 

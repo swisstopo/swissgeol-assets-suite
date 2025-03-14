@@ -1,6 +1,7 @@
 export * from './lib/models/base/model';
 export * from './lib/models/base/local-date';
 
+export * from './lib/models/app-config';
 export * from './lib/models/asset';
 export * from './lib/models/contact';
 export * from './lib/models/favorite';
