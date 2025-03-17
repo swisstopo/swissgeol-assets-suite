@@ -40,7 +40,6 @@ export const openPanel = createAction('[App Shared State] Open Panel');
 export const logout = createAction('[App Shared State] Logout');
 
 export const setLang = createAction('[App Shared State] Set Lang', props<{ lang: Lang }>());
-export const toggleSearchFilter = createAction('[App Shared State] Toggle Search Filter');
 
 export const updateAssetInSearch = createAction(
   '[App Shared State] Update Asset In Search',

@@ -37,7 +37,6 @@ export class RoutingService {
     if (this.previousUrl === null || document.location.pathname === this.previousUrl) {
       await this.router.navigate(fallback ?? [this.rootPath()]);
     } else {
-      console.log(this.previousUrl);
       await this.router.navigateByUrl(this.previousUrl);
     }
   }
