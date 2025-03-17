@@ -5,12 +5,14 @@ import { AssetSearchQuery, LV95, Polygon } from '@asset-sg/shared';
 import { AssetId } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
 import { combineLatest, distinctUntilChanged, firstValueFrom, map, skip, Subscription } from 'rxjs';
-import { runCombinedSearch } from '../state/asset-search/asset-search.actions';
-import { AssetSearchState } from '../state/asset-search/asset-search.reducer';
+import { runCombinedSearch, setFiltersOpen, setResultsOpen } from '../state/asset-search/asset-search.actions';
+import { AssetSearchState, AssetSearchUiState } from '../state/asset-search/asset-search.reducer';
 import {
   hasNoActiveFilters,
   selectAssetSearchQuery,
   selectCurrentAssetDetail,
+  selectIsFiltersOpen,
+  selectIsResultsOpen,
 } from '../state/asset-search/asset-search.selector';
 
 @Injectable({ providedIn: 'root' })
@@ -25,7 +27,24 @@ export class ViewerParamsService {
   private readonly paramsFromStore$ = combineLatest([
     this.store.select(selectAssetSearchQuery).pipe(distinctUntilChanged()),
     this.store.select(selectCurrentAssetDetail).pipe(distinctUntilChanged()),
-  ]).pipe(map(([query, asset]) => ({ query, assetId: asset?.assetId ?? null })));
+    combineLatest([
+      this.store.select(selectIsFiltersOpen).pipe(distinctUntilChanged()),
+      this.store.select(selectIsResultsOpen).pipe(distinctUntilChanged()),
+    ]).pipe(
+      map(
+        ([isFiltersOpen, isResultsOpen]): AssetSearchUiState => ({
+          isFiltersOpen,
+          isResultsOpen,
+        })
+      )
+    ),
+  ]).pipe(
+    map(([query, asset, ui]) => ({
+      query,
+      ui,
+      assetId: asset?.assetId ?? null,
+    }))
+  );
 
   private subscription = new Subscription();
 
@@ -110,7 +129,7 @@ export class ViewerParamsService {
   }
 
   private writeParamsToUrl(options: { shouldReplaceUrl?: boolean } = {}): void {
-    const { query, assetId } = this.params;
+    const { query, ui, assetId } = this.params;
 
     const params: Params = {};
     updatePlainParam(params, QUERY_PARAM_MAPPING.text, query.text);
@@ -130,6 +149,9 @@ export class ViewerParamsService {
     updateArrayParam(params, QUERY_PARAM_MAPPING.workgroupIds, query.workgroupIds);
     updatePlainParam(params, QUERY_PARAM_MAPPING.assetId, assetId);
 
+    updateBooleanParam(params, UI_PARAM_MAPPING.isFiltersOpen, ui.isFiltersOpen, { defaultValue: true });
+    updateBooleanParam(params, UI_PARAM_MAPPING.isResultsOpen, ui.isResultsOpen, { defaultValue: false });
+
     const url = document.location.pathname.split('/', 3);
     const route = query.favoritesOnly ? ['favorites'] : [];
 
@@ -146,12 +168,15 @@ export class ViewerParamsService {
   }
 
   private writeParamsToStore(): void {
+    const { assetId, query, ui } = this.params;
     this.store.dispatch(
       runCombinedSearch({
-        assetId: this.params.assetId ?? undefined,
-        query: this.params.query,
+        assetId: assetId ?? undefined,
+        query,
       })
     );
+    this.store.dispatch(setFiltersOpen({ isOpen: ui.isFiltersOpen }));
+    this.store.dispatch(setResultsOpen({ isOpen: ui.isResultsOpen }));
   }
 
   private parseParamsFromUrl(): ViewerParams {
@@ -171,7 +196,11 @@ export class ViewerParamsService {
     query.languageItemCodes = readArrayParam(params, QUERY_PARAM_MAPPING.languageItemCodes);
     query.workgroupIds = readArrayParam<number>(params, QUERY_PARAM_MAPPING.workgroupIds);
     query.favoritesOnly = this.parseFavoritesOnlyFromUrl();
-    return { query, assetId };
+    const ui: AssetSearchUiState = {
+      isFiltersOpen: readBooleanParam(params, UI_PARAM_MAPPING.isFiltersOpen) ?? true,
+      isResultsOpen: readBooleanParam(params, UI_PARAM_MAPPING.isResultsOpen) ?? false,
+    };
+    return { query, ui, assetId };
   }
 
   private parseFavoritesOnlyFromUrl(): boolean {
@@ -182,6 +211,7 @@ export class ViewerParamsService {
 
 interface ViewerParams {
   query: AssetSearchQuery;
+  ui: AssetSearchUiState;
   assetId: AssetId | null;
 }
 
@@ -205,8 +235,22 @@ const QUERY_PARAM_MAPPING = {
   categories: 'search[categories]',
 };
 
+const UI_PARAM_MAPPING: Record<keyof AssetSearchUiState, string> = {
+  isResultsOpen: 'show[results]',
+  isFiltersOpen: 'show[filters]',
+};
+
 const updatePlainParam = (params: Params, name: string, value: string | number | null | undefined): void => {
   params[name] = value == null || value === '' ? null : value;
+};
+
+const updateBooleanParam = (
+  params: Params,
+  name: string,
+  value: boolean | null | undefined,
+  options: { defaultValue: boolean }
+): void => {
+  params[name] = value == null || value === options.defaultValue ? null : value;
 };
 
 const updateDateParam = (params: Params, name: string, value: Date | null | undefined): void => {
@@ -229,6 +273,14 @@ const readNumberParam = (params: Params, name: string): number | undefined => {
     return undefined;
   }
   return value;
+};
+
+const readBooleanParam = (params: Params, name: string): boolean | undefined => {
+  const stringValue = readStringParam(params, name);
+  if (stringValue == null) {
+    return undefined;
+  }
+  return stringValue !== 'false';
 };
 
 const readArrayParam = <T>(params: Params, name: string): T[] | undefined => {
