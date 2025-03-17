@@ -37,6 +37,7 @@ export interface AssetSearchState {
 }
 
 export interface AssetSearchUiState {
+  scrollOffsetForResults: number;
   isFiltersOpen: boolean;
   isResultsOpen: boolean;
 }
@@ -74,6 +75,7 @@ const initialState: AssetSearchState = {
   ui: {
     isFiltersOpen: true,
     isResultsOpen: false,
+    scrollOffsetForResults: 0,
   },
 };
 
@@ -139,6 +141,12 @@ export const assetSearchReducer = createReducer(
     return {
       ...state,
       ui: { ...state.ui, isResultsOpen: isOpen === 'toggle' ? !state.ui.isResultsOpen : isOpen },
+    };
+  }),
+  on(actions.setScrollOffsetForResults, (state, { offset }): AssetSearchState => {
+    return {
+      ...state,
+      ui: { ...state.ui, scrollOffsetForResults: offset },
     };
   }),
   on(actions.setStudies, (state, { studies }): AssetSearchState => ({ ...state, studies })),

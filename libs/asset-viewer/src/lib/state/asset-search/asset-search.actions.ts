@@ -46,5 +46,9 @@ export const clearSelectedAsset = createAction('[Asset Search] Clear Selected As
 export const clearPolygon = createAction('[Asset Search] Clear Polygon');
 export const setStudies = createAction('[Asset Search] Set Studies', props<{ studies: AllStudyDTOs }>());
 
-export const setFiltersOpen = createAction('[Asset Search] Open Filters', props<{ isOpen: boolean | 'toggle' }>());
-export const setResultsOpen = createAction('[Asset Search] Open Results', props<{ isOpen: boolean | 'toggle' }>());
+export const setFiltersOpen = createAction('[Asset Search] Set Filters Open', props<{ isOpen: boolean | 'toggle' }>());
+export const setResultsOpen = createAction('[Asset Search] Set Results Open', props<{ isOpen: boolean | 'toggle' }>());
+export const setScrollOffsetForResults = createAction(
+  '[Asset Search] Set Scroll Offset For Results',
+  props<{ offset: number }>()
+);

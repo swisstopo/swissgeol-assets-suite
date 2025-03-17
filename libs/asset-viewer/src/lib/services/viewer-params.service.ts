@@ -5,7 +5,12 @@ import { AssetSearchQuery, LV95, Polygon } from '@asset-sg/shared';
 import { AssetId } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
 import { combineLatest, distinctUntilChanged, firstValueFrom, map, skip, Subscription } from 'rxjs';
-import { runCombinedSearch, setFiltersOpen, setResultsOpen } from '../state/asset-search/asset-search.actions';
+import {
+  runCombinedSearch,
+  setFiltersOpen,
+  setResultsOpen,
+  setScrollOffsetForResults,
+} from '../state/asset-search/asset-search.actions';
 import { AssetSearchState, AssetSearchUiState } from '../state/asset-search/asset-search.reducer';
 import {
   hasNoActiveFilters,
@@ -13,6 +18,7 @@ import {
   selectCurrentAssetDetail,
   selectIsFiltersOpen,
   selectIsResultsOpen,
+  selectScrollOffsetForResults,
 } from '../state/asset-search/asset-search.selector';
 
 @Injectable({ providedIn: 'root' })
@@ -28,11 +34,13 @@ export class ViewerParamsService {
     this.store.select(selectAssetSearchQuery).pipe(distinctUntilChanged()),
     this.store.select(selectCurrentAssetDetail).pipe(distinctUntilChanged()),
     combineLatest([
+      this.store.select(selectScrollOffsetForResults).pipe(distinctUntilChanged()),
       this.store.select(selectIsFiltersOpen).pipe(distinctUntilChanged()),
       this.store.select(selectIsResultsOpen).pipe(distinctUntilChanged()),
     ]).pipe(
       map(
-        ([isFiltersOpen, isResultsOpen]): AssetSearchUiState => ({
+        ([scrollOffsetForResults, isFiltersOpen, isResultsOpen]): AssetSearchUiState => ({
+          scrollOffsetForResults,
           isFiltersOpen,
           isResultsOpen,
         })
@@ -120,6 +128,8 @@ export class ViewerParamsService {
             ...this.params.query,
             favoritesOnly: isFavoritesOnly,
           };
+          this.params.ui.isResultsOpen = false;
+          this.params.ui.scrollOffsetForResults = 0;
           shouldReplaceUrl = true;
           this.writeParamsToStore();
         }
@@ -149,8 +159,9 @@ export class ViewerParamsService {
     updateArrayParam(params, QUERY_PARAM_MAPPING.workgroupIds, query.workgroupIds);
     updatePlainParam(params, QUERY_PARAM_MAPPING.assetId, assetId);
 
-    updateBooleanParam(params, UI_PARAM_MAPPING.isFiltersOpen, ui.isFiltersOpen, { defaultValue: true });
-    updateBooleanParam(params, UI_PARAM_MAPPING.isResultsOpen, ui.isResultsOpen, { defaultValue: false });
+    updatePlainParam(params, UI_PARAM_MAPPING.scrollOffsetForResults, ui.scrollOffsetForResults, { defaultValue: 0 });
+    updatePlainParam(params, UI_PARAM_MAPPING.isFiltersOpen, ui.isFiltersOpen, { defaultValue: true });
+    updatePlainParam(params, UI_PARAM_MAPPING.isResultsOpen, ui.isResultsOpen, { defaultValue: false });
 
     const url = document.location.pathname.split('/', 3);
     const route = query.favoritesOnly ? ['favorites'] : [];
@@ -177,6 +188,8 @@ export class ViewerParamsService {
     );
     this.store.dispatch(setFiltersOpen({ isOpen: ui.isFiltersOpen }));
     this.store.dispatch(setResultsOpen({ isOpen: ui.isResultsOpen }));
+
+    this.store.dispatch(setScrollOffsetForResults({ offset: ui.scrollOffsetForResults }));
   }
 
   private parseParamsFromUrl(): ViewerParams {
@@ -199,6 +212,7 @@ export class ViewerParamsService {
     const ui: AssetSearchUiState = {
       isFiltersOpen: readBooleanParam(params, UI_PARAM_MAPPING.isFiltersOpen) ?? true,
       isResultsOpen: readBooleanParam(params, UI_PARAM_MAPPING.isResultsOpen) ?? false,
+      scrollOffsetForResults: readNumberParam(params, UI_PARAM_MAPPING.scrollOffsetForResults) ?? 0,
     };
     return { query, ui, assetId };
   }
@@ -236,21 +250,18 @@ const QUERY_PARAM_MAPPING = {
 };
 
 const UI_PARAM_MAPPING: Record<keyof AssetSearchUiState, string> = {
-  isResultsOpen: 'show[results]',
-  isFiltersOpen: 'show[filters]',
+  scrollOffsetForResults: 'results[offset]',
+  isResultsOpen: 'results[show]',
+  isFiltersOpen: 'search[show]',
 };
 
-const updatePlainParam = (params: Params, name: string, value: string | number | null | undefined): void => {
-  params[name] = value == null || value === '' ? null : value;
-};
-
-const updateBooleanParam = (
+const updatePlainParam = <T extends string | number | boolean>(
   params: Params,
   name: string,
-  value: boolean | null | undefined,
-  options: { defaultValue: boolean }
+  value: T | null | undefined,
+  options: { defaultValue?: T } = {}
 ): void => {
-  params[name] = value == null || value === options.defaultValue ? null : value;
+  params[name] = value == null || value === '' || value === options.defaultValue ? null : value;
 };
 
 const updateDateParam = (params: Params, name: string, value: Date | null | undefined): void => {
