@@ -27,8 +27,8 @@
     [isActive]="!workgroup.disabledAt"
     (toggleIsActive)="toggleActiveStatus(workgroup)"
   ></asset-sg-toggle-status>
-  } @else if (isUsersPage) {
-  <h2>{{ (selectedUser$ | async)?.email }}</h2>
+  } @else if (isUsersPage && user) {
+  <h2>{{ user.email }}</h2>
   <asset-sg-chip type="secondary"><span translate>admin.user</span></asset-sg-chip>
   } @else {
   <h2 translate="">menuBar.settings</h2>
