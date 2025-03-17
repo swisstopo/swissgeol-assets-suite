@@ -106,9 +106,7 @@ export class AssetSearchEffects implements OnInitEffects {
       ofType(actions.updateResults),
       map(({ results }) => results.page.total !== 0),
       withLatestFrom(this.store.select(selectIsSearchQueryEmpty)),
-      map(([hasResults, isSearchQueryEmpty]) =>
-        !hasResults || isSearchQueryEmpty ? actions.closeResults() : actions.openResults()
-      )
+      map(([hasResults, isSearchQueryEmpty]) => actions.setResultsOpen({ isOpen: hasResults && !isSearchQueryEmpty }))
     )
   );
 

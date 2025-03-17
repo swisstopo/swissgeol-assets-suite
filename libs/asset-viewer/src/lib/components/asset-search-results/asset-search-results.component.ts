@@ -47,7 +47,7 @@ export class AssetSearchResultsComponent implements OnInit, OnDestroy {
   public allResults: AssetEditDetailVM[] = [];
   public resultsToDisplay: AssetEditDetailVM[] = [];
   private size = 0;
-  private limit = 50;
+  private readonly limit = 50;
 
   private readonly _store = inject(Store<AppStateWithAssetSearch>);
   public readonly isResultsOpen$ = this._store.select(selectIsResultsOpen);
@@ -55,7 +55,7 @@ export class AssetSearchResultsComponent implements OnInit, OnDestroy {
   public readonly total$ = this._store.select(selectAssetSearchTotalResults);
   public readonly currentAssetDetail$ = this._store.select(selectCurrentAssetDetail);
   private readonly subscriptions: Subscription = new Subscription();
-  private changeDetector = inject(ChangeDetectorRef);
+  private readonly changeDetector = inject(ChangeDetectorRef);
 
   public ngOnInit() {
     this.initSubscriptions();
@@ -70,7 +70,7 @@ export class AssetSearchResultsComponent implements OnInit, OnDestroy {
   }
 
   public toggleResultsOpen() {
-    this._store.dispatch(actions.toggleResults());
+    this._store.dispatch(actions.setResultsOpen({ isOpen: 'toggle' }));
   }
 
   public onScroll(event: Event) {

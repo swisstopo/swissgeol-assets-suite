@@ -28,14 +28,17 @@ export interface AssetSearchState {
   query: AssetSearchQuery;
   results: AssetSearchResult;
   stats: AssetSearchStats;
-  isInitialized: boolean;
   currentAsset: AssetEditDetail | undefined;
   resultsLoadingState: LoadingState;
   filterLoadingState: LoadingState;
   assetDetailLoadingState: LoadingState;
+  studies: AllStudyDTOs | null;
+  ui: AssetSearchUiState;
+}
+
+export interface AssetSearchUiState {
   isFiltersOpen: boolean;
   isResultsOpen: boolean;
-  studies: AllStudyDTOs | null;
 }
 
 export interface AppStateWithAssetSearch extends AppState {
@@ -43,7 +46,6 @@ export interface AppStateWithAssetSearch extends AppState {
 }
 
 const initialState: AssetSearchState = {
-  isInitialized: false,
   query: {},
   results: {
     page: {
@@ -64,24 +66,19 @@ const initialState: AssetSearchState = {
     workgroupIds: [],
     createDate: null,
   },
-  isFiltersOpen: true,
-  isResultsOpen: false,
   resultsLoadingState: LoadingState.Initial,
   assetDetailLoadingState: LoadingState.Initial,
   filterLoadingState: LoadingState.Initial,
   currentAsset: undefined,
   studies: null,
+  ui: {
+    isFiltersOpen: true,
+    isResultsOpen: false,
+  },
 };
 
 export const assetSearchReducer = createReducer(
   initialState,
-  on(
-    actions.runCombinedSearch,
-    (state): AssetSearchState => ({
-      ...state,
-      isInitialized: true,
-    })
-  ),
   on(
     actions.search,
     (state, { query }): AssetSearchState => ({
@@ -132,14 +129,18 @@ export const assetSearchReducer = createReducer(
     })
   ),
   on(
-    appSharedStateActions.toggleSearchFilter,
-    (state): AssetSearchState => ({ ...state, isFiltersOpen: !state.isFiltersOpen })
+    actions.setFiltersOpen,
+    (state, { isOpen }): AssetSearchState => ({
+      ...state,
+      ui: { ...state.ui, isFiltersOpen: isOpen === 'toggle' ? !state.ui.isFiltersOpen : isOpen },
+    })
   ),
-  on(actions.openFilters, (state): AssetSearchState => ({ ...state, isFiltersOpen: true })),
-  on(actions.closeFilters, (state): AssetSearchState => ({ ...state, isFiltersOpen: false })),
-  on(actions.openResults, (state): AssetSearchState => ({ ...state, isResultsOpen: true })),
-  on(actions.closeResults, (state): AssetSearchState => ({ ...state, isResultsOpen: false })),
-  on(actions.toggleResults, (state): AssetSearchState => ({ ...state, isResultsOpen: !state.isResultsOpen })),
+  on(actions.setResultsOpen, (state, { isOpen }): AssetSearchState => {
+    return {
+      ...state,
+      ui: { ...state.ui, isResultsOpen: isOpen === 'toggle' ? !state.ui.isResultsOpen : isOpen },
+    };
+  }),
   on(actions.setStudies, (state, { studies }): AssetSearchState => ({ ...state, studies })),
   on(
     actions.clearPolygon,
@@ -156,7 +157,6 @@ export const assetSearchReducer = createReducer(
     (state): AssetSearchState => ({
       ...initialState,
       stats: state.stats,
-      isInitialized: state.isInitialized,
     })
   ),
   on(appSharedStateActions.openPanel, (state): AssetSearchState => ({ ...state })),
