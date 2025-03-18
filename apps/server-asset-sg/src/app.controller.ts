@@ -21,7 +21,7 @@ export class AppController {
 
   constructor(private readonly assetSearchService: AssetSearchService, private readonly prismaService: PrismaService) {
     this.config = {
-      mode: requireEnv('ANONYMOUS_MODE', Boolean) ? AppMode.Anonymous : AppMode.Default,
+      mode: readEnv('ANONYMOUS_MODE', Boolean) ? AppMode.Anonymous : AppMode.Default,
       googleAnalyticsId: readEnv('GOOGLE_ANALYTICS_ID'),
       oauth: {
         issuer: requireEnv('OAUTH_ISSUER'),
