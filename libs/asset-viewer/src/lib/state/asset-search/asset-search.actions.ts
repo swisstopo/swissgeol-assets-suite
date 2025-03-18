@@ -2,6 +2,7 @@ import { AssetEditDetail, AssetSearchQuery, AssetSearchResult, AssetSearchStats 
 import { AssetId } from '@asset-sg/shared/v2';
 import { createAction, props } from '@ngrx/store';
 import { AllStudyDTOs } from '../../models';
+import { AssetSearchUiState } from './asset-search.reducer';
 
 export const initialize = createAction('[Asset Search] Initialize');
 export const runCombinedSearch = createAction(
@@ -51,4 +52,8 @@ export const setResultsOpen = createAction('[Asset Search] Set Results Open', pr
 export const setScrollOffsetForResults = createAction(
   '[Asset Search] Set Scroll Offset For Results',
   props<{ offset: number }>()
+);
+export const setMapPosition = createAction(
+  '[Asset Search] Set Map Position',
+  props<Partial<AssetSearchUiState['map']>>()
 );

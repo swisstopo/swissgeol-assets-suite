@@ -15,6 +15,7 @@ import * as E from 'fp-ts/Either';
 
 import { getCenter } from 'ol/extent';
 import { LineString as OlLineString, Polygon } from 'ol/geom';
+import { MapPosition } from '../../components/map/map-controller';
 import { AllStudyDTO, AllStudyDTOs } from '../../models';
 import * as actions from './asset-search.actions';
 
@@ -40,6 +41,7 @@ export interface AssetSearchUiState {
   scrollOffsetForResults: number;
   isFiltersOpen: boolean;
   isResultsOpen: boolean;
+  map: Partial<MapPosition>;
 }
 
 export interface AppStateWithAssetSearch extends AppState {
@@ -76,6 +78,7 @@ const initialState: AssetSearchState = {
     isFiltersOpen: true,
     isResultsOpen: false,
     scrollOffsetForResults: 0,
+    map: {},
   },
 };
 
@@ -149,6 +152,12 @@ export const assetSearchReducer = createReducer(
       ui: { ...state.ui, scrollOffsetForResults: offset },
     };
   }),
+  on(actions.setMapPosition, (state, position): AssetSearchState => {
+    return {
+      ...state,
+      ui: { ...state.ui, map: { ...state.ui.map, ...position } },
+    };
+  }),
   on(actions.setStudies, (state, { studies }): AssetSearchState => ({ ...state, studies })),
   on(
     actions.clearPolygon,
@@ -168,7 +177,6 @@ export const assetSearchReducer = createReducer(
     })
   ),
   on(appSharedStateActions.openPanel, (state): AssetSearchState => ({ ...state })),
-
   on(
     appSharedStateActions.removeAssetFromSearch,
     (state, { assetId }): AssetSearchState => ({

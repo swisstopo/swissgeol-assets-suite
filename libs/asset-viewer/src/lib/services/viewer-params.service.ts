@@ -5,9 +5,11 @@ import { AssetSearchQuery, LV95, Polygon } from '@asset-sg/shared';
 import { AssetId } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
 import { combineLatest, distinctUntilChanged, firstValueFrom, map, skip, Subscription } from 'rxjs';
+import { DEFAULT_MAP_POSITION } from '../components/map/map-controller';
 import {
   runCombinedSearch,
   setFiltersOpen,
+  setMapPosition,
   setResultsOpen,
   setScrollOffsetForResults,
 } from '../state/asset-search/asset-search.actions';
@@ -18,6 +20,7 @@ import {
   selectCurrentAssetDetail,
   selectIsFiltersOpen,
   selectIsResultsOpen,
+  selectMapPosition,
   selectScrollOffsetForResults,
 } from '../state/asset-search/asset-search.selector';
 
@@ -37,12 +40,14 @@ export class ViewerParamsService {
       this.store.select(selectScrollOffsetForResults).pipe(distinctUntilChanged()),
       this.store.select(selectIsFiltersOpen).pipe(distinctUntilChanged()),
       this.store.select(selectIsResultsOpen).pipe(distinctUntilChanged()),
+      this.store.select(selectMapPosition).pipe(distinctUntilChanged()),
     ]).pipe(
       map(
-        ([scrollOffsetForResults, isFiltersOpen, isResultsOpen]): AssetSearchUiState => ({
+        ([scrollOffsetForResults, isFiltersOpen, isResultsOpen, map]): AssetSearchUiState => ({
           scrollOffsetForResults,
           isFiltersOpen,
           isResultsOpen,
+          map,
         })
       )
     ),
@@ -77,7 +82,10 @@ export class ViewerParamsService {
     // - We always take the value for 'favoritesOnly' from the URL
     if (isEmptyParams(paramsFromUrl) && !isEmptyParams(paramsFromStore)) {
       this.params = paramsFromStore;
-      this.params.query.favoritesOnly = paramsFromUrl.query.favoritesOnly;
+      this.params.query = {
+        ...this.params.query,
+        favoritesOnly: paramsFromUrl.query.favoritesOnly,
+      };
       this.writeParamsToUrl({ shouldReplaceUrl: true });
       // When navigating from 'Favorites' to 'Create Asset' to 'Filter', we need to override the 'favoritesOnly' property in the state and trigger a new search
       this.writeParamsToStore();
@@ -100,7 +108,10 @@ export class ViewerParamsService {
         this.params = params;
         // We need the value from the URL for 'favoritesOnly' as it is removed from the state after resetting the search
         const paramsFromUrl = this.parseParamsFromUrl();
-        this.params.query.favoritesOnly = paramsFromUrl.query.favoritesOnly;
+        this.params.query = {
+          ...this.params.query,
+          favoritesOnly: paramsFromUrl.query.favoritesOnly,
+        };
         this.writeParamsToUrl({ shouldReplaceUrl });
         shouldReplaceUrl = false;
       })
@@ -163,6 +174,10 @@ export class ViewerParamsService {
     updatePlainParam(params, UI_PARAM_MAPPING.isFiltersOpen, ui.isFiltersOpen, { defaultValue: true });
     updatePlainParam(params, UI_PARAM_MAPPING.isResultsOpen, ui.isResultsOpen, { defaultValue: false });
 
+    updatePlainParam(params, UI_PARAM_MAPPING.map.x, ui.map.x, { defaultValue: DEFAULT_MAP_POSITION.x });
+    updatePlainParam(params, UI_PARAM_MAPPING.map.y, ui.map.y, { defaultValue: DEFAULT_MAP_POSITION.y });
+    updatePlainParam(params, UI_PARAM_MAPPING.map.z, ui.map.z, { defaultValue: DEFAULT_MAP_POSITION.z });
+
     const url = document.location.pathname.split('/', 3);
     const route = query.favoritesOnly ? ['favorites'] : [];
 
@@ -186,10 +201,10 @@ export class ViewerParamsService {
         query,
       })
     );
+    this.store.dispatch(setScrollOffsetForResults({ offset: ui.scrollOffsetForResults }));
     this.store.dispatch(setFiltersOpen({ isOpen: ui.isFiltersOpen }));
     this.store.dispatch(setResultsOpen({ isOpen: ui.isResultsOpen }));
-
-    this.store.dispatch(setScrollOffsetForResults({ offset: ui.scrollOffsetForResults }));
+    this.store.dispatch(setMapPosition(ui.map));
   }
 
   private parseParamsFromUrl(): ViewerParams {
@@ -213,6 +228,11 @@ export class ViewerParamsService {
       isFiltersOpen: readBooleanParam(params, UI_PARAM_MAPPING.isFiltersOpen) ?? true,
       isResultsOpen: readBooleanParam(params, UI_PARAM_MAPPING.isResultsOpen) ?? false,
       scrollOffsetForResults: readNumberParam(params, UI_PARAM_MAPPING.scrollOffsetForResults) ?? 0,
+      map: {
+        x: readNumberParam(params, UI_PARAM_MAPPING.map.x),
+        y: readNumberParam(params, UI_PARAM_MAPPING.map.y),
+        z: readNumberParam(params, UI_PARAM_MAPPING.map.z),
+      },
     };
     return { query, ui, assetId };
   }
@@ -249,10 +269,19 @@ const QUERY_PARAM_MAPPING = {
   categories: 'search[categories]',
 };
 
-const UI_PARAM_MAPPING: Record<keyof AssetSearchUiState, string> = {
+type ParamMapping<T> = {
+  [K in keyof T]: T[K] extends Record<string, unknown> ? ParamMapping<Required<T[K]>> : string;
+};
+
+const UI_PARAM_MAPPING: ParamMapping<AssetSearchUiState> = {
   scrollOffsetForResults: 'results[offset]',
   isResultsOpen: 'results[show]',
   isFiltersOpen: 'search[show]',
+  map: {
+    x: 'map[x]',
+    y: 'map[y]',
+    z: 'map[z]',
+  },
 };
 
 const updatePlainParam = <T extends string | number | boolean>(

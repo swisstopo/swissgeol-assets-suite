@@ -38,6 +38,7 @@ export const selectFilterLoadingState = createSelector(assetSearchFeature, (stat
 export const selectIsFiltersOpen = createSelector(assetSearchFeature, (state) => state.ui.isFiltersOpen);
 
 export const selectIsResultsOpen = createSelector(assetSearchFeature, (state) => state.ui.isResultsOpen);
+export const selectMapPosition = createSelector(assetSearchFeature, (state) => state.ui.map);
 
 export const selectScrollOffsetForResults = createSelector(
   assetSearchFeature,
