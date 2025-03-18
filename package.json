@@ -125,7 +125,7 @@
     "concurrently": "^7.6.0",
     "cypress": "13.13.0",
     "dotenv-cli": "^7.4.1",
-    "esbuild": "^0.19.2",
+    "esbuild": "^0.25.0",
     "eslint": "^9.20.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-cypress": "2.13.4",
