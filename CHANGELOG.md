@@ -16,15 +16,15 @@
 
 ### Changed
 
-- Benutzer:innen werden neu mit Vor- und Nachnamen angezeigt (nicht mehr mit E-Mail Adresse).
+- Benutzer werden neu mit Vor- und Nachnamen angezeigt (nicht mehr mit E-Mail Adresse).
 - Die Darstellung der Benutzer- und Arbeitsgruppenverwaltung wurde angepasst.
-- Line Breaks wurden aus den Titeln entfernt.
+- Line Breaks wurden aus den Titeln von Assets entfernt.
 
 ### Fixed
 
 - Kontakte in Assets, die unterschiedliche Rollen haben, können nun auch einzeln von einem Asset entfernt werden.
-- Das Löschen von Assets führ nicht mehr zu einer Endlosschlaufe.
-- Das Entfernen von Benutzer:innen, die nicht mehr in der Cognito-Gruppe existieren funktioniert nun korrekt.
+- Das Löschen von Assets führt nicht mehr zu einer Endlosschlaufe, wenn man auf die Kartenansicht zurückkehrt.
+- Das Entfernen von Benutzer, die nicht mehr in der Cognito-Gruppe existieren, funktioniert nun korrekt.
 
 ## v1.8.0
 
