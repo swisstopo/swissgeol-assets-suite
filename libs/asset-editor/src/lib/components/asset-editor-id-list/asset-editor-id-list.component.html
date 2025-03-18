@@ -28,7 +28,7 @@
   [isDisabled]="control.disabled"
   (save)="saveId($event)"
   (delete)="deleteId($event)"
-  (finish)="closeForm()"
+  (closeForm)="closeForm()"
 />
 } @if (!isFormOpen || (ids.length === 1 && !isNewFormOpen)) {
 <button asset-sg-secondary class="mb-2 -mt-2 self-start" (click)="openForm()" translate>
