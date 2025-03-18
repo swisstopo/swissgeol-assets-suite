@@ -1,0 +1,92 @@
+name: Deploy K8s
+
+on:
+  workflow_dispatch:
+    inputs:
+      env:
+        type: choice
+        description: The environment to which the Kubernetes config is deployed.
+        options:
+          - dev
+          - int
+          - prod
+
+  push:
+    branches:
+      - "feature/assets-393-angleich-automated-deployment" # TODO remove before merge
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  TARGET_ENV: ${{ github.event.inputs.env || 'dev' }}
+
+jobs:
+  setup:
+    name: "setup"
+    runs-on: ubuntu-latest
+    outputs:
+      VAULT_ROLE: ${{ steps.select-vault-role.outputs.VAULT_ROLE }}
+    steps:
+      - name: "Select VAULT_ROLE"
+        id: select-vault-role
+        env:
+          DEV_ROLE: ${{ secrets.VAULT_ROLE_DEV }}
+          INT_ROLE: ${{ secrets.VAULT_ROLE_INT }}
+          PROD_ROLE: ${{ secrets.VAULT_ROLE_PROD }}
+        run: |
+          case "$TARGET_ENV" in
+          dev) echo "VAULT_ROLE=$DEV_ROLE" >> $GITHUB_OUTPUT ;;
+          int) echo "VAULT_ROLE=$INT_ROLE" >> $GITHUB_OUTPUT ;;
+          prod) echo "VAULT_ROLE=$PROD_ROLE" >> $GITHUB_OUTPUT ;;
+          *) echo "Invalid env"; exit 1 ;;
+          esac
+
+  deploy-assets:
+    name: "deploy assets"
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Checkout repository"
+        uses: actions/checkout@v4
+      - name: "Deploy"
+        uses: ./.github/actions/deploy-k8s-suite
+        with:
+          TARGET_ENV: ${{ env.TARGET_ENV }}
+          AWS_ROLE: ${{ secrets.AWS_ROLE }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          VAULT_ROLE: ${{ needs.setup.outputs.VAULT_ROLE }}
+          VAULT_CA_CERT: ${{ secrets.VAULT_CA_CERT }}
+#  deploy-assets-ext:
+#    name: "deploy assets-ext"
+#    if: ${{ env.TARGET_ENV == 'prod' }}
+#    needs: setup
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: "Deploy"
+#        uses: ./.github/actions/deploy-k8s-suite
+#        with:
+#          TARGET_ENV: ${{ env.TARGET_ENV }}
+#          AWS_ROLE: ${{ secrets.AWS_ROLE }}
+#          AWS_REGION: ${{ secrets.AWS_REGION }}
+#          VAULT_ROLE: ${{ needs.setup.outputs.VAULT_ROLE }}
+#          VAULT_CA_CERT: ${{ secrets.VAULT_CA_CERT }}
+#          SUITE_NAME_SUFFIX: "ext"
+#
+#  deploy-assets-view:
+#    name: "deploy assets-view"
+#    if: ${{ env.TARGET_ENV == 'prod' }}
+#    needs: setup
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: "Deploy"
+#        uses: ./.github/actions/deploy-k8s-suite
+#        with:
+#          TARGET_ENV: ${{ env.TARGET_ENV }}
+#          AWS_ROLE: ${{ secrets.AWS_ROLE }}
+#          AWS_REGION: ${{ secrets.AWS_REGION }}
+#          VAULT_ROLE: ${{ needs.setup.outputs.VAULT_ROLE }}
+#          VAULT_CA_CERT: ${{ secrets.VAULT_CA_CERT }}
+#          SUITE_NAME_SUFFIX: "view"
+#          HAS_SYNC: "true"

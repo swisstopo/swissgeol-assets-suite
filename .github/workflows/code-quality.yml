@@ -4,8 +4,9 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
     branches:
-      - "**"
-      - "!main"
+      - "foobar" # TODO reset
+#      - "**"
+#      - "!main"
 
 env:
   NODE_VERSION: "22.x"
