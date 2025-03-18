@@ -42,7 +42,7 @@ export class HttpInterceptor implements AngularHttpInterceptor, OnDestroy {
     if (
       (this._oauthService.issuer && req.url.includes(this._oauthService.issuer)) ||
       (this._oauthService.tokenEndpoint && req.url.includes(this._oauthService.tokenEndpoint)) ||
-      req.url.includes('oauth-config/config') ||
+      req.url === 'api/config' ||
       this.isAnonymousMode
     ) {
       return next.handle(req);
@@ -54,6 +54,7 @@ export class HttpInterceptor implements AngularHttpInterceptor, OnDestroy {
       });
       return EMPTY;
     } else if (!token) {
+      console.warn(`Ignored request as the user is not logged in yet: ${req.method} ${req.urlWithParams}`);
       return EMPTY;
     } else {
       return next
