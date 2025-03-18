@@ -26,7 +26,13 @@ jobs:
           # https://github.com/advisories/GHSA-67mh-4wv8-2f99 (2025-02-11)
           # Blocks the upgrade to Angular 19. Issue is fixed in esbuild, but not in @angular-devkit/build-angular.
           # Vulnerability has been deemed largely inconsequential to our development process.
-          allow-ghsas: GHSA-67mh-4wv8-2f99
+
+          # https://github.com/advisories/GHSA-968p-4wvh-cqc8 (2025-03-18)
+          # Babel is mainly used within Angular and NX libraries and not controlled by us.
+          # We do not currently use Regular Expressions with named capturing groups anywhere.
+          allow-ghsas: >-
+            GHSA-67mh-4wv8-2f99,
+            GHSA-968p-4wvh-cqc8
 
   install:
     runs-on: ubuntu-latest
