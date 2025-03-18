@@ -26,14 +26,16 @@
     }
 
     &__body {
+      display: flex;
+      flex-direction: column;
       background-color: variables.$white;
       padding: 16px;
-      gap: 12px;
+      gap: 6px;
 
       &__item {
         display: flex;
         justify-items: flex-start;
-        gap: 8px;
+        gap: 5px;
         align-items: center;
         font-weight: variables.$font-normal;
       }

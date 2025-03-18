@@ -1,29 +1,23 @@
 export const accessPublicIcon = {
   data: `
-    <svg width="34" height="34" viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <g filter="url(#filter0_dd_12086_16851)">
-    <mask id="path-1-inside-1_12086_16851" fill="white">
-    <path d="M9 6C9 5.44772 9.44772 5 10 5H24C24.5523 5 25 5.44772 25 6V20C25 20.5523 24.5523 21 24 21H10C9.44772 21 9 20.5523 9 20V6Z"/>
+    <svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <g filter="url(#filter0_d_7439_28751)">
+    <mask id="path-1-inside-1_7439_28751" fill="white">
+    <path d="M7 8C7 7.44772 7.44772 7 8 7H22C22.5523 7 23 7.44772 23 8V22C23 22.5523 22.5523 23 22 23H8C7.44772 23 7 22.5523 7 22V8Z"/>
     </mask>
-    <path d="M9 6C9 5.44772 9.44772 5 10 5H24C24.5523 5 25 5.44772 25 6V20C25 20.5523 24.5523 21 24 21H10C9.44772 21 9 20.5523 9 20V6Z" fill="#10B981"/>
-    <path d="M9 5H25H9ZM25 21H9H25ZM10 21C8.34315 21 7 19.6569 7 18V8C7 6.34315 8.34315 5 10 5H11C11 5 11 5.44772 11 6V20C11 20.5523 11 21 11 21H10ZM25 5V21V5Z" fill="#064E3B" mask="url(#path-1-inside-1_12086_16851)"/>
+    <path d="M7 8C7 7.44772 7.44772 7 8 7H22C22.5523 7 23 7.44772 23 8V22C23 22.5523 22.5523 23 22 23H8C7.44772 23 7 22.5523 7 22V8Z" fill="#10B981"/>
+    <path d="M7 7H23H7ZM23 23H7H23ZM8 23C6.34315 23 5 21.6569 5 20V10C5 8.34315 6.34315 7 8 7H9C9 7 9 7.44772 9 8V22C9 22.5523 9 23 9 23H8ZM23 7V23V7Z" fill="#064E3B" mask="url(#path-1-inside-1_7439_28751)"/>
     </g>
     <defs>
-    <filter id="filter0_dd_12086_16851" x="0" y="0" width="34" height="34" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+    <filter id="filter0_d_7439_28751" x="2" y="4" width="26" height="26" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
     <feFlood flood-opacity="0" result="BackgroundImageFix"/>
     <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
-    <feMorphology radius="1" operator="erode" in="SourceAlpha" result="effect1_dropShadow_12086_16851"/>
+    <feMorphology radius="1" operator="erode" in="SourceAlpha" result="effect1_dropShadow_7439_28751"/>
     <feOffset dy="2"/>
-    <feGaussianBlur stdDeviation="2"/>
-    <feColorMatrix type="matrix" values="0 0 0 0 0.0627451 0 0 0 0 0.72549 0 0 0 0 0.505882 0 0 0 0.16 0"/>
-    <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_12086_16851"/>
-    <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
-    <feMorphology radius="1" operator="erode" in="SourceAlpha" result="effect2_dropShadow_12086_16851"/>
-    <feOffset dy="4"/>
-    <feGaussianBlur stdDeviation="5"/>
-    <feColorMatrix type="matrix" values="0 0 0 0 0.0627451 0 0 0 0 0.72549 0 0 0 0 0.505882 0 0 0 0.18 0"/>
-    <feBlend mode="normal" in2="effect1_dropShadow_12086_16851" result="effect2_dropShadow_12086_16851"/>
-    <feBlend mode="normal" in="SourceGraphic" in2="effect2_dropShadow_12086_16851" result="shape"/>
+    <feGaussianBlur stdDeviation="3"/>
+    <feColorMatrix type="matrix" values="0 0 0 0 0.0627451 0 0 0 0 0.72549 0 0 0 0 0.505882 0 0 0 0.4 0"/>
+    <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_7439_28751"/>
+    <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_7439_28751" result="shape"/>
     </filter>
     </defs>
     </svg>
@@ -33,30 +27,24 @@ export const accessPublicIcon = {
 
 export const accessInternalIcon = {
   data: `
-    <svg width="34" height="34" viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <g filter="url(#filter0_dd_12086_16855)">
-    <mask id="path-1-inside-1_12086_16855" fill="white">
-    <path d="M9 6C9 5.44772 9.44772 5 10 5H24C24.5523 5 25 5.44772 25 6V20C25 20.5523 24.5523 21 24 21H10C9.44772 21 9 20.5523 9 20V6Z"/>
+    <svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <g filter="url(#filter0_d_7439_28753)">
+    <mask id="path-1-inside-1_7439_28753" fill="white">
+    <path d="M7 8C7 7.44772 7.44772 7 8 7H22C22.5523 7 23 7.44772 23 8V22C23 22.5523 22.5523 23 22 23H8C7.44772 23 7 22.5523 7 22V8Z"/>
     </mask>
-    <path d="M9 6C9 5.44772 9.44772 5 10 5H24C24.5523 5 25 5.44772 25 6V20C25 20.5523 24.5523 21 24 21H10C9.44772 21 9 20.5523 9 20V6Z" fill="#F59E0B"/>
-    <path d="M9 5H25H9ZM25 21H9H25ZM10 21C8.34315 21 7 19.6569 7 18V8C7 6.34315 8.34315 5 10 5H11C11 5 11 5.44772 11 6V20C11 20.5523 11 21 11 21H10ZM25 5V21V5Z" fill="#78350F" mask="url(#path-1-inside-1_12086_16855)"/>
+    <path d="M7 8C7 7.44772 7.44772 7 8 7H22C22.5523 7 23 7.44772 23 8V22C23 22.5523 22.5523 23 22 23H8C7.44772 23 7 22.5523 7 22V8Z" fill="#F59E0B"/>
+    <path d="M7 7H23H7ZM23 23H7H23ZM8 23C6.34315 23 5 21.6569 5 20V10C5 8.34315 6.34315 7 8 7H9C9 7 9 7.44772 9 8V22C9 22.5523 9 23 9 23H8ZM23 7V23V7Z" fill="#78350F" mask="url(#path-1-inside-1_7439_28753)"/>
     </g>
     <defs>
-    <filter id="filter0_dd_12086_16855" x="0" y="0" width="34" height="34" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+    <filter id="filter0_d_7439_28753" x="2" y="4" width="26" height="26" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
     <feFlood flood-opacity="0" result="BackgroundImageFix"/>
     <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
-    <feMorphology radius="1" operator="erode" in="SourceAlpha" result="effect1_dropShadow_12086_16855"/>
+    <feMorphology radius="1" operator="erode" in="SourceAlpha" result="effect1_dropShadow_7439_28753"/>
     <feOffset dy="2"/>
-    <feGaussianBlur stdDeviation="2"/>
-    <feColorMatrix type="matrix" values="0 0 0 0 0.960784 0 0 0 0 0.619608 0 0 0 0 0.0431373 0 0 0 0.16 0"/>
-    <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_12086_16855"/>
-    <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
-    <feMorphology radius="1" operator="erode" in="SourceAlpha" result="effect2_dropShadow_12086_16855"/>
-    <feOffset dy="4"/>
-    <feGaussianBlur stdDeviation="5"/>
-    <feColorMatrix type="matrix" values="0 0 0 0 0.960784 0 0 0 0 0.619608 0 0 0 0 0.0431373 0 0 0 0.18 0"/>
-    <feBlend mode="normal" in2="effect1_dropShadow_12086_16855" result="effect2_dropShadow_12086_16855"/>
-    <feBlend mode="normal" in="SourceGraphic" in2="effect2_dropShadow_12086_16855" result="shape"/>
+    <feGaussianBlur stdDeviation="3"/>
+    <feColorMatrix type="matrix" values="0 0 0 0 0.960784 0 0 0 0 0.619608 0 0 0 0 0.0431373 0 0 0 0.4 0"/>
+    <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_7439_28753"/>
+    <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_7439_28753" result="shape"/>
     </filter>
     </defs>
     </svg>
@@ -66,30 +54,24 @@ export const accessInternalIcon = {
 
 export const accessLockedIcon = {
   data: `
-    <svg width="34" height="34" viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <g filter="url(#filter0_dd_12086_16859)">
-    <mask id="path-1-inside-1_12086_16859" fill="white">
-    <path d="M9 6C9 5.44772 9.44772 5 10 5H24C24.5523 5 25 5.44772 25 6V20C25 20.5523 24.5523 21 24 21H10C9.44772 21 9 20.5523 9 20V6Z"/>
+    <svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <g filter="url(#filter0_d_7462_22960)">
+    <mask id="path-1-inside-1_7462_22960" fill="white">
+    <path d="M7 8C7 7.44772 7.44772 7 8 7H22C22.5523 7 23 7.44772 23 8V22C23 22.5523 22.5523 23 22 23H8C7.44772 23 7 22.5523 7 22V8Z"/>
     </mask>
-    <path d="M9 6C9 5.44772 9.44772 5 10 5H24C24.5523 5 25 5.44772 25 6V20C25 20.5523 24.5523 21 24 21H10C9.44772 21 9 20.5523 9 20V6Z" fill="#E53940"/>
-    <path d="M9 5H25H9ZM25 21H9H25ZM10 21C8.34315 21 7 19.6569 7 18V8C7 6.34315 8.34315 5 10 5H11C11 5 11 5.44772 11 6V20C11 20.5523 11 21 11 21H10ZM25 5V21V5Z" fill="#801519" mask="url(#path-1-inside-1_12086_16859)"/>
+    <path d="M7 8C7 7.44772 7.44772 7 8 7H22C22.5523 7 23 7.44772 23 8V22C23 22.5523 22.5523 23 22 23H8C7.44772 23 7 22.5523 7 22V8Z" fill="#E53940"/>
+    <path d="M7 7H23H7ZM23 23H7H23ZM8 23C6.34315 23 5 21.6569 5 20V10C5 8.34315 6.34315 7 8 7H9C9 7 9 7.44772 9 8V22C9 22.5523 9 23 9 23H8ZM23 7V23V7Z" fill="#801519" mask="url(#path-1-inside-1_7462_22960)"/>
     </g>
     <defs>
-    <filter id="filter0_dd_12086_16859" x="0" y="0" width="34" height="34" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+    <filter id="filter0_d_7462_22960" x="2" y="4" width="26" height="26" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
     <feFlood flood-opacity="0" result="BackgroundImageFix"/>
     <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
-    <feMorphology radius="1" operator="erode" in="SourceAlpha" result="effect1_dropShadow_12086_16859"/>
+    <feMorphology radius="1" operator="erode" in="SourceAlpha" result="effect1_dropShadow_7462_22960"/>
     <feOffset dy="2"/>
-    <feGaussianBlur stdDeviation="2"/>
-    <feColorMatrix type="matrix" values="0 0 0 0 0.898039 0 0 0 0 0.223529 0 0 0 0 0.25098 0 0 0 0.16 0"/>
-    <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_12086_16859"/>
-    <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
-    <feMorphology radius="1" operator="erode" in="SourceAlpha" result="effect2_dropShadow_12086_16859"/>
-    <feOffset dy="4"/>
-    <feGaussianBlur stdDeviation="5"/>
-    <feColorMatrix type="matrix" values="0 0 0 0 0.898039 0 0 0 0 0.223529 0 0 0 0 0.25098 0 0 0 0.18 0"/>
-    <feBlend mode="normal" in2="effect1_dropShadow_12086_16859" result="effect2_dropShadow_12086_16859"/>
-    <feBlend mode="normal" in="SourceGraphic" in2="effect2_dropShadow_12086_16859" result="shape"/>
+    <feGaussianBlur stdDeviation="3"/>
+    <feColorMatrix type="matrix" values="0 0 0 0 0.898039 0 0 0 0 0.223529 0 0 0 0 0.25098 0 0 0 0.4 0"/>
+    <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_7462_22960"/>
+    <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_7462_22960" result="shape"/>
     </filter>
     </defs>
     </svg>
