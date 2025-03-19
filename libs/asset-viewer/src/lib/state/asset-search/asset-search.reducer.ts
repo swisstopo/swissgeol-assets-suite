@@ -15,8 +15,9 @@ import * as E from 'fp-ts/Either';
 
 import { getCenter } from 'ol/extent';
 import { LineString as OlLineString, Polygon } from 'ol/geom';
-import { AllStudyDTO, AllStudyDTOs } from '../../models';
 import * as actions from './asset-search.actions';
+import { AllStudyDTO } from '../../models';
+import { StudyGeometryType } from '@asset-sg/shared/v2';
 
 export enum LoadingState {
   Initial = 'initial',
@@ -35,7 +36,7 @@ export interface AssetSearchState {
   assetDetailLoadingState: LoadingState;
   isFiltersOpen: boolean;
   isResultsOpen: boolean;
-  studies: AllStudyDTOs | null;
+  studies: AllStudyDTO[] | null;
 }
 
 export interface AppStateWithAssetSearch extends AppState {
@@ -188,27 +189,27 @@ export const assetSearchReducer = createReducer(
           ?.filter((study) => study.assetId !== asset.assetId)
           .concat(
             asset.studies.map((study): AllStudyDTO => {
-              const centroid = (() => {
+              const { centroid, geometryType }: { centroid: LV95; geometryType: StudyGeometryType } = (() => {
                 const { right: geom } = GeomFromGeomText.decode(study.geomText) as E.Right<
                   Point | StudyPolygon | LineString
                 >;
                 switch (geom._tag) {
                   case 'Point':
-                    return geom.coord;
+                    return { centroid: geom.coord, geometryType: 'Point' };
                   case 'Polygon': {
                     const [x, y] = getCenter(new Polygon([geom.coords.map((it) => [it.x, it.y])]).getExtent());
-                    return { x, y } as LV95;
+                    return { centroid: { x, y } as LV95, geometryType: 'Polygon' };
                   }
                   case 'LineString': {
                     const [x, y] = getCenter(new OlLineString(geom.coords.map((it) => [it.x, it.y])).getExtent());
-                    return { x, y } as LV95;
+                    return { centroid: { x, y } as LV95, geometryType: 'Line' };
                   }
                 }
               })();
               return {
                 assetId: study.assetId,
                 studyId: study.studyId,
-                isPoint: study.geomText.startsWith('POINT'),
+                geometryType: geometryType,
                 centroid,
               };
             })

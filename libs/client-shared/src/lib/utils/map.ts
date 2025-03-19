@@ -88,18 +88,39 @@ export const makeRhombusImage = (radius: number) =>
     stroke: new Stroke({ color: '#78350F', width: 2 }),
   });
 
-export const featureStyles = {
-  hidden: new Style(undefined),
-  point: new Style({
+const makeLineShape = () =>
+  new RegularShape({
+    fill: new Fill({ color: '#3B82F6' }),
+    stroke: new Stroke({ color: '#1E3A8A', width: 2 }),
+    radius: 10 / Math.SQRT2,
+    radius2: 10,
+    points: 4,
+    angle: 0,
+    scale: [1, 0.5],
+  });
+
+/**
+ * These styles are used in the non-filtered overview and they consist of point representations (location _or_ centroid)
+ */
+const overviewStyles = {
+  studyOverviewPoint: new Style({
     image: new Circle({
       radius: 10,
       fill: new Fill({ color: '#14AFB8' }),
       stroke: new Stroke({ color: '#13474E', width: 2 }),
     }),
   }),
-  rhombus: new Style({
+  studyOverviewPolygon: new Style({
     image: makeRhombusImage(5),
   }),
+  studyOverviewLine: new Style({
+    image: makeLineShape(),
+  }),
+};
+
+export const featureStyles = {
+  hidden: new Style(undefined),
+  ...overviewStyles,
   bigPoint: new Style({
     image: new Circle({
       radius: 8,

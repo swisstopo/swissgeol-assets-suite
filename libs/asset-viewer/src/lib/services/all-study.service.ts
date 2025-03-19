@@ -7,13 +7,14 @@ import * as RD from '@devexperts/remote-data-ts';
 import * as E from 'fp-ts/Either';
 import { concatMap, filter, from, map, Observable, scan, share, toArray } from 'rxjs';
 
-import { AllStudyDTO, AllStudyDTOs } from '../models';
+import { AllStudyDTO } from '../models';
+import { StudyGeometryType } from '@asset-sg/shared/v2';
 
 @Injectable({ providedIn: 'root' })
 export class AllStudyService {
   constructor(private _httpClient: HttpClient) {}
 
-  getAllStudies(): ORD.ObservableRemoteData<ApiError, AllStudyDTOs> {
+  getAllStudies(): ORD.ObservableRemoteData<ApiError, AllStudyDTO[]> {
     return this.getAllStudiesFromApi();
   }
 
@@ -24,13 +25,13 @@ export class AllStudyService {
       bufferUntilLineEnd(),
       filter((line) => line.length !== 0),
       map((line) => {
-        const [id, assetId, isPoint, x, y] = line.split(';');
+        const [id, assetId, geometryType, x, y] = line.split(';');
         return {
           studyId: `study_${id}`,
           assetId: parseInt(assetId),
-          isPoint: Boolean(parseInt(isPoint)),
+          geometryType: geometryType as StudyGeometryType,
           centroid: { x: parseFloat(x), y: parseFloat(y) } as LV95,
-        } as AllStudyDTO;
+        };
       }),
       toArray(),
       map((it) => E.right<ApiError, AllStudyDTO[]>(it)),

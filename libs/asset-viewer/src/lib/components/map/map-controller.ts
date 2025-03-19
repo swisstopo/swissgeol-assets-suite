@@ -127,7 +127,6 @@ export class MapController {
     this.assetIdsByStudyId.clear();
     const studyFeatures: Feature<Point>[] = Array(studies.length);
     const heatmapFeatures: Feature<Point>[] = Array(studies.length);
-
     for (let i = 0; i < studies.length; i++) {
       const study = studies[i];
       const geometry = new Point(olCoordsFromLV95(study.centroid));
@@ -139,7 +138,7 @@ export class MapController {
 
       const studyFeature = new Feature<Point>(geometry);
       studyFeature.setId(study.studyId);
-      studyFeature.setStyle(study.isPoint ? featureStyles.point : featureStyles.rhombus);
+      studyFeature.setStyle(this.getStudyStyle(study.geometryType));
       studyFeature.setProperties({ 'swisstopo.type': 'StudyPoint' });
       studyFeatures[i] = studyFeature;
     }
@@ -280,8 +279,8 @@ export class MapController {
   }
 
   private handleZoomChange(zoom: number): void {
-    (featureStyles.point.getImage() as Circle).setRadius(zoom < 12 ? 4 : 4 * (zoom / 7.5));
-    featureStyles.rhombus.setImage(makeRhombusImage(zoom < 12 ? 5 : 5 * (zoom / 7.5)));
+    (featureStyles.studyOverviewPoint.getImage() as Circle).setRadius(zoom < 12 ? 4 : 4 * (zoom / 7.5));
+    featureStyles.studyOverviewPolygon.setImage(makeRhombusImage(zoom < 12 ? 5 : 5 * (zoom / 7.5)));
   }
 
   private makeLayers(): MapLayers {
@@ -298,6 +297,20 @@ export class MapController {
       activeAsset: makeSimpleLayer(),
       picker: makeSimpleLayer(),
     };
+  }
+
+  // todo: typehint string better
+  private getStudyStyle(study: string): Style {
+    switch (study) {
+      case 'Point':
+        return featureStyles.studyOverviewPoint;
+      case 'Polygon':
+        return featureStyles.studyOverviewPolygon;
+      case 'Line':
+        return featureStyles.studyOverviewLine;
+      default:
+        return featureStyles.studyOverviewPoint;
+    }
   }
 
   private makeHeatmapLayer(): MapLayer<Point> {
