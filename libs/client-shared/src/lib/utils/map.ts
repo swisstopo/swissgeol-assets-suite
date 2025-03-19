@@ -157,7 +157,7 @@ const filteredStyles = {
     }),
   ],
 };
-
+// todo: check where selectedPolygons are used
 /**
  * These styles are used for the selected asset
  */
@@ -173,9 +173,8 @@ const selectedStyles = {
     studyPoint,
   ],
   selectedPolygon: new Style({
-    zIndex: 1,
-    stroke: new Stroke({ color: 'red', width: 3 }),
-    fill: new Fill({ color: '#ffffff88' }),
+    zIndex: 999,
+    stroke: new Stroke({ color: '#EC4899', width: 8 }),
   }),
   selectedLine: new Style({
     zIndex: 2,
@@ -198,9 +197,8 @@ const hoveredStyles = {
     studyPoint,
   ],
   hoveredPolygon: new Style({
-    zIndex: 1,
-    stroke: new Stroke({ color: '#0b7285', width: 4 }),
-    fill: new Fill({ color: '#eafc5288' }),
+    zIndex: 999,
+    stroke: new Stroke({ color: '#8B5CF6', width: 8 }),
   }),
   hoveredLine: new Style({
     zIndex: 2,
