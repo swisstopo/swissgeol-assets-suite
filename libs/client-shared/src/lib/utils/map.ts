@@ -84,8 +84,8 @@ export const makeRhombusImage = (radius: number) =>
     points: 4,
     radius,
     angle: 0,
-    fill: new Fill({ color: '#194ed0' }),
-    stroke: new Stroke({ color: '#194ed0' }),
+    fill: new Fill({ color: 'rgba(245, 158, 11, 1.0)' }), // no transparency on rhombus
+    stroke: new Stroke({ color: '#78350F', width: 2 }),
   });
 
 export const featureStyles = {
@@ -93,8 +93,8 @@ export const featureStyles = {
   point: new Style({
     image: new Circle({
       radius: 10,
-      fill: new Fill({ color: '#194ed0' }),
-      stroke: new Stroke({ color: '#194ed0' }),
+      fill: new Fill({ color: '#14AFB8' }),
+      stroke: new Stroke({ color: '#13474E', width: 2 }),
     }),
   }),
   rhombus: new Style({
@@ -102,9 +102,9 @@ export const featureStyles = {
   }),
   bigPoint: new Style({
     image: new Circle({
-      radius: 20,
-      stroke: new Stroke({ color: 'red', width: 2.5 }),
-      fill: new Fill({ color: 'transparent' }),
+      radius: 8,
+      fill: new Fill({ color: '#14AFB8' }),
+      stroke: new Stroke({ color: '#13474E', width: 2 }),
     }),
     zIndex: 3,
   }),
@@ -131,8 +131,8 @@ export const featureStyles = {
   }),
 
   polygon: new Style({
-    stroke: new Stroke({ color: 'red', width: 2.5 }),
-    fill: new Fill({ color: 'transparent' }),
+    fill: new Fill({ color: 'rgba(245, 158, 11, 0.2)' }),
+    stroke: new Stroke({ color: '#78350F', width: 2 }),
     zIndex: 1,
   }),
   polygonAsset: new Style({
@@ -151,11 +151,24 @@ export const featureStyles = {
     fill: new Fill({ color: '#ffffff88' }),
   }),
 
-  lineString: new Style({
-    stroke: new Stroke({ color: 'red', width: 3 }),
-    fill: new Fill({ color: 'transparent' }),
-    zIndex: 2,
-  }),
+  lineString: [
+    // border style (slightly thicker)
+    new Style({
+      stroke: new Stroke({
+        color: '#1E3A8A',
+        width: 10,
+      }),
+      zIndex: 2,
+    }),
+    // fill style
+    new Style({
+      stroke: new Stroke({
+        color: '#3B82F6',
+        width: 6,
+      }),
+      zIndex: 2,
+    }),
+  ],
   lineStringAsset: new Style({
     stroke: new Stroke({ color: 'red', width: 3 }),
   }),

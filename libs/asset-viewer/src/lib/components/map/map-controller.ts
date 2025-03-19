@@ -517,8 +517,11 @@ const makeSources = (layers: MapLayers): MapLayerSources => ({
   picker: requireSource(layers.picker),
 });
 
-const makeStudyFeature = (study: Study, styles: { point: Style; polygon: Style; lineString: Style }): Feature => {
-  const [geometry, style] = ((): [Geometry, Style] => {
+const makeStudyFeature = (
+  study: Study,
+  styles: { point: Style; polygon: Style; lineString: Style | Style[] }
+): Feature => {
+  const [geometry, style] = ((): [Geometry, Style | Style[]] => {
     switch (study.geom._tag) {
       case 'Point':
         return [new Point(olCoordsFromLV95(study.geom.coord)), styles.point];
