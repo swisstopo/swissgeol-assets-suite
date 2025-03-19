@@ -147,7 +147,7 @@ export class AssetSearchResultsComponent implements OnInit, OnDestroy {
         this.resultsToDisplay = this.allResults.slice(0, this.size);
         const container = this.scrollContainer?.nativeElement;
         if (container !== undefined) {
-          container.scrollTop = 0;
+          container.scrollTo({ top: 0, behavior: 'smooth' });
         }
         this.resultsReady$.next();
       })
