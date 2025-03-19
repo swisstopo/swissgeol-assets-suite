@@ -117,7 +117,6 @@ export class MapController {
         }
       }
 
-      // Log okay
       this.requestedPosition$.subscribe(this.setPositionImmediately.bind(this));
     });
   }
