@@ -133,9 +133,9 @@ export class AssetSearchResultsComponent implements OnInit, OnDestroy {
     this.isTableReady$
       .pipe(
         combineLatestWith(this.resultsReady$),
+        take(1),
         switchMap(() => this.scrollOffset$),
-        switchMap((offset) => this.scrollByOffset(offset)),
-        take(1)
+        switchMap((offset) => this.scrollByOffset(offset))
       )
       .subscribe();
 
