@@ -152,7 +152,7 @@ export const assetSearchReducer = createReducer(
       ui: { ...state.ui, scrollOffsetForResults: offset },
     };
   }),
-  on(actions.setMapPosition, (state, position): AssetSearchState => {
+  on(actions.setMapPosition, (state, { position }): AssetSearchState => {
     return {
       ...state,
       ui: { ...state.ui, map: { ...state.ui.map, ...position } },

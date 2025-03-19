@@ -67,12 +67,12 @@ export class MapController {
 
   private readonly requestedPosition$ = new ReplaySubject<Partial<MapPosition>>(1);
 
-  constructor(element: HTMLElement) {
+  constructor(element: HTMLElement, initialPosition: MapPosition) {
     const view = new View({
       projection: 'EPSG:3857',
       minResolution: 0.1,
-      resolution: INITIAL_RESOLUTION,
-      center: SWISS_CENTER,
+      resolution: initialPosition.z,
+      center: [initialPosition.x, initialPosition.y],
       extent: SWISS_EXTENT,
       showFullExtent: true,
     });
@@ -276,6 +276,9 @@ export class MapController {
   }
 
   clearActiveAsset(): void {
+    if (this.activeAsset === null) {
+      return;
+    }
     this.resetActiveAssetStyle();
     this.activeAsset = null;
     this.sources.activeAsset.clear();

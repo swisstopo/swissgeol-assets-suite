@@ -13,9 +13,9 @@ import {
   ViewChild,
 } from '@angular/core';
 import { arrayEqual, isNotNull } from '@asset-sg/core';
-import { filterNullish } from '@asset-sg/shared/v2';
+import { extend, filterNullish } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
-import { asapScheduler, filter, first, skip, Subscription, take, withLatestFrom } from 'rxjs';
+import { delay, filter, first, skip, Subscription, take, withLatestFrom } from 'rxjs';
 import * as searchActions from '../../state/asset-search/asset-search.actions';
 import { setMapPosition } from '../../state/asset-search/asset-search.actions';
 import {
@@ -29,7 +29,7 @@ import {
 import { AppStateWithMapControl } from '../../state/map-control/map-control.reducer';
 import { DrawControl } from '../map-controls/draw-controls';
 import { ZoomControl } from '../map-controls/zoom-control';
-import { DEFAULT_MAP_POSITION, MapController } from './map-controller';
+import { DEFAULT_MAP_POSITION, MapController, MapPosition } from './map-controller';
 
 @Component({
   selector: 'asset-sg-map',
@@ -97,9 +97,17 @@ export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
   }
 
   ngAfterViewInit(): void {
-    asapScheduler.schedule(() => {
-      this.initializeMap();
-    });
+    // Set the initial map position by its stored value.
+    this.store
+      .select(selectMapPosition)
+      .pipe(
+        filter((it) => Object.keys(it).length !== 0),
+        take(1),
+        delay(1)
+      )
+      .subscribe((position) => {
+        this.initializeMap(extend(DEFAULT_MAP_POSITION, position));
+      });
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -116,8 +124,8 @@ export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
     this.controller.dispose();
   }
 
-  private initializeMap(): void {
-    this.controller = new MapController(this.mapElement.nativeElement);
+  private initializeMap(initialPosition: MapPosition): void {
+    this.controller = new MapController(this.mapElement.nativeElement, initialPosition);
 
     this.controls = {
       zoom: new ZoomControl({
@@ -133,14 +141,6 @@ export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
     this.controller.addControl(this.controls.zoom);
     this.controller.addControl(this.controls.draw);
 
-    // Set the initial map position by its stored value.
-    this.store
-      .select(selectMapPosition)
-      .pipe(take(1))
-      .subscribe((position) => {
-        this.controller.setPosition({ ...DEFAULT_MAP_POSITION, ...position });
-      });
-
     // Reset the map position when its stored value is cleared.
     // Note that we do not want to react to any other changes to it,
     // as these are always supposed to be made by ourselves.
@@ -150,7 +150,7 @@ export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
         .pipe(skip(1))
         .subscribe((position) => {
           if (Object.values(position).every((it) => it === undefined)) {
-            this.controller.setPosition(DEFAULT_MAP_POSITION);
+            // this.controller.setPosition(DEFAULT_MAP_POSITION);
           }
         })
     );
@@ -237,7 +237,7 @@ export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
       clearTimeout(this.timeoutForSetPosition);
     }
     this.timeoutForSetPosition = setTimeout(() => {
-      this.store.dispatch(setMapPosition({ x, y, z }));
+      this.store.dispatch(setMapPosition({ position: { x, y, z } }));
     }, 250);
   }
 

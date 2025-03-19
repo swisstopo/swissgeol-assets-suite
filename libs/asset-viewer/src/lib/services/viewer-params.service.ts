@@ -204,7 +204,7 @@ export class ViewerParamsService {
     this.store.dispatch(setScrollOffsetForResults({ offset: ui.scrollOffsetForResults }));
     this.store.dispatch(setFiltersOpen({ isOpen: ui.isFiltersOpen }));
     this.store.dispatch(setResultsOpen({ isOpen: ui.isResultsOpen }));
-    this.store.dispatch(setMapPosition(ui.map));
+    this.store.dispatch(setMapPosition({ position: ui.map }));
   }
 
   private parseParamsFromUrl(): ViewerParams {

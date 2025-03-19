@@ -55,5 +55,5 @@ export const setScrollOffsetForResults = createAction(
 );
 export const setMapPosition = createAction(
   '[Asset Search] Set Map Position',
-  props<Partial<AssetSearchUiState['map']>>()
+  props<{ position: Partial<AssetSearchUiState['map']> }>()
 );
