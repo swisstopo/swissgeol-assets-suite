@@ -1,6 +1,7 @@
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 
+import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { AppLogger } from '@/app.logger';
 import { PrismaExceptionFilter } from '@/core/exception-filters/prisma.exception-filter';
@@ -16,6 +17,7 @@ process.on('warning', (e) => console.warn(e.stack));
 async function bootstrap(): Promise<void> {
   const logger = new AppLogger();
   const app = await NestFactory.create(AppModule, { logger });
+  app.use(helmet());
   app.setGlobalPrefix(API_PREFIX);
   app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true, forbidNonWhitelisted: true }));
   app.useGlobalFilters(new PrismaExceptionFilter());
