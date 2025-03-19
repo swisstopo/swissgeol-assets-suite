@@ -28,7 +28,7 @@ register(proj4);
 
 export const createFeaturesFromStudy = (
   study: Study,
-  featureStyles: { point: Style; polygon: Style; lineString: Style }
+  featureStyles: { point: Style | Style[]; polygon: Style | Style[]; lineString: Style | Style[] }
 ) => ({
   ...study,
   olGeometry: decorateFeature(
@@ -53,7 +53,7 @@ export const createFeaturesFromStudy = (
 
 export const createFeaturesFromStudies = (
   studies: Studies,
-  featureStyles: { point: Style; polygon: Style; lineString: Style }
+  featureStyles: { point: Style | Style[]; polygon: Style | Style[]; lineString: Style | Style[] }
 ) =>
   pipe(
     studies,
@@ -62,7 +62,7 @@ export const createFeaturesFromStudies = (
 
 export const decorateFeature = (
   feature: Feature,
-  attributes: { style: Style; id: string | number },
+  attributes: { style: Style | Style[]; id: string | number },
   properties: Record<string, string | number> = {}
   // attributes: Partial<{ style: Style; id: string | number; assetSgFeatureType: string }>,
 ) => {
@@ -99,80 +99,46 @@ const makeLineShape = () =>
     scale: [1, 0.5],
   });
 
+// Todo: z-index is off
+
+/**
+ * This style is used for displaying a point study; which is used for both overview and filtered view.
+ */
+const studyPoint = new Style({
+  zIndex: 3,
+  image: new Circle({
+    radius: 8,
+    fill: new Fill({ color: '#14AFB8' }),
+    stroke: new Stroke({ color: '#13474E', width: 2 }),
+  }),
+});
+
 /**
  * These styles are used in the non-filtered overview and they consist of point representations (location _or_ centroid)
  */
 const overviewStyles = {
-  studyOverviewPoint: new Style({
-    image: new Circle({
-      radius: 10,
-      fill: new Fill({ color: '#14AFB8' }),
-      stroke: new Stroke({ color: '#13474E', width: 2 }),
-    }),
-  }),
+  studyOverviewPoint: studyPoint,
   studyOverviewPolygon: new Style({
+    zIndex: 1,
     image: makeRhombusImage(5),
   }),
   studyOverviewLine: new Style({
+    zIndex: 2,
     image: makeLineShape(),
   }),
 };
 
-export const featureStyles = {
-  hidden: new Style(undefined),
-  ...overviewStyles,
-  bigPoint: new Style({
-    image: new Circle({
-      radius: 8,
-      fill: new Fill({ color: '#14AFB8' }),
-      stroke: new Stroke({ color: '#13474E', width: 2 }),
-    }),
-    zIndex: 3,
-  }),
-  bigPointAsset: new Style({
-    image: new Circle({
-      radius: 20,
-      stroke: new Stroke({ color: 'red', width: 6 }),
-      fill: new Fill({ color: '#ffffff88' }),
-    }),
-  }),
-  bigPointAssetHighlighted: new Style({
-    image: new Circle({
-      radius: 20,
-      stroke: new Stroke({ color: '#0b7285', width: 6 }),
-      fill: new Fill({ color: '#eafc5288' }),
-    }),
-  }),
-  bigPointAssetNotSelected: new Style({
-    image: new Circle({
-      radius: 20,
-      stroke: new Stroke({ color: '#ff0000', width: 6, lineDash: [10, 5] }),
-      fill: new Fill({ color: '#ffffff88' }),
-    }),
-  }),
-
-  polygon: new Style({
+/**
+ * These styles are used for the filtered view; i.e. they also style the geometries and not just points.
+ */
+const filteredStyles = {
+  filteredPoint: studyPoint,
+  filteredPolygon: new Style({
     fill: new Fill({ color: 'rgba(245, 158, 11, 0.2)' }),
     stroke: new Stroke({ color: '#78350F', width: 2 }),
     zIndex: 1,
   }),
-  polygonAsset: new Style({
-    stroke: new Stroke({ color: 'red', width: 3 }),
-    fill: new Fill({ color: '#ffffff88' }),
-  }),
-  linePreview: new Style({
-    stroke: new Stroke({ color: '#0b7285', width: 3, lineDash: [10, 10] }),
-  }),
-  polygonAssetHighlighted: new Style({
-    stroke: new Stroke({ color: '#0b7285', width: 4 }),
-    fill: new Fill({ color: '#eafc5288' }),
-  }),
-  polygonAssetNotSelected: new Style({
-    stroke: new Stroke({ color: '#ff0000', width: 3, lineDash: [10, 10] }),
-    fill: new Fill({ color: '#ffffff88' }),
-  }),
-
-  lineString: [
+  filteredLine: [
     // border style (slightly thicker)
     new Style({
       stroke: new Stroke({
@@ -190,15 +156,99 @@ export const featureStyles = {
       zIndex: 2,
     }),
   ],
-  lineStringAsset: new Style({
+};
+
+/**
+ * These styles are used for the selected asset
+ */
+const selectedStyles = {
+  selectedPoint: [
+    new Style({
+      zIndex: 3,
+      image: new Circle({
+        radius: 16,
+        fill: new Fill({ color: '#EC4899' }),
+      }),
+    }),
+    studyPoint,
+  ],
+  selectedPolygon: new Style({
+    zIndex: 1,
+    stroke: new Stroke({ color: 'red', width: 3 }),
+    fill: new Fill({ color: '#ffffff88' }),
+  }),
+  selectedLine: new Style({
+    zIndex: 2,
     stroke: new Stroke({ color: 'red', width: 3 }),
   }),
-  lineStringAssetHighlighted: new Style({
+};
+
+/**
+ * These styles are used when hovering an asset
+ */
+const hoveredStyles = {
+  hoveredPoint: [
+    new Style({
+      zIndex: 3,
+      image: new Circle({
+        radius: 16,
+        fill: new Fill({ color: '#8B5CF6' }),
+      }),
+    }),
+    studyPoint,
+  ],
+  hoveredPolygon: new Style({
+    zIndex: 1,
     stroke: new Stroke({ color: '#0b7285', width: 4 }),
     fill: new Fill({ color: '#eafc5288' }),
   }),
-  lineStringAssetNotSelected: new Style({
-    stroke: new Stroke({ color: '#ff0000', width: 3, lineDash: [10, 10] }),
+  hoveredLine: new Style({
+    zIndex: 2,
+    stroke: new Stroke({ color: '#0b7285', width: 4 }),
+    fill: new Fill({ color: '#eafc5288' }),
+  }),
+};
+
+/**
+ * These styles are used when editing multi-geometry objects in the editor to highlight those that are NOT currently
+ * being edited.
+ */
+const nonEditingStyles = {
+  nonEditingPoint: [
+    new Style({
+      zIndex: 3,
+      image: new Circle({
+        radius: 16,
+        stroke: new Stroke({ color: '#ff0000', width: 6, lineDash: [10, 5] }),
+        fill: new Fill({ color: '#ffffff88' }),
+      }),
+    }),
+    studyPoint,
+  ],
+  nonEditingPolygon: [
+    new Style({
+      zIndex: 1,
+      stroke: new Stroke({ color: '#ff0000', width: 3, lineDash: [10, 10] }),
+      fill: new Fill({ color: '#ffffff88' }),
+    }),
+  ],
+  nonEditingLine: [
+    new Style({
+      zIndex: 2,
+      stroke: new Stroke({ color: '#ff0000', width: 3, lineDash: [10, 10] }),
+    }),
+  ],
+};
+
+export const featureStyles = {
+  hidden: new Style(undefined),
+  ...overviewStyles,
+  ...filteredStyles,
+  ...selectedStyles,
+  ...hoveredStyles,
+  ...nonEditingStyles,
+  linePreview: new Style({
+    stroke: new Stroke({ color: '#0b7285', width: 3, lineDash: [10, 10] }),
   }),
 };
 

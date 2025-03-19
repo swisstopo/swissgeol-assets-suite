@@ -170,9 +170,9 @@ export class MapController {
         const study: Study = { studyId: assetStudy.studyId, geom: wktToGeoJSON(assetStudy.geomText) };
         features.push(
           makeStudyFeature(study, {
-            point: featureStyles.bigPoint,
-            polygon: featureStyles.polygon,
-            lineString: featureStyles.lineString,
+            point: featureStyles.filteredPoint,
+            polygon: featureStyles.filteredPolygon,
+            lineString: featureStyles.filteredLine,
           })
         );
         const studyFeature = this.sources.studies.getFeatureById(study.studyId);
@@ -213,9 +213,9 @@ export class MapController {
     const features = asset.studies.map((assetStudy) => {
       const study = { studyId: assetStudy.studyId, geom: wktToGeoJSON(assetStudy.geomText) };
       return makeStudyFeature(study, {
-        point: featureStyles.bigPointAssetHighlighted,
-        polygon: featureStyles.polygonAssetHighlighted,
-        lineString: featureStyles.lineStringAssetHighlighted,
+        point: featureStyles.hoveredPoint,
+        polygon: featureStyles.hoveredPolygon,
+        lineString: featureStyles.hoveredLine,
       });
     });
 
@@ -245,9 +245,9 @@ export class MapController {
       studies.push(study);
 
       const feature = makeStudyFeature(study, {
-        point: featureStyles.bigPointAsset,
-        polygon: featureStyles.polygonAsset,
-        lineString: featureStyles.lineStringAsset,
+        point: featureStyles.selectedPoint,
+        polygon: featureStyles.selectedPolygon,
+        lineString: featureStyles.selectedLine,
       });
       features.push(feature);
 
@@ -532,7 +532,7 @@ const makeSources = (layers: MapLayers): MapLayerSources => ({
 
 const makeStudyFeature = (
   study: Study,
-  styles: { point: Style; polygon: Style; lineString: Style | Style[] }
+  styles: { point: Style | Style[]; polygon: Style; lineString: Style | Style[] }
 ): Feature => {
   const [geometry, style] = ((): [Geometry, Style | Style[]] => {
     switch (study.geom._tag) {
