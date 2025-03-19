@@ -65,11 +65,11 @@ export class AssetViewerPageComponent implements OnInit, OnDestroy {
   @ViewChild('templateAppBarPortalContent') templateAppBarPortalContent!: TemplateRef<unknown>;
   @ViewChild('searchInput') searchInput!: ElementRef<HTMLInputElement>;
 
-  private _lc = inject(LifecycleHooks);
-  private _appPortalService = inject(AppPortalService);
-  private _viewContainerRef = inject(ViewContainerRef);
-  private _store = inject(Store<AppState>);
-  private _cd = inject(ChangeDetectorRef);
+  private readonly _lc = inject(LifecycleHooks);
+  private readonly _appPortalService = inject(AppPortalService);
+  private readonly _viewContainerRef = inject(ViewContainerRef);
+  private readonly _store = inject(Store<AppState>);
+  private readonly _cd = inject(ChangeDetectorRef);
 
   public isLoading$ = combineLatest(
     [
@@ -136,7 +136,7 @@ export class AssetViewerPageComponent implements OnInit, OnDestroy {
           return;
         }
         if (searchQuery.text || '' !== this.searchInput.nativeElement.value || '') {
-          this.searchInput.nativeElement.value = searchQuery.text || '';
+          this.searchInput.nativeElement.value = searchQuery.text ?? '';
         }
       });
 
@@ -172,7 +172,7 @@ export class AssetViewerPageComponent implements OnInit, OnDestroy {
   }
 
   public ngOnInit() {
-    this._store.dispatch(actions.openFilters());
+    this._store.dispatch(actions.setFiltersOpen({ isOpen: true }));
 
     this.authService.isInitialized$.pipe(filter(identity), take(1)).subscribe(() => {
       this.viewerParamsService.start();

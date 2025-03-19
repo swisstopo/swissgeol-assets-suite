@@ -4,7 +4,7 @@ import { isNull, ORD } from '@asset-sg/core';
 import { UntilDestroy } from '@ngneat/until-destroy';
 import { Actions, createEffect, ofType, OnInitEffects } from '@ngrx/effects';
 import { Action, Store } from '@ngrx/store';
-import { filter, map, of, switchMap, take, withLatestFrom } from 'rxjs';
+import { filter, map, of, skip, switchMap, take, withLatestFrom } from 'rxjs';
 import { AllStudyService } from '../../services/all-study.service';
 import { AssetSearchService } from '../../services/asset-search.service';
 
@@ -104,11 +104,10 @@ export class AssetSearchEffects implements OnInitEffects {
   public toggleResultsTable$ = createEffect(() =>
     this.actions$.pipe(
       ofType(actions.updateResults),
+      skip(1),
       map(({ results }) => results.page.total !== 0),
       withLatestFrom(this.store.select(selectIsSearchQueryEmpty)),
-      map(([hasResults, isSearchQueryEmpty]) =>
-        !hasResults || isSearchQueryEmpty ? actions.closeResults() : actions.openResults()
-      )
+      map(([hasResults, isSearchQueryEmpty]) => actions.setResultsOpen({ isOpen: hasResults && !isSearchQueryEmpty }))
     )
   );
 
