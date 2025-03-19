@@ -112,9 +112,9 @@ export class AssetSearchResultsComponent implements OnInit, OnDestroy {
 
     const MIN_ROW_HEIGHT = 52;
     const minimalElementCount = offset / MIN_ROW_HEIGHT;
-    const minimalRequiredHeight = Math.ceil(minimalElementCount / this.pageSize) * this.pageSize;
+    const minimalRequiredPageSize = Math.ceil(minimalElementCount / this.pageSize) * this.pageSize;
 
-    this.size = Math.max(minimalRequiredHeight, this.pageSize);
+    this.size = Math.max(minimalRequiredPageSize, this.pageSize);
     this.resultsToDisplay = this.allResults.slice(0, this.size);
 
     await tick();
