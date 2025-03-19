@@ -165,6 +165,7 @@ export class AssetSearchResultsComponent implements OnInit, OnDestroy {
           await tick();
           if (this.scrollContainer?.nativeElement != null) {
             this.isTableReady$.next();
+            break;
           }
         }
       })
