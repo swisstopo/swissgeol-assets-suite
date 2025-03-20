@@ -2,7 +2,7 @@
 <h5>{{ title }}</h5>
 }
 <mat-form-field class="select">
-  <svg-icon key="chevron-down" class="icon" />
+  <svg-icon key="arrow-down" class="icon" />
 
   <mat-select [value]="selectedValues" (valueChange)="onFilterChange($event)" [multiple]="multiple" (blur)="onBlur()">
     @for (value of values; track value) {

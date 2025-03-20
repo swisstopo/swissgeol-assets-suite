@@ -8,7 +8,7 @@
 <asset-sg-language-selector />
 
 <ng-container *ngIf="(isAnonymous$ | async) === false">
-  <button mat-button type="button" class="profile" [matMenuTriggerFor]="profileMenu">
+  <button asset-sg-primary isIcon type="button" class="profile" [matMenuTriggerFor]="profileMenu">
     <svg-icon key="profile" />
   </button>
 
@@ -16,7 +16,7 @@
     <ng-container *rxLet="user$; let user">
       <div>{{ user.firstName }} {{ user.lastName }}</div>
       <div>
-        <button asset-sg-primary translate (click)="logout()">logout</button>
+        <button asset-sg-secondary translate (click)="logout()">logout</button>
       </div>
     </ng-container>
   </mat-menu>

@@ -18,7 +18,7 @@ import {
 @Component({
   standalone: true,
   selector: 'asset-sg-animate-number',
-  template: '{{ value$ | push | number:"1." }}',
+  template: '{{ value$ | push | number:"1." : "de-CH" }}',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [PushModule, DecimalPipe],
 })

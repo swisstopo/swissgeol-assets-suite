@@ -20,11 +20,11 @@ a.logo {
 
 .version {
   color: #828e9a;
+  font-size: 12px;
+  line-height: 16px;
 }
 
 button.profile {
-  background-color: #295969;
-  color: white;
   min-width: 36px;
   max-width: 36px;
   min-height: 36px;
@@ -48,16 +48,7 @@ button.profile {
 
   & > div {
     padding: 8px 12px;
-  }
-
-  ::ng-deep button {
-    width: 100%;
-    color: #337083;
-    border: 1px solid #337083;
-    background-color: transparent;
-
-    &:hover {
-      background-color: #adc6cd;
-    }
+    font-weight: 400;
+    font-size: 14px;
   }
 }
