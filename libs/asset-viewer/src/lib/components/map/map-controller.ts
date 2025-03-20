@@ -8,6 +8,7 @@ import {
 } from '@asset-sg/client-shared';
 import { isNotUndefined } from '@asset-sg/core';
 import { AssetEditDetail, getCoordsFromStudy, Study } from '@asset-sg/shared';
+import { StudyGeometryType } from '@asset-sg/shared/v2';
 import { buffer } from '@turf/buffer';
 import { Control } from 'ol/control';
 import { Coordinate } from 'ol/coordinate';
@@ -299,6 +300,7 @@ export class MapController {
   dispose(): void {
     this.map.dispose();
   }
+
   private bufferFeatureWithStyle(feature: Feature, style: Style): Feature {
     const geoJson = this.geoJsonHandler.writeFeatureObject(feature);
     const buffered = buffer(geoJson, BUFFER_RADIUS_IN_METERS, { units: 'meters' });
@@ -330,8 +332,7 @@ export class MapController {
     };
   }
 
-  // todo: typehint string better
-  private getStudyStyle(study: string): Style {
+  private getStudyStyle(study: StudyGeometryType): Style {
     switch (study) {
       case 'Point':
         return featureStyles.studyOverviewPoint;
@@ -339,8 +340,6 @@ export class MapController {
         return featureStyles.studyOverviewPolygon;
       case 'Line':
         return featureStyles.studyOverviewLine;
-      default:
-        return featureStyles.studyOverviewPoint;
     }
   }
 

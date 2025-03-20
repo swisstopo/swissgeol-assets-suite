@@ -3,12 +3,12 @@ import { Injectable } from '@angular/core';
 import { ApiError } from '@asset-sg/client-shared';
 import { ORD } from '@asset-sg/core';
 import { LV95 } from '@asset-sg/shared';
+import { StudyGeometryType } from '@asset-sg/shared/v2';
 import * as RD from '@devexperts/remote-data-ts';
 import * as E from 'fp-ts/Either';
 import { concatMap, filter, from, map, Observable, scan, share, toArray } from 'rxjs';
 
 import { AllStudyDTO } from '../models';
-import { StudyGeometryType } from '@asset-sg/shared/v2';
 
 @Injectable({ providedIn: 'root' })
 export class AllStudyService {

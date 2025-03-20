@@ -3,12 +3,12 @@ import { AsyncPipe } from '@angular/common';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ButtonComponent, SmartTranslatePipe } from '@asset-sg/client-shared';
 import { SvgIconComponent } from '@ngneat/svg-icon';
-import { TranslateModule } from '@ngx-translate/core';
-import { BehaviorSubject } from 'rxjs/internal/BehaviorSubject';
-import { selectHasNoActiveFilters } from '../../state/asset-search/asset-search.selector';
 import { Store } from '@ngrx/store';
-import { AppStateWithAssetSearch } from '../../state/asset-search/asset-search.reducer';
+import { TranslateModule } from '@ngx-translate/core';
 import { Subscription } from 'rxjs';
+import { BehaviorSubject } from 'rxjs/internal/BehaviorSubject';
+import { AppStateWithAssetSearch } from '../../state/asset-search/asset-search.reducer';
+import { selectHasNoActiveFilters } from '../../state/asset-search/asset-search.selector';
 
 // todo assets-300, assets-420: finalize interface to be used with styling; add translation keys in proper places
 interface MapStyle {

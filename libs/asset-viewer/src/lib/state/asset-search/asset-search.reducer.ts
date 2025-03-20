@@ -10,14 +10,14 @@ import {
   Point,
   StudyPolygon,
 } from '@asset-sg/shared';
+import { StudyGeometryType } from '@asset-sg/shared/v2';
 import { createReducer, on } from '@ngrx/store';
 import * as E from 'fp-ts/Either';
 
 import { getCenter } from 'ol/extent';
 import { LineString as OlLineString, Polygon } from 'ol/geom';
-import * as actions from './asset-search.actions';
 import { AllStudyDTO } from '../../models';
-import { StudyGeometryType } from '@asset-sg/shared/v2';
+import * as actions from './asset-search.actions';
 
 export enum LoadingState {
   Initial = 'initial',
