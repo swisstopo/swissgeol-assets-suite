@@ -51,6 +51,33 @@ export const geometryLineIcon = {
   name: 'geometry-line' as const,
 };
 
+export const geometryLineGeneralizedIcon = {
+  data: `
+    <svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <g filter="url(#filter0_d_12246_758)">
+    <mask id="path-1-inside-1_12246_758" fill="white">
+    <path d="M7.5 20C6.94772 20 6.5 19.5523 6.5 19L6.5 11C6.5 10.4477 6.94772 10 7.5 10L22.5 10C23.0523 10 23.5 10.4477 23.5 11V19C23.5 19.5523 23.0523 20 22.5 20L7.5 20Z"/>
+    </mask>
+    <path d="M7.5 20C6.94772 20 6.5 19.5523 6.5 19L6.5 11C6.5 10.4477 6.94772 10 7.5 10L22.5 10C23.0523 10 23.5 10.4477 23.5 11V19C23.5 19.5523 23.0523 20 22.5 20L7.5 20Z" fill="#3B82F6"/>
+    <path d="M7.5 20C6.94772 20 6.5 19.5523 6.5 19L6.5 11C6.5 10.4477 6.94772 10 7.5 10L22.5 10C23.0523 10 23.5 10.4477 23.5 11V19C23.5 19.5523 23.0523 20 22.5 20L7.5 20Z" stroke="#1E3A8A" stroke-width="4" mask="url(#path-1-inside-1_12246_758)"/>
+    </g>
+    <defs>
+    <filter id="filter0_d_12246_758" x="2.5" y="8" width="25" height="18" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+    <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+    <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+    <feOffset dy="2"/>
+    <feGaussianBlur stdDeviation="2"/>
+    <feComposite in2="hardAlpha" operator="out"/>
+    <feColorMatrix type="matrix" values="0 0 0 0 0.231373 0 0 0 0 0.509804 0 0 0 0 0.964706 0 0 0 0.35 0"/>
+    <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_12246_758"/>
+    <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_12246_758" result="shape"/>
+    </filter>
+    </defs>
+    </svg>
+  `,
+  name: 'geometry-line-generalized' as const,
+};
+
 export const geometryPolygonIcon = {
   data: `
     <svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -78,4 +105,33 @@ export const geometryPolygonIcon = {
     </svg>
   `,
   name: 'geometry-polygon' as const,
+};
+
+export const geometryPolygonGeneralizedIcon = {
+  data: `
+    <svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <g clip-path="url(#clip0_12246_762)">
+    <g filter="url(#filter0_d_12246_762)">
+    <path d="M14.1318 7.26943C14.5156 6.59761 15.4843 6.59761 15.8682 7.26943L24.1451 21.7539C24.526 22.4205 24.0446 23.25 23.2768 23.25H6.72318C5.95536 23.25 5.47399 22.4205 5.85494 21.7539L14.1318 7.26943Z" fill="#F59E0B"/>
+    <path d="M15 7.76557L23.2768 22.25H6.72318L15 7.76557Z" stroke="#78350F" stroke-width="2"/>
+    </g>
+    </g>
+    <defs>
+    <filter id="filter0_d_12246_762" x="0.71875" y="3.76562" width="28.5625" height="26.4844" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+    <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+    <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+    <feMorphology radius="1" operator="erode" in="SourceAlpha" result="effect1_dropShadow_12246_762"/>
+    <feOffset dy="2"/>
+    <feGaussianBlur stdDeviation="3"/>
+    <feColorMatrix type="matrix" values="0 0 0 0 0.960784 0 0 0 0 0.619608 0 0 0 0 0.0431373 0 0 0 0.4 0"/>
+    <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_12246_762"/>
+    <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_12246_762" result="shape"/>
+    </filter>
+    <clipPath id="clip0_12246_762">
+    <rect width="30" height="30" fill="white"/>
+    </clipPath>
+    </defs>
+    </svg>
+  `,
+  name: 'geometry-polygon-generalized' as const,
 };

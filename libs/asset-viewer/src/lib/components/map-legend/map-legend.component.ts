@@ -1,10 +1,14 @@
 import { CdkAccordion, CdkAccordionItem } from '@angular/cdk/accordion';
 import { AsyncPipe } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ButtonComponent, SmartTranslatePipe } from '@asset-sg/client-shared';
 import { SvgIconComponent } from '@ngneat/svg-icon';
 import { TranslateModule } from '@ngx-translate/core';
 import { BehaviorSubject } from 'rxjs/internal/BehaviorSubject';
+import { selectHasNoActiveFilters } from '../../state/asset-search/asset-search.selector';
+import { Store } from '@ngrx/store';
+import { AppStateWithAssetSearch } from '../../state/asset-search/asset-search.reducer';
+import { Subscription } from 'rxjs';
 
 // todo assets-300, assets-420: finalize interface to be used with styling; add translation keys in proper places
 interface MapStyle {
@@ -16,6 +20,11 @@ interface MapStyle {
 interface MapStyleItem {
   translationKey: string;
   iconKey: string;
+  /**
+   * This key is used for the filtered view to show a different icon since the
+   * geometries are generalized to points there.
+   */
+  generalizedIconKey?: string;
 }
 
 const mapStyles: MapStyle[] = [
@@ -30,10 +39,12 @@ const mapStyles: MapStyle[] = [
       {
         translationKey: 'Asset Linie',
         iconKey: 'geometry-line',
+        generalizedIconKey: 'geometry-line-generalized',
       },
       {
         translationKey: 'Asset Fläche',
         iconKey: 'geometry-polygon',
+        generalizedIconKey: 'geometry-polygon-generalized',
       },
     ],
   },
@@ -71,10 +82,27 @@ const mapStyles: MapStyle[] = [
   templateUrl: './map-legend.component.html',
   styleUrl: './map-legend.component.scss',
 })
-export class MapLegendComponent {
+export class MapLegendComponent implements OnInit, OnDestroy {
+  protected hasNoActiveFilters?: boolean;
   private activeStyleIndex = 0;
   private activeStyleSubject = new BehaviorSubject(mapStyles[this.activeStyleIndex]);
   protected activeStyle$ = this.activeStyleSubject.asObservable();
+  private hasNoActiveFilters$ = this.store.select(selectHasNoActiveFilters);
+  private subscriptions = new Subscription();
+
+  constructor(private readonly store: Store<AppStateWithAssetSearch>) {}
+
+  public ngOnInit() {
+    this.subscriptions.add(
+      this.hasNoActiveFilters$.subscribe((hasNoActiveFilters) => {
+        this.hasNoActiveFilters = hasNoActiveFilters;
+      })
+    );
+  }
+
+  public ngOnDestroy() {
+    this.subscriptions.unsubscribe();
+  }
 
   protected handleChange() {
     // todo assets-300, assets-420: handle change

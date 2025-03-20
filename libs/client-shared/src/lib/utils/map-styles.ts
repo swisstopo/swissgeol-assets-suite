@@ -62,9 +62,9 @@ const studyPoint = new Style({
   }),
 });
 
-export const makeRhombusImage = (radius: number) =>
+export const makeTriangleShape = (radius: number) =>
   new RegularShape({
-    points: 4,
+    points: 3,
     radius,
     angle: 0,
     fill: new Fill({ color: 'rgba(245, 158, 11, 1.0)' }), // no transparency on rhombus
@@ -86,7 +86,7 @@ const overviewStyles: OverviewStyles = {
   studyOverviewPoint: studyPoint,
   studyOverviewPolygon: new Style({
     zIndex: 1,
-    image: makeRhombusImage(5),
+    image: makeTriangleShape(5),
   }),
   studyOverviewLine: new Style({
     zIndex: 2,

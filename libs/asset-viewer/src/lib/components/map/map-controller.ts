@@ -1,7 +1,7 @@
 import {
   featureStyles,
   makeLineShape,
-  makeRhombusImage,
+  makeTriangleShape,
   olCoordsFromLV95,
   SWISS_CENTER,
   SWISS_EXTENT,
@@ -310,7 +310,7 @@ export class MapController {
 
   private handleZoomChange(zoom: number): void {
     (featureStyles.studyOverviewPoint.getImage() as Circle).setRadius(zoom < 12 ? 4 : 4 * (zoom / 7.5));
-    featureStyles.studyOverviewPolygon.setImage(makeRhombusImage(zoom < 12 ? 5 : 5 * (zoom / 7.5)));
+    featureStyles.studyOverviewPolygon.setImage(makeTriangleShape(zoom < 12 ? 5 : 5 * (zoom / 7.5)));
     featureStyles.studyOverviewLine.setImage(makeLineShape(zoom < 12 ? 5 : 5 * (zoom / 7.5)));
   }
 
