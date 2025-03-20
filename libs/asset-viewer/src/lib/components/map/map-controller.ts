@@ -1,7 +1,14 @@
-import { featureStyles, makeRhombusImage, olCoordsFromLV95, SWISS_CENTER, SWISS_EXTENT } from '@asset-sg/client-shared';
+import {
+  featureStyles,
+  makeLineShape,
+  makeRhombusImage,
+  olCoordsFromLV95,
+  SWISS_CENTER,
+  SWISS_EXTENT,
+} from '@asset-sg/client-shared';
 import { isNotUndefined } from '@asset-sg/core';
 import { AssetEditDetail, getCoordsFromStudy, Study } from '@asset-sg/shared';
-import buffer from '@turf/buffer';
+import { buffer } from '@turf/buffer';
 import { Control } from 'ol/control';
 import { Coordinate } from 'ol/coordinate';
 import { easeOut } from 'ol/easing';
@@ -26,7 +33,7 @@ export const INITIAL_RESOLUTION = 500;
 /**
  * Buffer radius used to create selection/hover effects around study geometries.
  */
-const BUFFER_RADIUS_IN_METERS = 500;
+const BUFFER_RADIUS_IN_METERS = 100;
 
 export class MapController {
   readonly layers: MapLayers;
@@ -304,6 +311,7 @@ export class MapController {
   private handleZoomChange(zoom: number): void {
     (featureStyles.studyOverviewPoint.getImage() as Circle).setRadius(zoom < 12 ? 4 : 4 * (zoom / 7.5));
     featureStyles.studyOverviewPolygon.setImage(makeRhombusImage(zoom < 12 ? 5 : 5 * (zoom / 7.5)));
+    featureStyles.studyOverviewLine.setImage(makeLineShape(zoom < 12 ? 5 : 5 * (zoom / 7.5)));
   }
 
   private makeLayers(): MapLayers {
