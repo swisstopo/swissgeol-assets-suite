@@ -1,7 +1,7 @@
 import { AssetEditDetail, AssetSearchQuery, AssetSearchResult, AssetSearchStats } from '@asset-sg/shared';
 import { AssetId } from '@asset-sg/shared/v2';
 import { createAction, props } from '@ngrx/store';
-import { AllStudyDTOs } from '../../models';
+import { AllStudyDTO } from '../../models';
 
 export const initialize = createAction('[Asset Search] Initialize');
 export const runCombinedSearch = createAction(
@@ -44,7 +44,7 @@ export const selectAsset = createAction('[Asset Search] Select Asset', props<{ a
 export const setSelectedAsset = createAction('[Asset Search] Set Selected Asset', props<{ asset: AssetEditDetail }>());
 export const clearSelectedAsset = createAction('[Asset Search] Clear Selected Asset');
 export const clearPolygon = createAction('[Asset Search] Clear Polygon');
-export const setStudies = createAction('[Asset Search] Set Studies', props<{ studies: AllStudyDTOs }>());
+export const setStudies = createAction('[Asset Search] Set Studies', props<{ studies: AllStudyDTO[] }>());
 
 export const openFilters = createAction('[Asset Search] Open Filters');
 export const closeFilters = createAction('[Asset Search] Close Filters');

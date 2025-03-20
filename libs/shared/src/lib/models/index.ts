@@ -1,4 +1,3 @@
-export * from './all-study';
 export * from './asset-detail';
 export * from './asset-by-title';
 export * from './asset-edit';

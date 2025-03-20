@@ -1,6 +1,6 @@
 @if (activeStyle$ | async; as activeStyle) {
 <cdk-accordion class="map-legend">
-  <cdk-accordion-item #legend="cdkAccordionItem" class="map-legend__content">
+  <cdk-accordion-item #legend="cdkAccordionItem" class="map-legend__content" [expanded]="true">
     <div [attr.aria-expanded]="legend.expanded" [attr.id]="'legend-header'" class="map-legend__content__header">
       <button (click)="handleChange()" asset-sg-tertiary isIcon>
         <svg-icon [key]="'change'"></svg-icon>
@@ -20,7 +20,11 @@
     >
       @for (styleItem of activeStyle.styleItems; track $index) {
       <div class="map-legend__content__body__item">
+        @if ((hasNoActiveFilters$ | async) && styleItem.generalizedIconKey) {
+        <svg-icon [key]="styleItem.generalizedIconKey"></svg-icon>
+        } @else {
         <svg-icon [key]="styleItem.iconKey"></svg-icon>
+        }
         <span>{{ styleItem.translationKey | smartTranslate }}</span>
       </div>
       }

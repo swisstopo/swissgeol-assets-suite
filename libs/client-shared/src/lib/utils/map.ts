@@ -12,7 +12,7 @@ import { fromExtent as polygonFromExtent } from 'ol/geom/Polygon';
 import Map from 'ol/Map';
 import { fromLonLat, transform } from 'ol/proj';
 import { register } from 'ol/proj/proj4';
-import { Circle, Fill, RegularShape, Stroke, Style } from 'ol/style';
+import { Style } from 'ol/style';
 
 import proj4 from 'proj4';
 import { isoWGSLat, isoWGSLng } from '../models';
@@ -28,7 +28,7 @@ register(proj4);
 
 export const createFeaturesFromStudy = (
   study: Study,
-  featureStyles: { point: Style; polygon: Style; lineString: Style }
+  featureStyles: { point: Style | Style[]; polygon: Style | Style[]; lineString: Style | Style[] }
 ) => ({
   ...study,
   olGeometry: decorateFeature(
@@ -53,7 +53,7 @@ export const createFeaturesFromStudy = (
 
 export const createFeaturesFromStudies = (
   studies: Studies,
-  featureStyles: { point: Style; polygon: Style; lineString: Style }
+  featureStyles: { point: Style | Style[]; polygon: Style | Style[]; lineString: Style | Style[] }
 ) =>
   pipe(
     studies,
@@ -62,7 +62,7 @@ export const createFeaturesFromStudies = (
 
 export const decorateFeature = (
   feature: Feature,
-  attributes: { style: Style; id: string | number },
+  attributes: { style: Style | Style[]; id: string | number },
   properties: Record<string, string | number> = {}
   // attributes: Partial<{ style: Style; id: string | number; assetSgFeatureType: string }>,
 ) => {
@@ -77,95 +77,6 @@ export const olCoordsFromLV95Array = (coords: LV95[]): Coordinate[] => coords.ma
 export const olCoordsFromLV95 = (lv95Coords: LV95): Coordinate => {
   const wgsCoords = lv95ToWGS(lv95Coords);
   return fromLonLat([isoWGSLng.unwrap(wgsCoords.lng), isoWGSLat.unwrap(wgsCoords.lat)]);
-};
-
-export const makeRhombusImage = (radius: number) =>
-  new RegularShape({
-    points: 4,
-    radius,
-    angle: 0,
-    fill: new Fill({ color: '#194ed0' }),
-    stroke: new Stroke({ color: '#194ed0' }),
-  });
-
-export const featureStyles = {
-  hidden: new Style(undefined),
-  point: new Style({
-    image: new Circle({
-      radius: 10,
-      fill: new Fill({ color: '#194ed0' }),
-      stroke: new Stroke({ color: '#194ed0' }),
-    }),
-  }),
-  rhombus: new Style({
-    image: makeRhombusImage(5),
-  }),
-  bigPoint: new Style({
-    image: new Circle({
-      radius: 20,
-      stroke: new Stroke({ color: 'red', width: 2.5 }),
-      fill: new Fill({ color: 'transparent' }),
-    }),
-    zIndex: 3,
-  }),
-  bigPointAsset: new Style({
-    image: new Circle({
-      radius: 20,
-      stroke: new Stroke({ color: 'red', width: 6 }),
-      fill: new Fill({ color: '#ffffff88' }),
-    }),
-  }),
-  bigPointAssetHighlighted: new Style({
-    image: new Circle({
-      radius: 20,
-      stroke: new Stroke({ color: '#0b7285', width: 6 }),
-      fill: new Fill({ color: '#eafc5288' }),
-    }),
-  }),
-  bigPointAssetNotSelected: new Style({
-    image: new Circle({
-      radius: 20,
-      stroke: new Stroke({ color: '#ff0000', width: 6, lineDash: [10, 5] }),
-      fill: new Fill({ color: '#ffffff88' }),
-    }),
-  }),
-
-  polygon: new Style({
-    stroke: new Stroke({ color: 'red', width: 2.5 }),
-    fill: new Fill({ color: 'transparent' }),
-    zIndex: 1,
-  }),
-  polygonAsset: new Style({
-    stroke: new Stroke({ color: 'red', width: 3 }),
-    fill: new Fill({ color: '#ffffff88' }),
-  }),
-  linePreview: new Style({
-    stroke: new Stroke({ color: '#0b7285', width: 3, lineDash: [10, 10] }),
-  }),
-  polygonAssetHighlighted: new Style({
-    stroke: new Stroke({ color: '#0b7285', width: 4 }),
-    fill: new Fill({ color: '#eafc5288' }),
-  }),
-  polygonAssetNotSelected: new Style({
-    stroke: new Stroke({ color: '#ff0000', width: 3, lineDash: [10, 10] }),
-    fill: new Fill({ color: '#ffffff88' }),
-  }),
-
-  lineString: new Style({
-    stroke: new Stroke({ color: 'red', width: 3 }),
-    fill: new Fill({ color: 'transparent' }),
-    zIndex: 2,
-  }),
-  lineStringAsset: new Style({
-    stroke: new Stroke({ color: 'red', width: 3 }),
-  }),
-  lineStringAssetHighlighted: new Style({
-    stroke: new Stroke({ color: '#0b7285', width: 4 }),
-    fill: new Fill({ color: '#eafc5288' }),
-  }),
-  lineStringAssetNotSelected: new Style({
-    stroke: new Stroke({ color: '#ff0000', width: 3, lineDash: [10, 10] }),
-  }),
 };
 
 export const zoomToStudies = (
