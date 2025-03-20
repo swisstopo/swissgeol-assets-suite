@@ -10,7 +10,6 @@ import {
   Point,
   StudyPolygon,
 } from '@asset-sg/shared';
-import { StudyGeometryType } from '@asset-sg/shared/v2';
 import { createReducer, on } from '@ngrx/store';
 import * as E from 'fp-ts/Either';
 
@@ -189,23 +188,7 @@ export const assetSearchReducer = createReducer(
           ?.filter((study) => study.assetId !== asset.assetId)
           .concat(
             asset.studies.map((study): AllStudyDTO => {
-              const { centroid, geometryType }: { centroid: LV95; geometryType: StudyGeometryType } = (() => {
-                const { right: geom } = GeomFromGeomText.decode(study.geomText) as E.Right<
-                  Point | StudyPolygon | LineString
-                >;
-                switch (geom._tag) {
-                  case 'Point':
-                    return { centroid: geom.coord, geometryType: 'Point' };
-                  case 'Polygon': {
-                    const [x, y] = getCenter(new Polygon([geom.coords.map((it) => [it.x, it.y])]).getExtent());
-                    return { centroid: { x, y } as LV95, geometryType: 'Polygon' };
-                  }
-                  case 'LineString': {
-                    const [x, y] = getCenter(new OlLineString(geom.coords.map((it) => [it.x, it.y])).getExtent());
-                    return { centroid: { x, y } as LV95, geometryType: 'Line' };
-                  }
-                }
-              })();
+              const { centroid, geometryType } = extractCentroidFromStudy(study);
               return {
                 assetId: study.assetId,
                 studyId: study.studyId,
@@ -217,3 +200,22 @@ export const assetSearchReducer = createReducer(
     };
   })
 );
+
+function extractCentroidFromStudy(study: { assetId: number; studyId: string; geomText: string }): {
+  centroid: LV95;
+  geometryType: 'Point' | 'Polygon' | 'Line';
+} {
+  const { right: geom } = GeomFromGeomText.decode(study.geomText) as E.Right<Point | StudyPolygon | LineString>;
+  switch (geom._tag) {
+    case 'Point':
+      return { centroid: geom.coord, geometryType: 'Point' };
+    case 'Polygon': {
+      const [x, y] = getCenter(new Polygon([geom.coords.map((it) => [it.x, it.y])]).getExtent());
+      return { centroid: { x, y } as LV95, geometryType: 'Polygon' };
+    }
+    case 'LineString': {
+      const [x, y] = getCenter(new OlLineString(geom.coords.map((it) => [it.x, it.y])).getExtent());
+      return { centroid: { x, y } as LV95, geometryType: 'Line' };
+    }
+  }
+}

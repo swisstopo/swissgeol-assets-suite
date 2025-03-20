@@ -20,7 +20,7 @@
     >
       @for (styleItem of activeStyle.styleItems; track $index) {
       <div class="map-legend__content__body__item">
-        @if (hasNoActiveFilters && styleItem.generalizedIconKey) {
+        @if ((hasNoActiveFilters$ | async) && styleItem.generalizedIconKey) {
         <svg-icon [key]="styleItem.generalizedIconKey"></svg-icon>
         } @else {
         <svg-icon [key]="styleItem.iconKey"></svg-icon>
