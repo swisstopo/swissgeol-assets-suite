@@ -1,11 +1,21 @@
-import { featureStyles, makeRhombusImage, olCoordsFromLV95, SWISS_CENTER, SWISS_EXTENT } from '@asset-sg/client-shared';
+import {
+  featureStyles,
+  makeLineShape,
+  makeTriangleShape,
+  olCoordsFromLV95,
+  SWISS_CENTER,
+  SWISS_EXTENT,
+} from '@asset-sg/client-shared';
 import { isNotUndefined } from '@asset-sg/core';
 import { AssetEditDetail, getCoordsFromStudy, Study } from '@asset-sg/shared';
+import { StudyGeometryType } from '@asset-sg/shared/v2';
+import { buffer } from '@turf/buffer';
 import { Control } from 'ol/control';
 import { Coordinate } from 'ol/coordinate';
 import { easeOut } from 'ol/easing';
 import { containsExtent } from 'ol/extent';
 import Feature from 'ol/Feature';
+import { GeoJSON } from 'ol/format';
 import { Geometry, LineString, Point, Polygon } from 'ol/geom';
 import { fromExtent as polygonFromExtent } from 'ol/geom/Polygon';
 import { Heatmap, Tile as TileLayer, Vector as VectorLayer } from 'ol/layer';
@@ -21,15 +31,17 @@ import { wktToGeoJSON } from '../../state/asset-search/asset-search.selector';
 
 export const INITIAL_RESOLUTION = 500;
 
-export class MapController {
-  private readonly map: OlMap;
+/**
+ * Buffer radius used to create selection/hover effects around study geometries.
+ */
+const BUFFER_RADIUS_IN_METERS = 100;
 
+export class MapController {
   readonly layers: MapLayers;
   readonly sources: MapLayerSources;
-
   readonly assetsClick$: Observable<number[]>;
   readonly assetsHover$: Observable<number[]>;
-
+  private readonly map: OlMap;
   /**
    * The id of all visible assets, mapped to their {@link AssetEditDetail} object.
    * @private
@@ -57,6 +69,11 @@ export class MapController {
   private showHeatmap = true;
 
   private isInitialized = false;
+
+  private geoJsonHandler = new GeoJSON({
+    dataProjection: 'EPSG:4326',
+    featureProjection: 'EPSG:3857',
+  });
 
   constructor(element: HTMLElement) {
     const view = new View({
@@ -127,7 +144,6 @@ export class MapController {
     this.assetIdsByStudyId.clear();
     const studyFeatures: Feature<Point>[] = Array(studies.length);
     const heatmapFeatures: Feature<Point>[] = Array(studies.length);
-
     for (let i = 0; i < studies.length; i++) {
       const study = studies[i];
       const geometry = new Point(olCoordsFromLV95(study.centroid));
@@ -139,7 +155,7 @@ export class MapController {
 
       const studyFeature = new Feature<Point>(geometry);
       studyFeature.setId(study.studyId);
-      studyFeature.setStyle(study.isPoint ? featureStyles.point : featureStyles.rhombus);
+      studyFeature.setStyle(this.getStudyStyle(study.geometryType));
       studyFeature.setProperties({ 'swisstopo.type': 'StudyPoint' });
       studyFeatures[i] = studyFeature;
     }
@@ -171,9 +187,9 @@ export class MapController {
         const study: Study = { studyId: assetStudy.studyId, geom: wktToGeoJSON(assetStudy.geomText) };
         features.push(
           makeStudyFeature(study, {
-            point: featureStyles.bigPoint,
-            polygon: featureStyles.polygon,
-            lineString: featureStyles.lineString,
+            point: featureStyles.filteredPoint,
+            polygon: featureStyles.filteredPolygon,
+            lineString: featureStyles.filteredLine,
           })
         );
         const studyFeature = this.sources.studies.getFeatureById(study.studyId);
@@ -211,13 +227,16 @@ export class MapController {
       this.sources.picker.clear();
       return;
     }
-    const features = asset.studies.map((assetStudy) => {
+    const features = asset.studies.flatMap((assetStudy) => {
       const study = { studyId: assetStudy.studyId, geom: wktToGeoJSON(assetStudy.geomText) };
-      return makeStudyFeature(study, {
-        point: featureStyles.bigPointAssetHighlighted,
-        polygon: featureStyles.polygonAssetHighlighted,
-        lineString: featureStyles.lineStringAssetHighlighted,
+      const studyFeature = makeStudyFeature(study, {
+        point: featureStyles.filteredPoint,
+        polygon: featureStyles.filteredPolygon,
+        lineString: featureStyles.filteredLine,
       });
+
+      const bufferedFeature = this.bufferFeatureWithStyle(studyFeature, featureStyles.hoveredPolygon);
+      return [studyFeature, bufferedFeature];
     });
 
     this.sources.picker.clear();
@@ -246,11 +265,14 @@ export class MapController {
       studies.push(study);
 
       const feature = makeStudyFeature(study, {
-        point: featureStyles.bigPointAsset,
-        polygon: featureStyles.polygonAsset,
-        lineString: featureStyles.lineStringAsset,
+        point: featureStyles.filteredPoint,
+        polygon: featureStyles.filteredPolygon,
+        lineString: featureStyles.filteredLine,
       });
       features.push(feature);
+
+      const bufferedFeature = this.bufferFeatureWithStyle(feature, featureStyles.selectedPolygon);
+      features.push(bufferedFeature);
 
       const studyFeature = this.sources.studies.getFeatureById(study.studyId);
       if (studyFeature != null) {
@@ -279,9 +301,19 @@ export class MapController {
     this.map.dispose();
   }
 
+  private bufferFeatureWithStyle(feature: Feature, style: Style): Feature {
+    const geoJson = this.geoJsonHandler.writeFeatureObject(feature);
+    const buffered = buffer(geoJson, BUFFER_RADIUS_IN_METERS, { units: 'meters' });
+    const bufferedFeature = this.geoJsonHandler.readFeature(buffered);
+    bufferedFeature.setStyle(style);
+
+    return bufferedFeature;
+  }
+
   private handleZoomChange(zoom: number): void {
-    (featureStyles.point.getImage() as Circle).setRadius(zoom < 12 ? 4 : 4 * (zoom / 7.5));
-    featureStyles.rhombus.setImage(makeRhombusImage(zoom < 12 ? 5 : 5 * (zoom / 7.5)));
+    (featureStyles.studyOverviewPoint.getImage() as Circle).setRadius(zoom < 12 ? 4 : 4 * (zoom / 7.5));
+    featureStyles.studyOverviewPolygon.setImage(makeTriangleShape(zoom < 12 ? 5 : 5 * (zoom / 7.5)));
+    featureStyles.studyOverviewLine.setImage(makeLineShape(zoom < 12 ? 5 : 5 * (zoom / 7.5)));
   }
 
   private makeLayers(): MapLayers {
@@ -298,6 +330,17 @@ export class MapController {
       activeAsset: makeSimpleLayer(),
       picker: makeSimpleLayer(),
     };
+  }
+
+  private getStudyStyle(study: StudyGeometryType): Style {
+    switch (study) {
+      case 'Point':
+        return featureStyles.studyOverviewPoint;
+      case 'Polygon':
+        return featureStyles.studyOverviewPolygon;
+      case 'Line':
+        return featureStyles.studyOverviewLine;
+    }
   }
 
   private makeHeatmapLayer(): MapLayer<Point> {
@@ -517,8 +560,11 @@ const makeSources = (layers: MapLayers): MapLayerSources => ({
   picker: requireSource(layers.picker),
 });
 
-const makeStudyFeature = (study: Study, styles: { point: Style; polygon: Style; lineString: Style }): Feature => {
-  const [geometry, style] = ((): [Geometry, Style] => {
+const makeStudyFeature = (
+  study: Study,
+  styles: { point: Style | Style[]; polygon: Style; lineString: Style | Style[] }
+): Feature => {
+  const [geometry, style] = ((): [Geometry, Style | Style[]] => {
     switch (study.geom._tag) {
       case 'Point':
         return [new Point(olCoordsFromLV95(study.geom.coord)), styles.point];

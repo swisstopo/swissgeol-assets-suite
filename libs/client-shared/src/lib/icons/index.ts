@@ -23,7 +23,13 @@ import { helpIcon } from './help';
 import { infoIcon } from './info';
 import { infoFilledIcon } from './info-filled';
 import { accessInternalIcon, accessLockedIcon, accessPublicIcon } from './map-styles/access';
-import { geometryLineIcon, geometryPointIcon, geometryPolygonIcon } from './map-styles/geometry';
+import {
+  geometryLineGeneralizedIcon,
+  geometryLineIcon,
+  geometryPointIcon,
+  geometryPolygonGeneralizedIcon,
+  geometryPolygonIcon,
+} from './map-styles/geometry';
 import { optionsIcon } from './options';
 import { polygonIcon } from './polygon';
 import { profileIcon } from './profile';
@@ -80,7 +86,9 @@ export const icons = [
   zoomPlusIcon,
   geometryPointIcon,
   geometryLineIcon,
+  geometryLineGeneralizedIcon,
   geometryPolygonIcon,
+  geometryPolygonGeneralizedIcon,
   accessPublicIcon,
   accessInternalIcon,
   accessLockedIcon,

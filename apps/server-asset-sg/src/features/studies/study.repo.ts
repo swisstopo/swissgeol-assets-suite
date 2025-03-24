@@ -63,7 +63,7 @@ export class StudyRepo implements ReadRepo<Study, StudyId> {
       SELECT
         s.study_id as "id",
         s.asset_id AS "assetId",
-        s.is_point AS "isPoint",
+        s.geometry_type AS "geometryType",
         SUBSTRING(s.centroid_geom_text FROM 7 FOR length(s.centroid_geom_text) -7) AS "center"
       FROM public.all_study s
       ${condition}

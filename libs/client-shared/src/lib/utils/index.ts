@@ -6,4 +6,5 @@ export * from './date';
 export * from './error';
 export * from './filter-navigate-to-component';
 export * from './map';
+export * from './map-styles';
 export * from './wgs';

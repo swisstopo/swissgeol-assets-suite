@@ -1,10 +1,12 @@
 import { LV95 } from '@asset-sg/shared';
 import { AssetId } from './asset';
 
+export type StudyGeometryType = 'Point' | 'Line' | 'Polygon';
+
 export interface Study {
   id: StudyId;
   center: LV95;
-  isPoint: boolean;
+  geometryType: StudyGeometryType;
   assetId: AssetId;
 }
 
@@ -16,5 +18,5 @@ export enum StudyType {
 }
 
 export const serializeStudyAsCsv = (study: Study): string => {
-  return `${study.id.substring(6)};${study.assetId};${+study.isPoint};${study.center.x};${study.center.y}`;
+  return `${study.id.substring(6)};${study.assetId};${study.geometryType};${study.center.x};${study.center.y}`;
 };
