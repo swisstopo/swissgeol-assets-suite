@@ -47,7 +47,7 @@ export class AssetEditorFilesComponent {
     const element = event.target as HTMLInputElement;
     const files = element.files;
     if (files && files.length > 0) {
-      if (Array.from(files).some((f) => f.size > 250 * 1024 * 1024)) {
+      if (Array.from(files).some((f) => f.size > 2000 * 1024 * 1024)) {
         this.isFileTooLarge = true;
       } else {
         const file: AssetEditorNewFile = {
