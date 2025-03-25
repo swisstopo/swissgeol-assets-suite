@@ -35,9 +35,15 @@ const assetSearchFeature = (state: AppStateWithAssetSearch) => state.assetSearch
 export const selectSearchLoadingState = createSelector(assetSearchFeature, (state) => state.resultsLoadingState);
 export const selectFilterLoadingState = createSelector(assetSearchFeature, (state) => state.filterLoadingState);
 
-export const selectIsFiltersOpen = createSelector(assetSearchFeature, (state) => state?.isFiltersOpen ?? false);
+export const selectIsFiltersOpen = createSelector(assetSearchFeature, (state) => state.ui.isFiltersOpen);
 
-export const selectIsResultsOpen = createSelector(assetSearchFeature, (state) => state.isResultsOpen);
+export const selectIsResultsOpen = createSelector(assetSearchFeature, (state) => state.ui.isResultsOpen);
+export const selectMapPosition = createSelector(assetSearchFeature, (state) => state.ui.map);
+
+export const selectScrollOffsetForResults = createSelector(
+  assetSearchFeature,
+  (state) => state.ui.scrollOffsetForResults
+);
 
 export const selectAssetDetailLoadingState = createSelector(
   assetSearchFeature,
@@ -45,8 +51,6 @@ export const selectAssetDetailLoadingState = createSelector(
 );
 
 export const selectAssetSearchQuery = createSelector(assetSearchFeature, (state) => state.query);
-
-export const selectAssetSearchIsInitialized = createSelector(assetSearchFeature, (state) => state.isInitialized);
 
 export const selectAssetSearchResultData = createSelector(assetSearchFeature, (state) => state.results.data);
 

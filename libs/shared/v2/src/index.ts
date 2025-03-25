@@ -23,3 +23,5 @@ export * from './lib/schemas/user.schema';
 export * from './lib/schemas/workgroup.schema';
 
 export * from './lib/utils/class-validator/is-nullable.decorator';
+export * from './lib/utils/object';
+export * from './lib/utils/sleep';

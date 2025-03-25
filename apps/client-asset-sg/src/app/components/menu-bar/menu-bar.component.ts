@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, HostBinding, inject } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
-import { appSharedStateActions, fromAppShared } from '@asset-sg/client-shared';
+import { fromAppShared } from '@asset-sg/client-shared';
 import { AssetEditPolicy } from '@asset-sg/shared/v2';
 import { UntilDestroy } from '@ngneat/until-destroy';
 import { Store } from '@ngrx/store';
@@ -8,7 +8,7 @@ import { TranslateService } from '@ngx-translate/core';
 import { filter, map, Observable, startWith } from 'rxjs';
 
 // eslint-disable-next-line @nx/enforce-module-boundaries
-import { selectIsFiltersOpen } from '../../../../../../libs/asset-viewer/src/lib/state/asset-search/asset-search.selector';
+import { setFiltersOpen } from '../../../../../../libs/asset-viewer/src/lib/state/asset-search/asset-search.actions';
 import { AppState } from '../../state/app-state';
 
 @UntilDestroy()
@@ -29,7 +29,6 @@ export class MenuBarComponent {
   readonly translateService = inject(TranslateService);
 
   readonly userExists$ = this.store.select(fromAppShared.selectIsAnonymousMode).pipe(map((anonymous) => !anonymous));
-  readonly isFiltersOpen$ = this.store.select(selectIsFiltersOpen);
 
   readonly activeItem$: Observable<MenuItem | null> = this.router.events.pipe(
     filter((event) => event instanceof NavigationEnd),
@@ -58,7 +57,7 @@ export class MenuBarComponent {
   );
 
   toggleAssetDrawer(): void {
-    this.store.dispatch(appSharedStateActions.toggleSearchFilter());
+    this.store.dispatch(setFiltersOpen({ isOpen: 'toggle' }));
   }
 
   protected readonly AssetEditPolicy = AssetEditPolicy;
