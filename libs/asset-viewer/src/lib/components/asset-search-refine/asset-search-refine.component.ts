@@ -4,11 +4,12 @@ import { MatOptionSelectionChange } from '@angular/material/core';
 import { Router } from '@angular/router';
 import { AssetSearchQuery, DateRange } from '@asset-sg/shared';
 import { Store } from '@ngrx/store';
-import { combineLatest, map, startWith, Subscription, tap } from 'rxjs';
+import { combineLatest, map, startWith, Subscription } from 'rxjs';
 
 import * as actions from '../../state/asset-search/asset-search.actions';
 import {
   AvailableAuthor,
+  Filter,
   selectAssetKindFilters,
   selectAssetSearchQuery,
   selectAvailableAuthors,
@@ -46,6 +47,7 @@ export class AssetSearchRefineComponent implements OnInit, OnDestroy, AfterViewI
 
   public assetSearchQuery!: AssetSearchQuery;
 
+  public activeFilters: Filter<string | number>[] = [];
   private readonly createDateRange$ = this.store.select(selectCreateDate);
   private readonly availableAuthors$ = this.store.select(selectAvailableAuthors);
   private readonly isFiltersOpen$ = this.store.select(selectIsFiltersOpen);
@@ -64,10 +66,7 @@ export class AssetSearchRefineComponent implements OnInit, OnDestroy, AfterViewI
     this.languageFilters$,
     this.assetKindFilters$,
     this.workgroupFilters$,
-  ]).pipe(
-    map((a) => a.flat(1).filter((filter) => filter.isActive)),
-    tap((activeFilters) => console.log(activeFilters))
-  );
+  ]).pipe(map((a) => a.flat(1).filter((filter) => filter.isActive)));
 
   readonly isDrawActive$ = this.store.select(selectMapControlIsDrawing);
 
@@ -152,13 +151,26 @@ export class AssetSearchRefineComponent implements OnInit, OnDestroy, AfterViewI
     this.store.dispatch(actions.resetSearch());
   }
 
+  public removeFilter(filterToRemove: Filter<string | number>) {
+    const remainingFiltersWithSameKey = this.activeFilters
+      .filter((filter) => filter.queryKey === filterToRemove.queryKey && filter.value !== filterToRemove.value)
+      .map((remainingFilter) => remainingFilter.value);
+    this.store.dispatch(
+      actions.mergeQuery({
+        query: {
+          [filterToRemove.queryKey]: remainingFiltersWithSameKey.length > 0 ? remainingFiltersWithSameKey : undefined,
+        },
+      })
+    );
+  }
+
   public closeFilters() {
     this.store.dispatch(actions.setFiltersOpen({ isOpen: false }));
   }
 
   private initSubscriptions() {
     this.subscriptions.add(this.isFiltersOpen$.subscribe((isOpen) => (this.isFiltersOpen = isOpen)));
-
+    this.subscriptions.add(this.activeFilters$.subscribe((activeFilter) => (this.activeFilters = activeFilter)));
     this.subscriptions.add(
       this.store.select(selectAssetSearchQuery).subscribe((query) => {
         this.assetSearchQuery = query;

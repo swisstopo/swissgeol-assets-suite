@@ -4,11 +4,11 @@
 
 :host {
   @include drawerPanel.drawer-panel-width;
-  position: relative;
-  padding: 0 1rem 1rem 0;
+  padding: 16px;
   display: flex;
   flex-direction: column;
   z-index: 1;
+  gap: 24px;
 }
 
 @include drawerPanel.draw-panel-header;
@@ -20,47 +20,69 @@
   align-items: center;
   border-bottom: 2px solid #dee2e6;
   padding: 21px 0;
+  margin: 0;
 
   h2 {
     margin: 0;
   }
 }
 
-.scrollable-area {
+.content {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
-  padding-top: 0.75rem;
-  overflow-y: scroll;
-  overflow-x: hidden;
+  gap: 12px;
+  height: calc(100vh - 88px - 80px - 24px - 24px);
 }
 
-.search-control-wrapper {
+asset-sg-chip:hover {
+  cursor: pointer;
+}
+
+.chip-content {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.button-container {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  padding-right: 1rem;
 }
 
 h3 {
   display: flex;
   align-items: center;
   margin: 0;
-  border-bottom: 2px solid #dee2e6;
   font-size: 0.875rem;
   font-weight: variables.$font-bold;
   min-height: 3rem;
 }
 
 h4 {
+  font-weight: 500;
   margin: 0;
-  line-height: 1rem;
-  margin-block: 0.75rem;
+  line-height: 20px;
+  font-size: 14px;
+  color: #1c2834;
+}
+
+.section {
+  background-color: white;
+  border-radius: 4px;
 }
 
 section.filters {
+  padding: 16px 0 16px 16px;
+  overflow-y: scroll;
   display: flex;
   flex-direction: column;
+  gap: 30px;
+
+  section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
 }
 
 .mat-mdc-form-field {

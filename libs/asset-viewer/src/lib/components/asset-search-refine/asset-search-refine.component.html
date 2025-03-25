@@ -4,35 +4,35 @@
     <svg-icon key="close"></svg-icon>
   </button>
 </div>
+<div class="content">
+  @if (activeFilters.length > 0 || assetSearchQuery.polygon) {
+  <mat-chip-set>
+    @if (assetSearchQuery.polygon) {
+    <asset-sg-chip (click)="removePolygon()">
+      <span class="chip-content">
+        <svg-icon key="polygon-draw"></svg-icon>
+        <svg-icon key="cancel"></svg-icon
+      ></span>
+    </asset-sg-chip>
+    } @for (activeFilter of activeFilters; track activeFilter) {
+    <asset-sg-chip (click)="removeFilter(activeFilter)">
+      <span class="chip-content">{{ activeFilter.name | smartTranslate }} <svg-icon key="cancel"></svg-icon></span>
+    </asset-sg-chip>
 
-<div class="scrollable-area">
-  <div class="search-control-wrapper">
-    <button asset-sg-primary translate (click)="resetSearch()">search.resetSearch</button>
-    <button
-      asset-sg-primary
-      [ngClass]="{ 'asset-sg-active': isDrawActive$ | async }"
-      *ngIf="!assetSearchQuery.polygon"
-      (click)="toggleDrawPolygon()"
-      translate
-    >
+    }
+  </mat-chip-set>
+  }
+  <div class="button-container section">
+    @if (!assetSearchQuery.polygon) {
+    <button asset-sg-tertiary [class.active]="isDrawActive$ | async" (click)="toggleDrawPolygon()" translate>
+      <svg-icon key="polygon-draw"></svg-icon>
       search.drawPolygon
     </button>
-    <button asset-sg-primary *ngIf="assetSearchQuery.polygon" (click)="removePolygon()" translate>
-      search.removePolygon
-    </button>
+    } @else {
+    <button asset-sg-tertiary (click)="removePolygon()" translate>search.removePolygon</button>
+    }
   </div>
-  <div>
-    <mat-chip-set>
-      @for (activeFilter of (activeFilters$ | push); track activeFilter) {
-      <asset-sg-chip
-        ><h4>{{ activeFilter.name | smartTranslate }}</h4></asset-sg-chip
-      >
-
-      }
-    </mat-chip-set>
-  </div>
-  <section class="filters">
-    <h3 translate>search.refineSearch</h3>
+  <section class="filters section">
     <section>
       <h4 translate>search.workgroup</h4>
       <asset-sg-asset-search-filter [filters]="workgroupFilters$ | push" />
@@ -152,4 +152,7 @@
       </mat-form-field>
     </section>
   </section>
+  <div class="button-container">
+    <button asset-sg-primary translate (click)="resetSearch()">search.resetSearch</button>
+  </div>
 </div>

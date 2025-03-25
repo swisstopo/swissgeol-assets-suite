@@ -67,9 +67,9 @@ asset-sg-asset-picker {
 asset-sg-asset-search-refine {
   background: variables.$grey-01;
   grid-area: search-filter;
-  overflow-y: auto;
   padding-left: 16px;
-  width: 368px;
+  padding-top: 0;
+  width: 440px;
 }
 
 asset-sg-asset-search-results {
