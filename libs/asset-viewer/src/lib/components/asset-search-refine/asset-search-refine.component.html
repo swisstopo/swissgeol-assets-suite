@@ -21,6 +21,16 @@
       search.removePolygon
     </button>
   </div>
+  <div>
+    <mat-chip-set>
+      @for (activeFilter of (activeFilters$ | push); track activeFilter) {
+      <asset-sg-chip
+        ><h4>{{ activeFilter.name | smartTranslate }}</h4></asset-sg-chip
+      >
+
+      }
+    </mat-chip-set>
+  </div>
   <section class="filters">
     <h3 translate>search.refineSearch</h3>
     <section>
