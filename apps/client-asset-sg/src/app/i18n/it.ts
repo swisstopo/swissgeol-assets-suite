@@ -312,21 +312,18 @@ export const itAppTranslations: AppTranslations = {
       title: 'Responsabilità',
       content:
         'Nonostante si presti grande attenzione all’esattezza delle informazioni pubblicate su questo sito, l’Ufficio federale di topografia swisstopo declina ogni responsabilità per la fedeltà, l’esattezza, l’attualità, l’affidabilità e la completezza di tali informazioni.' +
-        '<br>' +
-        '<br>' +
+        '<br><br>' +
         'swisstopo si riserva esplicitamente il diritto in qualsiasi momento di modificare parzialmente o completamente il contenuto del sito, di cancellarlo o di sospenderne temporaneamente la pubblicazione, senza alcun preavviso.' +
-        '<br>' +
-        '<br>' +
-        'swisstopo declina ogni responsabilità per danni materiali o immateriali derivanti dall’accesso alle informazioni diffuse, dall’uso o dal mancato uso del sito, oppure che sono riconducibili a un malfunzionamento del collegamento o a disturbi tecnici del sito.' +
-        '<br>' +
-        '<br>' +
-        'Per ulteriori informazioni legali, consultare il seguente link:',
+        '<br><br>' +
+        'swisstopo declina ogni responsabilità per danni materiali o immateriali derivanti dall’accesso alle informazioni diffuse, dall’uso o dal mancato uso del sito, oppure che sono riconducibili a un malfunzionamento del collegamento o a disturbi tecnici del sito.',
     },
 
     tracking: {
       title: 'Acquisizione di dati',
       content:
-        "Per poter adattare la nostra offerta web in modo ottimale alle vostre esigenze, utilizziamo gli strumenti di analisi Google Analytics e Sentry. Ciò significa, che il vostro comportamento sul sito web viene registrato in forma anonima. Di conseguenza, non vengono trasmessi o memorizzati dati personali. Se non siete dʼaccordo, potete interrompere la raccolta dei dati da parte degli strumenti di analisi e continuare ad utilizzare questo sito web senza restrizioni. Troverete maggiori informazioni sulla nostra pagina <a target='_blank' href='https://www.swissgeol.ch/datenschutz-it'>Basi legali.</a>",
+        'Per poter adattare la nostra offerta web in modo ottimale alle vostre esigenze, utilizziamo lo strumento di analisi Google Analytics. Ciò significa, che il vostro comportamento sul sito web viene registrato in forma anonima. Di conseguenza, non vengono trasmessi o memorizzati dati personali. Se non siete dʼaccordo, potete interrompere la raccolta dei dati da parte degli strumenti di analisi e continuare ad utilizzare questo sito web senza restrizioni.' +
+        '<br><br>' +
+        'Per ulteriori informazioni legali, consultare il seguente link: {{external}}',
       consentLabel: "D'accordo con acquisizione di dati (facoltativo)",
     },
     accept: 'Accettare',

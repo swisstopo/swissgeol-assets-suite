@@ -2,13 +2,18 @@
   background-color: grey;
 }
 
-h1 {
-  color: black;
-  font-weight: 500;
-}
-
 h2 {
   margin: 0;
+}
+
+h3 {
+  color: black;
+  font-weight: 500;
+  margin-block: 24px 12px;
+}
+
+h3:first-child {
+  margin-top: 0;
 }
 
 p {
@@ -24,6 +29,10 @@ p {
 
 .content {
   padding: 24px;
+}
+
+.content:not(:last-child) {
+  padding-bottom: 0;
 }
 
 .actions {

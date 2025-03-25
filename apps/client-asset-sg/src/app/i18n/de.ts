@@ -308,23 +308,20 @@ export const deAppTranslations = {
   disclaimer: {
     title: 'Nutzungsbedingungen',
     liability: {
-      title: 'Haftung',
+      title: 'Haftungsausschluss',
       content:
         'Obwohl das Bundesamt für Landestopografie swisstopo mit aller Sorgfalt auf die Richtigkeit der veröffentlichten Informationen achtet, kann hinsichtlich der inhaltlichen Richtigkeit, Genauigkeit, Aktualität, Zuverlässigkeit und Vollständigkeit dieser Informationen keine Gewährleistung übernommen werden.' +
-        '<br>' +
-        '<br>' +
+        '<br><br>' +
         'Swisstopo behält sich ausdrücklich vor, jederzeit Inhalte ohne Ankündigung ganz oder teilweise zu ändern, zu löschen oder zeitweise nicht zu veröffentlichen.' +
-        '<br>' +
-        '<br>' +
-        'Haftungsansprüche gegen swisstopo wegen Schäden materieller oder immaterieller Art, welche aus dem Zugriff oder der Nutzung bzw. Nichtnutzung der veröffentlichten Informationen, durch Missbrauch der Verbindung oder durch technische Störungen entstanden sind, werden ausgeschlossen.' +
-        '<br>' +
-        '<br>' +
-        'Weitere rechtliche Bestimmungen finden sie hier:',
+        '<br><br>' +
+        'Haftungsansprüche gegen swisstopo wegen Schäden materieller oder immaterieller Art, welche aus dem Zugriff oder der Nutzung bzw. Nichtnutzung der veröffentlichten Informationen, durch Missbrauch der Verbindung oder durch technische Störungen entstanden sind, werden ausgeschlossen.',
     },
     tracking: {
       title: 'Datenerfassung',
       content:
-        "Damit wir unser Webangebot optimal auf Ihre Bedürfnisse ausrichten können, verwenden wir die Analysetools Google Analytics und Sentry. Dabei wird Ihr Verhalten auf der Website in anonymisierter Form erfasst. Es werden also keine personenbezogenen Daten übermittelt oder gespeichert. Wenn Sie damit nicht einverstanden sind, können Sie die Datenerfassung durch Analysetools unterbinden und diese Website trotzdem ohne Einschränkungen nutzen. Weitere Informationen dazu finden Sie auf unserer Seite <a target='_blank' href='https://www.swissgeol.ch/datenschutz'>Rechtliches.</a>",
+        'Damit wir unser Webangebot optimal auf Ihre Bedürfnisse ausrichten können, verwenden wir das Analysetool Google Analytics. Dabei wird Ihr Verhalten auf der Website in anonymisierter Form erfasst. Es werden also keine personenbezogenen Daten übermittelt oder gespeichert. Wenn Sie damit nicht einverstanden sind, können Sie die Datenerfassung durch Analysetools unterbinden und diese Website trotzdem ohne Einschränkungen nutzen.' +
+        '<br><br>' +
+        'Weitere rechtliche Bestimmungen finden Sie hier: {{external}}',
       consentLabel: 'Einwilligung zur Datenerfassung (optional)',
     },
     accept: 'Akzeptieren',
