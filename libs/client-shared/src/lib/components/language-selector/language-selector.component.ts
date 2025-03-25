@@ -1,11 +1,11 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { AsyncPipe } from '@angular/common';
+import { Component, inject } from '@angular/core';
 import { MatButton } from '@angular/material/button';
 import { MatMenu, MatMenuTrigger } from '@angular/material/menu';
 import { NavigationEnd, Router, RouterLink } from '@angular/router';
 import { isNotNull, isTruthy } from '@asset-sg/core';
 import { Lang } from '@asset-sg/shared';
 import { SvgIconComponent } from '@ngneat/svg-icon';
-import { LetModule } from '@rx-angular/template/let';
 import { flow, pipe } from 'fp-ts/function';
 import * as O from 'fp-ts/Option';
 import queryString from 'query-string';
@@ -18,8 +18,7 @@ import { AnchorComponent } from '../button';
   standalone: true,
   templateUrl: './language-selector.component.html',
   styleUrls: ['./language-selector.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [SvgIconComponent, MatMenu, MatMenuTrigger, RouterLink, MatButton, AnchorComponent, LetModule],
+  imports: [SvgIconComponent, MatMenu, MatMenuTrigger, RouterLink, MatButton, AnchorComponent, AsyncPipe],
 })
 export class LanguageSelectorComponent {
   private readonly router = inject(Router);

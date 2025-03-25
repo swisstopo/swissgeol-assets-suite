@@ -49,8 +49,9 @@ export class AuthService {
     const isLoggedIn = isAnonymous || this._state$.value === AuthState.Success;
     if (isLoggedIn && !this.configService.getHideDisclaimer()) {
       this.dialogService.open(DisclaimerDialogComponent, {
-        width: '500px',
+        width: '960px',
         disableClose: true,
+        autoFocus: false,
       });
     }
   }
