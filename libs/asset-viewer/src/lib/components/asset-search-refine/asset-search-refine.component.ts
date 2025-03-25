@@ -43,6 +43,7 @@ export class AssetSearchRefineComponent implements OnInit, OnDestroy, AfterViewI
   public createDateRange: DateRange | null = null;
   public availableAuthors: AvailableAuthor[] = [];
   public filteredAuthors: AvailableAuthor[] = [];
+  public selectedAuthor?: AvailableAuthor;
   public isFiltersOpen = false;
 
   public assetSearchQuery!: AssetSearchQuery;
@@ -116,6 +117,7 @@ export class AssetSearchRefineComponent implements OnInit, OnDestroy, AfterViewI
   public updateAuthor(event: MatOptionSelectionChange, authorId: number) {
     if (event.isUserInput) {
       this.updateSearch({ authorId });
+      this.selectedAuthor = this.filteredAuthors.find((a) => a.contactId === authorId);
     }
   }
 
@@ -131,6 +133,7 @@ export class AssetSearchRefineComponent implements OnInit, OnDestroy, AfterViewI
   }
 
   public resetAuthorSearch() {
+    this.selectedAuthor = undefined;
     this.authorAutoCompleteControl.setValue('');
     this.updateSearch({ authorId: undefined });
   }

@@ -49,15 +49,6 @@ asset-sg-chip:hover {
   flex-direction: column;
 }
 
-h3 {
-  display: flex;
-  align-items: center;
-  margin: 0;
-  font-size: 0.875rem;
-  font-weight: variables.$font-bold;
-  min-height: 3rem;
-}
-
 h4 {
   font-weight: 500;
   margin: 0;
@@ -66,22 +57,28 @@ h4 {
   color: #1c2834;
 }
 
-.section {
-  background-color: white;
-  border-radius: 4px;
-}
-
-section.filters {
-  padding: 16px 0 16px 16px;
-  overflow-y: scroll;
+.filters-container {
   display: flex;
   flex-direction: column;
-  gap: 30px;
+  gap: 24px;
+  overflow-y: scroll;
 
-  section {
+  .section {
+    background-color: white;
+    border-radius: 4px;
+  }
+
+  .filters {
+    padding: 16px;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 30px;
+
+    section {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
   }
 }
 
