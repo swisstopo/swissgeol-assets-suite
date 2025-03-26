@@ -45,13 +45,13 @@ asset-sg-map {
   width: 500px;
   height: 56px;
 
-  border-bottom: 2px solid #337083;
-  color: #1c2834;
+  border-bottom: 2px solid variables.$cyan-08;
+  color: variables.$grey-10;
   background-color: #f8f9fa;
   border-radius: 6px;
 
   &::placeholder {
-    color: #1c2834;
+    color: variables.$grey-10;
   }
 }
 

@@ -60,9 +60,9 @@
         >
           <mat-chip-set>
             @for (workgroup of getWorkgroupsOfUser(user); track workgroup.id) {
-            <asset-sg-chip>{{ workgroup.name }}</asset-sg-chip>
+            <asset-sg-chip type="tertiary">{{ workgroup.name }}</asset-sg-chip>
             } @if (user.roles.size > WORKGROUP_DISPLAY_COUNT) {
-            <asset-sg-chip>+{{ user.roles.size - WORKGROUP_DISPLAY_COUNT }}</asset-sg-chip>
+            <asset-sg-chip type="tertiary">+{{ user.roles.size - WORKGROUP_DISPLAY_COUNT }}</asset-sg-chip>
             }
           </mat-chip-set>
         </td>

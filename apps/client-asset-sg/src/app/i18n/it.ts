@@ -92,7 +92,7 @@ export const itAppTranslations: AppTranslations = {
       None: 'IT keine',
     },
     workgroup: 'IT Arbeitsgruppe',
-    resetSearch: 'IT Suche zurücksetzen',
+    resetSearch: 'IT Filter zurücksetzen',
     file: 'IT Datei',
     legalFile: 'IT Rechtliche Einwilligungen',
     openFileInNewTab: 'IT {{fileName}} in neuem Tab öffnen',

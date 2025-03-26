@@ -1,8 +1,8 @@
-@use "../../styles/mixins" as mixins;
+@use "../../styles/variables";
 
 :host {
   .mat-mdc-standard-chip.mdc-evolution-chip--disabled {
-    background-color: #596978;
+    background-color: variables.$cyan-09;
     opacity: unset;
   }
 
@@ -22,14 +22,18 @@
   }
 }
 
-:host:not(.disabled):hover {
+:host([icon]):not(.disabled):hover {
   cursor: pointer;
 }
 
-:host(.disabled) .mat-mdc-standard-chip.mdc-evolution-chip--disabled {
-  background-color: #acb4bd;
+:host(.secondary):not(.disabled) .mat-mdc-standard-chip.mdc-evolution-chip--disabled {
+  background-color: variables.$grey-10;
 }
 
-:host(.secondary) .mat-mdc-standard-chip.mdc-evolution-chip--disabled {
-  background-color: #1c2834;
+:host(.tertiary):not(.disabled) .mat-mdc-standard-chip.mdc-evolution-chip--disabled {
+  background-color: variables.$grey-07;
+}
+
+:host(.disabled) .mat-mdc-standard-chip.mdc-evolution-chip--disabled {
+  background-color: variables.$grey-05;
 }

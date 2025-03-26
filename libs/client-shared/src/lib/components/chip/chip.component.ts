@@ -10,7 +10,7 @@ import { SvgIconComponent } from '@ngneat/svg-icon';
   imports: [MatChip, SvgIconComponent],
 })
 export class ChipComponent {
-  @Input() type: 'primary' | 'secondary' = 'primary';
+  @Input() type: 'primary' | 'secondary' | 'tertiary' = 'primary';
   @Input() icon: string | null = null;
 
   @HostBinding('class.disabled')
@@ -20,5 +20,10 @@ export class ChipComponent {
   @HostBinding('class.secondary')
   get isSecondary() {
     return this.type === 'secondary';
+  }
+
+  @HostBinding('class.tertiary')
+  get isTertiary() {
+    return this.type === 'tertiary';
   }
 }
