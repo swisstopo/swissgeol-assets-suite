@@ -5,12 +5,23 @@ import { AssetSearchQuery, LV95, Polygon } from '@asset-sg/shared';
 import { AssetId } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
 import { combineLatest, distinctUntilChanged, firstValueFrom, map, skip, Subscription } from 'rxjs';
-import { runCombinedSearch } from '../state/asset-search/asset-search.actions';
-import { AssetSearchState } from '../state/asset-search/asset-search.reducer';
+import { DEFAULT_MAP_POSITION } from '../components/map/map-controller';
+import {
+  runCombinedSearch,
+  setFiltersOpen,
+  setMapPosition,
+  setResultsOpen,
+  setScrollOffsetForResults,
+} from '../state/asset-search/asset-search.actions';
+import { AssetSearchState, AssetSearchUiState } from '../state/asset-search/asset-search.reducer';
 import {
   hasNoActiveFilters,
   selectAssetSearchQuery,
   selectCurrentAssetDetail,
+  selectIsFiltersOpen,
+  selectIsResultsOpen,
+  selectMapPosition,
+  selectScrollOffsetForResults,
 } from '../state/asset-search/asset-search.selector';
 
 @Injectable({ providedIn: 'root' })
@@ -25,7 +36,28 @@ export class ViewerParamsService {
   private readonly paramsFromStore$ = combineLatest([
     this.store.select(selectAssetSearchQuery).pipe(distinctUntilChanged()),
     this.store.select(selectCurrentAssetDetail).pipe(distinctUntilChanged()),
-  ]).pipe(map(([query, asset]) => ({ query, assetId: asset?.assetId ?? null })));
+    combineLatest([
+      this.store.select(selectScrollOffsetForResults).pipe(distinctUntilChanged()),
+      this.store.select(selectIsFiltersOpen).pipe(distinctUntilChanged()),
+      this.store.select(selectIsResultsOpen).pipe(distinctUntilChanged()),
+      this.store.select(selectMapPosition).pipe(distinctUntilChanged()),
+    ]).pipe(
+      map(
+        ([scrollOffsetForResults, isFiltersOpen, isResultsOpen, map]): AssetSearchUiState => ({
+          scrollOffsetForResults,
+          isFiltersOpen,
+          isResultsOpen,
+          map,
+        })
+      )
+    ),
+  ]).pipe(
+    map(([query, asset, ui]) => ({
+      query,
+      ui,
+      assetId: asset?.assetId ?? null,
+    }))
+  );
 
   private subscription = new Subscription();
 
@@ -47,9 +79,16 @@ export class ViewerParamsService {
     // We only use the values from the store if:
     // - There are no URL query params
     // - There are query or assetId values in the store
+    // - We always take the value for 'favoritesOnly' from the URL
     if (isEmptyParams(paramsFromUrl) && !isEmptyParams(paramsFromStore)) {
       this.params = paramsFromStore;
+      this.params.query = {
+        ...this.params.query,
+        favoritesOnly: paramsFromUrl.query.favoritesOnly,
+      };
       this.writeParamsToUrl({ shouldReplaceUrl: true });
+      // When navigating from 'Favorites' to 'Create Asset' to 'Filter', we need to override the 'favoritesOnly' property in the state and trigger a new search
+      this.writeParamsToStore();
     } else {
       this.params = paramsFromUrl;
       this.writeParamsToStore();
@@ -67,6 +106,12 @@ export class ViewerParamsService {
     this.subscription.add(
       this.paramsFromStore$.pipe(skip(1)).subscribe((params) => {
         this.params = params;
+        // We need the value from the URL for 'favoritesOnly' as it is removed from the state after resetting the search
+        const paramsFromUrl = this.parseParamsFromUrl();
+        this.params.query = {
+          ...this.params.query,
+          favoritesOnly: paramsFromUrl.query.favoritesOnly,
+        };
         this.writeParamsToUrl({ shouldReplaceUrl });
         shouldReplaceUrl = false;
       })
@@ -94,6 +139,8 @@ export class ViewerParamsService {
             ...this.params.query,
             favoritesOnly: isFavoritesOnly,
           };
+          this.params.ui.isResultsOpen = false;
+          this.params.ui.scrollOffsetForResults = 0;
           shouldReplaceUrl = true;
           this.writeParamsToStore();
         }
@@ -103,7 +150,7 @@ export class ViewerParamsService {
   }
 
   private writeParamsToUrl(options: { shouldReplaceUrl?: boolean } = {}): void {
-    const { query, assetId } = this.params;
+    const { query, ui, assetId } = this.params;
 
     const params: Params = {};
     updatePlainParam(params, QUERY_PARAM_MAPPING.text, query.text);
@@ -123,6 +170,14 @@ export class ViewerParamsService {
     updateArrayParam(params, QUERY_PARAM_MAPPING.workgroupIds, query.workgroupIds);
     updatePlainParam(params, QUERY_PARAM_MAPPING.assetId, assetId);
 
+    updatePlainParam(params, UI_PARAM_MAPPING.scrollOffsetForResults, ui.scrollOffsetForResults, { defaultValue: 0 });
+    updatePlainParam(params, UI_PARAM_MAPPING.isFiltersOpen, ui.isFiltersOpen, { defaultValue: true });
+    updatePlainParam(params, UI_PARAM_MAPPING.isResultsOpen, ui.isResultsOpen, { defaultValue: false });
+
+    updatePlainParam(params, UI_PARAM_MAPPING.map.x, ui.map.x, { defaultValue: DEFAULT_MAP_POSITION.x });
+    updatePlainParam(params, UI_PARAM_MAPPING.map.y, ui.map.y, { defaultValue: DEFAULT_MAP_POSITION.y });
+    updatePlainParam(params, UI_PARAM_MAPPING.map.z, ui.map.z, { defaultValue: DEFAULT_MAP_POSITION.z });
+
     const url = document.location.pathname.split('/', 3);
     const route = query.favoritesOnly ? ['favorites'] : [];
 
@@ -139,12 +194,17 @@ export class ViewerParamsService {
   }
 
   private writeParamsToStore(): void {
+    const { assetId, query, ui } = this.params;
     this.store.dispatch(
       runCombinedSearch({
-        assetId: this.params.assetId ?? undefined,
-        query: this.params.query,
+        assetId: assetId ?? undefined,
+        query,
       })
     );
+    this.store.dispatch(setScrollOffsetForResults({ offset: ui.scrollOffsetForResults }));
+    this.store.dispatch(setFiltersOpen({ isOpen: ui.isFiltersOpen }));
+    this.store.dispatch(setResultsOpen({ isOpen: ui.isResultsOpen }));
+    this.store.dispatch(setMapPosition({ position: ui.map }));
   }
 
   private parseParamsFromUrl(): ViewerParams {
@@ -164,7 +224,17 @@ export class ViewerParamsService {
     query.languageItemCodes = readArrayParam(params, QUERY_PARAM_MAPPING.languageItemCodes);
     query.workgroupIds = readArrayParam<number>(params, QUERY_PARAM_MAPPING.workgroupIds);
     query.favoritesOnly = this.parseFavoritesOnlyFromUrl();
-    return { query, assetId };
+    const ui: AssetSearchUiState = {
+      isFiltersOpen: readBooleanParam(params, UI_PARAM_MAPPING.isFiltersOpen) ?? true,
+      isResultsOpen: readBooleanParam(params, UI_PARAM_MAPPING.isResultsOpen) ?? false,
+      scrollOffsetForResults: readNumberParam(params, UI_PARAM_MAPPING.scrollOffsetForResults) ?? 0,
+      map: {
+        x: readNumberParam(params, UI_PARAM_MAPPING.map.x),
+        y: readNumberParam(params, UI_PARAM_MAPPING.map.y),
+        z: readNumberParam(params, UI_PARAM_MAPPING.map.z),
+      },
+    };
+    return { query, ui, assetId };
   }
 
   private parseFavoritesOnlyFromUrl(): boolean {
@@ -175,6 +245,7 @@ export class ViewerParamsService {
 
 interface ViewerParams {
   query: AssetSearchQuery;
+  ui: AssetSearchUiState;
   assetId: AssetId | null;
 }
 
@@ -198,8 +269,28 @@ const QUERY_PARAM_MAPPING = {
   categories: 'search[categories]',
 };
 
-const updatePlainParam = (params: Params, name: string, value: string | number | null | undefined): void => {
-  params[name] = value == null || value === '' ? null : value;
+type ParamMapping<T> = {
+  [K in keyof T]: T[K] extends Record<string, unknown> ? ParamMapping<Required<T[K]>> : string;
+};
+
+const UI_PARAM_MAPPING: ParamMapping<AssetSearchUiState> = {
+  scrollOffsetForResults: 'results[offset]',
+  isResultsOpen: 'results[show]',
+  isFiltersOpen: 'search[show]',
+  map: {
+    x: 'map[x]',
+    y: 'map[y]',
+    z: 'map[z]',
+  },
+};
+
+const updatePlainParam = <T extends string | number | boolean>(
+  params: Params,
+  name: string,
+  value: T | null | undefined,
+  options: { defaultValue?: T } = {}
+): void => {
+  params[name] = value == null || value === '' || value === options.defaultValue ? null : value;
 };
 
 const updateDateParam = (params: Params, name: string, value: Date | null | undefined): void => {
@@ -222,6 +313,14 @@ const readNumberParam = (params: Params, name: string): number | undefined => {
     return undefined;
   }
   return value;
+};
+
+const readBooleanParam = (params: Params, name: string): boolean | undefined => {
+  const stringValue = readStringParam(params, name);
+  if (stringValue == null) {
+    return undefined;
+  }
+  return stringValue !== 'false';
 };
 
 const readArrayParam = <T>(params: Params, name: string): T[] | undefined => {

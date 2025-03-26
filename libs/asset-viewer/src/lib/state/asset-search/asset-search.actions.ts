@@ -2,6 +2,7 @@ import { AssetEditDetail, AssetSearchQuery, AssetSearchResult, AssetSearchStats 
 import { AssetId } from '@asset-sg/shared/v2';
 import { createAction, props } from '@ngrx/store';
 import { AllStudyDTO } from '../../models';
+import { AssetSearchUiState } from './asset-search.reducer';
 
 export const initialize = createAction('[Asset Search] Initialize');
 export const runCombinedSearch = createAction(
@@ -46,8 +47,13 @@ export const clearSelectedAsset = createAction('[Asset Search] Clear Selected As
 export const clearPolygon = createAction('[Asset Search] Clear Polygon');
 export const setStudies = createAction('[Asset Search] Set Studies', props<{ studies: AllStudyDTO[] }>());
 
-export const openFilters = createAction('[Asset Search] Open Filters');
-export const closeFilters = createAction('[Asset Search] Close Filters');
-export const openResults = createAction('[Asset Search] Open Results');
-export const closeResults = createAction('[Asset Search] Close Results');
-export const toggleResults = createAction('[Asset Search] Toggle Results');
+export const setFiltersOpen = createAction('[Asset Search] Set Filters Open', props<{ isOpen: boolean | 'toggle' }>());
+export const setResultsOpen = createAction('[Asset Search] Set Results Open', props<{ isOpen: boolean | 'toggle' }>());
+export const setScrollOffsetForResults = createAction(
+  '[Asset Search] Set Scroll Offset For Results',
+  props<{ offset: number }>()
+);
+export const setMapPosition = createAction(
+  '[Asset Search] Set Map Position',
+  props<{ position: Partial<AssetSearchUiState['map']> }>()
+);

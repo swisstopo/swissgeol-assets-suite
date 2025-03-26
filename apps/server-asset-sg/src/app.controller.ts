@@ -1,6 +1,6 @@
 import { unknownToError } from '@asset-sg/core';
 import { AssetByTitle } from '@asset-sg/shared';
-import { User } from '@asset-sg/shared/v2';
+import { AppConfig, AppMode, User } from '@asset-sg/shared/v2';
 import { Controller, Get, HttpException, Query } from '@nestjs/common';
 import { sequenceS } from 'fp-ts/Apply';
 import * as A from 'fp-ts/Array';
@@ -13,22 +13,29 @@ import { Authorize } from '@/core/decorators/authorize.decorator';
 import { CurrentUser } from '@/core/decorators/current-user.decorator';
 import { PrismaService } from '@/core/prisma.service';
 import { AssetSearchService } from '@/features/assets/search/asset-search.service';
+import { readEnv, requireEnv } from '@/utils/requireEnv';
 
 @Controller('/')
 export class AppController {
-  constructor(private readonly assetSearchService: AssetSearchService, private readonly prismaService: PrismaService) {}
+  private readonly config: AppConfig;
 
-  @Get('/oauth-config/config')
-  getConfig() {
-    return {
-      oauth_issuer: process.env.OAUTH_ISSUER,
-      oauth_clientId: process.env.OAUTH_CLIENT_ID,
-      oauth_scope: process.env.OAUTH_SCOPE,
-      oauth_responseType: process.env.OAUTH_RESPONSE_TYPE,
-      oauth_showDebugInformation: !!process.env.OAUTH_SHOW_DEBUG_INFORMATION,
-      oauth_tokenEndpoint: process.env.OAUTH_TOKEN_ENDPOINT,
-      anonymous_mode: process.env.ANONYMOUS_MODE === 'true',
+  constructor(private readonly assetSearchService: AssetSearchService, private readonly prismaService: PrismaService) {
+    this.config = {
+      mode: readEnv('ANONYMOUS_MODE', Boolean) ? AppMode.Anonymous : AppMode.Default,
+      googleAnalyticsId: readEnv('GOOGLE_ANALYTICS_ID'),
+      oauth: {
+        issuer: requireEnv('OAUTH_ISSUER'),
+        clientId: requireEnv('OAUTH_CLIENT_ID'),
+        scope: requireEnv('OAUTH_SCOPE'),
+        showDebugInformation: readEnv('OAUTH_SHOW_DEBUG_INFORMATION', Boolean) ?? false,
+        tokenEndpoint: requireEnv('OAUTH_TOKEN_ENDPOINT'),
+      },
     };
+  }
+
+  @Get('/config')
+  showConfig(): AppConfig {
+    return this.config;
   }
 
   /**

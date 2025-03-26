@@ -189,6 +189,11 @@ mat-paginator {
   .mat-mdc-paginator-icon {
     fill: #828e9a;
   }
+
+  .mat-mdc-paginator-page-size,
+  .mat-mdc-paginator-range-actions {
+    font-size: 12px;
+  }
 }
 
 .asset-sg-dialog {

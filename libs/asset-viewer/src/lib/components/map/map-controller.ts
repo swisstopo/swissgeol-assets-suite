@@ -15,7 +15,7 @@ import MapBrowserEvent from 'ol/MapBrowserEvent';
 import { Cluster, Tile, Vector as VectorSource, XYZ } from 'ol/source';
 import Style, { StyleFunction } from 'ol/style/Style';
 import View from 'ol/View';
-import { filter, fromEventPattern, map, Observable, switchMap } from 'rxjs';
+import { filter, fromEventPattern, map, Observable, ReplaySubject, switchMap } from 'rxjs';
 import { AllStudyDTO } from '../../models';
 import { CustomFeatureProperties } from '../../shared/map-configuration/custom-feature-properties.enum';
 import { availableLayerStyles, defaultLayerStyle } from '../../shared/map-configuration/map-layer-styles';
@@ -24,6 +24,12 @@ import { wktToGeoJSON } from '../../state/asset-search/asset-search.selector';
 import { mapAssetAccessToAccessType } from '../../utils/access-type';
 
 export const INITIAL_RESOLUTION = 500;
+
+export const DEFAULT_MAP_POSITION: MapPosition = {
+  x: SWISS_CENTER[0],
+  y: SWISS_CENTER[1],
+  z: INITIAL_RESOLUTION,
+};
 
 /**
  * Buffer radius used to create selection/hover effects around study geometries.
@@ -35,6 +41,8 @@ export class MapController {
   readonly sources: MapLayerSources;
   readonly assetsClick$: Observable<number[]>;
   readonly assetsHover$: Observable<number[]>;
+  readonly positionChange$: Observable<[number, number, number]>;
+
   private readonly map: OlMap;
   /**
    * The id of all visible assets, mapped to their {@link AssetEditDetail} object.
@@ -64,17 +72,18 @@ export class MapController {
 
   private isInitialized = false;
 
+  private readonly requestedPosition$ = new ReplaySubject<Partial<MapPosition>>(1);
   private geoJsonHandler = new GeoJSON({
     dataProjection: 'EPSG:4326',
     featureProjection: 'EPSG:3857',
   });
 
-  constructor(element: HTMLElement) {
+  constructor(element: HTMLElement, initialPosition: MapPosition) {
     const view = new View({
       projection: 'EPSG:3857',
       minResolution: 0.1,
-      resolution: INITIAL_RESOLUTION,
-      center: SWISS_CENTER,
+      resolution: initialPosition.z,
+      center: [initialPosition.x, initialPosition.y],
       extent: SWISS_EXTENT,
       showFullExtent: true,
     });
@@ -99,6 +108,7 @@ export class MapController {
 
     this.assetsClick$ = this.makeAssetsClick$();
     this.assetsHover$ = this.makeAssetsHover$();
+    this.positionChange$ = this.makePositionChange$();
 
     this.map.once('loadend', () => {
       this.isInitialized = true;
@@ -108,6 +118,8 @@ export class MapController {
           view.setMinZoom(zoom);
         }
       }
+
+      this.requestedPosition$.subscribe(this.setPositionImmediately.bind(this));
     });
   }
 
@@ -166,8 +178,7 @@ export class MapController {
 
     const features: Feature[] = [];
     const studies: Study[] = [];
-    for (let i = 0; i < assets.length; i++) {
-      const asset = assets[i];
+    for (const asset of assets) {
       this.assetsById.set(asset.assetId, asset);
       for (const assetStudy of asset.studies) {
         const study: Study = { studyId: assetStudy.studyId, geom: wktToGeoJSON(assetStudy.geomText) };
@@ -272,6 +283,9 @@ export class MapController {
   }
 
   clearActiveAsset(): void {
+    if (this.activeAsset === null) {
+      return;
+    }
     this.resetActiveAssetStyle();
     this.activeAsset = null;
     this.sources.activeAsset.clear();
@@ -280,6 +294,23 @@ export class MapController {
     window.requestAnimationFrame(() => {
       resetZoom(this.map.getView(), { isAnimated: true });
     });
+  }
+
+  setPosition(position: Partial<MapPosition>): void {
+    this.requestedPosition$.next(position);
+  }
+
+  private setPositionImmediately(position: Partial<MapPosition>): void {
+    const view = this.map.getView();
+    const center = view.getCenter();
+    if (center === undefined) {
+      throw new Error("can't set position, view is not yet initialized.");
+    }
+    view.setCenter([position.x ?? center[0], position.y ?? center[1]]);
+    if (position.z !== undefined) {
+      view.setResolution(position.z);
+    }
+    this.map.render();
   }
 
   dispose(): void {
@@ -335,6 +366,20 @@ export class MapController {
       radius: 5,
       opacity: 0.7,
     }) as MapLayer<Point>;
+  }
+
+  private makePositionChange$(): Observable<[number, number, number]> {
+    return fromEventPattern((h) => this.map.getView().on('change:center', h)).pipe(
+      map(() => {
+        const center = this.map.getView().getCenter();
+        const resolution = this.map.getView().getResolution();
+        if (center === undefined || resolution === undefined) {
+          return null;
+        }
+        return [...center, resolution] as [number, number, number];
+      }),
+      filter((it) => it !== null)
+    );
   }
 
   /**
@@ -473,6 +518,12 @@ export class MapController {
     }
     return geometry.getType() === 'LineString' ? 'Line' : geometry.getType();
   }
+}
+
+export interface MapPosition {
+  x: number;
+  y: number;
+  z: number;
 }
 
 interface MapLayers {

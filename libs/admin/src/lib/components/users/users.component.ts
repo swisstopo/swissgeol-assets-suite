@@ -24,7 +24,7 @@ export class UsersComponent extends AbstractAdminTableComponent<User> implements
     { displayValue: 'DE', key: 'lang', match: (value) => value.lang === 'de' },
     { displayValue: 'EN', key: 'lang', match: (value) => value.lang === 'en' },
     { displayValue: 'FR', key: 'lang', match: (value) => value.lang === 'fr' },
-    { displayValue: 'IT', key: 'lang', match: (value) => value.lang === 'en' },
+    { displayValue: 'IT', key: 'lang', match: (value) => value.lang === 'it' },
   ];
   public filterForIsAdmin: Filter<User>[] = [];
 

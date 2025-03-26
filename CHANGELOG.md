@@ -8,6 +8,24 @@
 
 ### Fixed
 
+## v1.9.0
+
+### Added
+
+- Die sgsId von Assets muss neu einzigartig sein.
+
+### Changed
+
+- Benutzer werden neu mit Vor- und Nachnamen angezeigt (nicht mehr mit E-Mail Adresse).
+- Die Darstellung der Benutzer- und Arbeitsgruppenverwaltung wurde angepasst.
+- Line Breaks wurden aus den Titeln von Assets entfernt.
+
+### Fixed
+
+- Kontakte in Assets, die unterschiedliche Rollen haben, können nun auch einzeln von einem Asset entfernt werden.
+- Das Löschen von Assets führt nicht mehr zu einer Endlosschlaufe, wenn man auf die Kartenansicht zurückkehrt.
+- Das Entfernen von Benutzer, die nicht mehr in der Cognito-Gruppe existieren, funktioniert nun korrekt.
+
 ## v1.8.0
 
 ### Added

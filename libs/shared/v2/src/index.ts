@@ -1,6 +1,7 @@
 export * from './lib/models/base/model';
 export * from './lib/models/base/local-date';
 
+export * from './lib/models/app-config';
 export * from './lib/models/asset';
 export * from './lib/models/contact';
 export * from './lib/models/favorite';
@@ -22,3 +23,5 @@ export * from './lib/schemas/user.schema';
 export * from './lib/schemas/workgroup.schema';
 
 export * from './lib/utils/class-validator/is-nullable.decorator';
+export * from './lib/utils/object';
+export * from './lib/utils/sleep';

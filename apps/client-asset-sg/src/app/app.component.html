@@ -32,6 +32,11 @@
     }
   </ng-container>
 </ng-template>
+
 <div class="alerts">
   <ul app-alert-list></ul>
 </div>
+
+@if (googleAnalyticsId$ | async; as id) {
+<app-google-analytics [id]="id" />
+}

@@ -27,7 +27,7 @@ export class AssetEditorIdFormComponent implements OnInit, OnChanges, OnDestroy 
   public delete = new EventEmitter<IdVM>();
 
   @Output()
-  public finish = new EventEmitter<void>();
+  public closeForm = new EventEmitter<void>();
 
   private _valueAsVM: Partial<IdVM> | null = null;
 
@@ -91,11 +91,11 @@ export class AssetEditorIdFormComponent implements OnInit, OnChanges, OnDestroy 
 
   public saveForm(): void {
     this.writeValue();
-    this.finish.emit();
+    this.closeForm.emit();
   }
 
   public cancel(): void {
-    this.finish.emit();
+    this.closeForm.emit();
   }
 
   private syncFormFieldsWithValue(): void {

@@ -1,13 +1,17 @@
 import { AsyncPipe } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { AfterViewInit, Component, inject, ViewChild } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { MatCheckbox } from '@angular/material/checkbox';
 import { MatDialogActions, MatDialogContent, MatDialogRef } from '@angular/material/dialog';
 import { MatDivider } from '@angular/material/divider';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { LetModule } from '@rx-angular/template/let';
+import { Store } from '@ngrx/store';
+import { TranslateModule } from '@ngx-translate/core';
 import { map } from 'rxjs';
-import { ButtonComponent } from '../../components/button';
-import { LanguageSelectorComponent } from '../../components/language-selector';
+import { setTrackingConsent } from '../../state/app-shared-state.actions';
+import { AppState } from '../../state/index';
 import { CURRENT_LANG } from '../../utils';
+import { ButtonComponent } from '../button/button.component';
+import { LanguageSelectorComponent } from '../language-selector/language-selector.component';
 
 const LEGAL_BASE_URL = 'https://www.swissgeol.ch/datenschutz';
 
@@ -22,26 +26,35 @@ const LEGAL_BASE_URL = 'https://www.swissgeol.ch/datenschutz';
     MatDialogActions,
     MatDialogContent,
     ButtonComponent,
-    AsyncPipe,
     TranslateModule,
-    LetModule,
+    MatCheckbox,
+    FormsModule,
+    AsyncPipe,
   ],
 })
-export class DisclaimerDialogComponent {
+export class DisclaimerDialogComponent implements AfterViewInit {
   public text = '';
+  public hasConsented = true;
+
   private readonly dialogRef = inject(MatDialogRef<DisclaimerDialogComponent>);
-  private readonly translateService = inject(TranslateService);
+  private readonly store = inject(Store<AppState>);
 
   private readonly currentLang$ = inject(CURRENT_LANG);
-  public readonly legalUrl$ = this.currentLang$.pipe(
-    map((lang) => (lang === 'de' ? LEGAL_BASE_URL : `${LEGAL_BASE_URL}-${lang}/`))
+  public readonly legalAnchor$ = this.currentLang$.pipe(
+    map((lang) => {
+      const url = lang === 'de' ? LEGAL_BASE_URL : `${LEGAL_BASE_URL}-${lang}/`;
+      return `<a href="${url}" target="_blank" rel="noopener nofollow">${url}</a>`;
+    })
   );
 
-  public readonly disclaimerText$ = this.currentLang$.pipe(
-    map(() => this.translateService.instant(`disclaimer.content`).replaceAll('\n', '<br>'))
-  );
+  @ViewChild('consentCheckbox') consentCheckbox!: MatCheckbox;
+
+  ngAfterViewInit(): void {
+    this.consentCheckbox.focus();
+  }
 
   public close() {
+    this.store.dispatch(setTrackingConsent({ hasConsented: this.hasConsented }));
     this.dialogRef.close();
   }
 }

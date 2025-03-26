@@ -43,6 +43,7 @@ import { environment } from '../environments/environment';
 import { adminGuard } from './app-guards';
 import { AppComponent } from './app.component';
 import { AppBarComponent, MenuBarComponent, NotFoundComponent, RedirectToLangComponent } from './components';
+import { GoogleAnalyticsComponent } from './components/google-analytics/google-analytics.component';
 import { MenuBarItemComponent } from './components/menu-bar-item/menu-bar-item.component';
 import { SplashScreenComponent } from './components/splash-screen/splash-screen.component';
 import { appTranslations } from './i18n';
@@ -55,6 +56,7 @@ registerLocaleData(locale_deCH, 'de-CH');
 @NgModule({
   declarations: [
     AppComponent,
+    GoogleAnalyticsComponent,
     RedirectToLangComponent,
     NotFoundComponent,
     AppBarComponent,

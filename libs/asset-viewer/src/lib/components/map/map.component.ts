@@ -13,23 +13,24 @@ import {
   ViewChild,
 } from '@angular/core';
 import { arrayEqual, isNotNull } from '@asset-sg/core';
-import { filterNullish } from '@asset-sg/shared/v2';
+import { extend, filterNullish } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
 import { StyleFunction } from 'ol/style/Style';
-import { asapScheduler, filter, first, Subscription, withLatestFrom } from 'rxjs';
+import { delay, filter, first, skip, Subscription, take, withLatestFrom } from 'rxjs';
 import * as searchActions from '../../state/asset-search/asset-search.actions';
+import { setMapPosition } from '../../state/asset-search/asset-search.actions';
 import {
   selectAssetSearchPolygon,
   selectAssetSearchResultData,
   selectCurrentAssetDetail,
   selectHasNoActiveFilters,
-  selectIsSearchQueryEmpty,
+  selectMapPosition,
   selectStudies,
 } from '../../state/asset-search/asset-search.selector';
 import { AppStateWithMapControl } from '../../state/map-control/map-control.reducer';
 import { DrawControl } from '../map-controls/draw-controls';
 import { ZoomControl } from '../map-controls/zoom-control';
-import { MapController } from './map-controller';
+import { DEFAULT_MAP_POSITION, MapController, MapPosition } from './map-controller';
 
 @Component({
   selector: 'asset-sg-map',
@@ -86,6 +87,8 @@ export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
 
   isInitialized = false;
 
+  private timeoutForSetPosition: number | null = null;
+
   private readonly subscription = new Subscription();
 
   constructor() {
@@ -95,9 +98,17 @@ export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
   }
 
   ngAfterViewInit(): void {
-    asapScheduler.schedule(() => {
-      this.initializeMap();
-    });
+    // Set the initial map position by its stored value.
+    this.store
+      .select(selectMapPosition)
+      .pipe(
+        filter((it) => Object.keys(it).length !== 0),
+        take(1),
+        delay(1)
+      )
+      .subscribe((position) => {
+        this.initializeMap(extend(DEFAULT_MAP_POSITION, position));
+      });
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -114,8 +125,8 @@ export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
     this.controller.dispose();
   }
 
-  private initializeMap(): void {
-    this.controller = new MapController(this.mapElement.nativeElement);
+  private initializeMap(initialPosition: MapPosition): void {
+    this.controller = new MapController(this.mapElement.nativeElement, initialPosition);
 
     this.controls = {
       zoom: new ZoomControl({
@@ -131,12 +142,18 @@ export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
     this.controller.addControl(this.controls.zoom);
     this.controller.addControl(this.controls.draw);
 
+    // Reset the map position when its stored value is cleared.
+    // Note that we do not want to react to any other changes to it,
+    // as these are always supposed to be made by ourselves.
     this.subscription.add(
-      this.store.select(selectIsSearchQueryEmpty).subscribe((isSearchQueryEmpty) => {
-        if (isSearchQueryEmpty) {
-          this.controls.zoom.resetZoom();
-        }
-      })
+      this.store
+        .select(selectMapPosition)
+        .pipe(skip(1))
+        .subscribe((position) => {
+          if (Object.values(position).every((it) => it === undefined)) {
+            this.controller.setPosition(DEFAULT_MAP_POSITION);
+          }
+        })
     );
 
     this.controls.draw.isDrawing$.subscribe((isDrawing) => {
@@ -145,6 +162,7 @@ export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
 
     this.subscription.add(this.controller.assetsClick$.subscribe(this.assetsClick));
     this.subscription.add(this.controller.assetsHover$.subscribe(this.assetsHover));
+    this.subscription.add(this.controller.positionChange$.subscribe(this.handlePositionChange.bind(this)));
 
     // Some bindings can be initialized only after the map has fully loaded,
     // since they modify the map's zoom level.
@@ -213,6 +231,15 @@ export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
     } else {
       this.controller.setHighlightedAsset(this.highlightedAssetId);
     }
+  }
+
+  private handlePositionChange([x, y, z]: [number, number, number]): void {
+    if (this.timeoutForSetPosition !== null) {
+      clearTimeout(this.timeoutForSetPosition);
+    }
+    this.timeoutForSetPosition = setTimeout(() => {
+      this.store.dispatch(setMapPosition({ position: { x, y, z } }));
+    }, 250);
   }
 
   @HostBinding('class.is-loading')

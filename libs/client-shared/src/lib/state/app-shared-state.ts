@@ -10,6 +10,7 @@ export interface AppSharedState {
   workgroups: SimpleWorkgroup[];
   lang: Lang;
   isAnonymousMode: boolean;
+  hasConsentedToTracking: boolean;
 }
 
 export interface AppState {
