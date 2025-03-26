@@ -26,7 +26,7 @@ export class MapLegendComponent {
   protected hasNoActiveFilters$ = this.store.select(selectHasNoActiveFilters);
   private activeLayerStyle: LayerStyleIdentification = defaultLayerStyle;
   private readonly layerStyleKeys = Object.keys(availableLayerStyles) as LayerStyleIdentification[];
-  private activeLayerStyleSubject = new BehaviorSubject(availableLayerStyles[this.activeLayerStyle]);
+  private readonly activeLayerStyleSubject = new BehaviorSubject(availableLayerStyles[this.activeLayerStyle]);
   protected activeLayerStyle$ = this.activeLayerStyleSubject.asObservable();
 
   constructor(private readonly store: Store<AppStateWithAssetSearch>) {}
