@@ -552,7 +552,7 @@ const makeStudyFeature = (study: Study): Feature => {
       case 'LineString':
         return new LineString(study.geom.coords.map(olCoordsFromLV95));
       case 'Polygon': {
-        return new Polygon([study.geom.coords.map(olCoordsFromLV95)]); // todo: check z-Index manipulation here
+        return new Polygon([study.geom.coords.map(olCoordsFromLV95)]);
       }
     }
   })();

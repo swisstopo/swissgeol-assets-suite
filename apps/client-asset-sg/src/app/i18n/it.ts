@@ -319,4 +319,22 @@ export const itAppTranslations: AppTranslations = {
       'Per ulteriori informazioni legali, consultare il seguente link:',
     accept: 'Accettare',
   },
+  mapLayers: {
+    geometry: {
+      name: 'Geometria',
+      items: {
+        point: 'Punto Asset',
+        line: 'Linea Asset',
+        polygon: 'Area Asset',
+      },
+    },
+    access: {
+      name: 'Accesso',
+      items: {
+        public: 'Pubblico',
+        internal: 'Interno',
+        restricted: 'Riservato',
+      },
+    },
+  },
 };

@@ -319,4 +319,22 @@ export const enAppTranslations: AppTranslations = {
       'Further legal provisions can be found here:',
     accept: 'Accept',
   },
+  mapLayers: {
+    geometry: {
+      name: 'Geometry',
+      items: {
+        point: 'Asset Point',
+        line: 'Asset Line',
+        polygon: 'Asset Area',
+      },
+    },
+    access: {
+      name: 'Access',
+      items: {
+        public: 'Public',
+        internal: 'Internal',
+        restricted: 'Restricted',
+      },
+    },
+  },
 };

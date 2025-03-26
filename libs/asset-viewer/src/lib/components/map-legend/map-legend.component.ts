@@ -1,7 +1,7 @@
 import { CdkAccordion, CdkAccordionItem } from '@angular/cdk/accordion';
 import { AsyncPipe } from '@angular/common';
 import { Component, EventEmitter, OnDestroy, OnInit, Output } from '@angular/core';
-import { ButtonComponent, SmartTranslatePipe } from '@asset-sg/client-shared';
+import { ButtonComponent } from '@asset-sg/client-shared';
 import { SvgIconComponent } from '@ngneat/svg-icon';
 import { Store } from '@ngrx/store';
 import { TranslateModule } from '@ngx-translate/core';
@@ -18,15 +18,7 @@ import { selectHasNoActiveFilters } from '../../state/asset-search/asset-search.
 
 @Component({
   selector: 'asset-sg-map-legend',
-  imports: [
-    CdkAccordion,
-    CdkAccordionItem,
-    SvgIconComponent,
-    ButtonComponent,
-    AsyncPipe,
-    TranslateModule,
-    SmartTranslatePipe,
-  ],
+  imports: [CdkAccordion, CdkAccordionItem, SvgIconComponent, ButtonComponent, AsyncPipe, TranslateModule],
   templateUrl: './map-legend.component.html',
   styleUrl: './map-legend.component.scss',
 })

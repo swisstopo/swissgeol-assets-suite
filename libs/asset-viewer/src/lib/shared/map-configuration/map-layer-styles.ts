@@ -4,7 +4,6 @@ import { styleFunctionByGeometry } from './styles/geometry-based.map-layer-style
 
 export type LayerStyleIdentification = 'geometry' | 'access';
 
-// todo assets-300, assets-420: finalize interface to be used with styling; add translation keys in proper places
 /**
  * A LayerStyle consists of a translatable name, an OpenLayers style function that is responsible for styling the
  * data, as well as a list of LayerStyleItems which are used to display the legend.
@@ -34,39 +33,39 @@ type AvailableLayerStyles = {
 
 export const availableLayerStyles: AvailableLayerStyles = {
   geometry: {
-    name: 'Geometrie',
+    name: 'mapLayers.geometry.name',
     styleFunction: styleFunctionByGeometry,
     styleItems: [
       {
-        translationKey: 'Asset Punkt',
+        translationKey: 'mapLayers.geometry.items.point',
         iconKey: 'geometry-point',
       },
       {
-        translationKey: 'Asset Linie',
+        translationKey: 'mapLayers.geometry.items.line',
         iconKey: 'geometry-line',
         generalizedIconKey: 'geometry-line-generalized',
       },
       {
-        translationKey: 'Asset Fläche',
+        translationKey: 'mapLayers.geometry.items.polygon',
         iconKey: 'geometry-polygon',
         generalizedIconKey: 'geometry-polygon-generalized',
       },
     ],
   },
   access: {
-    name: 'Freigabe',
+    name: 'mapLayers.access.name',
     styleFunction: styleFunctionByAccess,
     styleItems: [
       {
-        translationKey: 'Öffentlich',
+        translationKey: 'mapLayers.access.items.public',
         iconKey: 'access-public',
       },
       {
-        translationKey: 'Intern',
+        translationKey: 'mapLayers.access.items.internal',
         iconKey: 'access-internal',
       },
       {
-        translationKey: 'gesperrt',
+        translationKey: 'mapLayers.access.items.restricted',
         iconKey: 'access-locked',
       },
     ],
