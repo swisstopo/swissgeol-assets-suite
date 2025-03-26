@@ -31,3 +31,12 @@ export interface ValueCount<T> {
   value: T;
   count: number;
 }
+
+export const makeEmptyAssetSearchResults = (): AssetSearchResult => ({
+  page: {
+    size: 0,
+    offset: 0,
+    total: 0,
+  },
+  data: [],
+});

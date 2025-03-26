@@ -27,7 +27,9 @@ export abstract class BasePolicyDirective<T> implements OnInit, OnChanges, OnDes
 
   private user: User | null = null;
 
-  private ref = inject(ChangeDetectorRef);
+  private readonly ref = inject(ChangeDetectorRef);
+
+  private hasRendered = false;
 
   private readonly subscription = new Subscription();
 
@@ -56,11 +58,16 @@ export abstract class BasePolicyDirective<T> implements OnInit, OnChanges, OnDes
 
   private render(): void {
     const policyInstance = this.user == null ? null : new this.policy(this.user);
-    if (policyInstance != null && this.check(policyInstance)) {
+    const shouldRender = policyInstance != null && this.check(policyInstance);
+    if (shouldRender === this.hasRendered) {
+      return;
+    }
+    if (shouldRender) {
       this.viewContainer.createEmbeddedView(this.templateRef);
     } else {
       this.viewContainer.clear();
     }
+    this.hasRendered = shouldRender;
   }
 
   protected abstract check(policy: Policy<T>): boolean;

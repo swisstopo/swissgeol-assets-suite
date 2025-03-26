@@ -24,7 +24,7 @@ export class AssetSearchFilterComponent<T> {
       activeValues.add(filter.value);
     }
     this.store.dispatch(
-      actions.mergeQuery({
+      actions.updateSearchQuery({
         query: { [filter.queryKey]: activeValues.size > 0 ? [...activeValues] : undefined },
       })
     );

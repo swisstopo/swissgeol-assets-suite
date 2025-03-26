@@ -8,7 +8,10 @@ import { TranslateService } from '@ngx-translate/core';
 import { filter, map, Observable, startWith } from 'rxjs';
 
 // eslint-disable-next-line @nx/enforce-module-boundaries
-import { setFiltersOpen } from '../../../../../../libs/asset-viewer/src/lib/state/asset-search/asset-search.actions';
+import {
+  setFiltersOpen,
+  updateSearchQuery,
+} from '../../../../../../libs/asset-viewer/src/lib/state/asset-search/asset-search.actions';
 import { AppState } from '../../state/app-state';
 
 @UntilDestroy()
@@ -58,6 +61,20 @@ export class MenuBarComponent {
 
   toggleAssetDrawer(): void {
     this.store.dispatch(setFiltersOpen({ isOpen: 'toggle' }));
+  }
+
+  goToViewer({ favoritesOnly }: { favoritesOnly: boolean }): void {
+    const basePath = `/${this.translateService.currentLang}`;
+    const favoritesPath = `${basePath}/favorites`;
+
+    const [sourcePath, targetPath] = favoritesOnly ? [basePath, favoritesPath] : [favoritesPath, basePath];
+
+    const currentPath = this.router.url.split('?', 2)[0];
+    if (currentPath === sourcePath) {
+      this.store.dispatch(updateSearchQuery({ query: { favoritesOnly } }));
+    } else {
+      this.router.navigateByUrl(targetPath).then();
+    }
   }
 
   protected readonly AssetEditPolicy = AssetEditPolicy;

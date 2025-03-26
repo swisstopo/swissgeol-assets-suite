@@ -7,6 +7,7 @@ import {
   GeomFromGeomText,
   LineString,
   LV95,
+  makeEmptyAssetSearchResults,
   Point,
   StudyPolygon,
 } from '@asset-sg/shared';
@@ -15,33 +16,29 @@ import * as E from 'fp-ts/Either';
 
 import { getCenter } from 'ol/extent';
 import { LineString as OlLineString, Polygon } from 'ol/geom';
-import { MapPosition } from '../../components/map/map-controller';
+import { DEFAULT_MAP_POSITION, MapPosition } from '../../components/map/map-controller';
 import { AllStudyDTO, AllStudyDTOs } from '../../models';
 import * as actions from './asset-search.actions';
-
-export enum LoadingState {
-  Initial = 'initial',
-  Loading = 'loading',
-  Loaded = 'loaded',
-}
 
 export interface AssetSearchState {
   query: AssetSearchQuery;
   results: AssetSearchResult;
   stats: AssetSearchStats;
-  currentAsset: AssetEditDetail | undefined;
-  resultsLoadingState: LoadingState;
-  filterLoadingState: LoadingState;
-  assetDetailLoadingState: LoadingState;
-  studies: AllStudyDTOs | null;
+  studies: AllStudyDTOs;
+  currentAsset: AssetEditDetail | null;
   ui: AssetSearchUiState;
+
+  isLoadingStudies: boolean;
+  isLoadingResults: boolean;
+  isLoadingStats: boolean;
+  isLoadingAsset: boolean;
 }
 
 export interface AssetSearchUiState {
   scrollOffsetForResults: number;
   isFiltersOpen: boolean;
   isResultsOpen: boolean;
-  map: Partial<MapPosition>;
+  map: MapPosition;
 }
 
 export interface AppStateWithAssetSearch extends AppState {
@@ -50,14 +47,8 @@ export interface AppStateWithAssetSearch extends AppState {
 
 const initialState: AssetSearchState = {
   query: {},
-  results: {
-    page: {
-      size: 0,
-      offset: 0,
-      total: 0,
-    },
-    data: [],
-  },
+  studies: [],
+  results: makeEmptyAssetSearchResults(),
   stats: {
     total: 0,
     authorIds: [],
@@ -69,23 +60,31 @@ const initialState: AssetSearchState = {
     workgroupIds: [],
     createDate: null,
   },
-  resultsLoadingState: LoadingState.Initial,
-  assetDetailLoadingState: LoadingState.Initial,
-  filterLoadingState: LoadingState.Initial,
-  currentAsset: undefined,
-  studies: null,
+  currentAsset: null,
   ui: {
     isFiltersOpen: true,
     isResultsOpen: false,
     scrollOffsetForResults: 0,
-    map: {},
+    map: DEFAULT_MAP_POSITION,
   },
+
+  isLoadingStudies: false,
+  isLoadingResults: false,
+  isLoadingStats: false,
+  isLoadingAsset: false,
 };
 
 export const assetSearchReducer = createReducer(
   initialState,
   on(
-    actions.search,
+    actions.setQuery,
+    (state, { query }): AssetSearchState => ({
+      ...state,
+      query,
+    })
+  ),
+  on(
+    actions.updateSearchQuery,
     (state, { query }): AssetSearchState => ({
       ...state,
       query: {
@@ -95,42 +94,35 @@ export const assetSearchReducer = createReducer(
     })
   ),
   on(
-    actions.updateResults,
-    (state, { results }): AssetSearchState => ({
+    actions.setStudies,
+    (state, { studies, isLoading }): AssetSearchState => ({
       ...state,
-      results,
-      resultsLoadingState: LoadingState.Loaded,
+      studies: studies ?? state.studies,
+      isLoadingStudies: isLoading ?? state.isLoadingStudies,
     })
   ),
   on(
-    actions.updateStats,
-    (state, { stats }): AssetSearchState => ({
+    actions.setResults,
+    (state, { results, isLoading }): AssetSearchState => ({
       ...state,
-      stats,
-      filterLoadingState: LoadingState.Loaded,
+      results: results ?? state.results,
+      isLoadingResults: isLoading ?? state.isLoadingResults,
     })
   ),
   on(
-    actions.selectAsset,
-    (state): AssetSearchState => ({
+    actions.setStats,
+    (state, { stats, isLoading }): AssetSearchState => ({
       ...state,
-      assetDetailLoadingState: LoadingState.Loading,
+      stats: stats ?? state.stats,
+      isLoadingStats: isLoading ?? state.isLoadingStats,
     })
   ),
   on(
-    actions.setSelectedAsset,
-    (state, { asset }): AssetSearchState => ({
+    actions.setCurrentAsset,
+    (state, { asset, isLoading }): AssetSearchState => ({
       ...state,
-      currentAsset: asset,
-      assetDetailLoadingState: LoadingState.Loaded,
-    })
-  ),
-  on(
-    actions.clearSelectedAsset,
-    (state): AssetSearchState => ({
-      ...state,
-      currentAsset: initialState.currentAsset,
-      assetDetailLoadingState: initialState.assetDetailLoadingState,
+      currentAsset: asset === undefined ? state.currentAsset : asset,
+      isLoadingAsset: isLoading ?? state.isLoadingAsset,
     })
   ),
   on(
@@ -155,33 +147,15 @@ export const assetSearchReducer = createReducer(
   on(actions.setMapPosition, (state, { position }): AssetSearchState => {
     return {
       ...state,
-      ui: { ...state.ui, map: { ...state.ui.map, ...position } },
+      ui: { ...state.ui, map: position },
     };
   }),
-  on(actions.setStudies, (state, { studies }): AssetSearchState => ({ ...state, studies })),
-  on(
-    actions.clearPolygon,
-    (state): AssetSearchState => ({
-      ...state,
-      query: {
-        ...state.query,
-        polygon: undefined,
-      },
-    })
-  ),
-  on(
-    actions.resetSearch,
-    (state): AssetSearchState => ({
-      ...initialState,
-      stats: state.stats,
-    })
-  ),
   on(appSharedStateActions.openPanel, (state): AssetSearchState => ({ ...state })),
   on(
     appSharedStateActions.removeAssetFromSearch,
     (state, { assetId }): AssetSearchState => ({
       ...state,
-      currentAsset: state.currentAsset?.assetId === assetId ? undefined : state.currentAsset,
+      currentAsset: state.currentAsset?.assetId === assetId ? null : state.currentAsset,
       results: {
         ...state.results,
         data: state.results.data.filter((it) => it.assetId !== assetId),
@@ -194,7 +168,7 @@ export const assetSearchReducer = createReducer(
     const mapAsset = (it: AssetEditDetail): AssetEditDetail => (it.assetId === asset.assetId ? asset : it);
     return {
       ...state,
-      currentAsset: state.currentAsset == undefined ? undefined : mapAsset(state.currentAsset),
+      currentAsset: state.currentAsset === null ? null : mapAsset(state.currentAsset),
       results: {
         ...state.results,
         data: state.results.data.map(mapAsset),

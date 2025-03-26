@@ -1,26 +1,18 @@
 import { Component, ElementRef, EventEmitter, inject, OnDestroy, OnInit, Output, ViewChild } from '@angular/core';
 import { sleep, tick } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
-import {
-  BehaviorSubject,
-  combineLatestWith,
-  filter,
-  firstValueFrom,
-  Subject,
-  Subscription,
-  switchMap,
-  take,
-} from 'rxjs';
+import { BehaviorSubject, combineLatestWith, firstValueFrom, map, Subject, Subscription, switchMap, take } from 'rxjs';
+import { ViewerControllerService } from '../../services/viewer-controller.service';
 import * as actions from '../../state/asset-search/asset-search.actions';
 import { setScrollOffsetForResults } from '../../state/asset-search/asset-search.actions';
 import { AppStateWithAssetSearch } from '../../state/asset-search/asset-search.reducer';
 import {
   AssetEditDetailVM,
   selectAssetEditDetailVM,
-  selectAssetSearchTotalResults,
-  selectCurrentAssetDetail,
+  selectCurrentAsset,
   selectIsResultsOpen,
   selectScrollOffsetForResults,
+  selectSearchStats,
 } from '../../state/asset-search/asset-search.selector';
 
 @Component({
@@ -52,10 +44,11 @@ export class AssetSearchResultsComponent implements OnInit, OnDestroy {
   private readonly pageSize = 50;
 
   private readonly store = inject(Store<AppStateWithAssetSearch>);
+  private readonly viewerControllerService = inject(ViewerControllerService);
   public readonly isResultsOpen$ = this.store.select(selectIsResultsOpen);
   public readonly assets$ = this.store.select(selectAssetEditDetailVM);
-  public readonly total$ = this.store.select(selectAssetSearchTotalResults);
-  public readonly currentAssetDetail$ = this.store.select(selectCurrentAssetDetail);
+  public readonly total$ = this.store.select(selectSearchStats).pipe(map((stats) => stats.total));
+  public readonly currentAssetDetail$ = this.store.select(selectCurrentAsset);
   public readonly scrollOffset$ = this.store.select(selectScrollOffsetForResults);
 
   private readonly subscriptions: Subscription = new Subscription();
@@ -74,7 +67,7 @@ export class AssetSearchResultsComponent implements OnInit, OnDestroy {
   }
 
   public searchForAsset(assetId: number): void {
-    this.store.dispatch(actions.assetClicked({ assetId }));
+    this.viewerControllerService.selectAsset(assetId);
   }
 
   public async toggleResultsOpen(): Promise<void> {
@@ -130,9 +123,9 @@ export class AssetSearchResultsComponent implements OnInit, OnDestroy {
 
   private initSubscriptions(): void {
     // Scroll to the offset stored in the store.
-    this.isTableReady$
+    this.viewerControllerService.viewerReady$
       .pipe(
-        combineLatestWith(this.resultsReady$),
+        combineLatestWith(this.isTableReady$, this.resultsReady$),
         take(1),
         switchMap(() => this.scrollOffset$),
         take(1),
@@ -142,12 +135,13 @@ export class AssetSearchResultsComponent implements OnInit, OnDestroy {
 
     // Subscribe to results.
     this.subscriptions.add(
-      this.assets$.pipe(filter((assets) => assets.length !== 0)).subscribe((assets) => {
+      this.viewerControllerService.viewerReady$.pipe(switchMap(() => this.assets$)).subscribe(async (assets) => {
         this.allResults$.next(assets);
         this.size = Math.min(this.pageSize, assets.length);
         this.resultsToDisplay = this.allResults.slice(0, this.size);
         const container = this.scrollContainer?.nativeElement;
         if (container !== undefined) {
+          await tick();
           container.scrollTo({ top: 0, behavior: 'smooth' });
         }
         this.resultsReady$.next();

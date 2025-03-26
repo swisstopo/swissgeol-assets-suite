@@ -1,6 +1,7 @@
 import { featureStyles, makeRhombusImage, olCoordsFromLV95, SWISS_CENTER, SWISS_EXTENT } from '@asset-sg/client-shared';
 import { isNotUndefined } from '@asset-sg/core';
 import { AssetEditDetail, getCoordsFromStudy, Study } from '@asset-sg/shared';
+import { extend } from '@asset-sg/shared/v2';
 import { Control } from 'ol/control';
 import { Coordinate } from 'ol/coordinate';
 import { easeOut } from 'ol/easing';
@@ -35,7 +36,7 @@ export class MapController {
 
   readonly assetsClick$: Observable<number[]>;
   readonly assetsHover$: Observable<number[]>;
-  readonly positionChange$: Observable<[number, number, number]>;
+  readonly positionChange$: Observable<MapPosition>;
 
   /**
    * The id of all visible assets, mapped to their {@link AssetEditDetail} object.
@@ -74,6 +75,7 @@ export class MapController {
       resolution: initialPosition.z,
       center: [initialPosition.x, initialPosition.y],
       extent: SWISS_EXTENT,
+      maxResolution: DEFAULT_MAP_POSITION.z,
       showFullExtent: true,
     });
 
@@ -289,20 +291,33 @@ export class MapController {
     });
   }
 
+  getPosition(): MapPosition | null {
+    const center = this.map.getView().getCenter();
+    const resolution = this.map.getView().getResolution();
+    if (center === undefined || resolution === undefined) {
+      return null;
+    }
+    return { x: center[0], y: center[1], z: resolution };
+  }
+
   setPosition(position: Partial<MapPosition>): void {
     this.requestedPosition$.next(position);
   }
 
   private setPositionImmediately(position: Partial<MapPosition>): void {
-    const view = this.map.getView();
-    const center = view.getCenter();
-    if (center === undefined) {
+    const oldPosition = this.getPosition();
+    if (oldPosition === null) {
       throw new Error("can't set position, view is not yet initialized.");
     }
-    view.setCenter([position.x ?? center[0], position.y ?? center[1]]);
-    if (position.z !== undefined) {
-      view.setResolution(position.z);
+    const view = this.map.getView();
+    const newPosition = extend(oldPosition, position);
+    const hasChanged =
+      newPosition.x !== oldPosition.x || newPosition.y !== oldPosition.y || newPosition.z !== oldPosition.z;
+    if (!hasChanged) {
+      return;
     }
+    view.setCenter([newPosition.x, newPosition.y]);
+    view.setResolution(newPosition.z);
     this.map.render();
   }
 
@@ -348,16 +363,9 @@ export class MapController {
     }) as MapLayer<Point>;
   }
 
-  private makePositionChange$(): Observable<[number, number, number]> {
+  private makePositionChange$(): Observable<MapPosition> {
     return fromEventPattern((h) => this.map.getView().on('change:center', h)).pipe(
-      map(() => {
-        const center = this.map.getView().getCenter();
-        const resolution = this.map.getView().getResolution();
-        if (center === undefined || resolution === undefined) {
-          return null;
-        }
-        return [...center, resolution] as [number, number, number];
-      }),
+      map(() => this.getPosition()),
       filter((it) => it !== null)
     );
   }
