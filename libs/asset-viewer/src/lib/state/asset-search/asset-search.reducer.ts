@@ -10,7 +10,7 @@ import {
   Point,
   StudyPolygon,
 } from '@asset-sg/shared';
-import { StudyGeometryType } from '@asset-sg/shared/v2';
+import { StudyAccessType, StudyGeometryType } from '@asset-sg/shared/v2';
 import { createReducer, on } from '@ngrx/store';
 import * as E from 'fp-ts/Either';
 
@@ -211,6 +211,11 @@ export const assetSearchReducer = createReducer(
                 studyId: study.studyId,
                 geometryType: geometryType,
                 centroid,
+                accessType: asset.publicUse.isAvailable
+                  ? StudyAccessType.Public
+                  : asset.internalUse.isAvailable
+                  ? StudyAccessType.Internal
+                  : StudyAccessType.Restricted,
               };
             })
           ) ?? null,

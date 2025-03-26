@@ -1,4 +1,4 @@
-import { StudyGeometryType } from '@asset-sg/shared/v2';
+import { StudyAccessType, StudyGeometryType } from '@asset-sg/shared/v2';
 import Fill from 'ol/style/Fill';
 import Stroke from 'ol/style/Stroke';
 import Style, { StyleFunction } from 'ol/style/Style';
@@ -27,10 +27,10 @@ const restrictedAccess = {
   strokeColor: '#801519',
 };
 
-const accessTypeMapping: { [key: number]: keyof AccessTypeKey } = {
-  1: 'public',
-  2: 'internal',
-  3: 'restricted',
+const accessTypeMapping: { [key in StudyAccessType]: keyof AccessTypeKey } = {
+  0: 'public',
+  1: 'internal',
+  2: 'restricted',
 };
 const overviewStylesAccess: LayerStyleByAccess = {
   point: {
@@ -150,7 +150,7 @@ export const styleFunctionByAccess: StyleFunction = (feature) => {
   const geometry = feature.getGeometry();
   if (!geometry) return new Style();
 
-  const accessType = feature.get('access_type') as 1 | 2 | 3;
+  const accessType = feature.get('access_type') as StudyAccessType;
   const accessStyles: keyof AccessTypeKey = accessTypeMapping[accessType];
 
   switch (geometry.getType()) {

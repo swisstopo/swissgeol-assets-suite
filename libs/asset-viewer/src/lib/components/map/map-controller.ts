@@ -140,7 +140,7 @@ export class MapController {
       studyFeature.setId(study.studyId);
       studyFeature.setProperties({ 'swisstopo.type': 'StudyPoint' });
       studyFeature.setProperties({ geometry_type: study.geometryType });
-      studyFeature.setProperties({ access_type: Math.floor(Math.random() * 3) + 1 });
+      studyFeature.setProperties({ access_type: study.accessType });
       studyFeatures[i] = studyFeature;
     }
 

@@ -1,5 +1,5 @@
 import { parseLV95 } from '@asset-sg/shared';
-import { Study, StudyId } from '@asset-sg/shared/v2';
+import { Study, StudyAccessType, StudyId } from '@asset-sg/shared/v2';
 import { WorkgroupId } from '@asset-sg/shared/v2';
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
@@ -60,20 +60,37 @@ export class StudyRepo implements ReadRepo<Study, StudyId> {
   private async query(condition: Prisma.Sql): Promise<Study[]> {
     type RawStudy = Omit<Study, 'center'> & { center: string };
     const studies: RawStudy[] = await this.prisma.$queryRaw`
-      SELECT
-        s.study_id as "id",
-        s.asset_id AS "assetId",
-        s.geometry_type AS "geometryType",
-        SUBSTRING(s.centroid_geom_text FROM 7 FOR length(s.centroid_geom_text) -7) AS "center"
+      SELECT s.study_id                                                                  AS "id",
+             s.asset_id                                                                  AS "assetId",
+             s.geometry_type                                                             AS "geometryType",
+             SUBSTRING(s.centroid_geom_text FROM 7 FOR length(s.centroid_geom_text) - 7) AS "center",
+             CASE
+               WHEN s.is_public THEN 0
+               WHEN NOT s.is_public AND s.is_internal THEN 1
+               WHEN NOT s.is_public AND NOT s.is_internal THEN 2
+               END                                                                       AS "accessType"
       FROM public.all_study s
-      ${condition}
+        ${condition}
     `;
     return studies.map((study) => {
       return {
         ...study,
         center: parseLV95(study.center, { separator: ' ' }),
+        accessType: this.parseAccessType(study.accessType),
       };
     });
+  }
+
+  private parseAccessType(accessType: number): StudyAccessType {
+    switch (accessType) {
+      case 0:
+        return StudyAccessType.Public;
+      case 1:
+        return StudyAccessType.Internal;
+      case 2:
+      default:
+        return StudyAccessType.Restricted;
+    }
   }
 }
 
