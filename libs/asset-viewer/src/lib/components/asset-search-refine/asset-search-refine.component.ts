@@ -69,7 +69,7 @@ export class AssetSearchRefineComponent implements OnInit, OnDestroy, AfterViewI
     this.languageFilters$,
     this.assetKindFilters$,
     this.workgroupFilters$,
-  ]).pipe(map((a) => a.flat(1).filter((filter) => filter.isActive)));
+  ]).pipe(map((filterGroups) => filterGroups.flatMap((filters) => filters.filter((filter) => filter.isActive))));
 
   readonly isDrawActive$ = this.store.select(selectMapControlIsDrawing);
 
