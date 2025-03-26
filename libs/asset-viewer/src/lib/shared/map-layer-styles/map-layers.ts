@@ -5,9 +5,8 @@ import { geometryStyleFunction } from './geometry-based.map-layer-style';
 export type LayerType = 'geometry' | 'access';
 
 // todo assets-300, assets-420: finalize interface to be used with styling; add translation keys in proper places
-export interface MapStyle {
+interface MapStyle {
   name: string;
-  type: LayerType;
   styleItems: MapStyleItem[];
   styleFunction: StyleFunction;
 }
@@ -22,10 +21,13 @@ interface MapStyleItem {
   generalizedIconKey?: string;
 }
 
-export const mapLayers: MapStyle[] = [
-  {
+type MapLayers = {
+  [K in LayerType]: MapStyle;
+};
+
+export const mapLayers: MapLayers = {
+  geometry: {
     name: 'Geometrie',
-    type: 'geometry',
     styleFunction: geometryStyleFunction,
     styleItems: [
       {
@@ -44,9 +46,8 @@ export const mapLayers: MapStyle[] = [
       },
     ],
   },
-  {
+  access: {
     name: 'Freigabe',
-    type: 'access',
     styleFunction: accessStyleFunction,
     styleItems: [
       {
@@ -63,4 +64,6 @@ export const mapLayers: MapStyle[] = [
       },
     ],
   },
-];
+};
+
+export const defaultLayerType: LayerType = 'geometry';
