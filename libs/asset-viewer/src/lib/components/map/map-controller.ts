@@ -228,8 +228,7 @@ export class MapController {
       const study = { studyId: assetStudy.studyId, geom: wktToGeoJSON(assetStudy.geomText) };
       const studyFeature = makeStudyFeature(study);
 
-      const bufferedFeature = this.bufferFeatureWithStyle(studyFeature, interactionStyles.hoveredPolygon);
-      return [studyFeature, bufferedFeature];
+      return this.bufferFeatureWithStyle(studyFeature, interactionStyles.hoveredPolygon);
     });
 
     this.sources.picker.clear();
