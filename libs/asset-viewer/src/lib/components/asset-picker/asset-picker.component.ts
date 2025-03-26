@@ -28,8 +28,7 @@ import {
   Subject,
   switchMap,
 } from 'rxjs';
-
-import * as actions from '../../state/asset-search/asset-search.actions';
+import { ViewerControllerService } from '../../services/viewer-controller.service';
 
 interface AssetPickerState {
   assets: AssetEditDetail[];
@@ -52,6 +51,8 @@ const initialState: AssetPickerState = {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AssetPickerComponent extends RxState<AssetPickerState> {
+  private readonly viewerControllerService = inject(ViewerControllerService);
+
   public show$ = this.select('show');
   public assets$ = this.select('assets');
   public currentAssetId$ = this.select('currentAssetId');
@@ -160,7 +161,7 @@ export class AssetPickerComponent extends RxState<AssetPickerState> {
   }
 
   public selectAndClose(assetId: number) {
-    this._store.dispatch(actions.assetClicked({ assetId }));
+    this.viewerControllerService.selectAsset(assetId);
     this.closePicker$.next();
   }
 }
