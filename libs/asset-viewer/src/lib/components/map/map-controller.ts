@@ -17,8 +17,8 @@ import Style, { StyleFunction } from 'ol/style/Style';
 import View from 'ol/View';
 import { filter, fromEventPattern, map, Observable, switchMap } from 'rxjs';
 import { AllStudyDTO } from '../../models';
-import { defaultLayerType, mapLayers } from '../../shared/map-layer-styles/map-layers';
-import { interactionStyles } from '../../shared/map-layer-styles/system-styles.map-layer-style';
+import { defaultLayerStyle, availableLayerStyles } from '../../shared/map-layer-styles/map-layer-styles';
+import { interactionStyles } from '../../shared/map-layer-styles/styles/system-styles.map-layer-style';
 import { wktToGeoJSON } from '../../state/asset-search/asset-search.selector';
 
 export const INITIAL_RESOLUTION = 500;
@@ -300,9 +300,9 @@ export class MapController {
         }),
       }),
       heatmap: this.makeHeatmapLayer(),
-      studies: makeSimpleLayer<Point>({ minZoom: 11, style: mapLayers[defaultLayerType].styleFunction }),
+      studies: makeSimpleLayer<Point>({ minZoom: 11, style: availableLayerStyles[defaultLayerStyle].styleFunction }),
       polygon: makeSimpleLayer(),
-      assets: makeSimpleLayer({ style: mapLayers[defaultLayerType].styleFunction }),
+      assets: makeSimpleLayer({ style: availableLayerStyles[defaultLayerStyle].styleFunction }),
       activeAsset: makeSimpleLayer(),
       picker: makeSimpleLayer(),
     };

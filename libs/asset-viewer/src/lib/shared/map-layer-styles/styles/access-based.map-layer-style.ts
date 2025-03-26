@@ -2,9 +2,17 @@ import { StudyGeometryType } from '@asset-sg/shared/v2';
 import Fill from 'ol/style/Fill';
 import Stroke from 'ol/style/Stroke';
 import Style, { StyleFunction } from 'ol/style/Style';
+import { DEFAULT_LINE_WIDTHS, DEFAULT_STROKE_WIDTH, LAYER_Z_INDEX } from '../style-constants';
+import { makeLineShape, makeSimpleCircle, makeTriangleShape } from '../utils';
 import { LayerStyle } from './layer-style.type';
-import { DEFAULT_LINE_WIDTHS, DEFAULT_STROKE_WIDTH, LAYER_Z_INDEX } from './style-constants';
-import { makeLineShape, makeSimpleCircle, makeTriangleShape } from './utils';
+
+type AccessTypeKey = {
+  restricted: Style | Style[];
+  internal: Style | Style[];
+  public: Style | Style[];
+};
+
+type LayerStyleByAccess = LayerStyle<AccessTypeKey>;
 
 const publicAccess = {
   fillColor: (opactityOverride = 1.0) => `rgba(16, 185, 129, ${opactityOverride})`,
@@ -18,13 +26,13 @@ const restrictedAccess = {
   fillColor: (opacityOverride = 1.0) => `rgba(229, 57, 64, ${opacityOverride})`,
   strokeColor: '#801519',
 };
-type AccessStyle = LayerStyle<{
-  restricted: Style | Style[];
-  internal: Style | Style[];
-  public: Style | Style[];
-}>;
 
-const overviewStylesAccess: AccessStyle = {
+const accessTypeMapping: { [key: number]: keyof AccessTypeKey } = {
+  1: 'public',
+  2: 'internal',
+  3: 'restricted',
+};
+const overviewStylesAccess: LayerStyleByAccess = {
   point: {
     pointInstance: {
       public: new Style({
@@ -138,61 +146,30 @@ const overviewStylesAccess: AccessStyle = {
   },
 };
 
-export const accessStyleFunction: StyleFunction = (feature) => {
+export const styleFunctionByAccess: StyleFunction = (feature) => {
   const geometry = feature.getGeometry();
-  if (geometry) {
-    switch (geometry.getType()) {
-      case 'Point':
+  if (!geometry) return new Style();
+
+  const accessType = feature.get('access_type') as 1 | 2 | 3;
+  const accessStyles: keyof AccessTypeKey = accessTypeMapping[accessType];
+
+  switch (geometry.getType()) {
+    case 'Point': {
+      const geomType = feature.get('geometry_type') as StudyGeometryType;
+      const styleKey = (
         {
-          const geomType = feature.get('geometry_type') as StudyGeometryType;
-          let style: keyof AccessStyle['point'];
-          switch (geomType) {
-            case 'Point':
-              style = 'pointInstance';
-              break;
-            case 'Line':
-              style = 'lineInstance';
-              break;
-            case 'Polygon':
-              style = 'polygonInstance';
-              break;
-          }
-          const accessType = feature.get('access_type') as 1 | 2 | 3;
-          switch (accessType) {
-            case 1:
-              return overviewStylesAccess.point[style].public;
-            case 2:
-              return overviewStylesAccess.point[style].internal;
-            case 3:
-              return overviewStylesAccess.point[style].restricted;
-          }
-        }
-        break; // todo required?
-      case 'LineString':
-        {
-          const accessType = feature.get('access_type') as 1 | 2 | 3;
-          switch (accessType) {
-            case 1:
-              return overviewStylesAccess.line.public;
-            case 2:
-              return overviewStylesAccess.line.internal;
-            case 3:
-              return overviewStylesAccess.line.restricted;
-          }
-        }
-        break;
-      case 'Polygon': {
-        const accessType = feature.get('access_type') as 1 | 2 | 3;
-        switch (accessType) {
-          case 1:
-            return overviewStylesAccess.polygon.public;
-          case 2:
-            return overviewStylesAccess.polygon.internal;
-          case 3:
-            return overviewStylesAccess.polygon.restricted;
-        }
-      }
+          Point: 'pointInstance',
+          Line: 'lineInstance',
+          Polygon: 'polygonInstance',
+        } as { [key in StudyGeometryType]: keyof LayerStyleByAccess['point'] }
+      )[geomType];
+      return overviewStylesAccess.point[styleKey]?.[accessStyles] ?? new Style();
     }
+    case 'LineString':
+      return overviewStylesAccess.line[accessStyles] ?? new Style();
+    case 'Polygon':
+      return overviewStylesAccess.polygon[accessStyles] ?? new Style();
+    default:
+      return new Style();
   }
-  return new Style();
 };

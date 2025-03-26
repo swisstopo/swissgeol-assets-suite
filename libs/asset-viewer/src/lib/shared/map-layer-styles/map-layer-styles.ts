@@ -1,17 +1,24 @@
 import { StyleFunction } from 'ol/style/Style';
-import { accessStyleFunction } from './access-based.map-layer-style';
-import { geometryStyleFunction } from './geometry-based.map-layer-style';
+import { styleFunctionByAccess } from './styles/access-based.map-layer-style';
+import { styleFunctionByGeometry } from './styles/geometry-based.map-layer-style';
 
-export type LayerType = 'geometry' | 'access';
+export type LayerStyleIdentification = 'geometry' | 'access';
 
 // todo assets-300, assets-420: finalize interface to be used with styling; add translation keys in proper places
-interface MapStyle {
+/**
+ * A LayerStyle consists of a translatable name, an OpenLayers style function that is responsible for styling the
+ * data, as well as a list of LayerStyleItems which are used to display the legend.
+ */
+export interface LayerStyle {
   name: string;
-  styleItems: MapStyleItem[];
+  styleItems: LayerStyleItem[];
   styleFunction: StyleFunction;
 }
 
-interface MapStyleItem {
+/**
+ * A symbolization used in the LayerStyle's style function; this entry is used to display the legend.
+ */
+interface LayerStyleItem {
   translationKey: string;
   iconKey: string;
   /**
@@ -21,14 +28,14 @@ interface MapStyleItem {
   generalizedIconKey?: string;
 }
 
-type MapLayers = {
-  [K in LayerType]: MapStyle;
+type AvailableLayerStyles = {
+  [K in LayerStyleIdentification]: LayerStyle;
 };
 
-export const mapLayers: MapLayers = {
+export const availableLayerStyles: AvailableLayerStyles = {
   geometry: {
     name: 'Geometrie',
-    styleFunction: geometryStyleFunction,
+    styleFunction: styleFunctionByGeometry,
     styleItems: [
       {
         translationKey: 'Asset Punkt',
@@ -48,7 +55,7 @@ export const mapLayers: MapLayers = {
   },
   access: {
     name: 'Freigabe',
-    styleFunction: accessStyleFunction,
+    styleFunction: styleFunctionByAccess,
     styleItems: [
       {
         translationKey: 'Öffentlich',
@@ -66,4 +73,4 @@ export const mapLayers: MapLayers = {
   },
 };
 
-export const defaultLayerType: LayerType = 'geometry';
+export const defaultLayerStyle: LayerStyleIdentification = 'geometry';

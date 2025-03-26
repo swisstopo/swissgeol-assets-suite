@@ -1,4 +1,4 @@
-@if (activeStyle$ | async; as activeStyle) {
+@if (activeLayerStyle$ | async; as activeStyle) {
 <cdk-accordion class="map-legend">
   <cdk-accordion-item #legend="cdkAccordionItem" class="map-legend__content" [expanded]="true">
     <div [attr.aria-expanded]="legend.expanded" [attr.id]="'legend-header'" class="map-legend__content__header">

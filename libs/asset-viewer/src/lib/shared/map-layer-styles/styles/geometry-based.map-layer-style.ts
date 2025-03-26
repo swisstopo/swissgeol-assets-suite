@@ -1,13 +1,13 @@
 import { StudyGeometryType } from '@asset-sg/shared/v2';
 import { Fill, Stroke, Style } from 'ol/style';
 import { StyleFunction } from 'ol/style/Style';
+import { DEFAULT_LINE_WIDTHS, DEFAULT_STROKE_WIDTH, LAYER_Z_INDEX } from '../style-constants';
+import { makeLineShape, makeSimpleCircle, makeTriangleShape } from '../utils';
 import { LayerStyle } from './layer-style.type';
-import { DEFAULT_LINE_WIDTHS, DEFAULT_STROKE_WIDTH, LAYER_Z_INDEX } from './style-constants';
-import { makeLineShape, makeSimpleCircle, makeTriangleShape } from './utils';
 
-type GeometryBasedStyle = LayerStyle<Style | Style[]>;
+type LayerStyleByGeometry = LayerStyle<Style | Style[]>;
 
-const overviewStylesGeometry: GeometryBasedStyle = {
+const overviewStylesGeometry: LayerStyleByGeometry = {
   point: {
     pointInstance: new Style({
       zIndex: LAYER_Z_INDEX.POINT,
@@ -45,31 +45,31 @@ const overviewStylesGeometry: GeometryBasedStyle = {
   }),
 };
 
-export const geometryStyleFunction: StyleFunction = (feature) => {
+export const styleFunctionByGeometry: StyleFunction = (feature) => {
   const geometry = feature.getGeometry();
-  if (geometry) {
-    switch (geometry.getType()) {
-      case 'Point':
-        {
-          const geomType = feature.get('geometry_type') as StudyGeometryType; // typehint possible?
-
-          switch (geomType) {
-            case 'Point':
-              return overviewStylesGeometry.point.pointInstance;
-            case 'Line':
-              return overviewStylesGeometry.point.lineInstance;
-            case 'Polygon':
-              return overviewStylesGeometry.point.polygonInstance;
-          }
-        }
-        break; // required?
-      case 'LineString':
-        return overviewStylesGeometry.line;
-      case 'Polygon':
-        return overviewStylesGeometry.polygon;
-    }
+  if (!geometry) {
+    return new Style();
   }
+  switch (geometry.getType()) {
+    case 'Point': {
+      const geomType = feature.get('geometry_type') as StudyGeometryType; // typehint possible?
 
-  // required?
-  return new Style();
+      switch (geomType) {
+        case 'Point':
+          return overviewStylesGeometry.point.pointInstance;
+        case 'Line':
+          return overviewStylesGeometry.point.lineInstance;
+        case 'Polygon':
+          return overviewStylesGeometry.point.polygonInstance;
+        default:
+          return new Style();
+      }
+    }
+    case 'LineString':
+      return overviewStylesGeometry.line;
+    case 'Polygon':
+      return overviewStylesGeometry.polygon;
+    default:
+      return new Style();
+  }
 };

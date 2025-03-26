@@ -8,7 +8,11 @@ import { TranslateModule } from '@ngx-translate/core';
 import { StyleFunction } from 'ol/style/Style';
 import { Subscription } from 'rxjs';
 import { BehaviorSubject } from 'rxjs/internal/BehaviorSubject';
-import { defaultLayerType, LayerType, mapLayers } from '../../shared/map-layer-styles/map-layers';
+import {
+  availableLayerStyles,
+  defaultLayerStyle,
+  LayerStyleIdentification,
+} from '../../shared/map-layer-styles/map-layer-styles';
 import { AppStateWithAssetSearch } from '../../state/asset-search/asset-search.reducer';
 import { selectHasNoActiveFilters } from '../../state/asset-search/asset-search.selector';
 
@@ -29,10 +33,10 @@ import { selectHasNoActiveFilters } from '../../state/asset-search/asset-search.
 export class MapLegendComponent implements OnInit, OnDestroy {
   @Output() public readonly changeStyle = new EventEmitter<StyleFunction>();
   protected hasNoActiveFilters?: boolean;
-  private activeSyle: LayerType = defaultLayerType;
-  private mapLayersKeys = Object.keys(mapLayers) as LayerType[];
-  private activeStyleSubject = new BehaviorSubject(mapLayers[this.activeSyle]);
-  protected activeStyle$ = this.activeStyleSubject.asObservable();
+  private activeLayerStyle: LayerStyleIdentification = defaultLayerStyle;
+  private readonly layerStyleKeys = Object.keys(availableLayerStyles) as LayerStyleIdentification[];
+  private activeLayerStyleSubject = new BehaviorSubject(availableLayerStyles[this.activeLayerStyle]);
+  protected activeLayerStyle$ = this.activeLayerStyleSubject.asObservable();
   private hasNoActiveFilters$ = this.store.select(selectHasNoActiveFilters);
   private subscriptions = new Subscription();
 
@@ -51,10 +55,10 @@ export class MapLegendComponent implements OnInit, OnDestroy {
   }
 
   protected handleChange() {
-    const currentIndex = this.mapLayersKeys.indexOf(this.activeSyle);
-    const nextIndex = (currentIndex + 1) % this.mapLayersKeys.length;
-    this.activeSyle = this.mapLayersKeys[nextIndex];
-    this.activeStyleSubject.next(mapLayers[this.activeSyle]);
-    this.changeStyle.emit(mapLayers[this.activeSyle].styleFunction);
+    const currentIndex = this.layerStyleKeys.indexOf(this.activeLayerStyle);
+    const nextIndex = (currentIndex + 1) % this.layerStyleKeys.length;
+    this.activeLayerStyle = this.layerStyleKeys[nextIndex];
+    this.activeLayerStyleSubject.next(availableLayerStyles[this.activeLayerStyle]);
+    this.changeStyle.emit(availableLayerStyles[this.activeLayerStyle].styleFunction);
   }
 }
