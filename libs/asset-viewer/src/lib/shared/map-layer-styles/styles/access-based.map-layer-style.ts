@@ -152,7 +152,6 @@ export const styleFunctionByAccess: StyleFunction = (feature) => {
 
   const accessType = feature.get('access_type') as StudyAccessType;
   const accessStyles: keyof AccessTypeKey = accessTypeMapping[accessType];
-
   switch (geometry.getType()) {
     case 'Point': {
       const geomType = feature.get('geometry_type') as StudyGeometryType;

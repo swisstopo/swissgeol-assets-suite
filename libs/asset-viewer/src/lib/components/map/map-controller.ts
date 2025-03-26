@@ -1,5 +1,6 @@
 import { olCoordsFromLV95, SWISS_CENTER, SWISS_EXTENT } from '@asset-sg/client-shared';
 import { AssetEditDetail, getCoordsFromStudy, Study } from '@asset-sg/shared';
+import { StudyAccessType } from '@asset-sg/shared/v2';
 import { buffer } from '@turf/buffer';
 import { Control } from 'ol/control';
 import { Coordinate } from 'ol/coordinate';
@@ -17,7 +18,7 @@ import Style, { StyleFunction } from 'ol/style/Style';
 import View from 'ol/View';
 import { filter, fromEventPattern, map, Observable, switchMap } from 'rxjs';
 import { AllStudyDTO } from '../../models';
-import { defaultLayerStyle, availableLayerStyles } from '../../shared/map-layer-styles/map-layer-styles';
+import { availableLayerStyles, defaultLayerStyle } from '../../shared/map-layer-styles/map-layer-styles';
 import { interactionStyles } from '../../shared/map-layer-styles/styles/system-styles.map-layer-style';
 import { wktToGeoJSON } from '../../state/asset-search/asset-search.selector';
 
@@ -179,7 +180,13 @@ export class MapController {
           feature.setProperties({ geometry_type: 'Polygon' });
         }
 
-        feature.setProperties({ access_type: Math.floor(Math.random() * 3) + 1 });
+        feature.setProperties({
+          access_type: asset.publicUse.isAvailable
+            ? StudyAccessType.Public
+            : asset.internalUse.isAvailable
+            ? StudyAccessType.Internal
+            : StudyAccessType.Restricted,
+        });
         features.push(feature);
 
         const studyFeature = this.sources.studies.getFeatureById(study.studyId);
@@ -250,10 +257,24 @@ export class MapController {
       };
       studies.push(study);
 
-      const feature = makeStudyFeature(study);
-      features.push(feature);
+      let existingFeature = this.sources.assets.getFeatureById(assetStudy.studyId);
+      if (!existingFeature) {
+        existingFeature = makeStudyFeature(study);
+        existingFeature.setProperties({
+          geometry_type:
+            existingFeature.getGeometry()?.getType() === 'LineString'
+              ? 'Line'
+              : existingFeature.getGeometry()?.getType(),
+          access_type: asset.publicUse.isAvailable
+            ? StudyAccessType.Public
+            : asset.internalUse.isAvailable
+            ? StudyAccessType.Internal
+            : StudyAccessType.Restricted,
+        });
+      }
+      features.push(existingFeature);
 
-      const bufferedFeature = this.bufferFeatureWithStyle(feature, interactionStyles.selectedPolygon);
+      const bufferedFeature = this.bufferFeatureWithStyle(existingFeature, interactionStyles.selectedPolygon);
       features.push(bufferedFeature);
 
       const studyFeature = this.sources.studies.getFeatureById(study.studyId);
@@ -303,7 +324,7 @@ export class MapController {
       studies: makeSimpleLayer<Point>({ minZoom: 11, style: availableLayerStyles[defaultLayerStyle].styleFunction }),
       polygon: makeSimpleLayer(),
       assets: makeSimpleLayer({ style: availableLayerStyles[defaultLayerStyle].styleFunction }),
-      activeAsset: makeSimpleLayer(),
+      activeAsset: makeSimpleLayer({ style: availableLayerStyles[defaultLayerStyle].styleFunction }),
       picker: makeSimpleLayer(),
     };
   }
@@ -460,6 +481,8 @@ export class MapController {
     this.layers.studies.changed();
     this.layers.assets.setStyle(styleFunction);
     this.layers.assets.changed();
+    this.layers.activeAsset.setStyle(styleFunction);
+    this.layers.activeAsset.changed();
   }
 }
 
