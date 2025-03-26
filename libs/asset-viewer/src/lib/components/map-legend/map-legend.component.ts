@@ -12,7 +12,7 @@ import {
   availableLayerStyles,
   defaultLayerStyle,
   LayerStyleIdentification,
-} from '../../shared/map-layer-styles/map-layer-styles';
+} from '../../shared/map-configuration/map-layer-styles';
 import { AppStateWithAssetSearch } from '../../state/asset-search/asset-search.reducer';
 import { selectHasNoActiveFilters } from '../../state/asset-search/asset-search.selector';
 

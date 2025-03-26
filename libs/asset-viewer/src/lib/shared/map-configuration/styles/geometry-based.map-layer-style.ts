@@ -1,6 +1,7 @@
 import { StudyGeometryType } from '@asset-sg/shared/v2';
 import { Fill, Stroke, Style } from 'ol/style';
 import { StyleFunction } from 'ol/style/Style';
+import { CustomFeatureProperties } from '../custom-feature-properties.enum';
 import { DEFAULT_LINE_WIDTHS, DEFAULT_STROKE_WIDTH, LAYER_Z_INDEX } from '../style-constants';
 import { makeLineShape, makeSimpleCircle, makeTriangleShape } from '../utils';
 import { LayerStyle } from './layer-style.type';
@@ -52,7 +53,7 @@ export const styleFunctionByGeometry: StyleFunction = (feature) => {
   }
   switch (geometry.getType()) {
     case 'Point': {
-      const geomType = feature.get('geometry_type') as StudyGeometryType; // typehint possible?
+      const geomType = feature.get(CustomFeatureProperties.GeometryType) as StudyGeometryType;
 
       switch (geomType) {
         case 'Point':

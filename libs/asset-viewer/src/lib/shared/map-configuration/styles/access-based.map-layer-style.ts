@@ -2,6 +2,7 @@ import { StudyAccessType, StudyGeometryType } from '@asset-sg/shared/v2';
 import Fill from 'ol/style/Fill';
 import Stroke from 'ol/style/Stroke';
 import Style, { StyleFunction } from 'ol/style/Style';
+import { CustomFeatureProperties } from '../custom-feature-properties.enum';
 import { DEFAULT_LINE_WIDTHS, DEFAULT_STROKE_WIDTH, LAYER_Z_INDEX } from '../style-constants';
 import { makeLineShape, makeSimpleCircle, makeTriangleShape } from '../utils';
 import { LayerStyle } from './layer-style.type';
@@ -148,13 +149,15 @@ const overviewStylesAccess: LayerStyleByAccess = {
 
 export const styleFunctionByAccess: StyleFunction = (feature) => {
   const geometry = feature.getGeometry();
-  if (!geometry) return new Style();
+  if (!geometry) {
+    return new Style();
+  }
 
-  const accessType = feature.get('access_type') as StudyAccessType;
+  const accessType = feature.get(CustomFeatureProperties.AccessType) as StudyAccessType;
   const accessStyles: keyof AccessTypeKey = accessTypeMapping[accessType];
   switch (geometry.getType()) {
     case 'Point': {
-      const geomType = feature.get('geometry_type') as StudyGeometryType;
+      const geomType = feature.get(CustomFeatureProperties.GeometryType) as StudyGeometryType;
       const styleKey = (
         {
           Point: 'pointInstance',
@@ -162,12 +165,12 @@ export const styleFunctionByAccess: StyleFunction = (feature) => {
           Polygon: 'polygonInstance',
         } as { [key in StudyGeometryType]: keyof LayerStyleByAccess['point'] }
       )[geomType];
-      return overviewStylesAccess.point[styleKey]?.[accessStyles] ?? new Style();
+      return overviewStylesAccess.point[styleKey][accessStyles];
     }
     case 'LineString':
-      return overviewStylesAccess.line[accessStyles] ?? new Style();
+      return overviewStylesAccess.line[accessStyles];
     case 'Polygon':
-      return overviewStylesAccess.polygon[accessStyles] ?? new Style();
+      return overviewStylesAccess.polygon[accessStyles];
     default:
       return new Style();
   }

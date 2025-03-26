@@ -1,6 +1,5 @@
 import { olCoordsFromLV95, SWISS_CENTER, SWISS_EXTENT } from '@asset-sg/client-shared';
 import { AssetEditDetail, getCoordsFromStudy, Study } from '@asset-sg/shared';
-import { StudyAccessType } from '@asset-sg/shared/v2';
 import { buffer } from '@turf/buffer';
 import { Control } from 'ol/control';
 import { Coordinate } from 'ol/coordinate';
@@ -18,9 +17,11 @@ import Style, { StyleFunction } from 'ol/style/Style';
 import View from 'ol/View';
 import { filter, fromEventPattern, map, Observable, switchMap } from 'rxjs';
 import { AllStudyDTO } from '../../models';
-import { availableLayerStyles, defaultLayerStyle } from '../../shared/map-layer-styles/map-layer-styles';
-import { interactionStyles } from '../../shared/map-layer-styles/styles/system-styles.map-layer-style';
+import { CustomFeatureProperties } from '../../shared/map-configuration/custom-feature-properties.enum';
+import { availableLayerStyles, defaultLayerStyle } from '../../shared/map-configuration/map-layer-styles';
+import { interactionStyles } from '../../shared/map-configuration/styles/system-styles.map-layer-style';
 import { wktToGeoJSON } from '../../state/asset-search/asset-search.selector';
+import { mapAssetAccessToAccessType } from '../../utils/access-type';
 
 export const INITIAL_RESOLUTION = 500;
 
@@ -139,9 +140,9 @@ export class MapController {
 
       const studyFeature = new Feature<Point>(geometry);
       studyFeature.setId(study.studyId);
-      studyFeature.setProperties({ 'swisstopo.type': 'StudyPoint' });
-      studyFeature.setProperties({ geometry_type: study.geometryType });
-      studyFeature.setProperties({ access_type: study.accessType });
+      studyFeature.setProperties({ [CustomFeatureProperties.SwisstopoType]: 'StudyPoint' });
+      studyFeature.setProperties({ [CustomFeatureProperties.GeometryType]: study.geometryType });
+      studyFeature.setProperties({ [CustomFeatureProperties.AccessType]: study.accessType });
       studyFeatures[i] = studyFeature;
     }
 
@@ -171,21 +172,9 @@ export class MapController {
       for (const assetStudy of asset.studies) {
         const study: Study = { studyId: assetStudy.studyId, geom: wktToGeoJSON(assetStudy.geomText) };
         const feature = makeStudyFeature(study);
-
-        if (feature.getGeometry()?.getType() === 'Point') {
-          feature.setProperties({ geometry_type: 'Point' });
-        } else if (feature.getGeometry()?.getType() === 'LineString') {
-          feature.setProperties({ geometry_type: 'Line' });
-        } else if (feature.getGeometry()?.getType() === 'Polygon') {
-          feature.setProperties({ geometry_type: 'Polygon' });
-        }
-
         feature.setProperties({
-          access_type: asset.publicUse.isAvailable
-            ? StudyAccessType.Public
-            : asset.internalUse.isAvailable
-            ? StudyAccessType.Internal
-            : StudyAccessType.Restricted,
+          [CustomFeatureProperties.GeometryType]: this.mapGeometryToGeometryType(feature.getGeometry()),
+          [CustomFeatureProperties.AccessType]: mapAssetAccessToAccessType(asset),
         });
         features.push(feature);
 
@@ -261,15 +250,8 @@ export class MapController {
       if (!existingFeature) {
         existingFeature = makeStudyFeature(study);
         existingFeature.setProperties({
-          geometry_type:
-            existingFeature.getGeometry()?.getType() === 'LineString'
-              ? 'Line'
-              : existingFeature.getGeometry()?.getType(),
-          access_type: asset.publicUse.isAvailable
-            ? StudyAccessType.Public
-            : asset.internalUse.isAvailable
-            ? StudyAccessType.Internal
-            : StudyAccessType.Restricted,
+          [CustomFeatureProperties.GeometryType]: this.mapGeometryToGeometryType(existingFeature.getGeometry()),
+          [CustomFeatureProperties.AccessType]: mapAssetAccessToAccessType(asset),
         });
       }
       features.push(existingFeature);
@@ -302,6 +284,15 @@ export class MapController {
 
   dispose(): void {
     this.map.dispose();
+  }
+
+  handleStyleChange(styleFunction: StyleFunction) {
+    this.layers.studies.setStyle(styleFunction);
+    this.layers.studies.changed();
+    this.layers.assets.setStyle(styleFunction);
+    this.layers.assets.changed();
+    this.layers.activeAsset.setStyle(styleFunction);
+    this.layers.activeAsset.changed();
   }
 
   private bufferFeatureWithStyle(feature: Feature, style: Style): Feature {
@@ -476,13 +467,11 @@ export class MapController {
     feature.unset('previousStyle');
   }
 
-  handleStyleChange(styleFunction: StyleFunction) {
-    this.layers.studies.setStyle(styleFunction);
-    this.layers.studies.changed();
-    this.layers.assets.setStyle(styleFunction);
-    this.layers.assets.changed();
-    this.layers.activeAsset.setStyle(styleFunction);
-    this.layers.activeAsset.changed();
+  private mapGeometryToGeometryType(geometry: Geometry | undefined) {
+    if (!geometry) {
+      throw new Error('No Geometry found.');
+    }
+    return geometry.getType() === 'LineString' ? 'Line' : geometry.getType();
   }
 }
 
@@ -571,7 +560,7 @@ const makeStudyFeature = (study: Study): Feature => {
   const feature = new Feature({ geometry });
 
   feature.setId(study.studyId);
-  feature.setProperties({ 'swisstopo.type': 'StudyGeometry' });
+  feature.setProperties({ [CustomFeatureProperties.SwisstopoType]: 'StudyGeometry' });
   return feature;
 };
 
