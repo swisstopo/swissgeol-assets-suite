@@ -309,15 +309,23 @@ export const frAppTranslations: AppTranslations = {
   },
   disclaimer: {
     title: "Conditions d'utilisation",
-    subtitle: 'Responsabilité',
-    content:
-      'Malgré la grande attention qu’il porte à la justesse des informations diffusées sur ce site, l’Office fédéral de topographie swisstopo ne peut endosser aucune responsabilité quant à la fidélité, à l’exactitude, à l’actualité, à la fiabilité et à l’intégralité de ces informations.\n' +
-      '\n' +
-      'swisstopo se réserve expressément le droit de modifier en partie ou en totalité le contenu de ce site, de le supprimer ou d’en suspendre temporairement la diffusion, et ce à tout moment et sans avertissement préalable.\n' +
-      '\n' +
-      'swisstopo ne saurait être tenu pour responsable des dommages matériels ou immatériels qui pourraient être causés par l’accès aux informations diffusées ou par leur utilisation ou non-utilisation, par le mauvais usage de la connexion ou par des problèmes techniques.\n' +
-      '\n' +
-      "Pour plus d'informations légales, veuillez consulter le lien suivant:",
+    liability: {
+      title: 'Responsabilité',
+      content:
+        'Malgré la grande attention qu’il porte à la justesse des informations diffusées sur ce site, l’Office fédéral de topographie swisstopo ne peut endosser aucune responsabilité quant à la fidélité, à l’exactitude, à l’actualité, à la fiabilité et à l’intégralité de ces informations.' +
+        '<br><br>' +
+        'swisstopo se réserve expressément le droit de modifier en partie ou en totalité le contenu de ce site, de le supprimer ou d’en suspendre temporairement la diffusion, et ce à tout moment et sans avertissement préalable.' +
+        '<br><br>' +
+        'swisstopo ne saurait être tenu pour responsable des dommages matériels ou immatériels qui pourraient être causés par l’accès aux informations diffusées ou par leur utilisation ou non-utilisation, par le mauvais usage de la connexion ou par des problèmes techniques.',
+    },
+    tracking: {
+      title: 'Acquisition de données',
+      content:
+        'Nous utilisons l’outil d’analyse Google Analytics afin d’adapter au mieux notre site web à vos besoins. Votre comportement sur le site est enregistré de manière anonyme. Aucune donnée personnelle n’est transmise ou stockée. Si vous n’acceptez pas cet état de fait, vous pouvez empêcher la collecte de données par des outils d’analyse et continuer à utiliser ce site web sans restriction.' +
+        '<br><br>' +
+        "Pour plus d'informations légales, veuillez consulter le lien suivant: {{external}}",
+      consentLabel: 'Consentement à la acquisition de données (facultatif)',
+    },
     accept: 'Accepter',
   },
 };

@@ -140,6 +140,10 @@ export class AssetSearchRefineComponent implements OnInit, OnDestroy, AfterViewI
     this.store.dispatch(actions.resetSearch());
   }
 
+  public closeFilters() {
+    this.store.dispatch(actions.setFiltersOpen({ isOpen: false }));
+  }
+
   private initSubscriptions() {
     this.subscriptions.add(this.isFiltersOpen$.subscribe((isOpen) => (this.isFiltersOpen = isOpen)));
 

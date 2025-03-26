@@ -3,7 +3,7 @@ import { inject, Injectable } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { Router } from '@angular/router';
 import { ORD } from '@asset-sg/core';
-import { User, UserSchema } from '@asset-sg/shared/v2';
+import { AppConfig, AppMode, OAuthConfig, User, UserSchema } from '@asset-sg/shared/v2';
 import * as RD from '@devexperts/remote-data-ts';
 import { Store } from '@ngrx/store';
 import { OAuthService } from 'angular-oauth2-oidc';
@@ -26,21 +26,15 @@ export class AuthService {
   private readonly _state$ = new BehaviorSubject(AuthState.Ongoing);
   private readonly _isInitialized$ = new BehaviorSubject(false);
 
-  async initialize(oAuthConfig: Record<string, unknown>) {
-    const isAnonymous = oAuthConfig['anonymous_mode'];
+  async initialize(config: AppConfig): Promise<void> {
+    const isAnonymous = config.mode === AppMode.Anonymous;
     if (isAnonymous) {
       this.setState(AuthState.Success);
       this.store.dispatch(appSharedStateActions.setAnonymousMode());
     } else {
       const callbackUrl = sessionStorage.getItem(CALLBACK_PATH_KEY);
       sessionStorage.setItem(CALLBACK_PATH_KEY, window.location.pathname + window.location.search);
-      this.configureOAuth(
-        oAuthConfig['oauth_issuer'] as string,
-        oAuthConfig['oauth_clientId'] as string,
-        oAuthConfig['oauth_scope'] as string,
-        oAuthConfig['oauth_showDebugInformation'] as boolean,
-        oAuthConfig['oauth_tokenEndpoint'] as string
-      );
+      this.configureOAuth(config.oauth);
       await this.signIn();
       if (callbackUrl != null) {
         await this.router.navigateByUrl(callbackUrl);
@@ -55,8 +49,9 @@ export class AuthService {
     const isLoggedIn = isAnonymous || this._state$.value === AuthState.Success;
     if (isLoggedIn && !this.configService.getHideDisclaimer()) {
       this.dialogService.open(DisclaimerDialogComponent, {
-        width: '500px',
+        width: '960px',
         disableClose: true,
+        autoFocus: false,
       });
     }
   }
@@ -77,7 +72,7 @@ export class AuthService {
         this._state$.next(AuthState.Ongoing);
         this.oauthService.initLoginFlow();
       }
-    } catch (_e) {
+    } catch {
       this._state$.next(AuthState.Aborted);
     }
   }
@@ -121,23 +116,13 @@ export class AuthService {
     return this.httpClient.get('/api/users/current').pipe(map((it) => plainToInstance(UserSchema, it)));
   }
 
-  private configureOAuth(
-    issuer: string,
-    clientId: string,
-    scope: string,
-    showDebugInformation: boolean,
-    tokenEndpoint: string
-  ): void {
+  private configureOAuth(config: OAuthConfig): void {
     this.oauthService.configure({
-      issuer,
+      ...config,
       redirectUri: window.location.origin,
       postLogoutRedirectUri: window.location.origin,
-      clientId,
-      scope,
       responseType: 'code',
-      showDebugInformation,
       strictDiscoveryDocumentValidation: false,
-      tokenEndpoint,
     });
   }
 }

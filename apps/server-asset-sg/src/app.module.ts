@@ -78,6 +78,6 @@ import { WorkgroupsController } from '@/features/workgroups/workgroups.controlle
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(JwtMiddleware).exclude('/oauth-config/config', 'ocr/(.*)').forRoutes('*');
+    consumer.apply(JwtMiddleware).exclude('/config', 'ocr/(.*)').forRoutes('*');
   }
 }

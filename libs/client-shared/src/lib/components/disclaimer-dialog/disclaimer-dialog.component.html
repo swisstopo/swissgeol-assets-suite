@@ -5,9 +5,16 @@
   </div>
   <mat-divider></mat-divider>
   <div mat-dialog-content class="content">
-    <h1 translate>disclaimer.subtitle</h1>
-    <p [innerHTML]="disclaimerText$ | async"></p>
-    <a *rxLet="legalUrl$; let lang" [href]="lang" target="_blank" rel="noopener nofollow">{{ lang }}</a>
+    <h3 translate>disclaimer.liability.title</h3>
+    <p [innerHTML]="'disclaimer.liability.content' | translate"></p>
+
+    <h3 translate>disclaimer.tracking.title</h3>
+    <p [innerHTML]="'disclaimer.tracking.content' | translate : { external: legalAnchor$ | async }"></p>
+  </div>
+  <div mat-dialog-content>
+    <mat-checkbox #consentCheckbox [(ngModel)]="hasConsented" color="primary" class="checkbox" tabIndex="0">
+      <span translate>disclaimer.tracking.consentLabel</span>
+    </mat-checkbox>
   </div>
   <mat-divider></mat-divider>
   <div mat-dialog-actions class="actions">

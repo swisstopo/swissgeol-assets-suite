@@ -16,6 +16,8 @@ export const selectRDReferenceData = createSelector(appSharedFeature, (state) =>
 
 export const selectIsAnonymousMode = createSelector(appSharedFeature, (state) => state.isAnonymousMode);
 
+export const selectHasConsentedToTracking = createSelector(appSharedFeature, (state) => state.hasConsentedToTracking);
+
 export const selectRDUserProfile = createSelector(appSharedFeature, (state) => state.rdUserProfile);
 
 export const selectUser = createSelector(selectRDUserProfile, RD.toNullable);
