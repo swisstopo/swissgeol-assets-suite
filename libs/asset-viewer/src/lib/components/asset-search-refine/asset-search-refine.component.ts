@@ -44,6 +44,8 @@ export class AssetSearchRefineComponent implements OnInit, OnDestroy, AfterViewI
   public availableAuthors: AvailableAuthor[] = [];
   public filteredAuthors: AvailableAuthor[] = [];
   public selectedAuthor?: AvailableAuthor;
+  public minDate?: Date;
+  public maxDate?: Date;
   public isFiltersOpen = false;
 
   public assetSearchQuery!: AssetSearchQuery;
@@ -85,6 +87,7 @@ export class AssetSearchRefineComponent implements OnInit, OnDestroy, AfterViewI
     this.subscriptions.add(
       this.minDateControl.valueChanges.subscribe((value) => {
         if (value instanceof Date || value === undefined) {
+          this.minDate = value;
           this.updateSearch({ createDate: { min: value, max: this.maxDateControl.getRawValue() } });
         }
       })
@@ -92,6 +95,7 @@ export class AssetSearchRefineComponent implements OnInit, OnDestroy, AfterViewI
     this.subscriptions.add(
       this.maxDateControl.valueChanges.subscribe((value) => {
         if (value instanceof Date || value === undefined) {
+          this.maxDate = value;
           this.updateSearch({ createDate: { min: this.minDateControl.getRawValue(), max: value } });
         }
       })

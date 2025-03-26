@@ -5,27 +5,29 @@
   </button>
 </div>
 <div class="content">
-  @if (activeFilters.length > 0 || assetSearchQuery.polygon || selectedAuthor) {
   <mat-chip-set>
     @if (selectedAuthor) {
-    <asset-sg-chip (click)="resetAuthorSearch()">
-      <span class="chip-content">{{ selectedAuthor.name }} <svg-icon key="cancel"></svg-icon></span>
+    <asset-sg-chip (click)="resetAuthorSearch()" icon="cancel">
+      <span class="ellipsis">{{ selectedAuthor.name }}</span>
     </asset-sg-chip>
     } @if (assetSearchQuery.polygon) {
-    <asset-sg-chip (click)="removePolygon()">
-      <span class="chip-content">
-        <svg-icon key="polygon-draw"></svg-icon>
-        <svg-icon key="cancel"></svg-icon
-      ></span>
+    <asset-sg-chip (click)="removePolygon()" icon="cancel">
+      <svg-icon key="polygon-draw"></svg-icon>
+    </asset-sg-chip>
+    } @if (minDate) {
+    <asset-sg-chip (click)="resetMinDateRangeSearch()" icon="cancel">
+      > {{ minDate | date : "dd.MM.yyyy" }}
+    </asset-sg-chip>
+    } @if (maxDate) {
+    <asset-sg-chip (click)="resetMaxDateRangeSearch()" icon="cancel">
+      < {{ maxDate | date : "dd.MM.yyyy" }}
     </asset-sg-chip>
     } @for (activeFilter of activeFilters; track activeFilter) {
-    <asset-sg-chip (click)="removeFilter(activeFilter)">
-      <span class="chip-content">{{ activeFilter.name | smartTranslate }} <svg-icon key="cancel"></svg-icon></span>
+    <asset-sg-chip (click)="removeFilter(activeFilter)" icon="cancel">
+      <span class="ellipsis">{{ activeFilter.name | smartTranslate }} </span>
     </asset-sg-chip>
-
     }
   </mat-chip-set>
-  }
   <div class="filters-container">
     <div class="button-container section">
       <button asset-sg-tertiary [class.active]="isDrawActive$ | async" (click)="toggleDrawPolygon()" translate>

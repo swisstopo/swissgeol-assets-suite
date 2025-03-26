@@ -1,16 +1,29 @@
+@use "../../styles/mixins" as mixins;
+
 :host {
   .mat-mdc-standard-chip.mdc-evolution-chip--disabled {
     background-color: #596978;
     opacity: unset;
   }
 
-  .chip-text {
+  .container {
+    display: flex;
+    align-items: center;
+    gap: 6px;
     color: white;
     font-weight: 500;
     font-size: 12px;
     line-height: 16px;
     letter-spacing: 0.0125em;
   }
+
+  svg-icon {
+    margin-right: -4px;
+  }
+}
+
+:host:not(.disabled):hover {
+  cursor: pointer;
 }
 
 :host(.disabled) .mat-mdc-standard-chip.mdc-evolution-chip--disabled {

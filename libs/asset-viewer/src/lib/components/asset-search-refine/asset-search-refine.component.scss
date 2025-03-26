@@ -34,14 +34,9 @@
   height: calc(100vh - 88px - 80px - 24px - 24px);
 }
 
-asset-sg-chip:hover {
-  cursor: pointer;
-}
-
-.chip-content {
-  display: flex;
-  justify-content: center;
-  align-items: center;
+.ellipsis {
+  max-width: 150px;
+  @include mixins.text-ellipsis;
 }
 
 .button-container {
