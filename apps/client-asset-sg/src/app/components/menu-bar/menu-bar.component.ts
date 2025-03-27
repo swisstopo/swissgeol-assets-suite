@@ -69,7 +69,7 @@ export class MenuBarComponent {
     if (isOpen) {
       this.store.dispatch(setFiltersState({ state: PanelState.ClosedManually }));
     } else {
-      this.store.dispatch(setFiltersState({ state: PanelState.ClosedAutomatically }));
+      this.store.dispatch(setFiltersState({ state: PanelState.OpenedManually }));
     }
   }
 
