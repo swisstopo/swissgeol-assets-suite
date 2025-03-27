@@ -328,4 +328,22 @@ export const itAppTranslations: AppTranslations = {
     },
     accept: 'Accettare',
   },
+  mapLayers: {
+    geometry: {
+      name: 'Geometria',
+      items: {
+        point: 'Punto Asset',
+        line: 'Linea Asset',
+        polygon: 'Area Asset',
+      },
+    },
+    access: {
+      name: 'Accesso',
+      items: {
+        public: 'Pubblico',
+        internal: 'Interno',
+        restricted: 'Riservato',
+      },
+    },
+  },
 };

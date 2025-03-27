@@ -3,4 +3,4 @@
   <asset-sg-map-controls *ngIf="controls != null" [zoom]="controls.zoom" />
 </div>
 
-<asset-sg-map-legend></asset-sg-map-legend>
+<asset-sg-map-legend (changeStyle)="handleStyleChange($event)"></asset-sg-map-legend>

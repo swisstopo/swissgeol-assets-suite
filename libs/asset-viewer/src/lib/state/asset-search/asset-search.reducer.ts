@@ -17,6 +17,7 @@ import { getCenter } from 'ol/extent';
 import { LineString as OlLineString, Polygon } from 'ol/geom';
 import { MapPosition } from '../../components/map/map-controller';
 import { AllStudyDTO } from '../../models';
+import { mapAssetAccessToAccessType } from '../../utils/access-type';
 import * as actions from './asset-search.actions';
 
 export enum LoadingState {
@@ -210,6 +211,7 @@ export const assetSearchReducer = createReducer(
                 studyId: study.studyId,
                 geometryType: geometryType,
                 centroid,
+                accessType: mapAssetAccessToAccessType(asset),
               };
             })
           ) ?? null,

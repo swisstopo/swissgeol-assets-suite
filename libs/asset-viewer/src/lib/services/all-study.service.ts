@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 import { ApiError } from '@asset-sg/client-shared';
 import { ORD } from '@asset-sg/core';
 import { LV95 } from '@asset-sg/shared';
-import { StudyGeometryType } from '@asset-sg/shared/v2';
+import { StudyAccessType, StudyGeometryType } from '@asset-sg/shared/v2';
 import * as RD from '@devexperts/remote-data-ts';
 import * as E from 'fp-ts/Either';
 import { concatMap, filter, from, map, Observable, scan, share, toArray } from 'rxjs';
@@ -25,12 +25,13 @@ export class AllStudyService {
       bufferUntilLineEnd(),
       filter((line) => line.length !== 0),
       map((line) => {
-        const [id, assetId, geometryType, x, y] = line.split(';');
+        const [id, assetId, geometryType, accessType, x, y] = line.split(';');
         return {
           studyId: `study_${id}`,
           assetId: parseInt(assetId),
           geometryType: geometryType as StudyGeometryType,
           centroid: { x: parseFloat(x), y: parseFloat(y) } as LV95,
+          accessType: parseInt(accessType) as StudyAccessType,
         };
       }),
       toArray(),

@@ -326,4 +326,22 @@ export const deAppTranslations = {
     },
     accept: 'Akzeptieren',
   },
+  mapLayers: {
+    geometry: {
+      name: 'Geometrie',
+      items: {
+        point: 'Asset Punkt',
+        line: 'Asset Linie',
+        polygon: 'Asset Fläche',
+      },
+    },
+    access: {
+      name: 'Freigabe',
+      items: {
+        public: 'Öffentlich',
+        internal: 'Intern',
+        restricted: 'Gesperrt',
+      },
+    },
+  },
 };
