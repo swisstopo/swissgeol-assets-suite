@@ -7,7 +7,7 @@ export const LAYER_Z_INDEX = {
 export const DEFAULT_STROKE_WIDTH = 2;
 
 /**
- * Used for faking lines to have a stroke by applying to Styles, where one is
+ * Used for faking lines to have a stroke by applying two Styles, where one is
  * a bit wider than the other.
  */
 export const DEFAULT_LINE_WIDTHS = {
