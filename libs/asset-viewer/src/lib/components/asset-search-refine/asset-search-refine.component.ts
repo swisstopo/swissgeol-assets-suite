@@ -4,12 +4,13 @@ import { MatOptionSelectionChange } from '@angular/material/core';
 import { Router } from '@angular/router';
 import { AssetSearchQuery, DateRange } from '@asset-sg/shared';
 import { Store } from '@ngrx/store';
-import { combineLatest, map, startWith, Subscription } from 'rxjs';
+import { map, startWith, Subscription } from 'rxjs';
 
 import * as actions from '../../state/asset-search/asset-search.actions';
 import {
   AvailableAuthor,
   Filter,
+  selectActiveFilters,
   selectAssetKindFilters,
   selectAssetSearchQuery,
   selectAvailableAuthors,
@@ -62,15 +63,7 @@ export class AssetSearchRefineComponent implements OnInit, OnDestroy, AfterViewI
   readonly assetKindFilters$ = this.store.select(selectAssetKindFilters);
   readonly workgroupFilters$ = this.store.select(selectWorkgroupFilters);
 
-  readonly activeFilters$ = combineLatest([
-    this.usageCodeFilters$,
-    this.geometryCodeFilters$,
-    this.manCatLabelFilters$,
-    this.languageFilters$,
-    this.assetKindFilters$,
-    this.workgroupFilters$,
-  ]).pipe(map((filterGroups) => filterGroups.flatMap((filters) => filters.filter((filter) => filter.isActive))));
-
+  readonly activeFilters$ = this.store.select(selectActiveFilters);
   readonly isDrawActive$ = this.store.select(selectMapControlIsDrawing);
 
   private readonly subscriptions: Subscription = new Subscription();

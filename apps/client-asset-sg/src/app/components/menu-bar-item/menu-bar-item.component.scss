@@ -1,3 +1,6 @@
+@use "@angular/material" as mat;
+@use "../../styles/variables";
+
 :host {
   position: relative;
   width: 100%;
@@ -19,6 +22,15 @@
 }
 
 .box > .icon {
+  @include mat.badge-overrides(
+    (
+      background-color: variables.$red,
+      text-color: variables.$white,
+      text-size: 12px,
+      text-weight: 700,
+      text-font: "Inter",
+    )
+  );
   display: flex;
   justify-content: center;
   align-items: center;
@@ -27,6 +39,10 @@
 
   transition: ease-out 100ms;
   transition-property: color, background-color;
+
+  .mat-badge-content {
+    align-content: center;
+  }
 }
 
 .box {
