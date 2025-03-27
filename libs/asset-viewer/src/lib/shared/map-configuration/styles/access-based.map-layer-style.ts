@@ -6,7 +6,7 @@ import Style, { StyleFunction } from 'ol/style/Style';
 import { CustomFeatureProperties } from '../custom-feature-properties.enum';
 import { DEFAULT_LINE_WIDTHS, DEFAULT_STROKE_WIDTH, LAYER_Z_INDEX } from '../style-constants';
 import { makeLineShape, makeSimpleCircle, makeTriangleShape } from '../utils';
-import { LayerStyle } from './layer-style.type';
+import { getGeometryToPointRepresentationMapping, LayerStyle } from './layer-style.type';
 
 type AccessTypeKey = {
   restricted: Style | Style[];
@@ -169,7 +169,7 @@ const getPointRepresentationForGeometry = (
   accessStyles: keyof AccessTypeKey
 ): Style | Style[] => {
   const geomType = feature.get(CustomFeatureProperties.GeometryType) as StudyGeometryType;
-  const styleKey = geometryToPointRepresentationMapping[geomType];
+  const styleKey = getGeometryToPointRepresentationMapping()[geomType];
   return overviewStylesAccess.point[styleKey][accessStyles];
 };
 
