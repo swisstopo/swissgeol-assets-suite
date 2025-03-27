@@ -107,6 +107,7 @@ export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
     );
 
     storedPosition$.pipe(take(1)).subscribe((position) => {
+      this.publishedPosition = position;
       this.initializeMap(position);
     });
 

@@ -20,12 +20,10 @@ import { distinctUntilChanged, filter, fromEventPattern, map, Observable, Replay
 import { AllStudyDTO } from '../../models';
 import { wktToGeoJSON } from '../../state/asset-search/asset-search.selector';
 
-export const INITIAL_RESOLUTION = 500;
-
 export const DEFAULT_MAP_POSITION: MapPosition = {
   x: SWISS_CENTER[0],
   y: SWISS_CENTER[1],
-  z: INITIAL_RESOLUTION,
+  z: 8,
 };
 
 export class MapController {
@@ -71,11 +69,11 @@ export class MapController {
   constructor(element: HTMLElement, initialPosition: MapPosition) {
     const view = new View({
       projection: 'EPSG:3857',
-      minResolution: 0.1,
-      resolution: initialPosition.z,
+      zoom: initialPosition.z,
       center: [initialPosition.x, initialPosition.y],
       extent: SWISS_EXTENT,
-      maxResolution: DEFAULT_MAP_POSITION.z,
+      maxZoom: 20,
+      minZoom: DEFAULT_MAP_POSITION.z,
       showFullExtent: true,
     });
 
@@ -112,13 +110,6 @@ export class MapController {
 
     this.map.once('loadend', () => {
       this.isInitialized = true;
-      if (this.activeAsset === null) {
-        const zoom = view.getZoom();
-        if (zoom != null) {
-          view.setMinZoom(zoom);
-        }
-      }
-
       this.requestedPosition$.subscribe(this.setPositionImmediately.bind(this));
     });
   }
@@ -293,11 +284,11 @@ export class MapController {
 
   getPosition(): MapPosition | null {
     const center = this.map.getView().getCenter();
-    const resolution = this.map.getView().getResolution();
-    if (center === undefined || resolution === undefined) {
+    const zoom = this.map.getView().getZoom();
+    if (center === undefined || zoom === undefined) {
       return null;
     }
-    return { x: center[0], y: center[1], z: resolution };
+    return { x: center[0], y: center[1], z: zoom };
   }
 
   setPosition(position: Partial<MapPosition>): void {
@@ -309,15 +300,15 @@ export class MapController {
     if (oldPosition === null) {
       throw new Error("can't set position, view is not yet initialized.");
     }
-    const view = this.map.getView();
     const newPosition = extend(oldPosition, position);
     const hasChanged =
       newPosition.x !== oldPosition.x || newPosition.y !== oldPosition.y || newPosition.z !== oldPosition.z;
     if (!hasChanged) {
       return;
     }
+    const view = this.map.getView();
     view.setCenter([newPosition.x, newPosition.y]);
-    view.setResolution(newPosition.z);
+    view.setZoom(newPosition.z);
     this.map.render();
   }
 
@@ -674,13 +665,13 @@ const zoomToCenter = (map: OlMap, { center, zoom }: { center: Coordinate; zoom: 
 export const resetZoom = (view: View, options: { isAnimated?: boolean } = {}): void => {
   if (options.isAnimated) {
     view.animate({
-      resolution: INITIAL_RESOLUTION,
-      center: SWISS_CENTER,
+      zoom: DEFAULT_MAP_POSITION.z,
+      center: [DEFAULT_MAP_POSITION.x, DEFAULT_MAP_POSITION.y],
       duration: 250,
       easing: easeOut,
     });
   } else {
-    view.setResolution(INITIAL_RESOLUTION);
-    view.setCenter(SWISS_CENTER);
+    view.setZoom(DEFAULT_MAP_POSITION.z);
+    view.setCenter([DEFAULT_MAP_POSITION.x, DEFAULT_MAP_POSITION.y]);
   }
 };
