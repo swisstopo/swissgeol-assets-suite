@@ -1,59 +1,88 @@
 import { AssetEditDetail, AssetSearchQuery, AssetSearchResult, AssetSearchStats } from '@asset-sg/shared';
-import { AssetId } from '@asset-sg/shared/v2';
 import { createAction, props } from '@ngrx/store';
+import { MapPosition } from '../../components/map/map-controller';
 import { AllStudyDTOs } from '../../models';
-import { AssetSearchUiState } from './asset-search.reducer';
 
-export const initialize = createAction('[Asset Search] Initialize');
-export const runCombinedSearch = createAction(
-  '[Asset Search] Run Combined Search',
+export const setQuery = createAction(
+  '[Asset Search] Set Query',
   props<{
-    assetId: number | undefined;
-    query: AssetSearchQuery;
+    query: Partial<AssetSearchQuery>;
   }>()
 );
-export const search = createAction(
-  '[Asset Search] Search',
-  props<{
-    query: AssetSearchQuery;
-  }>()
-);
-export const mergeQuery = createAction(
-  '[Asset Search] Merge Query',
-  props<{
-    query: AssetSearchQuery;
-  }>()
-);
-export const executeSearch = createAction('[Asset Search] Execute Search', props<{ query: AssetSearchQuery }>());
 
-export const updateResults = createAction(
-  '[Asset Search] Update Results',
+export const updateSearchQuery = createAction(
+  '[Asset Search] Update Query',
   props<{
-    results: AssetSearchResult;
+    query: Partial<AssetSearchQuery>;
   }>()
 );
-export const updateStats = createAction(
-  '[Asset Search] Update Stats',
+
+export const setResults = createAction(
+  '[Asset Search] Set Results',
   props<{
-    stats: AssetSearchStats;
+    results?: AssetSearchResult;
+    isLoading?: boolean;
   }>()
 );
-export const resetSearch = createAction('[Asset Search] Reset Search');
+export const setStats = createAction(
+  '[Asset Search] Set Stats',
+  props<{
+    stats?: AssetSearchStats;
+    isLoading?: boolean;
+  }>()
+);
 
-export const assetClicked = createAction('[Asset Search] Asset Clicked', props<{ assetId: number }>());
-export const selectAsset = createAction('[Asset Search] Select Asset', props<{ assetId: AssetId }>());
-export const setSelectedAsset = createAction('[Asset Search] Set Selected Asset', props<{ asset: AssetEditDetail }>());
-export const clearSelectedAsset = createAction('[Asset Search] Clear Selected Asset');
-export const clearPolygon = createAction('[Asset Search] Clear Polygon');
-export const setStudies = createAction('[Asset Search] Set Studies', props<{ studies: AllStudyDTOs }>());
+export const setStudies = createAction(
+  '[Asset Search] Set Studies',
+  props<{
+    studies?: AllStudyDTOs;
+    isLoading?: boolean;
+  }>()
+);
 
-export const setFiltersOpen = createAction('[Asset Search] Set Filters Open', props<{ isOpen: boolean | 'toggle' }>());
-export const setResultsOpen = createAction('[Asset Search] Set Results Open', props<{ isOpen: boolean | 'toggle' }>());
+export const setCurrentAsset = createAction(
+  '[Asset Search] Set Current Asset',
+  props<{
+    asset?: AssetEditDetail | null;
+    isLoading?: boolean;
+  }>()
+);
+
+export const setFiltersState = createAction('[Asset Search] Set Filters Open', props<{ state: PanelState }>());
+export const setResultsState = createAction('[Asset Search] Set Results Open', props<{ state: PanelState }>());
 export const setScrollOffsetForResults = createAction(
   '[Asset Search] Set Scroll Offset For Results',
   props<{ offset: number }>()
 );
-export const setMapPosition = createAction(
-  '[Asset Search] Set Map Position',
-  props<{ position: Partial<AssetSearchUiState['map']> }>()
-);
+export const setMapPosition = createAction('[Asset Search] Set Map Position', props<{ position: MapPosition }>());
+
+export const resetSearch = createAction('[Asset Search] Reset Search');
+
+export enum PanelState {
+  ClosedManually,
+  ClosedAutomatically,
+  OpenedManually,
+  OpenedAutomatically,
+}
+
+export const isPanelOpen = (state: PanelState): boolean => {
+  switch (state) {
+    case PanelState.ClosedManually:
+    case PanelState.ClosedAutomatically:
+      return false;
+    case PanelState.OpenedManually:
+    case PanelState.OpenedAutomatically:
+      return true;
+  }
+};
+
+export const isPanelAutomaticallyToggled = (state: PanelState): boolean => {
+  switch (state) {
+    case PanelState.ClosedManually:
+    case PanelState.OpenedManually:
+      return false;
+    case PanelState.ClosedAutomatically:
+    case PanelState.OpenedAutomatically:
+      return true;
+  }
+};

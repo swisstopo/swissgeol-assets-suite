@@ -1,22 +1,22 @@
 import { AfterViewInit, Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { MatOptionSelectionChange } from '@angular/material/core';
-import { Router } from '@angular/router';
 import { AssetSearchQuery, DateRange } from '@asset-sg/shared';
 import { Store } from '@ngrx/store';
 import { map, startWith, Subscription } from 'rxjs';
 
 import * as actions from '../../state/asset-search/asset-search.actions';
+import { PanelState, resetSearch } from '../../state/asset-search/asset-search.actions';
 import {
   AvailableAuthor,
   selectAssetKindFilters,
-  selectAssetSearchQuery,
   selectAvailableAuthors,
   selectCreateDate,
   selectGeometryFilters,
   selectIsFiltersOpen,
   selectLanguageFilters,
   selectManCatLabelFilters,
+  selectSearchQuery,
   selectUsageCodeFilters,
   selectWorkgroupFilters,
 } from '../../state/asset-search/asset-search.selector';
@@ -33,7 +33,6 @@ const MIN_CREATE_DATE = new Date(1800, 0, 1);
 })
 export class AssetSearchRefineComponent implements OnInit, OnDestroy, AfterViewInit {
   private readonly store = inject(Store);
-  private readonly router = inject(Router);
 
   public authorAutoCompleteControl = new FormControl('');
   public minDateControl = new FormControl();
@@ -95,7 +94,7 @@ export class AssetSearchRefineComponent implements OnInit, OnDestroy, AfterViewI
   }
 
   public removePolygon() {
-    this.store.dispatch(actions.clearPolygon());
+    this.store.dispatch(actions.updateSearchQuery({ query: { polygon: undefined } }));
   }
 
   public toggleDrawPolygon() {
@@ -110,7 +109,7 @@ export class AssetSearchRefineComponent implements OnInit, OnDestroy, AfterViewI
 
   public updateSearch(filterConfiguration: Partial<AssetSearchQuery>) {
     if (this.isFiltersOpen) {
-      this.store.dispatch(actions.mergeQuery({ query: filterConfiguration }));
+      this.store.dispatch(actions.updateSearchQuery({ query: filterConfiguration }));
     }
   }
 
@@ -133,22 +132,21 @@ export class AssetSearchRefineComponent implements OnInit, OnDestroy, AfterViewI
   }
 
   public resetSearch() {
-    void this.router.navigate([]);
     this.authorAutoCompleteControl.setValue('');
     this.maxDateControl.setValue(null);
     this.maxDateControl.setValue(null);
-    this.store.dispatch(actions.resetSearch());
+    this.store.dispatch(resetSearch());
   }
 
   public closeFilters() {
-    this.store.dispatch(actions.setFiltersOpen({ isOpen: false }));
+    this.store.dispatch(actions.setFiltersState({ state: PanelState.ClosedManually }));
   }
 
   private initSubscriptions() {
     this.subscriptions.add(this.isFiltersOpen$.subscribe((isOpen) => (this.isFiltersOpen = isOpen)));
 
     this.subscriptions.add(
-      this.store.select(selectAssetSearchQuery).subscribe((query) => {
+      this.store.select(selectSearchQuery).subscribe((query) => {
         this.assetSearchQuery = query;
       })
     );

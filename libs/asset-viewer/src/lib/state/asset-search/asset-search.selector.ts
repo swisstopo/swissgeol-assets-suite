@@ -28,16 +28,19 @@ import * as O from 'fp-ts/Option';
 
 import { AssetDetail } from '../../models';
 
+import { isPanelOpen } from './asset-search.actions';
 import { AppStateWithAssetSearch } from './asset-search.reducer';
 
 const assetSearchFeature = (state: AppStateWithAssetSearch) => state.assetSearch;
 
-export const selectSearchLoadingState = createSelector(assetSearchFeature, (state) => state.resultsLoadingState);
-export const selectFilterLoadingState = createSelector(assetSearchFeature, (state) => state.filterLoadingState);
+export const selectFiltersState = createSelector(assetSearchFeature, (state) => state.ui.filtersState);
 
-export const selectIsFiltersOpen = createSelector(assetSearchFeature, (state) => state.ui.isFiltersOpen);
+export const selectResultsState = createSelector(assetSearchFeature, (state) => state.ui.resultsState);
 
-export const selectIsResultsOpen = createSelector(assetSearchFeature, (state) => state.ui.isResultsOpen);
+export const selectIsFiltersOpen = createSelector(selectFiltersState, isPanelOpen);
+
+export const selectIsResultsOpen = createSelector(selectResultsState, isPanelOpen);
+
 export const selectMapPosition = createSelector(assetSearchFeature, (state) => state.ui.map);
 
 export const selectScrollOffsetForResults = createSelector(
@@ -45,37 +48,24 @@ export const selectScrollOffsetForResults = createSelector(
   (state) => state.ui.scrollOffsetForResults
 );
 
-export const selectAssetDetailLoadingState = createSelector(
+export const selectSearchQuery = createSelector(assetSearchFeature, (state) => state.query);
+
+export const selectSearchResults = createSelector(assetSearchFeature, (state) => state.results);
+
+export const selectSearchStats = createSelector(assetSearchFeature, (state) => state.stats);
+
+export const selectCurrentAsset = createSelector(assetSearchFeature, (state) => state.currentAsset);
+
+export const selectHasCurrentAsset = createSelector(
   assetSearchFeature,
-  (state) => state.assetDetailLoadingState
+  (state) => state.currentAsset !== null || state.isLoadingAsset
 );
 
-export const selectAssetSearchQuery = createSelector(assetSearchFeature, (state) => state.query);
-
-export const selectAssetSearchResultData = createSelector(assetSearchFeature, (state) => state.results.data);
-
-export const selectAssetSearchPolygon = createSelector(assetSearchFeature, (state) => state.query.polygon);
-
-export const selectAssetsSearchStats = createSelector(assetSearchFeature, (state) => state.stats);
-
-export const selectAssetSearchTotalResults = createSelector(assetSearchFeature, (state) => state.stats.total);
-
-export const selectCurrentAssetDetail = createSelector(assetSearchFeature, (state) => state.currentAsset);
 export const selectStudies = createSelector(assetSearchFeature, (state) => state.studies);
-
-export const selectHasNoActiveFilters = createSelector(assetSearchFeature, ({ query }) => hasNoActiveFilters(query));
-
-export const selectIsSearchQueryEmpty = createSelector(
-  assetSearchFeature,
-  ({ query, currentAsset }) => currentAsset == null && hasNoActiveFilters(query)
-);
-
-export const hasNoActiveFilters = (query: AssetSearchQuery): boolean =>
-  Object.values(query).every((value) => value === undefined || value == false);
 
 export const selectCurrentAssetDetailVM = createSelector(
   fromAppShared.selectRDReferenceData,
-  selectCurrentAssetDetail,
+  selectCurrentAsset,
   (referenceData, currentAssetDetail) => {
     if (RD.isSuccess(referenceData) && !!currentAssetDetail) {
       return makeAssetDetailVMNew(referenceData.value, currentAssetDetail);
@@ -86,12 +76,12 @@ export const selectCurrentAssetDetailVM = createSelector(
 
 export const selectAssetEditDetailVM = createSelector(
   fromAppShared.selectRDReferenceData,
-  selectAssetSearchResultData,
+  selectSearchResults,
   (referenceData, assets): AssetEditDetailVM[] => {
     if (!RD.isSuccess(referenceData) || !assets) {
       return [];
     }
-    return assets.map((asset) => {
+    return assets.data.map((asset) => {
       const manCatLabelItems: ValueItem[] = asset.manCatLabelRefs.map(
         (manCatLabelItemCode) => referenceData.value.manCatLabelItems[manCatLabelItemCode]
       );
@@ -120,7 +110,7 @@ export const selectAssetEditDetailVM = createSelector(
 
 export const selectAvailableAuthors = createSelector(
   fromAppShared.selectRDReferenceData,
-  selectAssetsSearchStats,
+  selectSearchStats,
   (referenceData, stats): AvailableAuthor[] | null => {
     if (RD.isSuccess(referenceData)) {
       return stats.authorIds.map((authorId) => {
@@ -135,7 +125,7 @@ export const selectAvailableAuthors = createSelector(
   }
 );
 
-export const selectCreateDate = createSelector(selectAssetsSearchStats, (stats): DateRange | null => stats.createDate);
+export const selectCreateDate = createSelector(selectSearchStats, (stats): DateRange | null => stats.createDate);
 
 const makeFilters = <T>(
   configs: Array<FilterConfig<T>>,
@@ -171,8 +161,8 @@ export const selectFilters = <T extends string>(
 ) =>
   createSelector(
     fromAppShared.selectRDReferenceData,
-    selectAssetSearchQuery,
-    selectAssetsSearchStats,
+    selectSearchQuery,
+    selectSearchStats,
     (referenceData, query, stats): Array<Filter<T>> => {
       if (!RD.isSuccess(referenceData)) {
         return [];
@@ -196,8 +186,8 @@ export const selectFilters = <T extends string>(
 
 export const selectWorkgroupFilters = createSelector(
   fromAppShared.selectWorkgroups,
-  selectAssetSearchQuery,
-  selectAssetsSearchStats,
+  selectSearchQuery,
+  selectSearchStats,
   (workgroups, query, stats) => {
     // Create a mapping of workgroups by their id for easier and more performant lookup.
     const workgroupsById = new Map<WorkgroupId, SimpleWorkgroup>();

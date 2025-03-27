@@ -1,23 +1,19 @@
 import { HttpClient, HttpDownloadProgressEvent, HttpEvent, HttpEventType } from '@angular/common/http';
-import { Injectable } from '@angular/core';
-import { ApiError } from '@asset-sg/client-shared';
-import { ORD } from '@asset-sg/core';
+import { inject, Injectable } from '@angular/core';
 import { LV95 } from '@asset-sg/shared';
-import * as RD from '@devexperts/remote-data-ts';
-import * as E from 'fp-ts/Either';
-import { concatMap, filter, from, map, Observable, scan, share, toArray } from 'rxjs';
+import { concatMap, filter, from, map, Observable, scan, toArray } from 'rxjs';
 
 import { AllStudyDTO, AllStudyDTOs } from '../models';
 
 @Injectable({ providedIn: 'root' })
 export class AllStudyService {
-  constructor(private _httpClient: HttpClient) {}
+  private readonly _httpClient = inject(HttpClient);
 
-  getAllStudies(): ORD.ObservableRemoteData<ApiError, AllStudyDTOs> {
+  getAllStudies(): Observable<AllStudyDTOs> {
     return this.getAllStudiesFromApi();
   }
 
-  private getAllStudiesFromApi(): ORD.ObservableRemoteData<ApiError, AllStudyDTO[]> {
+  private getAllStudiesFromApi(): Observable<AllStudyDTOs> {
     return this._httpClient.get('/api/studies', { observe: 'events', responseType: 'text', reportProgress: true }).pipe(
       filter((event) => event.type === HttpEventType.DownloadProgress || event.type === HttpEventType.Response),
       map((event: HttpEvent<string>) => (event as HttpDownloadProgressEvent).partialText ?? ''),
@@ -32,10 +28,7 @@ export class AllStudyService {
           centroid: { x: parseFloat(x), y: parseFloat(y) } as LV95,
         } as AllStudyDTO;
       }),
-      toArray(),
-      map((it) => E.right<ApiError, AllStudyDTO[]>(it)),
-      map(RD.fromEither),
-      share()
+      toArray()
     );
   }
 }

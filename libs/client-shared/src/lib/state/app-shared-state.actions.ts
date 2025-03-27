@@ -40,8 +40,6 @@ export const loadWorkgroupsResult = createAction(
   props<{ workgroups: SimpleWorkgroup[] }>()
 );
 
-export const openPanel = createAction('[App Shared State] Open Panel');
-
 export const logout = createAction('[App Shared State] Logout');
 
 export const setLang = createAction('[App Shared State] Set Lang', props<{ lang: Lang }>());
