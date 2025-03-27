@@ -6,11 +6,7 @@ import { Store } from '@ngrx/store';
 import { map, startWith, Subscription } from 'rxjs';
 
 import * as actions from '../../state/asset-search/asset-search.actions';
-import {
-  setMapPosition,
-  setResultsOpen,
-  setScrollOffsetForResults,
-} from '../../state/asset-search/asset-search.actions';
+import { resetSearch } from '../../state/asset-search/asset-search.actions';
 import {
   AvailableAuthor,
   selectAssetKindFilters,
@@ -26,7 +22,6 @@ import {
 } from '../../state/asset-search/asset-search.selector';
 import * as mapControlActions from '../../state/map-control/map-control.actions';
 import { selectMapControlIsDrawing } from '../../state/map-control/map-control.selector';
-import { DEFAULT_MAP_POSITION } from '../map/map-controller';
 
 const MIN_CREATE_DATE = new Date(1800, 0, 1);
 
@@ -140,11 +135,7 @@ export class AssetSearchRefineComponent implements OnInit, OnDestroy, AfterViewI
     this.authorAutoCompleteControl.setValue('');
     this.maxDateControl.setValue(null);
     this.maxDateControl.setValue(null);
-    this.store.dispatch(setScrollOffsetForResults({ offset: 0 }));
-    this.store.dispatch(setResultsOpen({ isOpen: false }));
-    this.store.dispatch(setMapPosition({ position: DEFAULT_MAP_POSITION }));
-    this.store.dispatch(actions.setQuery({ query: {} }));
-    this.store.dispatch(actions.setCurrentAsset({ asset: null }));
+    this.store.dispatch(resetSearch());
   }
 
   public closeFilters() {

@@ -152,6 +152,20 @@ export const assetSearchReducer = createReducer(
   }),
   on(appSharedStateActions.openPanel, (state): AssetSearchState => ({ ...state })),
   on(
+    actions.resetSearch,
+    (state): AssetSearchState => ({
+      ...state,
+      query: {},
+      currentAsset: null,
+      ui: {
+        ...state.ui,
+        scrollOffsetForResults: 0,
+        isResultsOpen: false,
+        map: DEFAULT_MAP_POSITION,
+      },
+    })
+  ),
+  on(
     appSharedStateActions.removeAssetFromSearch,
     (state, { assetId }): AssetSearchState => ({
       ...state,

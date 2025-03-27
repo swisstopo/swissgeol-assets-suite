@@ -55,3 +55,5 @@ export const setScrollOffsetForResults = createAction(
   props<{ offset: number }>()
 );
 export const setMapPosition = createAction('[Asset Search] Set Map Position', props<{ position: MapPosition }>());
+
+export const resetSearch = createAction('[Asset Search] Reset Search');
