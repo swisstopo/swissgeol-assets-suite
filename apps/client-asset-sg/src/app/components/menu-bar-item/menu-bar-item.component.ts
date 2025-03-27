@@ -14,6 +14,9 @@ export class MenuBarItemComponent {
   @Input()
   link: string[] | null = null;
 
+  @Input()
+  badge: number | null = null;
+
   @Input({ transform: coerceBooleanProperty })
   disabled = false;
 

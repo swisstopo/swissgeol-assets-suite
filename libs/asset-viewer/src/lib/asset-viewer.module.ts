@@ -3,6 +3,7 @@ import { CommonModule, DecimalPipe } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { MatChipSet } from '@angular/material/chips';
 import { MAT_DATE_FORMATS, MAT_DATE_LOCALE } from '@angular/material/core';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -30,6 +31,7 @@ import {
   ButtonComponent,
   CanCreateDirective,
   CanUpdateDirective,
+  ChipComponent,
   DatepickerToggleIconComponent,
   DatePipe,
   DragHandleComponent,
@@ -134,6 +136,8 @@ import { mapControlReducer } from './state/map-control/map-control.reducer';
     MatTooltip,
     CanCreateDirective,
     CanUpdateDirective,
+    MatChipSet,
+    ChipComponent,
   ],
   providers: [
     TranslatePipe,

@@ -5,6 +5,7 @@
       asset-sg-menu-bar-item
       icon="assets"
       [link]="isActive ? null : [translateService.currentLang]"
+      [badge]="isActive ? (activeFilters$ | async) : null"
       [isActive]="isActive"
       (click)="isActive ? toggleAssetDrawer() : null"
     >
@@ -16,6 +17,7 @@
       asset-sg-menu-bar-item
       icon="favorite"
       [link]="isActive ? null : [translateService.currentLang, 'favorites']"
+      [badge]="isActive ? (activeFilters$ | async) : null"
       [isActive]="isActive"
       (click)="isActive ? toggleAssetDrawer() : null"
     >

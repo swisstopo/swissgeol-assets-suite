@@ -1,6 +1,8 @@
+@use "../../styles/variables";
+
 .container {
   border-radius: 8px;
-  border: 1px solid #acb4bd;
+  border: 1px solid variables.$grey-05;
 }
 
 .header {

@@ -277,6 +277,18 @@ export const selectManCatLabelFilters = selectFilters<string>('manCatLabelItemCo
   }))
 );
 
+export const selectActiveFilters = createSelector(
+  selectUsageCodeFilters,
+  selectAssetKindFilters,
+  selectLanguageFilters,
+  selectGeometryFilters,
+  selectManCatLabelFilters,
+  selectWorkgroupFilters,
+  (...filterGroups) => {
+    return filterGroups.flatMap((filters) => filters.filter((filter) => filter.isActive));
+  }
+);
+
 export interface AvailableAuthor {
   contactId: number;
   count: number;
