@@ -26,7 +26,7 @@ import {
   setResultsOpen,
   setScrollOffsetForResults,
 } from '../state/asset-search/asset-search.actions';
-import { AppStateWithAssetSearch, AssetSearchState } from '../state/asset-search/asset-search.reducer';
+import { AppStateWithAssetSearch } from '../state/asset-search/asset-search.reducer';
 import {
   selectCurrentAsset,
   selectIsFiltersOpen,
@@ -39,7 +39,7 @@ import {
 } from '../state/asset-search/asset-search.selector';
 import { AllStudyService } from './all-study.service';
 import { AssetSearchService } from './asset-search.service';
-import { ViewerParams, ViewerParamsService } from './viewer-params.service';
+import { isEmptyViewerParams, ViewerParams, ViewerParamsService } from './viewer-params.service';
 
 @Injectable({ providedIn: 'root' })
 export class ViewerControllerService {
@@ -80,8 +80,20 @@ export class ViewerControllerService {
   }
 
   private async initializeFromStore(): Promise<void> {
-    const params = this.viewerParamsService.readParamsFromUrl();
-    const loads: Array<Promise<void>> = [this.updateStoreByParams(params)];
+    const loads: Array<Promise<void>> = [];
+
+    const paramsFromUrl = await this.viewerParamsService.readParamsFromUrl();
+    const paramsFromStore = await this.viewerParamsService.readParamsFromStore();
+
+    let params: ViewerParams;
+    if (isEmptyViewerParams(paramsFromUrl) && !isEmptyViewerParams(paramsFromStore)) {
+      params = paramsFromStore;
+      await this.viewerParamsService.writeParamsToUrl(params);
+      loads.push(this.loadAsset(params.assetId));
+    } else {
+      params = paramsFromUrl;
+      loads.push(this.updateStoreByParams(paramsFromUrl));
+    }
 
     const studies = await firstValueFrom(this.store.select(selectStudies));
     if (studies.length === 0) {
@@ -120,7 +132,11 @@ export class ViewerControllerService {
     this.store.dispatch(actions.setStats({ stats, isLoading: false }));
   }
 
-  private async loadAsset(id: AssetId): Promise<void> {
+  private async loadAsset(id: AssetId | null): Promise<void> {
+    if (id === null) {
+      this.store.dispatch(setCurrentAsset({ asset: null }));
+      return;
+    }
     this.store.dispatch(actions.setCurrentAsset({ isLoading: true }));
     const asset = await firstValueFrom(this.assetSearchService.fetchAssetEditDetail(id));
     this.store.dispatch(actions.setCurrentAsset({ asset, isLoading: false }));
@@ -153,17 +169,6 @@ export class ViewerControllerService {
       );
     };
 
-    const loadParamsFromStore = async (): Promise<ViewerParams> => {
-      const state = await firstValueFrom(
-        this.store.pipe(map((store) => store.assetSearch)) as Observable<AssetSearchState>
-      );
-      return {
-        assetId: state.currentAsset?.assetId ?? null,
-        query: state.query,
-        ui: state.ui,
-      };
-    };
-
     const foreground$ = merge(...foregroundEvents.map((event$) => prepareEvent(event$, false)));
     const background$ = merge(...backgroundEvents.map((event$) => prepareEvent(event$, true)));
 
@@ -171,7 +176,7 @@ export class ViewerControllerService {
       if (this.isUpdatingStore) {
         return;
       }
-      const params = await loadParamsFromStore();
+      const params = await this.viewerParamsService.readParamsFromStore();
       this.isUpdatingUrl = true;
       await this.viewerParamsService.writeParamsToUrl(params, { shouldReplaceUrl });
       this.isUpdatingUrl = false;
@@ -196,7 +201,7 @@ export class ViewerControllerService {
       if (this.isUpdatingUrl || !(event instanceof NavigationEnd)) {
         return;
       }
-      const params = this.viewerParamsService.readParamsFromUrl();
+      const params = await this.viewerParamsService.readParamsFromUrl();
       this.isUpdatingStore = true;
       await this.updateStoreByParams(params);
       this.isUpdatingStore = false;
@@ -210,12 +215,6 @@ export class ViewerControllerService {
     this.store.dispatch(setResultsOpen({ isOpen: ui.isResultsOpen }));
     this.store.dispatch(setMapPosition({ position: ui.map }));
     this.store.dispatch(setQuery({ query }));
-
-    if (assetId === null) {
-      this.store.dispatch(setCurrentAsset({ asset: null }));
-      return Promise.resolve();
-    } else {
-      return this.loadAsset(assetId);
-    }
+    return this.loadAsset(assetId);
   }
 }

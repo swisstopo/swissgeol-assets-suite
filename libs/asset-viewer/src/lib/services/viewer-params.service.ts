@@ -1,18 +1,35 @@
 import { inject, Injectable } from '@angular/core';
-import { ActivatedRoute, Params, Router } from '@angular/router';
+import { Params, Router } from '@angular/router';
 import { isNotNull } from '@asset-sg/core';
-import { AssetSearchQuery, LV95, Polygon } from '@asset-sg/shared';
+import { AssetSearchQuery, isEmptySearchQuery, LV95, Polygon } from '@asset-sg/shared';
 import { AssetId } from '@asset-sg/shared/v2';
+import { Store } from '@ngrx/store';
+import { firstValueFrom, map, Observable } from 'rxjs';
 import { DEFAULT_MAP_POSITION } from '../components/map/map-controller';
 
-import { AssetSearchUiState } from '../state/asset-search/asset-search.reducer';
+import {
+  AppStateWithAssetSearch,
+  AssetSearchState,
+  AssetSearchUiState,
+} from '../state/asset-search/asset-search.reducer';
 
 @Injectable({ providedIn: 'root' })
 export class ViewerParamsService {
   private readonly router = inject(Router);
-  private readonly route = inject(ActivatedRoute);
+  private readonly store = inject(Store<AppStateWithAssetSearch>);
 
-  readParamsFromUrl(): ViewerParams {
+  async readParamsFromStore(): Promise<ViewerParams> {
+    const state = await firstValueFrom(
+      this.store.pipe(map((store) => store.assetSearch)) as Observable<AssetSearchState>
+    );
+    return {
+      assetId: state.currentAsset?.assetId ?? null,
+      query: state.query,
+      ui: state.ui,
+    };
+  }
+
+  async readParamsFromUrl(): Promise<ViewerParams> {
     const { queryParams: params } = this.router.routerState.snapshot.root;
     const query: AssetSearchQuery = {};
     const assetId = readNumberParam(params, QUERY_PARAM_MAPPING.assetId) ?? null;
@@ -86,6 +103,9 @@ export class ViewerParamsService {
     return url.length === 3 && url[2] === 'favorites';
   }
 }
+
+export const isEmptyViewerParams = (params: ViewerParams): boolean =>
+  params.assetId == null && isEmptySearchQuery(params.query);
 
 export interface ViewerParams {
   query: AssetSearchQuery;
