@@ -12,11 +12,37 @@ export class ViewerParamsService {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
 
-  readParamsFromUrl(): Promise<ViewerParams> {
-    return Promise.resolve(this.parseParamsFromUrl());
+  readParamsFromUrl(): ViewerParams {
+    const { queryParams: params } = this.router.routerState.snapshot.root;
+    const query: AssetSearchQuery = {};
+    const assetId = readNumberParam(params, QUERY_PARAM_MAPPING.assetId) ?? null;
+    query.text = readStringParam(params, QUERY_PARAM_MAPPING.text);
+    query.polygon = readPolygonParam(params, QUERY_PARAM_MAPPING.polygon);
+    query.authorId = readNumberParam(params, QUERY_PARAM_MAPPING.authorId);
+    const min = readDateParam(params, QUERY_PARAM_MAPPING.createDate.min);
+    const max = readDateParam(params, QUERY_PARAM_MAPPING.createDate.max);
+    query.createDate = min && max ? { min, max } : undefined;
+    query.manCatLabelItemCodes = readArrayParam(params, QUERY_PARAM_MAPPING.manCatLabelItemCodes);
+    query.assetKindItemCodes = readArrayParam(params, QUERY_PARAM_MAPPING.assetKindItemCodes);
+    query.usageCodes = readArrayParam(params, QUERY_PARAM_MAPPING.usageCodes);
+    query.geometryCodes = readArrayParam(params, QUERY_PARAM_MAPPING.geometryCodes);
+    query.languageItemCodes = readArrayParam(params, QUERY_PARAM_MAPPING.languageItemCodes);
+    query.workgroupIds = readArrayParam<number>(params, QUERY_PARAM_MAPPING.workgroupIds);
+    query.favoritesOnly = this.parseFavoritesOnlyFromUrl();
+    const ui: AssetSearchUiState = {
+      isFiltersOpen: readBooleanParam(params, UI_PARAM_MAPPING.isFiltersOpen) ?? true,
+      isResultsOpen: readBooleanParam(params, UI_PARAM_MAPPING.isResultsOpen) ?? false,
+      scrollOffsetForResults: readNumberParam(params, UI_PARAM_MAPPING.scrollOffsetForResults) ?? 0,
+      map: {
+        x: readNumberParam(params, UI_PARAM_MAPPING.map.x) ?? DEFAULT_MAP_POSITION.x,
+        y: readNumberParam(params, UI_PARAM_MAPPING.map.y) ?? DEFAULT_MAP_POSITION.y,
+        z: readNumberParam(params, UI_PARAM_MAPPING.map.z) ?? DEFAULT_MAP_POSITION.z,
+      },
+    };
+    return { query, ui, assetId };
   }
 
-  writeParamsToUrl(viewerParams: ViewerParams, options: { shouldReplaceUrl?: boolean } = {}): void {
+  async writeParamsToUrl(viewerParams: ViewerParams, options: { shouldReplaceUrl?: boolean } = {}): Promise<void> {
     const { query, ui, assetId } = viewerParams;
 
     const params: Params = {};
@@ -48,43 +74,11 @@ export class ViewerParamsService {
     const url = document.location.pathname.split('/', 3);
     const route = query.favoritesOnly ? ['favorites'] : [];
 
-    this.router
-      .navigate([url[1], ...route], {
-        queryParams: params,
-        queryParamsHandling: 'merge',
-        replaceUrl: options.shouldReplaceUrl,
-      })
-      .then();
-  }
-
-  private parseParamsFromUrl(): ViewerParams {
-    const { queryParams: params } = this.route.snapshot;
-    const query: AssetSearchQuery = {};
-    const assetId = readNumberParam(params, QUERY_PARAM_MAPPING.assetId) ?? null;
-    query.text = readStringParam(params, QUERY_PARAM_MAPPING.text);
-    query.polygon = readPolygonParam(params, QUERY_PARAM_MAPPING.polygon);
-    query.authorId = readNumberParam(params, QUERY_PARAM_MAPPING.authorId);
-    const min = readDateParam(params, QUERY_PARAM_MAPPING.createDate.min);
-    const max = readDateParam(params, QUERY_PARAM_MAPPING.createDate.max);
-    query.createDate = min && max ? { min, max } : undefined;
-    query.manCatLabelItemCodes = readArrayParam(params, QUERY_PARAM_MAPPING.manCatLabelItemCodes);
-    query.assetKindItemCodes = readArrayParam(params, QUERY_PARAM_MAPPING.assetKindItemCodes);
-    query.usageCodes = readArrayParam(params, QUERY_PARAM_MAPPING.usageCodes);
-    query.geometryCodes = readArrayParam(params, QUERY_PARAM_MAPPING.geometryCodes);
-    query.languageItemCodes = readArrayParam(params, QUERY_PARAM_MAPPING.languageItemCodes);
-    query.workgroupIds = readArrayParam<number>(params, QUERY_PARAM_MAPPING.workgroupIds);
-    query.favoritesOnly = this.parseFavoritesOnlyFromUrl();
-    const ui: AssetSearchUiState = {
-      isFiltersOpen: readBooleanParam(params, UI_PARAM_MAPPING.isFiltersOpen) ?? true,
-      isResultsOpen: readBooleanParam(params, UI_PARAM_MAPPING.isResultsOpen) ?? false,
-      scrollOffsetForResults: readNumberParam(params, UI_PARAM_MAPPING.scrollOffsetForResults) ?? 0,
-      map: {
-        x: readNumberParam(params, UI_PARAM_MAPPING.map.x) ?? DEFAULT_MAP_POSITION.x,
-        y: readNumberParam(params, UI_PARAM_MAPPING.map.y) ?? DEFAULT_MAP_POSITION.y,
-        z: readNumberParam(params, UI_PARAM_MAPPING.map.z) ?? DEFAULT_MAP_POSITION.z,
-      },
-    };
-    return { query, ui, assetId };
+    await this.router.navigate([url[1], ...route], {
+      queryParams: params,
+      queryParamsHandling: 'merge',
+      replaceUrl: options.shouldReplaceUrl,
+    });
   }
 
   private parseFavoritesOnlyFromUrl(): boolean {
@@ -93,7 +87,7 @@ export class ViewerParamsService {
   }
 }
 
-interface ViewerParams {
+export interface ViewerParams {
   query: AssetSearchQuery;
   ui: AssetSearchUiState;
   assetId: AssetId | null;

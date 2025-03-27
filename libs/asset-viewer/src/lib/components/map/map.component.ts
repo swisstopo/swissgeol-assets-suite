@@ -246,7 +246,7 @@ export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
     this.timeoutForSetPosition = setTimeout(() => {
       this.publishedPosition = position;
       this.store.dispatch(setMapPosition({ position }));
-    }, 250);
+    }, 50);
   }
 
   @HostBinding('class.is-loading')
