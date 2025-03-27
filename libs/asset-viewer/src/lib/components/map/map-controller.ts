@@ -610,7 +610,6 @@ const makeStudyFeature = (study: Study): Feature => {
   const feature = new Feature({ geometry });
 
   feature.setId(study.studyId);
-  feature.setProperties({ [CustomFeatureProperties.SwisstopoType]: 'StudyGeometry' });
   return feature;
 };
 

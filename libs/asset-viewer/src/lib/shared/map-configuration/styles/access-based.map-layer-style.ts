@@ -1,4 +1,5 @@
 import { StudyAccessType, StudyGeometryType } from '@asset-sg/shared/v2';
+import { FeatureLike } from 'ol/Feature';
 import Fill from 'ol/style/Fill';
 import Stroke from 'ol/style/Stroke';
 import Style, { StyleFunction } from 'ol/style/Style';
@@ -33,6 +34,16 @@ const accessTypeMapping: { [key in StudyAccessType]: keyof AccessTypeKey } = {
   1: 'internal',
   2: 'restricted',
 };
+
+/**
+ * Used to extract the point representation for a given geometry from the layer style.
+ */
+const geometryToPointRepresentationMapping: { [key in StudyGeometryType]: keyof LayerStyleByAccess['point'] } = {
+  Point: 'pointInstance',
+  Line: 'lineInstance',
+  Polygon: 'polygonInstance',
+};
+
 const overviewStylesAccess: LayerStyleByAccess = {
   point: {
     pointInstance: {
@@ -147,6 +158,21 @@ const overviewStylesAccess: LayerStyleByAccess = {
   },
 };
 
+/**
+ * Returns the point representation for a given geometry and access type by using the lookup table and extracting the
+ * corresponding point.
+ * @param feature
+ * @param accessStyles
+ */
+const getPointRepresentationForGeometry = (
+  feature: FeatureLike,
+  accessStyles: keyof AccessTypeKey
+): Style | Style[] => {
+  const geomType = feature.get(CustomFeatureProperties.GeometryType) as StudyGeometryType;
+  const styleKey = geometryToPointRepresentationMapping[geomType];
+  return overviewStylesAccess.point[styleKey][accessStyles];
+};
+
 export const styleFunctionByAccess: StyleFunction = (feature) => {
   const geometry = feature.getGeometry();
   if (!geometry) {
@@ -157,15 +183,7 @@ export const styleFunctionByAccess: StyleFunction = (feature) => {
   const accessStyles: keyof AccessTypeKey = accessTypeMapping[accessType];
   switch (geometry.getType()) {
     case 'Point': {
-      const geomType = feature.get(CustomFeatureProperties.GeometryType) as StudyGeometryType;
-      const styleKey = (
-        {
-          Point: 'pointInstance',
-          Line: 'lineInstance',
-          Polygon: 'polygonInstance',
-        } as { [key in StudyGeometryType]: keyof LayerStyleByAccess['point'] }
-      )[geomType];
-      return overviewStylesAccess.point[styleKey][accessStyles];
+      return getPointRepresentationForGeometry(feature, accessStyles);
     }
     case 'LineString':
       return overviewStylesAccess.line[accessStyles];
