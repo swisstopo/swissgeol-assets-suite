@@ -6,7 +6,7 @@ import { Store } from '@ngrx/store';
 import { map, startWith, Subscription } from 'rxjs';
 
 import * as actions from '../../state/asset-search/asset-search.actions';
-import { resetSearch } from '../../state/asset-search/asset-search.actions';
+import { PanelState, resetSearch } from '../../state/asset-search/asset-search.actions';
 import {
   AvailableAuthor,
   selectAssetKindFilters,
@@ -139,7 +139,7 @@ export class AssetSearchRefineComponent implements OnInit, OnDestroy, AfterViewI
   }
 
   public closeFilters() {
-    this.store.dispatch(actions.setFiltersOpen({ isOpen: false }));
+    this.store.dispatch(actions.setFiltersState({ state: PanelState.ClosedManually }));
   }
 
   private initSubscriptions() {

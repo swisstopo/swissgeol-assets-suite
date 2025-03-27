@@ -4,7 +4,7 @@ import { Store } from '@ngrx/store';
 import { BehaviorSubject, combineLatestWith, firstValueFrom, map, Subject, Subscription, switchMap, take } from 'rxjs';
 import { ViewerControllerService } from '../../services/viewer-controller.service';
 import * as actions from '../../state/asset-search/asset-search.actions';
-import { setScrollOffsetForResults } from '../../state/asset-search/asset-search.actions';
+import { PanelState, setScrollOffsetForResults } from '../../state/asset-search/asset-search.actions';
 import { AppStateWithAssetSearch } from '../../state/asset-search/asset-search.reducer';
 import {
   AssetEditDetailVM,
@@ -74,8 +74,10 @@ export class AssetSearchResultsComponent implements OnInit, OnDestroy {
     const isOpen = await firstValueFrom(this.isResultsOpen$);
     if (isOpen) {
       this.saveScrollToStore(0);
+      this.store.dispatch(actions.setResultsState({ state: PanelState.ClosedManually }));
+    } else {
+      this.store.dispatch(actions.setResultsState({ state: PanelState.OpenedManually }));
     }
-    this.store.dispatch(actions.setResultsOpen({ isOpen: 'toggle' }));
   }
 
   public onScroll(event: Event): void {

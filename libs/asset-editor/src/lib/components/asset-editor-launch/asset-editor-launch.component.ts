@@ -9,15 +9,7 @@ import {
   ViewChild,
   ViewContainerRef,
 } from '@angular/core';
-import {
-  AppPortalService,
-  appSharedStateActions,
-  AppState,
-  CURRENT_LANG,
-  LifecycleHooks,
-  LifecycleHooksDirective,
-} from '@asset-sg/client-shared';
-import { Store } from '@ngrx/store';
+import { AppPortalService, CURRENT_LANG, LifecycleHooks, LifecycleHooksDirective } from '@asset-sg/client-shared';
 import { asyncScheduler, observeOn } from 'rxjs';
 
 @Component({
@@ -35,7 +27,6 @@ export class AssetEditorLaunchComponent implements OnDestroy {
   private readonly appPortalService = inject(AppPortalService);
   private readonly viewContainerRef = inject(ViewContainerRef);
   private readonly cd = inject(ChangeDetectorRef);
-  private readonly store = inject<Store<AppState>>(Store);
   public readonly currentLang$ = inject(CURRENT_LANG);
 
   constructor() {
@@ -45,7 +36,6 @@ export class AssetEditorLaunchComponent implements OnDestroy {
         new TemplatePortal(this._templateDrawerPortalContent, this.viewContainerRef)
       );
       this.cd.detectChanges();
-      this.store.dispatch(appSharedStateActions.openPanel());
     });
   }
 

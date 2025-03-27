@@ -7,6 +7,7 @@ import { Store } from '@ngrx/store';
 import { firstValueFrom, map, Observable } from 'rxjs';
 import { DEFAULT_MAP_POSITION } from '../components/map/map-controller';
 
+import { isPanelOpen, PanelState } from '../state/asset-search/asset-search.actions';
 import {
   AppStateWithAssetSearch,
   AssetSearchState,
@@ -47,8 +48,14 @@ export class ViewerParamsService {
     query.workgroupIds = readArrayParam<number>(params, QUERY_PARAM_MAPPING.workgroupIds);
     query.favoritesOnly = this.parseFavoritesOnlyFromUrl();
     const ui: AssetSearchUiState = {
-      isFiltersOpen: readBooleanParam(params, UI_PARAM_MAPPING.isFiltersOpen) ?? true,
-      isResultsOpen: readBooleanParam(params, UI_PARAM_MAPPING.isResultsOpen) ?? false,
+      filtersState:
+        readBooleanParam(params, UI_PARAM_MAPPING.filtersState) ?? true
+          ? PanelState.OpenedAutomatically
+          : PanelState.ClosedAutomatically,
+      resultsState:
+        readBooleanParam(params, UI_PARAM_MAPPING.resultsState) ?? false
+          ? PanelState.OpenedAutomatically
+          : PanelState.ClosedAutomatically,
       scrollOffsetForResults: readNumberParam(params, UI_PARAM_MAPPING.scrollOffsetForResults) ?? 0,
       map: {
         x: readNumberParam(params, UI_PARAM_MAPPING.map.x) ?? DEFAULT_MAP_POSITION.x,
@@ -81,8 +88,8 @@ export class ViewerParamsService {
     updatePlainParam(params, QUERY_PARAM_MAPPING.assetId, assetId);
 
     updatePlainParam(params, UI_PARAM_MAPPING.scrollOffsetForResults, ui.scrollOffsetForResults, { defaultValue: 0 });
-    updatePlainParam(params, UI_PARAM_MAPPING.isFiltersOpen, ui.isFiltersOpen, { defaultValue: true });
-    updatePlainParam(params, UI_PARAM_MAPPING.isResultsOpen, ui.isResultsOpen, { defaultValue: false });
+    updatePlainParam(params, UI_PARAM_MAPPING.filtersState, isPanelOpen(ui.filtersState), { defaultValue: true });
+    updatePlainParam(params, UI_PARAM_MAPPING.resultsState, isPanelOpen(ui.resultsState), { defaultValue: false });
 
     updatePlainParam(params, UI_PARAM_MAPPING.map.x, ui.map.x, { defaultValue: DEFAULT_MAP_POSITION.x });
     updatePlainParam(params, UI_PARAM_MAPPING.map.y, ui.map.y, { defaultValue: DEFAULT_MAP_POSITION.y });
@@ -137,8 +144,8 @@ type ParamMapping<T> = {
 
 const UI_PARAM_MAPPING: ParamMapping<AssetSearchUiState> = {
   scrollOffsetForResults: 'results[offset]',
-  isResultsOpen: 'results[show]',
-  isFiltersOpen: 'search[show]',
+  resultsState: 'results[show]',
+  filtersState: 'search[show]',
   map: {
     x: 'map[x]',
     y: 'map[y]',

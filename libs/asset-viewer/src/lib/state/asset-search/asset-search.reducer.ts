@@ -19,6 +19,7 @@ import { LineString as OlLineString, Polygon } from 'ol/geom';
 import { DEFAULT_MAP_POSITION, MapPosition } from '../../components/map/map-controller';
 import { AllStudyDTO, AllStudyDTOs } from '../../models';
 import * as actions from './asset-search.actions';
+import { PanelState } from './asset-search.actions';
 
 export interface AssetSearchState {
   query: AssetSearchQuery;
@@ -36,8 +37,8 @@ export interface AssetSearchState {
 
 export interface AssetSearchUiState {
   scrollOffsetForResults: number;
-  isFiltersOpen: boolean;
-  isResultsOpen: boolean;
+  filtersState: PanelState;
+  resultsState: PanelState;
   map: MapPosition;
 }
 
@@ -62,8 +63,8 @@ const initialState: AssetSearchState = {
   },
   currentAsset: null,
   ui: {
-    isFiltersOpen: true,
-    isResultsOpen: false,
+    filtersState: PanelState.OpenedAutomatically,
+    resultsState: PanelState.ClosedAutomatically,
     scrollOffsetForResults: 0,
     map: DEFAULT_MAP_POSITION,
   },
@@ -126,18 +127,19 @@ export const assetSearchReducer = createReducer(
     })
   ),
   on(
-    actions.setFiltersOpen,
-    (state, { isOpen }): AssetSearchState => ({
+    actions.setFiltersState,
+    (state, { state: filtersState }): AssetSearchState => ({
       ...state,
-      ui: { ...state.ui, isFiltersOpen: isOpen === 'toggle' ? !state.ui.isFiltersOpen : isOpen },
+      ui: { ...state.ui, filtersState },
     })
   ),
-  on(actions.setResultsOpen, (state, { isOpen }): AssetSearchState => {
-    return {
+  on(
+    actions.setResultsState,
+    (state, { state: resultsState }): AssetSearchState => ({
       ...state,
-      ui: { ...state.ui, isResultsOpen: isOpen === 'toggle' ? !state.ui.isResultsOpen : isOpen },
-    };
-  }),
+      ui: { ...state.ui, resultsState },
+    })
+  ),
   on(actions.setScrollOffsetForResults, (state, { offset }): AssetSearchState => {
     return {
       ...state,
@@ -150,7 +152,6 @@ export const assetSearchReducer = createReducer(
       ui: { ...state.ui, map: position },
     };
   }),
-  on(appSharedStateActions.openPanel, (state): AssetSearchState => ({ ...state })),
   on(
     actions.resetSearch,
     (state): AssetSearchState => ({
@@ -159,9 +160,7 @@ export const assetSearchReducer = createReducer(
       currentAsset: null,
       ui: {
         ...state.ui,
-        scrollOffsetForResults: 0,
-        isResultsOpen: false,
-        map: DEFAULT_MAP_POSITION,
+        resultsState: PanelState.OpenedManually,
       },
     })
   ),

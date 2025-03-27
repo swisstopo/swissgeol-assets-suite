@@ -34,13 +34,14 @@ import {
 
 import { ViewerControllerService } from '../../services/viewer-controller.service';
 import * as actions from '../../state/asset-search/asset-search.actions';
+import { PanelState } from '../../state/asset-search/asset-search.actions';
 import { AppStateWithAssetSearch, AssetSearchState } from '../../state/asset-search/asset-search.reducer';
 import {
+  selectCurrentAsset,
+  selectHasCurrentAsset,
+  selectIsFiltersOpen,
   selectSearchQuery,
   selectSearchResults,
-  selectCurrentAsset,
-  selectIsFiltersOpen,
-  selectHasCurrentAsset,
 } from '../../state/asset-search/asset-search.selector';
 
 @UntilDestroy()
@@ -154,7 +155,7 @@ export class AssetViewerPageComponent implements OnInit, OnDestroy {
   }
 
   public ngOnInit() {
-    this.store.dispatch(actions.setFiltersOpen({ isOpen: true }));
+    this.store.dispatch(actions.setFiltersState({ state: PanelState.OpenedAutomatically }));
 
     this.authService.isInitialized$.pipe(filter(identity), take(1)).subscribe(() => {
       this.viewerControllerService.initialize();

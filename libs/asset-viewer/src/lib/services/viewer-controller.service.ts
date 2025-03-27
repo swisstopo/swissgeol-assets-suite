@@ -19,19 +19,23 @@ import {
 import { DEFAULT_MAP_POSITION } from '../components/map/map-controller';
 import * as actions from '../state/asset-search/asset-search.actions';
 import {
+  isPanelAutomaticallyToggled,
+  isPanelOpen,
+  PanelState,
   setCurrentAsset,
-  setFiltersOpen,
+  setFiltersState,
   setMapPosition,
   setQuery,
-  setResultsOpen,
+  setResultsState,
   setScrollOffsetForResults,
 } from '../state/asset-search/asset-search.actions';
 import { AppStateWithAssetSearch } from '../state/asset-search/asset-search.reducer';
 import {
   selectCurrentAsset,
-  selectIsFiltersOpen,
+  selectFiltersState,
   selectIsResultsOpen,
   selectMapPosition,
+  selectResultsState,
   selectScrollOffsetForResults,
   selectSearchQuery,
   selectSearchResults,
@@ -99,7 +103,7 @@ export class ViewerControllerService {
     if (studies.length === 0) {
       loads.push(this.loadStudies());
     }
-    loads.push(this.loadResults(params.query, { force: params.ui.isResultsOpen }));
+    loads.push(this.loadResults(params.query, { force: isPanelOpen(params.ui.resultsState) }));
     loads.push(this.loadStats(params.query));
     await Promise.all(loads);
 
@@ -148,31 +152,47 @@ export class ViewerControllerService {
     }
     await Promise.all([this.loadResults(query), this.loadStats(query)]);
     const results = await firstValueFrom(this.store.select(selectSearchResults));
-    this.store.dispatch(actions.setResultsOpen({ isOpen: results.page.total !== 0 }));
+    this.store.dispatch(
+      actions.setResultsState({
+        state: results.page.total === 0 ? PanelState.ClosedAutomatically : PanelState.OpenedAutomatically,
+      })
+    );
   }
 
   private syncUrlParams(): Subscription {
-    const foregroundEvents = [
+    const prepareEvent = <T>(
+      event$: Observable<T>,
+      shouldReplaceUrl: boolean | ((value: T) => boolean)
+    ): Observable<boolean> => {
+      const transform = typeof shouldReplaceUrl === 'boolean' ? () => shouldReplaceUrl : shouldReplaceUrl;
+      return event$.pipe(skip(1), distinctUntilChanged(), map(transform));
+    };
+
+    // Events that add a new history entry.
+    const foregroundEvents: Array<Observable<unknown>> = [
       this.store.select(selectSearchQuery),
       this.store.select(selectCurrentAsset),
-      this.store.select(selectIsFiltersOpen),
-      this.store.select(selectIsResultsOpen),
+      this.store.select(selectFiltersState),
+      this.store.select(selectResultsState),
     ];
 
-    const backgroundEvents = [this.store.select(selectScrollOffsetForResults), this.store.select(selectMapPosition)];
+    // Events that replace the current history entry.
+    const backgroundEvents: Array<Observable<unknown>> = [
+      this.store.select(selectScrollOffsetForResults),
+      this.store.select(selectMapPosition),
+    ];
 
-    const prepareEvent = (event$: Observable<unknown>, shouldReplaceUrl: boolean): Observable<boolean> => {
-      return event$.pipe(
-        skip(1),
-        distinctUntilChanged(),
-        map(() => shouldReplaceUrl)
-      );
-    };
+    // Events that may or may not replace the current history entry, depending on their contents.
+    const dynamicEvents: Array<Observable<boolean>> = [
+      prepareEvent(this.store.select(selectFiltersState), isPanelAutomaticallyToggled),
+      prepareEvent(this.store.select(selectResultsState), isPanelAutomaticallyToggled),
+    ];
 
     const foreground$ = merge(...foregroundEvents.map((event$) => prepareEvent(event$, false)));
     const background$ = merge(...backgroundEvents.map((event$) => prepareEvent(event$, true)));
+    const dynamic$ = merge(...dynamicEvents);
 
-    return merge(foreground$, background$).subscribe(async (shouldReplaceUrl) => {
+    return merge(foreground$, background$, dynamic$).subscribe(async (shouldReplaceUrl) => {
       if (this.isUpdatingStore) {
         return;
       }
@@ -211,8 +231,8 @@ export class ViewerControllerService {
   private updateStoreByParams(params: ViewerParams): Promise<void> {
     const { ui, query, assetId } = params;
     this.store.dispatch(setScrollOffsetForResults({ offset: ui.scrollOffsetForResults }));
-    this.store.dispatch(setFiltersOpen({ isOpen: ui.isFiltersOpen }));
-    this.store.dispatch(setResultsOpen({ isOpen: ui.isResultsOpen }));
+    this.store.dispatch(setFiltersState({ state: ui.filtersState }));
+    this.store.dispatch(setResultsState({ state: ui.resultsState }));
     this.store.dispatch(setMapPosition({ position: ui.map }));
     this.store.dispatch(setQuery({ query }));
     return this.loadAsset(assetId);

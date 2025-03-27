@@ -48,8 +48,8 @@ export const setCurrentAsset = createAction(
   }>()
 );
 
-export const setFiltersOpen = createAction('[Asset Search] Set Filters Open', props<{ isOpen: boolean | 'toggle' }>());
-export const setResultsOpen = createAction('[Asset Search] Set Results Open', props<{ isOpen: boolean | 'toggle' }>());
+export const setFiltersState = createAction('[Asset Search] Set Filters Open', props<{ state: PanelState }>());
+export const setResultsState = createAction('[Asset Search] Set Results Open', props<{ state: PanelState }>());
 export const setScrollOffsetForResults = createAction(
   '[Asset Search] Set Scroll Offset For Results',
   props<{ offset: number }>()
@@ -57,3 +57,32 @@ export const setScrollOffsetForResults = createAction(
 export const setMapPosition = createAction('[Asset Search] Set Map Position', props<{ position: MapPosition }>());
 
 export const resetSearch = createAction('[Asset Search] Reset Search');
+
+export enum PanelState {
+  ClosedManually,
+  ClosedAutomatically,
+  OpenedManually,
+  OpenedAutomatically,
+}
+
+export const isPanelOpen = (state: PanelState): boolean => {
+  switch (state) {
+    case PanelState.ClosedManually:
+    case PanelState.ClosedAutomatically:
+      return false;
+    case PanelState.OpenedManually:
+    case PanelState.OpenedAutomatically:
+      return true;
+  }
+};
+
+export const isPanelAutomaticallyToggled = (state: PanelState): boolean => {
+  switch (state) {
+    case PanelState.ClosedManually:
+    case PanelState.OpenedManually:
+      return false;
+    case PanelState.ClosedAutomatically:
+    case PanelState.OpenedAutomatically:
+      return true;
+  }
+};

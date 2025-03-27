@@ -5,13 +5,18 @@ import { AssetEditPolicy } from '@asset-sg/shared/v2';
 import { UntilDestroy } from '@ngneat/until-destroy';
 import { Store } from '@ngrx/store';
 import { TranslateService } from '@ngx-translate/core';
-import { filter, map, Observable, startWith } from 'rxjs';
+import { filter, firstValueFrom, map, Observable, startWith } from 'rxjs';
 
 // eslint-disable-next-line @nx/enforce-module-boundaries
 import {
-  setFiltersOpen,
+  setFiltersState,
   updateSearchQuery,
+  PanelState,
 } from '../../../../../../libs/asset-viewer/src/lib/state/asset-search/asset-search.actions';
+
+// eslint-disable-next-line @nx/enforce-module-boundaries
+import { selectIsFiltersOpen } from '../../../../../../libs/asset-viewer/src/lib/state/asset-search/asset-search.selector';
+
 import { AppState } from '../../state/app-state';
 
 @UntilDestroy()
@@ -59,8 +64,13 @@ export class MenuBarComponent {
     startWith('home' as const)
   );
 
-  toggleAssetDrawer(): void {
-    this.store.dispatch(setFiltersOpen({ isOpen: 'toggle' }));
+  async toggleAssetDrawer(): Promise<void> {
+    const isOpen = await firstValueFrom(this.store.select(selectIsFiltersOpen));
+    if (isOpen) {
+      this.store.dispatch(setFiltersState({ state: PanelState.ClosedManually }));
+    } else {
+      this.store.dispatch(setFiltersState({ state: PanelState.ClosedAutomatically }));
+    }
   }
 
   goToViewer({ favoritesOnly }: { favoritesOnly: boolean }): void {

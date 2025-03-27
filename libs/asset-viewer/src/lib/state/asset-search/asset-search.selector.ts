@@ -28,13 +28,19 @@ import * as O from 'fp-ts/Option';
 
 import { AssetDetail } from '../../models';
 
+import { isPanelOpen } from './asset-search.actions';
 import { AppStateWithAssetSearch } from './asset-search.reducer';
 
 const assetSearchFeature = (state: AppStateWithAssetSearch) => state.assetSearch;
 
-export const selectIsFiltersOpen = createSelector(assetSearchFeature, (state) => state.ui.isFiltersOpen);
+export const selectFiltersState = createSelector(assetSearchFeature, (state) => state.ui.filtersState);
 
-export const selectIsResultsOpen = createSelector(assetSearchFeature, (state) => state.ui.isResultsOpen);
+export const selectResultsState = createSelector(assetSearchFeature, (state) => state.ui.resultsState);
+
+export const selectIsFiltersOpen = createSelector(selectFiltersState, isPanelOpen);
+
+export const selectIsResultsOpen = createSelector(selectResultsState, isPanelOpen);
+
 export const selectMapPosition = createSelector(assetSearchFeature, (state) => state.ui.map);
 
 export const selectScrollOffsetForResults = createSelector(
