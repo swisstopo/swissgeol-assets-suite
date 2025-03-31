@@ -1,16 +1,13 @@
 import { Component, inject } from '@angular/core';
-import { AppState, CURRENT_LANG } from '@asset-sg/client-shared';
+import { CURRENT_LANG } from '@asset-sg/client-shared';
 import { AssetFileType } from '@asset-sg/shared';
 import { AssetEditPolicy } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
 import { map, Observable } from 'rxjs';
+import { ViewerControllerService } from '../../services/viewer-controller.service';
 import * as actions from '../../state/asset-search/asset-search.actions';
-import { LoadingState } from '../../state/asset-search/asset-search.reducer';
-import {
-  AssetDetailFileVM,
-  selectAssetDetailLoadingState,
-  selectCurrentAssetDetailVM,
-} from '../../state/asset-search/asset-search.selector';
+import { AppStateWithAssetSearch } from '../../state/asset-search/asset-search.reducer';
+import { AssetDetailFileVM, selectCurrentAssetDetailVM } from '../../state/asset-search/asset-search.selector';
 
 @Component({
   selector: 'asset-sg-asset-search-detail',
@@ -19,11 +16,12 @@ import {
   standalone: false,
 })
 export class AssetSearchDetailComponent {
-  private readonly store = inject(Store<AppState>);
+  private readonly store = inject(Store<AppStateWithAssetSearch>);
   public readonly currentLang$ = inject(CURRENT_LANG);
+  private readonly viewerControllerService = inject(ViewerControllerService);
 
-  public readonly assetDetail$ = this.store.select(selectCurrentAssetDetailVM);
-  public readonly filesByType$: Observable<Record<AssetFileType, AssetDetailFileVM[]>> = this.assetDetail$.pipe(
+  public readonly asset$ = this.store.select(selectCurrentAssetDetailVM);
+  public readonly filesByType$: Observable<Record<AssetFileType, AssetDetailFileVM[]>> = this.asset$.pipe(
     map((asset) => {
       const mapping: Record<AssetFileType, AssetDetailFileVM[]> = {
         Normal: [],
@@ -39,16 +37,13 @@ export class AssetSearchDetailComponent {
     })
   );
 
-  public loadingState = this.store.select(selectAssetDetailLoadingState);
-
   public clearSelectedAsset() {
-    this.store.dispatch(actions.clearSelectedAsset());
+    this.store.dispatch(actions.setCurrentAsset({ asset: null }));
   }
 
   public searchForReferenceAsset(assetId: number) {
-    this.store.dispatch(actions.assetClicked({ assetId }));
+    this.viewerControllerService.selectAsset(assetId);
   }
 
-  protected readonly LoadingState = LoadingState;
   protected readonly AssetEditPolicy = AssetEditPolicy;
 }

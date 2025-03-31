@@ -8,6 +8,41 @@
 
 ### Fixed
 
+## v1.10.0
+
+### Added
+
+- Google Analytics werden neu verwendet, um die Nutzung der Applikation zu tracken.
+- Es wurden neue Security Headers hinzugefügt.
+- Die Position der Karte und der Suchergebnisse wird nun gespeichert und beim Neuladen der Seite wiederhergestellt.
+
+### Changed
+
+- Diverse Elemente wurden an das Design im Figma angepasst.
+- Die maximale Dateigrösse, die hochgeladen werden kann, wurde auf 2GB erhöht.
+- Der Text des Disclaimers wurde an den der anderen Applikationen angepasst.
+- Die Darstellung der Filteroberfläche wurde dem Design in Figma angepasst.
+
+### Fixed
+
+## v1.9.0
+
+### Added
+
+- Die sgsId von Assets muss neu einzigartig sein.
+
+### Changed
+
+- Benutzer werden neu mit Vor- und Nachnamen angezeigt (nicht mehr mit E-Mail Adresse).
+- Die Darstellung der Benutzer- und Arbeitsgruppenverwaltung wurde angepasst.
+- Line Breaks wurden aus den Titeln von Assets entfernt.
+
+### Fixed
+
+- Kontakte in Assets, die unterschiedliche Rollen haben, können nun auch einzeln von einem Asset entfernt werden.
+- Das Löschen von Assets führt nicht mehr zu einer Endlosschlaufe, wenn man auf die Kartenansicht zurückkehrt.
+- Das Entfernen von Benutzer, die nicht mehr in der Cognito-Gruppe existieren, funktioniert nun korrekt.
+
 ## v1.8.0
 
 ### Added

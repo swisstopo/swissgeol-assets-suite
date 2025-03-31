@@ -1,12 +1,15 @@
+@use "../../styles/variables";
+
 button.language {
   text-transform: uppercase;
   width: 69px;
   height: 36px;
   padding: 8px 12px;
   border-radius: 4px;
-  color: #337083;
+  color: variables.$cyan-08;
   transition: 150ms ease-in;
   transition-property: color, background-color;
+  font-size: 14px;
 
   & > ::ng-deep .mdc-button__label {
     width: 100%;
@@ -46,42 +49,50 @@ button.language {
   }
 }
 
-::ng-deep .languages + * .mat-mdc-menu-panel {
-  text-transform: uppercase;
-  min-width: 85px;
-  max-width: 85px;
-
-  & > .mat-mdc-menu-content {
-    display: flex;
-    flex-direction: column;
-    padding: 0;
+::ng-deep {
+  .cdk-overlay-pane {
+    margin-top: 4px;
   }
 
-  a {
-    color: #1c2834;
-    text-decoration: none;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 8px 12px;
-    transition: color 150ms ease-in;
-  }
+  .languages + * .mat-mdc-menu-panel {
+    text-transform: uppercase;
+    min-width: 85px;
+    max-width: 85px;
 
-  a:hover {
-    background-color: #dfe4e9;
-  }
+    & > .mat-mdc-menu-content {
+      display: flex;
+      flex-direction: column;
+      padding: 0;
+    }
 
-  a > span.name {
-    flex-basis: 30%;
-  }
+    a {
+      color: variables.$grey-10;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 12px;
+      transition: color 150ms ease-in;
+      font-size: 14px;
+      font-weight: 400;
+    }
 
-  a > span.icon {
-    flex-grow: 1;
-    display: flex;
-    justify-content: flex-start;
-  }
+    a:hover {
+      background-color: variables.$grey-02;
+    }
 
-  a:not(.is-active) > span.icon {
-    visibility: hidden;
+    a > span.name {
+      flex-basis: 30%;
+    }
+
+    a > span.icon {
+      display: flex;
+      justify-content: flex-start;
+    }
+
+    a:not(.is-active) > span.icon {
+      visibility: hidden;
+    }
   }
 }

@@ -3,6 +3,7 @@ import { CommonModule, DecimalPipe } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { MatChipSet } from '@angular/material/chips';
 import { MAT_DATE_FORMATS, MAT_DATE_LOCALE } from '@angular/material/core';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -30,6 +31,7 @@ import {
   ButtonComponent,
   CanCreateDirective,
   CanUpdateDirective,
+  ChipComponent,
   DatepickerToggleIconComponent,
   DatePipe,
   DragHandleComponent,
@@ -42,7 +44,6 @@ import {
 } from '@asset-sg/client-shared';
 import { FavoritesModule } from '@asset-sg/favorites';
 import { SvgIconComponent } from '@ngneat/svg-icon';
-import { EffectsModule } from '@ngrx/effects';
 import { StoreModule } from '@ngrx/store';
 import { TranslateModule, TranslatePipe } from '@ngx-translate/core';
 import { ForModule } from '@rx-angular/template/for';
@@ -61,7 +62,6 @@ import { AssetViewerPageComponent } from './components/asset-viewer-page';
 import { MapComponent } from './components/map/map.component';
 import { MapControlsComponent } from './components/map-controls/map-controls.component';
 import { ViewerParamsService } from './services/viewer-params.service';
-import { AssetSearchEffects } from './state/asset-search/asset-search.effects';
 import { assetSearchReducer } from './state/asset-search/asset-search.reducer';
 import { mapControlReducer } from './state/map-control/map-control.reducer';
 
@@ -90,7 +90,6 @@ import { mapControlReducer } from './state/map-control/map-control.reducer';
     TranslateModule.forChild(),
     StoreModule.forFeature('assetSearch', assetSearchReducer),
     StoreModule.forFeature('mapControl', mapControlReducer),
-    EffectsModule.forFeature(AssetSearchEffects),
     ReactiveFormsModule,
 
     SvgIconComponent,
@@ -134,6 +133,8 @@ import { mapControlReducer } from './state/map-control/map-control.reducer';
     MatTooltip,
     CanCreateDirective,
     CanUpdateDirective,
+    MatChipSet,
+    ChipComponent,
   ],
   providers: [
     TranslatePipe,

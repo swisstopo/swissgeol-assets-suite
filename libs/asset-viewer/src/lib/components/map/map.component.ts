@@ -13,22 +13,24 @@ import {
   ViewChild,
 } from '@angular/core';
 import { arrayEqual, isNotNull } from '@asset-sg/core';
+import { isEmptySearchQuery } from '@asset-sg/shared';
 import { filterNullish } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
-import { asapScheduler, filter, first, Subscription, withLatestFrom } from 'rxjs';
+import { distinctUntilChanged, filter, first, map, skip, Subscription, switchMap, take, withLatestFrom } from 'rxjs';
+import { ViewerControllerService } from '../../services/viewer-controller.service';
 import * as searchActions from '../../state/asset-search/asset-search.actions';
+import { setMapPosition } from '../../state/asset-search/asset-search.actions';
 import {
-  selectAssetSearchPolygon,
-  selectAssetSearchResultData,
-  selectCurrentAssetDetail,
-  selectHasNoActiveFilters,
-  selectIsSearchQueryEmpty,
+  selectSearchResults,
+  selectCurrentAsset,
+  selectMapPosition,
   selectStudies,
+  selectSearchQuery,
 } from '../../state/asset-search/asset-search.selector';
 import { AppStateWithMapControl } from '../../state/map-control/map-control.reducer';
 import { DrawControl } from '../map-controls/draw-controls';
 import { ZoomControl } from '../map-controls/zoom-control';
-import { MapController } from './map-controller';
+import { DEFAULT_MAP_POSITION, MapController, MapPosition } from './map-controller';
 
 @Component({
   selector: 'asset-sg-map',
@@ -75,6 +77,7 @@ export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
   controlsElement!: ElementRef<HTMLElement>;
 
   private readonly store = inject(Store<AppStateWithMapControl>);
+  private readonly viewerControllerService = inject(ViewerControllerService);
 
   private controller!: MapController;
 
@@ -85,7 +88,11 @@ export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
 
   isInitialized = false;
 
+  private timeoutForSetPosition: number | null = null;
+
   private readonly subscription = new Subscription();
+
+  private publishedPosition = DEFAULT_MAP_POSITION;
 
   constructor() {
     this.initializeEnd.subscribe(() => {
@@ -94,9 +101,28 @@ export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
   }
 
   ngAfterViewInit(): void {
-    asapScheduler.schedule(() => {
-      this.initializeMap();
+    // Set the initial map position by its stored value.
+    const storedPosition$ = this.viewerControllerService.viewerReady$.pipe(
+      switchMap(() => this.store.select(selectMapPosition))
+    );
+
+    storedPosition$.pipe(take(1)).subscribe((position) => {
+      this.publishedPosition = position;
+      this.initializeMap(position);
     });
+
+    this.subscription.add(
+      storedPosition$.pipe(skip(1)).subscribe((position) => {
+        if (position === this.publishedPosition) {
+          return;
+        }
+        if (this.timeoutForSetPosition !== null) {
+          clearTimeout(this.timeoutForSetPosition);
+          this.timeoutForSetPosition = null;
+        }
+        this.controller.setPosition(position);
+      })
+    );
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -113,8 +139,8 @@ export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
     this.controller.dispose();
   }
 
-  private initializeMap(): void {
-    this.controller = new MapController(this.mapElement.nativeElement);
+  private initializeMap(initialPosition: MapPosition): void {
+    this.controller = new MapController(this.mapElement.nativeElement, initialPosition);
 
     this.controls = {
       zoom: new ZoomControl({
@@ -130,20 +156,13 @@ export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
     this.controller.addControl(this.controls.zoom);
     this.controller.addControl(this.controls.draw);
 
-    this.subscription.add(
-      this.store.select(selectIsSearchQueryEmpty).subscribe((isSearchQueryEmpty) => {
-        if (isSearchQueryEmpty) {
-          this.controls.zoom.resetZoom();
-        }
-      })
-    );
-
     this.controls.draw.isDrawing$.subscribe((isDrawing) => {
       this.controller.setClickEnabled(!isDrawing);
     });
 
     this.subscription.add(this.controller.assetsClick$.subscribe(this.assetsClick));
     this.subscription.add(this.controller.assetsHover$.subscribe(this.assetsHover));
+    this.subscription.add(this.controller.positionChange$.subscribe(this.handlePositionChange.bind(this)));
 
     // Some bindings can be initialized only after the map has fully loaded,
     // since they modify the map's zoom level.
@@ -157,16 +176,16 @@ export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
 
   private initializeStoreBindings() {
     this.subscription.add(
-      this.store.select(selectHasNoActiveFilters).subscribe((hasNoActiveFilters) => {
-        this.controller.setShowHeatmap(hasNoActiveFilters);
+      this.store.select(selectSearchQuery).subscribe((query) => {
+        this.controller.setShowHeatmap(isEmptySearchQuery(query));
       })
     );
     this.subscription.add(
-      this.store.select(selectAssetSearchResultData).subscribe((assets) => this.controller.setAssets(assets))
+      this.store.select(selectSearchResults).subscribe((results) => this.controller.setAssets(results.data))
     );
 
     this.subscription.add(
-      this.store.select(selectCurrentAssetDetail).subscribe((asset) => {
+      this.store.select(selectCurrentAsset).subscribe((asset) => {
         if (asset == null) {
           this.controller.clearActiveAsset();
         } else {
@@ -185,20 +204,26 @@ export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
 
   private initializePolygonBindings(): void {
     this.subscription.add(
-      this.store.select(selectAssetSearchPolygon).subscribe((polygon) => {
-        this.controls.draw.setPolygon(polygon ?? null);
-      })
+      this.store
+        .select(selectSearchQuery)
+        .pipe(
+          map((it) => it.polygon),
+          distinctUntilChanged()
+        )
+        .subscribe((polygon) => {
+          this.controls.draw.setPolygon(polygon ?? null);
+        })
     );
     this.subscription.add(
       this.controls.draw.polygon$
         .pipe(
           filterNullish(),
-          withLatestFrom(this.store.select(selectAssetSearchPolygon)),
+          withLatestFrom(this.store.select(selectSearchQuery).pipe(map((query) => query.polygon))),
           filter(([polygon, storePolygon]) => !arrayEqual(polygon, storePolygon))
         )
         .subscribe(([polygon, _]) =>
           this.store.dispatch(
-            searchActions.mergeQuery({
+            searchActions.updateSearchQuery({
               query: { polygon: polygon },
             })
           )
@@ -212,6 +237,16 @@ export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
     } else {
       this.controller.setHighlightedAsset(this.highlightedAssetId);
     }
+  }
+
+  private handlePositionChange(position: MapPosition): void {
+    if (this.timeoutForSetPosition !== null) {
+      clearTimeout(this.timeoutForSetPosition);
+    }
+    this.timeoutForSetPosition = setTimeout(() => {
+      this.publishedPosition = position;
+      this.store.dispatch(setMapPosition({ position }));
+    }, 50);
   }
 
   @HostBinding('class.is-loading')

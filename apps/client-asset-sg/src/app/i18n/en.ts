@@ -92,14 +92,14 @@ export const enAppTranslations: AppTranslations = {
       None: 'none',
     },
     workgroup: 'Workgroup',
-    resetSearch: 'Reset search',
+    resetSearch: 'Reset filters',
     file: 'File',
     legalFile: 'Legal consent',
     openFileInNewTab: 'Open {{fileName}} in new tab',
     downloadFile: 'Download {{fileName}}',
     assetsUnderMouseCursor: '{{ assetsCount }} assets found under the mouse cursor. Please select one:',
     removePolygon: 'Remove polygon',
-    drawPolygon: 'Draw polygon',
+    drawPolygon: 'Polygon selection',
     hideTable: 'Hide table',
     showTable: 'Show table',
   },
@@ -307,16 +307,24 @@ export const enAppTranslations: AppTranslations = {
     range: '{{start}} – {{end}} of {{length}}',
   },
   disclaimer: {
-    title: 'Terms of service',
-    subtitle: 'Limitation of liability',
-    content:
-      'Although every care has been taken by the Federal Office of Topography swisstopo to ensure the accuracy of the information published, no guarantee can be given with regard to the accurate, reliable, up-to-date or complete nature of this information.\n' +
-      '\n' +
-      'swisstopo reserves the right to alter or remove the content, in full or in part, without prior notice.\n' +
-      '\n' +
-      'Liability claims against swisstopo for material or immaterial damage resulting from access to or use or non-use of the published information, from misuse of the connection or from technical faults are excluded.\n' +
-      '\n' +
-      'Further legal provisions can be found here:',
+    title: 'Terms of Service',
+    liability: {
+      title: 'Limitation of liability',
+      content:
+        'Although every care has been taken by the Federal Office of Topography swisstopo to ensure the accuracy of the information published, no guarantee can be given with regard to the accurate, reliable, up-to-date or complete nature of this information.' +
+        '<br><br>' +
+        'swisstopo reserves the right to alter or remove the content, in full or in part, without prior notice.' +
+        '<br><br>' +
+        'Liability claims against swisstopo for material or immaterial damage resulting from access to or use or non-use of the published information, from misuse of the connection or from technical faults are excluded.',
+    },
+    tracking: {
+      title: 'Data acquisition',
+      content:
+        'To enable us to optimally tailor our website to your needs, we use the analysis tool Google Analytics. Your behaviour on the website is recorded in anonymised form. No personal data is transmitted or stored. If you do not wish to consent to this, you can stop data collection by analysis tools and still use this website without restrictions.' +
+        '<br><br>' +
+        'Further legal provisions can be found here: {{external}}',
+      consentLabel: 'Consent to data acquisition (optional)',
+    },
     accept: 'Accept',
   },
 };

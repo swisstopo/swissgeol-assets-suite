@@ -1,22 +1,24 @@
 import { AfterViewInit, Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { MatOptionSelectionChange } from '@angular/material/core';
-import { Router } from '@angular/router';
 import { AssetSearchQuery, DateRange } from '@asset-sg/shared';
 import { Store } from '@ngrx/store';
 import { map, startWith, Subscription } from 'rxjs';
 
 import * as actions from '../../state/asset-search/asset-search.actions';
+import { PanelState, resetSearch } from '../../state/asset-search/asset-search.actions';
 import {
   AvailableAuthor,
+  Filter,
+  selectActiveFilters,
   selectAssetKindFilters,
-  selectAssetSearchQuery,
   selectAvailableAuthors,
   selectCreateDate,
   selectGeometryFilters,
   selectIsFiltersOpen,
   selectLanguageFilters,
   selectManCatLabelFilters,
+  selectSearchQuery,
   selectUsageCodeFilters,
   selectWorkgroupFilters,
 } from '../../state/asset-search/asset-search.selector';
@@ -33,7 +35,6 @@ const MIN_CREATE_DATE = new Date(1800, 0, 1);
 })
 export class AssetSearchRefineComponent implements OnInit, OnDestroy, AfterViewInit {
   private readonly store = inject(Store);
-  private readonly router = inject(Router);
 
   public authorAutoCompleteControl = new FormControl('');
   public minDateControl = new FormControl();
@@ -42,10 +43,14 @@ export class AssetSearchRefineComponent implements OnInit, OnDestroy, AfterViewI
   public createDateRange: DateRange | null = null;
   public availableAuthors: AvailableAuthor[] = [];
   public filteredAuthors: AvailableAuthor[] = [];
+  public selectedAuthor?: AvailableAuthor;
+  public minDate?: Date;
+  public maxDate?: Date;
   public isFiltersOpen = false;
 
   public assetSearchQuery!: AssetSearchQuery;
 
+  public activeFilters: Filter<string | number>[] = [];
   private readonly createDateRange$ = this.store.select(selectCreateDate);
   private readonly availableAuthors$ = this.store.select(selectAvailableAuthors);
   private readonly isFiltersOpen$ = this.store.select(selectIsFiltersOpen);
@@ -57,6 +62,7 @@ export class AssetSearchRefineComponent implements OnInit, OnDestroy, AfterViewI
   readonly assetKindFilters$ = this.store.select(selectAssetKindFilters);
   readonly workgroupFilters$ = this.store.select(selectWorkgroupFilters);
 
+  readonly activeFilters$ = this.store.select(selectActiveFilters);
   readonly isDrawActive$ = this.store.select(selectMapControlIsDrawing);
 
   private readonly subscriptions: Subscription = new Subscription();
@@ -73,6 +79,7 @@ export class AssetSearchRefineComponent implements OnInit, OnDestroy, AfterViewI
     this.subscriptions.add(
       this.minDateControl.valueChanges.subscribe((value) => {
         if (value instanceof Date || value === undefined) {
+          this.minDate = value;
           this.updateSearch({ createDate: { min: value, max: this.maxDateControl.getRawValue() } });
         }
       })
@@ -80,6 +87,7 @@ export class AssetSearchRefineComponent implements OnInit, OnDestroy, AfterViewI
     this.subscriptions.add(
       this.maxDateControl.valueChanges.subscribe((value) => {
         if (value instanceof Date || value === undefined) {
+          this.maxDate = value;
           this.updateSearch({ createDate: { min: this.minDateControl.getRawValue(), max: value } });
         }
       })
@@ -95,7 +103,7 @@ export class AssetSearchRefineComponent implements OnInit, OnDestroy, AfterViewI
   }
 
   public removePolygon() {
-    this.store.dispatch(actions.clearPolygon());
+    this.store.dispatch(actions.updateSearchQuery({ query: { polygon: undefined } }));
   }
 
   public toggleDrawPolygon() {
@@ -105,12 +113,13 @@ export class AssetSearchRefineComponent implements OnInit, OnDestroy, AfterViewI
   public updateAuthor(event: MatOptionSelectionChange, authorId: number) {
     if (event.isUserInput) {
       this.updateSearch({ authorId });
+      this.selectedAuthor = this.filteredAuthors.find((a) => a.contactId === authorId);
     }
   }
 
   public updateSearch(filterConfiguration: Partial<AssetSearchQuery>) {
     if (this.isFiltersOpen) {
-      this.store.dispatch(actions.mergeQuery({ query: filterConfiguration }));
+      this.store.dispatch(actions.updateSearchQuery({ query: filterConfiguration }));
     }
   }
 
@@ -120,6 +129,7 @@ export class AssetSearchRefineComponent implements OnInit, OnDestroy, AfterViewI
   }
 
   public resetAuthorSearch() {
+    this.selectedAuthor = undefined;
     this.authorAutoCompleteControl.setValue('');
     this.updateSearch({ authorId: undefined });
   }
@@ -133,18 +143,34 @@ export class AssetSearchRefineComponent implements OnInit, OnDestroy, AfterViewI
   }
 
   public resetSearch() {
-    void this.router.navigate([]);
     this.authorAutoCompleteControl.setValue('');
     this.maxDateControl.setValue(null);
     this.maxDateControl.setValue(null);
-    this.store.dispatch(actions.resetSearch());
+    this.store.dispatch(resetSearch());
+  }
+
+  public removeFilter(filterToRemove: Filter<string | number>) {
+    const remainingFiltersWithSameKey = this.activeFilters
+      .filter((filter) => filter.queryKey === filterToRemove.queryKey && filter.value !== filterToRemove.value)
+      .map((remainingFilter) => remainingFilter.value);
+    this.store.dispatch(
+      actions.updateSearchQuery({
+        query: {
+          [filterToRemove.queryKey]: remainingFiltersWithSameKey.length > 0 ? remainingFiltersWithSameKey : undefined,
+        },
+      })
+    );
+  }
+
+  public closeFilters() {
+    this.store.dispatch(actions.setFiltersState({ state: PanelState.ClosedManually }));
   }
 
   private initSubscriptions() {
     this.subscriptions.add(this.isFiltersOpen$.subscribe((isOpen) => (this.isFiltersOpen = isOpen)));
-
+    this.subscriptions.add(this.activeFilters$.subscribe((activeFilter) => (this.activeFilters = activeFilter)));
     this.subscriptions.add(
-      this.store.select(selectAssetSearchQuery).subscribe((query) => {
+      this.store.select(selectSearchQuery).subscribe((query) => {
         this.assetSearchQuery = query;
       })
     );

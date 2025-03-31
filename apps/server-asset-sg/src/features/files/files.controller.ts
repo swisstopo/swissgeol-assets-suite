@@ -74,7 +74,7 @@ export class FilesController {
   }
 
   @Post('/')
-  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: 250 * 1024 * 1024 } }))
+  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: 2000 * 1024 * 1024 } }))
   async upload(
     @Param('assetId', ParseIntPipe) assetId: number,
     @Req() req: Request,

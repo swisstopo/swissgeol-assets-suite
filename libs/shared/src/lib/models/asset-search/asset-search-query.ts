@@ -23,3 +23,6 @@ export enum GeometryCode {
 }
 
 export type Polygon = LV95[];
+
+export const isEmptySearchQuery = (query: AssetSearchQuery): boolean =>
+  Object.values(query).every((value) => value === undefined || value == false);

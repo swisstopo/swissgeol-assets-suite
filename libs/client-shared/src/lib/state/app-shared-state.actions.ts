@@ -24,6 +24,11 @@ export const loadUserProfile = createAction('[App Shared State] Load User Profil
 
 export const setAnonymousMode = createAction('[App Shared State] Set Viewer Mode');
 
+export const setTrackingConsent = createAction(
+  '[App Shared State] Set Tracking Consent',
+  props<{ hasConsented: boolean }>()
+);
+
 export const loadUserProfileResult = createAction(
   '[App Shared State] Load User Profile Result',
   props<RD.RemoteData<ApiError, User>>()
@@ -35,12 +40,9 @@ export const loadWorkgroupsResult = createAction(
   props<{ workgroups: SimpleWorkgroup[] }>()
 );
 
-export const openPanel = createAction('[App Shared State] Open Panel');
-
 export const logout = createAction('[App Shared State] Logout');
 
 export const setLang = createAction('[App Shared State] Set Lang', props<{ lang: Lang }>());
-export const toggleSearchFilter = createAction('[App Shared State] Toggle Search Filter');
 
 export const updateAssetInSearch = createAction(
   '[App Shared State] Update Asset In Search',

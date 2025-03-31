@@ -1,3 +1,5 @@
+@use "../../styles/variables";
+
 :host ::ng-deep {
   .mat-mdc-text-field-wrapper {
     border: 1px solid black;
@@ -67,6 +69,7 @@ h5 {
 }
 
 .icon {
+  color: variables.$cyan-08;
   position: absolute;
   right: 0;
 }

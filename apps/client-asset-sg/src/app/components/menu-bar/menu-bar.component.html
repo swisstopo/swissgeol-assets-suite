@@ -4,9 +4,9 @@
       *rxLet="activeItem === 'home'; let isActive"
       asset-sg-menu-bar-item
       icon="assets"
-      [link]="isActive ? null : [translateService.currentLang]"
+      [badge]="isActive ? (activeFilterCount$ | async) : null"
       [isActive]="isActive"
-      (click)="isActive ? toggleAssetDrawer() : null"
+      (click)="isActive ? toggleAssetDrawer() : goToViewer({ favoritesOnly: false })"
     >
       menuBar.filters
     </li>
@@ -15,9 +15,9 @@
       *rxLet="activeItem === 'favorites'; let isActive"
       asset-sg-menu-bar-item
       icon="favorite"
-      [link]="isActive ? null : [translateService.currentLang, 'favorites']"
+      [badge]="isActive ? (activeFilterCount$ | async) : null"
       [isActive]="isActive"
-      (click)="isActive ? toggleAssetDrawer() : null"
+      (click)="isActive ? toggleAssetDrawer() : goToViewer({ favoritesOnly: true })"
     >
       menuBar.favourites
     </li>

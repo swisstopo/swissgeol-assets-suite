@@ -4,6 +4,7 @@ import { CommonModule, NgOptimizedImage, registerLocaleData } from '@angular/com
 import { HTTP_INTERCEPTORS, provideHttpClient, withFetch, withInterceptorsFromDi } from '@angular/common/http';
 import locale_deCH from '@angular/common/locales/de-CH';
 import { inject, NgModule } from '@angular/core';
+import { MatBadge } from '@angular/material/badge';
 import { MatButton } from '@angular/material/button';
 import { MatDialogActions, MatDialogContent } from '@angular/material/dialog';
 import { MatDivider } from '@angular/material/divider';
@@ -43,6 +44,7 @@ import { environment } from '../environments/environment';
 import { adminGuard } from './app-guards';
 import { AppComponent } from './app.component';
 import { AppBarComponent, MenuBarComponent, NotFoundComponent, RedirectToLangComponent } from './components';
+import { GoogleAnalyticsComponent } from './components/google-analytics/google-analytics.component';
 import { MenuBarItemComponent } from './components/menu-bar-item/menu-bar-item.component';
 import { SplashScreenComponent } from './components/splash-screen/splash-screen.component';
 import { appTranslations } from './i18n';
@@ -55,6 +57,7 @@ registerLocaleData(locale_deCH, 'de-CH');
 @NgModule({
   declarations: [
     AppComponent,
+    GoogleAnalyticsComponent,
     RedirectToLangComponent,
     NotFoundComponent,
     AppBarComponent,
@@ -124,6 +127,7 @@ registerLocaleData(locale_deCH, 'de-CH');
     MatDivider,
     MatDialogContent,
     MatDialogActions,
+    MatBadge,
   ],
   providers: [
     provideSvgIcons(icons),

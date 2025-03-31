@@ -5,6 +5,7 @@ import { arrowLeftIcon } from './arrow-left';
 import { arrowUpIcon } from './arrow-up';
 import { assetsIcon } from './assets';
 import { calendarIcon } from './calendar';
+import { cancelIcon } from './cancel';
 import { checkIcon } from './check';
 import { checkmarkIcon } from './checkmark';
 import { chevronDownIcon } from './chevron-down';
@@ -23,6 +24,7 @@ import { infoIcon } from './info';
 import { infoFilledIcon } from './info-filled';
 import { optionsIcon } from './options';
 import { polygonIcon } from './polygon';
+import { polygonDraw } from './polygon-draw';
 import { profileIcon } from './profile';
 import { searchIcon } from './search';
 import { settingsIcon } from './settings';
@@ -44,6 +46,7 @@ export const icons = [
   arrowLeftIcon,
   assetsIcon,
   calendarIcon,
+  cancelIcon,
   checkIcon,
   checkmarkIcon,
   chevronDownIcon,
@@ -61,6 +64,7 @@ export const icons = [
   infoFilledIcon,
   optionsIcon,
   infoIcon,
+  polygonDraw,
   polygonIcon,
   profileIcon,
   searchIcon,
