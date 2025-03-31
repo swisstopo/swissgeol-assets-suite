@@ -10,23 +10,15 @@ import {
   ViewChild,
   ViewContainerRef,
 } from '@angular/core';
-import {
-  AppPortalService,
-  AppState,
-  AuthService,
-  LifecycleHooks,
-  LifecycleHooksDirective,
-} from '@asset-sg/client-shared';
+import { AppPortalService, AuthService, LifecycleHooks, LifecycleHooksDirective } from '@asset-sg/client-shared';
 import { AssetEditDetail } from '@asset-sg/shared';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { Store } from '@ngrx/store';
 import * as A from 'fp-ts/Array';
-import { flow } from 'fp-ts/function';
 import { Eq as eqNumber } from 'fp-ts/number';
 import * as O from 'fp-ts/Option';
 import {
   asyncScheduler,
-  combineLatest,
   filter,
   identity,
   map,
@@ -40,17 +32,16 @@ import {
   withLatestFrom,
 } from 'rxjs';
 
-import { ViewerParamsService } from '../../services/viewer-params.service';
+import { ViewerControllerService } from '../../services/viewer-controller.service';
 import * as actions from '../../state/asset-search/asset-search.actions';
-import { LoadingState } from '../../state/asset-search/asset-search.reducer';
+import { PanelState } from '../../state/asset-search/asset-search.actions';
+import { AppStateWithAssetSearch, AssetSearchState } from '../../state/asset-search/asset-search.reducer';
 import {
-  selectAssetDetailLoadingState,
-  selectAssetSearchQuery,
-  selectAssetSearchResultData,
-  selectCurrentAssetDetail,
-  selectFilterLoadingState,
+  selectCurrentAsset,
+  selectHasCurrentAsset,
   selectIsFiltersOpen,
-  selectSearchLoadingState,
+  selectSearchQuery,
+  selectSearchResults,
 } from '../../state/asset-search/asset-search.selector';
 
 @UntilDestroy()
@@ -68,43 +59,43 @@ export class AssetViewerPageComponent implements OnInit, OnDestroy {
   private readonly _lc = inject(LifecycleHooks);
   private readonly _appPortalService = inject(AppPortalService);
   private readonly _viewContainerRef = inject(ViewContainerRef);
-  private readonly _store = inject(Store<AppState>);
+  private readonly store = inject(Store<AppStateWithAssetSearch>);
   private readonly _cd = inject(ChangeDetectorRef);
 
-  public isLoading$ = combineLatest(
-    [
-      this._store.select(selectFilterLoadingState),
-      this._store.select(selectSearchLoadingState),
-      this._store.select(selectAssetDetailLoadingState),
-    ],
-    (filterLoadingState, searchLoadingState, detailLoadingState) =>
-      filterLoadingState === LoadingState.Loading ||
-      searchLoadingState === LoadingState.Loading ||
-      detailLoadingState === LoadingState.Loading
+  private readonly authService = inject(AuthService);
+  private readonly viewerControllerService = inject(ViewerControllerService);
+
+  public isLoading$ = this.store.pipe(
+    map((store): AssetSearchState => store.assetSearch),
+    map(
+      (search) =>
+        search.isLoadingStudies ||
+        search.isLoadingResults ||
+        search.isLoadingStats ||
+        // Loading for the current asset is only shown on the map in case an asset is already being displayed.
+        // Otherwise, the detail panel shows a loader.
+        (search.isLoadingAsset && search.currentAsset !== null)
+    )
   );
-  public currentAssetId$ = this._store.select(selectCurrentAssetDetail).pipe(
+
+  public currentAssetId$ = this.store.select(selectCurrentAsset).pipe(
     map((currentAsset) => currentAsset?.assetId),
     map(O.fromNullable)
   );
-  public currentAsset$ = this._store.select(selectCurrentAssetDetail);
-  public isFiltersOpen$ = this._store.select(selectIsFiltersOpen);
+
+  public hasCurrentAsset$ = this.store.select(selectHasCurrentAsset);
+
+  public isFiltersOpen$ = this.store.select(selectIsFiltersOpen);
 
   public _searchTextKeyDown$ = new Subject<KeyboardEvent>();
-  private _searchTextChanged$ = this._searchTextKeyDown$.pipe(
-    filter((ev) => ev.key === 'Enter'),
-    map((ev) => {
-      const value = (ev.target as HTMLInputElement).value;
-      return value ? O.some(value) : O.none;
-    })
+  private readonly searchTextChanged$ = this._searchTextKeyDown$.pipe(
+    filter((event) => event.key === 'Enter'),
+    map((event) => (event.target as HTMLInputElement).value)
   );
 
   public assetClicked$ = new Subject<number[]>();
   public assetsForPicker$: Observable<AssetEditDetail[]>;
   public highlightedAssetId: number | null = null;
-
-  private readonly authService = inject(AuthService);
-
-  private readonly viewerParamsService = inject(ViewerParamsService);
 
   constructor() {
     const setupPortals$ = this._lc.afterViewInit$.pipe(
@@ -128,7 +119,7 @@ export class AssetViewerPageComponent implements OnInit, OnDestroy {
 
     setupPortals$
       .pipe(
-        switchMap(() => this._store.select(selectAssetSearchQuery)),
+        switchMap(() => this.store.select(selectSearchQuery)),
         untilDestroyed(this)
       )
       .subscribe((searchQuery) => {
@@ -150,38 +141,30 @@ export class AssetViewerPageComponent implements OnInit, OnDestroy {
     );
 
     this.assetsForPicker$ = multipleStudiesClicked$.pipe(
-      withLatestFrom(this._store.select(selectAssetSearchResultData)),
-      map(([assetIds, searchAssets]) => searchAssets.filter((a) => assetIds.includes(a.assetId)))
+      withLatestFrom(this.store.select(selectSearchResults)),
+      map(([assetIds, searchAssets]) => searchAssets.data.filter((a) => assetIds.includes(a.assetId)))
     );
 
     singleStudyClicked$.pipe(untilDestroyed(this)).subscribe((assetIds) => {
-      this._store.dispatch(actions.assetClicked({ assetId: assetIds[0] }));
+      this.viewerControllerService.selectAsset(assetIds[0]);
     });
 
-    this._searchTextChanged$
-      .pipe(
-        map(
-          flow(
-            O.map((text) => actions.mergeQuery({ query: { text } })),
-            O.getOrElseW(() => actions.mergeQuery({ query: { text: '' } }))
-          )
-        )
-      )
-      .pipe(untilDestroyed(this))
-      .subscribe(this._store);
+    this.searchTextChanged$.pipe(untilDestroyed(this)).subscribe((text) => {
+      this.store.dispatch(actions.updateSearchQuery({ query: { text } }));
+    });
   }
 
   public ngOnInit() {
-    this._store.dispatch(actions.setFiltersOpen({ isOpen: true }));
+    this.store.dispatch(actions.setFiltersState({ state: PanelState.OpenedAutomatically }));
 
     this.authService.isInitialized$.pipe(filter(identity), take(1)).subscribe(() => {
-      this.viewerParamsService.start();
+      this.viewerControllerService.initialize();
     });
     this._appPortalService.setAppBarPortalContent(null);
   }
 
   ngOnDestroy() {
     this._appPortalService.setAppBarPortalContent(null);
-    this.viewerParamsService.stop();
+    this.viewerControllerService.reset();
   }
 }
