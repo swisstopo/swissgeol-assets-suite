@@ -4,6 +4,7 @@ import { CommonModule, NgOptimizedImage, registerLocaleData } from '@angular/com
 import { HTTP_INTERCEPTORS, provideHttpClient, withFetch, withInterceptorsFromDi } from '@angular/common/http';
 import locale_deCH from '@angular/common/locales/de-CH';
 import { inject, NgModule } from '@angular/core';
+import { MatBadge } from '@angular/material/badge';
 import { MatButton } from '@angular/material/button';
 import { MatDialogActions, MatDialogContent } from '@angular/material/dialog';
 import { MatDivider } from '@angular/material/divider';
@@ -126,6 +127,7 @@ registerLocaleData(locale_deCH, 'de-CH');
     MatDivider,
     MatDialogContent,
     MatDialogActions,
+    MatBadge,
   ],
   providers: [
     provideSvgIcons(icons),

@@ -1,7 +1,7 @@
 @use "../../styles/variables";
 
 :host {
-  border-bottom: 1px solid #dfe4e9;
+  border-bottom: 1px solid variables.$grey-02;
   z-index: 10;
   display: flex;
   align-items: center;

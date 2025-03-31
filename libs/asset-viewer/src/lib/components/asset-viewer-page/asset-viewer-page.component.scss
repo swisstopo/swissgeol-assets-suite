@@ -45,13 +45,13 @@ asset-sg-map {
   width: 500px;
   height: 56px;
 
-  border-bottom: 2px solid #337083;
-  color: #1c2834;
+  border-bottom: 2px solid variables.$cyan-08;
+  color: variables.$grey-10;
   background-color: #f8f9fa;
   border-radius: 6px;
 
   &::placeholder {
-    color: #1c2834;
+    color: variables.$grey-10;
   }
 }
 
@@ -67,9 +67,9 @@ asset-sg-asset-picker {
 asset-sg-asset-search-refine {
   background: variables.$grey-01;
   grid-area: search-filter;
-  overflow-y: auto;
   padding-left: 16px;
-  width: 368px;
+  padding-top: 0;
+  width: 440px;
 }
 
 asset-sg-asset-search-results {

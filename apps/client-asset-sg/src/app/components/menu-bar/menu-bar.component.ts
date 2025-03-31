@@ -9,6 +9,8 @@ import { filter, map, Observable, startWith } from 'rxjs';
 
 // eslint-disable-next-line @nx/enforce-module-boundaries
 import { setFiltersOpen } from '../../../../../../libs/asset-viewer/src/lib/state/asset-search/asset-search.actions';
+// eslint-disable-next-line @nx/enforce-module-boundaries
+import { selectActiveFilters } from '../../../../../../libs/asset-viewer/src/lib/state/asset-search/asset-search.selector';
 import { AppState } from '../../state/app-state';
 
 @UntilDestroy()
@@ -28,6 +30,9 @@ export class MenuBarComponent {
 
   readonly translateService = inject(TranslateService);
 
+  readonly activeFilters$ = this.store
+    .select(selectActiveFilters)
+    .pipe(map((filters) => (filters.length > 0 ? filters.length : null)));
   readonly userExists$ = this.store.select(fromAppShared.selectIsAnonymousMode).pipe(map((anonymous) => !anonymous));
 
   readonly activeItem$: Observable<MenuItem | null> = this.router.events.pipe(

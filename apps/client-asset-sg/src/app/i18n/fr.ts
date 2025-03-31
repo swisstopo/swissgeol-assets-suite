@@ -92,7 +92,7 @@ export const frAppTranslations: AppTranslations = {
       None: 'aucune',
     },
     workgroup: 'groupe de travail',
-    resetSearch: 'Réinitialiser la recherche',
+    resetSearch: 'Réinitialiser les filtres',
     file: 'Fichier',
     legalFile: 'Consentements légaux',
     openFileInNewTab: 'Ouvrir {{fileName}} dans un nouvel onglet',
