@@ -8,6 +8,23 @@
 
 ### Fixed
 
+## v1.10.0
+
+### Added
+
+- Google Analytics werden neu verwendet, um die Nutzung der Applikation zu tracken.
+- Es wurden neue Security Headers hinzugefügt.
+- Die Position der Karte und der Suchergebnisse wird nun gespeichert und beim Neuladen der Seite wiederhergestellt.
+
+### Changed
+
+- Diverse Elemente wurden an das Design im Figma angepasst.
+- Die maximale Dateigrösse, die hochgeladen werden kann, wurde auf 2GB erhöht.
+- Der Text des Disclaimers wurde an den der anderen Applikationen angepasst.
+- Die Darstellung der Filteroberfläche wurde dem Design in Figma angepasst.
+
+### Fixed
+
 ## v1.9.0
 
 ### Added
