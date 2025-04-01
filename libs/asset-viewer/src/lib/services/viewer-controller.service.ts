@@ -92,6 +92,11 @@ export class ViewerControllerService {
     let params: ViewerParams;
     if (isEmptyViewerParams(paramsFromUrl) && !isEmptyViewerParams(paramsFromStore)) {
       params = paramsFromStore;
+
+      // `favoritesOnly` is always taken from the URL.
+      // Without this, navigating to any of the viewer pages may have the wrong value set for that filter,
+      // as it fully depends on the current page's path.
+      params = { ...params, query: { ...params.query, favoritesOnly: paramsFromUrl.query.favoritesOnly } };
       await this.viewerParamsService.writeParamsToUrl(params);
       loads.push(this.loadAsset(params.assetId));
     } else {
