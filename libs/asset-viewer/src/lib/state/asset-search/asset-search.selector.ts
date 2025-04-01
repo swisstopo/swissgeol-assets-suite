@@ -48,7 +48,7 @@ export const selectScrollOffsetForResults = createSelector(
   (state) => state.ui.scrollOffsetForResults
 );
 
-export const selectSearchQuery = createSelector(assetSearchFeature, (state) => state.query);
+export const selectSearchQuery = createSelector(assetSearchFeature, (state) => state?.query ?? {});
 
 export const selectSearchResults = createSelector(assetSearchFeature, (state) => state.results);
 
