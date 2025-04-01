@@ -101,8 +101,8 @@ export class ViewerControllerService {
       loads.push(this.loadAsset(params.assetId));
     } else {
       params = paramsFromUrl;
-      loads.push(this.updateStoreByParams(paramsFromUrl));
     }
+    loads.push(this.updateStoreByParams(paramsFromUrl));
 
     const studies = await firstValueFrom(this.store.select(selectStudies));
     if (studies.length === 0) {
