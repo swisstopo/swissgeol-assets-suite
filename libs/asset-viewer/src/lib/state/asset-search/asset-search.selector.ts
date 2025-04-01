@@ -279,6 +279,10 @@ export const selectActiveFilters = createSelector(
   }
 );
 
+export const selectHasNoActiveFilters = createSelector(assetSearchFeature, ({ query }) =>
+  Object.values(query).every((value) => value === undefined || value == false)
+);
+
 export interface AvailableAuthor {
   contactId: number;
   count: number;

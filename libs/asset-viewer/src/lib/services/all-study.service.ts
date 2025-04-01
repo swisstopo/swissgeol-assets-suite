@@ -1,32 +1,34 @@
 import { HttpClient, HttpDownloadProgressEvent, HttpEvent, HttpEventType } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { LV95 } from '@asset-sg/shared';
+import { StudyAccessType, StudyGeometryType } from '@asset-sg/shared/v2';
 import { concatMap, filter, from, map, Observable, scan, toArray } from 'rxjs';
 
-import { AllStudyDTO, AllStudyDTOs } from '../models';
+import { AllStudyDTO } from '../models';
 
 @Injectable({ providedIn: 'root' })
 export class AllStudyService {
   private readonly _httpClient = inject(HttpClient);
 
-  getAllStudies(): Observable<AllStudyDTOs> {
+  getAllStudies(): Observable<AllStudyDTO[]> {
     return this.getAllStudiesFromApi();
   }
 
-  private getAllStudiesFromApi(): Observable<AllStudyDTOs> {
+  private getAllStudiesFromApi(): Observable<AllStudyDTO[]> {
     return this._httpClient.get('/api/studies', { observe: 'events', responseType: 'text', reportProgress: true }).pipe(
       filter((event) => event.type === HttpEventType.DownloadProgress || event.type === HttpEventType.Response),
       map((event: HttpEvent<string>) => (event as HttpDownloadProgressEvent).partialText ?? ''),
       bufferUntilLineEnd(),
       filter((line) => line.length !== 0),
       map((line) => {
-        const [id, assetId, isPoint, x, y] = line.split(';');
+        const [id, assetId, geometryType, accessType, x, y] = line.split(';');
         return {
           studyId: `study_${id}`,
           assetId: parseInt(assetId),
-          isPoint: Boolean(parseInt(isPoint)),
+          geometryType: geometryType as StudyGeometryType,
           centroid: { x: parseFloat(x), y: parseFloat(y) } as LV95,
-        } as AllStudyDTO;
+          accessType: parseInt(accessType) as StudyAccessType,
+        };
       }),
       toArray()
     );
