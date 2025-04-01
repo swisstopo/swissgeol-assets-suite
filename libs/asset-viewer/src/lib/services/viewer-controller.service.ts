@@ -102,7 +102,7 @@ export class ViewerControllerService {
     } else {
       params = paramsFromUrl;
     }
-    loads.push(this.updateStoreByParams(paramsFromUrl));
+    loads.push(this.updateStoreByParams(params));
 
     const studies = await firstValueFrom(this.store.select(selectStudies));
     if (studies.length === 0) {
