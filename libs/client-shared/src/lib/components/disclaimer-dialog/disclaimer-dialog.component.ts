@@ -13,8 +13,6 @@ import { CURRENT_LANG } from '../../utils';
 import { ButtonComponent } from '../button/button.component';
 import { LanguageSelectorComponent } from '../language-selector/language-selector.component';
 
-const LEGAL_BASE_URL = 'https://www.swissgeol.ch/datenschutz';
-
 @Component({
   standalone: true,
   selector: 'asset-sg-disclaimer-dialog',
@@ -42,7 +40,7 @@ export class DisclaimerDialogComponent implements AfterViewInit {
   private readonly currentLang$ = inject(CURRENT_LANG);
   public readonly legalAnchor$ = this.currentLang$.pipe(
     map((lang) => {
-      const url = lang === 'de' ? LEGAL_BASE_URL : `${LEGAL_BASE_URL}-${lang}/`;
+      const url = `https://www.swissgeol.ch/pages/legal/${lang}.html`;
       return `<a href="${url}" target="_blank" rel="noopener nofollow">${url}</a>`;
     })
   );
