@@ -1,9 +1,9 @@
 import { Component, inject } from '@angular/core';
 import { Store } from '@ngrx/store';
 
-import { AlertId } from '../alert.model';
-import { AlertEntry, AlertState } from '../alert.reducer';
-import { selectAlerts } from '../alert.selectors';
+import { AlertId } from '../../../state/alert/alert.model';
+import { AlertEntry, AlertState } from '../../../state/alert/alert.reducer';
+import { selectAlerts } from '../../../state/alert/alert.selectors';
 
 @Component({
   selector: 'ul[app-alert-list]',

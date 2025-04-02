@@ -4,9 +4,9 @@ import { SvgIconComponent } from '@ngneat/svg-icon';
 import { StoreModule } from '@ngrx/store';
 
 import { ForModule } from '@rx-angular/template/for';
+import { alertFeature, alertReducer } from '../../state/alert/alert.reducer';
 import { AlertComponent } from './alert/alert.component';
 import { AlertListComponent } from './alert-list/alert-list.component';
-import { alertFeature, alertReducer } from './alert.reducer';
 
 @NgModule({
   declarations: [AlertListComponent, AlertComponent],

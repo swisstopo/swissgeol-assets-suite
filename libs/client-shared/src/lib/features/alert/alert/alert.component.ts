@@ -2,9 +2,9 @@ import { Component, HostBinding, HostListener, inject, Input, OnDestroy, OnInit 
 import { Store } from '@ngrx/store';
 import { asyncScheduler, interval, Observable, of, Subscription } from 'rxjs';
 
-import { hideAlert } from '../alert.actions';
-import { Alert, AlertType } from '../alert.model';
-import { AlertMetadata, AlertState } from '../alert.reducer';
+import { hideAlert } from '../../../state/alert/alert.actions';
+import { Alert, AlertType } from '../../../state/alert/alert.model';
+import { AlertMetadata, AlertState } from '../../../state/alert/alert.reducer';
 
 @Component({
   selector: 'li[app-alert]',

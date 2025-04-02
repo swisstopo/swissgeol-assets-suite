@@ -12,11 +12,11 @@ export * from './lib/utils';
 // This means we need to export every part of the alerts here.
 export * from './lib/features/alert/alert/alert.component';
 export * from './lib/features/alert/alert-list/alert-list.component';
-export * from './lib/features/alert/alert.actions';
-export * from './lib/features/alert/alert.model';
+export * from './lib/state/alert/alert.actions';
+export * from './lib/state/alert/alert.model';
 export * from './lib/features/alert/alert.module';
-export * from './lib/features/alert/alert.reducer';
-export * from './lib/features/alert/alert.selectors';
+export * from './lib/state/alert/alert.reducer';
+export * from './lib/state/alert/alert.selectors';
 export * from './lib/features/auth/auth.module';
 export * from './lib/features/auth/auth.service';
 export * from './lib/features/auth/error.service';
