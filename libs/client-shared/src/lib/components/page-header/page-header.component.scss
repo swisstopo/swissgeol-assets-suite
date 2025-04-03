@@ -1,0 +1,19 @@
+@use "../../styles/variables";
+
+$sub-navigation-bar-height: 84px;
+
+.header {
+  height: $sub-navigation-bar-height;
+  background-color: variables.$white;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 18px;
+  padding: 0 24px;
+
+  .back-button {
+    height: 36px;
+    width: 36px;
+    padding: 0;
+  }
+}
