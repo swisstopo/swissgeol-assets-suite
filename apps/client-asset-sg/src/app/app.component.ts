@@ -73,7 +73,7 @@ export class AppComponent {
             return true;
           }
           const path = segments.slice(1).join('/');
-          return !(path === 'admin' || path.startsWith(`admin/`));
+          return !(path === 'admin' || path.startsWith(`admin/`) || path.startsWith('asset-admin/'));
         })
       )
       .subscribe((showMenuBar) => {
