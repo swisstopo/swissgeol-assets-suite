@@ -37,6 +37,7 @@ import {
   DrawerComponent,
   DrawerPanelComponent,
   FilterSelectorComponent,
+  PageHeaderComponent,
   SearchAndFilterComponent,
   SelectComponent,
   SmartTranslatePipe,
@@ -142,6 +143,7 @@ import { adminReducer } from './state/admin.reducer';
     ToggleStatusComponent,
     FormsModule,
     SelectComponent,
+    PageHeaderComponent,
   ],
 })
 export class AdminModule {}
