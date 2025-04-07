@@ -13,27 +13,34 @@ export class GoogleAnalyticsComponent implements OnInit, OnDestroy {
   id!: string;
 
   private readonly renderer = inject(Renderer2);
-  private script!: HTMLScriptElement;
+  private readonly scripts: HTMLScriptElement[] = [];
 
   ngOnInit(): void {
-    this.script = this.renderer.createElement('script');
-    this.script.async = true;
-    this.script.src = `https://www.googletagmanager.com/gtag/js?id=${this.id}`;
-    this.renderer.appendChild(document.head, this.script);
+    const gtmScript = this.renderer.createElement('script');
+    gtmScript.async = true;
+    gtmScript.src = `https://www.googletagmanager.com/gtag/js?id=${this.id}`;
+    this.renderer.appendChild(document.head, gtmScript);
 
-    this.script.onload = () => {
-      const dataLayer = ((window as AnalyticsWindow).dataLayer ??= []);
-      dataLayer.push(['js', new Date()]);
-      dataLayer.push(['config', this.id]);
-    };
+    const gtagScript = this.renderer.createElement('script');
+    gtagScript.innerHTML = `
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){window.dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', '${this.id}'); 
+    `;
+    this.renderer.appendChild(document.head, gtagScript);
+
+    this.scripts.push(gtmScript, gtagScript);
   }
 
   ngOnDestroy(): void {
-    this.renderer.removeChild(document.head, this.script);
+    for (const script of this.scripts) {
+      this.renderer.removeChild(document.head, script);
+    }
     delete (window as AnalyticsWindow).dataLayer;
   }
 }
 
 interface AnalyticsWindow {
-  dataLayer?: Array<[string, unknown]>;
+  dataLayer?: Array<[string, ...unknown[]]>;
 }
