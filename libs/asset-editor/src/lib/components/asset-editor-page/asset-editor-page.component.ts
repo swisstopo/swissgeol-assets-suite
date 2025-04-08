@@ -1,5 +1,5 @@
 import { Component, inject, OnDestroy, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup } from '@angular/forms';
+import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, NavigationEnd, ParamMap, Router } from '@angular/router';
 import { RoutingService } from '@asset-sg/client-shared';
 import { ORD } from '@asset-sg/core';
@@ -23,13 +23,12 @@ import { Tab } from '../asset-editor-navigation';
 export class AssetEditorPageComponent implements OnInit, OnDestroy {
   public assetId = 'new';
   public asset: AssetEditDetailVM | null = null;
-  public form?: FormGroup;
+  public form!: AssetForm;
   public activeTab: Tab = Tab.General;
   private readonly store = inject(Store<AppStateWithAssetEditor>);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly routingService = inject(RoutingService);
-  private readonly fb = inject(FormBuilder);
 
   public assetEditDetail$ = this.store.select(fromAssetEditor.selectRDAssetEditDetail).pipe(ORD.fromFilteredSuccess);
 
@@ -50,20 +49,14 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
   public ngOnInit() {
     this.subscriptions.add(this.activeItem$.subscribe());
     this.loadAssetFromRouteParams();
+    this.form = buildForm();
     // TODO: fix with new endpoints/ data schema for asset
     this.subscriptions.add(
-      this.assetEditDetail$
-        .pipe(map((res) => (O.isSome(res) ? res.value : null)))
-        .subscribe((assetDetail) => (this.asset = assetDetail))
+      this.assetEditDetail$.pipe(map((res) => (O.isSome(res) ? res.value : null))).subscribe((assetDetail) => {
+        this.asset = assetDetail;
+        this.initializeForm();
+      })
     );
-    this.form = this.fb.group({
-      general: this.fb.group({}),
-      contacts: this.fb.group({}),
-      references: this.fb.group({}),
-      geometries: this.fb.group({}),
-      altdaten: this.fb.group({}),
-      status: this.fb.group({}),
-    });
   }
 
   public ngOnDestroy() {
@@ -72,6 +65,11 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
 
   public navigateToStart() {
     this.routingService.navigateBack(['/']).then();
+  }
+
+  public initializeForm() {
+    this.form.reset();
+    this.form.controls.general.controls.titlePublic.setValue(this.asset?.titlePublic ?? null);
   }
 
   private loadAssetFromRouteParams() {
@@ -88,3 +86,21 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
 
   protected readonly Tab = Tab;
 }
+
+function buildForm() {
+  return new FormGroup({
+    general: new FormGroup({
+      titlePublic: new FormControl('', { validators: [Validators.required] }),
+    }),
+    files: new FormGroup({
+      other: new FormControl('', { validators: [Validators.required] }),
+    }),
+    contacts: new FormGroup({}),
+    references: new FormGroup({}),
+    geometries: new FormGroup({}),
+    altdaten: new FormGroup({}),
+    status: new FormGroup({}),
+  });
+}
+
+export type AssetForm = ReturnType<typeof buildForm>;

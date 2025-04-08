@@ -46,7 +46,6 @@ import { de } from 'date-fns/locale/de';
 
 import * as O from 'fp-ts/Option';
 import { combineLatest, filter, map } from 'rxjs';
-import { AssetEditorFilesComponent } from './components/asset-editor-files/asset-editor-files.component';
 import { AssetEditorIdFormComponent } from './components/asset-editor-id-form/asset-editor-id-form.component';
 import { AssetEditorIdListComponent } from './components/asset-editor-id-list/asset-editor-id-list.component';
 import { AssetEditorLaunchComponent } from './components/asset-editor-launch';
@@ -62,6 +61,8 @@ import { AssetEditorTabGeometriesComponent } from './components/asset-editor-tab
 import { AssetEditorTabPageComponent } from './components/asset-editor-tab-page';
 import { AssetEditorTabReferencesComponent } from './components/asset-editor-tab-references';
 import { AssetEditorTabUsageComponent } from './components/asset-editor-tab-usage';
+import { AssetEditorFilesComponent } from './components/asset-editor-tabs/asset-editor-files';
+import { AssetEditorGeneralComponent } from './components/asset-editor-tabs/asset-editor-general';
 import { AssetMultiselectComponent } from './components/asset-multiselect';
 import { Lv95xWithoutPrefixPipe, Lv95yWithoutPrefixPipe } from './components/lv95-without-prefix';
 import { AssetEditorEffects } from './state/asset-editor.effects';
@@ -72,7 +73,6 @@ export const canLeaveEdit: CanDeactivateFn<AssetEditorPageComponent> = (c) => tr
 
 @NgModule({
   declarations: [
-    AssetEditorFilesComponent,
     AssetEditorIdFormComponent,
     AssetEditorIdListComponent,
     AssetEditorLaunchComponent,
@@ -86,6 +86,8 @@ export const canLeaveEdit: CanDeactivateFn<AssetEditorPageComponent> = (c) => tr
     AssetEditorTabPageComponent,
     AssetEditorTabReferencesComponent,
     AssetEditorTabUsageComponent,
+    AssetEditorGeneralComponent,
+    AssetEditorFilesComponent,
     AssetEditorSaveComponent,
     Lv95xWithoutPrefixPipe,
     Lv95yWithoutPrefixPipe,

@@ -1,15 +1,15 @@
-@if (shouldShowWarning) {
+@if (hasUnsavedChanges) {
 <div class="warning">
   <svg-icon key="cancel"></svg-icon>
   <span translate>edit.unsavedChanges</span>
 </div>
 }
 <div style="flex: 1"></div>
-<button asset-sg-secondary (click)="discardChanges()" translate>
+<button asset-sg-secondary (click)="discardChanges()" [disabled]="!hasUnsavedChanges" translate>
   edit.discardChanges
   <svg-icon key="delete"></svg-icon>
 </button>
-<button asset-sg-primary (click)="saveChanges()" translate>
+<button asset-sg-primary (click)="saveChanges()" [disabled]="isSaveDisabled" translate>
   save
   <svg-icon key="save"></svg-icon>
 </button>
