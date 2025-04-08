@@ -1,9 +1,7 @@
-import { Component, inject, Input, OnDestroy, OnInit } from '@angular/core';
+import { Component, inject, Input } from '@angular/core';
 import { FormGroup } from '@angular/forms';
-import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { UntilDestroy } from '@ngneat/until-destroy';
-
-import { filter, startWith, Subscription, tap } from 'rxjs';
 
 @UntilDestroy()
 @Component({
@@ -12,38 +10,15 @@ import { filter, startWith, Subscription, tap } from 'rxjs';
   styleUrls: ['./asset-editor-navigation.component.scss'],
   standalone: false,
 })
-export class AssetEditorNavigationComponent implements OnInit, OnDestroy {
+export class AssetEditorNavigationComponent {
   @Input() assetId = 'new';
-  public activeTab = Tab.General;
+  @Input() public activeTab = Tab.General;
   public form?: FormGroup;
-
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
-  private readonly subscriptions: Subscription = new Subscription();
-
-  readonly activeItem$ = this.router.events.pipe(
-    filter((event) => event instanceof NavigationEnd),
-    startWith(() => undefined),
-    tap(() => {
-      const segments = (this.router.getCurrentNavigation() ?? this.router.lastSuccessfulNavigation)?.finalUrl?.root
-        .children?.['primary']?.segments;
-      if (segments !== undefined && segments.length > 0) {
-        this.activeTab = segments.pop()?.path as Tab;
-        console.log(this.activeTab);
-      }
-    })
-  );
 
   public get tabs(): Tab[] {
     return Object.values(Tab);
-  }
-
-  public ngOnInit() {
-    this.subscriptions.add(this.activeItem$.subscribe());
-  }
-
-  public ngOnDestroy() {
-    this.subscriptions.unsubscribe();
   }
 
   selectTab(tab: Tab): void {
@@ -55,7 +30,7 @@ export class AssetEditorNavigationComponent implements OnInit, OnDestroy {
   }
 }
 
-enum Tab {
+export enum Tab {
   General = 'general',
   Files = 'files',
   Usage = 'usage',
