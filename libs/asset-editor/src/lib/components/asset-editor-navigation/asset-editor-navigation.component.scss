@@ -6,11 +6,11 @@
   height: calc(100vh - 88px - 84px);
   border-right: 1px solid variables.$grey-02;
   box-sizing: border-box;
+  width: 280px;
 }
 
 .page {
   height: 40px;
-  width: 280px;
   border-bottom: 1px solid variables.$grey-02;
   padding-left: 35px;
   align-content: center;
