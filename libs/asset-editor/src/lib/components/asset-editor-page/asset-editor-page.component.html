@@ -16,13 +16,20 @@
 <div style="display: flex">
   <asset-sg-editor-navigation [assetId]="assetId" [activeTab]="activeTab"></asset-sg-editor-navigation>
   <div>
-    @switch (activeTab) { @case (Tab.General) {
-    <span>{{ activeTab }}</span>
-    } @case (Tab.Administration) {
-    <span>{{ activeTab }}</span>
-    } @default {
-    <span>other</span>
-    } }
-    <asset-sg-editor-save></asset-sg-editor-save>
+    <div class="form-container">
+      @switch (activeTab) { @case (Tab.General) {
+      <asset-sg-editor-general [formGroup]="form.controls.general"></asset-sg-editor-general>
+      } @case (Tab.Files) {
+      <asset-sg-editor-files [formGroup]="form.controls.files"></asset-sg-editor-files>
+      } @default {
+      <span>other</span>
+      } }
+    </div>
+
+    <asset-sg-editor-save
+      [isSaveDisabled]="form.invalid || !form.dirty"
+      [hasUnsavedChanges]="form.dirty"
+      (discard)="initializeForm()"
+    ></asset-sg-editor-save>
   </div>
 </div>

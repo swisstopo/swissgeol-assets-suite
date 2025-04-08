@@ -9,7 +9,8 @@ import { UntilDestroy } from '@ngneat/until-destroy';
   standalone: false,
 })
 export class AssetEditorSaveComponent {
-  @Input() public shouldShowWarning = true;
+  @Input() public isSaveDisabled = false;
+  @Input() public hasUnsavedChanges = false;
   @Output() public save = new EventEmitter<void>();
   @Output() public discard = new EventEmitter<void>();
 
