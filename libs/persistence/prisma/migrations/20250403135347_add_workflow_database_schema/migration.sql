@@ -1,10 +1,9 @@
 -- CreateEnum
-CREATE TYPE "workflow_status" AS ENUM ('Draft', 'InReview', 'Reviewed');
+CREATE TYPE "workflow_status" AS ENUM ('Draft', 'InReview', 'Reviewed', 'Published');
 
 -- CreateTable
 CREATE TABLE "workflow" (
     "workflow_id" SERIAL NOT NULL,
-    "is_published" BOOLEAN NOT NULL DEFAULT false,
     "has_requested_changes" BOOLEAN NOT NULL DEFAULT false,
     "status" "workflow_status" NOT NULL DEFAULT 'Draft',
     "asset_id" INTEGER NOT NULL,
@@ -18,8 +17,7 @@ CREATE TABLE "workflow" (
 -- CreateTable
 CREATE TABLE "workflow_change" (
     "workflow_change_id" SERIAL NOT NULL,
-    "comment" TEXT NOT NULL,
-    "is_published" BOOLEAN NOT NULL DEFAULT false,
+    "comment" TEXT,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "from_status" "workflow_status" NOT NULL,
     "to_status" "workflow_status" NOT NULL,
@@ -94,8 +92,8 @@ BEGIN
 
     -- Now insert into workflow table with asset_id and the two tab_status IDs
     v_asset_id := asset_record.asset_id;
-    INSERT INTO workflow (asset_id, is_published, reviewed_tabs_id, published_tabs_id, status)
-    VALUES (v_asset_id, true, v_tab_status_reviewed_id, v_tab_status_published_id, 'Reviewed'::workflow_status);
+    INSERT INTO workflow (asset_id, reviewed_tabs_id, published_tabs_id, status)
+    VALUES (v_asset_id, v_tab_status_reviewed_id, v_tab_status_published_id, 'Published'::workflow_status);
   END LOOP;
 END;
 $$;

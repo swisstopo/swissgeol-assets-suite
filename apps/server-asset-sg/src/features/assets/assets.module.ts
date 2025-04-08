@@ -18,7 +18,11 @@ import { FileS3Service } from '@/features/assets/files/file-s3.service';
 import { FileRepo } from '@/features/assets/files/file.repo';
 import { FileService } from '@/features/assets/files/file.service';
 import { FilesController } from '@/features/assets/files/files.controller';
+import { WorkflowController } from '@/features/assets/workflow/workflow.controller';
+import { WorkflowRepo } from '@/features/assets/workflow/workflow.repo';
+import { WorkflowService } from '@/features/assets/workflow/workflow.service';
 import { StudyRepo } from '@/features/studies/study.repo';
+import { UsersModule } from '@/features/users/users.module';
 
 @Module({
   controllers: [
@@ -28,6 +32,7 @@ import { StudyRepo } from '@/features/studies/study.repo';
     AssetSearchController,
     FavoritesController,
     AssetSyncController,
+    WorkflowController,
   ],
   providers: [
     provideElasticsearch,
@@ -44,6 +49,9 @@ import { StudyRepo } from '@/features/studies/study.repo';
     FileService,
     FavoriteRepo,
     AssetSyncService,
+    WorkflowRepo,
+    WorkflowService,
   ],
+  imports: [UsersModule],
 })
 export class AssetsModule {}
