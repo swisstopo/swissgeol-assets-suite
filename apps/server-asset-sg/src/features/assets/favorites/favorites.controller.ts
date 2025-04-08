@@ -14,10 +14,10 @@ import {
 import { authorize } from '@/core/authorize';
 import { Authorize } from '@/core/decorators/authorize.decorator';
 import { CurrentUser } from '@/core/decorators/current-user.decorator';
-import { AssetEditRepo } from '@/features/asset-edit/asset-edit.repo';
-import { AssetInfoRepo } from '@/features/assets/asset-info.repo';
-import { AssetSearchService } from '@/features/assets/search/asset-search.service';
-import { FavoriteRepo } from '@/features/favorites/favorite.repo';
+import { AssetEditRepo } from '@/features/assets/asset-edit/asset-edit.repo';
+import { AssetInfoRepo } from '@/features/assets/assets/asset-info.repo';
+import { AssetSearchService } from '@/features/assets/assets/search/asset-search.service';
+import { FavoriteRepo } from '@/features/assets/favorites/favorite.repo';
 
 @Controller('/assets/favorites')
 export class FavoritesController {

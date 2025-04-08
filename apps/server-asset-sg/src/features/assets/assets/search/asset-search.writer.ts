@@ -3,7 +3,7 @@ import { AssetId, ContactId, StudyId, UserId } from '@asset-sg/shared/v2';
 import { Client as ElasticsearchClient } from '@elastic/elasticsearch';
 import { BulkOperationContainer } from '@elastic/elasticsearch/lib/api/types';
 import { PrismaClient } from '@prisma/client';
-import { mapLv95ToElastic } from '@/features/assets/search/asset-search.utils';
+import { mapLv95ToElastic } from '@/features/assets/assets/search/asset-search.utils';
 import { StudyRepo } from '@/features/studies/study.repo';
 import { ProcessQueue } from '@/utils/process-queue';
 

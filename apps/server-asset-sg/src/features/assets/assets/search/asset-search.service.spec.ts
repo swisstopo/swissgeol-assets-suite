@@ -16,23 +16,23 @@ import {
 import { faker } from '@faker-js/faker';
 
 // eslint-disable-next-line @nx/enforce-module-boundaries
-import indexMapping from '../../../../../../development/init/elasticsearch/mappings/swissgeol_asset_asset.json';
+import indexMapping from '../../../../../../../development/init/elasticsearch/mappings/swissgeol_asset_asset.json';
 // eslint-disable-next-line @nx/enforce-module-boundaries
-import { assetKindItems } from '../../../../../../test/data/asset-kind-item';
+import { assetKindItems } from '../../../../../../../test/data/asset-kind-item';
 // eslint-disable-next-line @nx/enforce-module-boundaries
-import { languageItems } from '../../../../../../test/data/language-items';
+import { languageItems } from '../../../../../../../test/data/language-items';
 // eslint-disable-next-line @nx/enforce-module-boundaries
-import { manCatLabelItems } from '../../../../../../test/data/man-cat-label-item';
+import { manCatLabelItems } from '../../../../../../../test/data/man-cat-label-item';
 // eslint-disable-next-line @nx/enforce-module-boundaries
-import { clearPrismaAssets, setupDB } from '../../../../../../test/setup-db';
+import { clearPrismaAssets, setupDB } from '../../../../../../../test/setup-db';
 
 import { ASSET_ELASTIC_INDEX, AssetSearchService } from './asset-search.service';
 
 import { openElasticsearchClient } from '@/core/elasticsearch';
 import { PrismaService } from '@/core/prisma.service';
-import { fakeAssetPatch, fakeAssetUsage, fakeContact, fakeUser } from '@/features/asset-edit/asset-edit.fake';
-import { AssetEditData, AssetEditRepo } from '@/features/asset-edit/asset-edit.repo';
-import { FileRepo } from '@/features/files/file.repo';
+import { fakeAssetPatch, fakeAssetUsage, fakeContact, fakeUser } from '@/features/assets/asset-edit/asset-edit.fake';
+import { AssetEditData, AssetEditRepo } from '@/features/assets/asset-edit/asset-edit.repo';
+import { FileRepo } from '@/features/assets/files/file.repo';
 import { StudyRepo } from '@/features/studies/study.repo';
 
 describe(AssetSearchService, () => {
