@@ -691,7 +691,6 @@ enum StudyGeometryType {
 
 model Workflow {
   workflowId          Int            @id @default(autoincrement()) @map("workflow_id")
-  isPublished         Boolean        @default(false) @map("is_published")
   hasRequestedChanges Boolean        @default(false) @map("has_requested_changes")
   status              WorkflowStatus @default(Draft) @map("status")
 
@@ -714,8 +713,7 @@ model Workflow {
 
 model WorkflowChange {
   workflowChangeId Int            @id @default(autoincrement()) @map("workflow_change_id")
-  comment          String
-  isPublished      Boolean        @default(false) @map("is_published")
+  comment          String?
   createdAt        DateTime       @default(now()) @map("created_at")
   fromStatus       WorkflowStatus @map("from_status")
   toStatus         WorkflowStatus @map("to_status")
@@ -736,6 +734,7 @@ enum WorkflowStatus {
   Draft
   InReview
   Reviewed
+  Published
 
   @@map("workflow_status")
 }

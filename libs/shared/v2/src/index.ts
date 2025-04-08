@@ -7,6 +7,7 @@ export * from './lib/models/contact';
 export * from './lib/models/favorite';
 export * from './lib/models/study';
 export * from './lib/models/user';
+export * from './lib/models/workflow';
 export * from './lib/models/workgroup';
 
 export * from './lib/policies/base/policy';
@@ -20,6 +21,7 @@ export * from './lib/schemas/base/schema';
 export * from './lib/schemas/asset.schema';
 export * from './lib/schemas/contact.schema';
 export * from './lib/schemas/user.schema';
+export * from './lib/schemas/workflow.schema';
 export * from './lib/schemas/workgroup.schema';
 
 export * from './lib/utils/class-validator/is-nullable.decorator';
