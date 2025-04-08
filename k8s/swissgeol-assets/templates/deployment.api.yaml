@@ -103,12 +103,12 @@ spec:
               value: ''
             - name: OCR_CALLBACK_URL
               value: ''
-      #        resources:
-      #          limits:
-      #            cpu: '0.6'
-      #            memory: 1Gi
-      #          requests:
-      #            cpu: '0.6'
-      #            memory: 500Mi
+          resources:
+            limits:
+              cpu: '1'
+              memory: 4.5Gi
+            requests:
+              cpu: '0.2'
+              memory: 100Mi
       imagePullSecrets:
         - name: {{ .Release.Namespace }}-registry
