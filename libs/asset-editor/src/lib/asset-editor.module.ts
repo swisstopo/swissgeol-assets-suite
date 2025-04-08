@@ -5,6 +5,7 @@ import { inject, NgModule } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatChipSet } from '@angular/material/chips';
 import { MAT_DATE_FORMATS, MAT_DATE_LOCALE } from '@angular/material/core';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -17,6 +18,7 @@ import {
   AdminOnlyDirective,
   AnchorComponent,
   ButtonComponent,
+  ChipComponent,
   DatepickerToggleIconComponent,
   DatePipe,
   DateTimePipe,
@@ -25,6 +27,7 @@ import {
   FileNamePipe,
   fromAppShared,
   MatDateIdModule,
+  PageHeaderComponent,
   ValueItemDescriptionPipe,
   ValueItemNamePipe,
   ViewChildMarker,
@@ -47,6 +50,7 @@ import { AssetEditorFilesComponent } from './components/asset-editor-files/asset
 import { AssetEditorIdFormComponent } from './components/asset-editor-id-form/asset-editor-id-form.component';
 import { AssetEditorIdListComponent } from './components/asset-editor-id-list/asset-editor-id-list.component';
 import { AssetEditorLaunchComponent } from './components/asset-editor-launch';
+import { AssetEditorNavigationComponent } from './components/asset-editor-navigation';
 import { AssetEditorPageComponent } from './components/asset-editor-page';
 import { AssetEditorSyncComponent } from './components/asset-editor-sync/asset-editor-sync.component';
 import { AssetEditorTabAdministrationComponent, ReplaceBrPipe } from './components/asset-editor-tab-administration';
@@ -63,7 +67,7 @@ import { AssetEditorEffects } from './state/asset-editor.effects';
 import { assetEditorReducer } from './state/asset-editor.reducer';
 import { selectRDAssetEditDetail } from './state/asset-editor.selectors';
 
-export const canLeaveEdit: CanDeactivateFn<AssetEditorPageComponent> = (c) => c.canLeave();
+export const canLeaveEdit: CanDeactivateFn<AssetEditorPageComponent> = (c) => true;
 
 @NgModule({
   declarations: [
@@ -84,6 +88,7 @@ export const canLeaveEdit: CanDeactivateFn<AssetEditorPageComponent> = (c) => c.
     Lv95xWithoutPrefixPipe,
     Lv95yWithoutPrefixPipe,
     ReplaceBrPipe,
+    AssetEditorNavigationComponent,
   ],
   imports: [
     CommonModule,
@@ -175,6 +180,9 @@ export const canLeaveEdit: CanDeactivateFn<AssetEditorPageComponent> = (c) => c.
     MatProgressBarModule,
     MatSelectModule,
     AdminOnlyDirective,
+    PageHeaderComponent,
+    MatChipSet,
+    ChipComponent,
   ],
   providers: [
     { provide: MAT_DATE_LOCALE, useValue: de },

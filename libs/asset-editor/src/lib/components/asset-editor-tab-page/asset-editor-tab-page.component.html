@@ -1,11 +1,3 @@
-<nav role="tablist">
-  @for (tab of tabs; track tab) {
-  <button role="tab" attr.aria-selected="{{ activeTab === tab }}" translate (click)="selectTab(tab)">
-    edit.tabs.{{ tab }}.tabName
-  </button>
-  }
-</nav>
-
 <form [formGroup]="form">
   <ul class="tabs" *ngIf="isFormReady">
     <li role="tabpanel" [class.is-active]="activeTab === Tab.General">
