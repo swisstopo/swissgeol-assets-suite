@@ -52,6 +52,7 @@ import { AssetEditorIdListComponent } from './components/asset-editor-id-list/as
 import { AssetEditorLaunchComponent } from './components/asset-editor-launch';
 import { AssetEditorNavigationComponent } from './components/asset-editor-navigation';
 import { AssetEditorPageComponent } from './components/asset-editor-page';
+import { AssetEditorSaveComponent } from './components/asset-editor-save';
 import { AssetEditorSyncComponent } from './components/asset-editor-sync/asset-editor-sync.component';
 import { AssetEditorTabAdministrationComponent, ReplaceBrPipe } from './components/asset-editor-tab-administration';
 import { AssetEditorTabContactsComponent } from './components/asset-editor-tab-contacts';
@@ -85,6 +86,7 @@ export const canLeaveEdit: CanDeactivateFn<AssetEditorPageComponent> = (c) => tr
     AssetEditorTabPageComponent,
     AssetEditorTabReferencesComponent,
     AssetEditorTabUsageComponent,
+    AssetEditorSaveComponent,
     Lv95xWithoutPrefixPipe,
     Lv95yWithoutPrefixPipe,
     ReplaceBrPipe,

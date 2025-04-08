@@ -253,6 +253,8 @@ export const enAppTranslations: AppTranslations = {
       },
     },
     closeManageAsset: 'Close manage asset',
+    unsavedChanges: 'Unsaved Changes',
+    discardChanges: 'Discard changes',
     questionDiscardChanges: 'Do you want to discard your changes?',
     userManagementHeading: 'Users',
     userManagementButton: 'Manage users',

@@ -252,6 +252,8 @@ export const deAppTranslations = {
       },
     },
     closeManageAsset: 'Asset verwalten schliessen',
+    unsavedChanges: 'Ungespeicherte Änderungen',
+    discardChanges: 'Änderungen verwerfen',
     questionDiscardChanges: 'Möchten Sie die Änderungen verwerfen?',
     userManagementHeading: 'Benutzer',
     userManagementButton: 'Benutzer verwalten',
