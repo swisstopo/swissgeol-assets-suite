@@ -7,6 +7,8 @@ import * as O from 'fp-ts/Option';
 import { AssetEditorNewFile } from '../components/asset-editor-form-group';
 import { AssetEditDetail } from '../models';
 
+export const loadAsset = createAction('[Asset Editor] Load asset', props<{ assetId: number }>());
+
 export const loadAssetEditDetailResult = createAction(
   '[Asset Editor] Load Asset Edit Detail Result',
   props<RD.RemoteData<ApiError, O.Option<AssetEditDetail>>>()
