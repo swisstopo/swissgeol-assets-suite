@@ -1,9 +1,10 @@
 import { Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
+import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, NavigationEnd, ParamMap, Router } from '@angular/router';
-import { RoutingService } from '@asset-sg/client-shared';
+import { ConfirmDialogComponent, RoutingService } from '@asset-sg/client-shared';
 import { ORD } from '@asset-sg/core';
-import { UntilDestroy } from '@ngneat/until-destroy';
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { Store } from '@ngrx/store';
 import * as O from 'fp-ts/Option';
 import { filter, map, startWith, Subscription, take, tap } from 'rxjs';
@@ -29,6 +30,7 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly routingService = inject(RoutingService);
+  private readonly dialogService = inject(MatDialog);
 
   public assetEditDetail$ = this.store.select(fromAssetEditor.selectRDAssetEditDetail).pipe(ORD.fromFilteredSuccess);
 
@@ -70,6 +72,18 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
   public initializeForm() {
     this.form.reset();
     this.form.controls.general.controls.titlePublic.setValue(this.asset?.titlePublic ?? null);
+  }
+
+  public openConfirmDialog() {
+    const dialogRef = this.dialogService.open<ConfirmDialogComponent>(ConfirmDialogComponent, {
+      data: {
+        text: 'confirmDelete',
+      },
+    });
+    dialogRef.componentInstance.confirmEvent.pipe(untilDestroyed(this)).subscribe(() => {
+      this.store.dispatch(actions.deleteAsset({ assetId: parseInt(this.assetId) }));
+      dialogRef.close();
+    });
   }
 
   private loadAssetFromRouteParams() {
