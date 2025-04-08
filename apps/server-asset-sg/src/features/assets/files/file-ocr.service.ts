@@ -4,7 +4,7 @@ import { sleep } from '@asset-sg/shared/v2';
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { OcrState, Prisma } from '@prisma/client';
 import { PrismaService } from '@/core/prisma.service';
-import { FileS3Service } from '@/features/files/file-s3.service';
+import { FileS3Service } from '@/features/assets/files/file-s3.service';
 
 const serviceUrl = process.env.OCR_SERVICE_URL as string;
 if (serviceUrl == null || serviceUrl.length == 0) {

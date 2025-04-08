@@ -12,7 +12,7 @@ import { plainToInstance } from 'class-transformer';
 import { Authorize } from '@/core/decorators/authorize.decorator';
 import { CurrentUser } from '@/core/decorators/current-user.decorator';
 import { ParseBody } from '@/core/decorators/parse.decorator';
-import { AssetSearchService } from '@/features/assets/search/asset-search.service';
+import { AssetSearchService } from '@/features/assets/assets/search/asset-search.service';
 
 @Controller('/assets/search')
 export class AssetSearchController {
@@ -25,10 +25,8 @@ export class AssetSearchController {
     @ParseBody(AssetSearchQueryDTO)
     query: AssetSearchQuery,
     @CurrentUser() user: User,
-
     @Query('limit')
     limit?: number,
-
     @Query('offset')
     offset?: number
   ): Promise<AssetSearchResult> {

@@ -1,13 +1,13 @@
 import * as Option from 'fp-ts/Option';
 
 // eslint-disable-next-line @nx/enforce-module-boundaries
-import { clearPrismaAssets, setupDB } from '../../../../../test/setup-db';
+import { clearPrismaAssets, setupDB } from '../../../../../../test/setup-db';
 
 import { fakeAssetPatch, fakeUser } from './asset-edit.fake';
 import { AssetEditRepo } from './asset-edit.repo';
 
 import { PrismaService } from '@/core/prisma.service';
-import { FileRepo } from '@/features/files/file.repo';
+import { FileRepo } from '@/features/assets/files/file.repo';
 
 describe(AssetEditRepo, () => {
   const prisma = new PrismaService();
