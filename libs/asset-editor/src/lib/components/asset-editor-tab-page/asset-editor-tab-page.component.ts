@@ -21,8 +21,6 @@ import * as A from 'fp-ts/Array';
 import { pipe } from 'fp-ts/function';
 import * as O from 'fp-ts/Option';
 import { BehaviorSubject, filter, map, Observable, of, take } from 'rxjs';
-
-import { TabPageBridgeService } from '../../services/tab-page-bridge.service';
 import * as actions from '../../state/asset-editor.actions';
 import { AppStateWithAssetEditor } from '../../state/asset-editor.reducer';
 import * as fromAssetEditor from '../../state/asset-editor.selectors';
@@ -48,7 +46,6 @@ export class AssetEditorTabPageComponent implements AfterViewInit {
   @ViewChild('tmplDiscardDialog') _tmplDiscardDialog!: TemplateRef<unknown>;
 
   private readonly _store = inject(Store<AppStateWithAssetEditor>);
-  private readonly _tabPageBridgeService = inject(TabPageBridgeService);
   private readonly _dialogService = inject(Dialog);
 
   private readonly routingService = inject(RoutingService);
@@ -71,8 +68,6 @@ export class AssetEditorTabPageComponent implements AfterViewInit {
   public form = makeAssetEditorFormGroup();
 
   constructor() {
-    this._tabPageBridgeService.registerTabPage(this);
-
     this.form.disable();
 
     this._store
@@ -181,15 +176,6 @@ export class AssetEditorTabPageComponent implements AfterViewInit {
     });
   }
 
-  selectTab(tab: Tab): void {
-    if (this.activeTab === tab) {
-      return;
-    }
-    this.activeTab = tab;
-    const pathPrefix = this.urlPath.substring(0, this.indexOfLastSlashInUrlPath);
-    this.location.replaceState(`${pathPrefix}/${tab}`);
-  }
-
   delete(): void {
     const { general } = this.form.getRawValue();
     this._store.dispatch(actions.deleteAsset({ assetId: general.id }));
@@ -285,18 +271,6 @@ export class AssetEditorTabPageComponent implements AfterViewInit {
       disableClose: true,
     }));
     return dialogRef.closed.pipe(map(isTruthy));
-  }
-
-  private get urlPath(): string {
-    return this.location.path().split('?', 2)[0];
-  }
-
-  private get indexOfLastSlashInUrlPath(): number {
-    return this.urlPath.lastIndexOf('/');
-  }
-
-  public get tabs(): Tab[] {
-    return Object.values(Tab);
   }
 
   protected readonly Tab = Tab;

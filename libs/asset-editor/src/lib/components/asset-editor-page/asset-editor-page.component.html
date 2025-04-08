@@ -1,7 +1,19 @@
-<ng-template #templateDrawerPortalContent>
-  <asset-sg-drawer #tabPageComponent>
-    <asset-sg-drawer-panel widthPercentageOfViewPanel="1" [display]="true">
-      <asset-sg-editor-tab-page></asset-sg-editor-tab-page>
-    </asset-sg-drawer-panel>
-  </asset-sg-drawer>
-</ng-template>
+<asset-sg-page-header (backNavigation)="navigateToStart()">
+  <h2>{{ asset?.titlePublic }}</h2>
+  <mat-chip-set>
+    <asset-sg-chip type="primary">Review</asset-sg-chip>
+    @if (asset?.processor) {
+    <asset-sg-chip type="tertiary">{{ asset?.processor }}</asset-sg-chip>
+    }
+  </mat-chip-set>
+  <div style="flex: 1"></div>
+
+  <button asset-sg-secondary translate>
+    delete
+    <svg-icon key="delete"></svg-icon>
+  </button>
+</asset-sg-page-header>
+<div style="display: flex">
+  <asset-sg-editor-navigation [assetId]="assetId"></asset-sg-editor-navigation>
+  <asset-sg-editor-tab-page></asset-sg-editor-tab-page>
+</div>

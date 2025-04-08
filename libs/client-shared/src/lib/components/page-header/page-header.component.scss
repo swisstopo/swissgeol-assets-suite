@@ -10,6 +10,7 @@ $sub-navigation-bar-height: 84px;
   justify-content: flex-start;
   gap: 18px;
   padding: 0 24px;
+  border-bottom: 1px solid variables.$grey-02;
 
   .back-button {
     height: 36px;
