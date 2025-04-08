@@ -30,12 +30,12 @@ import { Injectable, Logger } from '@nestjs/common';
 import * as E from 'fp-ts/Either';
 
 // eslint-disable-next-line @nx/enforce-module-boundaries
-import indexMapping from '../../../../../../development/init/elasticsearch/mappings/swissgeol_asset_asset.json';
+import indexMapping from '../../../../../../../development/init/elasticsearch/mappings/swissgeol_asset_asset.json';
 
 import { PrismaService } from '@/core/prisma.service';
-import { AssetEditRepo } from '@/features/asset-edit/asset-edit.repo';
-import { mapLv95ToElastic } from '@/features/assets/search/asset-search.utils';
-import { AssetSearchWriter, AssetSearchWriterOptions } from '@/features/assets/search/asset-search.writer';
+import { AssetEditRepo } from '@/features/assets/asset-edit/asset-edit.repo';
+import { mapLv95ToElastic } from '@/features/assets/assets/search/asset-search.utils';
+import { AssetSearchWriter, AssetSearchWriterOptions } from '@/features/assets/assets/search/asset-search.writer';
 import { StudyRepo } from '@/features/studies/study.repo';
 
 const INDEX = 'swissgeol_asset_asset';

@@ -3,8 +3,8 @@ import { AssetContactEdit, AssetLanguageEdit, DateIdFromDate, LinkedAsset, Statu
 import { pipe } from 'fp-ts/function';
 import * as D from 'io-ts/Decoder';
 
-import { AssetFilesFromPostgres } from '@/models/AssetDetailFromPostgres';
-import { PostgresAllStudies } from '@/utils/postgres-studies/postgres-studies';
+import { AssetFilesFromPostgres } from './AssetDetailFromPostgres';
+import { PostgresAllStudies } from '@/features/assets/asset-edit/utils/postgres-studies';
 
 export const AssetEditDetailFromPostgres = pipe(
   D.struct({

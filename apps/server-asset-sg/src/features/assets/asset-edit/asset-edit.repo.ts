@@ -8,14 +8,14 @@ import * as O from 'fp-ts/Option';
 
 import { PrismaService } from '@/core/prisma.service';
 import { Repo, RepoListOptions } from '@/core/repo';
-import { FileRepo } from '@/features/files/file.repo';
-import { AssetEditDetailFromPostgres } from '@/models/asset-edit-detail';
+import { AssetEditDetailFromPostgres } from '@/features/assets/asset-edit/models/asset-edit-detail';
 import {
   createStudies,
   deleteStudies,
   postgresStudiesByAssetId,
   updateStudies,
-} from '@/utils/postgres-studies/postgres-studies';
+} from '@/features/assets/asset-edit/utils/postgres-studies';
+import { FileRepo } from '@/features/assets/files/file.repo';
 import { handlePrismaMutationError } from '@/utils/prisma';
 
 @Injectable()

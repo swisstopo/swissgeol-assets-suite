@@ -23,7 +23,7 @@ import {
 import { authorize } from '@/core/authorize';
 import { CurrentUser } from '@/core/decorators/current-user.decorator';
 import { ParseBody } from '@/core/decorators/parse.decorator';
-import { AssetRepo } from '@/features/assets/asset.repo';
+import { AssetRepo } from '@/features/assets/assets/asset.repo';
 
 @Controller('/assets')
 export class AssetsController {
@@ -91,8 +91,8 @@ const validateData = (user: User, data: AssetData, record?: Asset) => {
     );
   }
 
-  // Specialization of the policy where we disallow the internal status to be changed to anything else than `tobechecked`
-  // if the current user is not a master-editor for the asset's current or future workgroup.
+  // Specialization of the policy where we disallow the internal status to be changed to anything else than
+  // `tobechecked` if the current user is not a master-editor for the asset's current or future workgroup.
   const hasInternalUseChanged = record == null || record.usage.internal.statusCode !== data.usage.internal.statusCode;
   if (
     hasInternalUseChanged &&
