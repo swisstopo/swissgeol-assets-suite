@@ -94,6 +94,20 @@ export class AssetEditorEffects {
     )
   );
 
+  loadAsset$ = createEffect(() =>
+    this._actions$.pipe(
+      ofType(actions.loadAsset),
+      switchMap(({ assetId }) => this._assetEditorService.loadAssetDetailData(assetId)),
+      tap(async (rd) => {
+        if (RD.isFailure(rd)) {
+          await this._router.navigate(['/'], { queryParams: undefined });
+        }
+      }),
+      ORD.map(O.some),
+      map(actions.loadAssetEditDetailResult)
+    )
+  );
+
   deleteAsset$ = createEffect(() =>
     this._actions$.pipe(
       ofType(actions.deleteAsset),
