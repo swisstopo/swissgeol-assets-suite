@@ -7,7 +7,7 @@ import { ORD } from '@asset-sg/core';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { Store } from '@ngrx/store';
 import * as O from 'fp-ts/Option';
-import { filter, map, startWith, Subscription, take, tap } from 'rxjs';
+import { filter, map, Observable, startWith, Subscription, take, tap } from 'rxjs';
 import { AssetEditDetailVM } from '../../models';
 import * as actions from '../../state/asset-editor.actions';
 import { AppStateWithAssetEditor } from '../../state/asset-editor.reducer';
@@ -67,9 +67,11 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
 
   public navigateToStart() {
     this.routingService.navigateBack(['/']).then();
+    console.log(this.form.dirty, this.form.valid);
   }
 
   public initializeForm() {
+    console.log('init');
     this.form.reset();
     this.form.controls.general.controls.titlePublic.setValue(this.asset?.titlePublic ?? null);
   }
@@ -80,10 +82,29 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
         text: 'confirmDelete',
       },
     });
-    dialogRef.componentInstance.confirmEvent.pipe(untilDestroyed(this)).subscribe(() => {
-      this.store.dispatch(actions.deleteAsset({ assetId: parseInt(this.assetId) }));
-      dialogRef.close();
+    dialogRef
+      .afterClosed()
+      .pipe(untilDestroyed(this))
+      .subscribe((hasConfirmed) => {
+        if (hasConfirmed) {
+          this.store.dispatch(actions.deleteAsset({ assetId: parseInt(this.assetId) }));
+        }
+      });
+  }
+
+  public canDeactivate(): boolean | Observable<boolean> {
+    console.log(this.form.dirty, this.form.valid);
+
+    if (!this.form.dirty) {
+      return true;
+    }
+    const dialogRef = this.dialogService.open<ConfirmDialogComponent>(ConfirmDialogComponent, {
+      data: {
+        text: 'confirmDiscardChanges',
+      },
     });
+    console.log(this.form.dirty, this.form.valid);
+    return dialogRef.afterClosed();
   }
 
   private loadAssetFromRouteParams() {

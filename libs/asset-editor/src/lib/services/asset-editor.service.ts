@@ -3,7 +3,9 @@ import { inject, Injectable } from '@angular/core';
 import { ApiError, httpErrorResponseError } from '@asset-sg/client-shared';
 import { decodeError, OE, ORD, unknownError } from '@asset-sg/core';
 import { Contact, PatchAsset, PatchContact } from '@asset-sg/shared';
+import { AssetDataSchema } from '@asset-sg/shared/v2';
 import * as RD from '@devexperts/remote-data-ts';
+import { plainToInstance } from 'class-transformer';
 import * as E from 'fp-ts/Either';
 import { flow } from 'fp-ts/function';
 import { concat, forkJoin, map, Observable, of, startWith, toArray } from 'rxjs';
@@ -14,6 +16,10 @@ import { AssetEditDetail } from '../models';
 @Injectable({ providedIn: 'root' })
 export class AssetEditorService {
   private readonly httpClient = inject(HttpClient);
+
+  public loadAsset(assetId: number) {
+    return this.httpClient.get(`/api/asset-edit/${assetId}`).pipe(map((it) => plainToInstance(AssetDataSchema, it)));
+  }
 
   public loadAssetDetailData(assetId: number): ORD.ObservableRemoteData<ApiError, AssetEditDetail> {
     return this.httpClient
