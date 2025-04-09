@@ -6,7 +6,7 @@ import { isNotNull } from '@asset-sg/core';
 import { DateId } from '@asset-sg/shared';
 import { isMasterEditor } from '@asset-sg/shared/v2';
 import * as RD from '@devexperts/remote-data-ts';
-import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { UntilDestroy } from '@ngneat/until-destroy';
 import { Store } from '@ngrx/store';
 import { RxState } from '@rx-angular/state';
 import * as O from 'fp-ts/Option';
@@ -95,10 +95,6 @@ export class AssetEditorTabAdministrationComponent implements OnInit {
       data: {
         text: 'confirmDelete',
       },
-    });
-    dialogRef.componentInstance.confirmEvent.pipe(untilDestroyed(this)).subscribe(() => {
-      this.deleteAsset.emit();
-      dialogRef.close();
     });
   }
 }
