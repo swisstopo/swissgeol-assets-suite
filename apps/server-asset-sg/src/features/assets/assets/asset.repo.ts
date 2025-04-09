@@ -15,7 +15,7 @@ import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '@/core/prisma.service';
 import { FindRepo, MutateRepo } from '@/core/repo';
-import { assetSelection, parseAssetFromPrisma } from '@/features/assets/prisma-asset';
+import { assetSelection, parseAssetFromPrisma } from '@/features/assets/assets/prisma-asset';
 import { satisfy } from '@/utils/define';
 import { handlePrismaMutationError } from '@/utils/prisma';
 

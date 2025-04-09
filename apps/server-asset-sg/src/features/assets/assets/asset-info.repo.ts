@@ -2,7 +2,7 @@ import { AssetId, AssetInfo, UserId } from '@asset-sg/shared/v2';
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@/core/prisma.service';
 import { ReadRepo, RepoListOptions } from '@/core/repo';
-import { assetInfoSelection, parseAssetInfoFromPrisma } from '@/features/assets/prisma-asset';
+import { assetInfoSelection, parseAssetInfoFromPrisma } from '@/features/assets/assets/prisma-asset';
 
 @Injectable()
 export class AssetInfoRepo implements ReadRepo<AssetInfo, AssetId> {

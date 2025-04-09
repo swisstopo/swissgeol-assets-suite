@@ -23,11 +23,11 @@ import * as D from 'io-ts/Decoder';
 import { authorize } from '@/core/authorize';
 import { CurrentUser } from '@/core/decorators/current-user.decorator';
 import { PrismaService } from '@/core/prisma.service';
-import { AssetEditRepo } from '@/features/asset-edit/asset-edit.repo';
-import { FileOcrService } from '@/features/files/file-ocr.service';
-import { FileS3Service } from '@/features/files/file-s3.service';
-import { FileRepo } from '@/features/files/file.repo';
-import { FileService } from '@/features/files/file.service';
+import { AssetEditRepo } from '@/features/assets/asset-edit/asset-edit.repo';
+import { FileOcrService } from '@/features/assets/files/file-ocr.service';
+import { FileS3Service } from '@/features/assets/files/file-s3.service';
+import { FileRepo } from '@/features/assets/files/file.repo';
+import { FileService } from '@/features/assets/files/file.service';
 
 @Controller('/assets/:assetId/files')
 export class FilesController {

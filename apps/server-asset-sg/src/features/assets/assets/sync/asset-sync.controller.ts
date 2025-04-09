@@ -1,7 +1,7 @@
 import { Controller, Get, HttpException, Post, Res } from '@nestjs/common';
 import { Response } from 'express';
 import { Authorize } from '@/core/decorators/authorize.decorator';
-import { AssetSyncService } from '@/features/assets/sync/asset-sync.service';
+import { AssetSyncService } from '@/features/assets/assets/sync/asset-sync.service';
 
 @Controller('/assets/sync')
 export class AssetSyncController {

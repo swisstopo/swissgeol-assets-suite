@@ -1,4 +1,5 @@
-import { AssetEditDetail, PatchAsset } from '@asset-sg/shared';
+import { unknownToError } from '@asset-sg/core';
+import { AssetByTitle, AssetEditDetail, PatchAsset } from '@asset-sg/shared';
 import { AssetEditPolicy, Role, User } from '@asset-sg/shared/v2';
 import {
   Controller,
@@ -11,14 +12,16 @@ import {
   ParseIntPipe,
   Post,
   Put,
+  Query,
 } from '@nestjs/common';
 import * as O from 'fp-ts/Option';
 import { authorize } from '@/core/authorize';
+import { Authorize } from '@/core/decorators/authorize.decorator';
 import { CurrentUser } from '@/core/decorators/current-user.decorator';
 import { ParseBody } from '@/core/decorators/parse.decorator';
-import { AssetEditRepo } from '@/features/asset-edit/asset-edit.repo';
-import { AssetEditService } from '@/features/asset-edit/asset-edit.service';
-import { AssetSearchService } from '@/features/assets/search/asset-search.service';
+import { AssetEditRepo } from '@/features/assets/asset-edit/asset-edit.repo';
+import { AssetEditService } from '@/features/assets/asset-edit/asset-edit.service';
+import { AssetSearchService } from '@/features/assets/assets/search/asset-search.service';
 
 @Controller('/asset-edit')
 export class AssetEditController {
@@ -87,6 +90,19 @@ export class AssetEditController {
     }
     await this.assetSearchService.deleteFromIndex(record.assetId);
   }
+
+  /**
+   * @deprecated
+   */
+  @Get('/asset-edit/search')
+  @Authorize.User()
+  async searchAssetsByTitle(@Query('title') title: string): Promise<AssetByTitle[]> {
+    try {
+      return await this.assetSearchService.searchByTitle(title);
+    } catch (e) {
+      throw new HttpException(unknownToError(e).message, 500);
+    }
+  }
 }
 
 const validatePatch = (user: User, patch: PatchAsset, record?: AssetEditDetail) => {
@@ -111,8 +127,8 @@ const validatePatch = (user: User, patch: PatchAsset, record?: AssetEditDetail) 
     );
   };
 
-  // Specialization of the policy where we disallow the internal status to be changed to anything else than `tobechecked`
-  // if the current user is not a master-editor for the asset's current or future workgroup.
+  // Specialization of the policy where we disallow the internal status to be changed to anything else than
+  // `tobechecked` if the current user is not a master-editor for the asset's current or future workgroup.
   if (hasStatusChanged('internalUse')) {
     throw new HttpException("Changing the asset's internalUse status is not allowed", HttpStatus.FORBIDDEN);
   }
