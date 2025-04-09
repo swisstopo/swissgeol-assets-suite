@@ -69,7 +69,7 @@ import { AssetEditorEffects } from './state/asset-editor.effects';
 import { assetEditorReducer } from './state/asset-editor.reducer';
 import { selectRDAssetEditDetail } from './state/asset-editor.selectors';
 
-export const canLeaveEdit: CanDeactivateFn<AssetEditorPageComponent> = (c) => true;
+export const canLeaveEdit: CanDeactivateFn<AssetEditorPageComponent> = (c) => c.canDeactivate();
 
 @NgModule({
   declarations: [
