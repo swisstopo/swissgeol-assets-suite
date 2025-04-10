@@ -33,13 +33,11 @@ export interface AssetSearchState {
   results: AssetSearchResult;
   stats: AssetSearchStats;
   studies: AllStudyDTO[];
-  currentAsset: AssetEditDetail | null;
   ui: AssetSearchUiState;
 
   isLoadingStudies: boolean;
   isLoadingResults: boolean;
   isLoadingStats: boolean;
-  isLoadingAsset: boolean;
 }
 
 export interface AssetSearchUiState {
@@ -68,7 +66,6 @@ const initialState: AssetSearchState = {
     workgroupIds: [],
     createDate: null,
   },
-  currentAsset: null,
   ui: {
     filtersState: PanelState.OpenedAutomatically,
     resultsState: PanelState.ClosedAutomatically,
@@ -79,7 +76,6 @@ const initialState: AssetSearchState = {
   isLoadingStudies: false,
   isLoadingResults: false,
   isLoadingStats: false,
-  isLoadingAsset: false,
 };
 
 export const assetSearchReducer = createReducer(
@@ -126,14 +122,6 @@ export const assetSearchReducer = createReducer(
     })
   ),
   on(
-    actions.setCurrentAsset,
-    (state, { asset, isLoading }): AssetSearchState => ({
-      ...state,
-      currentAsset: asset === undefined ? state.currentAsset : asset,
-      isLoadingAsset: isLoading ?? state.isLoadingAsset,
-    })
-  ),
-  on(
     actions.setFiltersState,
     (state, { state: filtersState }): AssetSearchState => ({
       ...state,
@@ -164,7 +152,6 @@ export const assetSearchReducer = createReducer(
     (state): AssetSearchState => ({
       ...state,
       query: {},
-      currentAsset: null,
       ui: {
         ...state.ui,
         resultsState: PanelState.OpenedManually,
@@ -175,7 +162,6 @@ export const assetSearchReducer = createReducer(
     appSharedStateActions.removeAssetFromSearch,
     (state, { assetId }): AssetSearchState => ({
       ...state,
-      currentAsset: state.currentAsset?.assetId === assetId ? null : state.currentAsset,
       results: {
         ...state.results,
         data: state.results.data.filter((it) => it.assetId !== assetId),
@@ -188,7 +174,6 @@ export const assetSearchReducer = createReducer(
     const mapAsset = (it: AssetEditDetail): AssetEditDetail => (it.assetId === asset.assetId ? asset : it);
     return {
       ...state,
-      currentAsset: state.currentAsset === null ? null : mapAsset(state.currentAsset),
       results: {
         ...state.results,
         data: state.results.data.map(mapAsset),

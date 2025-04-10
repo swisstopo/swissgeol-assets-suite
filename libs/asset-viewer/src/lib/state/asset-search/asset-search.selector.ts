@@ -30,7 +30,6 @@ import { isPanelOpen } from './asset-search.actions';
 import { AppStateWithAssetSearch } from './asset-search.reducer';
 
 const assetSearchFeature = (state: AppStateWithAssetSearch) => state.assetSearch;
-
 export const selectFiltersState = createSelector(assetSearchFeature, (state) => state.ui.filtersState);
 
 export const selectResultsState = createSelector(assetSearchFeature, (state) => state.ui.resultsState);
@@ -52,11 +51,12 @@ export const selectSearchResults = createSelector(assetSearchFeature, (state) =>
 
 export const selectSearchStats = createSelector(assetSearchFeature, (state) => state.stats);
 
-export const selectCurrentAsset = createSelector(assetSearchFeature, (state) => state.currentAsset);
+export const selectCurrentAsset = createSelector(fromAppShared.selectCurrentAsset, (currentAsset) => currentAsset);
 
 export const selectHasCurrentAsset = createSelector(
-  assetSearchFeature,
-  (state) => state.currentAsset !== null || state.isLoadingAsset
+  fromAppShared.selectCurrentAsset,
+  fromAppShared.selectIsLoadingAsset,
+  (currentAsset, isLoadingAsset) => currentAsset !== null || isLoadingAsset
 );
 
 export const selectStudies = createSelector(assetSearchFeature, (state) => state.studies);
