@@ -36,7 +36,7 @@ import { isNotNull } from '@asset-sg/core';
 import { AssetEditPolicy } from '@asset-sg/shared/v2';
 import { SvgIconComponent } from '@ngneat/svg-icon';
 import { EffectsModule } from '@ngrx/effects';
-import { Store, StoreModule } from '@ngrx/store';
+import { Store } from '@ngrx/store';
 import { TranslateModule } from '@ngx-translate/core';
 import { ForModule } from '@rx-angular/template/for';
 import { LetModule } from '@rx-angular/template/let';
@@ -62,8 +62,6 @@ import { AssetEditorGeneralComponent } from './components/asset-editor-tabs/asse
 import { AssetMultiselectComponent } from './components/asset-multiselect';
 import { Lv95xWithoutPrefixPipe, Lv95yWithoutPrefixPipe } from './components/lv95-without-prefix';
 import { AssetEditorEffects } from './state/asset-editor.effects';
-import { assetEditorReducer } from './state/asset-editor.reducer';
-import { selectAssetEditDetail } from './state/asset-editor.selectors';
 
 export const canLeaveEdit: CanDeactivateFn<AssetEditorPageComponent> = (component, _ars, _crss, target) =>
   component.canDeactivate(target);
@@ -130,7 +128,7 @@ export const canLeaveEdit: CanDeactivateFn<AssetEditorPageComponent> = (componen
           (() => {
             const store = inject(Store);
             return combineLatest([
-              store.select(selectAssetEditDetail).pipe(filter((v) => isNotNull(v))),
+              store.select(fromAppShared.selectCurrentAsset),
               store.select(fromAppShared.selectUser).pipe(filter(isNotNull)),
             ]).pipe(
               map(([assetEditDetail, user]) => {
@@ -143,7 +141,6 @@ export const canLeaveEdit: CanDeactivateFn<AssetEditorPageComponent> = (componen
       },
     ]),
     TranslateModule.forChild(),
-    StoreModule.forFeature('assetEditor', assetEditorReducer),
     EffectsModule.forFeature([AssetEditorEffects]),
     FormsModule,
     ReactiveFormsModule,
