@@ -33,7 +33,6 @@ import {
 } from '@asset-sg/client-shared';
 import { isNotNull } from '@asset-sg/core';
 import { AssetEditPolicy } from '@asset-sg/shared/v2';
-import * as RD from '@devexperts/remote-data-ts';
 import { SvgIconComponent } from '@ngneat/svg-icon';
 import { EffectsModule } from '@ngrx/effects';
 import { Store, StoreModule } from '@ngrx/store';
@@ -42,8 +41,6 @@ import { ForModule } from '@rx-angular/template/for';
 import { LetModule } from '@rx-angular/template/let';
 import { PushModule } from '@rx-angular/template/push';
 import { de } from 'date-fns/locale/de';
-
-import * as O from 'fp-ts/Option';
 import { combineLatest, filter, map } from 'rxjs';
 import { AssetEditorIdFormComponent } from './components/asset-editor-id-form/asset-editor-id-form.component';
 import { AssetEditorIdListComponent } from './components/asset-editor-id-list/asset-editor-id-list.component';
@@ -57,7 +54,6 @@ import { AssetEditorTabContactsComponent } from './components/asset-editor-tab-c
 import { AssetEditorTabFilesComponent } from './components/asset-editor-tab-files/asset-editor-tab-files.component';
 import { AssetEditorTabGeneralComponent } from './components/asset-editor-tab-general';
 import { AssetEditorTabGeometriesComponent } from './components/asset-editor-tab-geometries';
-import { AssetEditorTabPageComponent } from './components/asset-editor-tab-page';
 import { AssetEditorTabReferencesComponent } from './components/asset-editor-tab-references';
 import { AssetEditorTabUsageComponent } from './components/asset-editor-tab-usage';
 import { AssetEditorFilesComponent } from './components/asset-editor-tabs/asset-editor-files';
@@ -66,9 +62,10 @@ import { AssetMultiselectComponent } from './components/asset-multiselect';
 import { Lv95xWithoutPrefixPipe, Lv95yWithoutPrefixPipe } from './components/lv95-without-prefix';
 import { AssetEditorEffects } from './state/asset-editor.effects';
 import { assetEditorReducer } from './state/asset-editor.reducer';
-import { selectRDAssetEditDetail } from './state/asset-editor.selectors';
+import { selectAssetEditDetail } from './state/asset-editor.selectors';
 
-export const canLeaveEdit: CanDeactivateFn<AssetEditorPageComponent> = (c) => c.canDeactivate();
+export const canLeaveEdit: CanDeactivateFn<AssetEditorPageComponent> = (component, _ars, _crss, target) =>
+  component.canDeactivate(target);
 
 @NgModule({
   declarations: [
@@ -82,7 +79,6 @@ export const canLeaveEdit: CanDeactivateFn<AssetEditorPageComponent> = (c) => c.
     AssetEditorTabFilesComponent,
     AssetEditorTabGeneralComponent,
     AssetEditorTabGeometriesComponent,
-    AssetEditorTabPageComponent,
     AssetEditorTabReferencesComponent,
     AssetEditorTabUsageComponent,
     AssetEditorGeneralComponent,
@@ -133,7 +129,7 @@ export const canLeaveEdit: CanDeactivateFn<AssetEditorPageComponent> = (c) => c.
           (() => {
             const store = inject(Store);
             return combineLatest([
-              store.select(selectRDAssetEditDetail).pipe(map(RD.toNullable), filter(isNotNull), map(O.toNullable)),
+              store.select(selectAssetEditDetail).pipe(filter((v) => isNotNull(v))),
               store.select(fromAppShared.selectUser).pipe(filter(isNotNull)),
             ]).pipe(
               map(([assetEditDetail, user]) => {
