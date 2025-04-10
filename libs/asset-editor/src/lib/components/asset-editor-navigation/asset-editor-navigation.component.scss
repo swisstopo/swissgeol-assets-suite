@@ -1,0 +1,29 @@
+@use "../../styles/variables";
+
+:host {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 88px - 84px);
+  border-right: 1px solid variables.$grey-02;
+  box-sizing: border-box;
+  width: 280px;
+}
+
+.page {
+  height: 40px;
+  border-bottom: 1px solid variables.$grey-02;
+  padding-left: 35px;
+  align-content: center;
+
+  &:hover {
+    cursor: pointer;
+    background-color: variables.$grey-00;
+  }
+}
+
+.active {
+  padding-left: 30px;
+  background-color: variables.$grey-00;
+  border-left: 5px solid variables.$cyan-09;
+  color: variables.$cyan-09;
+}

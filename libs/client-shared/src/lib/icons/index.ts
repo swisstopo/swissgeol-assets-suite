@@ -35,6 +35,7 @@ import { optionsIcon } from './options';
 import { polygonIcon } from './polygon';
 import { polygonDraw } from './polygon-draw';
 import { profileIcon } from './profile';
+import { saveIcon } from './save';
 import { searchIcon } from './search';
 import { settingsIcon } from './settings';
 import { successIcon } from './success';
@@ -76,6 +77,7 @@ export const icons = [
   polygonDraw,
   polygonIcon,
   profileIcon,
+  saveIcon,
   searchIcon,
   settingsIcon,
   successIcon,

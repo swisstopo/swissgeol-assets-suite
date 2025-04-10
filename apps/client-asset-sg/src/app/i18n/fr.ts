@@ -252,6 +252,8 @@ export const frAppTranslations: AppTranslations = {
       },
     },
     closeManageAsset: 'Fermer la gestion des asset',
+    unsavedChanges: 'Modifications non enregistrées',
+    discardChanges: 'Annuler les modifications',
     questionDiscardChanges: 'Souhaitez-vous annuler les modifications ?',
     userManagementHeading: 'Utilisateurs',
     userManagementButton: 'Gérer les utilisateurs',

@@ -1,16 +1,9 @@
-import { ApiError } from '@asset-sg/client-shared';
-import { ContactEdit, PatchAsset, PatchContact } from '@asset-sg/shared';
-import * as RD from '@devexperts/remote-data-ts';
+import { AssetEditDetail, ContactEdit, PatchAsset, PatchContact } from '@asset-sg/shared';
 import { createAction, props } from '@ngrx/store';
-import * as O from 'fp-ts/Option';
 
 import { AssetEditorNewFile } from '../components/asset-editor-form-group';
-import { AssetEditDetail } from '../models';
 
-export const loadAssetEditDetailResult = createAction(
-  '[Asset Editor] Load Asset Edit Detail Result',
-  props<RD.RemoteData<ApiError, O.Option<AssetEditDetail>>>()
-);
+export const loadAsset = createAction('[Asset Editor] Load asset', props<{ assetId: number }>());
 
 export const createNewAsset = createAction('[Asset Editor] Create new asset', props<{ patchAsset: PatchAsset }>());
 
@@ -22,7 +15,7 @@ export const updateAssetEditDetail = createAction(
 export const updateAssetEditDetailResult = createAction(
   '[Asset Editor] Update Asset Edit Detail Result',
   props<{
-    data: RD.RemoteData<ApiError, AssetEditDetail>;
+    asset: AssetEditDetail;
   }>()
 );
 
