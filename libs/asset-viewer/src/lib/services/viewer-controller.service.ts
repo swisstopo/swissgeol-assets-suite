@@ -1,5 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
+import { appSharedStateActions } from '@asset-sg/client-shared';
 import { AssetSearchQuery, isEmptySearchQuery, makeEmptyAssetSearchResults } from '@asset-sg/shared';
 import { AssetId } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
@@ -22,7 +23,6 @@ import {
   isPanelAutomaticallyToggled,
   isPanelOpen,
   PanelState,
-  setCurrentAsset,
   setFiltersState,
   setMapPosition,
   setQuery,
@@ -143,12 +143,12 @@ export class ViewerControllerService {
 
   private async loadAsset(id: AssetId | null): Promise<void> {
     if (id === null) {
-      this.store.dispatch(setCurrentAsset({ asset: null }));
+      this.store.dispatch(appSharedStateActions.setCurrentAsset({ asset: null }));
       return;
     }
-    this.store.dispatch(actions.setCurrentAsset({ isLoading: true }));
+    this.store.dispatch(appSharedStateActions.setCurrentAsset({ isLoading: true }));
     const asset = await firstValueFrom(this.assetSearchService.fetchAssetEditDetail(id));
-    this.store.dispatch(actions.setCurrentAsset({ asset, isLoading: false }));
+    this.store.dispatch(appSharedStateActions.setCurrentAsset({ asset, isLoading: false }));
   }
 
   private async updateByQuery(query: AssetSearchQuery): Promise<void> {

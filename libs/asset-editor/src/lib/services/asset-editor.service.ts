@@ -2,14 +2,13 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { ApiError, httpErrorResponseError } from '@asset-sg/client-shared';
 import { decodeError, OE, ORD, unknownError } from '@asset-sg/core';
-import { Contact, PatchAsset, PatchContact } from '@asset-sg/shared';
+import { AssetEditDetail, Contact, PatchAsset, PatchContact } from '@asset-sg/shared';
 import * as RD from '@devexperts/remote-data-ts';
 import * as E from 'fp-ts/Either';
 import { flow } from 'fp-ts/function';
 import { concat, forkJoin, map, Observable, of, startWith, toArray } from 'rxjs';
 
 import { AssetEditorNewFile } from '../components/asset-editor-form-group';
-import { AssetEditDetail } from '../models';
 
 @Injectable({ providedIn: 'root' })
 export class AssetEditorService {

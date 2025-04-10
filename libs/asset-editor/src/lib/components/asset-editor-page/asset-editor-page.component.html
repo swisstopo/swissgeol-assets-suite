@@ -8,13 +8,15 @@
   </mat-chip-set>
   <div style="flex: 1"></div>
 
-  <button asset-sg-secondary (click)="openConfirmDialog()" translate>
+  @if (asset) {
+  <button asset-sg-secondary (click)="openConfirmDialogForAssetDeletion(asset.assetId)" translate>
     delete
     <svg-icon key="delete"></svg-icon>
   </button>
+  }
 </asset-sg-page-header>
 <div style="display: flex">
-  <asset-sg-editor-navigation [assetId]="assetId" [activeTab]="activeTab"></asset-sg-editor-navigation>
+  <asset-sg-editor-navigation [activeTab]="activeTab"></asset-sg-editor-navigation>
   <div>
     <div class="form-container">
       @switch (activeTab) { @case (Tab.General) {

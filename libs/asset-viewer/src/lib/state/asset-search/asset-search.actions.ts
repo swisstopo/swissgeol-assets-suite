@@ -1,4 +1,4 @@
-import { AssetEditDetail, AssetSearchQuery, AssetSearchResult, AssetSearchStats } from '@asset-sg/shared';
+import { AssetSearchQuery, AssetSearchResult, AssetSearchStats } from '@asset-sg/shared';
 import { createAction, props } from '@ngrx/store';
 import { MapPosition } from '../../components/map/map-controller';
 import { AllStudyDTO } from '../../models';
@@ -36,14 +36,6 @@ export const setStudies = createAction(
   '[Asset Search] Set Studies',
   props<{
     studies?: AllStudyDTO[];
-    isLoading?: boolean;
-  }>()
-);
-
-export const setCurrentAsset = createAction(
-  '[Asset Search] Set Current Asset',
-  props<{
-    asset?: AssetEditDetail | null;
     isLoading?: boolean;
   }>()
 );

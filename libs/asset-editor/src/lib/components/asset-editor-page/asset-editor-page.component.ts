@@ -1,15 +1,13 @@
 import { Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
-import { ActivatedRoute, NavigationEnd, ParamMap, Router, RouterStateSnapshot } from '@angular/router';
-import { ConfirmDialogComponent, RoutingService } from '@asset-sg/client-shared';
+import { ActivatedRoute, NavigationEnd, Router, RouterStateSnapshot } from '@angular/router';
+import { AppSharedState, ConfirmDialogComponent, fromAppShared, RoutingService } from '@asset-sg/client-shared';
+import { AssetEditDetail } from '@asset-sg/shared';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { Store } from '@ngrx/store';
-import { filter, Observable, startWith, Subscription, take, tap } from 'rxjs';
-import { AssetEditDetail } from '../../models';
+import { filter, Observable, startWith, Subscription, take, tap, withLatestFrom } from 'rxjs';
 import * as actions from '../../state/asset-editor.actions';
-import { AppStateWithAssetEditor } from '../../state/asset-editor.reducer';
-import * as fromAssetEditor from '../../state/asset-editor.selectors';
 import { Tab } from '../asset-editor-navigation';
 
 @UntilDestroy()
@@ -20,17 +18,17 @@ import { Tab } from '../asset-editor-navigation';
   standalone: false,
 })
 export class AssetEditorPageComponent implements OnInit, OnDestroy {
-  public assetId = 'new';
-  public asset?: AssetEditDetail;
+  public assetId: number | string = 'new';
+  public asset: AssetEditDetail | null = null;
   public form!: AssetForm;
   public activeTab: Tab = Tab.General;
-  private readonly store = inject(Store<AppStateWithAssetEditor>);
+  private readonly store = inject(Store<AppSharedState>);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly routingService = inject(RoutingService);
   private readonly dialogService = inject(MatDialog);
 
-  public assetEditDetail$ = this.store.select(fromAssetEditor.selectAssetEditDetail);
+  public assetEditDetail$ = this.store.select(fromAppShared.selectCurrentAsset);
 
   private readonly subscriptions: Subscription = new Subscription();
 
@@ -48,12 +46,13 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
 
   public ngOnInit() {
     this.subscriptions.add(this.activeItem$.subscribe());
-    this.loadAssetFromRouteParams();
     this.form = buildForm();
-    // TODO: fix with new endpoints/ data schema for asset
+    this.loadAssetFromRouteParams();
     this.subscriptions.add(
       this.assetEditDetail$.subscribe((assetDetail) => {
-        this.asset = assetDetail;
+        if (this.assetId !== 'new') {
+          this.asset = assetDetail;
+        }
         this.initializeForm();
       })
     );
@@ -72,7 +71,7 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
     this.form.controls.general.controls.titlePublic.setValue(this.asset?.titlePublic ?? null);
   }
 
-  public openConfirmDialog() {
+  public openConfirmDialogForAssetDeletion(assetId: number) {
     const dialogRef = this.dialogService.open<ConfirmDialogComponent>(ConfirmDialogComponent, {
       data: {
         text: 'confirmDelete',
@@ -83,13 +82,13 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
       .pipe(untilDestroyed(this))
       .subscribe((hasConfirmed) => {
         if (hasConfirmed) {
-          this.store.dispatch(actions.deleteAsset({ assetId: parseInt(this.assetId) }));
+          this.store.dispatch(actions.deleteAsset({ assetId }));
         }
       });
   }
 
   public canDeactivate(targetRoute: RouterStateSnapshot): boolean | Observable<boolean> {
-    if (!this.form.dirty || targetRoute.url.includes(this.assetId)) {
+    if (!this.form.dirty || targetRoute.url.includes(this.assetId.toString())) {
       return true;
     }
     const dialogRef = this.dialogService.open<ConfirmDialogComponent>(ConfirmDialogComponent, {
@@ -102,13 +101,23 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
 
   private loadAssetFromRouteParams() {
     this.subscriptions.add(
-      this.route.paramMap.pipe(take(1)).subscribe((params: ParamMap) => {
-        const assetId = params.get('assetId');
-        if (assetId) {
-          this.assetId = assetId;
-          this.store.dispatch(actions.loadAsset({ assetId: parseInt(assetId) }));
-        }
-      })
+      this.route.paramMap
+        .pipe(withLatestFrom(this.store.select(fromAppShared.selectCurrentAsset)), take(1))
+        .subscribe(([params, currentAsset]) => {
+          const assetIdFromParam = params.get('assetId');
+          if (!assetIdFromParam || !parseInt(assetIdFromParam)) {
+            return;
+          }
+          const assetId = parseInt(assetIdFromParam);
+
+          if (currentAsset?.assetId === assetId) {
+            this.assetId = currentAsset.assetId;
+            this.asset = currentAsset;
+          } else {
+            this.assetId = assetId;
+            this.store.dispatch(actions.loadAsset({ assetId }));
+          }
+        })
     );
   }
 
