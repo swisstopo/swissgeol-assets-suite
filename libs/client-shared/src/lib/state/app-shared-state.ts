@@ -1,4 +1,4 @@
-import { Lang, ReferenceData } from '@asset-sg/shared';
+import { AssetEditDetail, Lang, ReferenceData } from '@asset-sg/shared';
 import { SimpleWorkgroup, User } from '@asset-sg/shared/v2';
 import * as RD from '@devexperts/remote-data-ts';
 
@@ -11,6 +11,8 @@ export interface AppSharedState {
   lang: Lang;
   isAnonymousMode: boolean;
   hasConsentedToTracking: boolean;
+  currentAsset: AssetEditDetail | null;
+  isLoadingAsset: boolean;
 }
 
 export interface AppState {

@@ -1,4 +1,6 @@
+import { assetSearchActions } from '@asset-sg/asset-viewer';
 import { AppSharedState, appSharedStateActions } from '@asset-sg/client-shared';
+import { AssetEditDetail } from '@asset-sg/shared';
 import * as RD from '@devexperts/remote-data-ts';
 import { createReducer, on } from '@ngrx/store';
 import { pipe } from 'fp-ts/function';
@@ -12,10 +14,42 @@ const initialState: AppSharedState = {
   lang: 'de',
   isAnonymousMode: false,
   hasConsentedToTracking: false,
+  currentAsset: null,
+  isLoadingAsset: false,
 };
 
 export const appSharedStateReducer = createReducer(
   initialState,
+  on(
+    assetSearchActions.setCurrentAsset,
+    (state, { asset, isLoading }): AppSharedState => ({
+      ...state,
+      currentAsset: asset === undefined ? state.currentAsset : asset,
+      isLoadingAsset: isLoading ?? state.isLoadingAsset,
+    })
+  ),
+  on(
+    assetSearchActions.resetSearch,
+    (state): AppSharedState => ({
+      ...state,
+      currentAsset: null,
+    })
+  ),
+  on(
+    appSharedStateActions.removeAssetFromSearch,
+    (state, { assetId }): AppSharedState => ({
+      ...state,
+      currentAsset: state.currentAsset?.assetId === assetId ? null : state.currentAsset,
+    })
+  ),
+
+  on(appSharedStateActions.updateAssetInSearch, (state, { asset }): AppSharedState => {
+    const mapAsset = (it: AssetEditDetail): AssetEditDetail => (it.assetId === asset.assetId ? asset : it);
+    return {
+      ...state,
+      currentAsset: state.currentAsset === null ? null : mapAsset(state.currentAsset),
+    };
+  }),
   on(
     appSharedStateActions.loadUserProfileResult,
     (state, rdUserProfile): AppSharedState => ({ ...state, rdUserProfile })
