@@ -1,48 +1,25 @@
 import { inject, Injectable } from '@angular/core';
-import { ActivatedRouteSnapshot, Router } from '@angular/router';
 import { Alert, AlertType, appSharedStateActions, RoutingService, showAlert } from '@asset-sg/client-shared';
-import { GeomFromGeomText } from '@asset-sg/shared';
 import { UntilDestroy } from '@ngneat/until-destroy';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
-import { ROUTER_NAVIGATION } from '@ngrx/router-store';
-import { Store } from '@ngrx/store';
 import { TranslateService } from '@ngx-translate/core';
-import { filter, map, switchMap, withLatestFrom } from 'rxjs';
+import { map, switchMap } from 'rxjs';
 import { AssetEditorService } from '../services/asset-editor.service';
 import * as actions from './asset-editor.actions';
-import { selectAssetEditDetail } from './asset-editor.selectors';
 
 @UntilDestroy()
 @Injectable()
 export class AssetEditorEffects {
   private readonly _actions$ = inject(Actions);
   private readonly _assetEditorService = inject(AssetEditorService);
-  private readonly _router = inject(Router);
   private readonly routingService = inject(RoutingService);
   private readonly translateService = inject(TranslateService);
-  private readonly store = inject(Store);
-
-  loadAssetDetailIfNotAlreadyLoaded$ = createEffect(() =>
-    this._actions$.pipe(
-      ofType(ROUTER_NAVIGATION),
-      map((action) => action.payload.routerState.root),
-      map(getDeepestChild),
-      filter((route) => !isNaN(route.params['assetId'])),
-      withLatestFrom(this.store.select(selectAssetEditDetail)),
-      filter(([route, assetEditDetail]) => {
-        const assetId = parseInt(route.params['assetId']);
-        return assetEditDetail?.assetId !== assetId;
-      }),
-      map(([routerState]) => parseInt(routerState.params['assetId'])),
-      map((assetId) => actions.loadAsset({ assetId }))
-    )
-  );
 
   loadAsset$ = createEffect(() =>
     this._actions$.pipe(
       ofType(actions.loadAsset),
       switchMap(({ assetId }) => this._assetEditorService.loadAsset(assetId)),
-      map((asset) => actions.setAsset({ asset }))
+      map((asset) => appSharedStateActions.setCurrentAsset({ asset }))
     )
   );
 
@@ -111,7 +88,7 @@ export class AssetEditorEffects {
             studies: asset.studies.map((it) => ({
               assetId: asset.assetId,
               studyId: it.studyId,
-              geomText: GeomFromGeomText.encode(it.geom),
+              geomText: it.geomText,
             })),
           },
         })
@@ -134,11 +111,4 @@ export class AssetEditorEffects {
       map(appSharedStateActions.editContactResult)
     )
   );
-}
-
-function getDeepestChild(route: ActivatedRouteSnapshot): ActivatedRouteSnapshot {
-  while (route.firstChild) {
-    route = route.firstChild;
-  }
-  return route;
 }

@@ -21,7 +21,7 @@ const initialState: AppSharedState = {
 export const appSharedStateReducer = createReducer(
   initialState,
   on(
-    assetSearchActions.setCurrentAsset,
+    appSharedStateActions.setCurrentAsset,
     (state, { asset, isLoading }): AppSharedState => ({
       ...state,
       currentAsset: asset === undefined ? state.currentAsset : asset,

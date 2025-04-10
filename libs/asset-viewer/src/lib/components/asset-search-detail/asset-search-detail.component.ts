@@ -1,12 +1,11 @@
 import { Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { CURRENT_LANG } from '@asset-sg/client-shared';
+import { appSharedStateActions, CURRENT_LANG } from '@asset-sg/client-shared';
 import { AssetFileType } from '@asset-sg/shared';
 import { AssetEditPolicy } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
 import { map, Observable } from 'rxjs';
 import { ViewerControllerService } from '../../services/viewer-controller.service';
-import * as actions from '../../state/asset-search/asset-search.actions';
 import { AppStateWithAssetSearch } from '../../state/asset-search/asset-search.reducer';
 import { AssetDetailFileVM, selectCurrentAssetDetailVM } from '../../state/asset-search/asset-search.selector';
 
@@ -44,7 +43,7 @@ export class AssetSearchDetailComponent {
   }
 
   public clearSelectedAsset() {
-    this.store.dispatch(actions.setCurrentAsset({ asset: null }));
+    this.store.dispatch(appSharedStateActions.setCurrentAsset({ asset: null }));
   }
 
   public searchForReferenceAsset(assetId: number) {
