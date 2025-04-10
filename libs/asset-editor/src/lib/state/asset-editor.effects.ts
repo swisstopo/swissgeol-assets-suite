@@ -1,28 +1,16 @@
 import { inject, Injectable } from '@angular/core';
-import { Router } from '@angular/router';
-import {
-  Alert,
-  AlertType,
-  appSharedStateActions,
-  filterNavigateToComponent,
-  RoutingService,
-  showAlert,
-} from '@asset-sg/client-shared';
-import { DT, isNotNull, ORD, partitionEither } from '@asset-sg/core';
+import { ActivatedRouteSnapshot, Router } from '@angular/router';
+import { Alert, AlertType, appSharedStateActions, RoutingService, showAlert } from '@asset-sg/client-shared';
 import { GeomFromGeomText } from '@asset-sg/shared';
-import * as RD from '@devexperts/remote-data-ts';
 import { UntilDestroy } from '@ngneat/until-destroy';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
+import { ROUTER_NAVIGATION } from '@ngrx/router-store';
+import { Store } from '@ngrx/store';
 import { TranslateService } from '@ngx-translate/core';
-import { pipe } from 'fp-ts/function';
-import * as O from 'fp-ts/Option';
-import * as D from 'io-ts/Decoder';
-import { concatMap, filter, map, Observable, partition, share, switchMap, tap } from 'rxjs';
-
-import { AssetEditorPageComponent } from '../components/asset-editor-page';
+import { filter, map, switchMap, withLatestFrom } from 'rxjs';
 import { AssetEditorService } from '../services/asset-editor.service';
-
 import * as actions from './asset-editor.actions';
+import { selectAssetEditDetail } from './asset-editor.selectors';
 
 @UntilDestroy()
 @Injectable()
@@ -32,44 +20,29 @@ export class AssetEditorEffects {
   private readonly _router = inject(Router);
   private readonly routingService = inject(RoutingService);
   private readonly translateService = inject(TranslateService);
+  private readonly store = inject(Store);
 
-  validatedQueryParams = partitionEither(
-    filterNavigateToComponent(this._actions$, AssetEditorPageComponent).pipe(
-      map(({ params }) => pipe(D.struct({ assetId: D.union(DT.NumberFromString, D.literal('new')) }).decode(params))),
-      share()
+  loadAssetDetailIfNotAlreadyLoaded$ = createEffect(() =>
+    this._actions$.pipe(
+      ofType(ROUTER_NAVIGATION),
+      map((action) => action.payload.routerState.root),
+      map(getDeepestChild),
+      filter((route) => !isNaN(route.params['assetId'])),
+      withLatestFrom(this.store.select(selectAssetEditDetail)),
+      filter(([route, assetEditDetail]) => {
+        const assetId = parseInt(route.params['assetId']);
+        return assetEditDetail?.assetId !== assetId;
+      }),
+      map(([routerState]) => parseInt(routerState.params['assetId'])),
+      map((assetId) => actions.loadAsset({ assetId }))
     )
   );
 
-  navigateForInvalidQueryParams$ = createEffect(
-    () =>
-      this.validatedQueryParams[0].pipe(
-        concatMap((e) => {
-          console.error('error decoding queryParams', D.draw(e));
-          return this._router.navigate(['/'], { queryParams: undefined });
-        })
-      ),
-    { dispatch: false }
-  );
-
-  newOrAssetId = partition(this.validatedQueryParams[1], ({ assetId }) => assetId === 'new') as [
-    Observable<{ assetId: 'new' }>,
-    Observable<{ assetId: number }>
-  ];
-
-  newAsset$ = createEffect(() =>
-    this.newOrAssetId[0].pipe(map(() => actions.loadAssetEditDetailResult(RD.success(O.none))))
-  );
-
-  loadAssetEditDetail$ = createEffect(() =>
-    this.newOrAssetId[1].pipe(
-      switchMap((params) => this._assetEditorService.loadAssetDetailData(params.assetId)),
-      tap(async (rd) => {
-        if (RD.isFailure(rd)) {
-          await this._router.navigate(['/'], { queryParams: undefined });
-        }
-      }),
-      ORD.map(O.some),
-      map(actions.loadAssetEditDetailResult)
+  loadAsset$ = createEffect(() =>
+    this._actions$.pipe(
+      ofType(actions.loadAsset),
+      switchMap(({ assetId }) => this._assetEditorService.loadAsset(assetId)),
+      map((asset) => actions.setAsset({ asset }))
     )
   );
 
@@ -77,7 +50,7 @@ export class AssetEditorEffects {
     this._actions$.pipe(
       ofType(actions.createNewAsset),
       switchMap(({ patchAsset }) => this._assetEditorService.createAsset(patchAsset)),
-      map((data) => actions.updateAssetEditDetailResult({ data }))
+      map((data) => actions.updateAssetEditDetailResult({ asset: data }))
     )
   );
 
@@ -86,25 +59,11 @@ export class AssetEditorEffects {
       ofType(actions.updateAssetEditDetail),
       switchMap(({ assetId, patchAsset, newFiles, filesToDelete }) =>
         this._assetEditorService.deleteFiles(assetId, filesToDelete).pipe(
-          ORD.chainSwitchMapW(() => this._assetEditorService.uploadFiles(assetId, newFiles)),
-          ORD.chainSwitchMapW(() => this._assetEditorService.updateAssetDetail(assetId, patchAsset))
+          switchMap(() => this._assetEditorService.uploadFiles(assetId, newFiles)),
+          switchMap(() => this._assetEditorService.updateAssetDetail(assetId, patchAsset))
         )
       ),
-      map((data) => actions.updateAssetEditDetailResult({ data }))
-    )
-  );
-
-  loadAsset$ = createEffect(() =>
-    this._actions$.pipe(
-      ofType(actions.loadAsset),
-      switchMap(({ assetId }) => this._assetEditorService.loadAssetDetailData(assetId)),
-      tap(async (rd) => {
-        if (RD.isFailure(rd)) {
-          await this._router.navigate(['/'], { queryParams: undefined });
-        }
-      }),
-      ORD.map(O.some),
-      map(actions.loadAssetEditDetailResult)
+      map((data) => actions.updateAssetEditDetailResult({ asset: data }))
     )
   );
 
@@ -145,9 +104,7 @@ export class AssetEditorEffects {
   updateSearchAfterAssetChanged$ = createEffect(() =>
     this._actions$.pipe(
       ofType(actions.updateAssetEditDetailResult),
-      map(({ data }) => (RD.isSuccess(data) ? data.value : null)),
-      filter(isNotNull),
-      map((asset) =>
+      map(({ asset }) =>
         appSharedStateActions.updateAssetInSearch({
           asset: {
             ...asset,
@@ -177,4 +134,11 @@ export class AssetEditorEffects {
       map(appSharedStateActions.editContactResult)
     )
   );
+}
+
+function getDeepestChild(route: ActivatedRouteSnapshot): ActivatedRouteSnapshot {
+  while (route.firstChild) {
+    route = route.firstChild;
+  }
+  return route;
 }

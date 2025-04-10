@@ -1,4 +1,5 @@
 import { Component, inject } from '@angular/core';
+import { Router } from '@angular/router';
 import { CURRENT_LANG } from '@asset-sg/client-shared';
 import { AssetFileType } from '@asset-sg/shared';
 import { AssetEditPolicy } from '@asset-sg/shared/v2';
@@ -16,6 +17,7 @@ import { AssetDetailFileVM, selectCurrentAssetDetailVM } from '../../state/asset
   standalone: false,
 })
 export class AssetSearchDetailComponent {
+  private readonly router = inject(Router);
   private readonly store = inject(Store<AppStateWithAssetSearch>);
   public readonly currentLang$ = inject(CURRENT_LANG);
   private readonly viewerControllerService = inject(ViewerControllerService);
@@ -36,6 +38,10 @@ export class AssetSearchDetailComponent {
       return mapping;
     })
   );
+
+  public navigateToAssetEdit(lang: string | null, assetId: number) {
+    this.router.navigate([lang, 'asset-admin', assetId]);
+  }
 
   public clearSelectedAsset() {
     this.store.dispatch(actions.setCurrentAsset({ asset: null }));
