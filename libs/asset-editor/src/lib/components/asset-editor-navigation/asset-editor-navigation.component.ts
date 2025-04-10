@@ -11,7 +11,6 @@ import { UntilDestroy } from '@ngneat/until-destroy';
   standalone: false,
 })
 export class AssetEditorNavigationComponent {
-  @Input() assetId = 'new';
   @Input() public activeTab = Tab.General;
   public form?: FormGroup;
   private readonly route = inject(ActivatedRoute);
