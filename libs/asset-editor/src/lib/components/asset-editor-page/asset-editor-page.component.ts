@@ -1,14 +1,12 @@
 import { Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
-import { ActivatedRoute, NavigationEnd, ParamMap, Router } from '@angular/router';
+import { ActivatedRoute, NavigationEnd, ParamMap, Router, RouterStateSnapshot } from '@angular/router';
 import { ConfirmDialogComponent, RoutingService } from '@asset-sg/client-shared';
-import { ORD } from '@asset-sg/core';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { Store } from '@ngrx/store';
-import * as O from 'fp-ts/Option';
-import { filter, map, Observable, startWith, Subscription, take, tap } from 'rxjs';
-import { AssetEditDetailVM } from '../../models';
+import { filter, Observable, startWith, Subscription, take, tap } from 'rxjs';
+import { AssetEditDetail } from '../../models';
 import * as actions from '../../state/asset-editor.actions';
 import { AppStateWithAssetEditor } from '../../state/asset-editor.reducer';
 import * as fromAssetEditor from '../../state/asset-editor.selectors';
@@ -23,7 +21,7 @@ import { Tab } from '../asset-editor-navigation';
 })
 export class AssetEditorPageComponent implements OnInit, OnDestroy {
   public assetId = 'new';
-  public asset: AssetEditDetailVM | null = null;
+  public asset?: AssetEditDetail;
   public form!: AssetForm;
   public activeTab: Tab = Tab.General;
   private readonly store = inject(Store<AppStateWithAssetEditor>);
@@ -32,7 +30,7 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
   private readonly routingService = inject(RoutingService);
   private readonly dialogService = inject(MatDialog);
 
-  public assetEditDetail$ = this.store.select(fromAssetEditor.selectRDAssetEditDetail).pipe(ORD.fromFilteredSuccess);
+  public assetEditDetail$ = this.store.select(fromAssetEditor.selectAssetEditDetail);
 
   private readonly subscriptions: Subscription = new Subscription();
 
@@ -54,7 +52,7 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
     this.form = buildForm();
     // TODO: fix with new endpoints/ data schema for asset
     this.subscriptions.add(
-      this.assetEditDetail$.pipe(map((res) => (O.isSome(res) ? res.value : null))).subscribe((assetDetail) => {
+      this.assetEditDetail$.subscribe((assetDetail) => {
         this.asset = assetDetail;
         this.initializeForm();
       })
@@ -66,12 +64,10 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
   }
 
   public navigateToStart() {
-    this.routingService.navigateBack(['/']).then();
-    console.log(this.form.dirty, this.form.valid);
+    this.routingService.navigateToRoot().then();
   }
 
   public initializeForm() {
-    console.log('init');
     this.form.reset();
     this.form.controls.general.controls.titlePublic.setValue(this.asset?.titlePublic ?? null);
   }
@@ -92,10 +88,8 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
       });
   }
 
-  public canDeactivate(): boolean | Observable<boolean> {
-    console.log(this.form.dirty, this.form.valid);
-
-    if (!this.form.dirty) {
+  public canDeactivate(targetRoute: RouterStateSnapshot): boolean | Observable<boolean> {
+    if (!this.form.dirty || targetRoute.url.includes(this.assetId)) {
       return true;
     }
     const dialogRef = this.dialogService.open<ConfirmDialogComponent>(ConfirmDialogComponent, {
@@ -103,7 +97,6 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
         text: 'confirmDiscardChanges',
       },
     });
-    console.log(this.form.dirty, this.form.valid);
     return dialogRef.afterClosed();
   }
 
