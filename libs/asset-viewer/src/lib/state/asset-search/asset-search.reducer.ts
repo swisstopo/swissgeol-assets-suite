@@ -17,15 +17,22 @@ import * as E from 'fp-ts/Either';
 import { getCenter } from 'ol/extent';
 import { LineString as OlLineString, Polygon } from 'ol/geom';
 import { DEFAULT_MAP_POSITION, MapPosition } from '../../components/map/map-controller';
-import { AllStudyDTO, AllStudyDTOs } from '../../models';
+import { AllStudyDTO } from '../../models';
+import { mapAssetAccessToAccessType } from '../../utils/access-type';
 import * as actions from './asset-search.actions';
 import { PanelState } from './asset-search.actions';
+
+export enum LoadingState {
+  Initial = 'initial',
+  Loading = 'loading',
+  Loaded = 'loaded',
+}
 
 export interface AssetSearchState {
   query: AssetSearchQuery;
   results: AssetSearchResult;
   stats: AssetSearchStats;
-  studies: AllStudyDTOs;
+  studies: AllStudyDTO[];
   currentAsset: AssetEditDetail | null;
   ui: AssetSearchUiState;
 
@@ -191,31 +198,35 @@ export const assetSearchReducer = createReducer(
           ?.filter((study) => study.assetId !== asset.assetId)
           .concat(
             asset.studies.map((study): AllStudyDTO => {
-              const centroid = (() => {
-                const { right: geom } = GeomFromGeomText.decode(study.geomText) as E.Right<
-                  Point | StudyPolygon | LineString
-                >;
-                switch (geom._tag) {
-                  case 'Point':
-                    return geom.coord;
-                  case 'Polygon': {
-                    const [x, y] = getCenter(new Polygon([geom.coords.map((it) => [it.x, it.y])]).getExtent());
-                    return { x, y } as LV95;
-                  }
-                  case 'LineString': {
-                    const [x, y] = getCenter(new OlLineString(geom.coords.map((it) => [it.x, it.y])).getExtent());
-                    return { x, y } as LV95;
-                  }
-                }
-              })();
+              const { centroid, geometryType } = extractCentroidFromStudy(study);
               return {
                 assetId: study.assetId,
                 studyId: study.studyId,
-                isPoint: study.geomText.startsWith('POINT'),
+                geometryType: geometryType,
                 centroid,
+                accessType: mapAssetAccessToAccessType(asset),
               };
             })
           ) ?? null,
     };
   })
 );
+
+function extractCentroidFromStudy(study: { assetId: number; studyId: string; geomText: string }): {
+  centroid: LV95;
+  geometryType: 'Point' | 'Polygon' | 'Line';
+} {
+  const { right: geom } = GeomFromGeomText.decode(study.geomText) as E.Right<Point | StudyPolygon | LineString>;
+  switch (geom._tag) {
+    case 'Point':
+      return { centroid: geom.coord, geometryType: 'Point' };
+    case 'Polygon': {
+      const [x, y] = getCenter(new Polygon([geom.coords.map((it) => [it.x, it.y])]).getExtent());
+      return { centroid: { x, y } as LV95, geometryType: 'Polygon' };
+    }
+    case 'LineString': {
+      const [x, y] = getCenter(new OlLineString(geom.coords.map((it) => [it.x, it.y])).getExtent());
+      return { centroid: { x, y } as LV95, geometryType: 'Line' };
+    }
+  }
+}

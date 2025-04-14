@@ -26,8 +26,6 @@ import * as A from 'fp-ts/Array';
 import { pipe } from 'fp-ts/function';
 import * as O from 'fp-ts/Option';
 
-import { AssetDetail } from '../../models';
-
 import { isPanelOpen } from './asset-search.actions';
 import { AppStateWithAssetSearch } from './asset-search.reducer';
 
@@ -279,6 +277,10 @@ export const selectActiveFilters = createSelector(
   }
 );
 
+export const selectHasNoActiveFilters = createSelector(assetSearchFeature, ({ query }) =>
+  Object.values(query).every((value) => value === undefined || value == false)
+);
+
 export interface AvailableAuthor {
   contactId: number;
   count: number;
@@ -390,7 +392,13 @@ const makeAssetDetailVMNew = (referenceData: ReferenceData, assetDetail: AssetEd
   };
 };
 
-const makeAssetDetailContactVM = (referenceData: ReferenceData, assetContact: AssetDetail['assetContacts'][0]) => {
+const makeAssetDetailContactVM = (
+  referenceData: ReferenceData,
+  assetContact: {
+    role: AssetContactRole;
+    contact: Contact;
+  }
+) => {
   const {
     role,
     contact: { contactKindItemCode, ...contactRest },

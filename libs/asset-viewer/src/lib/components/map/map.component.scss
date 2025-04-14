@@ -1,5 +1,7 @@
 @use "../../styles/variables";
 
+$map-element-padding: 16px;
+
 :host {
   position: relative;
 }
@@ -16,11 +18,20 @@
 
 asset-sg-map-controls {
   position: absolute;
-  top: 16px;
-  right: 16px;
+  top: $map-element-padding;
+  right: $map-element-padding;
   padding: 0;
 }
 
-:host.is-loading asset-sg-map-controls {
-  opacity: 0;
+asset-sg-map-legend {
+  position: absolute;
+  top: $map-element-padding;
+  left: $map-element-padding;
+}
+
+:host.is-loading {
+  asset-sg-map-controls,
+  asset-sg-map-legend {
+    opacity: 0;
+  }
 }

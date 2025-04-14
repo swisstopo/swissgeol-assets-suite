@@ -61,6 +61,7 @@ import { FileSizePipe } from './components/asset-viewer-files/file-size-display.
 import { AssetViewerPageComponent } from './components/asset-viewer-page';
 import { MapComponent } from './components/map/map.component';
 import { MapControlsComponent } from './components/map-controls/map-controls.component';
+import { MapLegendComponent } from './components/map-legend/map-legend.component';
 import { ViewerParamsService } from './services/viewer-params.service';
 import { assetSearchReducer } from './state/asset-search/asset-search.reducer';
 import { mapControlReducer } from './state/map-control/map-control.reducer';
@@ -135,6 +136,7 @@ import { mapControlReducer } from './state/map-control/map-control.reducer';
     CanUpdateDirective,
     MatChipSet,
     ChipComponent,
+    MapLegendComponent,
   ],
   providers: [
     TranslatePipe,
