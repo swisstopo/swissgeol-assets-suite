@@ -1,18 +1,19 @@
 import { Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
-import { ActivatedRoute, NavigationEnd, Router, RouterStateSnapshot } from '@angular/router';
+import { ActivatedRoute, RouterStateSnapshot } from '@angular/router';
 import {
   AppSharedState,
   ConfirmDialogComponent,
   CURRENT_LANG,
   fromAppShared,
+  ROUTER_SEGMENTS,
   RoutingService,
 } from '@asset-sg/client-shared';
 import { AssetEditDetail, Lang } from '@asset-sg/shared';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { Store } from '@ngrx/store';
-import { filter, Observable, startWith, Subscription, take, tap, withLatestFrom } from 'rxjs';
+import { Observable, Subscription, take, tap, withLatestFrom } from 'rxjs';
 import * as actions from '../../state/asset-editor.actions';
 import { Tab } from '../asset-editor-navigation/asset-editor-navigation.component';
 
@@ -24,35 +25,28 @@ import { Tab } from '../asset-editor-navigation/asset-editor-navigation.componen
   standalone: false,
 })
 export class AssetEditorPageComponent implements OnInit, OnDestroy {
-  public assetId: number | null = null;
+  public mode: 'edit' | 'create' = 'edit';
+  // When creating a new asset, the asset is null
   public asset: AssetEditDetail | null = null;
   public form!: AssetForm;
   public activeTab: Tab = Tab.General;
   private currentLang: Lang = 'de';
   private readonly store = inject(Store<AppSharedState>);
   private readonly route = inject(ActivatedRoute);
-  private readonly router = inject(Router);
   private readonly routingService = inject(RoutingService);
   private readonly dialogService = inject(MatDialog);
   private readonly currentLang$ = inject(CURRENT_LANG);
+  private readonly routerSegments$ = inject(ROUTER_SEGMENTS);
 
   private readonly assetEditDetail$ = this.store.select(fromAppShared.selectCurrentAsset);
   private readonly subscriptions: Subscription = new Subscription();
 
-  get assetIdFromUrl(): number | string {
-    return this.assetId ?? 'new';
-  }
-
   public ngOnInit() {
     this.subscriptions.add(this.currentLang$.subscribe((lang) => (this.currentLang = lang)));
     this.subscriptions.add(
-      this.router.events
+      this.routerSegments$
         .pipe(
-          filter((event) => event instanceof NavigationEnd),
-          startWith(() => undefined),
-          tap(() => {
-            const segments = (this.router.getCurrentNavigation() ?? this.router.lastSuccessfulNavigation)?.finalUrl
-              ?.root.children?.['primary']?.segments;
+          tap((segments) => {
             if (segments !== undefined && segments.length > 0) {
               this.activeTab = segments[segments.length - 1].path as Tab;
             }
@@ -64,7 +58,7 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
     this.loadAssetFromRouteParams();
     this.subscriptions.add(
       this.assetEditDetail$.subscribe((assetDetail) => {
-        if (this.assetIdFromUrl !== 'new') {
+        if (this.mode === 'edit') {
           this.asset = assetDetail;
         }
         this.initializeForm();
@@ -119,16 +113,18 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
         .pipe(withLatestFrom(this.store.select(fromAppShared.selectCurrentAsset)), take(1))
         .subscribe(([params, currentAsset]) => {
           const assetIdFromParam = params.get('assetId');
-          if (!assetIdFromParam || !parseInt(assetIdFromParam)) {
+          if (!assetIdFromParam) {
             return;
           }
           const assetId = parseInt(assetIdFromParam);
+          if (isNaN(assetId)) {
+            this.mode = 'create';
+            return;
+          }
 
           if (currentAsset?.assetId === assetId) {
-            this.assetId = currentAsset.assetId;
             this.asset = currentAsset;
           } else {
-            this.assetId = assetId;
             this.store.dispatch(actions.loadAsset({ assetId }));
           }
         })

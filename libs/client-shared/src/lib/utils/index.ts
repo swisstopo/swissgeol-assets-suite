@@ -8,3 +8,4 @@ export * from './filter-navigate-to-component';
 export * from './map';
 export * from './map-styles';
 export * from './wgs';
+export * from './router-segments';

@@ -1,17 +1,17 @@
 import { ChangeDetectionStrategy, Component, HostBinding, inject } from '@angular/core';
-import { NavigationEnd, Router } from '@angular/router';
-import { fromAppShared } from '@asset-sg/client-shared';
+import { Router } from '@angular/router';
+import { fromAppShared, ROUTER_SEGMENTS } from '@asset-sg/client-shared';
 import { AssetEditPolicy } from '@asset-sg/shared/v2';
 import { UntilDestroy } from '@ngneat/until-destroy';
 import { Store } from '@ngrx/store';
 import { TranslateService } from '@ngx-translate/core';
-import { filter, firstValueFrom, map, Observable, startWith } from 'rxjs';
+import { firstValueFrom, map, Observable, startWith } from 'rxjs';
 
 // eslint-disable-next-line @nx/enforce-module-boundaries
 import {
+  PanelState,
   setFiltersState,
   updateSearchQuery,
-  PanelState,
 } from '../../../../../../libs/asset-viewer/src/lib/state/asset-search/asset-search.actions';
 
 // eslint-disable-next-line @nx/enforce-module-boundaries
@@ -37,6 +37,7 @@ export class MenuBarComponent {
   private readonly router = inject(Router);
   private readonly store = inject(Store<AppState>);
 
+  private readonly routerSegments$ = inject(ROUTER_SEGMENTS);
   readonly translateService = inject(TranslateService);
 
   readonly activeFilterCount$ = this.store
@@ -45,12 +46,8 @@ export class MenuBarComponent {
 
   readonly userExists$ = this.store.select(fromAppShared.selectIsAnonymousMode).pipe(map((anonymous) => !anonymous));
 
-  readonly activeItem$: Observable<MenuItem | null> = this.router.events.pipe(
-    filter((event) => event instanceof NavigationEnd),
-    startWith(() => undefined),
-    map((): MenuItem | null => {
-      const segments = (this.router.getCurrentNavigation() ?? this.router.lastSuccessfulNavigation)?.finalUrl?.root
-        .children?.['primary']?.segments;
+  readonly activeItem$: Observable<MenuItem | null> = this.routerSegments$.pipe(
+    map((segments): MenuItem | null => {
       if (segments == null || segments.length === 1) {
         return 'home';
       }
