@@ -2,9 +2,9 @@ import { AssetFile } from '@asset-sg/shared';
 import { AssetId, User } from '@asset-sg/shared/v2';
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '@/core/prisma.service';
-import { FileOcrService } from '@/features/files/file-ocr.service';
-import { FileS3Service, SaveFileS3Options } from '@/features/files/file-s3.service';
-import { CreateFileData, FileIdentifier, FileRepo } from '@/features/files/file.repo';
+import { FileOcrService } from '@/features/assets/files/file-ocr.service';
+import { FileS3Service, SaveFileS3Options } from '@/features/assets/files/file-s3.service';
+import { CreateFileData, FileIdentifier, FileRepo } from '@/features/assets/files/file.repo';
 
 @Injectable()
 export class FileService {

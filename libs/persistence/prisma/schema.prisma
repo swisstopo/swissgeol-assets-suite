@@ -70,6 +70,8 @@ model Asset {
   favorites             Favorite[]
   allStudies            AllStudy[]
 
+  workflow Workflow?
+
   @@map("asset")
 }
 
@@ -620,6 +622,10 @@ model AssetUser {
   firstName  String              @default("") @map("first_name")
   lastName   String              @default("") @map("last_name")
 
+  assignedWorkflowChanges WorkflowChange[] @relation(name: "assignee")
+  createdWorkflowChanges  WorkflowChange[] @relation(name: "created_by")
+  assignedWorkflows       Workflow[]
+
   @@map("asset_user")
 }
 
@@ -681,4 +687,70 @@ enum StudyGeometryType {
   Polygon
 
   @@map("study_geometry_type")
+}
+
+model Workflow {
+  workflowId          Int            @id @default(autoincrement()) @map("workflow_id")
+  hasRequestedChanges Boolean        @default(false) @map("has_requested_changes")
+  status              WorkflowStatus @default(Draft) @map("status")
+
+  asset   Asset @relation(fields: [assetId], references: [assetId], onDelete: Cascade)
+  assetId Int   @unique @map("asset_id")
+
+  workflowChanges WorkflowChange[]
+
+  reviewedTabs   TabStatus @relation(fields: [reviewedTabsId], references: [tabStatusId], name: "reviewed_tabs")
+  reviewedTabsId Int       @unique @map("reviewed_tabs_id")
+
+  publishedTabs   TabStatus @relation(fields: [publishedTabsId], references: [tabStatusId], name: "published_tabs")
+  publishedTabsId Int       @unique @map("published_tabs_id")
+
+  assignee   AssetUser? @relation(fields: [assigneeId], references: [id], onDelete: SetNull)
+  assigneeId String?    @map("assignee_id") @db.Uuid
+
+  @@map("workflow")
+}
+
+model WorkflowChange {
+  workflowChangeId Int            @id @default(autoincrement()) @map("workflow_change_id")
+  comment          String?
+  createdAt        DateTime       @default(now()) @map("created_at")
+  fromStatus       WorkflowStatus @map("from_status")
+  toStatus         WorkflowStatus @map("to_status")
+
+  workflow   Workflow @relation(fields: [workflowId], references: [workflowId], onDelete: Cascade)
+  workflowId Int      @map("workflow_id")
+
+  createdBy   AssetUser? @relation(fields: [createdById], references: [id], onDelete: SetNull, name: "created_by")
+  createdById String?    @map("created_by_id") @db.Uuid
+
+  assignee   AssetUser? @relation(fields: [assigneeId], references: [id], onDelete: SetNull, name: "assignee")
+  assigneeId String?    @map("assignee_id") @db.Uuid
+
+  @@map("workflow_change")
+}
+
+enum WorkflowStatus {
+  Draft
+  InReview
+  Reviewed
+  Published
+
+  @@map("workflow_status")
+}
+
+model TabStatus {
+  tabStatusId Int @id @default(autoincrement()) @map("tab_status_id")
+
+  general    Boolean @default(false)
+  files      Boolean @default(false)
+  usage      Boolean @default(false)
+  contacts   Boolean @default(false)
+  references Boolean @default(false)
+  geometries Boolean @default(false)
+
+  workflowReview  Workflow? @relation("reviewed_tabs")
+  workflowPublish Workflow? @relation("published_tabs")
+
+  @@map("tab_status")
 }

@@ -1,8 +1,8 @@
 import { faker } from '@faker-js/faker';
 // eslint-disable-next-line @nx/enforce-module-boundaries
-import { clearPrismaAssets, setupDB } from '../../../../../test/setup-db';
+import { clearPrismaAssets, setupDB } from '../../../../../../test/setup-db';
 import { PrismaService } from '@/core/prisma.service';
-import { determineUniqueFilename, FileRepo } from '@/features/files/file.repo';
+import { determineUniqueFilename, FileRepo } from '@/features/assets/files/file.repo';
 
 describe(FileRepo, () => {
   const prisma = new PrismaService();

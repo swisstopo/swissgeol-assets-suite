@@ -11,7 +11,7 @@ import { pipe } from 'fp-ts/function';
 import * as C from 'io-ts/Codec';
 import * as D from 'io-ts/Decoder';
 
-import { PostgresAllStudies } from '@/utils/postgres-studies/postgres-studies';
+import { PostgresAllStudies } from '@/features/assets/asset-edit/utils/postgres-studies';
 
 export const AssetFileFromPostgres = D.struct({
   id: D.number,

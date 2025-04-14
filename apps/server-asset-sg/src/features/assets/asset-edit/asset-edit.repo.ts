@@ -1,6 +1,6 @@
 import { decodeError, isNotNull } from '@asset-sg/core';
 import { AssetEditDetail, AssetUsage, dateFromDateId, DateIdFromDate, PatchAsset } from '@asset-sg/shared';
-import { User } from '@asset-sg/shared/v2';
+import { AssetId, User, UserId } from '@asset-sg/shared/v2';
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import * as E from 'fp-ts/Either';
@@ -8,14 +8,14 @@ import * as O from 'fp-ts/Option';
 
 import { PrismaService } from '@/core/prisma.service';
 import { Repo, RepoListOptions } from '@/core/repo';
-import { FileRepo } from '@/features/files/file.repo';
-import { AssetEditDetailFromPostgres } from '@/models/asset-edit-detail';
+import { AssetEditDetailFromPostgres } from '@/features/assets/asset-edit/models/asset-edit-detail';
 import {
   createStudies,
   deleteStudies,
   postgresStudiesByAssetId,
   updateStudies,
-} from '@/utils/postgres-studies/postgres-studies';
+} from '@/features/assets/asset-edit/utils/postgres-studies';
+import { FileRepo } from '@/features/assets/files/file.repo';
 import { handlePrismaMutationError } from '@/utils/prisma';
 
 @Injectable()
@@ -49,60 +49,64 @@ export class AssetEditRepo implements Repo<AssetEditDetail, number, AssetEditDat
   }
 
   async create(data: AssetEditData): Promise<AssetEditDetail> {
-    const asset = await this.prismaService.asset.create({
-      select: { assetId: true },
-      data: {
-        titlePublic: data.patch.titlePublic,
-        titleOriginal: data.patch.titleOriginal,
-        createDate: DateIdFromDate.encode(data.patch.createDate),
-        receiptDate: DateIdFromDate.encode(data.patch.receiptDate),
-        assetKindItem: { connect: { assetKindItemCode: data.patch.assetKindItemCode } },
-        assetFormatItem: { connect: { assetFormatItemCode: data.patch.assetFormatItemCode } },
-        isExtract: false,
-        isNatRel: data.patch.isNatRel,
-        lastProcessedDate: new Date(),
-        processor: data.user.email,
-        manCatLabelRefs: {
-          createMany: {
-            data: data.patch.manCatLabelRefs.map((manCatLabelItemCode) => ({
-              manCatLabelItemCode,
-            })),
-            skipDuplicates: true,
+    return this.prismaService.$transaction(async () => {
+      const asset = await this.prismaService.asset.create({
+        select: { assetId: true },
+        data: {
+          titlePublic: data.patch.titlePublic,
+          titleOriginal: data.patch.titleOriginal,
+          createDate: DateIdFromDate.encode(data.patch.createDate),
+          receiptDate: DateIdFromDate.encode(data.patch.receiptDate),
+          assetKindItem: { connect: { assetKindItemCode: data.patch.assetKindItemCode } },
+          assetFormatItem: { connect: { assetFormatItemCode: data.patch.assetFormatItemCode } },
+          isExtract: false,
+          isNatRel: data.patch.isNatRel,
+          lastProcessedDate: new Date(),
+          processor: data.user.email,
+          manCatLabelRefs: {
+            createMany: {
+              data: data.patch.manCatLabelRefs.map((manCatLabelItemCode) => ({
+                manCatLabelItemCode,
+              })),
+              skipDuplicates: true,
+            },
           },
-        },
-        assetContacts: {
-          createMany: { data: data.patch.assetContacts, skipDuplicates: true },
-        },
-        assetLanguages: {
-          createMany: { data: data.patch.assetLanguages, skipDuplicates: true },
-        },
-        ids: {
-          createMany: {
-            data: data.patch.ids.map(({ id, description }) => ({ id, description })),
+          assetContacts: {
+            createMany: { data: data.patch.assetContacts, skipDuplicates: true },
           },
-        },
-        typeNatRels: {
-          createMany: {
-            data: data.patch.typeNatRels.map((natRelItemCode) => ({ natRelItemCode })),
-            skipDuplicates: true,
+          assetLanguages: {
+            createMany: { data: data.patch.assetLanguages, skipDuplicates: true },
           },
-        },
-        internalUse: {
-          create: makeUsageInput(data.patch.internalUse),
-        },
-        publicUse: {
-          create: makeUsageInput(data.patch.publicUse),
-        },
-        statusWorks: {
-          create: {
-            statusWorkDate: new Date(),
-            statusWorkItemCode: 'initiateAsset',
+          ids: {
+            createMany: {
+              data: data.patch.ids.map(({ id, description }) => ({ id, description })),
+            },
           },
+          typeNatRels: {
+            createMany: {
+              data: data.patch.typeNatRels.map((natRelItemCode) => ({ natRelItemCode })),
+              skipDuplicates: true,
+            },
+          },
+          internalUse: {
+            create: makeUsageInput(data.patch.internalUse),
+          },
+          publicUse: {
+            create: makeUsageInput(data.patch.publicUse),
+          },
+          statusWorks: {
+            create: {
+              statusWorkDate: new Date(),
+              statusWorkItemCode: 'initiateAsset',
+            },
+          },
+          workgroup: { connect: { id: data.patch.workgroupId } },
         },
-        workgroup: { connect: { id: data.patch.workgroupId } },
-      },
+      });
+
+      await this.createWorkflow(asset.assetId, data.user.id);
+      return (await this.find(asset.assetId)) as AssetEditDetail;
     });
-    return (await this.find(asset.assetId)) as AssetEditDetail;
   }
 
   async update(id: number, data: AssetEditData): Promise<AssetEditDetail | null> {
@@ -283,11 +287,34 @@ export class AssetEditRepo implements Repo<AssetEditDetail, number, AssetEditDat
             Asset: { none: {} },
           },
         });
+
+        // Delete all `tabStatus` records that are not in use anymore.
+        await this.prismaService.tabStatus.deleteMany({
+          where: {
+            workflowPublish: null,
+            workflowReview: null,
+          },
+        });
       });
       return true;
     } catch (e) {
       return handlePrismaMutationError(e) ?? false;
     }
+  }
+
+  private async createWorkflow(assetId: AssetId, userId: UserId): Promise<void> {
+    const assetUser = await this.prismaService.assetUser.findUniqueOrThrow({
+      where: { id: userId },
+    });
+
+    await this.prismaService.workflow.create({
+      data: {
+        asset: { connect: { assetId: assetId } },
+        reviewedTabs: { create: {} },
+        publishedTabs: { create: {} },
+        assignee: { connect: { id: assetUser.id } },
+      },
+    });
   }
 
   private async loadDetail(asset: PrismaAsset): Promise<AssetEditDetail> {

@@ -4,11 +4,11 @@ import { fakerDE_CH as faker } from '@faker-js/faker';
 import * as O from 'fp-ts/Option';
 
 // eslint-disable-next-line @nx/enforce-module-boundaries
-import { fakeAssetFormatItemCode } from '../../../../../test/data/asset-format-item';
+import { fakeAssetFormatItemCode } from '../../../../../../test/data/asset-format-item';
 // eslint-disable-next-line @nx/enforce-module-boundaries
-import { fakeAssetKindItemCode } from '../../../../../test/data/asset-kind-item';
+import { fakeAssetKindItemCode } from '../../../../../../test/data/asset-kind-item';
 // eslint-disable-next-line @nx/enforce-module-boundaries
-import { fakeContactKindItemCode } from '../../../../../test/data/contact-kind-item';
+import { fakeContactKindItemCode } from '../../../../../../test/data/contact-kind-item';
 
 import { define } from '@/utils/define';
 

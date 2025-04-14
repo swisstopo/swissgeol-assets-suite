@@ -1,7 +1,6 @@
 import { unknownToError } from '@asset-sg/core';
-import { AssetByTitle } from '@asset-sg/shared';
 import { AppConfig, AppMode, User } from '@asset-sg/shared/v2';
-import { Controller, Get, HttpException, Query } from '@nestjs/common';
+import { Controller, Get, HttpException } from '@nestjs/common';
 import { sequenceS } from 'fp-ts/Apply';
 import * as A from 'fp-ts/Array';
 import * as E from 'fp-ts/Either';
@@ -12,14 +11,13 @@ import * as TE from 'fp-ts/TaskEither';
 import { Authorize } from '@/core/decorators/authorize.decorator';
 import { CurrentUser } from '@/core/decorators/current-user.decorator';
 import { PrismaService } from '@/core/prisma.service';
-import { AssetSearchService } from '@/features/assets/search/asset-search.service';
 import { readEnv, requireEnv } from '@/utils/requireEnv';
 
 @Controller('/')
 export class AppController {
   private readonly config: AppConfig;
 
-  constructor(private readonly assetSearchService: AssetSearchService, private readonly prismaService: PrismaService) {
+  constructor(private readonly prismaService: PrismaService) {
     this.config = {
       mode: readEnv('ANONYMOUS_MODE', Boolean) ? AppMode.Anonymous : AppMode.Default,
       googleAnalyticsId: readEnv('GOOGLE_ANALYTICS_ID'),
@@ -36,19 +34,6 @@ export class AppController {
   @Get('/config')
   showConfig(): AppConfig {
     return this.config;
-  }
-
-  /**
-   * @deprecated
-   */
-  @Get('/asset-edit/search')
-  @Authorize.User()
-  async searchAssetsByTitle(@Query('title') title: string): Promise<AssetByTitle[]> {
-    try {
-      return await this.assetSearchService.searchByTitle(title);
-    } catch (e) {
-      throw new HttpException(unknownToError(e).message, 500);
-    }
   }
 
   @Get('/reference-data')
