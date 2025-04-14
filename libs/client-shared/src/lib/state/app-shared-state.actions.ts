@@ -52,14 +52,14 @@ export const setCurrentAsset = createAction(
   }>()
 );
 
-export const updateAssetInSearch = createAction(
+export const updateAsset = createAction(
   '[App Shared State] Update Asset In Search',
   props<{
     asset: AssetEditDetail;
   }>()
 );
 
-export const removeAssetFromSearch = createAction(
+export const removeAsset = createAction(
   '[App Shared State] Remove Asset From Search',
   props<{
     assetId: AssetId;

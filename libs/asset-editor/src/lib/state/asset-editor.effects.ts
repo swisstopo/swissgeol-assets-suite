@@ -40,7 +40,7 @@ export class AssetEditorEffects {
           switchMap(() => this._assetEditorService.updateAssetDetail(assetId, patchAsset))
         )
       ),
-      map((data) => actions.updateAssetEditDetailResult({ asset: data }))
+      map((asset) => actions.updateAssetEditDetailResult({ asset }))
     )
   );
 
@@ -74,7 +74,7 @@ export class AssetEditorEffects {
         await this.routingService.navigateToRoot();
         return assetId;
       }),
-      map((assetId) => appSharedStateActions.removeAssetFromSearch({ assetId }))
+      map((assetId) => appSharedStateActions.removeAsset({ assetId }))
     )
   );
 
@@ -82,7 +82,7 @@ export class AssetEditorEffects {
     this._actions$.pipe(
       ofType(actions.updateAssetEditDetailResult),
       map(({ asset }) =>
-        appSharedStateActions.updateAssetInSearch({
+        appSharedStateActions.updateAsset({
           asset: {
             ...asset,
             studies: asset.studies.map((it) => ({
