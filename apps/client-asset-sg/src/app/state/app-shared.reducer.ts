@@ -1,6 +1,5 @@
 import { assetSearchActions } from '@asset-sg/asset-viewer';
 import { AppSharedState, appSharedStateActions } from '@asset-sg/client-shared';
-import { AssetEditDetail } from '@asset-sg/shared';
 import * as RD from '@devexperts/remote-data-ts';
 import { createReducer, on } from '@ngrx/store';
 import { pipe } from 'fp-ts/function';
@@ -36,20 +35,20 @@ export const appSharedStateReducer = createReducer(
     })
   ),
   on(
-    appSharedStateActions.removeAssetFromSearch,
+    appSharedStateActions.removeAsset,
     (state, { assetId }): AppSharedState => ({
       ...state,
       currentAsset: state.currentAsset?.assetId === assetId ? null : state.currentAsset,
     })
   ),
 
-  on(appSharedStateActions.updateAssetInSearch, (state, { asset }): AppSharedState => {
-    const mapAsset = (it: AssetEditDetail): AssetEditDetail => (it.assetId === asset.assetId ? asset : it);
-    return {
+  on(
+    appSharedStateActions.updateAsset,
+    (state, { asset }): AppSharedState => ({
       ...state,
-      currentAsset: state.currentAsset === null ? null : mapAsset(state.currentAsset),
-    };
-  }),
+      currentAsset: state.currentAsset?.assetId === asset.assetId ? asset : state.currentAsset,
+    })
+  ),
   on(
     appSharedStateActions.loadUserProfileResult,
     (state, rdUserProfile): AppSharedState => ({ ...state, rdUserProfile })

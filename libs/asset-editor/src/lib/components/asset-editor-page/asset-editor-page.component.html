@@ -6,7 +6,7 @@
     <asset-sg-chip type="tertiary">{{ asset?.processor }}</asset-sg-chip>
     }
   </mat-chip-set>
-  <div style="flex: 1"></div>
+  <div class="spacer"></div>
 
   @if (asset) {
   <button asset-sg-secondary (click)="openConfirmDialogForAssetDeletion(asset.assetId)" translate>
@@ -15,7 +15,7 @@
   </button>
   }
 </asset-sg-page-header>
-<div style="display: flex">
+<div class="editor-container">
   <asset-sg-editor-navigation [activeTab]="activeTab"></asset-sg-editor-navigation>
   <div>
     <div class="form-container">

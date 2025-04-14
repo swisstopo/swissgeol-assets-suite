@@ -1,5 +1,4 @@
 import { Component, inject, Input } from '@angular/core';
-import { FormGroup } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { UntilDestroy } from '@ngneat/until-destroy';
 
@@ -12,7 +11,6 @@ import { UntilDestroy } from '@ngneat/until-destroy';
 })
 export class AssetEditorNavigationComponent {
   @Input() public activeTab = Tab.General;
-  public form?: FormGroup;
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 

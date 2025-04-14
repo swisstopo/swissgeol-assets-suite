@@ -1,6 +1,6 @@
 import { Component, Input } from '@angular/core';
 import { UntilDestroy } from '@ngneat/until-destroy';
-import { AssetForm } from '../../asset-editor-page';
+import { AssetForm } from '../../asset-editor-page/asset-editor-page.component';
 
 @UntilDestroy()
 @Component({
