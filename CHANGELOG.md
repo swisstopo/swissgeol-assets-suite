@@ -8,6 +8,24 @@
 
 ### Fixed
 
+## v1.12.0
+
+### Added
+
+- Die Geometrien auf der Karte werden neu entsprechend ihrem Typ eingefärbt.
+- Auf der Karte wird eine Legende angezeigt, die Geometrien nach Typ und Farbe darstellt.
+
+### Changed
+
+- Die Deployment-Konfiguration für die API besitzt nun Ressourcen-Limite,
+  die das Hochladen von Dateien mit bis zu 2GB Grösse ermöglichen.
+
+## v1.11.0
+
+### Fixed
+
+- Google Analytics werden jetzt korrekt eingebunden.
+
 ## v1.10.0
 
 ### Added
@@ -47,7 +65,8 @@
 
 ### Added
 
-- Benutzer, die nicht mehr in der entsprechenden Cognito-Gruppe existieren, werden nächtlich aus der Datenbank gelöscht und können sich nicht mehr einloggen.
+- Benutzer, die nicht mehr in der entsprechenden Cognito-Gruppe existieren, werden nächtlich aus der Datenbank gelöscht
+  und können sich nicht mehr einloggen.
 
 ### Changed
 
@@ -96,20 +115,24 @@
 
 ### Changed
 
-- Admins haben nun auf alle Arbeitsgruppen Leserechte anstatt Schreibrechte - für das Schreiben muss ein Admin sich der Arbeitsgruppe hinzufügen
+- Admins haben nun auf alle Arbeitsgruppen Leserechte anstatt Schreibrechte - für das Schreiben muss ein Admin sich der
+  Arbeitsgruppe hinzufügen
 - Der Button für Polygon-Filter ist nun links bei den restlichen Filtern
 - Dependency Updates
 - Existierende Dateien, welche mit `_LDoc.pdf` enden,
   wurden als rechtliche Einwilligung mit Typ `permissionForm` markiert.
-- PDFs werden mit dem neuen [OCR Service](https://github.com/swisstopo/swissgeol-ocr) verarbeitet, um den Text zu extrahieren
+- PDFs werden mit dem neuen [OCR Service](https://github.com/swisstopo/swissgeol-ocr) verarbeitet, um den Text zu
+  extrahieren
 - Sidebar und Header wurden entsprechend dem neuen UI/UX Konzept überarbeitet
 
 ### Fixed
 
 - Benutzer mit Underscore in der Email können nun auch auf die Appliation zugreifen
-- Die Trefferzahlen bei Filtern spiegeln nun die tatsächliche Anzahl der Treffer wieder - davor wurden nicht alle Werte beachtet
+- Die Trefferzahlen bei Filtern spiegeln nun die tatsächliche Anzahl der Treffer wieder - davor wurden nicht alle Werte
+  beachtet
 - Navigation der Applikation über vorwärts und rückwärts Buttons behält nun den Suchstatus bei
-- Eine benutzerfreundliche Fehlermeldung wird angezeigt, wenn beim erstellen einer neuen Workgroup der Name bereits verwendet wird
+- Eine benutzerfreundliche Fehlermeldung wird angezeigt, wenn beim erstellen einer neuen Workgroup der Name bereits
+  verwendet wird
 
 ## v1.4.0
 
