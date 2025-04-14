@@ -1,4 +1,5 @@
 import { LocalDate } from './base/local-date';
+import { UserId } from './user';
 
 export const WorkflowStatusValues = ['draft', 'inReview', 'reviewed', 'published'] as const;
 export type WorkflowStatus = (typeof WorkflowStatusValues)[number];
@@ -6,8 +7,8 @@ export type WorkflowStatus = (typeof WorkflowStatusValues)[number];
 export interface WorkflowChange {
   comment: string | null;
   createdAt: LocalDate;
-  createdBy: string | null;
-  assignee: string | null;
+  createdBy: UserId | null;
+  assignee: UserId | null;
   fromStatus: WorkflowStatus;
   toStatus: WorkflowStatus;
 }

@@ -1,6 +1,6 @@
 import { decodeError, isNotNull } from '@asset-sg/core';
 import { AssetEditDetail, AssetUsage, dateFromDateId, DateIdFromDate, PatchAsset } from '@asset-sg/shared';
-import { AssetId, User } from '@asset-sg/shared/v2';
+import { AssetId, User, UserId } from '@asset-sg/shared/v2';
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import * as E from 'fp-ts/Either';
@@ -302,7 +302,7 @@ export class AssetEditRepo implements Repo<AssetEditDetail, number, AssetEditDat
     }
   }
 
-  private async createWorkflow(assetId: AssetId, userId: string): Promise<void> {
+  private async createWorkflow(assetId: AssetId, userId: UserId): Promise<void> {
     const assetUser = await this.prismaService.assetUser.findUniqueOrThrow({
       where: { id: userId },
     });

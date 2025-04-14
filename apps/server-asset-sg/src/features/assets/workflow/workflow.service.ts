@@ -39,11 +39,10 @@ export class WorkflowService {
   async publish(assetId: number, userId: string) {
     return this.prismaService.$transaction(async () => {
       const record = await this.getRecordOrThrow(assetId);
-      const publisher = await this.getUserOrThrow(userId);
-
       if (record.status !== 'reviewed') {
         throw new HttpException('Cannot publish workflow in current status', HttpStatus.BAD_REQUEST);
       }
+      const publisher = await this.getUserOrThrow(userId);
 
       return this.workflowRepo.publish(assetId, publisher.id, record.status);
     });
