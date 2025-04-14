@@ -160,7 +160,7 @@ export const assetSearchReducer = createReducer(
     })
   ),
   on(
-    appSharedStateActions.removeAssetFromSearch,
+    appSharedStateActions.removeAsset,
     (state, { assetId }): AssetSearchState => ({
       ...state,
       results: {
@@ -171,7 +171,7 @@ export const assetSearchReducer = createReducer(
     })
   ),
 
-  on(appSharedStateActions.updateAssetInSearch, (state, { asset }): AssetSearchState => {
+  on(appSharedStateActions.updateAsset, (state, { asset }): AssetSearchState => {
     const mapAsset = (it: AssetEditDetail): AssetEditDetail => (it.assetId === asset.assetId ? asset : it);
     return {
       ...state,

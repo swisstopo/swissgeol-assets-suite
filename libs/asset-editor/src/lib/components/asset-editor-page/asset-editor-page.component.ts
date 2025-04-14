@@ -2,13 +2,19 @@ import { Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, NavigationEnd, Router, RouterStateSnapshot } from '@angular/router';
-import { AppSharedState, ConfirmDialogComponent, fromAppShared, RoutingService } from '@asset-sg/client-shared';
-import { AssetEditDetail } from '@asset-sg/shared';
+import {
+  AppSharedState,
+  ConfirmDialogComponent,
+  CURRENT_LANG,
+  fromAppShared,
+  RoutingService,
+} from '@asset-sg/client-shared';
+import { AssetEditDetail, Lang } from '@asset-sg/shared';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { Store } from '@ngrx/store';
 import { filter, Observable, startWith, Subscription, take, tap, withLatestFrom } from 'rxjs';
 import * as actions from '../../state/asset-editor.actions';
-import { Tab } from '../asset-editor-navigation';
+import { Tab } from '../asset-editor-navigation/asset-editor-navigation.component';
 
 @UntilDestroy()
 @Component({
@@ -18,39 +24,47 @@ import { Tab } from '../asset-editor-navigation';
   standalone: false,
 })
 export class AssetEditorPageComponent implements OnInit, OnDestroy {
-  public assetId: number | string = 'new';
+  public assetId: number | null = null;
   public asset: AssetEditDetail | null = null;
   public form!: AssetForm;
   public activeTab: Tab = Tab.General;
+  private currentLang: Lang = 'de';
   private readonly store = inject(Store<AppSharedState>);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly routingService = inject(RoutingService);
   private readonly dialogService = inject(MatDialog);
+  private readonly currentLang$ = inject(CURRENT_LANG);
 
-  public assetEditDetail$ = this.store.select(fromAppShared.selectCurrentAsset);
-
+  private readonly assetEditDetail$ = this.store.select(fromAppShared.selectCurrentAsset);
   private readonly subscriptions: Subscription = new Subscription();
 
-  readonly activeItem$ = this.router.events.pipe(
-    filter((event) => event instanceof NavigationEnd),
-    startWith(() => undefined),
-    tap(() => {
-      const segments = (this.router.getCurrentNavigation() ?? this.router.lastSuccessfulNavigation)?.finalUrl?.root
-        .children?.['primary']?.segments;
-      if (segments !== undefined && segments.length > 0) {
-        this.activeTab = segments.pop()?.path as Tab;
-      }
-    })
-  );
+  get assetIdFromUrl(): number | string {
+    return this.assetId ?? 'new';
+  }
 
   public ngOnInit() {
-    this.subscriptions.add(this.activeItem$.subscribe());
+    this.subscriptions.add(this.currentLang$.subscribe((lang) => (this.currentLang = lang)));
+    this.subscriptions.add(
+      this.router.events
+        .pipe(
+          filter((event) => event instanceof NavigationEnd),
+          startWith(() => undefined),
+          tap(() => {
+            const segments = (this.router.getCurrentNavigation() ?? this.router.lastSuccessfulNavigation)?.finalUrl
+              ?.root.children?.['primary']?.segments;
+            if (segments !== undefined && segments.length > 0) {
+              this.activeTab = segments[segments.length - 1].path as Tab;
+            }
+          })
+        )
+        .subscribe()
+    );
     this.form = buildForm();
     this.loadAssetFromRouteParams();
     this.subscriptions.add(
       this.assetEditDetail$.subscribe((assetDetail) => {
-        if (this.assetId !== 'new') {
+        if (this.assetIdFromUrl !== 'new') {
           this.asset = assetDetail;
         }
         this.initializeForm();
@@ -88,7 +102,7 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
   }
 
   public canDeactivate(targetRoute: RouterStateSnapshot): boolean | Observable<boolean> {
-    if (!this.form.dirty || targetRoute.url.includes(this.assetId.toString())) {
+    if (!this.form.dirty || targetRoute.url.startsWith(`/${this.currentLang}/asset-admin/${this.asset?.assetId}`)) {
       return true;
     }
     const dialogRef = this.dialogService.open<ConfirmDialogComponent>(ConfirmDialogComponent, {
@@ -124,7 +138,7 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
   protected readonly Tab = Tab;
 }
 
-function buildForm() {
+const buildForm = () => {
   return new FormGroup({
     general: new FormGroup({
       titlePublic: new FormControl('', { validators: [Validators.required] }),
@@ -138,6 +152,6 @@ function buildForm() {
     altdaten: new FormGroup({}),
     status: new FormGroup({}),
   });
-}
+};
 
 export type AssetForm = ReturnType<typeof buildForm>;

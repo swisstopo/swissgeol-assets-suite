@@ -14,3 +14,11 @@ h2 {
   overflow-y: scroll;
   flex-direction: column;
 }
+
+.spacer {
+  flex: 1;
+}
+
+.editor-container {
+  display: flex;
+}
