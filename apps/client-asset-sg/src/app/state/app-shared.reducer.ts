@@ -1,10 +1,11 @@
-import { assetSearchActions } from '@asset-sg/asset-viewer';
 import { AppSharedState, appSharedStateActions } from '@asset-sg/client-shared';
 import * as RD from '@devexperts/remote-data-ts';
 import { createReducer, on } from '@ngrx/store';
 import { pipe } from 'fp-ts/function';
 import * as O from 'fp-ts/Option';
 import * as R from 'fp-ts/Record';
+// eslint-disable-next-line @nx/enforce-module-boundaries
+import { assetSearchActions } from '../../../../../libs/asset-viewer/src';
 
 const initialState: AppSharedState = {
   rdUserProfile: RD.initial,
