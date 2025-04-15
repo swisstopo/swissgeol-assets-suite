@@ -22,6 +22,13 @@ export const selectRDUserProfile = createSelector(appSharedFeature, (state) => s
 
 export const selectUser = createSelector(selectRDUserProfile, RD.toNullable);
 
+export const selectAssetFormatItems = createSelector(appSharedFeature, (state) =>
+  RD.isSuccess(state.rdReferenceData) ? state.rdReferenceData.value.assetFormatItems : null
+);
+
+export const selectAssetKindItems = createSelector(appSharedFeature, (state) =>
+  RD.isSuccess(state.rdReferenceData) ? state.rdReferenceData.value.assetKindItems : null
+);
 export const selectCurrentAsset = createSelector(appSharedFeature, (state) => state.currentAsset);
 export const selectIsLoadingAsset = createSelector(appSharedFeature, (state) => state.isLoadingAsset);
 export const selectWorkgroups = createSelector(appSharedFeature, (state) => state.workgroups);
