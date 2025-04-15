@@ -35,7 +35,7 @@ export class AssetSearchDetailComponent {
         mapping[file.type].push(file);
       }
       return mapping;
-    })
+    }),
   );
 
   public navigateToAssetEdit(lang: string | null, assetId: number) {

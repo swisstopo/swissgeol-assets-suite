@@ -12,7 +12,7 @@ export class AssetSyncService implements OnApplicationBootstrap {
   constructor(
     private readonly assetSearchService: AssetSearchService,
     private readonly schedulerRegistry: SchedulerRegistry,
-    private readonly assetRepo: AssetRepo
+    private readonly assetRepo: AssetRepo,
   ) {}
 
   async onApplicationBootstrap() {

@@ -32,7 +32,7 @@ export const ParseBody = createParamDecorator(async (dataType: SchemaType, conte
     if (E.isLeft(data)) {
       throw new HttpException(
         `invalid request body: ${decodeError(data.left).message}`,
-        HttpStatus.UNPROCESSABLE_ENTITY
+        HttpStatus.UNPROCESSABLE_ENTITY,
       );
     }
     return data.right as object;

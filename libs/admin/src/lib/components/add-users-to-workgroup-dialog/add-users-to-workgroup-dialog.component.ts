@@ -32,7 +32,7 @@ export class AddUsersToWorkgroupDialogComponent implements OnInit {
 
   constructor(
     @Inject(MAT_DIALOG_DATA) public data: { workgroup: Workgroup; mode: Mode },
-    private readonly dialogRef: MatDialogRef<AddUsersToWorkgroupDialogComponent>
+    private readonly dialogRef: MatDialogRef<AddUsersToWorkgroupDialogComponent>,
   ) {
     this.workgroup = this.data.workgroup;
     this.mode = this.data.mode;
@@ -92,7 +92,7 @@ export class AddUsersToWorkgroupDialogComponent implements OnInit {
         this.usersOnWorkgroup = users;
         this.users = users.filter((user) => !this.workgroup.users.has(user.id));
         this.userValues = this.users.map((user) => user.email);
-      })
+      }),
     );
   }
 }

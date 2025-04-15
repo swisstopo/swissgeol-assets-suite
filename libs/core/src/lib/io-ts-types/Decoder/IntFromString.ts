@@ -5,5 +5,5 @@ import { NumberFromString } from './NumberFromString';
 
 export const IntFromString: D.Decoder<unknown, number> = pipe(
   NumberFromString,
-  D.parse((n) => (!Number.isInteger(n) ? D.failure(n, `an integer`) : D.success(n)))
+  D.parse((n) => (!Number.isInteger(n) ? D.failure(n, `an integer`) : D.success(n))),
 );

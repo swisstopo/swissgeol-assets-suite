@@ -97,7 +97,7 @@ export class DateIdAdapter extends DateAdapter<DateId, never> {
       DateId.decode(obj),
       E.map(dateFromDateId),
       E.map((d) => this.dateFnsAdaptor.isDateInstance(d)),
-      E.getOrElse(() => this.invalid() === obj)
+      E.getOrElse(() => this.invalid() === obj),
     );
   }
 

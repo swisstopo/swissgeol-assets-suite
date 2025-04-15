@@ -8,27 +8,27 @@
 <ng-template #content>
   <ng-container *ngIf="authService.state$ | async as authState">
     @if (authState === AuthState.Success || authState === AuthState.ForbiddenResource) {
-    <asset-sg-app-bar>
-      <ng-template [cdkPortalOutlet]="(appPortalService.appBarPortalContent$ | push) ?? ''"></ng-template>
-    </asset-sg-app-bar>
-    @if (shouldShowMenuBar) {
-    <asset-sg-menu-bar />
-    }
-    <div class="router-outlet">
-      @if (authState === AuthState.Success) {
-      <router-outlet />
-      } @else {
-      <div class="forbidden">
-        <h1 translate>resourceForbidden</h1>
-        <p>403 - Forbidden</p>
-      </div>
+      <asset-sg-app-bar>
+        <ng-template [cdkPortalOutlet]="(appPortalService.appBarPortalContent$ | push) ?? ''"></ng-template>
+      </asset-sg-app-bar>
+      @if (shouldShowMenuBar) {
+        <asset-sg-menu-bar />
       }
-    </div>
-    <div class="drawer-portal">
-      <ng-template [cdkPortalOutlet]="(appPortalService.drawerPortalContent$ | push) ?? ''"></ng-template>
-    </div>
+      <div class="router-outlet">
+        @if (authState === AuthState.Success) {
+          <router-outlet />
+        } @else {
+          <div class="forbidden">
+            <h1 translate>resourceForbidden</h1>
+            <p>403 - Forbidden</p>
+          </div>
+        }
+      </div>
+      <div class="drawer-portal">
+        <ng-template [cdkPortalOutlet]="(appPortalService.drawerPortalContent$ | push) ?? ''"></ng-template>
+      </div>
     } @else {
-    <app-splash-screen />
+      <app-splash-screen />
     }
   </ng-container>
 </ng-template>
@@ -38,5 +38,5 @@
 </div>
 
 @if (googleAnalyticsId$ | async; as id) {
-<app-google-analytics [id]="id" />
+  <app-google-analytics [id]="id" />
 }

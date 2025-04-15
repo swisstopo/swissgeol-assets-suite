@@ -50,9 +50,9 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
             if (segments !== undefined && segments.length > 0) {
               this.activeTab = segments[segments.length - 1].path as Tab;
             }
-          })
+          }),
         )
-        .subscribe()
+        .subscribe(),
     );
     this.form = buildForm();
     this.loadAssetFromRouteParams();
@@ -62,7 +62,7 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
           this.asset = assetDetail;
         }
         this.initializeForm();
-      })
+      }),
     );
   }
 
@@ -127,7 +127,7 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
           } else {
             this.store.dispatch(actions.loadAsset({ assetId }));
           }
-        })
+        }),
     );
   }
 

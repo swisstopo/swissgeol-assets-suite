@@ -10,7 +10,7 @@ export const optionFromNullable = <A>(decoder: D.Decoder<unknown, A>): D.Decoder
 export const optionFromNullableNonEmptyString: D.Decoder<unknown, O.Option<string>> = pipe(
   D.nullable(D.string),
   D.map((a) => (a === '' ? null : a)),
-  D.map(O.fromNullable)
+  D.map(O.fromNullable),
 );
 
 export const optionFromNullableDate: D.Decoder<unknown, O.Option<Date>> = pipe(D.nullable(date), D.map(O.fromNullable));

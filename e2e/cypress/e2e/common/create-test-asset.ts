@@ -61,7 +61,7 @@ Given('Test asset is created', () => {
             expect(response.status).to.be.eq(201);
           });
         }
-      })
+      }),
   );
 });
 

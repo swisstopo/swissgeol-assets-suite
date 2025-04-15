@@ -11,7 +11,7 @@ export interface DateIdBrand {
 export type DateId = number & DateIdBrand;
 export const DateIdDecoder = pipe(
   D.number,
-  D.refine((n): n is DateId => n >= 100 && n <= 99991231, 'DateId')
+  D.refine((n): n is DateId => n >= 100 && n <= 99991231, 'DateId'),
 );
 export const DateId = C.fromDecoder(DateIdDecoder);
 export const DateIdOrd: Ord<DateId> = OrdNumber;

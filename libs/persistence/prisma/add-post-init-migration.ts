@@ -14,7 +14,7 @@ export const addPostInitMigration = async () => {
     A.filter((f) => f.endsWith('_init')),
     A.sort(OrdString),
     A.head,
-    O.map((f) => `./migrations/${Number(f.substring(0, 14)) + 1}_post-init`)
+    O.map((f) => `./migrations/${Number(f.substring(0, 14)) + 1}_post-init`),
   );
 
   if (O.isNone(newDirAfterInit)) {

@@ -50,7 +50,7 @@ export class AssetsController {
   async update(
     @Param('id', ParseIntPipe) id: number,
     @ParseBody(AssetDataSchema) data: AssetData,
-    @CurrentUser() user: User
+    @CurrentUser() user: User,
   ): Promise<Asset> {
     const record = await this.assetRepo.find(id);
     if (record == null) {
@@ -87,7 +87,7 @@ const validateData = (user: User, data: AssetData, record?: Asset) => {
   if (!policy.hasRole(Role.Editor, data.workgroupId)) {
     throw new HttpException(
       "Can't move asset to a workgroup for which the user is not an editor",
-      HttpStatus.FORBIDDEN
+      HttpStatus.FORBIDDEN,
     );
   }
 

@@ -22,13 +22,13 @@ import { lv95ToWGS } from './wgs';
 
 proj4.defs(
   'EPSG:2056',
-  '+proj=somerc +lat_0=46.95240555555556 +lon_0=7.439583333333333 +k_0=1 +x_0=2600000 +y_0=1200000 +ellps=bessel +towgs84=674.374,15.056,405.346,0,0,0,0 +units=m +no_defs'
+  '+proj=somerc +lat_0=46.95240555555556 +lon_0=7.439583333333333 +k_0=1 +x_0=2600000 +y_0=1200000 +ellps=bessel +towgs84=674.374,15.056,405.346,0,0,0,0 +units=m +no_defs',
 );
 register(proj4);
 
 export const createFeaturesFromStudy = (
   study: Study,
-  featureStyles: { point: Style | Style[]; polygon: Style | Style[]; lineString: Style | Style[] }
+  featureStyles: { point: Style | Style[]; polygon: Style | Style[]; lineString: Style | Style[] },
 ) => ({
   ...study,
   olGeometry: decorateFeature(
@@ -47,23 +47,23 @@ export const createFeaturesFromStudy = (
       })(study.geom),
       id: `${study.studyId}`,
     },
-    { assetSgFeatureType: study.geom._tag }
+    { assetSgFeatureType: study.geom._tag },
   ),
 });
 
 export const createFeaturesFromStudies = (
   studies: Studies,
-  featureStyles: { point: Style | Style[]; polygon: Style | Style[]; lineString: Style | Style[] }
+  featureStyles: { point: Style | Style[]; polygon: Style | Style[]; lineString: Style | Style[] },
 ) =>
   pipe(
     studies,
-    A.map((s) => createFeaturesFromStudy(s, featureStyles))
+    A.map((s) => createFeaturesFromStudy(s, featureStyles)),
   );
 
 export const decorateFeature = (
   feature: Feature,
   attributes: { style: Style | Style[]; id: string | number },
-  properties: Record<string, string | number> = {}
+  properties: Record<string, string | number> = {},
   // attributes: Partial<{ style: Style; id: string | number; assetSgFeatureType: string }>,
 ) => {
   if (attributes.style) feature.setStyle(attributes.style);
@@ -83,7 +83,7 @@ export const zoomToStudies = (
   windowService: WindowService,
   olMap: Map,
   studies: Study[],
-  fractionOfMapToUse: number
+  fractionOfMapToUse: number,
 ) => {
   if (fractionOfMapToUse < 0 || fractionOfMapToUse > 1) {
     console.warn('fractionOfMapToUse must be between 0 and 1');
@@ -96,15 +96,15 @@ export const zoomToStudies = (
         Point: (g) => olCoordsFromLV95Array([g.coord]),
         Polygon: (g) => olCoordsFromLV95Array(g.coords),
         LineString: (g) => olCoordsFromLV95Array(g.coords),
-      })(a.geom)
+      })(a.geom),
     ),
     A.flatten,
     NEA.fromArray,
     O.map((a) =>
       a.length === 1
         ? { _tag: 'centerOn' as const, coord: a[0] }
-        : { _tag: 'fit' as const, polygon: pipe(findExtentFromPoints(a), polygonFromExtent) }
-    )
+        : { _tag: 'fit' as const, polygon: pipe(findExtentFromPoints(a), polygonFromExtent) },
+    ),
   );
 
   if (O.isSome(viewMoveAction)) {
@@ -162,9 +162,9 @@ const findExtentFromPoints = (coords: NEA.NonEmptyArray<Coordinate>): Extent.Ext
         maxX: Math.max(acc.maxX, c[0]),
         minY: Math.min(acc.minY, c[1]),
         maxY: Math.max(acc.maxY, c[1]),
-      })
+      }),
     ),
-    ({ minX, maxX, minY, maxY }) => [minX, minY, maxX, maxY]
+    ({ minX, maxX, minY, maxY }) => [minX, minY, maxX, maxY],
   );
 
 const getSwissExtent = (): Extent.Extent => {

@@ -59,7 +59,7 @@ export class AssetEditorTabAdministrationComponent implements OnInit {
     map(RD.toNullable),
     filter(isNotNull),
     withLatestFrom(this.filteredAssetEditDetail$),
-    map(([user, assetEditDetail]) => isMasterEditor(user, assetEditDetail.workgroupId))
+    map(([user, assetEditDetail]) => isMasterEditor(user, assetEditDetail.workgroupId)),
   );
 
   @Output() public saveAsset = new EventEmitter<void>();

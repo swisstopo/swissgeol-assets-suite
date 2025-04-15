@@ -43,7 +43,7 @@ export class AppComponent {
     filter(identity),
     switchMap(() => this.config$),
     map((config) => config?.googleAnalyticsId),
-    filter((id) => id != null)
+    filter((id) => id != null),
   );
 
   constructor() {
@@ -55,7 +55,7 @@ export class AppComponent {
         switchMap(async (config) => {
           await this.authService.initialize(config);
           return config;
-        })
+        }),
       )
       .subscribe(async (config) => {
         this.config$.next(config);
@@ -72,7 +72,7 @@ export class AppComponent {
           }
           const path = segments.slice(1).join('/');
           return !(path === 'admin' || path.startsWith(`admin/`) || path.startsWith('asset-admin/'));
-        })
+        }),
       )
       .subscribe((showMenuBar) => {
         this.shouldShowMenuBar = showMenuBar;

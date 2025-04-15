@@ -26,21 +26,21 @@ export const appSharedStateReducer = createReducer(
       ...state,
       currentAsset: asset === undefined ? state.currentAsset : asset,
       isLoadingAsset: isLoading ?? state.isLoadingAsset,
-    })
+    }),
   ),
   on(
     assetSearchActions.resetSearch,
     (state): AppSharedState => ({
       ...state,
       currentAsset: null,
-    })
+    }),
   ),
   on(
     appSharedStateActions.removeAsset,
     (state, { assetId }): AppSharedState => ({
       ...state,
       currentAsset: state.currentAsset?.assetId === assetId ? null : state.currentAsset,
-    })
+    }),
   ),
 
   on(
@@ -48,29 +48,29 @@ export const appSharedStateReducer = createReducer(
     (state, { asset }): AppSharedState => ({
       ...state,
       currentAsset: state.currentAsset?.assetId === asset.assetId ? asset : state.currentAsset,
-    })
+    }),
   ),
   on(
     appSharedStateActions.loadUserProfileResult,
-    (state, rdUserProfile): AppSharedState => ({ ...state, rdUserProfile })
+    (state, rdUserProfile): AppSharedState => ({ ...state, rdUserProfile }),
   ),
   on(
     appSharedStateActions.setAnonymousMode,
     (state): AppSharedState => ({
       ...state,
       isAnonymousMode: true,
-    })
+    }),
   ),
   on(
     appSharedStateActions.setTrackingConsent,
     (state, { hasConsented }): AppSharedState => ({
       ...state,
       hasConsentedToTracking: hasConsented,
-    })
+    }),
   ),
   on(
     appSharedStateActions.loadReferenceDataResult,
-    (state, rdReferenceData): AppSharedState => ({ ...state, rdReferenceData })
+    (state, rdReferenceData): AppSharedState => ({ ...state, rdReferenceData }),
   ),
   on(appSharedStateActions.loadWorkgroupsResult, (state, { workgroups }): AppSharedState => ({ ...state, workgroups })),
   on(appSharedStateActions.logout, (): AppSharedState => initialState),
@@ -82,11 +82,11 @@ export const appSharedStateReducer = createReducer(
       rdReferenceData: pipe(
         RD.combine(state.rdReferenceData, contact),
         RD.map(([rd, contact]) =>
-          RD.success({ ...rd, contacts: pipe(rd.contacts, R.upsertAt(String(contact.id), contact)) })
+          RD.success({ ...rd, contacts: pipe(rd.contacts, R.upsertAt(String(contact.id), contact)) }),
         ),
-        RD.getOrElse(() => state.rdReferenceData)
+        RD.getOrElse(() => state.rdReferenceData),
       ),
-    })
+    }),
   ),
   on(
     appSharedStateActions.editContactResult,
@@ -100,12 +100,12 @@ export const appSharedStateReducer = createReducer(
             contacts: pipe(
               rd.contacts,
               R.updateAt(String(contact.id), contact),
-              O.getOrElse(() => rd.contacts)
+              O.getOrElse(() => rd.contacts),
             ),
-          })
+          }),
         ),
-        RD.getOrElse(() => state.rdReferenceData)
+        RD.getOrElse(() => state.rdReferenceData),
       ),
-    })
-  )
+    }),
+  ),
 );

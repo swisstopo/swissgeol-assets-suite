@@ -25,9 +25,9 @@ export const AssetFilesFromPostgres = pipe(
   D.array(
     D.struct({
       file: AssetFileFromPostgres,
-    })
+    }),
   ),
-  D.map((a) => a.map((b) => b.file))
+  D.map((a) => a.map((b) => b.file)),
 );
 
 export const AssetDetailFromPostgres = pipe(
@@ -39,11 +39,11 @@ export const AssetDetailFromPostgres = pipe(
     lastProcessedDate: DateIdFromDate,
     publicUse: pipe(
       D.struct({ isAvailable: D.boolean }),
-      D.map((a) => a.isAvailable)
+      D.map((a) => a.isAvailable),
     ),
     internalUse: pipe(
       D.struct({ isAvailable: D.boolean }),
-      D.map((a) => a.isAvailable)
+      D.map((a) => a.isAvailable),
     ),
     assetKindItemCode: D.string,
     assetFormatItemCode: D.string,
@@ -51,7 +51,7 @@ export const AssetDetailFromPostgres = pipe(
       D.struct({
         id: D.string,
         description: D.string,
-      })
+      }),
     ),
     assetLanguages: D.array(
       D.struct({
@@ -69,7 +69,7 @@ export const AssetDetailFromPostgres = pipe(
           descriptionIt: C.string,
           descriptionEn: C.string,
         }),
-      })
+      }),
     ),
     assetContacts: D.array(
       D.struct({
@@ -79,25 +79,25 @@ export const AssetDetailFromPostgres = pipe(
           locality: D.nullable(D.string),
           contactKindItemCode: D.string,
         }),
-      })
+      }),
     ),
     manCatLabelRefs: D.array(
       pipe(
         D.struct({ manCatLabelItemCode: D.string }),
-        D.map((a) => a.manCatLabelItemCode)
-      )
+        D.map((a) => a.manCatLabelItemCode),
+      ),
     ),
     assetFormatCompositions: D.array(
       pipe(
         D.struct({ assetFormatItemCode: D.string }),
-        D.map((a) => a.assetFormatItemCode)
-      )
+        D.map((a) => a.assetFormatItemCode),
+      ),
     ),
     typeNatRels: D.array(
       pipe(
         D.struct({ natRelItemCode: D.string }),
-        D.map((a) => a.natRelItemCode)
-      )
+        D.map((a) => a.natRelItemCode),
+      ),
     ),
     assetMain: DT.optionFromNullable(LinkedAsset),
     subordinateAssets: D.array(LinkedAsset),
@@ -105,21 +105,21 @@ export const AssetDetailFromPostgres = pipe(
       D.array(
         pipe(
           D.struct({ assetX: LinkedAsset }),
-          D.map((a) => a.assetX)
-        )
-      )
+          D.map((a) => a.assetX),
+        ),
+      ),
     ),
     siblingXAssets: D.array(
       pipe(
         D.struct({ assetY: LinkedAsset }),
-        D.map((a) => a.assetY)
-      )
+        D.map((a) => a.assetY),
+      ),
     ),
     statusWorks: D.array(
       D.struct({
         statusWorkItemCode: D.string,
         statusWorkDate: DT.date,
-      })
+      }),
     ),
     assetFiles: AssetFilesFromPostgres,
     studies: PostgresAllStudies,
@@ -130,6 +130,6 @@ export const AssetDetailFromPostgres = pipe(
       ...rest,
       usageCode: makeUsageCode(publicUse, internalUse),
     };
-  })
+  }),
 );
 export type AssetDetailFromPostgres = D.TypeOf<typeof AssetDetailFromPostgres>;

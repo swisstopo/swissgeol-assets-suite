@@ -9,5 +9,5 @@ export const JSONFromString = pipe(
     } catch (e) {
       return D.failure(s, 'JSON. ' + String(e));
     }
-  })
+  }),
 );

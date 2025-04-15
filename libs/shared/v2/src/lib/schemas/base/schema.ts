@@ -101,7 +101,7 @@ export const TransformMap = (): PropertyDecorator => {
       }
       return map;
     },
-    { toClassOnly: true }
+    { toClassOnly: true },
   );
   const transformToPlain = Transform(({ value }) => [...value.entries()], { toPlainOnly: true });
   return (target, propertyKey) => {

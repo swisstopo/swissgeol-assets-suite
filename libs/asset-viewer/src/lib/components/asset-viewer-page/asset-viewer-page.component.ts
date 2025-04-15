@@ -82,13 +82,13 @@ export class AssetViewerPageComponent implements OnInit, OnDestroy {
         search.isLoadingStats ||
         // Loading for the current asset is only shown on the map in case an asset is already being displayed.
         // Otherwise, the detail panel shows a loader.
-        (shared.isLoadingAsset && shared.currentAsset !== null)
-    )
+        (shared.isLoadingAsset && shared.currentAsset !== null),
+    ),
   );
 
   public currentAssetId$ = this.store.select(selectCurrentAsset).pipe(
     map((currentAsset) => currentAsset?.assetId),
-    map(O.fromNullable)
+    map(O.fromNullable),
   );
 
   public hasCurrentAsset$ = this.store.select(selectHasCurrentAsset);
@@ -98,7 +98,7 @@ export class AssetViewerPageComponent implements OnInit, OnDestroy {
   public _searchTextKeyDown$ = new Subject<KeyboardEvent>();
   private readonly searchTextChanged$ = this._searchTextKeyDown$.pipe(
     filter((event) => event.key === 'Enter'),
-    map((event) => (event.target as HTMLInputElement).value)
+    map((event) => (event.target as HTMLInputElement).value),
   );
 
   public assetClicked$ = new Subject<number[]>();
@@ -112,23 +112,23 @@ export class AssetViewerPageComponent implements OnInit, OnDestroy {
         () =>
           new Promise<void>((resolve) => {
             this._appPortalService.setAppBarPortalContent(
-              new TemplatePortal(this.templateAppBarPortalContent, this._viewContainerRef)
+              new TemplatePortal(this.templateAppBarPortalContent, this._viewContainerRef),
             );
             this._appPortalService.setDrawerPortalContent(null);
             setTimeout(() => {
               this._cd.detectChanges();
               resolve();
             });
-          })
+          }),
       ),
-      share()
+      share(),
     );
     setupPortals$.pipe(untilDestroyed(this)).subscribe();
 
     setupPortals$
       .pipe(
         switchMap(() => this.store.select(selectSearchQuery)),
-        untilDestroyed(this)
+        untilDestroyed(this),
       )
       .subscribe((searchQuery) => {
         if (this.searchInput == null) {
@@ -143,14 +143,14 @@ export class AssetViewerPageComponent implements OnInit, OnDestroy {
       this.assetClicked$.pipe(
         map(A.uniq(eqNumber)),
         filter((as) => as.length > 0),
-        share()
+        share(),
       ),
-      (ss) => ss.length === 1
+      (ss) => ss.length === 1,
     );
 
     this.assetsForPicker$ = multipleStudiesClicked$.pipe(
       withLatestFrom(this.store.select(selectSearchResults)),
-      map(([assetIds, searchAssets]) => searchAssets.data.filter((a) => assetIds.includes(a.assetId)))
+      map(([assetIds, searchAssets]) => searchAssets.data.filter((a) => assetIds.includes(a.assetId))),
     );
 
     singleStudyClicked$.pipe(untilDestroyed(this)).subscribe((assetIds) => {

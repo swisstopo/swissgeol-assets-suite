@@ -20,7 +20,7 @@ export class AppSharedStateService {
         map(flow(ReferenceData.decode, E.mapLeft(decodeError))),
         OE.catchErrorW(httpErrorResponseOrUnknownError),
         map(RD.fromEither),
-        startWith(RD.pending)
+        startWith(RD.pending),
       );
   }
 

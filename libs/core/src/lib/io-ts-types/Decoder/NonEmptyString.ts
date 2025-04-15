@@ -9,5 +9,5 @@ export type NonEmptyString = string & NonEmptyStringBrand;
 
 export const NonEmptyString = pipe(
   D.string,
-  D.refine((s): s is NonEmptyString => s !== '', 'NonEmptyString')
+  D.refine((s): s is NonEmptyString => s !== '', 'NonEmptyString'),
 );

@@ -60,7 +60,7 @@ export class AssetEditorTabUsageComponent implements OnInit {
     map(RD.toNullable),
     filter(isNotNull),
     withLatestFrom(this.filteredAssetEditDetail$),
-    map(([user, assetEditDetail]) => isMasterEditor(user, assetEditDetail.workgroupId))
+    map(([user, assetEditDetail]) => isMasterEditor(user, assetEditDetail.workgroupId)),
   );
 
   @ViewChild('tmplRemoveNationalInterestDialog') private _tmplRemoveNationalInterestDialog!: TemplateRef<unknown>;
@@ -82,8 +82,8 @@ export class AssetEditorTabUsageComponent implements OnInit {
     switchMap((status) =>
       status === 'INVALID'
         ? this.getUsageErrorText(this._form.controls['internalStartAvailabilityDate'].errors)
-        : of(null)
-    )
+        : of(null),
+    ),
   );
 
   public _publicStartAvailabilityDateErrorText$ = this._form$.pipe(
@@ -91,8 +91,8 @@ export class AssetEditorTabUsageComponent implements OnInit {
     switchMap((status) =>
       status === 'INVALID'
         ? this.getUsageErrorText(this._form.controls['publicStartAvailabilityDate'].errors)
-        : of(null)
-    )
+        : of(null),
+    ),
   );
 
   constructor() {

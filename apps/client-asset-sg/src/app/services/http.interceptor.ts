@@ -89,7 +89,7 @@ export class HttpInterceptor implements AngularHttpInterceptor, OnDestroy {
                 type: AlertType.Error,
                 isPersistent: false,
               },
-            })
+            }),
           );
         }
         break;
@@ -102,7 +102,7 @@ export class HttpInterceptor implements AngularHttpInterceptor, OnDestroy {
               type: AlertType.Error,
               isPersistent: true,
             },
-          })
+          }),
         );
         break;
       default: {
@@ -115,7 +115,7 @@ export class HttpInterceptor implements AngularHttpInterceptor, OnDestroy {
         const text =
           error.error instanceof Blob
             ? JSON.parse(await error.error.text()).message
-            : error.error.message ?? error.message;
+            : (error.error.message ?? error.message);
         this.store.dispatch(
           showAlert({
             alert: {
@@ -124,7 +124,7 @@ export class HttpInterceptor implements AngularHttpInterceptor, OnDestroy {
               type: AlertType.Error,
               isPersistent: true,
             },
-          })
+          }),
         );
       }
     }
@@ -138,7 +138,7 @@ export class HttpInterceptor implements AngularHttpInterceptor, OnDestroy {
     this.subscription.add(
       this.store.select(fromAppShared.selectIsAnonymousMode).subscribe((isAnonymousMode) => {
         this.isAnonymousMode = isAnonymousMode;
-      })
+      }),
     );
   }
 
@@ -156,7 +156,7 @@ export class HttpInterceptor implements AngularHttpInterceptor, OnDestroy {
           this.isNavigating = false;
           this.resetAuthState();
         }
-      })
+      }),
     );
   }
 

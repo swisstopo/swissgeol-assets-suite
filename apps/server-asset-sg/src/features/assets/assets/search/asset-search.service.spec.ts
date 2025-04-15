@@ -158,7 +158,7 @@ describe(AssetSearchService, () => {
       testSearchInProperty(faker.string.uuid(), (asset, text) => ({
         ...asset,
         titlePublic: text,
-      }))
+      })),
     );
 
     it(
@@ -166,7 +166,7 @@ describe(AssetSearchService, () => {
       testSearchInProperty(faker.string.uuid(), (asset, text) => ({
         ...asset,
         titleOriginal: text,
-      }))
+      })),
     );
 
     const contactData = fakeContact();
@@ -178,7 +178,7 @@ describe(AssetSearchService, () => {
           ...asset,
           assetContacts: [{ contactId: contact.contactId, role: 'author' }],
         };
-      })
+      }),
     );
 
     it('finds assets by minimum createDate', async () => {
@@ -200,7 +200,7 @@ describe(AssetSearchService, () => {
             min: new Date(dateFromDateId(asset.createDate).getTime() - millisPerDay),
           },
         },
-        user
+        user,
       );
 
       // Then
@@ -226,7 +226,7 @@ describe(AssetSearchService, () => {
             max: new Date(dateFromDateId(asset.createDate).getTime() + millisPerDay),
           },
         },
-        user
+        user,
       );
 
       // Then
@@ -260,7 +260,7 @@ describe(AssetSearchService, () => {
             max: new Date(dateFromDateId(asset.createDate).getTime() + millisPerDay),
           },
         },
-        user
+        user,
       );
 
       // Then
@@ -409,7 +409,7 @@ describe(AssetSearchService, () => {
           : asset.assetLanguages.map((it) => ({
               value: it.languageItemCode,
               count: 1,
-            }))
+            })),
       );
       expect(stats.usageCodes).toEqual([
         {
@@ -422,7 +422,7 @@ describe(AssetSearchService, () => {
         max: dateFromDateId(asset.createDate),
       });
       expect(stats.authorIds).toEqual(
-        asset.assetContacts.filter((it) => it.role === 'author').map((it) => ({ value: it.contactId, count: 1 }))
+        asset.assetContacts.filter((it) => it.role === 'author').map((it) => ({ value: it.contactId, count: 1 })),
       );
       expect(stats.manCatLabelItemCodes).toEqual(asset.manCatLabelRefs.map((it) => ({ value: it, count: 1 })));
     };
@@ -465,7 +465,7 @@ describe(AssetSearchService, () => {
 
     const makeBucket = (
       expectedAssets: AssetEditDetail[],
-      extract: (asset: AssetEditDetail) => string | number | string[] | number[]
+      extract: (asset: AssetEditDetail) => string | number | string[] | number[],
     ): Bucket[] => {
       return expectedAssets.reduce((buckets, asset) => {
         const keyOrKeys = extract(asset);
@@ -513,19 +513,19 @@ describe(AssetSearchService, () => {
         await assetRepo.create({
           user: fakeUser(),
           patch: { ...fakeAssetPatch(), [property]: 'unrelated' },
-        })
+        }),
       );
       await service.register(
         await assetRepo.create({
           user: fakeUser(),
           patch: { ...fakeAssetPatch(), [property]: '' },
-        })
+        }),
       );
       await service.register(
         await assetRepo.create({
           user: fakeUser(),
           patch: { ...fakeAssetPatch(), [property]: uniqueString.slice(0, 6).replace(/\d/, '_') },
-        })
+        }),
       );
 
       // When
@@ -552,7 +552,7 @@ describe(AssetSearchService, () => {
 
     it(
       'should match all assets which contain the query in their `titleOriginal`',
-      testSearchOnProperty('titleOriginal')
+      testSearchOnProperty('titleOriginal'),
     );
     it('should match all assets which contain the query in their `titlePublic`', testSearchOnProperty('titlePublic'));
 
@@ -568,13 +568,13 @@ describe(AssetSearchService, () => {
         expect(actualAsset.assetFormatItemCode).toEqual(expectedAsset.assetFormatItemCode);
         expect(actualAsset.assetKindItemCode).toEqual(expectedAsset.assetKindItemCode);
         expect(actualAsset.languages).toEqual(
-          expectedAsset.assetLanguages.map((it) => ({ code: it.languageItemCode }))
+          expectedAsset.assetLanguages.map((it) => ({ code: it.languageItemCode })),
         );
         expect(actualAsset.contacts).toEqual([]);
         expect(actualAsset.studies).toEqual([]);
         expect(actualAsset.manCatLabelItemCodes).toEqual([]);
         expect(actualAsset.usageCode).toEqual(
-          makeUsageCode(expectedAsset.publicUse.isAvailable, expectedAsset.internalUse.isAvailable)
+          makeUsageCode(expectedAsset.publicUse.isAvailable, expectedAsset.internalUse.isAvailable),
         );
       }
     };
@@ -592,7 +592,7 @@ describe(AssetSearchService, () => {
       expect(aggs.buckets.assetKindItemCodes).toEqual(expectedAssetKindItemCodes);
 
       const expectedLanguageItemCodes = makeBucket(expectedAssets, (asset) =>
-        asset.assetLanguages.map((it) => it.languageItemCode)
+        asset.assetLanguages.map((it) => it.languageItemCode),
       );
       const assetsWithoutLanguage = expectedAssets.filter((it) => it.assetLanguages.length === 0);
       if (assetsWithoutLanguage.length !== 0) {
@@ -606,7 +606,7 @@ describe(AssetSearchService, () => {
       expect(aggs.buckets.languageItemCodes).toEqual(expectedLanguageItemCodes);
 
       const expectedUsageCodes = makeBucket(expectedAssets, (asset) =>
-        makeUsageCode(asset.publicUse.isAvailable, asset.internalUse.isAvailable)
+        makeUsageCode(asset.publicUse.isAvailable, asset.internalUse.isAvailable),
       );
 
       aggs.buckets.usageCodes.sort(compareBuckets);
@@ -682,8 +682,8 @@ describe(AssetSearchService, () => {
             assetRepo.create({
               patch: fakeAssetPatch(),
               user: fakeUser(),
-            })
-          )
+            }),
+          ),
         );
       }
 

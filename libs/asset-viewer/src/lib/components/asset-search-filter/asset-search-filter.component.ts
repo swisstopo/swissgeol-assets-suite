@@ -26,7 +26,7 @@ export class AssetSearchFilterComponent<T> {
     this.store.dispatch(
       actions.updateSearchQuery({
         query: { [filter.queryKey]: activeValues.size > 0 ? [...activeValues] : undefined },
-      })
+      }),
     );
   }
 }

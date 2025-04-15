@@ -45,7 +45,7 @@ const findOutdatedVersions = (tags, recentTag) => {
   return versions.filter(
     (version) =>
       // Select all pre-releases that appear before the most recent one.
-      version.preRelease != null && compareVersions(recentVersion, version) > 0
+      version.preRelease != null && compareVersions(recentVersion, version) > 0,
   );
 };
 

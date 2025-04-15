@@ -1,8 +1,8 @@
 @if (hasUnsavedChanges) {
-<div class="warning">
-  <svg-icon key="cancel"></svg-icon>
-  <span translate>edit.unsavedChanges</span>
-</div>
+  <div class="warning">
+    <svg-icon key="cancel"></svg-icon>
+    <span translate>edit.unsavedChanges</span>
+  </div>
 }
 <div class="spacer"></div>
 <button asset-sg-secondary (click)="discardChanges()" [disabled]="!hasUnsavedChanges" translate>

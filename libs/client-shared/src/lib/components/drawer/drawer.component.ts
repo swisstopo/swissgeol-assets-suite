@@ -74,21 +74,24 @@ export class DrawerComponent extends RxState<DrawerState> {
         map(() =>
           pipe(
             [...this._panels],
-            A.mapWithIndex((i, p) => tuple(i, p))
-          )
+            A.mapWithIndex((i, p) => tuple(i, p)),
+          ),
         ),
         switchMap((ps) =>
           merge(
             ...pipe(
               ps,
-              A.map(([index, panel]) => panel._display$.pipe(map((display) => tuple(index, panel, display))))
-            )
-          )
+              A.map(([index, panel]) => panel._display$.pipe(map((display) => tuple(index, panel, display)))),
+            ),
+          ),
         ),
-        scan((acc, [index, panel, display]) => {
-          const f = acc.filter(([i]) => i !== index);
-          return [...f, tuple(index, panel, display)];
-        }, [] as [number, DrawerPanelComponent, boolean][]),
+        scan(
+          (acc, [index, panel, display]) => {
+            const f = acc.filter(([i]) => i !== index);
+            return [...f, tuple(index, panel, display)];
+          },
+          [] as [number, DrawerPanelComponent, boolean][],
+        ),
         coalesceWith(interval(0)),
         delay(0),
         observeOn(animationFrameScheduler),
@@ -100,10 +103,10 @@ export class DrawerComponent extends RxState<DrawerState> {
                 display,
                 widthPercentageOfViewPanel: p.getWidthPercentageOfViewPanel(),
                 element: p._host.nativeElement,
-              }))
-            )()
-          )
-        )
+              })),
+            )(),
+          ),
+        ),
       )
       .subscribe();
   }
@@ -118,27 +121,27 @@ const delayIO =
 
 const freezeDrawerWidthAndSetPanelWidths = (
   drawerElement: HTMLElement,
-  panels: { element: HTMLElement; display: boolean; widthPercentageOfViewPanel: number }[]
+  panels: { element: HTMLElement; display: boolean; widthPercentageOfViewPanel: number }[],
 ) => {
   drawerElement.style.width = `${drawerElement.clientWidth}px`;
   panels.forEach((p) =>
     setCssCustomProperty(p.element, [
       '--width-percentage-of-viewport',
       p.display ? String(p.widthPercentageOfViewPanel) : '0',
-    ])
+    ]),
   );
 };
 
 const measurePanelsAndSetDrawerWidth =
   (
     drawerElement: HTMLElement,
-    panels: { element: HTMLElement; display: boolean; widthPercentageOfViewPanel: number }[]
+    panels: { element: HTMLElement; display: boolean; widthPercentageOfViewPanel: number }[],
   ) =>
   () => {
     const newWidth = pipe(
       panels,
       A.map(({ element }) => element.clientWidth),
-      A.reduce(0, (a, b) => a + b)
+      A.reduce(0, (a, b) => a + b),
     );
     const promise = new Promise<void>((resolve) => {
       const handler = (e: TransitionEvent) => {
@@ -157,12 +160,12 @@ const measurePanelsAndSetDrawerWidth =
 
 const program = (
   drawerElement: HTMLElement,
-  panels: { element: HTMLElement; display: boolean; widthPercentageOfViewPanel: number }[]
+  panels: { element: HTMLElement; display: boolean; widthPercentageOfViewPanel: number }[],
 ) =>
   pipe(
     IO.of(freezeDrawerWidthAndSetPanelWidths(drawerElement, panels)),
     T.fromIO,
     T.chain(() => delayIO(0)),
     T.chain(() => requestAnimationFrame()),
-    T.chain(() => measurePanelsAndSetDrawerWidth(drawerElement, panels))
+    T.chain(() => measurePanelsAndSetDrawerWidth(drawerElement, panels)),
   );

@@ -25,7 +25,7 @@ export class FavoritesController {
     private readonly favoriteRepo: FavoriteRepo,
     private readonly assetInfoRepo: AssetInfoRepo,
     private readonly assetEditRepo: AssetEditRepo,
-    private readonly assetSearchService: AssetSearchService
+    private readonly assetSearchService: AssetSearchService,
   ) {}
 
   @Get('/')

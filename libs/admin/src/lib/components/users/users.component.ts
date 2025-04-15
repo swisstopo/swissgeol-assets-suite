@@ -39,7 +39,7 @@ export class UsersComponent extends AbstractAdminTableComponent<User> implements
 
   public readonly currentUser$: Observable<User> = this.store.select(fromAppShared.selectRDUserProfile).pipe(
     map((currentUser) => (RD.isSuccess(currentUser) ? currentUser.value : null)),
-    filter(isNotNull)
+    filter(isNotNull),
   );
 
   public override ngOnInit(): void {
@@ -50,7 +50,7 @@ export class UsersComponent extends AbstractAdminTableComponent<User> implements
 
   protected override matchBySearchTerm(user: User, searchTerm: string): boolean {
     return this.searchableFields.some((field) =>
-      user[field].toString().toLowerCase().includes(searchTerm.toLowerCase())
+      user[field].toString().toLowerCase().includes(searchTerm.toLowerCase()),
     );
   }
 
@@ -101,13 +101,13 @@ export class UsersComponent extends AbstractAdminTableComponent<User> implements
         for (const workgroup of workgroups) {
           this.workgroups.set(workgroup.id, workgroup);
         }
-      })
+      }),
     );
     this.subscriptions.add(
       this.users$.subscribe((users) => {
         this.data = users;
         this.dataSource.data = users;
-      })
+      }),
     );
     this.subscriptions.add(
       this.currentLang$.subscribe(() => {
@@ -115,7 +115,7 @@ export class UsersComponent extends AbstractAdminTableComponent<User> implements
           { displayValue: { key: 'admin.userPage.admin' }, key: 'isAdmin', match: (value) => value.isAdmin },
           { displayValue: { key: 'admin.userPage.noAdmin' }, key: 'isAdmin', match: (value) => !value.isAdmin },
         ];
-      })
+      }),
     );
   }
 }

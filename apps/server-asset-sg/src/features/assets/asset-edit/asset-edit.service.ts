@@ -18,7 +18,7 @@ export class AssetEditService {
       if (siblingCandidate?.workgroupId !== data.patch.workgroupId) {
         throw new HttpException(
           'Sibling assets must be in the same workgroup as the edited asset',
-          HttpStatus.UNPROCESSABLE_ENTITY
+          HttpStatus.UNPROCESSABLE_ENTITY,
         );
       }
     }
@@ -46,7 +46,7 @@ export class AssetEditService {
         if (child.workgroupId !== data.patch.workgroupId) {
           throw new HttpException(
             'Child assets must be in the same workgroup as the parent asset',
-            HttpStatus.UNPROCESSABLE_ENTITY
+            HttpStatus.UNPROCESSABLE_ENTITY,
           );
         }
       }

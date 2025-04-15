@@ -133,7 +133,7 @@ export class AssetRepo implements FindRepo<Asset, AssetId>, MutateRepo<Asset, As
       await this.deleteStudies(
         assetId,
         type,
-        studies.map((it) => it.id)
+        studies.map((it) => it.id),
       );
       await this.updateStudies(assetId, type, studies);
     }
@@ -159,7 +159,7 @@ export class AssetRepo implements FindRepo<Asset, AssetId>, MutateRepo<Asset, As
     const values = data.map(
       (it) => Prisma.sql`
       (${assetId}, 'unkown', st_geomfromtext('${it.geom}', 2056))
-    `
+    `,
     );
     await this.prisma.$queryRaw`
       INSERT INTO public.study_${type}
@@ -177,7 +177,7 @@ export class AssetRepo implements FindRepo<Asset, AssetId>, MutateRepo<Asset, As
       (it) => Prisma.sql`
       WHEN study_${Prisma.raw(type)}_id = ${it.id}
       THEN ${it.geom}
-    `
+    `,
     );
     await this.prisma.$queryRaw`
       UPDATE
