@@ -1,0 +1,75 @@
+@use "../../styles/variables";
+
+:host ::ng-deep {
+  .mat-mdc-text-field-wrapper {
+    border: 1px solid black;
+  }
+
+  .mat-mdc-select {
+    font-size: 16px;
+    line-height: 24px;
+    font-weight: 400;
+  }
+
+  .mat-mdc-select-arrow {
+    display: none;
+  }
+
+  .mdc-text-field--filled {
+    border-radius: 4px;
+    height: 44px;
+  }
+
+  .mat-mdc-form-field-flex {
+    align-items: center;
+    height: 100%;
+  }
+
+  .mat-mdc-form-field .mat-mdc-text-field-wrapper:not(.mdc-text-field--outlined) .mat-mdc-form-field-infix {
+    padding: 0;
+    align-content: center;
+  }
+
+  .mdc-text-field--filled:not(.mdc-text-field--disabled) {
+    background-color: transparent;
+  }
+
+  .mdc-text-field--filled:not(.mdc-text-field--disabled) .mdc-line-ripple::after,
+  .mdc-text-field--filled:not(.mdc-text-field--disabled) .mdc-line-ripple::before {
+    border: none;
+  }
+}
+
+:host([small]) ::ng-deep {
+  .mdc-text-field--filled {
+    border-radius: 4px;
+    height: 28px;
+  }
+
+  .mat-mdc-form-field .mat-mdc-text-field-wrapper:not(.mdc-text-field--outlined) .mat-mdc-form-field-infix {
+    padding-top: 2px;
+  }
+
+  .mat-mdc-form-field-subscript-wrapper {
+    display: none;
+  }
+}
+
+:host,
+mat-form-field {
+  max-width: 400px;
+  width: 100%;
+}
+
+h5 {
+  margin: 0 0 12px 12px;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+}
+
+.icon {
+  color: variables.$cyan-08;
+  position: absolute;
+  right: 0;
+}
