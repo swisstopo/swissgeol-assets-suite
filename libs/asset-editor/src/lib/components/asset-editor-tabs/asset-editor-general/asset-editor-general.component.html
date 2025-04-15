@@ -6,9 +6,7 @@
         [values]="availableWorkgroups$ | push"
         [bindLabel]="'name'"
         [bindKey]="'id'"
-        [ngModel]="formGroup.controls.workgroupId.value"
-        (ngModelChange)="setIdFromWorkgroup($event)"
-        [ngModelOptions]="{ standalone: true }"
+        formControlName="workgroupId"
       ></asset-sg-select>
     </div>
   </asset-sg-detail-section>
@@ -31,8 +29,13 @@
   <asset-sg-detail-section [title]="'edit.tabs.general.type' | translate">
     <div content>
       <div class="content">
-        <asset-sg-select [title]="'workgroup.title' | translate"></asset-sg-select>
-
+        <asset-sg-select
+          [title]="'edit.tabs.general.type' | translate"
+          [values]="assetKindItems$ | push"
+          [bindLabel]="'code'"
+          [bindKey]="'code'"
+          formControlName="assetKindItemCode"
+        ></asset-sg-select>
         <asset-sg-select
           [title]="'edit.tabs.general.language' | translate"
           [values]="languages"
@@ -43,7 +46,13 @@
           (ngModelChange)="setLangFromLangs($event)"
           [ngModelOptions]="{ standalone: true }"
         ></asset-sg-select>
-        <asset-sg-select [title]="'workgroup.title' | translate"></asset-sg-select>
+        <asset-sg-select
+          [title]="'edit.tabs.general.format' | translate"
+          [values]="assetFormatItems$ | push"
+          [bindLabel]="'code'"
+          [bindKey]="'code'"
+          formControlName="assetFormatItemCode"
+        ></asset-sg-select>
       </div>
     </div>
   </asset-sg-detail-section>
