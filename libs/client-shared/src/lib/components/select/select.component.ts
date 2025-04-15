@@ -7,6 +7,8 @@ import { TranslateModule } from '@ngx-translate/core';
 import { noop } from 'rxjs';
 import { SmartTranslatePipe } from '../smart-translate.pipe';
 
+type FormValue<T> = T | T[] | T[keyof T] | T[keyof T][];
+
 @Component({
   selector: 'asset-sg-select',
   templateUrl: './select.component.html',
@@ -36,6 +38,7 @@ import { SmartTranslatePipe } from '../smart-translate.pipe';
 export class SelectComponent<T> implements OnInit, ControlValueAccessor {
   @Input() public values: T[] = [];
   @Input() public bindLabel: keyof T | null = null;
+  @Input() public bindKey: keyof T | null = null;
   @Input() public title = '';
   @Input({ transform: coerceBooleanProperty }) public multiple = false;
   @Input() public initialValues: T[] = [];
@@ -45,7 +48,7 @@ export class SelectComponent<T> implements OnInit, ControlValueAccessor {
 
   public selectedValues?: T | T[] = this.multiple ? [] : undefined;
 
-  private onChange: (value: T | T[]) => void = noop;
+  private onChange: (value: FormValue<T>) => void = noop;
   private onTouched: () => void = noop;
 
   public ngOnInit(): void {
@@ -56,14 +59,29 @@ export class SelectComponent<T> implements OnInit, ControlValueAccessor {
   public onFilterChange(selectedValues: T | T[]): void {
     this.selectedValues = selectedValues;
     this.selectionChanged.emit(Array.isArray(selectedValues) ? selectedValues : [selectedValues]);
-    this.onChange(selectedValues);
+    if (this.bindKey) {
+      const newValues = Array.isArray(selectedValues)
+        ? selectedValues.map((value) => value[this.bindKey!])
+        : selectedValues[this.bindKey];
+      this.onChange(newValues);
+    } else {
+      this.onChange(selectedValues);
+    }
   }
 
-  public writeValue(value: T | T[]): void {
-    this.selectedValues = value;
+  // If there is a bindKey, we can assume that the value is a key of T or an array of keys of T.
+  // Otherwise, we can assume that the value is a T or an array of T.
+  public writeValue(value: FormValue<T>): void {
+    if (this.bindKey) {
+      this.selectedValues = Array.isArray(value)
+        ? this.values.filter((v) => (value as T[keyof T][]).includes(v[this.bindKey!]))
+        : this.values.find((v) => v[this.bindKey!] === value);
+    } else {
+      this.selectedValues = value as T | T[];
+    }
   }
 
-  public registerOnChange(fn: (value: T | T[]) => void): void {
+  public registerOnChange(fn: (value: FormValue<T>) => void): void {
     this.onChange = fn;
   }
 
