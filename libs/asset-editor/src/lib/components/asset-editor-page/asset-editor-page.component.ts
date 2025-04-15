@@ -104,6 +104,8 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
       this.asset ? dateFromDateId(this.asset.receiptDate) : null
     );
     this.form.controls.general.controls.assetLanguages.setValue(this.asset?.assetLanguages ?? null);
+    this.form.controls.general.controls.assetFormatItemCode.setValue(this.asset?.assetFormatItemCode ?? null);
+    this.form.controls.general.controls.assetKindItemCode.setValue(this.asset?.assetKindItemCode ?? null);
   }
 
   public openConfirmDialogForAssetDeletion(assetId: number) {
@@ -170,6 +172,8 @@ const buildForm = () => {
       creationDate: new FormControl<Date | null>(null, { validators: [Validators.required] }),
       receiptDate: new FormControl<Date | null>(null, { validators: [Validators.required] }),
       assetLanguages: new FormControl<Array<{ languageItemCode: string }>>([], { validators: [Validators.required] }),
+      assetFormatItemCode: new FormControl<string>('', { validators: [Validators.required] }),
+      assetKindItemCode: new FormControl<string>('', { validators: [Validators.required] }),
     }),
     files: new FormGroup({
       other: new FormControl('', { validators: [Validators.required] }),

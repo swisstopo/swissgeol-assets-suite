@@ -1,6 +1,6 @@
 import { Component, inject, Input, OnDestroy, OnInit } from '@angular/core';
 import { fromAppShared, Translation } from '@asset-sg/client-shared';
-import { Role, SimpleWorkgroup, WorkgroupId } from '@asset-sg/shared/v2';
+import { Role, SimpleWorkgroup } from '@asset-sg/shared/v2';
 import { UntilDestroy } from '@ngneat/until-destroy';
 import { Store } from '@ngrx/store';
 import { map, Subscription } from 'rxjs';
@@ -24,7 +24,23 @@ export class AssetEditorGeneralComponent implements OnInit, OnDestroy {
   public selectedLanguages: string[] = [];
   private readonly store = inject(Store);
   private readonly subscription: Subscription = new Subscription();
-  public readonly languageSelector$ = this.store.select(selectLanguageFilters).pipe(
+  public readonly assetFormatItems$ = this.store.select(fromAppShared.selectAssetFormatItems).pipe(
+    map((assetFormatItems) => {
+      if (assetFormatItems == null) {
+        return [];
+      }
+      return Object.values(assetFormatItems);
+    })
+  );
+  public readonly assetKindItems$ = this.store.select(fromAppShared.selectAssetKindItems).pipe(
+    map((assetKindItems) => {
+      if (assetKindItems == null) {
+        return [];
+      }
+      return Object.values(assetKindItems);
+    })
+  );
+  private readonly languageSelector$ = this.store.select(selectLanguageFilters).pipe(
     map((languageFilters) => {
       return languageFilters.map((lang) => ({ name: lang.name, value: lang.value }));
     })
@@ -38,15 +54,12 @@ export class AssetEditorGeneralComponent implements OnInit, OnDestroy {
     this.subscription.add(this.availableWorkgroups$.subscribe((workgroups) => (this.workgroups = workgroups)));
     this.subscription.add(this.languageSelector$.subscribe((languages) => (this.languages = languages)));
     this.subscription.add(this.formGroup.valueChanges.subscribe((v) => console.log(v)));
+    this.subscription.add(this.assetFormatItems$.subscribe(console.log));
     this.selectedLanguages = this.formGroup.controls.assetLanguages.value?.map((lang) => lang.languageItemCode) ?? [];
   }
 
   public ngOnDestroy() {
     this.subscription.unsubscribe();
-  }
-
-  public setIdFromWorkgroup(id: WorkgroupId) {
-    this.formGroup.controls.workgroupId.setValue(id);
   }
 
   public setLangFromLangs(langs: string[]) {
