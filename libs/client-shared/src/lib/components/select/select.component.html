@@ -5,6 +5,11 @@
   <svg-icon key="arrow-down" class="icon" />
 
   <mat-select [value]="selectedValues" (valueChange)="onFilterChange($event)" [multiple]="multiple" (blur)="onBlur()">
+    @if (shouldShowTrigger) {
+      <mat-select-trigger
+        >{{ Array.isArray(selectedValues) ? selectedValues.length : 0 }} {{ triggerLabel }}</mat-select-trigger
+      >
+    }
     @for (value of values; track value) {
       <mat-option [value]="value">{{ (bindLabel ? $any(value[bindLabel]) : value) | smartTranslate }}</mat-option>
     }
