@@ -10,12 +10,12 @@ export function can$<T, P extends Policy<T>>(policy: Class<P>, check: (policy: P
 export function can$<T, P extends Policy<T>, TR extends T>(
   policy: Class<P>,
   record: Observable<TR | null>,
-  check: (policy: P, record: TR) => boolean
+  check: (policy: P, record: TR) => boolean,
 ): Observable<boolean>;
 export function can$<T, P extends Policy<T>>(
   policy: Class<P>,
   checkOrRecord: unknown,
-  checkOrNone?: (policy: P, record: T) => boolean
+  checkOrNone?: (policy: P, record: T) => boolean,
 ): Observable<boolean> {
   const user$ = inject(Store)
     .select(selectRDUserProfile)
@@ -33,7 +33,7 @@ export function can$<T, P extends Policy<T>>(
         }
         const instance = new policy(user);
         return record$.pipe(map((record) => (record === null ? false : check(instance, record))));
-      })
+      }),
     );
   }
 }
