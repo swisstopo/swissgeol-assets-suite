@@ -30,6 +30,7 @@ import {
   MatDateIdModule,
   PageHeaderComponent,
   SelectComponent,
+  SmartTranslatePipe,
   TextInputComponent,
   ValueItemDescriptionPipe,
   ValueItemNamePipe,
@@ -187,6 +188,7 @@ export const canLeaveEdit: CanDeactivateFn<AssetEditorPageComponent> = (componen
     SelectComponent,
     TextInputComponent,
     DatePickerComponent,
+    SmartTranslatePipe,
   ],
   providers: [
     { provide: MAT_DATE_LOCALE, useValue: de },
