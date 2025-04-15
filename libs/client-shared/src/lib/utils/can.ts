@@ -2,7 +2,7 @@ import { inject } from '@angular/core';
 import { Policy } from '@asset-sg/shared/v2';
 import * as RD from '@devexperts/remote-data-ts';
 import { Store } from '@ngrx/store';
-import { map, Observable, of, switchMap } from 'rxjs';
+import { map, Observable, of, shareReplay, switchMap } from 'rxjs';
 import { Class } from 'type-fest';
 import { selectRDUserProfile } from '../state/app-shared-state.selectors';
 
@@ -22,7 +22,10 @@ export function can$<T, P extends Policy<T>>(
     .pipe(map((currentUser) => (RD.isSuccess(currentUser) ? currentUser.value : null)));
   if (checkOrNone === undefined) {
     const check = checkOrRecord as (policy: P) => boolean;
-    return user$.pipe(map((user) => (user === null ? false : check(new policy(user)))));
+    return user$.pipe(
+      map((user) => (user === null ? false : check(new policy(user)))),
+      shareReplay(1),
+    );
   } else {
     const check = checkOrNone;
     const record$ = checkOrRecord as Observable<T>;
@@ -32,7 +35,10 @@ export function can$<T, P extends Policy<T>>(
           return of(false);
         }
         const instance = new policy(user);
-        return record$.pipe(map((record) => (record === null ? false : check(instance, record))));
+        return record$.pipe(
+          map((record) => (record === null ? false : check(instance, record))),
+          shareReplay(1),
+        );
       }),
     );
   }

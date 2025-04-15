@@ -1,0 +1,8 @@
+<div class="indicator">
+  @if (stage === Stage.Done) {
+    <svg-icon key="checkmark" />
+  } @else {
+    {{ index + 1 }}
+  }
+</div>
+{{ "workflowStatus." + status | translate }}

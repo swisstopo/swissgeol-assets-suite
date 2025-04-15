@@ -1,0 +1,7 @@
+@if (workflow !== null) {
+  <div class="status">
+    <asset-sg-editor-status-steps [workflow]="workflow" />
+    <asset-sg-editor-status-assignee [workflow]="workflow" />
+  </div>
+  <asset-sg-editor-status-content [workflow]="workflow" />
+}

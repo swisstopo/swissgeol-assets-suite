@@ -29,6 +29,16 @@ export const deAppTranslations = {
   favorites: {
     title: 'Favoriten',
   },
+  workflow: {
+    status: 'Status',
+    assignee: 'Zugewiesene Person',
+  },
+  workflowStatus: {
+    Draft: 'Draft',
+    InReview: 'Review',
+    Reviewed: 'Reviewed',
+    Published: 'Veröffentlicht',
+  },
   menuBar: {
     filters: 'Filter',
     admin: 'Verwaltung',
@@ -247,6 +257,13 @@ export const deAppTranslations = {
           tab: 'Tab',
           hasValidationErrors: 'enthält Validierungsfehler',
         },
+      },
+      status: {
+        tabName: 'Status',
+        changeStatus: 'Status manuell ändern',
+        requestReview: 'Review anfordern',
+        requestChanges: 'Änderungen anfordern',
+        finishReview: 'Review abschliessen',
       },
     },
     closeManageAsset: 'Asset verwalten schliessen',
