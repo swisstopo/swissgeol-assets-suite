@@ -11,19 +11,18 @@
       menuBar.filters
     </li>
     @if (userExists$ | async) {
-      <li
-        *rxLet="activeItem === 'favorites'; let isActive"
-        asset-sg-menu-bar-item
-        icon="favorite"
-        [badge]="isActive ? (activeFilterCount$ | async) : null"
-        [isActive]="isActive"
-        (click)="isActive ? toggleAssetDrawer() : goToViewer({ favoritesOnly: true })"
-      >
-        menuBar.favourites
-      </li>
-    }
     <li
-      *canCreate="AssetEditPolicy"
+      *rxLet="activeItem === 'favorites'; let isActive"
+      asset-sg-menu-bar-item
+      icon="favorite"
+      [badge]="isActive ? (activeFilterCount$ | async) : null"
+      [isActive]="isActive"
+      (click)="isActive ? toggleAssetDrawer() : goToViewer({ favoritesOnly: true })"
+    >
+      menuBar.favourites
+    </li>
+    } @if (canCreatesAsset$ | async) {
+    <li
       asset-sg-menu-bar-item
       icon="add"
       [link]="[translateService.currentLang, 'asset-admin', 'new']"
@@ -31,6 +30,7 @@
     >
       menuBar.createAsset
     </li>
+    }
   </ul>
 
   <ul class="submenu">
