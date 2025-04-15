@@ -34,5 +34,5 @@ export const favoritesReducer = createReducer(
     const assetIds = new Set(state.assetIds);
     assetIds.delete(assetId);
     return { ...state, assetIds };
-  })
+  }),
 );

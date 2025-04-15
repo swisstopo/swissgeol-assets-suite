@@ -70,7 +70,7 @@ export class WorkgroupsController {
   async create(
     @ParseBody(WorkgroupDataSchema)
     data: WorkgroupData,
-    @CurrentUser() user: User
+    @CurrentUser() user: User,
   ): Promise<Workgroup> {
     authorize(WorkgroupPolicy, user).canCreate();
     const record = await this.workgroupRepo.create(data);
@@ -82,7 +82,7 @@ export class WorkgroupsController {
     @Param('id', ParseIntPipe) id: number,
     @ParseBody(WorkgroupDataSchema)
     data: WorkgroupData,
-    @CurrentUser() user: User
+    @CurrentUser() user: User,
   ): Promise<Workgroup> {
     const record = await this.workgroupRepo.find(id);
     if (record === null) {

@@ -22,33 +22,33 @@ export class FavoritesEffect implements OnInitEffects {
       ofType(actions.initialize),
       switchMap(() => this.store.select(selectIsInitialized)),
       filter((isInitialized) => !isInitialized),
-      map(() => actions.load())
-    )
+      map(() => actions.load()),
+    ),
   );
 
   public load$ = createEffect(() =>
     this.actions$.pipe(
       ofType(actions.load),
       switchMap(() => this.favoritesService.fetchIds()),
-      map((assetIds) => actions.set({ assetIds }))
-    )
+      map((assetIds) => actions.set({ assetIds })),
+    ),
   );
 
   public create$ = createEffect(
     () =>
       this.actions$.pipe(
         ofType(actions.add),
-        switchMap(({ assetId }) => this.favoritesService.create(assetId))
+        switchMap(({ assetId }) => this.favoritesService.create(assetId)),
       ),
-    { dispatch: false }
+    { dispatch: false },
   );
 
   public delete$ = createEffect(
     () =>
       this.actions$.pipe(
         ofType(actions.remove),
-        switchMap(({ assetId }) => this.favoritesService.delete(assetId))
+        switchMap(({ assetId }) => this.favoritesService.delete(assetId)),
       ),
-    { dispatch: false }
+    { dispatch: false },
   );
 }

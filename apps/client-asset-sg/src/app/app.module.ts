@@ -102,7 +102,7 @@ registerLocaleData(locale_deCH, 'de-CH');
         runtimeChecks: {
           strictStateImmutability: false,
         },
-      }
+      },
     ),
     EffectsModule.forRoot([AppSharedStateEffects]),
     ForModule,

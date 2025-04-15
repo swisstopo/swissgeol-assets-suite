@@ -1,6 +1,6 @@
 <li *rxFor="let assetFile of files" class="link">
   @if (assetFile.legalDocItem != null) {
-  <span class="legal-doc-item-code"> {{ assetFile.legalDocItem | valueItemName }}: </span>
+    <span class="legal-doc-item-code"> {{ assetFile.legalDocItem | valueItemName }}: </span>
   }
   <span class="name"> {{ assetFile | fileName }} ({{ assetFile | fileMetadata : locale }}) </span>
   <button

@@ -1,15 +1,15 @@
 @if (link == null) {
-<div class="container">
-  <div class="box">
-    <ng-container *ngTemplateOutlet="content" />
+  <div class="container">
+    <div class="box">
+      <ng-container *ngTemplateOutlet="content" />
+    </div>
   </div>
-</div>
 } @else {
-<a class="container" [routerLink]="link">
-  <div class="box">
-    <ng-container *ngTemplateOutlet="content" />
-  </div>
-</a>
+  <a class="container" [routerLink]="link">
+    <div class="box">
+      <ng-container *ngTemplateOutlet="content" />
+    </div>
+  </a>
 }
 
 <ng-template #content>

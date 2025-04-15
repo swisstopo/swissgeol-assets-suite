@@ -25,7 +25,7 @@ export class WorkflowRepo {
     fromStatus: WorkflowStatus,
     createdById: string,
     assigneeId: string,
-    data: WorkflowChangeData
+    data: WorkflowChangeData,
   ): Promise<Workflow> {
     const entry = await this.prisma.workflow.update({
       where: { assetId },

@@ -82,7 +82,7 @@ export class AssetSearchRefineComponent implements OnInit, OnDestroy, AfterViewI
           this.minDate = value;
           this.updateSearch({ createDate: { min: value, max: this.maxDateControl.getRawValue() } });
         }
-      })
+      }),
     );
     this.subscriptions.add(
       this.maxDateControl.valueChanges.subscribe((value) => {
@@ -90,7 +90,7 @@ export class AssetSearchRefineComponent implements OnInit, OnDestroy, AfterViewI
           this.maxDate = value;
           this.updateSearch({ createDate: { min: this.minDateControl.getRawValue(), max: value } });
         }
-      })
+      }),
     );
   }
 
@@ -158,7 +158,7 @@ export class AssetSearchRefineComponent implements OnInit, OnDestroy, AfterViewI
         query: {
           [filterToRemove.queryKey]: remainingFiltersWithSameKey.length > 0 ? remainingFiltersWithSameKey : undefined,
         },
-      })
+      }),
     );
   }
 
@@ -172,31 +172,31 @@ export class AssetSearchRefineComponent implements OnInit, OnDestroy, AfterViewI
     this.subscriptions.add(
       this.store.select(selectSearchQuery).subscribe((query) => {
         this.assetSearchQuery = query;
-      })
+      }),
     );
 
     this.subscriptions.add(
       this.createDateRange$.subscribe((dateRange) => {
         this.createDateRange = dateRange;
-      })
+      }),
     );
 
     this.subscriptions.add(
       this.availableAuthors$.subscribe((authors) => {
         this.availableAuthors = authors ?? [];
         this.filteredAuthors = authors ?? [];
-      })
+      }),
     );
 
     this.subscriptions.add(
       this.authorAutoCompleteControl.valueChanges
         .pipe(
           startWith(''),
-          map((value) => this.filterAuthors(value ?? ''))
+          map((value) => this.filterAuthors(value ?? '')),
         )
         .subscribe((filteredAuthors) => {
           this.filteredAuthors = filteredAuthors;
-        })
+        }),
     );
   }
 }

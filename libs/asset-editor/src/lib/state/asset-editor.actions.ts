@@ -9,14 +9,14 @@ export const createNewAsset = createAction('[Asset Editor] Create new asset', pr
 
 export const updateAssetEditDetail = createAction(
   '[Asset Editor] Update asset',
-  props<{ assetId: number; patchAsset: PatchAsset; filesToDelete: number[]; newFiles: AssetEditorNewFile[] }>()
+  props<{ assetId: number; patchAsset: PatchAsset; filesToDelete: number[]; newFiles: AssetEditorNewFile[] }>(),
 );
 
 export const updateAssetEditDetailResult = createAction(
   '[Asset Editor] Update Asset Edit Detail Result',
   props<{
     asset: AssetEditDetail;
-  }>()
+  }>(),
 );
 
 export const deleteAsset = createAction('[Asset Editor] Delete asset', props<{ assetId: number }>());
@@ -25,7 +25,7 @@ export const handleSuccessfulDeletion = createAction(
   '[Asset Editor] Handle successful deletion',
   props<{
     assetId: number;
-  }>()
+  }>(),
 );
 export const editContact = createAction('[Asset Editor] Edit contact', props<{ contact: ContactEdit }>());
 

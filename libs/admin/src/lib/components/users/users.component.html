@@ -4,29 +4,29 @@
     (shouldShowFiltersChanged)="toggleFilters($event)"
   ></asset-sg-search-and-filter>
   @if (shouldShowFilters) {
-  <div class="filters">
-    <asset-sg-filter-selector
-      (filterAdded)="addFilter($event)"
-      (filterRemoved)="removeFilter($event)"
-      title="{{ 'admin.workgroups' | translate }}"
-      [filters]="workgroupFilters"
-      multiple
-    ></asset-sg-filter-selector>
-    <asset-sg-filter-selector
-      (filterAdded)="addFilter($event)"
-      (filterRemoved)="removeFilter($event)"
-      title="{{ 'admin.userPage.admin' | translate }}"
-      [filters]="filterForIsAdmin"
-      multiple
-    ></asset-sg-filter-selector>
-    <asset-sg-filter-selector
-      (filterAdded)="addFilter($event)"
-      (filterRemoved)="removeFilter($event)"
-      title="{{ 'admin.userPage.lang' | translate }}"
-      [filters]="langFilters"
-      multiple
-    ></asset-sg-filter-selector>
-  </div>
+    <div class="filters">
+      <asset-sg-filter-selector
+        (filterAdded)="addFilter($event)"
+        (filterRemoved)="removeFilter($event)"
+        title="{{ 'admin.workgroups' | translate }}"
+        [filters]="workgroupFilters"
+        multiple
+      ></asset-sg-filter-selector>
+      <asset-sg-filter-selector
+        (filterAdded)="addFilter($event)"
+        (filterRemoved)="removeFilter($event)"
+        title="{{ 'admin.userPage.admin' | translate }}"
+        [filters]="filterForIsAdmin"
+        multiple
+      ></asset-sg-filter-selector>
+      <asset-sg-filter-selector
+        (filterAdded)="addFilter($event)"
+        (filterRemoved)="removeFilter($event)"
+        title="{{ 'admin.userPage.lang' | translate }}"
+        [filters]="langFilters"
+        multiple
+      ></asset-sg-filter-selector>
+    </div>
   }
 
   <div *rxLet="currentUser$; let currentUser">
@@ -60,9 +60,10 @@
         >
           <mat-chip-set>
             @for (workgroup of getWorkgroupsOfUser(user); track workgroup.id) {
-            <asset-sg-chip type="tertiary">{{ workgroup.name }}</asset-sg-chip>
-            } @if (user.roles.size > WORKGROUP_DISPLAY_COUNT) {
-            <asset-sg-chip type="tertiary">+{{ user.roles.size - WORKGROUP_DISPLAY_COUNT }}</asset-sg-chip>
+              <asset-sg-chip type="tertiary">{{ workgroup.name }}</asset-sg-chip>
+            }
+            @if (user.roles.size > WORKGROUP_DISPLAY_COUNT) {
+              <asset-sg-chip type="tertiary">+{{ user.roles.size - WORKGROUP_DISPLAY_COUNT }}</asset-sg-chip>
             }
           </mat-chip-set>
         </td>

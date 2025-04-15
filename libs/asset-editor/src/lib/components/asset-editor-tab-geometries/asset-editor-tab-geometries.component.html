@@ -8,7 +8,7 @@
             <mat-select
               [value]="_selectedStudyId$ | push"
               (selectionChange)="selectStudy($event)"
-              [placeholder]="'edit.tabs.geometries.selectGeometryLabel' | translate : { count: studies.length }"
+              [placeholder]="'edit.tabs.geometries.selectGeometryLabel' | translate: { count: studies.length }"
               [disabled]="(isDisabled$ | async) || mode !== 'edit-geometry'"
             >
               <mat-option *rxFor="let study of studies; let index = index" [value]="study.studyId">
@@ -81,8 +81,8 @@
                       setCurrentStudyCoordIndex: setCurrentStudyCoordIndex.bind(this),
                       setCurrentStudyCoordWithMenuOpen: setCurrentStudyCoordWithMenuOpen.bind(this),
                       disabled: false,
-                      showCoordMenu: false
-                    }
+                      showCoordMenu: false,
+                    },
                   }"
                 />
                 <div class="flex -ml-1 mt-4" *ngIf="(_newGeometryType$ | push) === 'Point'">
@@ -125,8 +125,8 @@
                           canDelete:
                             (selectedStudy.geom._tag === 'Polygon' && selectedStudy.geom.coords.length > 4) ||
                             (selectedStudy.geom._tag === 'LineString' && selectedStudy.geom.coords.length > 2),
-                          showCoordMenu: true
-                        }
+                          showCoordMenu: true,
+                        },
                       }"
                     />
                   </ng-container>
@@ -184,9 +184,7 @@
               </mat-form-field>
               <button
                 [ngClass]="{ invisible: context.disabled || !context.showCoordMenu }"
-                [attr.aria-label]="
-                  'edit.tabs.geometries.vertextMenu.buttonLabel' | translate : { index: context.index }
-                "
+                [attr.aria-label]="'edit.tabs.geometries.vertextMenu.buttonLabel' | translate: { index: context.index }"
                 [matMenuTriggerFor]="coordActionMenu"
                 (onMenuOpen)="context.setCurrentStudyCoordWithMenuOpen(true, context.index)"
                 (onMenuClose)="context.setCurrentStudyCoordWithMenuOpen(false, context.index)"

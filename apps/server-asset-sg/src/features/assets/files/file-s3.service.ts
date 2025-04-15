@@ -30,7 +30,7 @@ export class FileS3Service {
         Body: content,
         Bucket: this.bucket,
         ContentType: options.mediaType,
-      })
+      }),
     );
   }
 
@@ -40,7 +40,7 @@ export class FileS3Service {
         new GetObjectCommand({
           Key: this.getKey(name),
           Bucket: this.bucket,
-        })
+        }),
       );
       return {
         content: output.Body as NodeJS.ReadableStream,
@@ -57,7 +57,7 @@ export class FileS3Service {
         new HeadObjectCommand({
           Key: this.getKey(name),
           Bucket: this.bucket,
-        })
+        }),
       );
       return this.createMetadata(output, name);
     } catch (e) {
@@ -71,7 +71,7 @@ export class FileS3Service {
         new DeleteObjectCommand({
           Key: this.getKey(name),
           Bucket: this.bucket,
-        })
+        }),
       );
       return true;
     } catch (e) {

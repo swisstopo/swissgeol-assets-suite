@@ -28,7 +28,7 @@ export class AssetSearchController {
     @Query('limit')
     limit?: number,
     @Query('offset')
-    offset?: number
+    offset?: number,
   ): Promise<AssetSearchResult> {
     limit = limit == null ? limit : Number(limit);
     offset = offset == null ? offset : Number(offset);
@@ -43,7 +43,7 @@ export class AssetSearchController {
   async showStats(
     @ParseBody(AssetSearchQueryDTO)
     query: AssetSearchQuery,
-    @CurrentUser() user: User
+    @CurrentUser() user: User,
   ): Promise<AssetSearchStats> {
     restrictQueryForUser(query, user);
     const stats = await this.assetSearchService.aggregate(query, user);

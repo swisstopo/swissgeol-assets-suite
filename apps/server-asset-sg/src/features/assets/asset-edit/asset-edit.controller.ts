@@ -28,7 +28,7 @@ export class AssetEditController {
   constructor(
     private readonly assetEditRepo: AssetEditRepo,
     private readonly assetEditService: AssetEditService,
-    private readonly assetSearchService: AssetSearchService
+    private readonly assetSearchService: AssetSearchService,
   ) {}
 
   @Get('/:id')
@@ -57,7 +57,7 @@ export class AssetEditController {
   async update(
     @Param('id', ParseIntPipe) id: number,
     @ParseBody(PatchAsset) patch: PatchAsset,
-    @CurrentUser() user: User
+    @CurrentUser() user: User,
   ) {
     const record = await this.assetEditRepo.find(id);
     if (record == null) {
@@ -113,7 +113,7 @@ const validatePatch = (user: User, patch: PatchAsset, record?: AssetEditDetail) 
   if (!policy.hasRole(Role.Editor, patch.workgroupId)) {
     throw new HttpException(
       "Can't move asset to a workgroup for which the user is not an editor",
-      HttpStatus.FORBIDDEN
+      HttpStatus.FORBIDDEN,
     );
   }
 

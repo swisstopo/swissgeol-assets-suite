@@ -11,16 +11,16 @@
       menuBar.filters
     </li>
     @if (userExists$ | async) {
-    <li
-      *rxLet="activeItem === 'favorites'; let isActive"
-      asset-sg-menu-bar-item
-      icon="favorite"
-      [badge]="isActive ? (activeFilterCount$ | async) : null"
-      [isActive]="isActive"
-      (click)="isActive ? toggleAssetDrawer() : goToViewer({ favoritesOnly: true })"
-    >
-      menuBar.favourites
-    </li>
+      <li
+        *rxLet="activeItem === 'favorites'; let isActive"
+        asset-sg-menu-bar-item
+        icon="favorite"
+        [badge]="isActive ? (activeFilterCount$ | async) : null"
+        [isActive]="isActive"
+        (click)="isActive ? toggleAssetDrawer() : goToViewer({ favoritesOnly: true })"
+      >
+        menuBar.favourites
+      </li>
     }
     <li
       *canCreate="AssetEditPolicy"

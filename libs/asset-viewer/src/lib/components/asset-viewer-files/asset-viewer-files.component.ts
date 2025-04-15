@@ -39,7 +39,7 @@ export class AssetViewerFilesComponent implements OnInit, OnDestroy {
     this.subscriptions.add(
       this.store.select(fromAppShared.selectLocale).subscribe((locale) => {
         this.locale = locale;
-      })
+      }),
     );
   }
 

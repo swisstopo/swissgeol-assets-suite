@@ -20,7 +20,10 @@ const BATCH_SIZE = 1;
 export class FileOcrService implements OnModuleInit {
   private readonly logger = new Logger(FileOcrService.name);
 
-  constructor(private readonly fileS3Service: FileS3Service, private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly fileS3Service: FileS3Service,
+    private readonly prisma: PrismaService,
+  ) {}
 
   onModuleInit() {
     this.processRemaining().then();
@@ -37,7 +40,7 @@ export class FileOcrService implements OnModuleInit {
     if (errorCount > 0) {
       this.logger.log(
         "Found files whose OCR failed. Please reset their 'ocrStatus' manually if you want to retry them.",
-        { count: errorCount }
+        { count: errorCount },
       );
     }
 

@@ -33,7 +33,10 @@ export abstract class BasePolicyDirective<T> implements OnInit, OnChanges, OnDes
 
   private readonly subscription = new Subscription();
 
-  constructor(private readonly templateRef: TemplateRef<unknown>, private readonly viewContainer: ViewContainerRef) {}
+  constructor(
+    private readonly templateRef: TemplateRef<unknown>,
+    private readonly viewContainer: ViewContainerRef,
+  ) {}
 
   ngOnInit(): void {
     this.subscription.add(
@@ -43,7 +46,7 @@ export abstract class BasePolicyDirective<T> implements OnInit, OnChanges, OnDes
         .subscribe((user) => {
           this.user = user;
           this.render();
-        })
+        }),
     );
   }
 

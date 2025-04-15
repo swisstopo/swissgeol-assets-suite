@@ -23,7 +23,7 @@ export class JwtMiddleware implements NestMiddleware {
   constructor(
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
     private readonly userRepo: UserRepo,
-    private readonly workgroupRepo: WorkgroupRepo
+    private readonly workgroupRepo: WorkgroupRepo,
   ) {}
 
   async use(req: Request, res: Response, next: NextFunction) {
@@ -72,11 +72,11 @@ export class JwtMiddleware implements NestMiddleware {
       E.chain((decoded) =>
         pipe(
           jwk,
-          E.chain((jwk) => this.getSigningKeyE(decoded, jwk))
-        )
+          E.chain((jwk) => this.getSigningKeyE(decoded, jwk)),
+        ),
       ),
       this.jwkToPemE,
-      E.chain((pem) => this.verifyToken(token, pem))
+      E.chain((pem) => this.verifyToken(token, pem)),
     );
   }
 
@@ -84,9 +84,9 @@ export class JwtMiddleware implements NestMiddleware {
     return pipe(
       TE.tryCatch(
         () => this.cacheManager.get('jwk'),
-        (reason) => new Error(`${reason}`)
+        (reason) => new Error(`${reason}`),
       ),
-      TE.chain((cache) => (cache ? TE.right(cache as JwksKey[]) : TE.left(new Error('No cache found'))))
+      TE.chain((cache) => (cache ? TE.right(cache as JwksKey[]) : TE.left(new Error('No cache found')))),
     );
   }
 
@@ -98,16 +98,18 @@ export class JwtMiddleware implements NestMiddleware {
       E.chain(
         E.fromPredicate(
           () => type === 'Bearer',
-          () => new Error('Invalid token type')
-        )
-      )
+          () => new Error('Invalid token type'),
+        ),
+      ),
     );
   }
 
   private decodeTokenE(token: string): E.Either<Error, Jwt> {
     return pipe(
       E.tryCatch(() => jwt.decode(token, { complete: true }), E.toError),
-      E.chain((decoded) => (decoded !== null ? E.right(decoded) : E.left(new Error('Token decoding resulted in null'))))
+      E.chain((decoded) =>
+        decoded !== null ? E.right(decoded) : E.left(new Error('Token decoding resulted in null')),
+      ),
     );
   }
 
@@ -117,7 +119,7 @@ export class JwtMiddleware implements NestMiddleware {
       return E.left(new Error('An internal server error occurred. Please try again.'));
     }
     const userGroups = (jwt.payload as JwtPayload)['cognito:groups'].map((group: string) =>
-      group.trim().toLowerCase()
+      group.trim().toLowerCase(),
     ) as string[];
     const isUserAuthorized = userGroups.some((group) => authorizedGroups.includes(group));
     return isUserAuthorized ? E.right(jwt) : E.left(new Error('You are not authorized to access this resource'));
@@ -128,16 +130,16 @@ export class JwtMiddleware implements NestMiddleware {
     return pipe(
       TE.tryCatch(
         () => axios.get(`${process.env.OAUTH_ISSUER}${jwksPath}`),
-        (reason) => new Error(`${reason}`)
+        (reason) => new Error(`${reason}`),
       ),
-      TE.map((response) => response.data.keys)
+      TE.map((response) => response.data.keys),
     );
   }
 
   private getSigningKeyE(decoded: Jwt, jwks: JwksKey[]): E.Either<Error, JwksKey> {
     return pipe(
       jwks.find((key) => key.kid === decoded.header.kid),
-      (signingKey) => (signingKey ? E.right(signingKey) : E.left(new Error('Matching object not found')))
+      (signingKey) => (signingKey ? E.right(signingKey) : E.left(new Error('Matching object not found'))),
     );
   }
 
@@ -147,15 +149,15 @@ export class JwtMiddleware implements NestMiddleware {
       E.chain((signingKeyObject) =>
         E.tryCatch(
           () => jwkToPem(signingKeyObject as jwkToPem.JWK), // Attempt to convert JWK to PEM
-          (error) => new Error(`Failed to convert JWK to PEM: ${error}`) // Catch and wrap any errors
-        )
-      )
+          (error) => new Error(`Failed to convert JWK to PEM: ${error}`), // Catch and wrap any errors
+        ),
+      ),
     );
   }
 
   private verifyToken(
     token: E.Either<Error, string>,
-    pem: string
+    pem: string,
   ): E.Either<
     Error,
     {
@@ -169,16 +171,16 @@ export class JwtMiddleware implements NestMiddleware {
         pipe(
           E.tryCatch(
             () => jwt.verify(tokenString, pem, { algorithms: ['RS256'] }),
-            (err: unknown) => new Error(`Invalid token: ${(err as Error).message}`)
+            (err: unknown) => new Error(`Invalid token: ${(err as Error).message}`),
           ),
           E.map((verified) => {
             if (typeof verified === 'string') {
               throw new HttpException('invalid JWT payload: unable to decode', 401);
             }
             return { accessToken: tokenString, jwtPayload: verified };
-          })
-        )
-      )
+          }),
+        ),
+      ),
     );
   }
 
@@ -241,7 +243,7 @@ export class JwtMiddleware implements NestMiddleware {
           }),
         (reason) => {
           return new Error(`${reason}`);
-        }
+        },
       ),
       TE.map((response) => {
         return {
@@ -250,7 +252,7 @@ export class JwtMiddleware implements NestMiddleware {
           lastName: response.data.family_name,
           id: response.data.sub,
         };
-      })
+      }),
     );
   }
 

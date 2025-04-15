@@ -22,7 +22,7 @@ export class UserService {
   constructor(
     private readonly schedulerRegistry: SchedulerRegistry,
     private readonly userRepo: UserRepo,
-    private readonly prismaService: PrismaService
+    private readonly prismaService: PrismaService,
   ) {
     this.client = new CognitoIdentityProviderClient({ region: readEnv('COGNITO_REGION') ?? 'local' });
     this._poolId = readEnv('COGNITO_POOL_ID');
@@ -85,7 +85,7 @@ export class UserService {
           UserPoolId: this.poolId,
           GroupName: this.group,
           NextToken: nextToken,
-        })
+        }),
       );
       if (response.Users == null || response.Users.length === 0) {
         return ids;

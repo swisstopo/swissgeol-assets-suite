@@ -5,6 +5,12 @@
       "options": {
         "singleQuote": true
       }
+    },
+    {
+      "files": ["*.component.html"],
+      "options": {
+        "parser": "angular"
+      }
     }
   ]
 }

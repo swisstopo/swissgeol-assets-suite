@@ -40,7 +40,7 @@ const _makeReferenceDataVM = (referenceData: ReferenceData) => ({
     referenceData.contacts,
     R.toArray,
     A.sort(contramap((a: [string, Contact]) => a[1].name)(S.Ord)),
-    A.map((a) => a[1])
+    A.map((a) => a[1]),
   ),
 });
 export type ReferenceDataVM = ReturnType<typeof _makeReferenceDataVM>;
@@ -92,10 +92,10 @@ export const selectRDReferenceDataVM = createSelector(
         referenceData.contacts,
         R.toArray,
         A.sort(contramap((a: [string, Contact]) => a[1].name)(S.Ord)),
-        A.map((a) => a[1])
+        A.map((a) => a[1]),
       ),
-    }))
-  )
+    })),
+  ),
 );
 
 export const selectLocale = createSelector(appSharedFeature, (state) => (state.lang === 'en' ? 'en-GB' : 'de-CH'));

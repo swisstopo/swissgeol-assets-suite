@@ -55,9 +55,9 @@ const getReferenceData = (user: User, prismaService: PrismaService) => {
       TE.map(
         flow(
           A.map(({ [key]: _key, ...rest }) => [_key as string, { [newKey]: _key, ...rest }] as const),
-          RR.fromEntries
-        )
-      )
+          RR.fromEntries,
+        ),
+      ),
     );
 
   const queries = {
@@ -89,7 +89,7 @@ const getReferenceData = (user: User, prismaService: PrismaService) => {
               },
             }),
       'contactId',
-      'id'
+      'id',
     ),
   };
 

@@ -38,27 +38,27 @@ export const AssetEditDetailFromPostgres = pipe(
         idId: D.number,
         id: D.string,
         description: D.string,
-      })
+      }),
     ),
     assetLanguages: D.array(AssetLanguageEdit),
     assetContacts: D.array(AssetContactEdit),
     manCatLabelRefs: D.array(
       pipe(
         D.struct({ manCatLabelItemCode: D.string }),
-        D.map((a) => a.manCatLabelItemCode)
-      )
+        D.map((a) => a.manCatLabelItemCode),
+      ),
     ),
     assetFormatCompositions: D.array(
       pipe(
         D.struct({ assetFormatItemCode: D.string }),
-        D.map((a) => a.assetFormatItemCode)
-      )
+        D.map((a) => a.assetFormatItemCode),
+      ),
     ),
     typeNatRels: D.array(
       pipe(
         D.struct({ natRelItemCode: D.string }),
-        D.map((a) => a.natRelItemCode)
-      )
+        D.map((a) => a.natRelItemCode),
+      ),
     ),
     assetMain: DT.optionFromNullable(LinkedAsset),
     subordinateAssets: D.array(LinkedAsset),
@@ -66,26 +66,26 @@ export const AssetEditDetailFromPostgres = pipe(
       D.array(
         pipe(
           D.struct({ assetY: LinkedAsset }),
-          D.map((a) => a.assetY)
-        )
-      )
+          D.map((a) => a.assetY),
+        ),
+      ),
     ),
     siblingYAssets: D.array(
       pipe(
         D.struct({ assetX: LinkedAsset }),
-        D.map((a) => a.assetX)
-      )
+        D.map((a) => a.assetX),
+      ),
     ),
     statusWorks: D.array(
       D.struct({
         statusWorkItemCode: D.string,
         statusWorkDate: DT.date,
-      })
+      }),
     ),
     assetFiles: AssetFilesFromPostgres,
     workgroupId: D.number,
     studies: PostgresAllStudies,
-  })
+  }),
 );
 
 export type AssetEditDetailFromPostgres = D.TypeOf<typeof AssetEditDetailFromPostgres>;

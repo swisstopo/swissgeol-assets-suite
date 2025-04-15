@@ -38,11 +38,11 @@ export class LanguageSelectorComponent {
           lang,
           path: parsed.url,
           queryParams: parsed.query,
-        }))
-      )
+        })),
+      ),
     ),
     map((it) => O.toNullable(it)),
-    filter(isNotNull)
+    filter(isNotNull),
   );
 
   public readonly languages$ = this.currentLang$.pipe(
@@ -53,7 +53,7 @@ export class LanguageSelectorComponent {
         lang: lang.toUpperCase(),
         params: [`/${lang}${currentLang.path}`],
         queryParams: currentLang.queryParams,
-      }))
-    )
+      })),
+    ),
   );
 }

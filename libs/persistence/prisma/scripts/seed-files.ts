@@ -24,7 +24,7 @@ const S3File = pipe(
     Size: D.number,
     LastModified: DT.date,
   }),
-  D.map(({ Key, Size, LastModified }) => ({ name: Key, size: Size, lastModified: LastModified }))
+  D.map(({ Key, Size, LastModified }) => ({ name: Key, size: Size, lastModified: LastModified })),
 );
 type S3File = D.TypeOf<typeof S3File>;
 
@@ -40,17 +40,17 @@ function fetchPages(bucketParams: BucketParams): TE.TaskEither<Error, ListObject
       page.IsTruncated
         ? pipe(
             fetchPages({ ...bucketParams, Marker: page.Contents?.[page.Contents?.length - 1].Key }),
-            TE.map((pages) => [page, ...pages])
+            TE.map((pages) => [page, ...pages]),
           )
-        : TE.right([page])
-    )
+        : TE.right([page]),
+    ),
   );
 }
 
 const regex = /^asset_files\/(?<sgsId>\d+)(?:-(?<sgsIdRange>\d+))?(?:_(?<index>\d+))?\.(?<extension>.+)$/;
 
 const matchPdfFileToAssetId = (
-  f: S3File
+  f: S3File,
 ): { noMatch: O.Option<S3File>; matches: { sgsId: number; s3File: S3File }[] } => {
   const match = f.name.match(regex);
   if (!match || !match.groups) {
@@ -66,7 +66,7 @@ const matchPdfFileToAssetId = (
       matches: sgsIdRange
         ? pipe(
             NEA.range(+sgsId, +sgsIdRange),
-            A.map((n) => ({ sgsId: n, s3File: f }))
+            A.map((n) => ({ sgsId: n, s3File: f })),
           )
         : [{ sgsId: +sgsId, s3File: f }],
     };
@@ -87,7 +87,7 @@ export const queryFiles = pipe(
           noMatches: pipe(
             a,
             A.map((r) => r.noMatch),
-            A.compact
+            A.compact,
           ),
           matches: pipe(
             a,
@@ -100,14 +100,14 @@ export const queryFiles = pipe(
             A.map(([sgsId, a]) => ({
               sgsId: +sgsId,
               filenames: a.map((f) => f.s3File.name.replace('asset_files/', '')),
-            }))
+            })),
           ),
-        }))
+        })),
       ),
       E.mapLeft(D.draw),
-      TE.fromEither
-    )
-  )
+      TE.fromEither,
+    ),
+  ),
 );
 
 // queryFiles().then(data => {

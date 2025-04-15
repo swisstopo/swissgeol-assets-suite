@@ -18,7 +18,7 @@ export class WorkflowController {
   async change(
     @ParseBody(WorkflowChangeDataSchema) data: WorkflowChangeData,
     @Param('assetId', ParseIntPipe) assetId: number,
-    @CurrentUser() user: User
+    @CurrentUser() user: User,
   ): Promise<Workflow> {
     return this.workflowService.addChange(assetId, data, user.id);
   }

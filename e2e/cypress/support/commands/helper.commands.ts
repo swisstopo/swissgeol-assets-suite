@@ -33,7 +33,7 @@ Cypress.Commands.add('login', (username: string, password: string) => {
     },
     {
       cacheAcrossSpecs: true,
-    }
+    },
   );
 });
 

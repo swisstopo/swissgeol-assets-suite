@@ -90,13 +90,13 @@ const validateUsageDates: ValidatorFn = (control: AbstractControl) => {
     const { internalPublicUsageDateError: _internalPublicUsageDateError1, ...restInternalUseStatusStartAvailability } =
       internalUseStatusStartAvailability.errors || {};
     internalUseStatusStartAvailability.setErrors(
-      Object.keys(restInternalUseStatusStartAvailability).length === 0 ? null : restInternalUseStatusStartAvailability
+      Object.keys(restInternalUseStatusStartAvailability).length === 0 ? null : restInternalUseStatusStartAvailability,
     );
 
     const { internalPublicUsageDateError: _internalPublicUsageDateError2, ...restPublicUseStatusStartAvailability } =
       publicUseStatusStartAvailability.errors || {};
     publicUseStatusStartAvailability.setErrors(
-      Object.keys(restPublicUseStatusStartAvailability).length === 0 ? null : restPublicUseStatusStartAvailability
+      Object.keys(restPublicUseStatusStartAvailability).length === 0 ? null : restPublicUseStatusStartAvailability,
     );
   }
 
@@ -115,7 +115,7 @@ const makeAssetEditorUsageFormGroup = (formBuilder: FormBuilder) =>
       isNatRel: new FormControl<boolean>(true, { nonNullable: true }),
       natRelTypeItemCodes: new FormControl<string[]>([], { nonNullable: true }),
     },
-    { validators: [validateUsageDates] }
+    { validators: [validateUsageDates] },
   );
 export type AssetEditorUsageFormGroup = ReturnType<typeof makeAssetEditorUsageFormGroup>;
 
@@ -172,5 +172,5 @@ export const isAssetEditorFormDisabled$ = (root: AssetEditorFormGroup) =>
     startWith(root.status),
     map((status) => status === 'DISABLED'),
     distinctUntilChanged(),
-    shareReplay({ bufferSize: 1, refCount: true })
+    shareReplay({ bufferSize: 1, refCount: true }),
   );

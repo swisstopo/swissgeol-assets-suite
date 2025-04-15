@@ -78,12 +78,12 @@ export class DrawControl extends Control {
             polygon.push(coords);
           }
           return polygon;
-        })
+        }),
       )
       .subscribe((polygon) =>
         asapScheduler.schedule(() => {
           this.setPolygon(polygon);
-        })
+        }),
       );
   }
 

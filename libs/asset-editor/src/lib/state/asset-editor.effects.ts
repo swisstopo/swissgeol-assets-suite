@@ -19,16 +19,16 @@ export class AssetEditorEffects {
     this._actions$.pipe(
       ofType(actions.loadAsset),
       switchMap(({ assetId }) => this._assetEditorService.loadAsset(assetId)),
-      map((asset) => appSharedStateActions.setCurrentAsset({ asset }))
-    )
+      map((asset) => appSharedStateActions.setCurrentAsset({ asset })),
+    ),
   );
 
   createAsset$ = createEffect(() =>
     this._actions$.pipe(
       ofType(actions.createNewAsset),
       switchMap(({ patchAsset }) => this._assetEditorService.createAsset(patchAsset)),
-      map((data) => actions.updateAssetEditDetailResult({ asset: data }))
-    )
+      map((data) => actions.updateAssetEditDetailResult({ asset: data })),
+    ),
   );
 
   updateAssetEditDetail$ = createEffect(() =>
@@ -37,19 +37,19 @@ export class AssetEditorEffects {
       switchMap(({ assetId, patchAsset, newFiles, filesToDelete }) =>
         this._assetEditorService.deleteFiles(assetId, filesToDelete).pipe(
           switchMap(() => this._assetEditorService.uploadFiles(assetId, newFiles)),
-          switchMap(() => this._assetEditorService.updateAssetDetail(assetId, patchAsset))
-        )
+          switchMap(() => this._assetEditorService.updateAssetDetail(assetId, patchAsset)),
+        ),
       ),
-      map((asset) => actions.updateAssetEditDetailResult({ asset }))
-    )
+      map((asset) => actions.updateAssetEditDetailResult({ asset })),
+    ),
   );
 
   deleteAsset$ = createEffect(() =>
     this._actions$.pipe(
       ofType(actions.deleteAsset),
       switchMap(({ assetId }) => this._assetEditorService.deleteAsset(assetId).pipe(map(() => assetId))),
-      map((assetId) => actions.handleSuccessfulDeletion({ assetId }))
-    )
+      map((assetId) => actions.handleSuccessfulDeletion({ assetId })),
+    ),
   );
 
   displayAlertAfterDeletion$ = createEffect(() =>
@@ -63,8 +63,8 @@ export class AssetEditorEffects {
           isPersistent: false,
         };
         return showAlert({ alert });
-      })
-    )
+      }),
+    ),
   );
 
   redirectToViewerAfterDeletion = createEffect(() =>
@@ -74,8 +74,8 @@ export class AssetEditorEffects {
         await this.routingService.navigateToRoot();
         return assetId;
       }),
-      map((assetId) => appSharedStateActions.removeAsset({ assetId }))
-    )
+      map((assetId) => appSharedStateActions.removeAsset({ assetId })),
+    ),
   );
 
   updateSearchAfterAssetChanged$ = createEffect(() =>
@@ -91,24 +91,24 @@ export class AssetEditorEffects {
               geomText: it.geomText,
             })),
           },
-        })
-      )
-    )
+        }),
+      ),
+    ),
   );
 
   createContact$ = createEffect(() =>
     this._actions$.pipe(
       ofType(actions.createContact),
       switchMap(({ contact }) => this._assetEditorService.createContact(contact)),
-      map(appSharedStateActions.createContactResult)
-    )
+      map(appSharedStateActions.createContactResult),
+    ),
   );
 
   updateContact$ = createEffect(() =>
     this._actions$.pipe(
       ofType(actions.editContact),
       switchMap(({ contact }) => this._assetEditorService.updateContact(contact.id, contact)),
-      map(appSharedStateActions.editContactResult)
-    )
+      map(appSharedStateActions.editContactResult),
+    ),
   );
 }

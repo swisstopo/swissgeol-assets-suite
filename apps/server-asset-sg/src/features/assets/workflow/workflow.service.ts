@@ -10,7 +10,7 @@ export class WorkflowService {
   constructor(
     private readonly workflowRepo: WorkflowRepo,
     private readonly assetUserRepo: UserRepo,
-    private readonly prismaService: PrismaService
+    private readonly prismaService: PrismaService,
   ) {}
 
   async findByAssetId(assetId: number): Promise<Workflow> {

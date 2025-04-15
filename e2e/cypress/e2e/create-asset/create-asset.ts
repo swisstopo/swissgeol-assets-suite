@@ -11,10 +11,10 @@ When(/^The user fills out general information$/, () => {
     .contains(' Swisstopo ')
     .click();
   cy.get('[formcontrolname="titlePublic"]', { timeout: 1000 }).type(
-    'CypressTestAsset'
+    'CypressTestAsset',
   );
   cy.get('[formcontrolname="titleOriginal"]', { timeout: 1000 }).type(
-    'CypressTestAsset'
+    'CypressTestAsset',
   );
   cy.get('[formcontrolname="createDate"]')
     .click({ force: true })
@@ -70,6 +70,6 @@ Then(/^The asset is created$/, () => {
     .then((interception) => interception.response.body.assetId)
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     .then((createdAssetId) =>
-      window.localStorage.setItem('assetId', createdAssetId)
+      window.localStorage.setItem('assetId', createdAssetId),
     );
 });

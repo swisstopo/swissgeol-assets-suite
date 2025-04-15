@@ -4,7 +4,9 @@ import { Component, inject, Input, OnDestroy, OnInit, Renderer2 } from '@angular
   selector: 'app-google-analytics',
   template: '',
   styles: `
-    :host { display: none }
+    :host {
+      display: none;
+    }
   `,
   standalone: false,
 })

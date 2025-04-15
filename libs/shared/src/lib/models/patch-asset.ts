@@ -25,13 +25,13 @@ export const PatchAsset = C.struct({
       idId: CT.optionFromNullable(C.number),
       id: C.string,
       description: C.string,
-    })
+    }),
   ),
   studies: C.array(
     C.struct({
       studyId: C.string,
       geomText: C.string,
-    })
+    }),
   ),
   assetMainId: CT.optionFromNullable(C.number),
   siblingAssetIds: C.array(C.number),

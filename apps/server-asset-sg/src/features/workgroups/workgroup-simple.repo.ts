@@ -5,7 +5,10 @@ import { ReadRepo, RepoListOptions } from '@/core/repo';
 import { satisfy } from '@/utils/define';
 
 export class SimpleWorkgroupRepo implements ReadRepo<SimpleWorkgroup, WorkgroupId> {
-  constructor(private readonly prisma: PrismaService, private readonly user: User) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly user: User,
+  ) {}
 
   async find(id: WorkgroupId): Promise<SimpleWorkgroup | null> {
     const entry = await this.prisma.workgroup.findFirst({

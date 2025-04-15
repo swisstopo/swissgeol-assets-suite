@@ -3,29 +3,33 @@
   <mat-chip-set>
     <asset-sg-chip type="primary">Review</asset-sg-chip>
     @if (asset?.processor) {
-    <asset-sg-chip type="tertiary">{{ asset?.processor }}</asset-sg-chip>
+      <asset-sg-chip type="tertiary">{{ asset?.processor }}</asset-sg-chip>
     }
   </mat-chip-set>
   <div class="spacer"></div>
 
   @if (asset) {
-  <button asset-sg-secondary (click)="openConfirmDialogForAssetDeletion(asset.assetId)" translate>
-    delete
-    <svg-icon key="delete"></svg-icon>
-  </button>
+    <button asset-sg-secondary (click)="openConfirmDialogForAssetDeletion(asset.assetId)" translate>
+      delete
+      <svg-icon key="delete"></svg-icon>
+    </button>
   }
 </asset-sg-page-header>
 <div class="editor-container">
   <asset-sg-editor-navigation [activeTab]="activeTab"></asset-sg-editor-navigation>
   <div>
     <div class="form-container">
-      @switch (activeTab) { @case (Tab.General) {
-      <asset-sg-editor-general [formGroup]="form.controls.general"></asset-sg-editor-general>
-      } @case (Tab.Files) {
-      <asset-sg-editor-files [formGroup]="form.controls.files"></asset-sg-editor-files>
-      } @default {
-      <span>other</span>
-      } }
+      @switch (activeTab) {
+        @case (Tab.General) {
+          <asset-sg-editor-general [formGroup]="form.controls.general"></asset-sg-editor-general>
+        }
+        @case (Tab.Files) {
+          <asset-sg-editor-files [formGroup]="form.controls.files"></asset-sg-editor-files>
+        }
+        @default {
+          <span>other</span>
+        }
+      }
     </div>
 
     <asset-sg-editor-save

@@ -4,7 +4,11 @@ export const unknownToError = (e: unknown): Error =>
   typeof e === 'string' ? new Error(e) : e instanceof Error ? e : new Error('Unknown error');
 
 export class TypedError<T extends string, C> extends Error {
-  constructor(public readonly _tag: T, public readonly cause: C, message?: string) {
+  constructor(
+    public readonly _tag: T,
+    public readonly cause: C,
+    message?: string,
+  ) {
     super();
     if (message) {
       this.message = message;

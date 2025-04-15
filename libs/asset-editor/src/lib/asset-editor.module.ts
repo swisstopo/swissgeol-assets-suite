@@ -103,7 +103,7 @@ export const canLeaveEdit: CanDeactivateFn<AssetEditorPageComponent> = (componen
             const store = inject(Store);
             return store.select(fromAppShared.selectUser).pipe(
               filter(isNotNull),
-              map((user) => user.isAdmin)
+              map((user) => user.isAdmin),
             );
           }) as CanActivateFn,
         ],
@@ -135,7 +135,7 @@ export const canLeaveEdit: CanDeactivateFn<AssetEditorPageComponent> = (componen
               map(([assetEditDetail, user]) => {
                 const policy = new AssetEditPolicy(user);
                 return assetEditDetail == null ? policy.canCreate() : policy.canUpdate(assetEditDetail);
-              })
+              }),
             );
           }) as CanActivateFn,
         ],

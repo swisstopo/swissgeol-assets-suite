@@ -6,7 +6,7 @@ export type ObservableOption<A> = Observable<O.Option<A>>;
 export const fromFilteredSome = <T>(source: Observable<O.Option<T>>): Observable<T> =>
   source.pipe(
     filter(O.isSome),
-    rxMap((a) => a.value)
+    rxMap((a) => a.value),
   );
 
 export const map: <A, B>(f: (a: A) => B) => (fa: ObservableOption<A>) => ObservableOption<B> = (f) => (fa) =>
