@@ -1,0 +1,46 @@
+@use "../../../../styles/variables";
+
+:host {
+  --step-color: #828e9a;
+
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-inline: 12px;
+  width: 100%;
+  color: var(--step-color);
+
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 20px;
+  text-align: center;
+  vertical-align: middle;
+}
+
+:host.is-active {
+  --step-color: #{variables.$cyan-08};
+  font-weight: 700;
+
+  border-radius: 4px;
+  padding: 12px;
+  background-color: variables.$grey-01;
+  border: 1px solid #dfe4e9;
+}
+
+// indicator
+:host > .indicator {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--step-color);
+  border-radius: 50%;
+  background-color: variables.$white;
+}
+
+:host > .indicator > svg-icon {
+  width: 20px;
+  height: 20px;
+}

@@ -29,14 +29,3 @@ export class AssetSyncController {
     res.status(200).end();
   }
 }
-
-/**
- * The file into which the progress of the current asset sync is written.
- * This allows the sync to be shared across all users and requests without requiring a database entry.
- * Note that the file path is relative to the project root, _not_ to this file.
- */
-const assetSyncFile = './asset-sync-progress.tmp.json';
-
-interface AssetSyncState {
-  progress: number;
-}

@@ -31,6 +31,16 @@ export const enAppTranslations: AppTranslations = {
   favorites: {
     title: 'Favorites',
   },
+  workflow: {
+    status: 'Status',
+    assignee: 'Assignee',
+  },
+  workflowStatus: {
+    Draft: 'Draft',
+    InReview: 'Review',
+    Reviewed: 'Reviewed',
+    Published: 'Published',
+  },
   menuBar: {
     filters: 'Filters',
     admin: 'Administration',
@@ -250,6 +260,13 @@ export const enAppTranslations: AppTranslations = {
           tab: 'Tab',
           hasValidationErrors: 'has validation errors',
         },
+      },
+      status: {
+        tabName: 'Status',
+        changeStatus: 'Change Status Manually',
+        requestReview: 'Request Review',
+        requestChanges: 'Request Changes',
+        finishReview: 'Finish Review',
       },
     },
     closeManageAsset: 'Close manage asset',

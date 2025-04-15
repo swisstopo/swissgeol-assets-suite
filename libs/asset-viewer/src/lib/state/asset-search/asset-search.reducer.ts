@@ -8,6 +8,7 @@ import {
   LineString,
   LV95,
   makeEmptyAssetSearchResults,
+  makeEmptyAssetSearchStats,
   Point,
   StudyPolygon,
 } from '@asset-sg/shared';
@@ -55,17 +56,7 @@ const initialState: AssetSearchState = {
   query: {},
   studies: [],
   results: makeEmptyAssetSearchResults(),
-  stats: {
-    total: 0,
-    authorIds: [],
-    assetKindItemCodes: [],
-    languageItemCodes: [],
-    geometryCodes: [],
-    manCatLabelItemCodes: [],
-    usageCodes: [],
-    workgroupIds: [],
-    createDate: null,
-  },
+  stats: makeEmptyAssetSearchStats(),
   ui: {
     filtersState: PanelState.OpenedAutomatically,
     resultsState: PanelState.ClosedAutomatically,

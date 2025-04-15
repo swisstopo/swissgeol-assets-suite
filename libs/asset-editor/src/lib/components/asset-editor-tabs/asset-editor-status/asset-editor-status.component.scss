@@ -1,0 +1,12 @@
+:host {
+  display: flex;
+  padding: 60px 60px 97px 60px;
+  gap: 12px;
+}
+
+:host > .status {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 300px;
+}

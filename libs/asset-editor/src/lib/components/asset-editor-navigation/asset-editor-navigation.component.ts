@@ -1,6 +1,7 @@
-import { Component, inject, Input } from '@angular/core';
+import { Component, HostBinding, inject, Input } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { UntilDestroy } from '@ngneat/until-destroy';
+import { EditorMode } from '../../models';
 
 @UntilDestroy()
 @Component({
@@ -10,7 +11,12 @@ import { UntilDestroy } from '@ngneat/until-destroy';
   standalone: false,
 })
 export class AssetEditorNavigationComponent {
-  @Input() public activeTab = Tab.General;
+  @Input({ required: true })
+  public activeTab!: Tab;
+
+  @Input({ required: true })
+  public mode!: EditorMode;
+
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 
@@ -23,7 +29,15 @@ export class AssetEditorNavigationComponent {
       return;
     }
     this.activeTab = tab;
-    this.router.navigate(['../', tab], { relativeTo: this.route });
+    this.router.navigate(['../', tab], { relativeTo: this.route }).then();
+  }
+
+  @HostBinding('class')
+  get hostClasses(): Record<string, boolean> {
+    return {
+      'is-create': this.mode === EditorMode.Create,
+      'is-edit': this.mode === EditorMode.Edit,
+    };
   }
 }
 
@@ -35,4 +49,5 @@ export enum Tab {
   References = 'references',
   Geometries = 'geometries',
   Administration = 'administration',
+  Status = 'status',
 }

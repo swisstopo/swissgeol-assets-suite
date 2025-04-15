@@ -63,3 +63,16 @@ export const mapWorkflowStatusToPrisma = (status: WorkflowStatus): WorkflowStatu
 export const mapWorkflowStatusFromPrisma = (status: WorkflowStatusFromPrisma): WorkflowStatus => {
   return status as WorkflowStatus;
 };
+
+export const getWorkflowStatusIndex = (status: WorkflowStatus): number => {
+  switch (status) {
+    case WorkflowStatus.Draft:
+      return 0;
+    case WorkflowStatus.InReview:
+      return 1;
+    case WorkflowStatus.Reviewed:
+      return 2;
+    case WorkflowStatus.Published:
+      return 3;
+  }
+};
