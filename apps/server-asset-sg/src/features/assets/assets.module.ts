@@ -26,12 +26,12 @@ import { UsersModule } from '@/features/users/users.module';
 
 @Module({
   controllers: [
+    AssetSyncController,
     AssetsController,
     AssetEditController,
     FilesController,
     AssetSearchController,
     FavoritesController,
-    AssetSyncController,
     WorkflowController,
   ],
   providers: [

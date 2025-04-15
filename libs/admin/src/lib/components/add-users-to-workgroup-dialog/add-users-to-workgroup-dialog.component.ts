@@ -24,7 +24,7 @@ export class AddUsersToWorkgroupDialogComponent implements OnInit {
   public roles = Object.values(Role);
   public shouldShowError = false;
   private selectedUserIds: UserId[] = [];
-  public selectedRole: Role = Role.Viewer;
+  public selectedRole: Role = Role.Reader;
 
   private readonly store = inject(Store<AppStateWithAdmin>);
   private readonly users$: Observable<User[]> = this.store.select(selectUsers);
