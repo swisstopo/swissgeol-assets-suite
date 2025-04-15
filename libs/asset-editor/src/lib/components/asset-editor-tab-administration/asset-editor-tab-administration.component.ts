@@ -4,7 +4,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { ConfirmDialogComponent, fromAppShared } from '@asset-sg/client-shared';
 import { isNotNull } from '@asset-sg/core';
 import { DateId } from '@asset-sg/shared';
-import { isMasterEditor } from '@asset-sg/shared/v2';
+import { isPublisher } from '@asset-sg/shared/v2';
 import * as RD from '@devexperts/remote-data-ts';
 import { UntilDestroy } from '@ngneat/until-destroy';
 import { Store } from '@ngrx/store';
@@ -55,11 +55,11 @@ export class AssetEditorTabAdministrationComponent implements OnInit {
     .pipe(map(O.toNullable), filter(isNotNull));
 
   private readonly store = inject(Store);
-  public readonly isMasterEditor$ = this.store.select(fromAppShared.selectRDUserProfile).pipe(
+  public readonly isPublisher$ = this.store.select(fromAppShared.selectRDUserProfile).pipe(
     map(RD.toNullable),
     filter(isNotNull),
     withLatestFrom(this.filteredAssetEditDetail$),
-    map(([user, assetEditDetail]) => isMasterEditor(user, assetEditDetail.workgroupId)),
+    map(([user, assetEditDetail]) => isPublisher(user, assetEditDetail.workgroupId))
   );
 
   @Output() public saveAsset = new EventEmitter<void>();

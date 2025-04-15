@@ -15,10 +15,10 @@
             <mat-option class="ellipsis" value="tobechecked">
               {{ vm.statusAssetUseItems["tobechecked"] | valueItemName }}
             </mat-option>
-            <mat-option class="ellipsis" value="underclarification" [disabled]="!(isMasterEditor$ | push)">
+            <mat-option class="ellipsis" value="underclarification" [disabled]="!(isReviewer$ | push)">
               {{ vm.statusAssetUseItems["underclarification"] | valueItemName }}
             </mat-option>
-            <mat-option class="ellipsis" value="approved" [disabled]="!(isMasterEditor$ | push)">
+            <mat-option class="ellipsis" value="approved" [disabled]="!(isReviewer$ | push)">
               {{ vm.statusAssetUseItems["approved"] | valueItemName }}
             </mat-option>
           </mat-select>
@@ -47,10 +47,10 @@
             <mat-option class="ellipsis" value="tobechecked">
               {{ vm.statusAssetUseItems["tobechecked"] | valueItemName }}
             </mat-option>
-            <mat-option class="ellipsis" value="underclarification" [disabled]="!(isMasterEditor$ | push)">
+            <mat-option class="ellipsis" value="underclarification" [disabled]="!(isReviewer$ | push)">
               {{ vm.statusAssetUseItems["underclarification"] | valueItemName }}
             </mat-option>
-            <mat-option class="ellipsis" value="approved" [disabled]="!(isMasterEditor$ | push)">
+            <mat-option class="ellipsis" value="approved" [disabled]="!(isReviewer$ | push)">
               {{ vm.statusAssetUseItems["approved"] | valueItemName }}
             </mat-option>
           </mat-select>

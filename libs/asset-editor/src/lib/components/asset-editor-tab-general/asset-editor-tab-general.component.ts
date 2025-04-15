@@ -49,7 +49,7 @@ export class AssetEditorTabGeneralComponent implements OnInit {
    */
   public readonly availableWorkgroups$ = this.store
     .select(fromAppShared.selectWorkgroups)
-    .pipe(map((workgroups) => workgroups.filter((it) => it.role != Role.Viewer)));
+    .pipe(map((workgroups) => workgroups.filter((it) => it.role != Role.Reader)));
 
   @Input()
   public set referenceDataVM$(value: Observable<fromAppShared.ReferenceDataVM>) {
