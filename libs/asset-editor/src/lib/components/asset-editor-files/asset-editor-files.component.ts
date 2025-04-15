@@ -28,7 +28,7 @@ export class AssetEditorFilesComponent {
   private readonly store = inject(Store);
   public readonly legalDocItems$ = this.store.select(fromAppShared.selectRDReferenceDataVM).pipe(
     filter(RD.isSuccess),
-    map((a) => Object.values(a.value.legalDocItems))
+    map((a) => Object.values(a.value.legalDocItems)),
   );
 
   get hasFiles(): boolean {
@@ -66,7 +66,7 @@ export class AssetEditorFilesComponent {
   deleteFile(id: number): void {
     this.form.controls.filesToDelete.setValue([...this.form.controls.filesToDelete.value, id]);
     this.form.controls.existingFiles.setValue(
-      this.form.controls.existingFiles.value.map((it) => (it.id !== id ? it : { ...it, willBeDeleted: true }))
+      this.form.controls.existingFiles.value.map((it) => (it.id !== id ? it : { ...it, willBeDeleted: true })),
     );
     this.form.markAsDirty();
   }

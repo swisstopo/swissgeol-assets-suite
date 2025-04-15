@@ -10,7 +10,7 @@ const Tab = D.union(
   D.literal('contacts'),
   D.literal('references'),
   D.literal('geometries'),
-  D.literal('administration')
+  D.literal('administration'),
 );
 export function tabsMatcher(segments: UrlSegment[]): UrlMatchResult {
   return pipe(
@@ -20,13 +20,13 @@ export function tabsMatcher(segments: UrlSegment[]): UrlMatchResult {
       const tab = NEA.head(ss);
       return pipe(
         O.fromEither(Tab.decode(tab.path)),
-        O.map(() => ({ tab }))
+        O.map(() => ({ tab })),
       );
     }),
     O.map((posParams) => ({
       consumed: segments,
       posParams,
     })),
-    O.getOrElse(() => <UrlMatchResult>(null as unknown))
+    O.getOrElse(() => <UrlMatchResult>(null as unknown)),
   );
 }

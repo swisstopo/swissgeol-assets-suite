@@ -24,7 +24,7 @@ export class SmartTranslatePipe implements PipeTransform, OnDestroy {
     this.subscription.add(
       this.currentLang$.subscribe((currentLang) => {
         this.currentLang = currentLang;
-      })
+      }),
     );
   }
 

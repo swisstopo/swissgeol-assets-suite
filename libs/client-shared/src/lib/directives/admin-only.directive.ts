@@ -15,7 +15,10 @@ export class AdminOnlyDirective implements OnInit, OnDestroy {
 
   private ref = inject(ChangeDetectorRef);
 
-  constructor(private readonly templateRef: TemplateRef<unknown>, private readonly viewContainer: ViewContainerRef) {}
+  constructor(
+    private readonly templateRef: TemplateRef<unknown>,
+    private readonly viewContainer: ViewContainerRef,
+  ) {}
 
   ngOnInit(): void {
     this.subscription.add(
@@ -29,7 +32,7 @@ export class AdminOnlyDirective implements OnInit, OnDestroy {
             this.viewContainer.clear();
           }
           this.ref.markForCheck();
-        })
+        }),
     );
   }
 

@@ -14,7 +14,7 @@ export class FileService {
     private readonly fileRepo: FileRepo,
     private readonly fileOcrService: FileOcrService,
     private readonly fileS3Service: FileS3Service,
-    private readonly prisma: PrismaService
+    private readonly prisma: PrismaService,
   ) {}
 
   async create(data: UploadFileData): Promise<AssetFile> {
@@ -67,7 +67,7 @@ export class FileService {
     record: AssetFile,
     assetId: AssetId,
     content: Buffer,
-    options: SaveFileS3Options
+    options: SaveFileS3Options,
   ): Promise<void> {
     try {
       await this.fileS3Service.save(record.name, content, options);

@@ -9,7 +9,10 @@ abstract class ValueItemBase implements PipeTransform, OnDestroy {
   private lastValueItem: ValueItem | null = null;
   onLangChange: Subscription | undefined;
 
-  constructor(private translate: TranslateService, private cd: ChangeDetectorRef) {}
+  constructor(
+    private translate: TranslateService,
+    private cd: ChangeDetectorRef,
+  ) {}
 
   abstract pluckValue(valueItem: ValueItem, lang: string): string;
 

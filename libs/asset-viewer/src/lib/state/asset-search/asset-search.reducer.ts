@@ -85,7 +85,7 @@ export const assetSearchReducer = createReducer(
     (state, { query }): AssetSearchState => ({
       ...state,
       query,
-    })
+    }),
   ),
   on(
     actions.updateSearchQuery,
@@ -95,7 +95,7 @@ export const assetSearchReducer = createReducer(
         ...state.query,
         ...query,
       },
-    })
+    }),
   ),
   on(
     actions.setStudies,
@@ -103,7 +103,7 @@ export const assetSearchReducer = createReducer(
       ...state,
       studies: studies ?? state.studies,
       isLoadingStudies: isLoading ?? state.isLoadingStudies,
-    })
+    }),
   ),
   on(
     actions.setResults,
@@ -111,7 +111,7 @@ export const assetSearchReducer = createReducer(
       ...state,
       results: results ?? state.results,
       isLoadingResults: isLoading ?? state.isLoadingResults,
-    })
+    }),
   ),
   on(
     actions.setStats,
@@ -119,21 +119,21 @@ export const assetSearchReducer = createReducer(
       ...state,
       stats: stats ?? state.stats,
       isLoadingStats: isLoading ?? state.isLoadingStats,
-    })
+    }),
   ),
   on(
     actions.setFiltersState,
     (state, { state: filtersState }): AssetSearchState => ({
       ...state,
       ui: { ...state.ui, filtersState },
-    })
+    }),
   ),
   on(
     actions.setResultsState,
     (state, { state: resultsState }): AssetSearchState => ({
       ...state,
       ui: { ...state.ui, resultsState },
-    })
+    }),
   ),
   on(actions.setScrollOffsetForResults, (state, { offset }): AssetSearchState => {
     return {
@@ -156,7 +156,7 @@ export const assetSearchReducer = createReducer(
         ...state.ui,
         resultsState: PanelState.OpenedManually,
       },
-    })
+    }),
   ),
   on(
     appSharedStateActions.removeAsset,
@@ -167,7 +167,7 @@ export const assetSearchReducer = createReducer(
         data: state.results.data.filter((it) => it.assetId !== assetId),
       },
       studies: state.studies?.filter((study) => study.assetId !== assetId) ?? null,
-    })
+    }),
   ),
 
   on(appSharedStateActions.updateAsset, (state, { asset }): AssetSearchState => {
@@ -191,10 +191,10 @@ export const assetSearchReducer = createReducer(
                 centroid,
                 accessType: mapAssetAccessToAccessType(asset),
               };
-            })
+            }),
           ) ?? null,
     };
-  })
+  }),
 );
 
 function extractCentroidFromStudy(study: { assetId: number; studyId: string; geomText: string }): {

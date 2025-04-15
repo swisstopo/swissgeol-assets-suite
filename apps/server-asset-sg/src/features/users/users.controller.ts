@@ -37,7 +37,7 @@ export class UsersController {
   async update(
     @Param('id') id: UserId,
     @ParseBody(UserDataSchema)
-    data: UserData
+    data: UserData,
   ): Promise<User> {
     const user = await this.userRepo.update(id, data);
     if (user == null) {

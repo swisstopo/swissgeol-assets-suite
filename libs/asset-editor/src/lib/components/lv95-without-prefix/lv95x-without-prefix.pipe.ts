@@ -32,7 +32,7 @@ export class Lv95xWithoutPrefixPipe implements PipeTransform {
     return E.isLeft(decoded)
       ? value
       : this._dcmnt.activeElement === this._host.nativeElement
-      ? roundToMillimeter(decoded.right - 1000000)
-      : roundToMillimeter(decoded.right - 1000000).toFixed(3);
+        ? roundToMillimeter(decoded.right - 1000000)
+        : roundToMillimeter(decoded.right - 1000000).toFixed(3);
   }
 }

@@ -6,5 +6,5 @@ export const DateFromISOString: D.Decoder<unknown, Date> = pipe(
   D.parse((s) => {
     const d = new Date(s);
     return isNaN(d.getTime()) ? D.failure(s, `cannot parse ${JSON.stringify(s)} to a Date`) : D.success(d);
-  })
+  }),
 );

@@ -3,7 +3,7 @@ import { NavigationEnd, Router, UrlSegment } from '@angular/router';
 import { filter, map, Observable, startWith } from 'rxjs';
 
 export const ROUTER_SEGMENTS = new InjectionToken<Observable<UrlSegment[] | undefined>>(
-  '@asset-sg/client-shared/router-segments'
+  '@asset-sg/client-shared/router-segments',
 );
 
 export function routerSegmentsFactory(): Observable<UrlSegment[] | undefined> {
@@ -14,6 +14,6 @@ export function routerSegmentsFactory(): Observable<UrlSegment[] | undefined> {
     map(() => {
       return (router.getCurrentNavigation() ?? router.lastSuccessfulNavigation)?.finalUrl?.root.children?.['primary']
         ?.segments;
-    })
+    }),
   );
 }

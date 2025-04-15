@@ -166,9 +166,9 @@ export class AssetEditorTabGeometriesComponent implements OnInit {
     ({ currentStudyCoordIndex, currentStudyCoordWithMenuOpen }) => {
       return pipe(
         currentStudyCoordIndex,
-        O.alt(() => currentStudyCoordWithMenuOpen)
+        O.alt(() => currentStudyCoordWithMenuOpen),
       );
-    }
+    },
   );
 
   private _selectInteraction = new Select({
@@ -178,7 +178,7 @@ export class AssetEditorTabGeometriesComponent implements OnInit {
       pipe(
         this._state.get().selectedStudyId,
         O.filter((studyId) => String(f.getId()).startsWith(studyId)),
-        O.reduce(false, constTrue)
+        O.reduce(false, constTrue),
       ),
   });
 
@@ -191,11 +191,11 @@ export class AssetEditorTabGeometriesComponent implements OnInit {
         O.chain((i) =>
           pipe(
             studies,
-            A.findFirst((s) => s.studyId === i)
-          )
-        )
-      )
-    )
+            A.findFirst((s) => s.studyId === i),
+          ),
+        ),
+      ),
+    ),
   );
   public _selectedStudy$ = this.__selectedStudy$.pipe(map(O.toUndefined));
 
@@ -265,7 +265,7 @@ export class AssetEditorTabGeometriesComponent implements OnInit {
 
     fromEventPattern<SelectEvent>(
       (h) => this._selectInteraction.on('select', h),
-      (h) => this._selectInteraction.un('select', h)
+      (h) => this._selectInteraction.un('select', h),
     )
       .pipe(withLatestFrom(this._state.select('selectedStudyId')), delay(0), untilDestroyed(this))
       .subscribe(([e, selectedStudyId]) => {
@@ -295,11 +295,11 @@ export class AssetEditorTabGeometriesComponent implements OnInit {
                         Point: constTrue,
                         LineString: constFalse,
                         Polygon: constFalse,
-                      })(s.geom)
-                    )
-                  )
+                      })(s.geom),
+                    ),
+                  ),
                 ),
-                O.getOrElse(constFalse)
+                O.getOrElse(constFalse),
               ),
             });
           } else {
@@ -321,7 +321,7 @@ export class AssetEditorTabGeometriesComponent implements OnInit {
 
     fromEventPattern<TranslateEvent>(
       (h) => translateInteraction.on('translating', h),
-      (h) => translateInteraction.un('translating', h)
+      (h) => translateInteraction.un('translating', h),
     )
       .pipe(untilDestroyed(this))
       .subscribe(() => {
@@ -338,9 +338,9 @@ export class AssetEditorTabGeometriesComponent implements OnInit {
                 O.fromPredicate((g): g is Point => g instanceof Point),
                 O.map((p) => coordinateToLv95RoundedWithoutPrefix(p.getCoordinates())),
                 O.bindTo('coord'),
-                O.bind('currentStudyCoordIndex', () => coordFeature)
-              )
-            )
+                O.bind('currentStudyCoordIndex', () => coordFeature),
+              ),
+            ),
           );
           if (O.isSome(coordAndIndex)) {
             const { coord, currentStudyCoordIndex } = coordAndIndex.value;
@@ -349,8 +349,8 @@ export class AssetEditorTabGeometriesComponent implements OnInit {
                 updateCurrentStudyCoordIndex(O.some(currentStudyCoordIndex)),
                 updateIsMapDragMode('coord'),
                 updateCoordX(coord.x),
-                updateCoordY(coord.y)
-              )
+                updateCoordY(coord.y),
+              ),
             );
           }
         }
@@ -369,9 +369,9 @@ export class AssetEditorTabGeometriesComponent implements OnInit {
                 }),
                 O.chain(O.fromNullable),
                 O.chain(NEA.fromArray),
-                O.map(A.map(coordinateToLv95RoundedToMillimeter))
-              )
-            )
+                O.map(A.map(coordinateToLv95RoundedToMillimeter)),
+              ),
+            ),
           );
           if (O.isSome(coords)) {
             this._state.set(flow(updateIsMapDragMode('geometry'), updateStudyAllCoords(coords.value)));
@@ -381,7 +381,7 @@ export class AssetEditorTabGeometriesComponent implements OnInit {
 
     fromEventPattern<TranslateEvent>(
       (h) => translateInteraction.on('translateend', h),
-      (h) => translateInteraction.un('translateend', h)
+      (h) => translateInteraction.un('translateend', h),
     )
       .pipe(untilDestroyed(this))
       .subscribe(() => {
@@ -399,7 +399,7 @@ export class AssetEditorTabGeometriesComponent implements OnInit {
 
     fromEventPattern(
       (h) => olMap.once('loadend', h),
-      (h) => olMap.un('loadend', h)
+      (h) => olMap.un('loadend', h),
     )
       .pipe(untilDestroyed(this))
       .subscribe(() => {
@@ -427,9 +427,9 @@ export class AssetEditorTabGeometriesComponent implements OnInit {
                   flow(
                     O.fromPredicate((aa) => aa.length === 1),
                     O.map(NEA.head),
-                    O.map((a) => a.studyId)
-                  )
-                )
+                    O.map((a) => a.studyId),
+                  ),
+                ),
               ),
             });
           });
@@ -443,10 +443,10 @@ export class AssetEditorTabGeometriesComponent implements OnInit {
           O.bind('selectedStudy', (a) =>
             pipe(
               a.studies,
-              A.findFirst((s) => s.studyId === a.selectedStudyId)
-            )
-          )
-        )
+              A.findFirst((s) => s.studyId === a.selectedStudyId),
+            ),
+          ),
+        ),
       )
       .pipe(share());
 
@@ -460,9 +460,9 @@ export class AssetEditorTabGeometriesComponent implements OnInit {
       .pipe(
         OO.fromFilteredSome,
         distinctUntilChanged(
-          contramap((a: { studies: Studies; selectedStudy: Study }) => a.selectedStudy)(eqStudyByStudyId).equals
+          contramap((a: { studies: Studies; selectedStudy: Study }) => a.selectedStudy)(eqStudyByStudyId).equals,
         ),
-        untilDestroyed(this)
+        untilDestroyed(this),
       )
       .subscribe(({ selectedStudy, studies }) => {
         this._vectorSourceAssetGeoms.getFeatures().forEach((feature) => {
@@ -494,15 +494,15 @@ export class AssetEditorTabGeometriesComponent implements OnInit {
         (a) =>
           pipe(
             sequenceProps(a, 'selectedStudyId'),
-            O.bind('selectedStudy', () => getCurrentStudy(a))
-          )
+            O.bind('selectedStudy', () => getCurrentStudy(a)),
+          ),
       )
       .pipe(OO.fromFilteredSome, untilDestroyed(this))
       .subscribe(
         ({ selectedStudy, currentStudyCoordIndex, currentStudyCoordWithMenuOpen, selectedStudyGeometrySelected }) => {
           const _currentStudyCoordIndex = pipe(
             currentStudyCoordIndex,
-            O.alt(() => currentStudyCoordWithMenuOpen)
+            O.alt(() => currentStudyCoordWithMenuOpen),
           );
           this._vectorSourceAssetGeoms.getFeatures().forEach((f) => {
             const id = getFeatureId(f);
@@ -529,7 +529,7 @@ export class AssetEditorTabGeometriesComponent implements OnInit {
                   f.setStyle(
                     this._state.get().selectedStudyGeometrySelected
                       ? editorStyles.bigPointAssetHighlighted
-                      : editorStyles.bigPointAsset
+                      : editorStyles.bigPointAsset,
                   );
                 }
               }
@@ -541,13 +541,13 @@ export class AssetEditorTabGeometriesComponent implements OnInit {
                     selectedStudyGeometrySelected ? editorStyles.polygonAssetHighlighted : editorStyles.polygonAsset,
                     selectedStudyGeometrySelected
                       ? editorStyles.lineStringAssetHighlighted
-                      : editorStyles.lineStringAsset
-                  )
+                      : editorStyles.lineStringAsset,
+                  ),
                 );
               }
             }
           });
-        }
+        },
       );
 
     this.__selectedStudy$
@@ -556,11 +556,11 @@ export class AssetEditorTabGeometriesComponent implements OnInit {
         map(([selectedStudy, selectedStudyGeometrySelected]) =>
           pipe(
             selectedStudy,
-            O.map((selectedStudy) => ({ selectedStudy, selectedStudyGeometrySelected }))
-          )
+            O.map((selectedStudy) => ({ selectedStudy, selectedStudyGeometrySelected })),
+          ),
         ),
         OO.fromFilteredSome,
-        untilDestroyed(this)
+        untilDestroyed(this),
       )
       .subscribe((a) => {
         if (a.selectedStudyGeometrySelected) {
@@ -576,8 +576,8 @@ export class AssetEditorTabGeometriesComponent implements OnInit {
                     a.selectedStudy.geom,
                     editorStyles.bigPointAssetHighlighted,
                     editorStyles.polygonAssetHighlighted,
-                    editorStyles.lineStringAssetNotSelected
-                  )
+                    editorStyles.lineStringAssetNotSelected,
+                  ),
                 );
               }
             }
@@ -588,7 +588,7 @@ export class AssetEditorTabGeometriesComponent implements OnInit {
 
   drawNewGeometry() {
     this._state.set(
-      flow(updateMode('choose-new-geometry'), updateSelectedStudyId(O.none), updateCurrentStudyCoordIndex(O.none))
+      flow(updateMode('choose-new-geometry'), updateSelectedStudyId(O.none), updateCurrentStudyCoordIndex(O.none)),
     );
   }
 
@@ -611,7 +611,7 @@ export class AssetEditorTabGeometriesComponent implements OnInit {
               studies: newStudies,
               selectedStudyId: O.some(study.value.studyId),
               selectedStudyGeometrySelected: true,
-            }))
+            })),
           );
           this._selectInteraction.getFeatures().clear();
           this._selectInteraction.getFeatures().push(studiesWithFeature.map((s) => s.olGeometry)[0]);
@@ -626,12 +626,12 @@ export class AssetEditorTabGeometriesComponent implements OnInit {
             studies: newStudies,
             selectedStudyId: O.some(study.studyId),
             selectedStudyGeometrySelected: false,
-          }))
+          })),
         );
 
         const finishCreate$ = this._state.select('mode').pipe(
           filter((m) => m !== 'create-new-geometry'),
-          take(1)
+          take(1),
         );
 
         finishCreate$.pipe(untilDestroyed(this)).subscribe(() => {
@@ -642,7 +642,7 @@ export class AssetEditorTabGeometriesComponent implements OnInit {
           .pipe(
             expand((n) => this.insertNewCoord(n + 1, 'Polygon', finishCreate$)),
             takeUntil(finishCreate$),
-            untilDestroyed(this)
+            untilDestroyed(this),
           )
           .subscribe();
       }
@@ -655,12 +655,12 @@ export class AssetEditorTabGeometriesComponent implements OnInit {
             studies: newStudies,
             selectedStudyId: O.some(study.studyId),
             selectedStudyGeometrySelected: false,
-          }))
+          })),
         );
 
         const finishCreate$ = this._state.select('mode').pipe(
           filter((m) => m !== 'create-new-geometry'),
-          take(1)
+          take(1),
         );
 
         finishCreate$.pipe(untilDestroyed(this)).subscribe(() => {
@@ -671,7 +671,7 @@ export class AssetEditorTabGeometriesComponent implements OnInit {
           .pipe(
             expand((n) => this.insertNewCoord(n + 1, 'Linestring', finishCreate$)),
             takeUntil(finishCreate$),
-            untilDestroyed(this)
+            untilDestroyed(this),
           )
           .subscribe();
       }
@@ -700,7 +700,7 @@ export class AssetEditorTabGeometriesComponent implements OnInit {
                 makeCoordinateMarker(this._vectorSourceAssetGeoms, coord, i, study);
               }
               const markerToDelete = this._vectorSourceAssetGeoms.getFeatureById(
-                makeCoordFeatureId(study, a.coords.length)
+                makeCoordFeatureId(study, a.coords.length),
               );
               if (markerToDelete) {
                 this._vectorSourceAssetGeoms.removeFeature(markerToDelete);
@@ -723,7 +723,7 @@ export class AssetEditorTabGeometriesComponent implements OnInit {
                 }
               });
               const markerToDelete = this._vectorSourceAssetGeoms.getFeatureById(
-                makeCoordFeatureId(study, a.coords.length - 1)
+                makeCoordFeatureId(study, a.coords.length - 1),
               );
               if (markerToDelete) {
                 this._vectorSourceAssetGeoms.removeFeature(markerToDelete);
@@ -748,7 +748,7 @@ export class AssetEditorTabGeometriesComponent implements OnInit {
 
     const drawEnd$ = fromEventPattern<DrawEvent>(
       (h) => draw.on('drawend', h),
-      (h) => draw.un('drawend', h)
+      (h) => draw.un('drawend', h),
     ).pipe(take(1), takeUntil(cancelInsert$), share());
 
     drawEnd$.pipe(untilDestroyed(this)).subscribe(() => {
@@ -771,7 +771,7 @@ export class AssetEditorTabGeometriesComponent implements OnInit {
             {
               style: editorStyles.polygonAsset,
               id: `line_${currentPointIndex - 1}`,
-            }
+            },
           );
           this._vectorSourceDraw.addFeature(lineFeature);
         }
@@ -790,7 +790,7 @@ export class AssetEditorTabGeometriesComponent implements OnInit {
             {
               style: editorStyles.polygonAssetNotSelected,
               id: `line_final`,
-            }
+            },
           );
           this._vectorSourceDraw.addFeature(lineFeature);
         }
@@ -845,14 +845,14 @@ export class AssetEditorTabGeometriesComponent implements OnInit {
                   study.geom.coords,
                   A.deleteAt(currentStudyCoordIndex),
                   O.map((coords) => (coords.length === 1 ? A.unsafeDeleteAt(0, coords) : coords)),
-                  O.map((coords) => ({ ...study, geom: { ...study.geom, coords } }))
-                )
+                  O.map((coords) => ({ ...study, geom: { ...study.geom, coords } })),
+                ),
               ),
               O.bind('updatedStudies', ({ index, updatedStudy }) =>
-                pipe(studies, A.updateAt(index, updatedStudy as Study))
-              )
-            )
-          )
+                pipe(studies, A.updateAt(index, updatedStudy as Study)),
+              ),
+            ),
+          ),
         );
         if (O.isSome(updateResult)) {
           this._state.set({ studies: updateResult.value.updatedStudies, currentStudyCoordIndex: O.none });
@@ -861,7 +861,7 @@ export class AssetEditorTabGeometriesComponent implements OnInit {
 
     fromEventPattern<MapBrowserEvent<PointerEvent>>(
       (h) => olMap.on('pointermove', h),
-      (h) => olMap.un('pointermove', h)
+      (h) => olMap.un('pointermove', h),
     )
       .pipe(takeUntil(merge(cancelInsert$, drawEnd$)), untilDestroyed(this))
       .subscribe((ev) => {
@@ -883,16 +883,16 @@ export class AssetEditorTabGeometriesComponent implements OnInit {
                     O.map((coords) =>
                       currentPointIndex === 0 && geometryType === 'Polygon'
                         ? A.unsafeInsertAt(currentPointIndex + 1, coord, coords)
-                        : coords
+                        : coords,
                     ),
-                    O.map((coords) => ({ ...study, geom: { ...study.geom, coords } }))
-                  )
+                    O.map((coords) => ({ ...study, geom: { ...study.geom, coords } })),
+                  ),
                 ),
                 O.bind('updatedStudies', ({ index, updatedStudy }) =>
-                  pipe(studies, A.updateAt(index, updatedStudy as Study))
-                )
-              )
-            )
+                  pipe(studies, A.updateAt(index, updatedStudy as Study)),
+                ),
+              ),
+            ),
           );
           if (O.isSome(updateResult)) {
             this._state.set((s) => ({
@@ -900,7 +900,7 @@ export class AssetEditorTabGeometriesComponent implements OnInit {
               studies: pipe(
                 updateResult,
                 O.map((f) => f.updatedStudies),
-                O.getOrElse(() => s.studies)
+                O.getOrElse(() => s.studies),
               ),
             }));
             if (currentPointIndex > 0) {
@@ -915,7 +915,7 @@ export class AssetEditorTabGeometriesComponent implements OnInit {
                     ev.coordinate,
                   ]),
                 }),
-                { style: editorStyles.linePreview, id: `line_preview1` }
+                { style: editorStyles.linePreview, id: `line_preview1` },
               );
               this._vectorSourceDraw.addFeature(feature1);
               if (geometryType === 'Polygon') {
@@ -930,7 +930,7 @@ export class AssetEditorTabGeometriesComponent implements OnInit {
                       ev.coordinate,
                     ]),
                   }),
-                  { style: editorStyles.linePreview, id: `line_preview2` }
+                  { style: editorStyles.linePreview, id: `line_preview2` },
                 );
                 this._vectorSourceDraw.addFeature(feature2);
               }
@@ -1003,9 +1003,9 @@ export class AssetEditorTabGeometriesComponent implements OnInit {
       O.chain((id) =>
         pipe(
           this._state.get().studies,
-          A.findFirst((s) => s.studyId === id)
-        )
-      )
+          A.findFirst((s) => s.studyId === id),
+        ),
+      ),
     );
     if (O.isSome(study)) {
       if (study.value.geom._tag === 'Point') {
@@ -1015,8 +1015,8 @@ export class AssetEditorTabGeometriesComponent implements OnInit {
             flow(
               updateSelectedStudyGeometrySelected(true),
               updateCurrentStudyCoordIndex(O.some(0)),
-              updateIsMapDragMode(focusOrigin != null ? 'none' : 'geometry')
-            )
+              updateIsMapDragMode(focusOrigin != null ? 'none' : 'geometry'),
+            ),
           );
           const pointFeature = this._vectorSourceAssetGeoms.getFeatureById(study.value.studyId);
           if (pointFeature) {
@@ -1051,7 +1051,7 @@ export class AssetEditorTabGeometriesComponent implements OnInit {
   cancelCreateGeometry() {
     this._deleteSelectedStudyGeometryFeature();
     this._state.set(
-      flow(deleteSelectedStudy, selectStudyIfOnly1, updateNewGeometryType(null), updateMode('edit-geometry'))
+      flow(deleteSelectedStudy, selectStudyIfOnly1, updateNewGeometryType(null), updateMode('edit-geometry')),
     );
   }
 
@@ -1072,8 +1072,8 @@ export class AssetEditorTabGeometriesComponent implements OnInit {
         updateNewGeometryType(null),
         updateMode('edit-geometry'),
         updateSelectedStudyGeometrySelected(false),
-        updateCurrentStudyCoordIndex(O.none)
-      )
+        updateCurrentStudyCoordIndex(O.none),
+      ),
     );
   }
 
@@ -1086,7 +1086,7 @@ export class AssetEditorTabGeometriesComponent implements OnInit {
         } else {
           const study = pipe(
             this._state.get().studies,
-            A.findFirst((s) => s.studyId === f.getId())
+            A.findFirst((s) => s.studyId === f.getId()),
           );
           if (O.isSome(study)) {
             f.setStyle(
@@ -1094,8 +1094,8 @@ export class AssetEditorTabGeometriesComponent implements OnInit {
                 study.value.geom,
                 editorStyles.bigPointAsset,
                 editorStyles.polygonAsset,
-                editorStyles.lineStringAsset
-              )
+                editorStyles.lineStringAsset,
+              ),
             );
           }
         }
@@ -1118,7 +1118,7 @@ export class AssetEditorTabGeometriesComponent implements OnInit {
           [662739.4642028128, 6075958.039112476],
         ],
       ]),
-      withAnimation ? { duration: 250, easing: easeOut } : {}
+      withAnimation ? { duration: 250, easing: easeOut } : {},
     );
   }
 
@@ -1133,9 +1133,9 @@ const getCurrentStudy = (state: Pick<TabGeometriesState, 'selectedStudyId' | 'st
     O.chain((id) =>
       pipe(
         state.studies,
-        A.findFirst((s) => s.studyId === id)
-      )
-    )
+        A.findFirst((s) => s.studyId === id),
+      ),
+    ),
   );
 
 const makeCoordFeatureIdStartWithId = (studyId: string) => `${studyId}-`;
@@ -1173,8 +1173,8 @@ const makeCoordinateMarker = (vectorSource: VectorSource<Geometry>, coord: LV95,
       {
         assetSgFeatureType: 'Coord',
         assetSgFeatureCoordIndex: index,
-      }
-    )
+      },
+    ),
   );
 
 const setFeatureStyle = (feature: Feature, study: Study, selected: boolean) => {
@@ -1191,7 +1191,7 @@ const updateStudyCoord =
     value: unknown,
     validateValue: (a: unknown) => O.Option<T>,
     updatePoint: (point: GeomPoint, value: T) => GeomPoint,
-    updateStudyCoords: (geom: GeomWithCoords, coordIndex: number, value: T) => O.Option<Geom>
+    updateStudyCoords: (geom: GeomWithCoords, coordIndex: number, value: T) => O.Option<Geom>,
   ) =>
   (state: TabGeometriesState) =>
     pipe(
@@ -1217,21 +1217,21 @@ const updateStudyCoord =
                       const maybeGeom = updateStudyCoords(
                         a,
                         currentStudyCoordIndex,
-                        validatedValue
+                        validatedValue,
                       ) as O.Option<GeomPolygon>;
                       return currentStudyCoordIndex !== 0 || a.coords.length === 1
                         ? maybeGeom
                         : pipe(
                             maybeGeom,
-                            O.chain((g) => updateStudyCoords(g, g.coords.length - 1, validatedValue))
+                            O.chain((g) => updateStudyCoords(g, g.coords.length - 1, validatedValue)),
                           );
                     },
                   })(study.geom),
                   O.map((geom) => ({ ...study, geom })),
-                  O.getOrElse(() => study)
-                )
-              )
-            )
+                  O.getOrElse(() => study),
+                ),
+              ),
+            ),
           ),
           O.bind('selectedStudyGeometrySelected', ({ studies, selectedStudyIndex }) =>
             pipe(
@@ -1242,18 +1242,18 @@ const updateStudyCoord =
                   Point: constTrue,
                   LineString: () => state.selectedStudyGeometrySelected,
                   Polygon: () => state.selectedStudyGeometrySelected,
-                })(study.geom)
-              )
-            )
-          )
-        )
+                })(study.geom),
+              ),
+            ),
+          ),
+        ),
       ),
       O.map(({ studies, selectedStudyGeometrySelected }) => ({
         ...state,
         studies,
         selectedStudyGeometrySelected,
       })),
-      O.getOrElse(() => state)
+      O.getOrElse(() => state),
     );
 
 const updateStudyAllCoords = (coords: LV95[]) => (state: TabGeometriesState) => {
@@ -1263,8 +1263,8 @@ const updateStudyAllCoords = (coords: LV95[]) => (state: TabGeometriesState) => 
     O.bind('selectedStudyIndex', ({ selectedStudyId }) =>
       pipe(
         state.studies,
-        A.findIndex((study) => study.studyId === selectedStudyId)
-      )
+        A.findIndex((study) => study.studyId === selectedStudyId),
+      ),
     ),
     O.bind('study', ({ selectedStudyIndex }) =>
       pipe(
@@ -1277,11 +1277,11 @@ const updateStudyAllCoords = (coords: LV95[]) => (state: TabGeometriesState) => 
             Polygon: (a) => ({ ...a, coords }),
             LineString: (a) => ({ ...a, coords }),
           })(study.geom),
-        }))
-      )
+        })),
+      ),
     ),
     O.chain(({ selectedStudyIndex, study }) => pipe(state.studies, A.updateAt(selectedStudyIndex, study))),
-    O.getOrElse(() => state.studies)
+    O.getOrElse(() => state.studies),
   );
   return { ...state, studies };
 };
@@ -1292,7 +1292,7 @@ const updateStudyCoords =
     return pipe(
       geom.coords,
       A.modifyAt(studyCoordIndex, (coord) => updateCoord(coord, value)),
-      O.map((coords) => ({ ...geom, coords }))
+      O.map((coords) => ({ ...geom, coords })),
     );
   };
 
@@ -1305,7 +1305,7 @@ const updateCoordX =
       value,
       (a) => O.some((Number(a) + 1000000) as LV95X),
       updatePoint,
-      updateStudyCoords(updateCoord)
+      updateStudyCoords(updateCoord),
     )(state);
   };
 
@@ -1324,7 +1324,7 @@ const updateCurrentStudyCoordIndex =
     currentStudyCoordIndex,
     selectedStudyGeometrySelected: pipe(
       currentStudyCoordIndex,
-      O.fold(() => state.selectedStudyGeometrySelected, constFalse)
+      O.fold(() => state.selectedStudyGeometrySelected, constFalse),
     ),
   });
 
@@ -1341,7 +1341,7 @@ const updateCoordY =
       value,
       (a) => O.some((Number(a) + 2000000) as LV95Y),
       updatePoint,
-      updateStudyCoords(updateCoord)
+      updateStudyCoords(updateCoord),
     )(state);
   };
 
@@ -1362,7 +1362,7 @@ const deleteSelectedStudy = (state: TabGeometriesState): TabGeometriesState => (
   studies: pipe(
     state.selectedStudyId,
     O.map((id) => state.studies.filter((s) => s.studyId !== id)),
-    O.getOrElse(() => state.studies)
+    O.getOrElse(() => state.studies),
   ),
 });
 
@@ -1378,8 +1378,8 @@ const addNewCoord =
       O.bind('selectedStudyIndex', ({ selectedStudyId }) =>
         pipe(
           state.studies,
-          A.findIndex((s) => s.studyId === selectedStudyId)
-        )
+          A.findIndex((s) => s.studyId === selectedStudyId),
+        ),
       ),
       O.bind('study', ({ selectedStudyIndex }) => getStudyWithGeomWithCoords(state.studies[selectedStudyIndex])),
       O.bind('newCoord', ({ study }) =>
@@ -1391,12 +1391,12 @@ const addNewCoord =
           O.map(({ coord1, coord2 }) =>
             midpoint(
               point([isoWGSLng.get(coord1.lng), isoWGSLat.get(coord1.lat)]),
-              point([isoWGSLng.get(coord2.lng), isoWGSLat.get(coord2.lat)])
-            )
+              point([isoWGSLng.get(coord2.lng), isoWGSLat.get(coord2.lat)]),
+            ),
           ),
           O.map((p) => WGStoLV95([p.geometry.coordinates[0], p.geometry.coordinates[1]])),
-          O.map(lv95RoundedToMillimeter)
-        )
+          O.map(lv95RoundedToMillimeter),
+        ),
       ),
       O.map(({ study, newCoord, selectedStudyIndex }) => ({
         ...state,
@@ -1407,10 +1407,10 @@ const addNewCoord =
             ...study,
             geom: { ...study.geom, coords: A.unsafeInsertAt(index + 1, newCoord, study.geom.coords) },
           },
-          state.studies
+          state.studies,
         ),
       })),
-      O.getOrElse(() => state)
+      O.getOrElse(() => state),
     );
 
 const deleteCoord =
@@ -1422,8 +1422,8 @@ const deleteCoord =
       O.bind('selectedStudyIndex', ({ selectedStudyId }) =>
         pipe(
           state.studies,
-          A.findIndex((s) => s.studyId === selectedStudyId)
-        )
+          A.findIndex((s) => s.studyId === selectedStudyId),
+        ),
       ),
       O.chain(({ selectedStudyIndex }) =>
         pipe(
@@ -1441,16 +1441,16 @@ const deleteCoord =
                   coords: pipe(A.unsafeDeleteAt(index, study.geom.coords), (cs) =>
                     study.geom._tag === 'Polygon' && index === 0 && cs.length > 1
                       ? A.unsafeUpdateAt(cs.length - 1, { ...cs[0] }, cs)
-                      : cs
+                      : cs,
                   ),
                 },
               },
-              state.studies
+              state.studies,
             ),
-          }))
-        )
+          })),
+        ),
       ),
-      O.getOrElse(() => state)
+      O.getOrElse(() => state),
     );
 
 const getFeatureCoordIndex = (feature: Feature) => {
@@ -1471,7 +1471,7 @@ const getFeatureId = (feature: Feature) =>
   pipe(
     feature.getId(),
     O.fromNullable,
-    O.filter((id): id is string => typeof id === 'string')
+    O.filter((id): id is string => typeof id === 'string'),
   );
 
 const createNewPointStudy = (olMap: Map | undefined): O.Option<Study> =>
@@ -1480,7 +1480,7 @@ const createNewPointStudy = (olMap: Map | undefined): O.Option<Study> =>
     O.fromNullable,
     O.chain((map) => O.fromNullable(map.getView().getCenter())),
     O.map(coordinateToLv95RoundedToMillimeter),
-    O.map((coord) => ({ studyId: 'study_location_new_' + makeId(), geom: Geom.as.Point({ coord }) }))
+    O.map((coord) => ({ studyId: 'study_location_new_' + makeId(), geom: Geom.as.Point({ coord }) })),
   );
 
 const coordinateToLv95RoundedToMillimeter = (c: Coordinate): LV95 =>

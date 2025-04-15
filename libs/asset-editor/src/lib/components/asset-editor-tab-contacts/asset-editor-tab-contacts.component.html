@@ -13,7 +13,7 @@
                     class="font-semibold"
                     [ngClass]="{
                       'text-dark-red':
-                        currentContactId._tag === 'Some' && currentContactId.value === assetContact.contactId
+                        currentContactId._tag === 'Some' && currentContactId.value === assetContact.contactId,
                     }"
                   >
                     {{ "contactRoles." + assetContact.role | translate }}
@@ -22,7 +22,7 @@
                     class="ellipsis"
                     [ngClass]="{
                       'text-dark-red':
-                        currentContactId._tag === 'Some' && currentContactId.value === assetContact.contactId
+                        currentContactId._tag === 'Some' && currentContactId.value === assetContact.contactId,
                     }"
                   >
                     {{ assetContact.contact.name }}

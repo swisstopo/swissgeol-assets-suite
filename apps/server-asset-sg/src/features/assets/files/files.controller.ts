@@ -37,7 +37,7 @@ export class FilesController {
     private readonly fileS3Service: FileS3Service,
     private readonly assetEditRepo: AssetEditRepo,
     private readonly prismaService: PrismaService,
-    private readonly fileService: FileService
+    private readonly fileService: FileService,
   ) {}
 
   @Get('/:id')
@@ -45,7 +45,7 @@ export class FilesController {
     @Param('assetId', ParseIntPipe) assetId: number,
     @Param('id', ParseIntPipe) id: number,
     @Res() res: Response,
-    @CurrentUser() user: User
+    @CurrentUser() user: User,
   ) {
     const asset = await this.assetEditRepo.find(assetId);
     if (asset == null || null === asset.assetFiles.find((it) => it.id === id)) {
@@ -79,7 +79,7 @@ export class FilesController {
     @Param('assetId', ParseIntPipe) assetId: number,
     @Req() req: Request,
     @UploadedFile() file: Express.Multer.File,
-    @CurrentUser() user: User
+    @CurrentUser() user: User,
   ) {
     const asset = await this.assetEditRepo.find(assetId);
     if (asset == null) {
@@ -89,7 +89,7 @@ export class FilesController {
 
     const type = pipe(
       AssetFileType.decode((req.body as { type?: string }).type ?? ''),
-      E.getOrElseW(() => null)
+      E.getOrElseW(() => null),
     );
     if (type == null) {
       throw new HttpException('invalid type', HttpStatus.BAD_REQUEST);
@@ -97,7 +97,7 @@ export class FilesController {
 
     const legalDocItemCode = pipe(
       D.nullable(LegalDocItemCode).decode((req.body as { legalDocItemCode?: string }).legalDocItemCode ?? null),
-      E.getOrElseW(() => false as const)
+      E.getOrElseW(() => false as const),
     );
     if (legalDocItemCode === false) {
       throw new HttpException('invalid legalDocItemCode', HttpStatus.BAD_REQUEST);
@@ -135,7 +135,7 @@ export class FilesController {
   async delete(
     @Param('assetId', ParseIntPipe) assetId: number,
     @Param('id', ParseIntPipe) id: number,
-    @CurrentUser() user: User
+    @CurrentUser() user: User,
   ) {
     const asset = await this.assetEditRepo.find(assetId);
     if (asset == null) {

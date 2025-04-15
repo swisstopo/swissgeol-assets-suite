@@ -29,7 +29,7 @@ export function getCssCustomPropertyValues<T extends readonly string[]>(
 } {
   const computedStyle = wndw.getComputedStyle(element);
   return propertyNames.map(
-    (propertyName) => computedStyle.getPropertyValue(normaliseCssPropertyName(propertyName)).trim()
+    (propertyName) => computedStyle.getPropertyValue(normaliseCssPropertyName(propertyName)).trim(),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ) as any;
 }

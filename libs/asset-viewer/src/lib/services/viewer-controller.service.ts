@@ -160,14 +160,14 @@ export class ViewerControllerService {
     this.store.dispatch(
       actions.setResultsState({
         state: results.page.total === 0 ? PanelState.ClosedAutomatically : PanelState.OpenedAutomatically,
-      })
+      }),
     );
   }
 
   private syncUrlParams(): Subscription {
     const prepareEvent = <T>(
       event$: Observable<T>,
-      shouldReplaceUrl: boolean | ((value: T) => boolean)
+      shouldReplaceUrl: boolean | ((value: T) => boolean),
     ): Observable<boolean> => {
       const transform = typeof shouldReplaceUrl === 'boolean' ? () => shouldReplaceUrl : shouldReplaceUrl;
       return event$.pipe(skip(1), distinctUntilChanged(), map(transform));

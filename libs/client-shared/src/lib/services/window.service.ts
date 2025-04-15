@@ -14,7 +14,7 @@ export class WindowService {
               resolve();
             }
           }),
-        ms
+        ms,
       );
     });
   }

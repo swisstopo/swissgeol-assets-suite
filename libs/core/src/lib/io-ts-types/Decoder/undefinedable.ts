@@ -10,7 +10,7 @@ export const undefinedable = <I, A>(or: D.Decoder<I, A>): D.Decoder<undefined | 
           or.decode(i),
           E.bimap(
             () => D.error(i, 'undefined'),
-            (a): A | undefined => a
-          )
+            (a): A | undefined => a,
+          ),
         ),
 });

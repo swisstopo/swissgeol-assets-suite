@@ -30,14 +30,14 @@ export const adminReducer = createReducer(
     (state): AdminState => ({
       ...state,
       isLoading: true,
-    })
+    }),
   ),
   on(
     actions.updateUser,
     (state): AdminState => ({
       ...state,
       isLoading: true,
-    })
+    }),
   ),
   on(
     actions.setUser,
@@ -45,28 +45,28 @@ export const adminReducer = createReducer(
       ...state,
       selectedUser: user,
       isLoading: false,
-    })
+    }),
   ),
   on(
     actions.findWorkgroup,
     (state): AdminState => ({
       ...state,
       isLoading: true,
-    })
+    }),
   ),
   on(
     actions.updateWorkgroup,
     (state): AdminState => ({
       ...state,
       isLoading: true,
-    })
+    }),
   ),
   on(
     actions.createWorkgroup,
     (state): AdminState => ({
       ...state,
       isLoading: true,
-    })
+    }),
   ),
   on(actions.setWorkgroup, (state, { workgroup }): AdminState => {
     const workgroups = [...state.workgroups];
@@ -88,28 +88,28 @@ export const adminReducer = createReducer(
     (state, { workgroup }): AdminState => ({
       ...state,
       workgroups: [...state.workgroups, workgroup],
-    })
+    }),
   ),
   on(
     actions.resetWorkgroup,
     (state): AdminState => ({
       ...state,
       selectedWorkgroup: null,
-    })
+    }),
   ),
   on(
     actions.resetUser,
     (state): AdminState => ({
       ...state,
       selectedUser: null,
-    })
+    }),
   ),
   on(
     actions.listUsers,
     (state): AdminState => ({
       ...state,
       isLoading: true,
-    })
+    }),
   ),
   on(
     actions.setUsers,
@@ -117,14 +117,14 @@ export const adminReducer = createReducer(
       ...state,
       users,
       isLoading: false,
-    })
+    }),
   ),
   on(
     actions.listWorkgroups,
     (state): AdminState => ({
       ...state,
       isLoading: true,
-    })
+    }),
   ),
   on(
     actions.setWorkgroups,
@@ -132,7 +132,7 @@ export const adminReducer = createReducer(
       ...state,
       workgroups,
       isLoading: false,
-    })
+    }),
   ),
   on(
     actions.removeWorkgroupAfterDelete,
@@ -140,6 +140,6 @@ export const adminReducer = createReducer(
       ...state,
       workgroups: state.workgroups.filter((workgroup) => workgroup.id !== workgroupId),
       isLoading: false,
-    })
-  )
+    }),
+  ),
 );

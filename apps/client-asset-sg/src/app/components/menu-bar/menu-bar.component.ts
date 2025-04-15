@@ -65,7 +65,7 @@ export class MenuBarComponent {
       }
       return null;
     }),
-    startWith('home' as const)
+    startWith('home' as const),
   );
 
   async toggleAssetDrawer(): Promise<void> {

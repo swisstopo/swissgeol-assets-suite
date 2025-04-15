@@ -28,7 +28,7 @@ export class ConfirmDialogComponent {
     @Inject(MAT_DIALOG_DATA)
     public data: {
       text: string;
-    }
+    },
   ) {}
 
   public close(confirmed: boolean) {

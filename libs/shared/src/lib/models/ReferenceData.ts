@@ -72,7 +72,7 @@ export const valueItemRecordToArray = (valueItemRecord: ValueItemRecord) =>
     valueItemRecord,
     R.toArray,
     A.sort(OrdValueItemByTupleFirst),
-    A.map((a) => a[1])
+    A.map((a) => a[1]),
   );
 
 export const OrdStringCaseInsensitive: Ord<string> = {
@@ -89,7 +89,7 @@ export const valueItemRecordToSortedArray = (valueItemRecord: ValueItemRecord, k
     valueItemRecord,
     R.toArray,
     A.map((a) => a[1]),
-    A.sort(contramap((a: ValueItem) => a[key])(OrdStringCaseInsensitive))
+    A.sort(contramap((a: ValueItem) => a[key])(OrdStringCaseInsensitive)),
   );
 
 export const getValueItemNameKey = (lang: Lang): 'nameDe' | 'nameFr' | 'nameIt' | 'nameEn' => {
@@ -106,7 +106,7 @@ export const getValueItemNameKey = (lang: Lang): 'nameDe' | 'nameFr' | 'nameIt' 
 };
 
 export const getValueItemDescriptionKey = (
-  lang: Lang
+  lang: Lang,
 ): 'descriptionDe' | 'descriptionFr' | 'descriptionIt' | 'descriptionEn' => {
   switch (lang) {
     case 'de':

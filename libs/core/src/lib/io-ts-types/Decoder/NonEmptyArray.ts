@@ -13,7 +13,7 @@ export const NonEmptyArray = <A>(decoder: D.Decoder<unknown, A>): D.Decoder<unkn
         E.chain((b) => {
           const nea = fromArray(b);
           return O.isNone(nea) ? D.failure(b, 'empty array') : D.success(nea.value);
-        })
-      )
-    )
+        }),
+      ),
+    ),
   );

@@ -131,7 +131,7 @@ export class AssetSearchResultsComponent implements OnInit, OnDestroy {
         take(1),
         switchMap(() => this.scrollOffset$),
         take(1),
-        switchMap((offset) => this.scrollByOffset(offset))
+        switchMap((offset) => this.scrollByOffset(offset)),
       )
       .subscribe();
 
@@ -147,7 +147,7 @@ export class AssetSearchResultsComponent implements OnInit, OnDestroy {
           container.scrollTo({ top: 0, behavior: 'smooth' });
         }
         this.resultsReady$.next();
-      })
+      }),
     );
 
     // Emit `isTableReady$` when the table has been rendered.
@@ -166,7 +166,7 @@ export class AssetSearchResultsComponent implements OnInit, OnDestroy {
             break;
           }
         }
-      })
+      }),
     );
   }
 

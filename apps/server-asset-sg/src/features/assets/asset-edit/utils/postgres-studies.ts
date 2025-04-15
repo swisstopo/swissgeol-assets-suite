@@ -16,14 +16,14 @@ export const PostgresAllStudies = C.array(
     assetId: C.number,
     studyId: C.string,
     geomText: C.string,
-  })
+  }),
 );
 export type PostgresAllStudies = D.TypeOf<typeof PostgresAllStudies>;
 
 const decodeStudyQueryResult = flow(
   PostgresAllStudies.decode,
   E.mapLeft((e) => new Error(D.draw(e))),
-  TE.fromEither
+  TE.fromEither,
 );
 
 const createAllStudyQuery = (whereClause: string) => `
@@ -40,14 +40,14 @@ const createAllStudyQuery = (whereClause: string) => `
 const allStudyQuery = (prismaClient: PrismaClient, whereClause: string): TE.TaskEither<Error, PostgresAllStudies> =>
   pipe(
     TE.tryCatch(() => prismaClient.$queryRawUnsafe(createAllStudyQuery(whereClause)), unknownToError),
-    TE.chain(decodeStudyQueryResult)
+    TE.chain(decodeStudyQueryResult),
   );
 
 export const postgresStudiesByPolygon = (prismaClient: PrismaClient, polygon: LV95[]) => {
   const polygonParam = polygon.map((point) => `${point.y} ${point.x}`).join(',');
   return allStudyQuery(
     prismaClient,
-    `st_contains(st_geomfromtext('polygon((${polygonParam}))', 2056), st_centroid(geom))`
+    `st_contains(st_geomfromtext('polygon((${polygonParam}))', 2056), st_centroid(geom))`,
   );
 };
 
@@ -56,7 +56,7 @@ export const postgresStudiesByAssetId = (prismaClient: PrismaClient, assetId: nu
 
 export const postgresStudiesByAssetIds = (
   prismaClient: PrismaClient,
-  assetIds: Array<number>
+  assetIds: Array<number>,
 ): TE.TaskEither<Error, PostgresAllStudies> =>
   pipe(
     TE.tryCatch(
@@ -70,9 +70,9 @@ export const postgresStudiesByAssetIds = (
             where
                 asset_id in (${Prisma.join(assetIds)})
             `,
-      unknownToError
+      unknownToError,
     ),
-    TE.chain(decodeStudyQueryResult)
+    TE.chain(decodeStudyQueryResult),
   );
 
 const parseStudyId = (studyId: string) => {
@@ -97,14 +97,14 @@ export const updateStudies = (prismaClient: PrismaClient, studies: { studyId: st
                                      geom = st_geomfromtext('${study.geomText}', 2056)
                                  where
                                      study_${type}_id = ${studyId}
-                                 and st_equals(geom, st_geomfromtext('${study.geomText}', 2056)) = false`
+                                 and st_equals(geom, st_geomfromtext('${study.geomText}', 2056)) = false`,
               ),
-            unknownToUnknownError
-          )
-        )
-      )
+            unknownToUnknownError,
+          ),
+        ),
+      ),
     ),
-    A.sequence(TE.ApplicativeSeq)
+    A.sequence(TE.ApplicativeSeq),
   );
 
 export const createStudies = (prismaClient: PrismaClient, assetId: number, studyGeomTexts: string[]) =>
@@ -119,8 +119,8 @@ export const createStudies = (prismaClient: PrismaClient, assetId: number, study
           return null;
         })(),
         E.fromNullable(unknownError(new Error(`Invalid geomText: ${geomText}`))),
-        E.map((type) => ({ type, geomText }))
-      )
+        E.map((type) => ({ type, geomText })),
+      ),
     ),
     A.sequence(E.Applicative),
     TE.fromEither,
@@ -131,14 +131,14 @@ export const createStudies = (prismaClient: PrismaClient, assetId: number, study
             () =>
               prismaClient.$executeRawUnsafe(
                 `insert into public.study_${type} (asset_id, geom_quality_item_code, geom)
-                                 values (${assetId}, 'unkown', st_geomfromtext('${geomText}', 2056))`
+                                 values (${assetId}, 'unkown', st_geomfromtext('${geomText}', 2056))`,
               ),
-            unknownToUnknownError
-          )
+            unknownToUnknownError,
+          ),
         ),
-        A.sequence(TE.ApplicativeSeq)
-      )
-    )
+        A.sequence(TE.ApplicativeSeq),
+      ),
+    ),
   );
 
 export const deleteStudies = (prismaClient: PrismaClient, assetId: number, studyIdsToKeep: string[]) =>
@@ -158,7 +158,7 @@ export const deleteStudies = (prismaClient: PrismaClient, assetId: number, study
           trace: [],
           ...pipe(
             a,
-            R.map((a) => a.map((b) => b.studyId))
+            R.map((a) => a.map((b) => b.studyId)),
           ),
         })),
         O.alt(() => O.some({ area: [], location: [], trace: [] })),
@@ -173,15 +173,15 @@ export const deleteStudies = (prismaClient: PrismaClient, assetId: number, study
                         `delete from public.study_${type}
                                            where
                                                asset_id = ${assetId}
-                                           and study_${type}_id not in (${studyIdsToKeep.join(',')})`
+                                           and study_${type}_id not in (${studyIdsToKeep.join(',')})`,
                       ),
-                unknownToUnknownError
-              )
+                unknownToUnknownError,
+              ),
             ),
-            R.sequence(TE.ApplicativeSeq)
-          )
+            R.sequence(TE.ApplicativeSeq),
+          ),
         ),
-        O.getOrElseW(() => TE.right(undefined))
-      )
-    )
+        O.getOrElseW(() => TE.right(undefined)),
+      ),
+    ),
   );

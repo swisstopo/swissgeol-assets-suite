@@ -39,14 +39,14 @@ export const chainSwitchMapW =
     pipe(ma, switchMap(RD.fold(initialL, pendingL, failure<E1 | E2, B>, f)));
 
 export const altSwitchMap = <E2, A>(
-  that: () => ObservableRemoteData<E2, A>
+  that: () => ObservableRemoteData<E2, A>,
 ): ((fa: ObservableRemoteData<unknown, A>) => ObservableRemoteData<E2, A>) =>
   switchMap(RD.fold(initialL, pendingL, that, success));
 
 export const fromFilteredSuccess = <E, A>(source: Observable<RD.RemoteData<E, A>>): Observable<A> =>
   source.pipe(
     filter(RD.isSuccess),
-    rxMap((a) => a.value)
+    rxMap((a) => a.value),
   );
 
 export const filterIsComplete = <E, A>(source: Observable<RD.RemoteData<E, A>>) => source.pipe(filter(rdIsComplete));
@@ -61,7 +61,7 @@ export const filterIsCompleteEither = <E, A>(source: Observable<RD.RemoteData<E,
         case 'RemoteSuccess':
           return E.right(a.value);
       }
-    })
+    }),
   );
 
 export const toOption = <E, A>(source: Observable<RD.RemoteData<E, A>>): Observable<O.Option<A>> =>

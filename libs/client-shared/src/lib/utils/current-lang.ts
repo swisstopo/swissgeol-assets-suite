@@ -11,6 +11,6 @@ export function currentLangFactory(): Observable<string> {
   return translateService.onLangChange.pipe(
     startWith(null),
     map(() => translateService.currentLang as Lang),
-    filter(isNotNil)
+    filter(isNotNil),
   );
 }

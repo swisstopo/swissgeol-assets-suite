@@ -8,16 +8,16 @@ import { ApiError } from '../utils';
 export const loadReferenceData = createAction('[App Shared State] Load Reference Data');
 export const loadReferenceDataResult = createAction(
   '[App Shared State] Load Reference Data Result',
-  props<RD.RemoteData<ApiError, ReferenceData>>()
+  props<RD.RemoteData<ApiError, ReferenceData>>(),
 );
 
 export const createContactResult = createAction(
   '[App Shared State] Create Contact Result',
-  props<RD.RemoteData<ApiError, Contact>>()
+  props<RD.RemoteData<ApiError, Contact>>(),
 );
 export const editContactResult = createAction(
   '[App Shared State] Edit Contact Result',
-  props<RD.RemoteData<ApiError, Contact>>()
+  props<RD.RemoteData<ApiError, Contact>>(),
 );
 
 export const loadUserProfile = createAction('[App Shared State] Load User Profile');
@@ -26,18 +26,18 @@ export const setAnonymousMode = createAction('[App Shared State] Set Viewer Mode
 
 export const setTrackingConsent = createAction(
   '[App Shared State] Set Tracking Consent',
-  props<{ hasConsented: boolean }>()
+  props<{ hasConsented: boolean }>(),
 );
 
 export const loadUserProfileResult = createAction(
   '[App Shared State] Load User Profile Result',
-  props<RD.RemoteData<ApiError, User>>()
+  props<RD.RemoteData<ApiError, User>>(),
 );
 
 export const loadWorkgroups = createAction('[App Shared State] Load Workgroups');
 export const loadWorkgroupsResult = createAction(
   '[App Shared State] Load Workgroups Result',
-  props<{ workgroups: SimpleWorkgroup[] }>()
+  props<{ workgroups: SimpleWorkgroup[] }>(),
 );
 
 export const logout = createAction('[App Shared State] Logout');
@@ -49,19 +49,19 @@ export const setCurrentAsset = createAction(
   props<{
     asset?: AssetEditDetail | null;
     isLoading?: boolean;
-  }>()
+  }>(),
 );
 
 export const updateAsset = createAction(
   '[App Shared State] Update Asset In Search',
   props<{
     asset: AssetEditDetail;
-  }>()
+  }>(),
 );
 
 export const removeAsset = createAction(
   '[App Shared State] Remove Asset From Search',
   props<{
     assetId: AssetId;
-  }>()
+  }>(),
 );

@@ -43,7 +43,7 @@ export class AssetEditorService {
             return this.httpClient
               .delete(`/api/assets/${assetId}/files/${fileId}`)
               .pipe(map(E.right), OE.catchErrorW(httpErrorResponseError), map(RD.fromEither), startWith(RD.pending));
-          })
+          }),
         ).pipe(
           map((rds) => {
             const error = rds.find(RD.isFailure);
@@ -51,7 +51,7 @@ export class AssetEditorService {
             if (!rds.every(RD.isSuccess))
               return RD.failure(unknownError(new Error('uploadFiles stream completed without success or failure')));
             return RD.success(undefined);
-          })
+          }),
         )
       : of(RD.success(undefined));
   }
@@ -69,7 +69,7 @@ export class AssetEditorService {
             return this.httpClient
               .post(`/api/assets/${assetId}/files`, formData)
               .pipe(map(E.right), OE.catchErrorW(httpErrorResponseError));
-          })
+          }),
         ).pipe(
           toArray(),
           map((rds) => {
@@ -79,7 +79,7 @@ export class AssetEditorService {
               ? RD.failure(unknownError(new Error('uploadFiles stream completed without success or failure')))
               : RD.success(undefined);
           }),
-          startWith(RD.pending)
+          startWith(RD.pending),
         )
       : of(RD.success(undefined));
   }
@@ -91,7 +91,7 @@ export class AssetEditorService {
         map(flow(Contact.decode, E.mapLeft(decodeError))),
         OE.catchErrorW(httpErrorResponseError),
         map(RD.fromEither),
-        startWith(RD.pending)
+        startWith(RD.pending),
       );
   }
 
@@ -102,7 +102,7 @@ export class AssetEditorService {
         map(flow(Contact.decode, E.mapLeft(decodeError))),
         OE.catchErrorW(httpErrorResponseError),
         map(RD.fromEither),
-        startWith(RD.pending)
+        startWith(RD.pending),
       );
   }
 }

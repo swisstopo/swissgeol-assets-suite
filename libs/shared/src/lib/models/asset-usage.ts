@@ -5,7 +5,7 @@ import * as D from 'io-ts/Decoder';
 import { DateId } from './DateStruct';
 
 export const StatusAssetUseCode = C.fromDecoder(
-  D.union(D.literal('tobechecked'), D.literal('underclarification'), D.literal('approved'))
+  D.union(D.literal('tobechecked'), D.literal('underclarification'), D.literal('approved')),
 );
 export type StatusAssetUseCode = C.TypeOf<typeof StatusAssetUseCode>;
 

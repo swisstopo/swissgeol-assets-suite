@@ -15,5 +15,5 @@ const initialState: MapControlState = { isDrawing: false };
 export const mapControlReducer = createReducer(
   initialState,
   on(actions.toggleDraw, (state) => ({ ...state, isDrawing: !state.isDrawing })),
-  on(actions.cancelDraw, (state) => ({ ...state, isDrawing: false }))
+  on(actions.cancelDraw, (state) => ({ ...state, isDrawing: false })),
 );

@@ -30,7 +30,7 @@ export class AllStudyService {
           accessType: parseInt(accessType) as StudyAccessType,
         };
       }),
-      toArray()
+      toArray(),
     );
   }
 }
@@ -47,9 +47,9 @@ function bufferUntilLineEnd() {
           acc.previous = chunk;
           return acc;
         },
-        { buffer: '', previous: '', lines: [] as string[] }
+        { buffer: '', previous: '', lines: [] as string[] },
       ),
       filter((acc) => acc.lines.length > 0),
-      concatMap((acc) => from(acc.lines))
+      concatMap((acc) => from(acc.lines)),
     );
 }

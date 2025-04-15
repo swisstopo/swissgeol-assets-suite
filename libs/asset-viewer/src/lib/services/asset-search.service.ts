@@ -21,7 +21,7 @@ export class AssetSearchService {
       map((res) => plainToInstance(AssetSearchResultDTO, res)),
       tap((result) => {
         result.data = result.data.map((asset) => (AssetEditDetail.decode(asset) as E.Right<AssetEditDetail>).right);
-      })
+      }),
     );
   }
 

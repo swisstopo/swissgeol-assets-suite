@@ -27,15 +27,15 @@ export class AdminEffects {
   public findUser$ = createEffect(() =>
     this.actions$.pipe(
       ofType(actions.findUser),
-      switchMap(({ userId }) => this.adminService.getUser(userId).pipe(map((user) => actions.setUser({ user }))))
-    )
+      switchMap(({ userId }) => this.adminService.getUser(userId).pipe(map((user) => actions.setUser({ user })))),
+    ),
   );
 
   public updateUser$ = createEffect(() =>
     this.actions$.pipe(
       ofType(actions.updateUser),
-      switchMap(({ user }) => this.adminService.updateUser(user).pipe(map((user: User) => actions.setUser({ user }))))
-    )
+      switchMap(({ user }) => this.adminService.updateUser(user).pipe(map((user: User) => actions.setUser({ user })))),
+    ),
   );
 
   public findWorkgroup$ = createEffect(() =>
@@ -44,33 +44,33 @@ export class AdminEffects {
       switchMap(({ workgroupId }) =>
         this.adminService
           .getWorkgroup(workgroupId.toString())
-          .pipe(map((workgroup: Workgroup) => actions.setWorkgroup({ workgroup })))
-      )
-    )
+          .pipe(map((workgroup: Workgroup) => actions.setWorkgroup({ workgroup }))),
+      ),
+    ),
   );
 
   public createWorkgroup$ = createEffect(() =>
     this.actions$.pipe(
       ofType(actions.createWorkgroup),
       switchMap(({ workgroup }) =>
-        this.adminService.createWorkgroup(workgroup).pipe(this.catchWorkgroupError(workgroup))
+        this.adminService.createWorkgroup(workgroup).pipe(this.catchWorkgroupError(workgroup)),
       ),
       withLatestFrom(this.currentLang$),
       map(([workgroup, currentLang]) => {
         void this.router.navigate([`/${currentLang}/admin/workgroups/${workgroup.id}`], { relativeTo: this.route });
         return actions.addWorkgroup({ workgroup });
-      })
-    )
+      }),
+    ),
   );
 
   public updateWorkgroup$ = createEffect(() =>
     this.actions$.pipe(
       ofType(actions.updateWorkgroup),
       switchMap(({ workgroupId, workgroup }) =>
-        this.adminService.updateWorkgroup(workgroupId, workgroup).pipe(this.catchWorkgroupError(workgroup))
+        this.adminService.updateWorkgroup(workgroupId, workgroup).pipe(this.catchWorkgroupError(workgroup)),
       ),
-      map((workgroup: Workgroup) => actions.setWorkgroup({ workgroup }))
-    )
+      map((workgroup: Workgroup) => actions.setWorkgroup({ workgroup })),
+    ),
   );
 
   public deleteWorkgroup$ = createEffect(() =>
@@ -79,29 +79,29 @@ export class AdminEffects {
       switchMap(({ workgroupId }) =>
         this.adminService
           .deleteWorkgroup(workgroupId)
-          .pipe(map(() => actions.removeWorkgroupAfterDelete({ workgroupId })))
-      )
-    )
+          .pipe(map(() => actions.removeWorkgroupAfterDelete({ workgroupId }))),
+      ),
+    ),
   );
 
   public listUsers$ = createEffect(() =>
     this.actions$.pipe(
       ofType(actions.listUsers, actions.setUser),
-      switchMap(() => this.adminService.getUsers().pipe(map((users: User[]) => actions.setUsers({ users }))))
-    )
+      switchMap(() => this.adminService.getUsers().pipe(map((users: User[]) => actions.setUsers({ users })))),
+    ),
   );
 
   public listWorkgroups$ = createEffect(() =>
     this.actions$.pipe(
       ofType(actions.listWorkgroups, actions.setWorkgroup),
       switchMap(() =>
-        this.adminService.getWorkgroups().pipe(map((workgroups: Workgroup[]) => actions.setWorkgroups({ workgroups })))
-      )
-    )
+        this.adminService.getWorkgroups().pipe(map((workgroups: Workgroup[]) => actions.setWorkgroups({ workgroups }))),
+      ),
+    ),
   );
 
   public loadUser$ = createEffect(() =>
-    this.actions$.pipe(ofType(actions.setUser, actions.setWorkgroup), map(appSharedStateActions.loadUserProfile))
+    this.actions$.pipe(ofType(actions.setUser, actions.setWorkgroup), map(appSharedStateActions.loadUserProfile)),
   );
 
   private readonly catchWorkgroupError = (data: WorkgroupData): OperatorFunction<Workgroup, Workgroup> =>
@@ -122,7 +122,7 @@ export class AdminEffects {
               type: AlertType.Error,
               isPersistent: false,
             },
-          })
+          }),
         );
         return EMPTY;
       }

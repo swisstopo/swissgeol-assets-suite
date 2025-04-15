@@ -28,9 +28,9 @@ export abstract class AbstractAdminTableComponent<T extends object> implements A
             this.dataSource.data = this.data.filter((element) => {
               return this.matchBySearchTerm(element, searchTerm) && this.matchByFilters(element, activeFilters);
             });
-          })
+          }),
         )
-        .subscribe()
+        .subscribe(),
     );
   }
 

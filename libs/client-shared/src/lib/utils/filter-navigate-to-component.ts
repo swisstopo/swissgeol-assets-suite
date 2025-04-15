@@ -13,7 +13,7 @@ export const filterNavigateToComponent = (source: Actions, component: Type<unkno
     ofType<RouterNavigationAction<RouterStateSnapshot>>(ROUTER_NAVIGATION),
     map((a: RouterNavigationAction<RouterStateSnapshot>) => findSnapshot(component, a.payload.routerState.root)),
     OO.fromFilteredSome,
-    filter((s) => matchesParents(s, ...parents))
+    filter((s) => matchesParents(s, ...parents)),
   );
 
 export const findSnapshot = (component: Type<unknown>, s: ActivatedRouteSnapshot): O.Option<ActivatedRouteSnapshot> => {

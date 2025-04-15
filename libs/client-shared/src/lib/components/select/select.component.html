@@ -1,15 +1,15 @@
 @if (title) {
-<h5>{{ title }}</h5>
+  <h5>{{ title }}</h5>
 }
 <mat-form-field class="select">
   <svg-icon key="arrow-down" class="icon" />
 
   <mat-select [value]="selectedValues" (valueChange)="onFilterChange($event)" [multiple]="multiple" (blur)="onBlur()">
     @for (value of values; track value) {
-    <mat-option [value]="value">{{ (bindLabel ? $any(value[bindLabel]) : value) | smartTranslate }}</mat-option>
+      <mat-option [value]="value">{{ (bindLabel ? $any(value[bindLabel]) : value) | smartTranslate }}</mat-option>
     }
   </mat-select>
   @if (shouldShowError) {
-  <mat-hint class="mat-mdc-form-field-error">{{ errorMessage }}</mat-hint>
+    <mat-hint class="mat-mdc-form-field-error">{{ errorMessage }}</mat-hint>
   }
 </mat-form-field>

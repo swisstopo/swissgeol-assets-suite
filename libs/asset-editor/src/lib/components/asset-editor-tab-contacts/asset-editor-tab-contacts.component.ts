@@ -121,16 +121,16 @@ export class AssetEditorTabContactsComponent implements OnInit {
           pipe(
             referenceDataVM.contacts,
             R.lookup(String(ac.contactId)),
-            O.map((contact) => ({ ...ac, contact }))
-          )
+            O.map((contact) => ({ ...ac, contact })),
+          ),
         ),
         A.compact,
         A.sortBy([
           contramap((ac: AssetContact) => ac.role)(ordStringLowerCase),
           contramap((ac: AssetContact) => ac.contact.name)(ordStringLowerCase),
           contramap((ac: AssetContact) => ac.contact.id)(ordNumber),
-        ])
-      )
+        ]),
+      ),
   );
 
   public _availableContacts$ = this._state.select(['assetContacts', 'referenceDataVM', 'uiMode'], identity).pipe(
@@ -150,9 +150,9 @@ export class AssetEditorTabContactsComponent implements OnInit {
         A.sortBy([
           contramap((ac: Contact) => ac.name)(ordStringLowerCase),
           contramap((ac: Contact) => ac.id)(ordNumber),
-        ])
+        ]),
       );
-    })
+    }),
   );
 
   public _contactKinds$ = this._state
@@ -175,7 +175,7 @@ export class AssetEditorTabContactsComponent implements OnInit {
       }
       query = query.toLocaleLowerCase();
       return contacts.filter((it) => it.name.toLocaleLowerCase().includes(query));
-    })
+    }),
   );
 
   public getForm(uiMode: UIMode) {
@@ -252,7 +252,7 @@ export class AssetEditorTabContactsComponent implements OnInit {
         s.currentContactId,
         O.filter((c) => c === contact.contact.id),
         O.map(() => ({ currentContactId: O.none, uiMode: 'view' as UIMode })),
-        O.getOrElse(() => ({ currentContactId: s.currentContactId, uiMode: s.uiMode }))
+        O.getOrElse(() => ({ currentContactId: s.currentContactId, uiMode: s.uiMode })),
       ),
     }));
   }
@@ -304,7 +304,7 @@ export class AssetEditorTabContactsComponent implements OnInit {
           referenceDataVM.contactsArray,
           A.sort(contramap((c: Contact) => c.id)(ordNumber)),
           NEA.fromArray,
-          O.map(NEA.last)
+          O.map(NEA.last),
         );
         if (O.isSome(newContact)) {
           this._state.set((s) => ({
@@ -312,7 +312,7 @@ export class AssetEditorTabContactsComponent implements OnInit {
             assetContacts: pipe(
               s.assetContacts,
               A.append({ contactId: newContact.value.id, role }),
-              A.uniq(eqAssetContactEdit)
+              A.uniq(eqAssetContactEdit),
             ),
             uiMode: 'view',
           }));

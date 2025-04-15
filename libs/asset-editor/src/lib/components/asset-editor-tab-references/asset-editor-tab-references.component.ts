@@ -56,7 +56,7 @@ export class AssetEditorTabReferencesComponent implements OnInit {
   public _formValid$ = this._newReferenceForm.valueChanges.pipe(
     startWith(null),
     map(() => this._newReferenceForm.valid),
-    distinctUntilChanged()
+    distinctUntilChanged(),
   );
   public _addParentDisabled$!: Observable<boolean>;
 
@@ -72,7 +72,7 @@ export class AssetEditorTabReferencesComponent implements OnInit {
         ...(this._form.controls.assetMain.value ? [this._form.controls.assetMain.value.assetId] : []),
         ...this._form.getRawValue().childAssets.map((a) => a.assetId),
         ...this._form.getRawValue().siblingAssets.map((a) => a.assetId),
-      ])
+      ]),
     );
     this._assets$ = combineLatest([
       this.assetIdsToIgnore$,
@@ -89,30 +89,30 @@ export class AssetEditorTabReferencesComponent implements OnInit {
                   .pipe(
                     map((res) => (res as { data: AssetEditDetail[] }).data),
                     catchError((err: HttpErrorResponse | unknown) =>
-                      of(err instanceof HttpErrorResponse ? httpErrorResponseError(err) : unknownToUnknownError(err))
+                      of(err instanceof HttpErrorResponse ? httpErrorResponseError(err) : unknownToUnknownError(err)),
                     ),
                     map(
                       flow(
                         D.array(AssetEditDetail).decode,
-                        E.getOrElseW(() => [])
-                      )
-                    )
+                        E.getOrElseW(() => []),
+                      ),
+                    ),
                   )
-              : of([])
-        )
+              : of([]),
+        ),
       ),
     ]).pipe(
       map(([assetIdsToIgnore, queriedAssets]) =>
         pipe(
           queriedAssets,
-          A.filter((a) => !assetIdsToIgnore.includes(a.assetId))
-        )
-      )
+          A.filter((a) => !assetIdsToIgnore.includes(a.assetId)),
+        ),
+      ),
     );
     this._addParentDisabled$ = this._form.valueChanges.pipe(
       startWith(null),
       map(() => this._form.getRawValue().assetMain != null),
-      distinctUntilChanged()
+      distinctUntilChanged(),
     );
   }
 

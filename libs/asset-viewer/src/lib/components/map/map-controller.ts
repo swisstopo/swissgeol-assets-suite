@@ -376,7 +376,7 @@ export class MapController {
   private makePositionChange$(): Observable<MapPosition> {
     return fromEventPattern((h) => this.map.getView().on('change:center', h)).pipe(
       map(() => this.getPosition()),
-      filter((it) => it !== null)
+      filter((it) => it !== null),
     );
   }
 
@@ -391,7 +391,7 @@ export class MapController {
   private makeAssetsClick$(): Observable<number[]> {
     return fromEventPattern<MapBrowserEvent<PointerEvent>>(
       (h) => this.map.on('click', h),
-      (h) => this.map.un('click', h)
+      (h) => this.map.un('click', h),
     ).pipe(
       filter(() => this.isClickEnabled),
 
@@ -415,7 +415,7 @@ export class MapController {
           },
           {
             layerFilter: (layer) => layer === this.layers.studies,
-          }
+          },
         );
         return [event, assetId] as const;
       }),
@@ -442,17 +442,17 @@ export class MapController {
           },
           {
             layerFilter: (layer) => layer === this.layers.assets,
-          }
+          },
         );
         return [...assetIds];
-      })
+      }),
     );
   }
 
   private makeAssetsHover$(): Observable<number[]> {
     return fromEventPattern<MapBrowserEvent<PointerEvent>>(
       (h) => this.map.on('pointermove', h),
-      (h) => this.map.un('pointermove', h)
+      (h) => this.map.un('pointermove', h),
     ).pipe(
       switchMap((event) => this.layers.assets.getFeatures(event.pixel)),
 
@@ -478,7 +478,7 @@ export class MapController {
           }
         }
         return assetIds;
-      })
+      }),
     );
   }
 

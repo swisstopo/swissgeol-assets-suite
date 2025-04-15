@@ -11,5 +11,5 @@ export const bigint: D.Decoder<unknown, bigint> = D.fromGuard(bigintGuard, 'bigi
 
 export const numberFromBigint: D.Decoder<unknown, number> = pipe(
   D.fromGuard(bigintGuard, 'bigint'),
-  D.parse((value) => E.right(Number(value)))
+  D.parse((value) => E.right(Number(value))),
 );

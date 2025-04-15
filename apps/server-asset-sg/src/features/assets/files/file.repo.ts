@@ -127,7 +127,7 @@ export interface CreateFileData {
 export const determineUniqueFilename = async (
   fileName: string,
   assetId: AssetId,
-  prisma: PrismaService
+  prisma: PrismaService,
 ): Promise<string> => {
   const name = fileName.startsWith('a' + assetId + '_') ? fileName : 'a' + assetId + '_' + fileName;
 
