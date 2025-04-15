@@ -1,7 +1,7 @@
 import { coerceBooleanProperty } from '@angular/cdk/coercion';
 import { Component, EventEmitter, forwardRef, Input, OnInit, Output } from '@angular/core';
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR, ReactiveFormsModule } from '@angular/forms';
-import { MatFormField, MatHint, MatOption, MatSelect } from '@angular/material/select';
+import { MatFormField, MatHint, MatOption, MatSelectModule } from '@angular/material/select';
 import { SvgIconComponent } from '@ngneat/svg-icon';
 import { TranslateModule } from '@ngx-translate/core';
 import { noop } from 'rxjs';
@@ -24,7 +24,7 @@ type FormValue<T> = T | T[] | T[keyof T] | T[keyof T][];
     },
   ],
   imports: [
-    MatSelect,
+    MatSelectModule,
     MatOption,
     ReactiveFormsModule,
     SvgIconComponent,
@@ -44,6 +44,8 @@ export class SelectComponent<T> implements OnInit, ControlValueAccessor {
   @Input() public initialValues: T[] = [];
   @Input() public shouldShowError = false;
   @Input() public errorMessage = '';
+  @Input({ transform: coerceBooleanProperty }) public shouldShowTrigger = false;
+  @Input() triggerLabel = '';
   @Output() public selectionChanged = new EventEmitter<T[]>();
 
   public selectedValues?: T | T[] = this.multiple ? [] : undefined;
@@ -92,4 +94,6 @@ export class SelectComponent<T> implements OnInit, ControlValueAccessor {
   public onBlur(): void {
     this.onTouched();
   }
+
+  protected readonly Array = Array;
 }

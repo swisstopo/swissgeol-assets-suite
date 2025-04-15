@@ -32,7 +32,7 @@
         <asset-sg-select
           [title]="'edit.tabs.general.type' | translate"
           [values]="assetKindItems$ | push"
-          [bindLabel]="'code'"
+          [bindLabel]="'value'"
           [bindKey]="'code'"
           formControlName="assetKindItemCode"
         ></asset-sg-select>
@@ -49,7 +49,7 @@
         <asset-sg-select
           [title]="'edit.tabs.general.format' | translate"
           [values]="assetFormatItems$ | push"
-          [bindLabel]="'code'"
+          [bindLabel]="'value'"
           [bindKey]="'code'"
           formControlName="assetFormatItemCode"
         ></asset-sg-select>
@@ -70,10 +70,23 @@
   <asset-sg-detail-section [title]="'edit.tabs.general.topic' | translate">
     <div content>
       <div class="content">
-        <asset-sg-select [title]="'workgroup.title' | translate"></asset-sg-select>
+        <asset-sg-select
+          [title]="'edit.tabs.general.topic' | translate"
+          [values]="manCatLabelItems$ | push"
+          [bindLabel]="'value'"
+          [bindKey]="'code'"
+          [triggerLabel]="
+            (selectedManCatLabels.length === 1 ? 'edit.tabs.general.topic' : 'edit.tabs.general.topics') | translate
+          "
+          shouldShowTrigger
+          multiple
+          formControlName="manCatLabelRefs"
+        ></asset-sg-select>
       </div>
       <mat-chip-set>
-        <asset-sg-chip type="secondary">dfgs</asset-sg-chip>
+        @for (topic of selectedManCatLabels; track topic.code) {
+          <asset-sg-chip type="secondary">{{ topic.value | smartTranslate }}</asset-sg-chip>
+        }
       </mat-chip-set>
     </div>
   </asset-sg-detail-section>
