@@ -34,5 +34,6 @@ const hasRole = (role: Role) => (user: User | null | undefined, workgroupId?: Wo
   return false;
 };
 
-export const isMasterEditor = hasRole(Role.MasterEditor);
 export const isEditor = hasRole(Role.Editor);
+export const isReviewer = hasRole(Role.Reviewer);
+export const isPublisher = hasRole(Role.Publisher);

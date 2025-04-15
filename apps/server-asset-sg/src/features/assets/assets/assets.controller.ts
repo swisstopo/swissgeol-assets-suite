@@ -97,8 +97,8 @@ const validateData = (user: User, data: AssetData, record?: Asset) => {
   if (
     hasInternalUseChanged &&
     data.usage.internal.statusCode !== UsageStatusCode.ToBeChecked &&
-    ((record != null && !policy.hasRole(Role.MasterEditor, record.workgroupId)) ||
-      !policy.hasRole(Role.MasterEditor, data.workgroupId))
+    ((record != null && !policy.hasRole(Role.Reviewer, record.workgroupId)) ||
+      !policy.hasRole(Role.Reviewer, data.workgroupId))
   ) {
     throw new HttpException("Changing the asset's status is not allowed", HttpStatus.FORBIDDEN);
   }

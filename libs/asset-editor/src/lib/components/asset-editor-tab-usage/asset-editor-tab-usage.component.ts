@@ -4,7 +4,7 @@ import { FormGroupDirective } from '@angular/forms';
 import { MatCheckboxChange } from '@angular/material/checkbox';
 import { fromAppShared, LifecycleHooks, LifecycleHooksDirective } from '@asset-sg/client-shared';
 import { isNotNull } from '@asset-sg/core';
-import { isMasterEditor } from '@asset-sg/shared/v2';
+import { isReviewer } from '@asset-sg/shared/v2';
 import * as RD from '@devexperts/remote-data-ts';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { Store } from '@ngrx/store';
@@ -56,11 +56,11 @@ export class AssetEditorTabUsageComponent implements OnInit {
     .pipe(map(O.toNullable), filter(isNotNull));
 
   private readonly store = inject(Store);
-  public readonly isMasterEditor$ = this.store.select(fromAppShared.selectRDUserProfile).pipe(
+  public readonly isReviewer$ = this.store.select(fromAppShared.selectRDUserProfile).pipe(
     map(RD.toNullable),
     filter(isNotNull),
     withLatestFrom(this.filteredAssetEditDetail$),
-    map(([user, assetEditDetail]) => isMasterEditor(user, assetEditDetail.workgroupId)),
+    map(([user, assetEditDetail]) => isReviewer(user, assetEditDetail.workgroupId))
   );
 
   @ViewChild('tmplRemoveNationalInterestDialog') private _tmplRemoveNationalInterestDialog!: TemplateRef<unknown>;
@@ -82,8 +82,8 @@ export class AssetEditorTabUsageComponent implements OnInit {
     switchMap((status) =>
       status === 'INVALID'
         ? this.getUsageErrorText(this._form.controls['internalStartAvailabilityDate'].errors)
-        : of(null),
-    ),
+        : of(null)
+    )
   );
 
   public _publicStartAvailabilityDateErrorText$ = this._form$.pipe(
@@ -91,8 +91,8 @@ export class AssetEditorTabUsageComponent implements OnInit {
     switchMap((status) =>
       status === 'INVALID'
         ? this.getUsageErrorText(this._form.controls['publicStartAvailabilityDate'].errors)
-        : of(null),
-    ),
+        : of(null)
+    )
   );
 
   constructor() {

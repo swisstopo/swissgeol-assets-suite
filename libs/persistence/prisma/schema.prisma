@@ -656,9 +656,12 @@ model WorkgroupsOnUsers {
 }
 
 enum Role {
-  Viewer       @map("viewer")
-  Editor       @map("editor")
-  MasterEditor @map("master-editor")
+  Reader
+  Editor
+  Reviewer
+  Publisher
+
+  @@map("role")
 }
 
 model Favorite {

@@ -23,7 +23,7 @@ export const fakeAssetUsage = (): AssetUsage => ({
 
 export const fakeUser = () => {
   const roles = new Map<WorkgroupId, Role>();
-  roles.set(1, Role.Viewer);
+  roles.set(1, Role.Reader);
   return define<User>({
     email: faker.internet.email(),
     lastName: faker.person.lastName(),

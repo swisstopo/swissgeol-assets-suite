@@ -54,7 +54,7 @@ const parse = (data: SelectedWorkgroup, isAdmin: boolean, isAnonymousMode = fals
   const simpleWorkgroup: SimpleWorkgroup = {
     id: data.id,
     name: data.name,
-    role: Role.Viewer,
+    role: Role.Reader,
   };
   if (isAnonymousMode) {
     return simpleWorkgroup;
