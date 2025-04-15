@@ -14,6 +14,7 @@ import { AssetEditDetail, Lang } from '@asset-sg/shared';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { Store } from '@ngrx/store';
 import { Observable, Subscription, take, tap, withLatestFrom } from 'rxjs';
+import { EditorMode } from '../../models';
 import * as actions from '../../state/asset-editor.actions';
 import { Tab } from '../asset-editor-navigation/asset-editor-navigation.component';
 
@@ -25,7 +26,8 @@ import { Tab } from '../asset-editor-navigation/asset-editor-navigation.componen
   standalone: false,
 })
 export class AssetEditorPageComponent implements OnInit, OnDestroy {
-  public mode: 'edit' | 'create' = 'edit';
+  public mode = EditorMode.Create;
+
   // When creating a new asset, the asset is null
   public asset: AssetEditDetail | null = null;
   public form!: AssetForm;
@@ -58,7 +60,7 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
     this.loadAssetFromRouteParams();
     this.subscriptions.add(
       this.assetEditDetail$.subscribe((assetDetail) => {
-        if (this.mode === 'edit') {
+        if (this.mode === EditorMode.Edit) {
           this.asset = assetDetail;
         }
         this.initializeForm();
@@ -96,7 +98,11 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
   }
 
   public canDeactivate(targetRoute: RouterStateSnapshot): boolean | Observable<boolean> {
-    if (!this.form.dirty || targetRoute.url.startsWith(`/${this.currentLang}/asset-admin/${this.asset?.assetId}`)) {
+    if (
+      this.form === undefined ||
+      !this.form.dirty ||
+      targetRoute.url.startsWith(`/${this.currentLang}/asset-admin/${this.asset?.assetId}`)
+    ) {
       return true;
     }
     const dialogRef = this.dialogService.open<ConfirmDialogComponent>(ConfirmDialogComponent, {
@@ -118,10 +124,11 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
           }
           const assetId = parseInt(assetIdFromParam);
           if (isNaN(assetId)) {
-            this.mode = 'create';
+            this.mode = EditorMode.Create;
             return;
           }
 
+          this.mode = EditorMode.Edit;
           if (currentAsset?.assetId === assetId) {
             this.asset = currentAsset;
           } else {

@@ -10,6 +10,7 @@ import {
   GeometryCode,
   LineString,
   LV95,
+  makeEmptyAssetSearchStats,
   ordStatusWorkByDate,
   Point,
   ReferenceData,
@@ -49,7 +50,10 @@ export const selectSearchQuery = createSelector(assetSearchFeature, (state) => s
 
 export const selectSearchResults = createSelector(assetSearchFeature, (state) => state.results);
 
-export const selectSearchStats = createSelector(assetSearchFeature, (state) => state.stats);
+export const selectSearchStats = createSelector(
+  assetSearchFeature,
+  (state) => state?.stats ?? makeEmptyAssetSearchStats(),
+);
 
 export const selectCurrentAsset = createSelector(fromAppShared.selectCurrentAsset, (currentAsset) => currentAsset);
 
