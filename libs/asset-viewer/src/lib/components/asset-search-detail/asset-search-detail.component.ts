@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { appSharedStateActions, CURRENT_LANG } from '@asset-sg/client-shared';
+import { appSharedStateActions, can$, CURRENT_LANG } from '@asset-sg/client-shared';
 import { AssetFileType } from '@asset-sg/shared';
 import { AssetEditPolicy } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
@@ -22,6 +22,9 @@ export class AssetSearchDetailComponent {
   private readonly viewerControllerService = inject(ViewerControllerService);
 
   public readonly asset$ = this.store.select(selectCurrentAssetDetailVM);
+
+  public readonly canUpdate$ = can$(AssetEditPolicy, this.asset$, (it, asset) => it.canUpdate(asset));
+
   public readonly filesByType$: Observable<Record<AssetFileType, AssetDetailFileVM[]>> = this.asset$.pipe(
     map((asset) => {
       const mapping: Record<AssetFileType, AssetDetailFileVM[]> = {
@@ -49,6 +52,4 @@ export class AssetSearchDetailComponent {
   public searchForReferenceAsset(assetId: number) {
     this.viewerControllerService.selectAsset(assetId);
   }
-
-  protected readonly AssetEditPolicy = AssetEditPolicy;
 }
