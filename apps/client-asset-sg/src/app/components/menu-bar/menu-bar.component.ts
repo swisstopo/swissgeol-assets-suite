@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, HostBinding, inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { fromAppShared, ROUTER_SEGMENTS } from '@asset-sg/client-shared';
+import { can$, fromAppShared, ROUTER_SEGMENTS } from '@asset-sg/client-shared';
 import { AssetEditPolicy } from '@asset-sg/shared/v2';
 import { UntilDestroy } from '@ngneat/until-destroy';
 import { Store } from '@ngrx/store';
@@ -45,6 +45,8 @@ export class MenuBarComponent {
     .pipe(map((filters) => (filters.length > 0 ? filters.length : null)));
 
   readonly userExists$ = this.store.select(fromAppShared.selectIsAnonymousMode).pipe(map((anonymous) => !anonymous));
+
+  readonly canCreatesAsset$ = can$(AssetEditPolicy, (it) => it.canCreate());
 
   readonly activeItem$: Observable<MenuItem | null> = this.routerSegments$.pipe(
     map((segments): MenuItem | null => {
