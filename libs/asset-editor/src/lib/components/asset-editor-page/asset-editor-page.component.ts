@@ -98,14 +98,15 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
     this.form.controls.general.controls.titleOriginal.setValue(this.asset?.titleOriginal ?? null);
     this.form.controls.general.controls.workgroupId.setValue(this.asset?.workgroupId ?? null);
     this.form.controls.general.controls.creationDate.setValue(
-      this.asset ? dateFromDateId(this.asset.createDate) : null
+      this.asset ? dateFromDateId(this.asset.createDate) : null,
     );
     this.form.controls.general.controls.receiptDate.setValue(
-      this.asset ? dateFromDateId(this.asset.receiptDate) : null
+      this.asset ? dateFromDateId(this.asset.receiptDate) : null,
     );
     this.form.controls.general.controls.assetLanguages.setValue(this.asset?.assetLanguages ?? null);
     this.form.controls.general.controls.assetFormatItemCode.setValue(this.asset?.assetFormatItemCode ?? null);
     this.form.controls.general.controls.assetKindItemCode.setValue(this.asset?.assetKindItemCode ?? null);
+    this.form.controls.general.controls.manCatLabelRefs.setValue(this.asset?.manCatLabelRefs ?? null);
   }
 
   public openConfirmDialogForAssetDeletion(assetId: number) {
@@ -174,6 +175,7 @@ const buildForm = () => {
       assetLanguages: new FormControl<Array<{ languageItemCode: string }>>([], { validators: [Validators.required] }),
       assetFormatItemCode: new FormControl<string>('', { validators: [Validators.required] }),
       assetKindItemCode: new FormControl<string>('', { validators: [Validators.required] }),
+      manCatLabelRefs: new FormControl<string[]>([], { validators: [Validators.required] }),
     }),
     files: new FormGroup({
       other: new FormControl('', { validators: [Validators.required] }),
