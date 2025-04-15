@@ -1,3 +1,79 @@
 <form [formGroup]="formGroup">
-  <input formControlName="titlePublic" />
+  <asset-sg-detail-section [title]="'workgroup.title' | translate">
+    <div content>
+      <asset-sg-select
+        [title]="'workgroup.title' | translate"
+        [values]="availableWorkgroups$ | push"
+        [bindLabel]="'name'"
+        [bindKey]="'id'"
+        [ngModel]="formGroup.controls.workgroupId.value"
+        (ngModelChange)="setIdFromWorkgroup($event)"
+        [ngModelOptions]="{ standalone: true }"
+      ></asset-sg-select>
+    </div>
+  </asset-sg-detail-section>
+  <asset-sg-detail-section [title]="'edit.tabs.general.title' | translate">
+    <div content>
+      <div class="content">
+        <asset-sg-text-input formControlName="titlePublic"></asset-sg-text-input>
+        <asset-sg-text-input formControlName="titleOriginal"></asset-sg-text-input>
+      </div>
+    </div>
+  </asset-sg-detail-section>
+  <asset-sg-detail-section [title]="'edit.tabs.general.date' | translate">
+    <div content>
+      <div class="content">
+        <asset-sg-date-picker formControlName="creationDate"></asset-sg-date-picker>
+        <asset-sg-date-picker formControlName="receiptDate"></asset-sg-date-picker>
+      </div>
+    </div>
+  </asset-sg-detail-section>
+  <asset-sg-detail-section [title]="'edit.tabs.general.type' | translate">
+    <div content>
+      <div class="content">
+        <asset-sg-select [title]="'workgroup.title' | translate"></asset-sg-select>
+
+        <asset-sg-select
+          [title]="'edit.tabs.general.language' | translate"
+          [values]="languages"
+          [bindLabel]="'name'"
+          [bindKey]="'value'"
+          multiple
+          [ngModel]="selectedLanguages"
+          (ngModelChange)="setLangFromLangs($event)"
+          [ngModelOptions]="{ standalone: true }"
+        ></asset-sg-select>
+        <asset-sg-select [title]="'workgroup.title' | translate"></asset-sg-select>
+      </div>
+    </div>
+  </asset-sg-detail-section>
+  <asset-sg-detail-section [title]="'edit.tabs.general.title' | translate">
+    <div content>
+      <mat-checkbox color="primary">fdsg</mat-checkbox>
+      <div class="content">
+        <asset-sg-select [title]="'workgroup.title' | translate"></asset-sg-select>
+      </div>
+      <mat-chip-set>
+        <asset-sg-chip type="secondary">dfgs</asset-sg-chip>
+      </mat-chip-set>
+    </div>
+  </asset-sg-detail-section>
+  <asset-sg-detail-section [title]="'edit.tabs.general.topic' | translate">
+    <div content>
+      <div class="content">
+        <asset-sg-select [title]="'workgroup.title' | translate"></asset-sg-select>
+      </div>
+      <mat-chip-set>
+        <asset-sg-chip type="secondary">dfgs</asset-sg-chip>
+      </mat-chip-set>
+    </div>
+  </asset-sg-detail-section>
+  <asset-sg-detail-section [title]="'edit.tabs.general.alternativeId' | translate">
+    <div actions>
+      <button asset-sg-secondary translate>
+        edit.tabs.general.addNewAlternativeId
+        <svg-icon key="add"></svg-icon>
+      </button>
+    </div>
+  </asset-sg-detail-section>
 </form>

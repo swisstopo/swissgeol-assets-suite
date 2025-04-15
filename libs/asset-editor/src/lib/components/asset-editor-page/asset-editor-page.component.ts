@@ -10,7 +10,7 @@ import {
   ROUTER_SEGMENTS,
   RoutingService,
 } from '@asset-sg/client-shared';
-import { AssetEditDetail, Lang } from '@asset-sg/shared';
+import { AssetEditDetail, dateFromDateId, Lang } from '@asset-sg/shared';
 import { Workflow } from '@asset-sg/shared/v2';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { Store } from '@ngrx/store';
@@ -95,6 +95,15 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
   public initializeForm() {
     this.form.reset();
     this.form.controls.general.controls.titlePublic.setValue(this.asset?.titlePublic ?? null);
+    this.form.controls.general.controls.titleOriginal.setValue(this.asset?.titleOriginal ?? null);
+    this.form.controls.general.controls.workgroupId.setValue(this.asset?.workgroupId ?? null);
+    this.form.controls.general.controls.creationDate.setValue(
+      this.asset ? dateFromDateId(this.asset.createDate) : null
+    );
+    this.form.controls.general.controls.receiptDate.setValue(
+      this.asset ? dateFromDateId(this.asset.receiptDate) : null
+    );
+    this.form.controls.general.controls.assetLanguages.setValue(this.asset?.assetLanguages ?? null);
   }
 
   public openConfirmDialogForAssetDeletion(assetId: number) {
@@ -156,6 +165,11 @@ const buildForm = () => {
   return new FormGroup({
     general: new FormGroup({
       titlePublic: new FormControl('', { validators: [Validators.required] }),
+      titleOriginal: new FormControl(''),
+      workgroupId: new FormControl<number | null>(null, { validators: [Validators.required] }),
+      creationDate: new FormControl<Date | null>(null, { validators: [Validators.required] }),
+      receiptDate: new FormControl<Date | null>(null, { validators: [Validators.required] }),
+      assetLanguages: new FormControl<Array<{ languageItemCode: string }>>([], { validators: [Validators.required] }),
     }),
     files: new FormGroup({
       other: new FormControl('', { validators: [Validators.required] }),
