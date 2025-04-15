@@ -28,6 +28,8 @@ import {
   ErrorService,
   icons,
   LanguageSelectorComponent,
+  ROUTER_SEGMENTS,
+  routerSegmentsFactory,
   TranslateTsLoader,
 } from '@asset-sg/client-shared';
 import { storeLogger } from '@asset-sg/core';
@@ -134,6 +136,7 @@ registerLocaleData(locale_deCH, 'de-CH');
     provideHttpClient(withFetch(), withInterceptorsFromDi()),
     ErrorService,
     { provide: CURRENT_LANG, useFactory: currentLangFactory },
+    { provide: ROUTER_SEGMENTS, useFactory: routerSegmentsFactory },
     { provide: HTTP_INTERCEPTORS, useClass: HttpInterceptor, multi: true },
     { provide: MAT_FORM_FIELD_DEFAULT_OPTIONS, useValue: { appearance: 'fill', floatLabel: 'auto' } },
   ],

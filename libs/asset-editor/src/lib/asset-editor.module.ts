@@ -5,6 +5,7 @@ import { inject, NgModule } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatChipSet } from '@angular/material/chips';
 import { MAT_DATE_FORMATS, MAT_DATE_LOCALE } from '@angular/material/core';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -17,6 +18,7 @@ import {
   AdminOnlyDirective,
   AnchorComponent,
   ButtonComponent,
+  ChipComponent,
   DatepickerToggleIconComponent,
   DatePipe,
   DateTimePipe,
@@ -24,49 +26,48 @@ import {
   DrawerPanelComponent,
   fromAppShared,
   MatDateIdModule,
+  PageHeaderComponent,
   ValueItemDescriptionPipe,
   ValueItemNamePipe,
   ViewChildMarker,
 } from '@asset-sg/client-shared';
 import { isNotNull } from '@asset-sg/core';
 import { AssetEditPolicy } from '@asset-sg/shared/v2';
-import * as RD from '@devexperts/remote-data-ts';
 import { SvgIconComponent } from '@ngneat/svg-icon';
 import { EffectsModule } from '@ngrx/effects';
-import { Store, StoreModule } from '@ngrx/store';
+import { Store } from '@ngrx/store';
 import { TranslateModule } from '@ngx-translate/core';
 import { ForModule } from '@rx-angular/template/for';
 import { LetModule } from '@rx-angular/template/let';
 import { PushModule } from '@rx-angular/template/push';
 import { de } from 'date-fns/locale/de';
-
-import * as O from 'fp-ts/Option';
 import { combineLatest, filter, map } from 'rxjs';
-import { AssetEditorFilesComponent } from './components/asset-editor-files/asset-editor-files.component';
 import { AssetEditorIdFormComponent } from './components/asset-editor-id-form/asset-editor-id-form.component';
 import { AssetEditorIdListComponent } from './components/asset-editor-id-list/asset-editor-id-list.component';
-import { AssetEditorLaunchComponent } from './components/asset-editor-launch';
-import { AssetEditorPageComponent } from './components/asset-editor-page';
+import { AssetEditorLaunchComponent } from './components/asset-editor-launch/asset-editor-launch.component';
+import { AssetEditorNavigationComponent } from './components/asset-editor-navigation/asset-editor-navigation.component';
+import { AssetEditorPageComponent } from './components/asset-editor-page/asset-editor-page.component';
+import { AssetEditorSaveComponent } from './components/asset-editor-save/asset-editor-save.component';
 import { AssetEditorSyncComponent } from './components/asset-editor-sync/asset-editor-sync.component';
-import { AssetEditorTabAdministrationComponent, ReplaceBrPipe } from './components/asset-editor-tab-administration';
-import { AssetEditorTabContactsComponent } from './components/asset-editor-tab-contacts';
+import { AssetEditorTabAdministrationComponent } from './components/asset-editor-tab-administration/asset-editor-tab-administration.component';
+import { ReplaceBrPipe } from './components/asset-editor-tab-administration/replace-br.pipe';
+import { AssetEditorTabContactsComponent } from './components/asset-editor-tab-contacts/asset-editor-tab-contacts.component';
 import { AssetEditorTabFilesComponent } from './components/asset-editor-tab-files/asset-editor-tab-files.component';
-import { AssetEditorTabGeneralComponent } from './components/asset-editor-tab-general';
-import { AssetEditorTabGeometriesComponent } from './components/asset-editor-tab-geometries';
-import { AssetEditorTabPageComponent } from './components/asset-editor-tab-page';
-import { AssetEditorTabReferencesComponent } from './components/asset-editor-tab-references';
-import { AssetEditorTabUsageComponent } from './components/asset-editor-tab-usage';
-import { AssetMultiselectComponent } from './components/asset-multiselect';
+import { AssetEditorTabGeneralComponent } from './components/asset-editor-tab-general/asset-editor-tab-general.component';
+import { AssetEditorTabGeometriesComponent } from './components/asset-editor-tab-geometries/asset-editor-tab-geometries.component';
+import { AssetEditorTabReferencesComponent } from './components/asset-editor-tab-references/asset-editor-tab-references.component';
+import { AssetEditorTabUsageComponent } from './components/asset-editor-tab-usage/asset-editor-tab-usage.component';
+import { AssetEditorFilesComponent } from './components/asset-editor-tabs/asset-editor-files/asset-editor-files.component';
+import { AssetEditorGeneralComponent } from './components/asset-editor-tabs/asset-editor-general/asset-editor-general.component';
+import { AssetMultiselectComponent } from './components/asset-multiselect/asset-multiselect.component';
 import { Lv95xWithoutPrefixPipe, Lv95yWithoutPrefixPipe } from './components/lv95-without-prefix';
 import { AssetEditorEffects } from './state/asset-editor.effects';
-import { assetEditorReducer } from './state/asset-editor.reducer';
-import { selectRDAssetEditDetail } from './state/asset-editor.selectors';
 
-export const canLeaveEdit: CanDeactivateFn<AssetEditorPageComponent> = (c) => c.canLeave();
+export const canLeaveEdit: CanDeactivateFn<AssetEditorPageComponent> = (component, _ars, _crss, target) =>
+  component.canDeactivate(target);
 
 @NgModule({
   declarations: [
-    AssetEditorFilesComponent,
     AssetEditorIdFormComponent,
     AssetEditorIdListComponent,
     AssetEditorLaunchComponent,
@@ -77,12 +78,15 @@ export const canLeaveEdit: CanDeactivateFn<AssetEditorPageComponent> = (c) => c.
     AssetEditorTabFilesComponent,
     AssetEditorTabGeneralComponent,
     AssetEditorTabGeometriesComponent,
-    AssetEditorTabPageComponent,
     AssetEditorTabReferencesComponent,
     AssetEditorTabUsageComponent,
+    AssetEditorGeneralComponent,
+    AssetEditorFilesComponent,
+    AssetEditorSaveComponent,
     Lv95xWithoutPrefixPipe,
     Lv95yWithoutPrefixPipe,
     ReplaceBrPipe,
+    AssetEditorNavigationComponent,
   ],
   imports: [
     CommonModule,
@@ -124,7 +128,7 @@ export const canLeaveEdit: CanDeactivateFn<AssetEditorPageComponent> = (c) => c.
           (() => {
             const store = inject(Store);
             return combineLatest([
-              store.select(selectRDAssetEditDetail).pipe(map(RD.toNullable), filter(isNotNull), map(O.toNullable)),
+              store.select(fromAppShared.selectCurrentAsset),
               store.select(fromAppShared.selectUser).pipe(filter(isNotNull)),
             ]).pipe(
               map(([assetEditDetail, user]) => {
@@ -137,7 +141,6 @@ export const canLeaveEdit: CanDeactivateFn<AssetEditorPageComponent> = (c) => c.
       },
     ]),
     TranslateModule.forChild(),
-    StoreModule.forFeature('assetEditor', assetEditorReducer),
     EffectsModule.forFeature([AssetEditorEffects]),
     FormsModule,
     ReactiveFormsModule,
@@ -173,6 +176,9 @@ export const canLeaveEdit: CanDeactivateFn<AssetEditorPageComponent> = (c) => c.
     MatProgressBarModule,
     MatSelectModule,
     AdminOnlyDirective,
+    PageHeaderComponent,
+    MatChipSet,
+    ChipComponent,
   ],
   providers: [
     { provide: MAT_DATE_LOCALE, useValue: de },

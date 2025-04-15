@@ -22,6 +22,8 @@ export const selectRDUserProfile = createSelector(appSharedFeature, (state) => s
 
 export const selectUser = createSelector(selectRDUserProfile, RD.toNullable);
 
+export const selectCurrentAsset = createSelector(appSharedFeature, (state) => state.currentAsset);
+export const selectIsLoadingAsset = createSelector(appSharedFeature, (state) => state.isLoadingAsset);
 export const selectWorkgroups = createSelector(appSharedFeature, (state) => state.workgroups);
 
 const _makeReferenceDataVM = (referenceData: ReferenceData) => ({

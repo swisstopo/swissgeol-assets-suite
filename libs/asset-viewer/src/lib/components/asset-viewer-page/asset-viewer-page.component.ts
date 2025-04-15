@@ -10,7 +10,13 @@ import {
   ViewChild,
   ViewContainerRef,
 } from '@angular/core';
-import { AppPortalService, AuthService, LifecycleHooks, LifecycleHooksDirective } from '@asset-sg/client-shared';
+import {
+  AppPortalService,
+  AppSharedState,
+  AuthService,
+  LifecycleHooks,
+  LifecycleHooksDirective,
+} from '@asset-sg/client-shared';
 import { AssetEditDetail } from '@asset-sg/shared';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { Store } from '@ngrx/store';
@@ -66,15 +72,17 @@ export class AssetViewerPageComponent implements OnInit, OnDestroy {
   private readonly viewerControllerService = inject(ViewerControllerService);
 
   public isLoading$ = this.store.pipe(
-    map((store): AssetSearchState => store.assetSearch),
+    map((store): { search: AssetSearchState; shared: AppSharedState } => {
+      return { search: store.assetSearch, shared: store.shared };
+    }),
     map(
-      (search) =>
+      ({ search, shared }) =>
         search.isLoadingStudies ||
         search.isLoadingResults ||
         search.isLoadingStats ||
         // Loading for the current asset is only shown on the map in case an asset is already being displayed.
         // Otherwise, the detail panel shows a loader.
-        (search.isLoadingAsset && search.currentAsset !== null)
+        (shared.isLoadingAsset && shared.currentAsset !== null)
     )
   );
 

@@ -1,10 +1,11 @@
 import { inject, Injectable } from '@angular/core';
 import { Params, Router } from '@angular/router';
+import { AppSharedState } from '@asset-sg/client-shared';
 import { isNotNull } from '@asset-sg/core';
 import { AssetSearchQuery, isEmptySearchQuery, LV95, Polygon } from '@asset-sg/shared';
 import { AssetId } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
-import { firstValueFrom, map, Observable } from 'rxjs';
+import { firstValueFrom, map } from 'rxjs';
 import { DEFAULT_MAP_POSITION } from '../components/map/map-controller';
 
 import { isPanelOpen, PanelState } from '../state/asset-search/asset-search.actions';
@@ -20,13 +21,14 @@ export class ViewerParamsService {
   private readonly store = inject(Store<AppStateWithAssetSearch>);
 
   async readParamsFromStore(): Promise<ViewerParams> {
-    const state = await firstValueFrom(
-      this.store.pipe(map((store) => store.assetSearch)) as Observable<AssetSearchState>
+    const [searchState, sharedState] = await firstValueFrom(
+      this.store.pipe(map((store) => [store.assetSearch, store.shared] as [AssetSearchState, AppSharedState]))
     );
+
     return {
-      assetId: state.currentAsset?.assetId ?? null,
-      query: state.query,
-      ui: state.ui,
+      assetId: sharedState.currentAsset?.assetId ?? null,
+      query: searchState.query,
+      ui: searchState.ui,
     };
   }
 

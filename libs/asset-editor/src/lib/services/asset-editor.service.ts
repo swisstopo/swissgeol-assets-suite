@@ -2,53 +2,34 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { ApiError, httpErrorResponseError } from '@asset-sg/client-shared';
 import { decodeError, OE, ORD, unknownError } from '@asset-sg/core';
-import { Contact, PatchAsset, PatchContact } from '@asset-sg/shared';
+import { AssetEditDetail, Contact, PatchAsset, PatchContact } from '@asset-sg/shared';
 import * as RD from '@devexperts/remote-data-ts';
 import * as E from 'fp-ts/Either';
 import { flow } from 'fp-ts/function';
 import { concat, forkJoin, map, Observable, of, startWith, toArray } from 'rxjs';
 
 import { AssetEditorNewFile } from '../components/asset-editor-form-group';
-import { AssetEditDetail } from '../models';
 
 @Injectable({ providedIn: 'root' })
 export class AssetEditorService {
   private readonly httpClient = inject(HttpClient);
 
-  public loadAssetDetailData(assetId: number): ORD.ObservableRemoteData<ApiError, AssetEditDetail> {
+  public loadAsset(assetId: number): Observable<AssetEditDetail> {
     return this.httpClient
       .get(`/api/asset-edit/${assetId}`)
-      .pipe(
-        map(flow(AssetEditDetail.decode, E.mapLeft(decodeError))),
-        OE.catchErrorW(httpErrorResponseError),
-        map(RD.fromEither),
-        startWith(RD.pending)
-      );
+      .pipe(map((res) => (AssetEditDetail.decode(res) as E.Right<AssetEditDetail>).right));
   }
 
-  public createAsset(patchAsset: PatchAsset): ORD.ObservableRemoteData<ApiError, AssetEditDetail> {
+  public createAsset(patchAsset: PatchAsset): Observable<AssetEditDetail> {
     return this.httpClient
       .post(`/api/asset-edit`, PatchAsset.encode(patchAsset))
-      .pipe(
-        map(flow(AssetEditDetail.decode, E.mapLeft(decodeError))),
-        OE.catchErrorW(httpErrorResponseError),
-        map(RD.fromEither),
-        startWith(RD.pending)
-      );
+      .pipe(map((res) => (AssetEditDetail.decode(res) as E.Right<AssetEditDetail>).right));
   }
 
-  public updateAssetDetail(
-    assetId: number,
-    patchAsset: PatchAsset
-  ): ORD.ObservableRemoteData<ApiError, AssetEditDetail> {
+  public updateAssetDetail(assetId: number, patchAsset: PatchAsset): Observable<AssetEditDetail> {
     return this.httpClient
       .put(`/api/asset-edit/${assetId}`, PatchAsset.encode(patchAsset))
-      .pipe(
-        map(flow(AssetEditDetail.decode, E.mapLeft(decodeError))),
-        OE.catchErrorW(httpErrorResponseError),
-        map(RD.fromEither),
-        startWith(RD.pending)
-      );
+      .pipe(map((res) => (AssetEditDetail.decode(res) as E.Right<AssetEditDetail>).right));
   }
 
   public deleteAsset(assetId: number): Observable<void> {

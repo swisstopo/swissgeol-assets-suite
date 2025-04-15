@@ -1,0 +1,24 @@
+@use "../../styles/variables";
+
+:host {
+  position: absolute;
+  bottom: 0;
+  width: calc(100vw - 280px);
+  height: 56px;
+  padding: 0 10px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0px -2px 4px -1px rgba(0, 0, 0, 0.03), 0px -4px 4px 0px rgba(0, 0, 0, 0.05);
+}
+
+.warning {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: variables.$red-08;
+}
+
+.spacer {
+  flex: 1;
+}

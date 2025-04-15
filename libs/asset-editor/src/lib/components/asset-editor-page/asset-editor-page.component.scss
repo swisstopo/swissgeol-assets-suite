@@ -1,0 +1,24 @@
+@use "../../styles/mixins";
+@use "../../styles/variables";
+
+h2 {
+  @include mixins.text-ellipsis(2);
+  max-width: 70vw;
+}
+
+.form-container {
+  display: flex;
+  background-color: variables.$grey-01;
+  height: calc(100vh - 88px - 84px - 56px);
+  width: calc(100vw - 280px);
+  overflow-y: scroll;
+  flex-direction: column;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.editor-container {
+  display: flex;
+}

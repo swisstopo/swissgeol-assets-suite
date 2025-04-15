@@ -4,6 +4,8 @@ import { createReducer, on } from '@ngrx/store';
 import { pipe } from 'fp-ts/function';
 import * as O from 'fp-ts/Option';
 import * as R from 'fp-ts/Record';
+// eslint-disable-next-line @nx/enforce-module-boundaries
+import { assetSearchActions } from '../../../../../libs/asset-viewer/src';
 
 const initialState: AppSharedState = {
   rdUserProfile: RD.initial,
@@ -12,10 +14,42 @@ const initialState: AppSharedState = {
   lang: 'de',
   isAnonymousMode: false,
   hasConsentedToTracking: false,
+  currentAsset: null,
+  isLoadingAsset: false,
 };
 
 export const appSharedStateReducer = createReducer(
   initialState,
+  on(
+    appSharedStateActions.setCurrentAsset,
+    (state, { asset, isLoading }): AppSharedState => ({
+      ...state,
+      currentAsset: asset === undefined ? state.currentAsset : asset,
+      isLoadingAsset: isLoading ?? state.isLoadingAsset,
+    })
+  ),
+  on(
+    assetSearchActions.resetSearch,
+    (state): AppSharedState => ({
+      ...state,
+      currentAsset: null,
+    })
+  ),
+  on(
+    appSharedStateActions.removeAsset,
+    (state, { assetId }): AppSharedState => ({
+      ...state,
+      currentAsset: state.currentAsset?.assetId === assetId ? null : state.currentAsset,
+    })
+  ),
+
+  on(
+    appSharedStateActions.updateAsset,
+    (state, { asset }): AppSharedState => ({
+      ...state,
+      currentAsset: state.currentAsset?.assetId === asset.assetId ? asset : state.currentAsset,
+    })
+  ),
   on(
     appSharedStateActions.loadUserProfileResult,
     (state, rdUserProfile): AppSharedState => ({ ...state, rdUserProfile })

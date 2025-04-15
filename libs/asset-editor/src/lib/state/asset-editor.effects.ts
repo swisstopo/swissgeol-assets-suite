@@ -1,27 +1,10 @@
 import { inject, Injectable } from '@angular/core';
-import { Router } from '@angular/router';
-import {
-  Alert,
-  AlertType,
-  appSharedStateActions,
-  filterNavigateToComponent,
-  RoutingService,
-  showAlert,
-} from '@asset-sg/client-shared';
-import { DT, isNotNull, ORD, partitionEither } from '@asset-sg/core';
-import { GeomFromGeomText } from '@asset-sg/shared';
-import * as RD from '@devexperts/remote-data-ts';
+import { Alert, AlertType, appSharedStateActions, RoutingService, showAlert } from '@asset-sg/client-shared';
 import { UntilDestroy } from '@ngneat/until-destroy';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { TranslateService } from '@ngx-translate/core';
-import { pipe } from 'fp-ts/function';
-import * as O from 'fp-ts/Option';
-import * as D from 'io-ts/Decoder';
-import { concatMap, filter, map, Observable, partition, share, switchMap, tap } from 'rxjs';
-
-import { AssetEditorPageComponent } from '../components/asset-editor-page';
+import { map, switchMap } from 'rxjs';
 import { AssetEditorService } from '../services/asset-editor.service';
-
 import * as actions from './asset-editor.actions';
 
 @UntilDestroy()
@@ -29,47 +12,14 @@ import * as actions from './asset-editor.actions';
 export class AssetEditorEffects {
   private readonly _actions$ = inject(Actions);
   private readonly _assetEditorService = inject(AssetEditorService);
-  private readonly _router = inject(Router);
   private readonly routingService = inject(RoutingService);
   private readonly translateService = inject(TranslateService);
 
-  validatedQueryParams = partitionEither(
-    filterNavigateToComponent(this._actions$, AssetEditorPageComponent).pipe(
-      map(({ params }) => pipe(D.struct({ assetId: D.union(DT.NumberFromString, D.literal('new')) }).decode(params))),
-      share()
-    )
-  );
-
-  navigateForInvalidQueryParams$ = createEffect(
-    () =>
-      this.validatedQueryParams[0].pipe(
-        concatMap((e) => {
-          console.error('error decoding queryParams', D.draw(e));
-          return this._router.navigate(['/'], { queryParams: undefined });
-        })
-      ),
-    { dispatch: false }
-  );
-
-  newOrAssetId = partition(this.validatedQueryParams[1], ({ assetId }) => assetId === 'new') as [
-    Observable<{ assetId: 'new' }>,
-    Observable<{ assetId: number }>
-  ];
-
-  newAsset$ = createEffect(() =>
-    this.newOrAssetId[0].pipe(map(() => actions.loadAssetEditDetailResult(RD.success(O.none))))
-  );
-
-  loadAssetEditDetail$ = createEffect(() =>
-    this.newOrAssetId[1].pipe(
-      switchMap((params) => this._assetEditorService.loadAssetDetailData(params.assetId)),
-      tap(async (rd) => {
-        if (RD.isFailure(rd)) {
-          await this._router.navigate(['/'], { queryParams: undefined });
-        }
-      }),
-      ORD.map(O.some),
-      map(actions.loadAssetEditDetailResult)
+  loadAsset$ = createEffect(() =>
+    this._actions$.pipe(
+      ofType(actions.loadAsset),
+      switchMap(({ assetId }) => this._assetEditorService.loadAsset(assetId)),
+      map((asset) => appSharedStateActions.setCurrentAsset({ asset }))
     )
   );
 
@@ -77,7 +27,7 @@ export class AssetEditorEffects {
     this._actions$.pipe(
       ofType(actions.createNewAsset),
       switchMap(({ patchAsset }) => this._assetEditorService.createAsset(patchAsset)),
-      map((data) => actions.updateAssetEditDetailResult({ data }))
+      map((data) => actions.updateAssetEditDetailResult({ asset: data }))
     )
   );
 
@@ -86,11 +36,11 @@ export class AssetEditorEffects {
       ofType(actions.updateAssetEditDetail),
       switchMap(({ assetId, patchAsset, newFiles, filesToDelete }) =>
         this._assetEditorService.deleteFiles(assetId, filesToDelete).pipe(
-          ORD.chainSwitchMapW(() => this._assetEditorService.uploadFiles(assetId, newFiles)),
-          ORD.chainSwitchMapW(() => this._assetEditorService.updateAssetDetail(assetId, patchAsset))
+          switchMap(() => this._assetEditorService.uploadFiles(assetId, newFiles)),
+          switchMap(() => this._assetEditorService.updateAssetDetail(assetId, patchAsset))
         )
       ),
-      map((data) => actions.updateAssetEditDetailResult({ data }))
+      map((asset) => actions.updateAssetEditDetailResult({ asset }))
     )
   );
 
@@ -124,23 +74,21 @@ export class AssetEditorEffects {
         await this.routingService.navigateToRoot();
         return assetId;
       }),
-      map((assetId) => appSharedStateActions.removeAssetFromSearch({ assetId }))
+      map((assetId) => appSharedStateActions.removeAsset({ assetId }))
     )
   );
 
   updateSearchAfterAssetChanged$ = createEffect(() =>
     this._actions$.pipe(
       ofType(actions.updateAssetEditDetailResult),
-      map(({ data }) => (RD.isSuccess(data) ? data.value : null)),
-      filter(isNotNull),
-      map((asset) =>
-        appSharedStateActions.updateAssetInSearch({
+      map(({ asset }) =>
+        appSharedStateActions.updateAsset({
           asset: {
             ...asset,
             studies: asset.studies.map((it) => ({
               assetId: asset.assetId,
               studyId: it.studyId,
-              geomText: GeomFromGeomText.encode(it.geom),
+              geomText: it.geomText,
             })),
           },
         })

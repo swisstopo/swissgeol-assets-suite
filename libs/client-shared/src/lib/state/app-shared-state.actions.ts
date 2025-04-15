@@ -44,14 +44,22 @@ export const logout = createAction('[App Shared State] Logout');
 
 export const setLang = createAction('[App Shared State] Set Lang', props<{ lang: Lang }>());
 
-export const updateAssetInSearch = createAction(
+export const setCurrentAsset = createAction(
+  '[Asset Search] Set Current Asset',
+  props<{
+    asset?: AssetEditDetail | null;
+    isLoading?: boolean;
+  }>()
+);
+
+export const updateAsset = createAction(
   '[App Shared State] Update Asset In Search',
   props<{
     asset: AssetEditDetail;
   }>()
 );
 
-export const removeAssetFromSearch = createAction(
+export const removeAsset = createAction(
   '[App Shared State] Remove Asset From Search',
   props<{
     assetId: AssetId;

@@ -1,11 +1,11 @@
 import { Component, inject } from '@angular/core';
-import { CURRENT_LANG } from '@asset-sg/client-shared';
+import { Router } from '@angular/router';
+import { appSharedStateActions, CURRENT_LANG } from '@asset-sg/client-shared';
 import { AssetFileType } from '@asset-sg/shared';
 import { AssetEditPolicy } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
 import { map, Observable } from 'rxjs';
 import { ViewerControllerService } from '../../services/viewer-controller.service';
-import * as actions from '../../state/asset-search/asset-search.actions';
 import { AppStateWithAssetSearch } from '../../state/asset-search/asset-search.reducer';
 import { AssetDetailFileVM, selectCurrentAssetDetailVM } from '../../state/asset-search/asset-search.selector';
 
@@ -16,6 +16,7 @@ import { AssetDetailFileVM, selectCurrentAssetDetailVM } from '../../state/asset
   standalone: false,
 })
 export class AssetSearchDetailComponent {
+  private readonly router = inject(Router);
   private readonly store = inject(Store<AppStateWithAssetSearch>);
   public readonly currentLang$ = inject(CURRENT_LANG);
   private readonly viewerControllerService = inject(ViewerControllerService);
@@ -37,8 +38,12 @@ export class AssetSearchDetailComponent {
     })
   );
 
+  public navigateToAssetEdit(lang: string | null, assetId: number) {
+    this.router.navigate([lang, 'asset-admin', assetId]);
+  }
+
   public clearSelectedAsset() {
-    this.store.dispatch(actions.setCurrentAsset({ asset: null }));
+    this.store.dispatch(appSharedStateActions.setCurrentAsset({ asset: null }));
   }
 
   public searchForReferenceAsset(assetId: number) {

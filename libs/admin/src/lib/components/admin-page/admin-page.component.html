@@ -1,8 +1,5 @@
 <mat-progress-bar *rxIf="isLoading$" mode="indeterminate" class="loading-bar" />
-<div class="header" *rxLet="currentLang$; let currentLang">
-  <button asset-sg-primary (click)="navigateBack(currentLang)" class="back-button">
-    <svg-icon key="arrow-left" class="close" />
-  </button>
+<asset-sg-page-header *rxLet="currentLang$; let currentLang" (backNavigation)="navigateBack(currentLang)">
   @if (isWorkgroupDetailPage && workgroup) {
 
   <h2>{{ workgroup.name }}</h2>
@@ -33,7 +30,7 @@
   } @else {
   <h2 translate="">menuBar.settings</h2>
   }
-</div>
+</asset-sg-page-header>
 <div class="main">
   @if (workgroup && workgroup.disabledAt) {
   <div class="inactive-overlay"></div>

@@ -253,6 +253,8 @@ export const itAppTranslations: AppTranslations = {
     closeManageAsset: 'IT Asset verwalten schliessen',
     userManagementHeading: 'IT Benutzer',
     userManagementButton: 'IT Benutzer verwalten',
+    unsavedChanges: 'IT Ungespeicherte Änderungen',
+    discardChanges: 'Änderungen verwerfen',
     questionDiscardChanges: 'IT Möchten Sie die Änderungen verwerfen?',
     adminInstructionsSyncElasticAssetsHeading: 'IT Assets mit Elasticsearch synchronisieren',
     adminInstructionsSyncElasticAssets:
