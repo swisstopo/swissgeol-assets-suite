@@ -31,7 +31,6 @@ export class TextAreaComponent implements ControlValueAccessor {
   private onTouched: () => void = noop;
 
   public writeValue(value: string) {
-    console.log(value);
     this.value = value;
   }
 
