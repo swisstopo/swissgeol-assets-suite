@@ -19,6 +19,8 @@ export const workflowSelection = satisfy<Prisma.WorkflowSelect>()({
   asset: {
     select: {
       workgroupId: true,
+      creator: { select: simpleUserSelection },
+      createDate: true,
     },
   },
   hasRequestedChanges: true,
@@ -39,9 +41,6 @@ export const workflowSelection = satisfy<Prisma.WorkflowSelect>()({
       fromStatus: true,
       toStatus: true,
       comment: true,
-    },
-    orderBy: {
-      createdAt: 'asc',
     },
   },
 });
@@ -65,6 +64,8 @@ export const parseWorkflowFromPrisma = (entry: SelectedWorkflow): Workflow => {
     ),
     reviewedTabs: entry.reviewedTabs,
     publishedTabs: entry.publishedTabs,
+    creator: entry.asset.creator && parseSimpleUser(entry.asset.creator),
+    createdAt: LocalDate.fromDate(entry.asset.createDate),
     workgroupId: entry.asset.workgroupId,
   };
 };

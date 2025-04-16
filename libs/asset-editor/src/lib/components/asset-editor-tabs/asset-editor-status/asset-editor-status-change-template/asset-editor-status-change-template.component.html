@@ -1,0 +1,19 @@
+<div class="sideline"></div>
+
+<div class="content">
+  <div class="heading">
+    <span class="highlight">
+      <asset-sg-username [user]="creator" />
+    </span>
+    ∙
+    <span class="date">
+      {{ createdAt.toDate() | date: "dd.MM.yyyy" }}
+    </span>
+  </div>
+  <div class="body">
+    <ul class="mutations">
+      <ng-content select="[slot=mutation]" />
+    </ul>
+    <ng-content select="[slot=body]" />
+  </div>
+</div>
