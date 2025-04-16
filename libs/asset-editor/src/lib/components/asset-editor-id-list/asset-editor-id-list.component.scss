@@ -1,22 +1,19 @@
-// list of ids
-ul {
-  margin: 0 0 1rem 0;
-  padding: 0;
-  list-style: none;
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
 }
 
-ul > li {
+.alternative-id {
   display: flex;
   align-items: center;
-  height: 2.5rem;
-  padding-left: 1rem;
-  margin-bottom: 0.5rem;
-}
+  gap: 12px;
 
-ul > li.is-being-edited {
-  display: none;
-}
+  asset-sg-text-input {
+    flex: 1;
+  }
 
-:host.is-editing > ul > li > button.actions {
-  display: none;
+  button {
+    padding-top: 32px;
+  }
 }

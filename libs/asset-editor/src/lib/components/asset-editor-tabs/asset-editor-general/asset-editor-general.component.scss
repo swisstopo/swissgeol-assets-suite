@@ -10,3 +10,7 @@ form {
   display: flex;
   gap: 16px;
 }
+
+.content.column {
+  flex-direction: column;
+}
