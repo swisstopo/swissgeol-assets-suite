@@ -22,6 +22,7 @@ export const frAppTranslations: AppTranslations = {
   delete: 'Supprimer',
   close: 'Fermer',
   datePlaceholder: 'AAAA-MM-JJ',
+  deletedUserName: 'FR gelöschter Benutzer',
   workgroup: {
     title: 'groupe de travail',
     errors: {
@@ -30,6 +31,17 @@ export const frAppTranslations: AppTranslations = {
   },
   favorites: {
     title: 'Favorites',
+  },
+  workflow: {
+    status: 'FR Status',
+    assignee: 'FR Zugewiesene Person',
+  },
+  workflowStatus: {
+    Draft: 'FR Draft',
+    InReview: 'FR Review',
+    Reviewed: 'FR Reviewed',
+    Published: 'FR Veröffentlicht',
+    notPublished: 'FR Nicht Veröffentlicht',
   },
   menuBar: {
     filters: 'Filtres',
@@ -249,6 +261,19 @@ export const frAppTranslations: AppTranslations = {
           tab: 'Onglet',
           hasValidationErrors: 'Contient des erreurs de validation',
         },
+      },
+      status: {
+        tabName: 'FR Status',
+        changeStatus: 'FR Status manuell ändern',
+        requestReview: 'FR Review anfordern',
+        requestChanges: 'FR Änderungen anfordern',
+        finishReview: 'FR Review abschliessen',
+        assign: 'FR Neue Person zuweisen',
+        publication: 'FR Publikation',
+        publish: 'FR Publish',
+        created: 'FR {{ status }} erstellt',
+        statusChanged: 'FR Status von {{ from }} zu {{ to }} geändert',
+        assigneeChanged: 'FR Asset {{ assignee }} zugewiesen',
       },
     },
     closeManageAsset: 'Fermer la gestion des asset',

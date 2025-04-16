@@ -14,7 +14,7 @@
     <div class="asset-detail">
       <div class="flex flex-row justify-between mb-4">
         <div class="text-dark-red font-bold mt-2.5">{{ assetDetail.titlePublic }}</div>
-        <ng-container *canUpdate="AssetEditPolicy; with: assetDetail">
+        @if (canUpdate$ | async) {
           <button
             asset-sg-tertiary
             isIcon
@@ -23,7 +23,7 @@
           >
             <svg-icon key="edit" data-testid="edit-asset-button"></svg-icon>
           </button>
-        </ng-container>
+        }
       </div>
       <div class="asset-status">
         <ng-container *ngIf="assetDetail.publicUse.isAvailable; else internalUse">

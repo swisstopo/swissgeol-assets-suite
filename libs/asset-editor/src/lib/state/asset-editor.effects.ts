@@ -18,7 +18,7 @@ export class AssetEditorEffects {
   loadAsset$ = createEffect(() =>
     this._actions$.pipe(
       ofType(actions.loadAsset),
-      switchMap(({ assetId }) => this._assetEditorService.loadAsset(assetId)),
+      switchMap(({ assetId }) => this._assetEditorService.fetchAsset(assetId)),
       map((asset) => appSharedStateActions.setCurrentAsset({ asset })),
     ),
   );

@@ -16,15 +16,20 @@
   }
 </asset-sg-page-header>
 <div class="editor-container">
-  <asset-sg-editor-navigation [activeTab]="activeTab"></asset-sg-editor-navigation>
+  <asset-sg-editor-navigation [activeTab]="activeTab" [mode]="mode" />
   <div>
     <div class="form-container">
       @switch (activeTab) {
         @case (Tab.General) {
-          <asset-sg-editor-general [formGroup]="form.controls.general"></asset-sg-editor-general>
+          <asset-sg-editor-general [formGroup]="form.controls.general" />
         }
         @case (Tab.Files) {
-          <asset-sg-editor-files [formGroup]="form.controls.files"></asset-sg-editor-files>
+          <asset-sg-editor-files [formGroup]="form.controls.files" />
+        }
+        @case (Tab.Status) {
+          @if (asset !== null) {
+            <asset-sg-editor-status [assetId]="asset.assetId" />
+          }
         }
         @default {
           <span>other</span>

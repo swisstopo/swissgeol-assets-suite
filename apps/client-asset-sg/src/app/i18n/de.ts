@@ -20,6 +20,7 @@ export const deAppTranslations = {
   delete: 'Löschen',
   close: 'Schliessen',
   datePlaceholder: 'JJJJ-MM-TT',
+  deletedUserName: 'gelöschter Benutzer',
   workgroup: {
     title: 'Arbeitsgruppe',
     errors: {
@@ -28,6 +29,17 @@ export const deAppTranslations = {
   },
   favorites: {
     title: 'Favoriten',
+  },
+  workflow: {
+    status: 'Status',
+    assignee: 'Zugewiesene Person',
+  },
+  workflowStatus: {
+    Draft: 'Draft',
+    InReview: 'Review',
+    Reviewed: 'Reviewed',
+    Published: 'Veröffentlicht',
+    notPublished: 'Nicht Veröffentlicht',
   },
   menuBar: {
     filters: 'Filter',
@@ -247,6 +259,19 @@ export const deAppTranslations = {
           tab: 'Tab',
           hasValidationErrors: 'enthält Validierungsfehler',
         },
+      },
+      status: {
+        tabName: 'Status',
+        changeStatus: 'Status manuell ändern',
+        requestReview: 'Review anfordern',
+        requestChanges: 'Änderungen anfordern',
+        finishReview: 'Review abschliessen',
+        assign: 'Neue Person zuweisen',
+        publication: 'Publikation',
+        publish: 'Publish',
+        created: '{{ status }} erstellt',
+        statusChanged: 'Status von {{ from }} zu {{ to }} geändert',
+        assigneeChanged: 'Asset {{ assignee }} zugewiesen',
       },
     },
     closeManageAsset: 'Asset verwalten schliessen',

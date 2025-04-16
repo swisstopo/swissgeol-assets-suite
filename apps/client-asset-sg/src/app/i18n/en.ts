@@ -22,6 +22,7 @@ export const enAppTranslations: AppTranslations = {
   delete: 'Delete',
   close: 'Close',
   datePlaceholder: 'YYYY-MM-DD',
+  deletedUserName: 'deleted User',
   workgroup: {
     title: 'Workgroup',
     errors: {
@@ -30,6 +31,17 @@ export const enAppTranslations: AppTranslations = {
   },
   favorites: {
     title: 'Favorites',
+  },
+  workflow: {
+    status: 'Status',
+    assignee: 'Assignee',
+  },
+  workflowStatus: {
+    Draft: 'Draft',
+    InReview: 'Review',
+    Reviewed: 'Reviewed',
+    Published: 'Published',
+    notPublished: 'Not Published',
   },
   menuBar: {
     filters: 'Filters',
@@ -248,6 +260,19 @@ export const enAppTranslations: AppTranslations = {
           tab: 'Tab',
           hasValidationErrors: 'has validation errors',
         },
+      },
+      status: {
+        tabName: 'Status',
+        changeStatus: 'Change Status Manually',
+        requestReview: 'Request Review',
+        requestChanges: 'Request Changes',
+        finishReview: 'Finish Review',
+        assign: 'Assign new Person',
+        publication: 'Publication',
+        publish: 'Publish',
+        created: '{{ status }} created',
+        statusChanged: 'Status changed from {{ from }} to {{ to }}',
+        assigneeChanged: 'Asset assigned to {{ assignee }}',
       },
     },
     closeManageAsset: 'Close manage asset',

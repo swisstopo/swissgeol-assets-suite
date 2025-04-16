@@ -32,7 +32,7 @@ Content-Type: application/json
   "users": [
     {
       "userId": "379a20e6-6a5d-4390-93ca-d408613e854d",
-      "role": "MasterEditor"
+      "role": "Reviewer"
     }
   ]
 }

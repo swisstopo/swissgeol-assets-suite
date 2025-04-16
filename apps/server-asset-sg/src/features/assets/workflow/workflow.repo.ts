@@ -1,17 +1,14 @@
-import { AssetId, Workflow, WorkflowChangeData, WorkflowStatus } from '@asset-sg/shared/v2';
+import { AssetId, UserId, Workflow, WorkflowStatus } from '@asset-sg/shared/v2';
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@/core/prisma.service';
-import {
-  mapWorkflowStatusToPrismaWorkflowStatus,
-  parseWorkflowFromPrisma,
-  workflowSelection,
-} from '@/features/assets/workflow/prisma-workflow';
+import { FindRepo } from '@/core/repo';
+import { parseWorkflowFromPrisma, workflowSelection } from '@/features/assets/workflow/prisma-workflow';
 
 @Injectable()
-export class WorkflowRepo {
+export class WorkflowRepo implements FindRepo<Workflow, AssetId> {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findByAssetId(assetId: AssetId): Promise<Workflow | null> {
+  async find(assetId: AssetId): Promise<Workflow | null> {
     const entry = await this.prisma.workflow.findUnique({
       select: workflowSelection,
       where: { assetId },
@@ -20,51 +17,32 @@ export class WorkflowRepo {
     return entry == null ? null : parseWorkflowFromPrisma(entry);
   }
 
-  async addChange(
-    assetId: AssetId,
-    fromStatus: WorkflowStatus,
-    createdById: string,
-    assigneeId: string,
-    data: WorkflowChangeData,
-  ): Promise<Workflow> {
+  async change(assetId: AssetId, { creatorId, comment, from, to }: ChangeOptions): Promise<Workflow> {
     const entry = await this.prisma.workflow.update({
       where: { assetId },
       data: {
-        status: mapWorkflowStatusToPrismaWorkflowStatus(data.toStatus),
-        assignee: { connect: { id: assigneeId } },
+        status: to.status ?? undefined,
+        assignee: to.assigneeId === null ? { disconnect: true } : { connect: { id: to.assigneeId } },
         workflowChanges: {
           create: {
-            comment: data.comment,
-            fromStatus: mapWorkflowStatusToPrismaWorkflowStatus(fromStatus),
-            toStatus: mapWorkflowStatusToPrismaWorkflowStatus(data.toStatus),
-            createdBy: { connect: { id: createdById } },
-            assignee: { connect: { id: assigneeId } },
+            comment,
+            fromStatus: from.status,
+            toStatus: to.status,
+            fromAssignee: from.assigneeId === null ? undefined : { connect: { id: from.assigneeId } },
+            toAssignee: to.assigneeId === null ? undefined : { connect: { id: to.assigneeId } },
+            creator: { connect: { id: creatorId } },
           },
         },
       },
       select: workflowSelection,
     });
-
     return parseWorkflowFromPrisma(entry);
   }
+}
 
-  async publish(assetId: AssetId, userId: string, fromStatus: WorkflowStatus): Promise<Workflow> {
-    const entry = await this.prisma.workflow.update({
-      where: { assetId },
-      data: {
-        assignee: { connect: { id: userId } },
-        status: mapWorkflowStatusToPrismaWorkflowStatus('published'),
-        workflowChanges: {
-          create: {
-            fromStatus: mapWorkflowStatusToPrismaWorkflowStatus(fromStatus),
-            toStatus: mapWorkflowStatusToPrismaWorkflowStatus('published'),
-            createdBy: { connect: { id: userId } },
-          },
-        },
-      },
-      select: workflowSelection,
-    });
-
-    return parseWorkflowFromPrisma(entry);
-  }
+interface ChangeOptions {
+  creatorId: UserId;
+  comment: string | null;
+  from: { status: WorkflowStatus; assigneeId: UserId | null };
+  to: { status: WorkflowStatus; assigneeId: UserId | null };
 }

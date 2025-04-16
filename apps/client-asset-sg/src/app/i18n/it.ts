@@ -22,6 +22,7 @@ export const itAppTranslations: AppTranslations = {
   delete: 'IT Löschen',
   close: 'IT Schliessen',
   datePlaceholder: 'AAAA-MM-GG',
+  deletedUserName: 'IT gelöschter Benutzer',
   workgroup: {
     title: 'IT Arbeitsgruppe',
     errors: {
@@ -30,6 +31,17 @@ export const itAppTranslations: AppTranslations = {
   },
   favorites: {
     title: 'IT Favoriten',
+  },
+  workflow: {
+    status: 'IT Status',
+    assignee: 'IT Zugewiesene Person',
+  },
+  workflowStatus: {
+    Draft: 'IT Draft',
+    InReview: 'IT Review',
+    Reviewed: 'IT Reviewed',
+    Published: 'IT Veröffentlicht',
+    notPublished: 'IT Nicht Veröffentlicht',
   },
   menuBar: {
     filters: 'IT Filter',
@@ -248,6 +260,19 @@ export const itAppTranslations: AppTranslations = {
           tab: 'IT Tab',
           hasValidationErrors: 'IT enthält Validierungsfehler',
         },
+      },
+      status: {
+        tabName: 'IT Status',
+        changeStatus: 'IT Status manuell ändern',
+        requestReview: 'IT Review anfordern',
+        requestChanges: 'IT Änderungen anfordern',
+        finishReview: 'IT Review abschliessen',
+        assign: 'IT Neue Person zuweisen',
+        publication: 'IT Publikation',
+        publish: 'IT Publish',
+        created: 'IT {{ status }} erstellt',
+        statusChanged: 'IT Status von {{ from }} zu {{ to }} geändert',
+        assigneeChanged: 'IT Asset {{ assignee }} zugewiesen',
       },
     },
     closeManageAsset: 'IT Asset verwalten schliessen',

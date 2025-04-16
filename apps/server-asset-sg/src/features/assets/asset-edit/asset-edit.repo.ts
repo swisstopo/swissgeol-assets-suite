@@ -1,6 +1,6 @@
 import { decodeError, isNotNull } from '@asset-sg/core';
 import { AssetEditDetail, AssetUsage, dateFromDateId, DateIdFromDate, PatchAsset } from '@asset-sg/shared';
-import { AssetId, User, UserId } from '@asset-sg/shared/v2';
+import { User } from '@asset-sg/shared/v2';
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import * as E from 'fp-ts/Either';
@@ -104,10 +104,20 @@ export class AssetEditRepo implements Repo<AssetEditDetail, number, AssetEditDat
             },
           },
           workgroup: { connect: { id: data.patch.workgroupId } },
+          creator: {
+            connect: {
+              id: data.user.id,
+            },
+          },
+          workflow: {
+            create: {
+              reviewedTabs: { create: {} },
+              publishedTabs: { create: {} },
+              assignee: { connect: { id: data.user.id } },
+            },
+          },
         },
       });
-
-      await this.createWorkflow(asset.assetId, data.user.id);
       return (await this.find(asset.assetId)) as AssetEditDetail;
     });
   }
@@ -303,21 +313,6 @@ export class AssetEditRepo implements Repo<AssetEditDetail, number, AssetEditDat
     } catch (e) {
       return handlePrismaMutationError(e) ?? false;
     }
-  }
-
-  private async createWorkflow(assetId: AssetId, userId: UserId): Promise<void> {
-    const assetUser = await this.prismaService.assetUser.findUniqueOrThrow({
-      where: { id: userId },
-    });
-
-    await this.prismaService.workflow.create({
-      data: {
-        asset: { connect: { assetId: assetId } },
-        reviewedTabs: { create: {} },
-        publishedTabs: { create: {} },
-        assignee: { connect: { id: assetUser.id } },
-      },
-    });
   }
 
   private async loadDetail(asset: PrismaAsset): Promise<AssetEditDetail> {
