@@ -118,7 +118,7 @@ describe('WorkgroupRepo', () => {
           [
             user.id,
             {
-              role: Role.MasterEditor,
+              role: Role.Reviewer,
               email: user.email,
               firstName: user.firstName,
               lastName: user.lastName,
@@ -169,7 +169,7 @@ describe('WorkgroupRepo', () => {
           [
             user.id,
             {
-              role: Role.MasterEditor,
+              role: Role.Reviewer,
               email: user.email,
               lastName: user.lastName,
               firstName: user.firstName,
@@ -214,7 +214,7 @@ describe('WorkgroupRepo', () => {
           [
             user.id,
             {
-              role: Role.MasterEditor,
+              role: Role.Reviewer,
               email: user.email,
               firstName: user.firstName,
               lastName: user.lastName,

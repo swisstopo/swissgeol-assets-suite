@@ -26,7 +26,7 @@ Content-Type: application/json
   "roles": [
     [
       1,
-      "MasterEditor"
+      "Reviewer"
     ]
   ],
   "isAdmin": false
