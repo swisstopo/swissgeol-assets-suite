@@ -1,17 +1,16 @@
-@if (title) {
-  <h5>{{ title }}</h5>
-}
-<mat-form-field>
-  <input
-    matInput
-    [matDatepicker]="picker"
-    [ngModel]="date"
-    (dateChange)="onDateChange($event)"
-    (blur)="onBlur()"
-    [placeholder]="'datePlaceholder' | translate"
-  />
-  <mat-datepicker-toggle matIconSuffix [for]="picker">
-    <svg-icon matDatepickerToggleIcon key="calendar"></svg-icon>
-  </mat-datepicker-toggle>
-  <mat-datepicker #picker></mat-datepicker>
-</mat-form-field>
+<asset-sg-form-item-wrapper [title]="title" [icon]="icon">
+  <mat-form-field>
+    <input
+      matInput
+      [matDatepicker]="picker"
+      [ngModel]="date"
+      (dateChange)="onDateChange($event)"
+      (blur)="onBlur()"
+      [placeholder]="'datePlaceholder' | translate"
+    />
+    <mat-datepicker-toggle matIconSuffix [for]="picker">
+      <svg-icon matDatepickerToggleIcon key="calendar"></svg-icon>
+    </mat-datepicker-toggle>
+    <mat-datepicker #picker></mat-datepicker>
+  </mat-form-field>
+</asset-sg-form-item-wrapper>

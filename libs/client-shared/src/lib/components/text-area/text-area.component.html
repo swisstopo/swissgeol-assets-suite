@@ -1,0 +1,12 @@
+<asset-sg-form-item-wrapper [title]="title" [icon]="icon">
+  <textarea
+    class="search-input"
+    matInput
+    [ngModel]="value"
+    (ngModelChange)="changeTerm($event)"
+    (blur)="onBlur()"
+    cdkTextareaAutosize
+    cdkAutosizeMinRows="1"
+    cdkAutosizeMaxRows="5"
+  ></textarea>
+</asset-sg-form-item-wrapper>

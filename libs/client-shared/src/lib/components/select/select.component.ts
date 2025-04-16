@@ -5,6 +5,7 @@ import { MatFormField, MatHint, MatOption, MatSelectModule } from '@angular/mate
 import { SvgIconComponent } from '@ngneat/svg-icon';
 import { TranslateModule } from '@ngx-translate/core';
 import { noop } from 'rxjs';
+import { FormItemWrapperComponent } from '../form-item-wrapper';
 import { SmartTranslatePipe } from '../smart-translate.pipe';
 
 type FormValue<T> = T | T[] | T[keyof T] | T[keyof T][];
@@ -33,6 +34,7 @@ type FormValue<T> = T | T[] | T[keyof T] | T[keyof T][];
     MatFormField,
     SmartTranslatePipe,
     MatHint,
+    FormItemWrapperComponent,
   ],
 })
 export class SelectComponent<T> implements OnInit, ControlValueAccessor {
@@ -40,6 +42,7 @@ export class SelectComponent<T> implements OnInit, ControlValueAccessor {
   @Input() public bindLabel: keyof T | null = null;
   @Input() public bindKey: keyof T | null = null;
   @Input() public title = '';
+  @Input() public icon = '';
   @Input({ transform: coerceBooleanProperty }) public multiple = false;
   @Input() public initialValues: T[] = [];
   @Input() public shouldShowError = false;
