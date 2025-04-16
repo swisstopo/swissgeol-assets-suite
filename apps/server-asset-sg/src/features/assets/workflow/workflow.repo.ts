@@ -1,4 +1,4 @@
-import { AssetId, Workflow, WorkflowChangeData, WorkflowStatus } from '@asset-sg/shared/v2';
+import { AssetId, UserId, Workflow, WorkflowStatus } from '@asset-sg/shared/v2';
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@/core/prisma.service';
 import { FindRepo } from '@/core/repo';
@@ -17,52 +17,32 @@ export class WorkflowRepo implements FindRepo<Workflow, AssetId> {
     return entry == null ? null : parseWorkflowFromPrisma(entry);
   }
 
-  // TODO If `WorkflowChangeData.assignee` was a UserId, we could merge most of these parameters - DVA 2025-04-15
-  async addChange(
-    assetId: AssetId,
-    fromStatus: WorkflowStatus,
-    createdById: string,
-    assigneeId: string,
-    data: WorkflowChangeData,
-  ): Promise<Workflow> {
+  async change(assetId: AssetId, { creatorId, comment, from, to }: ChangeOptions): Promise<Workflow> {
     const entry = await this.prisma.workflow.update({
       where: { assetId },
       data: {
-        status: data.status,
-        assignee: { connect: { id: assigneeId } },
+        status: to.status ?? undefined,
+        assignee: to.assigneeId === null ? { disconnect: true } : { connect: { id: to.assigneeId } },
         workflowChanges: {
           create: {
-            comment: data.comment,
-            fromStatus: fromStatus,
-            toStatus: data.status,
-            createdBy: { connect: { id: createdById } },
-            assignee: { connect: { id: assigneeId } },
+            comment,
+            fromStatus: from.status,
+            toStatus: to.status,
+            fromAssignee: from.assigneeId === null ? undefined : { connect: { id: from.assigneeId } },
+            toAssignee: to.assigneeId === null ? undefined : { connect: { id: to.assigneeId } },
+            creator: { connect: { id: creatorId } },
           },
         },
       },
       select: workflowSelection,
     });
-
     return parseWorkflowFromPrisma(entry);
   }
+}
 
-  async publish(assetId: AssetId, userId: string, fromStatus: WorkflowStatus): Promise<Workflow> {
-    const entry = await this.prisma.workflow.update({
-      where: { assetId },
-      data: {
-        assignee: { connect: { id: userId } },
-        status: WorkflowStatus.Published,
-        workflowChanges: {
-          create: {
-            fromStatus,
-            toStatus: WorkflowStatus.Published,
-            createdBy: { connect: { id: userId } },
-          },
-        },
-      },
-      select: workflowSelection,
-    });
-
-    return parseWorkflowFromPrisma(entry);
-  }
+interface ChangeOptions {
+  creatorId: UserId;
+  comment: string | null;
+  from: { status: WorkflowStatus; assigneeId: UserId | null };
+  to: { status: WorkflowStatus; assigneeId: UserId | null };
 }

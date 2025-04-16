@@ -14,30 +14,31 @@ export class WorkflowService {
     return handleMissing(await this.workflowRepo.find(assetId));
   }
 
-  async addChange(workflow: Workflow, data: WorkflowChangeData, createdById: UserId): Promise<Workflow> {
-    this.validateStatusChange(workflow.status, data.status);
-
-    const assignee = handleMissing(await this.userRepo.findByEmail(data.assignee));
-    const createdBy = handleMissing(await this.userRepo.find(createdById));
-
-    return this.workflowRepo.addChange(workflow.assetId, workflow.status, createdBy.id, assignee.id, data);
+  async addChange(workflow: Workflow, change: WorkflowChangeData, creatorId: UserId): Promise<Workflow> {
+    if (workflow.status === change.status && workflow.assignee?.id === change.assigneeId) {
+      throw new HttpException(
+        "A change must update either the workflow's status or assignee.",
+        HttpStatus.UNPROCESSABLE_ENTITY,
+      );
+    }
+    return this.workflowRepo.change(workflow.assetId, {
+      creatorId,
+      comment: change.comment,
+      from: { status: workflow.status, assigneeId: workflow.assignee?.id ?? null },
+      to: { status: change.status, assigneeId: change.assigneeId },
+    });
   }
 
-  async publish(workflow: Workflow, userId: string) {
+  async publish(workflow: Workflow, creatorId: UserId) {
     if (workflow.status !== WorkflowStatus.Reviewed) {
       throw new HttpException('Cannot publish workflow in current status', HttpStatus.BAD_REQUEST);
     }
-    const publisher = handleMissing(await this.userRepo.find(userId));
-    return this.workflowRepo.publish(workflow.assetId, publisher.id, workflow.status);
-  }
-
-  private validateStatusChange(fromStatus: WorkflowStatus, toStatus: WorkflowStatus): void {
-    if (toStatus === WorkflowStatus.Published) {
-      throw new HttpException('Cannot change status to published directly', HttpStatus.UNPROCESSABLE_ENTITY);
-    }
-    if (fromStatus === toStatus) {
-      throw new HttpException('No status change', HttpStatus.UNPROCESSABLE_ENTITY);
-    }
+    return this.workflowRepo.change(workflow.assetId, {
+      creatorId: creatorId,
+      comment: null,
+      from: { status: workflow.status, assigneeId: workflow.assignee?.id ?? null },
+      to: { status: WorkflowStatus.Published, assigneeId: workflow.assignee?.id ?? null },
+    });
   }
 }
 
