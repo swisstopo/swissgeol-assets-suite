@@ -40,3 +40,15 @@ export const makeEmptyAssetSearchResults = (): AssetSearchResult => ({
   },
   data: [],
 });
+
+export const makeEmptyAssetSearchStats = (): AssetSearchStats => ({
+  total: 0,
+  authorIds: [],
+  assetKindItemCodes: [],
+  languageItemCodes: [],
+  geometryCodes: [],
+  manCatLabelItemCodes: [],
+  usageCodes: [],
+  workgroupIds: [],
+  createDate: null,
+});

@@ -31,6 +31,17 @@ export const frAppTranslations: AppTranslations = {
   favorites: {
     title: 'Favorites',
   },
+  workflow: {
+    status: 'FR Status',
+    assignee: 'FR Zugewiesene Person',
+  },
+  workflowStatus: {
+    Draft: 'FR Draft',
+    InReview: 'FR Review',
+    Reviewed: 'FR Reviewed',
+    Published: 'FR Veröffentlicht',
+    notPublished: 'FR Nicht Veröffentlicht',
+  },
   menuBar: {
     filters: 'Filtres',
     admin: 'Administration',
@@ -249,6 +260,16 @@ export const frAppTranslations: AppTranslations = {
           tab: 'Onglet',
           hasValidationErrors: 'Contient des erreurs de validation',
         },
+      },
+      status: {
+        tabName: 'FR Status',
+        changeStatus: 'FR Status manuell ändern',
+        requestReview: 'FR Review anfordern',
+        requestChanges: 'FR Änderungen anfordern',
+        finishReview: 'FR Review abschliessen',
+        assign: 'FR Neue Person zuweisen',
+        publication: 'FR Publikation',
+        publish: 'FR Publish',
       },
     },
     closeManageAsset: 'Fermer la gestion des asset',

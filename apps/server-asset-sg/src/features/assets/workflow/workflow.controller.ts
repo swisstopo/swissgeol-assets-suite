@@ -1,17 +1,19 @@
-import { User, Workflow, WorkflowChangeData, WorkflowChangeDataSchema } from '@asset-sg/shared/v2';
+import { User, Workflow, WorkflowChangeData, WorkflowChangeDataSchema, WorkflowPolicy } from '@asset-sg/shared/v2';
 import { Controller, Get, Param, ParseIntPipe, Post } from '@nestjs/common';
 import { WorkflowService } from './workflow.service';
+import { authorize } from '@/core/authorize';
 import { CurrentUser } from '@/core/decorators/current-user.decorator';
 import { ParseBody } from '@/core/decorators/parse.decorator';
 
-// TODO assets-493: Add authorization checks
 @Controller('/assets/:assetId/workflow')
 export class WorkflowController {
   constructor(private readonly workflowService: WorkflowService) {}
 
   @Get('/')
   async find(@Param('assetId', ParseIntPipe) assetId: number, @CurrentUser() user: User): Promise<Workflow> {
-    return this.workflowService.findByAssetId(assetId);
+    const record = await this.workflowService.find(assetId);
+    authorize(WorkflowPolicy, user).canShow(record);
+    return record;
   }
 
   @Post('/change')
@@ -20,11 +22,15 @@ export class WorkflowController {
     @Param('assetId', ParseIntPipe) assetId: number,
     @CurrentUser() user: User,
   ): Promise<Workflow> {
-    return this.workflowService.addChange(assetId, data, user.id);
+    const record = await this.workflowService.find(assetId);
+    authorize(WorkflowPolicy, user).canUpdate(record);
+    return this.workflowService.addChange(record, data, user.id);
   }
 
   @Post('/publish')
   async publish(@Param('assetId', ParseIntPipe) assetId: number, @CurrentUser() user: User): Promise<Workflow> {
-    return this.workflowService.publish(assetId, user.id);
+    const record = await this.workflowService.find(assetId);
+    authorize(WorkflowPolicy, user).canUpdate(record);
+    return this.workflowService.publish(record, user.id);
   }
 }

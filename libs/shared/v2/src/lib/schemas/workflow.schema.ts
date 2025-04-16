@@ -1,14 +1,16 @@
 import { IsEmail, IsIn, IsString } from 'class-validator';
-import { WorkflowChangeData, WorkflowStatus, WorkflowStatusValues } from '../models/workflow';
+import { UnpublishedWorkflowStatus, WorkflowChangeData } from '../models/workflow';
+import { IsNullable, messageNullableString } from '../utils/class-validator/is-nullable.decorator';
 import { Schema } from './base/schema';
 
 export class WorkflowChangeDataSchema extends Schema implements WorkflowChangeData {
   @IsEmail()
   assignee!: string;
 
-  @IsString()
-  comment!: string;
+  @IsString({ message: messageNullableString })
+  @IsNullable()
+  comment!: string | null;
 
-  @IsIn(WorkflowStatusValues)
-  toStatus!: WorkflowStatus;
+  @IsIn(UnpublishedWorkflowStatus)
+  status!: UnpublishedWorkflowStatus;
 }

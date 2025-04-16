@@ -21,7 +21,7 @@ export type WorkgroupData = Data<Omit<Workgroup, 'numberOfAssets'>>;
 export type SimpleWorkgroup = Pick<Workgroup, 'id' | 'name'> & {
   /**
    * The role of the current user within this workgroup.
-   * Note that admins are registered as {@link Role.MasterEditor} for every workgroup.
+   * Note that admins are registered as {@link Role.Publisher} for every workgroup.
    */
   role: Role;
 };
@@ -31,11 +31,13 @@ export const Role = PrismaRole;
 
 export const getRoleIndex = (role: Role): number => {
   switch (role) {
-    case 'Viewer':
+    case 'Reader':
       return 0;
     case 'Editor':
       return 1;
-    case 'MasterEditor':
+    case 'Reviewer':
       return 2;
+    case 'Publisher':
+      return 3;
   }
 };

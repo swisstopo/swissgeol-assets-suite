@@ -18,7 +18,7 @@ const clearDB = async (prisma: PrismaClient, dbName: string): Promise<void> => {
   // Iterate over each table and delete all data
   for (const table of tables as Array<{ table_name: string }>) {
     const tableName = table.table_name;
-    if (tableName === 'schema_migrations') {
+    if (tableName === 'schema_migrations' || tableName === '_prisma_migrations') {
       continue;
     }
     await prisma.$executeRawUnsafe(`TRUNCATE TABLE ${dbName}.${tableName} CASCADE`);

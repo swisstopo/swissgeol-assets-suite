@@ -4,12 +4,14 @@ import { arrowDownIcon } from './arrow-down';
 import { arrowLeftIcon } from './arrow-left';
 import { arrowUpIcon } from './arrow-up';
 import { assetsIcon } from './assets';
+import { assignIcon } from './assign';
 import { calendarIcon } from './calendar';
 import { cancelIcon } from './cancel';
 import { changeIcon } from './change';
 import { checkIcon } from './check';
 import { checkmarkIcon } from './checkmark';
 import { chevronDownIcon } from './chevron-down';
+import { chevronRightIcon } from './chevron-right';
 import { closeIcon } from './close';
 import { closeNavIcon } from './close-nav';
 import { deleteIcon } from './delete';
@@ -55,11 +57,13 @@ export const icons = [
   arrowUpIcon,
   arrowLeftIcon,
   assetsIcon,
+  assignIcon,
   calendarIcon,
   cancelIcon,
   checkIcon,
   checkmarkIcon,
   chevronDownIcon,
+  chevronRightIcon,
   closeIcon,
   closeNavIcon,
   deleteIcon,

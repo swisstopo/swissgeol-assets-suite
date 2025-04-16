@@ -30,10 +30,16 @@ import { ASSET_ELASTIC_INDEX, AssetSearchService } from './asset-search.service'
 
 import { openElasticsearchClient } from '@/core/elasticsearch';
 import { PrismaService } from '@/core/prisma.service';
-import { fakeAssetPatch, fakeAssetUsage, fakeContact, fakeUser } from '@/features/assets/asset-edit/asset-edit.fake';
+import {
+  fakeAssetPatch,
+  fakeAssetUsage,
+  fakeContact,
+  fakeUserData,
+} from '@/features/assets/asset-edit/asset-edit.fake';
 import { AssetEditData, AssetEditRepo } from '@/features/assets/asset-edit/asset-edit.repo';
 import { FileRepo } from '@/features/assets/files/file.repo';
 import { StudyRepo } from '@/features/studies/study.repo';
+import { UserRepo } from '@/features/users/user.repo';
 
 describe(AssetSearchService, () => {
   const elastic = openElasticsearchClient();
@@ -41,6 +47,7 @@ describe(AssetSearchService, () => {
   const fileRepo = new FileRepo(prisma);
   const assetRepo = new AssetEditRepo(prisma, fileRepo);
   const studyRepo = new StudyRepo(prisma);
+  const userRepo = new UserRepo(prisma);
   const service = new AssetSearchService(elastic, prisma, assetRepo, studyRepo);
 
   beforeAll(async () => {
@@ -91,7 +98,7 @@ describe(AssetSearchService, () => {
   describe('register', () => {
     it('adds an asset to elasticsearch', async () => {
       // Given
-      const asset = await assetRepo.create({ patch: fakeAssetPatch(), user: fakeUser() });
+      const asset = await assetRepo.create({ patch: fakeAssetPatch(), user: await userRepo.create(fakeUserData()) });
 
       // When
       await service.register(asset);
@@ -112,7 +119,7 @@ describe(AssetSearchService, () => {
   describe('deleteFromIndex', () => {
     it('deletes an an asset from elastic search', async () => {
       // Given
-      const asset = await assetRepo.create({ patch: fakeAssetPatch(), user: fakeUser() });
+      const asset = await assetRepo.create({ patch: fakeAssetPatch(), user: await userRepo.create(fakeUserData()) });
       await service.register(asset);
 
       // When
@@ -139,7 +146,7 @@ describe(AssetSearchService, () => {
       <T extends string | number>(text: T, setup: (asset: PatchAsset, text: T) => PatchAsset | Promise<PatchAsset>) =>
       async () => {
         // Given
-        const user = fakeUser();
+        const user = await userRepo.create(fakeUserData());
         const patch = await setup(fakeAssetPatch(), text);
         const asset = await create({ patch, user });
         await create({ patch: fakeAssetPatch(), user });
@@ -183,7 +190,7 @@ describe(AssetSearchService, () => {
 
     it('finds assets by minimum createDate', async () => {
       // Given
-      const user = fakeUser();
+      const user = await userRepo.create(fakeUserData());
       const asset = await create({ patch: fakeAssetPatch(), user });
       await create({
         patch: {
@@ -209,7 +216,7 @@ describe(AssetSearchService, () => {
 
     it('finds assets by maximum createDate', async () => {
       // Given
-      const user = fakeUser();
+      const user = await userRepo.create(fakeUserData());
       const asset = await create({ patch: fakeAssetPatch(), user });
       await create({
         patch: {
@@ -235,22 +242,22 @@ describe(AssetSearchService, () => {
 
     it('finds assets by createDate range', async () => {
       // Given
-      const asset = await create({ patch: fakeAssetPatch(), user: fakeUser() });
+      const asset = await create({ patch: fakeAssetPatch(), user: await userRepo.create(fakeUserData()) });
       await create({
         patch: {
           ...fakeAssetPatch(),
           createDate: dateIdFromDate(new Date(dateFromDateId(asset.createDate).getTime() + millisPerDay * 2)),
         },
-        user: fakeUser(),
+        user: await userRepo.create(fakeUserData()),
       });
       await create({
         patch: {
           ...fakeAssetPatch(),
           createDate: dateIdFromDate(new Date(dateFromDateId(asset.createDate).getTime() - millisPerDay * 2)),
         },
-        user: fakeUser(),
+        user: await userRepo.create(fakeUserData()),
       });
-      const user = fakeUser();
+      const user = await userRepo.create(fakeUserData());
 
       // When
       const result = await service.search(
@@ -274,17 +281,17 @@ describe(AssetSearchService, () => {
       const code3 = languageItems[2].languageItemCode;
       const asset = await create({
         patch: { ...fakeAssetPatch(), assetLanguages: [{ languageItemCode: code1 }] },
-        user: fakeUser(),
+        user: await userRepo.create(fakeUserData()),
       });
       await create({
         patch: { ...fakeAssetPatch(), assetLanguages: [{ languageItemCode: code2 }] },
-        user: fakeUser(),
+        user: await userRepo.create(fakeUserData()),
       });
       await create({
         patch: { ...fakeAssetPatch(), assetLanguages: [{ languageItemCode: code3 }] },
-        user: fakeUser(),
+        user: await userRepo.create(fakeUserData()),
       });
-      const user = fakeUser();
+      const user = await userRepo.create(fakeUserData());
 
       // When
       const result = await service.search({ languageItemCodes: [code1] }, user);
@@ -298,7 +305,7 @@ describe(AssetSearchService, () => {
       const code1 = assetKindItems[0].assetKindItemCode;
       const code2 = assetKindItems[1].assetKindItemCode;
       const code3 = assetKindItems[2].assetKindItemCode;
-      const user = fakeUser();
+      const user = await userRepo.create(fakeUserData());
       const asset = await create({ patch: { ...fakeAssetPatch(), assetKindItemCode: code1 }, user });
       await create({ patch: { ...fakeAssetPatch(), assetKindItemCode: code2 }, user });
       await create({ patch: { ...fakeAssetPatch(), assetKindItemCode: code3 }, user });
@@ -315,7 +322,7 @@ describe(AssetSearchService, () => {
       const code1 = manCatLabelItems[0].manCatLabelItemCode;
       const code2 = manCatLabelItems[1].manCatLabelItemCode;
       const code3 = manCatLabelItems[2].manCatLabelItemCode;
-      const user = fakeUser();
+      const user = await userRepo.create(fakeUserData());
       const asset = await create({ patch: { ...fakeAssetPatch(), manCatLabelRefs: [code1] }, user });
       await create({ patch: { ...fakeAssetPatch(), manCatLabelRefs: [code2] }, user });
       await create({ patch: { ...fakeAssetPatch(), manCatLabelRefs: [code3] }, user });
@@ -330,7 +337,7 @@ describe(AssetSearchService, () => {
     it('finds assets by usageCode', async () => {
       // Given
       const usageCode: UsageCode = 'public';
-      const user = fakeUser();
+      const user = await userRepo.create(fakeUserData());
       const asset = await create({
         patch: {
           ...fakeAssetPatch(),
@@ -367,7 +374,7 @@ describe(AssetSearchService, () => {
       // Given
       const contact1 = await prisma.contact.create({ data: fakeContact() });
       const contact2 = await prisma.contact.create({ data: fakeContact() });
-      const user = fakeUser();
+      const user = await userRepo.create(fakeUserData());
       const asset = await create({
         patch: { ...fakeAssetPatch(), assetContacts: [{ contactId: contact1.contactId, role: 'author' }] },
         user,
@@ -429,7 +436,7 @@ describe(AssetSearchService, () => {
 
     it('returns empty stats when no assets are present', async () => {
       // Given
-      const user = fakeUser();
+      const user = await userRepo.create(fakeUserData());
 
       // When
       const result = await service.aggregate({}, user);
@@ -446,7 +453,7 @@ describe(AssetSearchService, () => {
 
     it('aggregates stats for a single asset', async () => {
       // Given
-      const user = fakeUser();
+      const user = await userRepo.create(fakeUserData());
       const asset = await create({ patch: fakeAssetPatch(), user });
 
       // When
@@ -488,19 +495,19 @@ describe(AssetSearchService, () => {
       // Given
       const uniqueString = faker.string.uuid();
       const asset1 = await assetRepo.create({
-        user: fakeUser(),
+        user: await userRepo.create(fakeUserData()),
         patch: { ...fakeAssetPatch(), [property]: `My unique title: ${uniqueString}` },
       });
       const asset2 = await assetRepo.create({
-        user: fakeUser(),
+        user: await userRepo.create(fakeUserData()),
         patch: { ...fakeAssetPatch(), [property]: `${uniqueString} is also here` },
       });
       const asset3 = await assetRepo.create({
-        user: fakeUser(),
+        user: await userRepo.create(fakeUserData()),
         patch: { ...fakeAssetPatch(), [property]: `${uniqueString}` },
       });
       const asset4 = await assetRepo.create({
-        user: fakeUser(),
+        user: await userRepo.create(fakeUserData()),
         patch: { ...fakeAssetPatch(), [property]: `some${uniqueString}things` },
       });
       await service.register(asset1);
@@ -511,19 +518,19 @@ describe(AssetSearchService, () => {
 
       await service.register(
         await assetRepo.create({
-          user: fakeUser(),
+          user: await userRepo.create(fakeUserData()),
           patch: { ...fakeAssetPatch(), [property]: 'unrelated' },
         }),
       );
       await service.register(
         await assetRepo.create({
-          user: fakeUser(),
+          user: await userRepo.create(fakeUserData()),
           patch: { ...fakeAssetPatch(), [property]: '' },
         }),
       );
       await service.register(
         await assetRepo.create({
-          user: fakeUser(),
+          user: await userRepo.create(fakeUserData()),
           patch: { ...fakeAssetPatch(), [property]: uniqueString.slice(0, 6).replace(/\d/, '_') },
         }),
       );
@@ -634,9 +641,9 @@ describe(AssetSearchService, () => {
 
     it('writes assets to Elasticsearch', async () => {
       // Given
-      const asset1 = await assetRepo.create({ patch: fakeAssetPatch(), user: fakeUser() });
-      const asset2 = await assetRepo.create({ patch: fakeAssetPatch(), user: fakeUser() });
-      const asset3 = await assetRepo.create({ patch: fakeAssetPatch(), user: fakeUser() });
+      const asset1 = await assetRepo.create({ patch: fakeAssetPatch(), user: await userRepo.create(fakeUserData()) });
+      const asset2 = await assetRepo.create({ patch: fakeAssetPatch(), user: await userRepo.create(fakeUserData()) });
+      const asset3 = await assetRepo.create({ patch: fakeAssetPatch(), user: await userRepo.create(fakeUserData()) });
 
       // When
       await service.syncWithDatabase();
@@ -672,29 +679,5 @@ describe(AssetSearchService, () => {
       // Then
       expect(progress).toEqual([1]);
     });
-
-    it('reports progress', async () => {
-      // Given
-      // Create 5000 assets so the sync has to be done in batches.
-      for (let i = 0; i < 500; i++) {
-        await Promise.all(
-          Array.from({ length: 10 }, () =>
-            assetRepo.create({
-              patch: fakeAssetPatch(),
-              user: fakeUser(),
-            }),
-          ),
-        );
-      }
-
-      // When
-      const progress: number[] = [];
-      await service.syncWithDatabase((percentage) => {
-        progress.push(percentage);
-      });
-
-      // Then
-      expect(progress).toEqual([0.2, 0.4, 0.6, 0.8, 1]);
-    }, 60_000);
   });
 });

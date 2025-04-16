@@ -14,7 +14,7 @@ import { AssetEditorNewFile } from '../components/asset-editor-form-group';
 export class AssetEditorService {
   private readonly httpClient = inject(HttpClient);
 
-  public loadAsset(assetId: number): Observable<AssetEditDetail> {
+  public fetchAsset(assetId: number): Observable<AssetEditDetail> {
     return this.httpClient
       .get(`/api/asset-edit/${assetId}`)
       .pipe(map((res) => (AssetEditDetail.decode(res) as E.Right<AssetEditDetail>).right));
