@@ -32,6 +32,10 @@ export const selectManCatLabelItems = createSelector(appSharedFeature, (state) =
 export const selectAssetKindItems = createSelector(appSharedFeature, (state) =>
   RD.isSuccess(state.rdReferenceData) ? state.rdReferenceData.value.assetKindItems : null,
 );
+
+export const selectNatRelItems = createSelector(appSharedFeature, (state) =>
+  RD.isSuccess(state.rdReferenceData) ? state.rdReferenceData.value.natRelItems : null,
+);
 export const selectCurrentAsset = createSelector(appSharedFeature, (state) => state.currentAsset);
 export const selectIsLoadingAsset = createSelector(appSharedFeature, (state) => state.isLoadingAsset);
 export const selectWorkgroups = createSelector(appSharedFeature, (state) => state.workgroups);
