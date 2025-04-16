@@ -29,6 +29,7 @@ import {
   PageHeaderComponent,
   TabComponent,
   TabsComponent,
+  UsernameComponent,
   ValueItemDescriptionPipe,
   ValueItemNamePipe,
   ViewChildMarker,
@@ -64,7 +65,9 @@ import { AssetEditorFilesComponent } from './components/asset-editor-tabs/asset-
 import { AssetEditorGeneralComponent } from './components/asset-editor-tabs/asset-editor-general/asset-editor-general.component';
 import { AssetEditorStatusApprovalComponent } from './components/asset-editor-tabs/asset-editor-status/asset-editor-status-approval/asset-editor-status-approval.component';
 import { AssetEditorStatusAssigneeComponent } from './components/asset-editor-tabs/asset-editor-status/asset-editor-status-assignee/asset-editor-status-assignee.component';
-import { AssetEditorStatusHistoryComponent } from './components/asset-editor-tabs/asset-editor-status/asset-editor-status-history/asset-editor-status-history.component';
+import { AssetEditorStatusChangeComponent } from './components/asset-editor-tabs/asset-editor-status/asset-editor-status-change/asset-editor-status-change.component';
+import { AssetEditorStatusChangeTemplateComponent } from './components/asset-editor-tabs/asset-editor-status/asset-editor-status-change-template/asset-editor-status-change-template.component';
+import { AssetEditorStatusChangesComponent } from './components/asset-editor-tabs/asset-editor-status/asset-editor-status-changes/asset-editor-status-changes.component';
 import { AssetEditorStatusPublicationComponent } from './components/asset-editor-tabs/asset-editor-status/asset-editor-status-publication/asset-editor-status-publication.component';
 import { AssetEditorStatusReviewComponent } from './components/asset-editor-tabs/asset-editor-status/asset-editor-status-review/asset-editor-status-review.component';
 import { AssetEditorStatusStepComponent } from './components/asset-editor-tabs/asset-editor-status/asset-editor-status-step/asset-editor-status-step.component';
@@ -97,7 +100,9 @@ export const canLeaveEdit: CanDeactivateFn<AssetEditorPageComponent> = (componen
     AssetEditorStatusComponent,
     AssetEditorStatusApprovalComponent,
     AssetEditorStatusAssigneeComponent,
-    AssetEditorStatusHistoryComponent,
+    AssetEditorStatusChangeComponent,
+    AssetEditorStatusChangeTemplateComponent,
+    AssetEditorStatusChangesComponent,
     AssetEditorStatusPublicationComponent,
     AssetEditorStatusReviewComponent,
     AssetEditorStatusStepComponent,
@@ -203,6 +208,7 @@ export const canLeaveEdit: CanDeactivateFn<AssetEditorPageComponent> = (componen
     IfModule,
     TabComponent,
     TabsComponent,
+    UsernameComponent,
   ],
   providers: [
     { provide: MAT_DATE_LOCALE, useValue: de },
