@@ -170,22 +170,20 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
 const buildForm = () => {
   return new FormGroup({
     general: new FormGroup({
+      workgroupId: new FormControl<number | null>(null, { validators: [Validators.required] }),
       titlePublic: new FormControl('', { validators: [Validators.required] }),
       titleOriginal: new FormControl(''),
-      workgroupId: new FormControl<number | null>(null, { validators: [Validators.required] }),
       creationDate: new FormControl<Date | null>(null, { validators: [Validators.required] }),
       receiptDate: new FormControl<Date | null>(null, { validators: [Validators.required] }),
-      assetLanguages: new FormControl<Array<{ languageItemCode: string }>>([], { validators: [Validators.required] }),
+      assetLanguages: new FormControl<Array<{ languageItemCode: string }>>([]),
       assetFormatItemCode: new FormControl<string>('', { validators: [Validators.required] }),
       assetKindItemCode: new FormControl<string>('', { validators: [Validators.required] }),
       manCatLabelRefs: new FormControl<string[]>([], { validators: [Validators.required] }),
-      isNatRel: new FormControl<boolean>(false, { validators: [Validators.required] }),
-      typeNatRels: new FormControl<string[]>([], { validators: [Validators.required] }),
+      isNatRel: new FormControl<boolean>(false),
+      typeNatRels: new FormControl<string[]>([]),
       ids: new FormControl<AlternativeId[]>([], { validators: [Validators.required], nonNullable: true }),
     }),
-    files: new FormGroup({
-      other: new FormControl('', { validators: [Validators.required] }),
-    }),
+    files: new FormGroup({}),
     contacts: new FormGroup({}),
     references: new FormGroup({}),
     geometries: new FormGroup({}),

@@ -12,13 +12,9 @@ export class AssetEditorIdListComponent {
   @Input({ required: true })
   public control!: FormControl<AlternativeId[]>;
 
-  public updateAlternativeId(
-    value: string,
-    alternativeId: AlternativeId,
-    field: keyof Omit<AlternativeId, 'idId'>,
-  ): void {
-    const ids = this.ids.map((id) => {
-      if (id.idId === alternativeId.idId) {
+  public updateAlternativeId(value: string, field: keyof Omit<AlternativeId, 'idId'>, index: number): void {
+    const ids = this.ids.map((id, idx) => {
+      if (idx === index) {
         return { ...id, [field]: value };
       }
       return id;
@@ -35,5 +31,6 @@ export class AssetEditorIdListComponent {
     const ids = [...this.ids];
     ids.splice(i, 1);
     this.control.setValue(ids);
+    this.control.markAsDirty();
   }
 }
