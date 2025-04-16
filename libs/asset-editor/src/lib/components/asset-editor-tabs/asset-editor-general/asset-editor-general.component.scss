@@ -9,6 +9,10 @@ form {
 .content {
   display: flex;
   gap: 16px;
+
+  asset-sg-text-area {
+    flex: 1;
+  }
 }
 
 .content.column {
