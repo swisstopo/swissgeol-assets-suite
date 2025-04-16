@@ -3,15 +3,17 @@ import * as Option from 'fp-ts/Option';
 // eslint-disable-next-line @nx/enforce-module-boundaries
 import { clearPrismaAssets, setupDB } from '../../../../../../test/setup-db';
 
-import { fakeAssetPatch, fakeUser } from './asset-edit.fake';
+import { fakeAssetPatch, fakeUserData } from './asset-edit.fake';
 import { AssetEditRepo } from './asset-edit.repo';
 
 import { PrismaService } from '@/core/prisma.service';
 import { FileRepo } from '@/features/assets/files/file.repo';
+import { UserRepo } from '@/features/users/user.repo';
 
 describe(AssetEditRepo, () => {
   const prisma = new PrismaService();
   const fileRepo = new FileRepo(prisma);
+  const userRepo = new UserRepo(prisma);
   const repo = new AssetEditRepo(prisma, fileRepo);
 
   beforeAll(async () => {
@@ -33,7 +35,7 @@ describe(AssetEditRepo, () => {
 
     it('returns the record associated with a specific id', async () => {
       // Given
-      const user = fakeUser();
+      const user = await userRepo.create(fakeUserData());
       const patch = fakeAssetPatch();
       const expected = await repo.create({ patch, user });
 
@@ -57,7 +59,7 @@ describe(AssetEditRepo, () => {
 
     it('returns the specified amount of records', async () => {
       // Given
-      const user = fakeUser();
+      const user = await userRepo.create(fakeUserData());
       const record1 = await repo.create({ patch: fakeAssetPatch(), user });
       const record2 = await repo.create({ patch: fakeAssetPatch(), user });
       const record3 = await repo.create({ patch: fakeAssetPatch(), user });
@@ -74,7 +76,7 @@ describe(AssetEditRepo, () => {
 
     it('returns the records appearing after the specified offset', async () => {
       // Given
-      const user = fakeUser();
+      const user = await userRepo.create(fakeUserData());
       await repo.create({ patch: fakeAssetPatch(), user });
       await repo.create({ patch: fakeAssetPatch(), user });
       const record1 = await repo.create({ patch: fakeAssetPatch(), user });
@@ -91,7 +93,7 @@ describe(AssetEditRepo, () => {
 
     it('returns an empty list when offset is larger than the total amount of records', async () => {
       // Given
-      const user = fakeUser();
+      const user = await userRepo.create(fakeUserData());
       await repo.create({ patch: fakeAssetPatch(), user });
       await repo.create({ patch: fakeAssetPatch(), user });
       await repo.create({ patch: fakeAssetPatch(), user });
@@ -108,7 +110,7 @@ describe(AssetEditRepo, () => {
   describe('create', () => {
     it('inserts a new record', async () => {
       // Given
-      const user = fakeUser();
+      const user = await userRepo.create(fakeUserData());
       const patch = fakeAssetPatch();
 
       // When
@@ -152,7 +154,7 @@ describe(AssetEditRepo, () => {
   describe('update', () => {
     it('returns `null` when updating a non-existent record', async () => {
       // Given
-      const user = fakeUser();
+      const user = await userRepo.create(fakeUserData());
       const patch = fakeAssetPatch();
 
       // When
@@ -164,8 +166,9 @@ describe(AssetEditRepo, () => {
 
     it('should update the fields of an existing record', async () => {
       // Given
-      const record = await repo.create({ patch: fakeAssetPatch(), user: fakeUser() });
-      const user = fakeUser();
+      const creator = await userRepo.create(fakeUserData());
+      const record = await repo.create({ patch: fakeAssetPatch(), user: creator });
+      const user = await userRepo.create(fakeUserData());
       const patch = fakeAssetPatch();
 
       // When
@@ -218,7 +221,7 @@ describe(AssetEditRepo, () => {
 
     it('removes a record and its relations from the database', async () => {
       // Given
-      const record = await repo.create({ patch: fakeAssetPatch(), user: fakeUser() });
+      const record = await repo.create({ patch: fakeAssetPatch(), user: await userRepo.create(fakeUserData()) });
 
       // When
       const isOk = await repo.delete(record.assetId);
