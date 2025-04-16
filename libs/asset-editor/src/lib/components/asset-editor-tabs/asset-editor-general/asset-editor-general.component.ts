@@ -24,7 +24,9 @@ interface TranslatedValueItem {
 })
 export class AssetEditorGeneralComponent implements OnInit, OnDestroy {
   @Input() formGroup!: AssetForm['controls']['general'];
+  @Input() sgsId: number | null = null;
 
+  public newId = 0;
   public workgroups: SimpleWorkgroup[] = [];
   public languages: { name: Translation; value: string }[] = [];
   public selectedLanguages: string[] = [];
@@ -118,6 +120,18 @@ export class AssetEditorGeneralComponent implements OnInit, OnDestroy {
     const currentValues = this.formGroup.controls[controlName].value ?? [];
     const newValues = currentValues.filter((value: string) => value !== item.code);
     this.formGroup.controls[controlName].setValue(newValues);
+  }
+
+  public addNewAlternativeId() {
+    this.formGroup.controls.ids.setValue([
+      ...this.formGroup.controls.ids.value,
+      {
+        idId: this.newId,
+        id: '',
+        description: '',
+      },
+    ]);
+    this.newId++;
   }
 }
 

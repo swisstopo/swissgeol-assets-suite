@@ -1,3 +1,4 @@
+import { coerceBooleanProperty } from '@angular/cdk/coercion';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { SvgIconComponent } from '@ngneat/svg-icon';
@@ -23,6 +24,7 @@ export class TextInputComponent implements ControlValueAccessor {
   @Input() public value = '';
   @Input() public icon = '';
   @Input() public placeholder = '';
+  @Input({ transform: coerceBooleanProperty }) public disabled = false;
   @Output() valueChange = new EventEmitter<string>();
   private onChange: (value: string) => void = noop;
   private onTouched: () => void = noop;

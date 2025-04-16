@@ -25,7 +25,10 @@
     <div class="form-container">
       @switch (activeTab) {
         @case (Tab.General) {
-          <asset-sg-editor-general [formGroup]="form.controls.general" />
+          <asset-sg-editor-general
+            [formGroup]="form.controls.general"
+            [sgsId]="asset?.sgsId ?? null"
+          ></asset-sg-editor-general>
         }
         @case (Tab.Files) {
           <asset-sg-editor-files [formGroup]="form.controls.files" />
