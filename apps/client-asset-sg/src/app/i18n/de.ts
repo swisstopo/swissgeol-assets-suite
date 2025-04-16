@@ -38,6 +38,7 @@ export const deAppTranslations = {
     InReview: 'Review',
     Reviewed: 'Reviewed',
     Published: 'Veröffentlicht',
+    notPublished: 'Nicht Veröffentlicht',
   },
   menuBar: {
     filters: 'Filter',
@@ -264,6 +265,9 @@ export const deAppTranslations = {
         requestReview: 'Review anfordern',
         requestChanges: 'Änderungen anfordern',
         finishReview: 'Review abschliessen',
+        assign: 'Neue Person zuweisen',
+        publication: 'Publikation',
+        publish: 'Publish',
       },
     },
     closeManageAsset: 'Asset verwalten schliessen',

@@ -40,6 +40,7 @@ export const enAppTranslations: AppTranslations = {
     InReview: 'Review',
     Reviewed: 'Reviewed',
     Published: 'Published',
+    notPublished: 'Not Published',
   },
   menuBar: {
     filters: 'Filters',
@@ -265,6 +266,9 @@ export const enAppTranslations: AppTranslations = {
         requestReview: 'Request Review',
         requestChanges: 'Request Changes',
         finishReview: 'Finish Review',
+        assign: 'Assign new Person',
+        publication: 'Publication',
+        publish: 'Publish',
       },
     },
     closeManageAsset: 'Close manage asset',

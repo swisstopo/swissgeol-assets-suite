@@ -2,7 +2,7 @@ import { Component, HostBinding, Input, OnChanges, SimpleChanges } from '@angula
 import { getWorkflowStatusIndex, Workflow, WorkflowStatus } from '@asset-sg/shared/v2';
 
 @Component({
-  selector: 'li[asset-sg-editor-status-step]',
+  selector: 'asset-sg-editor-status-step, li[asset-sg-editor-status-step]',
   styleUrls: ['./asset-editor-status-step.component.scss'],
   templateUrl: './asset-editor-status-step.component.html',
   standalone: false,
@@ -38,6 +38,10 @@ export class AssetEditorStatusStepComponent implements OnChanges {
     }
   }
 
+  get isDone(): boolean {
+    return this.stage === Stage.Done || (this.stage === Stage.Active && this.status === WorkflowStatus.Published);
+  }
+
   @HostBinding('class')
   get hostClass(): object {
     return {
@@ -47,6 +51,7 @@ export class AssetEditorStatusStepComponent implements OnChanges {
   }
 
   protected readonly Stage = Stage;
+  protected readonly WorkflowStatus = WorkflowStatus;
 }
 
 export enum Stage {

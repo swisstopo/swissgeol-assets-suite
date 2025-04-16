@@ -14,10 +14,12 @@ export interface User extends Model<UserId> {
   roles: Map<WorkgroupId, Role>;
 }
 
+export type SimpleUser = Pick<User, 'id' | 'firstName' | 'lastName'>;
+
 export type UserId = string;
 export type UserData = Omit<Data<User>, 'email'>;
 
-const hasRole = (role: Role) => (user: User | null | undefined, workgroupId?: WorkgroupId) => {
+export const hasRole = (role: Role) => (user: User | null | undefined, workgroupId?: WorkgroupId) => {
   if (user == null) {
     return false;
   }
