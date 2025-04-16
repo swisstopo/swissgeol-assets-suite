@@ -40,6 +40,7 @@ export const frAppTranslations: AppTranslations = {
     InReview: 'FR Review',
     Reviewed: 'FR Reviewed',
     Published: 'FR Veröffentlicht',
+    notPublished: 'FR Nicht Veröffentlicht',
   },
   menuBar: {
     filters: 'Filtres',
@@ -268,6 +269,9 @@ export const frAppTranslations: AppTranslations = {
         requestReview: 'FR Review anfordern',
         requestChanges: 'FR Änderungen anfordern',
         finishReview: 'FR Review abschliessen',
+        assign: 'FR Neue Person zuweisen',
+        publication: 'FR Publikation',
+        publish: 'FR Publish',
       },
     },
     closeManageAsset: 'Fermer la gestion des asset',

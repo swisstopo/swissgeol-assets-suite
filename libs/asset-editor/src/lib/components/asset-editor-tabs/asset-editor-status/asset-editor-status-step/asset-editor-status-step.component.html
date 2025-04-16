@@ -1,8 +1,14 @@
 <div class="indicator">
-  @if (stage === Stage.Done) {
+  @if (isDone) {
     <svg-icon key="checkmark" />
+  } @else if (status === WorkflowStatus.Published) {
+    <svg-icon key="check" />
   } @else {
     {{ index + 1 }}
   }
 </div>
-{{ "workflowStatus." + status | translate }}
+@if (!isDone && status === WorkflowStatus.Published) {
+  {{ "workflowStatus.notPublished" | translate }}
+} @else {
+  {{ "workflowStatus." + status | translate }}
+}

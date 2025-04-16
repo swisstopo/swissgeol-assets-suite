@@ -1,7 +1,7 @@
 import { WorkflowStatus as WorkflowStatusFromPrisma } from '@prisma/client';
 import { AssetId } from './asset';
 import { LocalDate } from './base/local-date';
-import { UserId } from './user';
+import { SimpleUser } from './user';
 import { WorkgroupId } from './workgroup';
 
 // TODO Consider merging `assetId` and `workflowId` into one field - DVA 2025-04-15
@@ -13,14 +13,15 @@ export interface Workflow {
   reviewedTabs: TabStatus;
   publishedTabs: TabStatus;
   status: WorkflowStatus;
+  assignee: SimpleUser | null;
   workgroupId: WorkgroupId;
 }
 
 export interface WorkflowChange {
   comment: string | null;
   createdAt: LocalDate;
-  createdBy: UserId | null;
-  assignee: UserId | null;
+  initiator: SimpleUser | null;
+  assignee: SimpleUser | null;
   fromStatus: WorkflowStatus;
   toStatus: WorkflowStatus;
 }

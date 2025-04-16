@@ -1,5 +1,6 @@
 import { LocalDate, mapWorkflowStatusFromPrisma, Workflow, WorkflowChange } from '@asset-sg/shared/v2';
 import { Prisma } from '@prisma/client';
+import { parseSimpleUser, simpleUserSelection } from '@/features/users/user.repo';
 import { satisfy } from '@/utils/define';
 
 type SelectedWorkflow = Prisma.WorkflowGetPayload<{ select: typeof workflowSelection }>;
@@ -13,10 +14,6 @@ const tabStatusSelection = satisfy<Prisma.TabStatusSelect>()({
   contacts: true,
 });
 
-const relatedUserSelection = satisfy<Prisma.AssetUserSelect>()({
-  email: true,
-});
-
 export const workflowSelection = satisfy<Prisma.WorkflowSelect>()({
   assetId: true,
   asset: {
@@ -25,7 +22,7 @@ export const workflowSelection = satisfy<Prisma.WorkflowSelect>()({
     },
   },
   hasRequestedChanges: true,
-  assignee: { select: relatedUserSelection },
+  assignee: { select: simpleUserSelection },
   status: true,
   publishedTabs: {
     select: tabStatusSelection,
@@ -35,8 +32,8 @@ export const workflowSelection = satisfy<Prisma.WorkflowSelect>()({
   },
   workflowChanges: {
     select: {
-      assignee: { select: relatedUserSelection },
-      createdBy: { select: relatedUserSelection },
+      assignee: { select: simpleUserSelection },
+      createdBy: { select: simpleUserSelection },
       createdAt: true,
       fromStatus: true,
       toStatus: true,
@@ -50,12 +47,13 @@ export const parseWorkflowFromPrisma = (entry: SelectedWorkflow): Workflow => {
     assetId: entry.assetId,
     hasRequestedChanges: entry.hasRequestedChanges,
     status: mapWorkflowStatusFromPrisma(entry.status),
+    assignee: entry.assignee && parseSimpleUser(entry.assignee),
     workflowChanges: entry.workflowChanges.map(
       (change): WorkflowChange => ({
         comment: change.comment,
         createdAt: LocalDate.fromDate(change.createdAt),
-        createdBy: change.createdBy?.email ?? null,
-        assignee: change.assignee?.email ?? null,
+        initiator: change.createdBy && parseSimpleUser(change.createdBy),
+        assignee: change.assignee && parseSimpleUser(change.assignee),
         fromStatus: mapWorkflowStatusFromPrisma(change.fromStatus),
         toStatus: mapWorkflowStatusFromPrisma(change.toStatus),
       }),

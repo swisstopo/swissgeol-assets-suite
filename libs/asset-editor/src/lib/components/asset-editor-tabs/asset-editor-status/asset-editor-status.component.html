@@ -1,7 +1,13 @@
-@if (workflow !== null) {
+@if (workflow === null) {
+  <mat-progress-bar mode="query" class="loader" />
+} @else {
   <div class="status">
-    <asset-sg-editor-status-steps [workflow]="workflow" />
-    <asset-sg-editor-status-assignee [workflow]="workflow" />
+    <asset-sg-editor-status-steps class="panel" [workflow]="workflow" />
+    @if (workflow.status === WorkflowStatus.Draft || workflow.status === WorkflowStatus.InReview) {
+      <asset-sg-editor-status-assignee class="panel" [workflow]="workflow" />
+    } @else {
+      <asset-sg-editor-status-publication class="panel" [workflow]="workflow" />
+    }
   </div>
-  <asset-sg-editor-status-content [workflow]="workflow" />
+  <asset-sg-editor-status-content class="panel" [workflow]="workflow" />
 }

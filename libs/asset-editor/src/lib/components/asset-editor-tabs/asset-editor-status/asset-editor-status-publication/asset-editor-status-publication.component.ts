@@ -3,12 +3,12 @@ import { can$ } from '@asset-sg/client-shared';
 import { Workflow, WorkflowPolicy, WorkflowStatus } from '@asset-sg/shared/v2';
 
 @Component({
-  selector: 'asset-sg-editor-status-steps',
-  styleUrls: ['./asset-editor-status-steps.component.scss'],
-  templateUrl: './asset-editor-status-steps.component.html',
+  selector: 'asset-sg-editor-status-publication',
+  styleUrls: ['./asset-editor-status-publication.component.scss'],
+  templateUrl: './asset-editor-status-publication.component.html',
   standalone: false,
 })
-export class AssetEditorStatusStepsComponent {
+export class AssetEditorStatusPublicationComponent {
   @Input({ required: true })
   workflow!: Workflow;
 

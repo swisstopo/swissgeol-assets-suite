@@ -40,6 +40,7 @@ export const itAppTranslations: AppTranslations = {
     InReview: 'IT Review',
     Reviewed: 'IT Reviewed',
     Published: 'IT Veröffentlicht',
+    notPublished: 'IT Nicht Veröffentlicht',
   },
   menuBar: {
     filters: 'IT Filter',
@@ -267,6 +268,9 @@ export const itAppTranslations: AppTranslations = {
         requestReview: 'IT Review anfordern',
         requestChanges: 'IT Änderungen anfordern',
         finishReview: 'IT Review abschliessen',
+        assign: 'IT Neue Person zuweisen',
+        publication: 'IT Publikation',
+        publish: 'IT Publish',
       },
     },
     closeManageAsset: 'IT Asset verwalten schliessen',
