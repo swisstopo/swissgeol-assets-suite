@@ -21,7 +21,7 @@ export type WorkgroupData = Data<Omit<Workgroup, 'numberOfAssets'>>;
 export type SimpleWorkgroup = Pick<Workgroup, 'id' | 'name'> & {
   /**
    * The role of the current user within this workgroup.
-   * Note that admins are registered as {@link Role.MasterEditor} for every workgroup.
+   * Note that admins are registered as {@link Role.Publisher} for every workgroup.
    */
   role: Role;
 };
