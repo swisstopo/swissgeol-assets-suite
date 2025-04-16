@@ -1,7 +1,7 @@
 import { WorkflowStatus as WorkflowStatusFromPrisma } from '@prisma/client';
 import { AssetId } from './asset';
 import { LocalDate } from './base/local-date';
-import { SimpleUser } from './user';
+import { SimpleUser, UserId } from './user';
 import { WorkgroupId } from './workgroup';
 
 // TODO Consider merging `assetId` and `workflowId` into one field - DVA 2025-04-15
@@ -9,6 +9,8 @@ import { WorkgroupId } from './workgroup';
 export interface Workflow {
   assetId: AssetId;
   hasRequestedChanges: boolean;
+
+  // TODO Consider renaming this to just `changes` - DVA 2025-04-16
   workflowChanges: WorkflowChange[];
   reviewedTabs: TabStatus;
   publishedTabs: TabStatus;
@@ -19,18 +21,18 @@ export interface Workflow {
 
 export interface WorkflowChange {
   comment: string | null;
-  createdAt: LocalDate;
-  initiator: SimpleUser | null;
-  assignee: SimpleUser | null;
+  creator: SimpleUser | null;
+  fromAssignee: SimpleUser | null;
+  toAssignee: SimpleUser | null;
   fromStatus: WorkflowStatus;
   toStatus: WorkflowStatus;
+  createdAt: LocalDate;
 }
 
 export interface WorkflowChangeData {
-  // TODO why is this an email and not a UserId  - DVA 2025-04-15
-  assignee: string;
   comment: string | null;
   status: UnpublishedWorkflowStatus;
+  assigneeId: UserId | null;
 }
 
 // TODO consider renaming this to something like `WorkflowSelection` - DVA 2025-04-15
