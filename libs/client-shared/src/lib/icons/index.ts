@@ -4,6 +4,7 @@ import { arrowDownIcon } from './arrow-down';
 import { arrowLeftIcon } from './arrow-left';
 import { arrowUpIcon } from './arrow-up';
 import { assetsIcon } from './assets';
+import { assignIcon } from './assign';
 import { calendarIcon } from './calendar';
 import { cancelIcon } from './cancel';
 import { changeIcon } from './change';
@@ -56,6 +57,7 @@ export const icons = [
   arrowUpIcon,
   arrowLeftIcon,
   assetsIcon,
+  assignIcon,
   calendarIcon,
   cancelIcon,
   checkIcon,

@@ -1,7 +1,17 @@
+@use "../../../styles/variables";
+
 :host {
   display: flex;
+  position: relative;
   padding: 60px 60px 97px 60px;
   gap: 12px;
+}
+
+:host > .loader {
+  position: absolute;
+  width: 100%;
+  top: 0;
+  left: 0;
 }
 
 :host > .status {
@@ -9,4 +19,22 @@
   flex-direction: column;
   gap: 12px;
   width: 300px;
+}
+
+// panel
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 24px;
+  border: 1px solid variables.$grey-02;
+  background-color: variables.$white;
+}
+
+.panel ::ng-deep h2 {
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 20px;
+  vertical-align: middle;
+  margin: 0;
 }

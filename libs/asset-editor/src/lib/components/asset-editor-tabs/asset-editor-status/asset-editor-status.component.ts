@@ -1,5 +1,5 @@
 import { Component, inject, Input, OnInit } from '@angular/core';
-import { AssetId, Workflow } from '@asset-sg/shared/v2';
+import { AssetId, Workflow, WorkflowStatus } from '@asset-sg/shared/v2';
 import { WorkflowApiService } from '../../../services/workflow-api.service';
 
 @Component({
@@ -18,7 +18,9 @@ export class AssetEditorStatusComponent implements OnInit {
 
   ngOnInit(): void {
     this.workflowApiService.fetchWorkflow(this.assetId).subscribe((workflow) => {
-      this.workflow = workflow;
+      this.workflow = { ...workflow, status: WorkflowStatus.Reviewed };
     });
   }
+
+  protected readonly WorkflowStatus = WorkflowStatus;
 }

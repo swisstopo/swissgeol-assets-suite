@@ -1,4 +1,4 @@
-import { Role, User, UserData, UserId, WorkgroupId } from '@asset-sg/shared/v2';
+import { Role, SimpleUser, User, UserData, UserId, WorkgroupId } from '@asset-sg/shared/v2';
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 
@@ -133,3 +133,17 @@ const parse = (data: SelectedUser): User => {
     roles,
   };
 };
+
+export const simpleUserSelection = satisfy<Prisma.AssetUserSelect>()({
+  id: true,
+  firstName: true,
+  lastName: true,
+});
+
+type SelectedSimpleUser = Prisma.AssetUserGetPayload<{ select: typeof simpleUserSelection }>;
+
+export const parseSimpleUser = (data: SelectedSimpleUser): SimpleUser => ({
+  id: data.id,
+  firstName: data.firstName,
+  lastName: data.lastName,
+});

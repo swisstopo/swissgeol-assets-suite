@@ -38,6 +38,7 @@ import { EffectsModule } from '@ngrx/effects';
 import { Store } from '@ngrx/store';
 import { TranslateModule } from '@ngx-translate/core';
 import { ForModule } from '@rx-angular/template/for';
+import { IfModule } from '@rx-angular/template/if';
 import { LetModule } from '@rx-angular/template/let';
 import { PushModule } from '@rx-angular/template/push';
 import { de } from 'date-fns/locale/de';
@@ -61,6 +62,7 @@ import { AssetEditorFilesComponent } from './components/asset-editor-tabs/asset-
 import { AssetEditorGeneralComponent } from './components/asset-editor-tabs/asset-editor-general/asset-editor-general.component';
 import { AssetEditorStatusAssigneeComponent } from './components/asset-editor-tabs/asset-editor-status/asset-editor-status-assignee/asset-editor-status-assignee.component';
 import { AssetEditorStatusContentComponent } from './components/asset-editor-tabs/asset-editor-status/asset-editor-status-content/asset-editor-status-content.component';
+import { AssetEditorStatusPublicationComponent } from './components/asset-editor-tabs/asset-editor-status/asset-editor-status-publication/asset-editor-status-publication.component';
 import { AssetEditorStatusStepComponent } from './components/asset-editor-tabs/asset-editor-status/asset-editor-status-step/asset-editor-status-step.component';
 import { AssetEditorStatusStepsComponent } from './components/asset-editor-tabs/asset-editor-status/asset-editor-status-steps/asset-editor-status-steps.component';
 import { AssetEditorStatusComponent } from './components/asset-editor-tabs/asset-editor-status/asset-editor-status.component';
@@ -90,6 +92,7 @@ export const canLeaveEdit: CanDeactivateFn<AssetEditorPageComponent> = (componen
     AssetEditorStatusComponent,
     AssetEditorStatusAssigneeComponent,
     AssetEditorStatusContentComponent,
+    AssetEditorStatusPublicationComponent,
     AssetEditorStatusStepComponent,
     AssetEditorStatusStepsComponent,
     AssetEditorSaveComponent,
@@ -189,6 +192,7 @@ export const canLeaveEdit: CanDeactivateFn<AssetEditorPageComponent> = (componen
     PageHeaderComponent,
     MatChipSet,
     ChipComponent,
+    IfModule,
   ],
   providers: [
     { provide: MAT_DATE_LOCALE, useValue: de },
