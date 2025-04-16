@@ -18,5 +18,6 @@ export * from './filter-selector';
 export * from './chip';
 export * from './search-and-filter';
 export * from './toggle-status';
+export * from './username/username.component';
 export * from './page-header';
 export * from './file-name.pipe';

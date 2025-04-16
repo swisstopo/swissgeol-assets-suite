@@ -20,6 +20,7 @@ export const deAppTranslations = {
   delete: 'Löschen',
   close: 'Schliessen',
   datePlaceholder: 'JJJJ-MM-TT',
+  deletedUserName: 'gelöschter Benutzer',
   workgroup: {
     title: 'Arbeitsgruppe',
     errors: {
@@ -270,6 +271,9 @@ export const deAppTranslations = {
         assign: 'Neue Person zuweisen',
         publication: 'Publikation',
         publish: 'Publish',
+        created: '{{ status }} erstellt',
+        statusChanged: 'Status von {{ from }} zu {{ to }} geändert',
+        assigneeChanged: 'Asset {{ assignee }} zugewiesen',
       },
     },
     closeManageAsset: 'Asset verwalten schliessen',

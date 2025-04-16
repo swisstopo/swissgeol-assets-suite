@@ -22,6 +22,7 @@ export const frAppTranslations: AppTranslations = {
   delete: 'Supprimer',
   close: 'Fermer',
   datePlaceholder: 'AAAA-MM-JJ',
+  deletedUserName: 'FR gelöschter Benutzer',
   workgroup: {
     title: 'groupe de travail',
     errors: {
@@ -272,6 +273,9 @@ export const frAppTranslations: AppTranslations = {
         assign: 'FR Neue Person zuweisen',
         publication: 'FR Publikation',
         publish: 'FR Publish',
+        created: 'FR {{ status }} erstellt',
+        statusChanged: 'FR Status von {{ from }} zu {{ to }} geändert',
+        assigneeChanged: 'FR Asset {{ assignee }} zugewiesen',
       },
     },
     closeManageAsset: 'Fermer la gestion des asset',
