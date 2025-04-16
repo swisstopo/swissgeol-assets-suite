@@ -9,5 +9,22 @@
       <asset-sg-editor-status-publication class="panel" [workflow]="workflow" />
     }
   </div>
-  <asset-sg-editor-status-content class="panel" [workflow]="workflow" />
+
+  <asset-sg-tabs>
+    <asset-sg-tab [panel]="history" translate> Verlauf </asset-sg-tab>
+    <asset-sg-tab [panel]="review" translate> Review </asset-sg-tab>
+    <asset-sg-tab [panel]="approval" translate> Freigabe </asset-sg-tab>
+
+    <ng-container slot="content">
+      <div role="tabpanel" #history id="history">
+        <asset-sg-editor-status-history [workflow]="workflow" />
+      </div>
+      <div role="tabpanel" #review id="review">
+        <asset-sg-editor-status-review [workflow]="workflow" />
+      </div>
+      <div role="tabpanel" #approval id="approval">
+        <asset-sg-editor-status-approval [workflow]="workflow" />
+      </div>
+    </ng-container>
+  </asset-sg-tabs>
 }

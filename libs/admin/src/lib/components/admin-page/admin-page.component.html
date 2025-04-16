@@ -36,14 +36,10 @@
   }
   @if (!isDetailPage) {
     <div class="navigation-container">
-      <div class="navigation">
-        <a routerLink="users" class="navigation__link" routerLinkActive="navigation__link--active">{{
-          "admin.users" | translate
-        }}</a>
-        <a routerLink="workgroups" class="navigation__link" routerLinkActive="navigation__link--active">{{
-          "admin.workgroups" | translate
-        }}</a>
-      </div>
+      <asset-sg-tabs>
+        <a asset-sg-tab routerLink="users" translate> admin.users </a>
+        <a asset-sg-tab routerLink="workgroups" translate> admin.workgroups </a>
+      </asset-sg-tabs>
       @if (isWorkgroupPage) {
         <button asset-sg-primary [routerLink]="['workgroups', 'new']" translate>
           admin.workgroupPage.create
