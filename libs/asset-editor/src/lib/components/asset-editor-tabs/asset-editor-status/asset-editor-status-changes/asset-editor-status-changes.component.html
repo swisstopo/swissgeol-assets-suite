@@ -1,0 +1,7 @@
+@for (change of changes; track change.createdAt) {
+  <asset-sg-editor-status-change [workflow]="workflow" [change]="change" />
+}
+
+<asset-sg-editor-status-change-template [creator]="workflow.creator" [createdAt]="workflow.createdAt">
+  <li slot="mutation" [innerHtml]="createText$ | async"></li>
+</asset-sg-editor-status-change-template>

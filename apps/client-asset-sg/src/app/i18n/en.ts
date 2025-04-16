@@ -22,6 +22,7 @@ export const enAppTranslations: AppTranslations = {
   delete: 'Delete',
   close: 'Close',
   datePlaceholder: 'YYYY-MM-DD',
+  deletedUserName: 'deleted User',
   workgroup: {
     title: 'Workgroup',
     errors: {
@@ -269,6 +270,9 @@ export const enAppTranslations: AppTranslations = {
         assign: 'Assign new Person',
         publication: 'Publication',
         publish: 'Publish',
+        created: '{{ status }} created',
+        statusChanged: 'Status changed from {{ from }} to {{ to }}',
+        assigneeChanged: 'Asset assigned to {{ assignee }}',
       },
     },
     closeManageAsset: 'Close manage asset',

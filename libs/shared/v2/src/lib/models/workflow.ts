@@ -16,6 +16,8 @@ export interface Workflow {
   publishedTabs: TabStatus;
   status: WorkflowStatus;
   assignee: SimpleUser | null;
+  creator: SimpleUser | null;
+  createdAt: LocalDate;
   workgroupId: WorkgroupId;
 }
 
