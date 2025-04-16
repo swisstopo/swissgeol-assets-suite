@@ -8,10 +8,8 @@ import {
   dateFromDateId,
   DateId,
   dateIdFromDate,
-  ElasticPoint,
   ElasticSearchAsset,
   GeometryCode,
-  LV95,
   makeUsageCode,
   SearchAssetAggregations,
   SearchAssetResult,
@@ -19,11 +17,10 @@ import {
   UsageCode,
   ValueCount,
 } from '@asset-sg/shared';
-import { AssetId, StudyId, User } from '@asset-sg/shared/v2';
+import { AssetId, User } from '@asset-sg/shared/v2';
 import { Client as ElasticsearchClient } from '@elastic/elasticsearch';
 import {
   AggregationsAggregationContainer,
-  BulkOperationContainer,
   QueryDslNumberRangeQuery,
   QueryDslQueryContainer,
   SearchResponse,
@@ -31,13 +28,14 @@ import {
 } from '@elastic/elasticsearch/lib/api/types';
 import { Injectable, Logger } from '@nestjs/common';
 import * as E from 'fp-ts/Either';
-import proj4 from 'proj4';
 
 // eslint-disable-next-line @nx/enforce-module-boundaries
 import indexMapping from '../../../../../../development/init/elasticsearch/mappings/swissgeol_asset_asset.json';
 
 import { PrismaService } from '@/core/prisma.service';
 import { AssetEditRepo } from '@/features/asset-edit/asset-edit.repo';
+import { mapLv95ToElastic } from '@/features/assets/search/asset-search.utils';
+import { AssetSearchWriter, AssetSearchWriterOptions } from '@/features/assets/search/asset-search.writer';
 import { StudyRepo } from '@/features/studies/study.repo';
 
 const INDEX = 'swissgeol_asset_asset';
@@ -66,8 +64,17 @@ export class AssetSearchService {
     private readonly studyRepo: StudyRepo
   ) {}
 
-  register(oneOrMore: AssetEditDetail | AssetEditDetail[]): Promise<void> {
-    return this.registerWithOptions(oneOrMore, { index: INDEX, shouldRefresh: true });
+  register(asset: AssetEditDetail): Promise<void> {
+    return this.getWriter().write(asset);
+  }
+
+  getWriter(options?: AssetSearchWriterOptions): AssetSearchWriter {
+    return new AssetSearchWriter(
+      this.elastic,
+      this.prisma,
+      this.studyRepo,
+      options ?? { index: INDEX, shouldRefresh: true }
+    );
   }
 
   async deleteFromIndex(assetId: number): Promise<void> {
@@ -106,20 +113,25 @@ export class AssetSearchService {
       ...indexMapping,
     });
 
+    const writer = this.getWriter({ index: SYNC_INDEX, isEager: true });
     let offset = 0;
     for (;;) {
-      this.logger.debug('Assets synced', { total, offset });
+      this.logger.debug('Syncing assets.', {
+        total,
+        offset,
+        progress: Number((offset / total).toFixed(2)),
+      });
       const records = await this.assetRepo.list({ limit: 1000, offset });
       if (records.length === 0) {
         break;
       }
-      await this.registerWithOptions(records, { index: SYNC_INDEX });
+      await writer.write(records);
       offset += records.length;
       if (onProgress != null) {
         await onProgress(Math.min(offset / total, 1));
       }
     }
-    this.logger.debug('Assets synced', { total, offset: total });
+    this.logger.debug('Done syncing assets.', { total });
 
     // Delete the existing asset index.
     await this.elastic.indices.delete({ index: INDEX, ignore_unavailable: true });
@@ -145,28 +157,6 @@ export class AssetSearchService {
 
     // Delete the sync index.
     await this.elastic.indices.delete({ index: SYNC_INDEX });
-  }
-
-  private async registerWithOptions(
-    oneOrMore: AssetEditDetail | AssetEditDetail[],
-    { index, shouldRefresh = false }: { index: string; shouldRefresh?: boolean }
-  ): Promise<void> {
-    const assets = Array.isArray(oneOrMore) ? oneOrMore : [oneOrMore];
-    const operations: Array<BulkOperationContainer | ElasticSearchAsset> = Array(assets.length * 2);
-    const mappings: Array<Promise<void>> = Array(assets.length);
-    for (let i = 0; i < assets.length; i++) {
-      const asset = assets[i];
-      mappings[i] = this.mapAssetToElastic(asset).then((elasticAsset) => {
-        operations[i * 2] = { index: { _index: index, _id: `${elasticAsset.assetId}` } };
-        operations[i * 2 + 1] = elasticAsset;
-      });
-    }
-    await Promise.all(mappings);
-    await this.elastic.bulk({
-      index,
-      refresh: shouldRefresh,
-      operations,
-    });
   }
 
   /**
@@ -699,85 +689,7 @@ export class AssetSearchService {
       }),
     };
   }
-
-  private async mapAssetToElastic(asset: AssetEditDetail): Promise<ElasticSearchAsset> {
-    const contacts = await this.prisma.contact.findMany({
-      select: {
-        name: true,
-      },
-      where: {
-        contactId: { in: asset.assetContacts.map((it) => it.contactId) },
-      },
-    });
-    const geometryCodes: GeometryCode[] = [];
-    const studyLocations: ElasticPoint[] = [];
-    for (const study of asset.studies) {
-      const geometryCode = (() => {
-        const prefix = study.geomText.split('(', 2)[0];
-        switch (prefix) {
-          case 'POINT':
-            return GeometryCode.Point;
-          case 'POLYGON':
-            return GeometryCode.Polygon;
-          case 'LINESTRING':
-            return GeometryCode.LineString;
-          default:
-            throw new Error(`unknown geomText prefix: ${prefix} for asset ${asset.assetId}`);
-        }
-      })();
-      geometryCodes.push(geometryCode);
-
-      const fullStudy = await this.studyRepo.find(study.studyId as StudyId);
-      if (fullStudy != null) {
-        studyLocations.push(mapLv95ToElastic(fullStudy.center));
-      }
-    }
-
-    const languageItemCodes =
-      asset.assetLanguages.length === 0 ? ['None'] : asset.assetLanguages.map((it) => it.languageItemCode);
-
-    const favoredByUsers = await this.prisma.assetUser.findMany({
-      select: {
-        id: true,
-      },
-      where: {
-        favorites: {
-          some: {
-            assetId: asset.assetId,
-          },
-        },
-      },
-    });
-
-    return {
-      assetId: asset.assetId,
-      titlePublic: asset.titlePublic,
-      titleOriginal: asset.titleOriginal,
-      sgsId: asset.sgsId,
-      createDate: asset.createDate,
-      assetKindItemCode: asset.assetKindItemCode,
-      languageItemCodes,
-      usageCode: makeUsageCode(asset.publicUse.isAvailable, asset.internalUse.isAvailable),
-      authorIds: asset.assetContacts.filter((it) => it.role === 'author').map((it) => it.contactId),
-      contactNames: contacts.map((it) => it.name),
-      manCatLabelItemCodes: asset.manCatLabelRefs,
-      geometryCodes: geometryCodes.length > 0 ? [...new Set(geometryCodes)] : ['None'],
-      studyLocations,
-      workgroupId: asset.workgroupId,
-      favoredByUserIds: favoredByUsers.map(({ id }) => id),
-      data: JSON.stringify(AssetEditDetail.encode(asset)),
-    };
-  }
 }
-
-const lv95Projection =
-  '+proj=somerc +lat_0=46.95240555555556 +lon_0=7.439583333333333 +k_0=1 +x_0=2600000 +y_0=1200000 +ellps=bessel +towgs84=674.374,15.056,405.346,0,0,0,0 +units=m +no_defs';
-const wgs84Projection = proj4.WGS84;
-
-const mapLv95ToElastic = (lv95: LV95): ElasticPoint => {
-  const wgs = proj4(lv95Projection, wgs84Projection, [lv95.x as number, lv95.y as number]);
-  return { lat: wgs[1], lon: wgs[0] };
-};
 
 const mapQueryToElasticDsl = (query: AssetSearchQuery, user: User): QueryDslQueryContainer => {
   const { must, filter } = mapQueryToElasticDslParts(query, user);
