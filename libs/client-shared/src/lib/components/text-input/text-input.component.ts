@@ -19,6 +19,7 @@ import { noop } from 'rxjs';
   ],
 })
 export class TextInputComponent implements ControlValueAccessor {
+  @Input() public title = '';
   @Input() public value = '';
   @Input() public icon = '';
   @Input() public placeholder = '';
