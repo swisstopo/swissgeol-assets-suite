@@ -6,6 +6,7 @@
         [values]="availableWorkgroups$ | push"
         [bindLabel]="'name'"
         [bindKey]="'id'"
+        icon="failure"
         formControlName="workgroupId"
       ></asset-sg-select>
     </div>
@@ -13,14 +14,15 @@
   <asset-sg-detail-section [title]="'edit.tabs.general.title' | translate">
     <div content>
       <div class="content">
-        <asset-sg-text-input
+        <asset-sg-text-area
           [title]="'edit.tabs.general.publicTitle' | translate"
+          icon="failure"
           formControlName="titlePublic"
-        ></asset-sg-text-input>
-        <asset-sg-text-input
+        ></asset-sg-text-area>
+        <asset-sg-text-area
           [title]="'edit.tabs.general.originalTitle' | translate"
           formControlName="titleOriginal"
-        ></asset-sg-text-input>
+        ></asset-sg-text-area>
       </div>
     </div>
   </asset-sg-detail-section>
@@ -29,10 +31,12 @@
       <div class="content">
         <asset-sg-date-picker
           [title]="'edit.tabs.general.creationDate' | translate"
+          icon="failure"
           formControlName="creationDate"
         ></asset-sg-date-picker>
         <asset-sg-date-picker
           [title]="'edit.tabs.general.dateReceived' | translate"
+          icon="failure"
           formControlName="receiptDate"
         ></asset-sg-date-picker>
       </div>
@@ -46,6 +50,7 @@
           [values]="assetKindItems$ | push"
           [bindLabel]="'value'"
           [bindKey]="'code'"
+          icon="failure"
           formControlName="assetKindItemCode"
         ></asset-sg-select>
         <asset-sg-select
@@ -63,6 +68,7 @@
           [values]="assetFormatItems$ | push"
           [bindLabel]="'value'"
           [bindKey]="'code'"
+          icon="failure"
           formControlName="assetFormatItemCode"
         ></asset-sg-select>
       </div>
@@ -107,6 +113,7 @@
           [triggerLabel]="
             (selectedManCatLabels.length === 1 ? 'edit.tabs.general.topic' : 'edit.tabs.general.topics') | translate
           "
+          icon="failure"
           shouldShowTrigger
           multiple
           formControlName="manCatLabelRefs"

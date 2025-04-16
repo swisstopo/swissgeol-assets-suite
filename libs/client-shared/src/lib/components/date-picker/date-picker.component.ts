@@ -7,6 +7,7 @@ import { MatInput, MatSuffix } from '@angular/material/input';
 import { SvgIconComponent } from '@ngneat/svg-icon';
 import { TranslateModule } from '@ngx-translate/core';
 import { noop } from 'rxjs';
+import { FormItemWrapperComponent } from '../form-item-wrapper';
 import { SmartTranslatePipe } from '../smart-translate.pipe';
 
 @Component({
@@ -35,10 +36,12 @@ import { SmartTranslatePipe } from '../smart-translate.pipe';
     MatSuffix,
     SvgIconComponent,
     MatDatepickerToggleIcon,
+    FormItemWrapperComponent,
   ],
 })
 export class DatePickerComponent implements ControlValueAccessor {
   @Input() public title = '';
+  @Input() public icon = '';
   @Input() public shouldShowError = false;
   @Input() public errorMessage = '';
   @Output() public selectionChanged = new EventEmitter<Date | null>();

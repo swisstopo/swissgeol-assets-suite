@@ -1,0 +1,9 @@
+@if (title) {
+  <div>
+    <h5>{{ title }}</h5>
+    @if (icon) {
+      <svg-icon [key]="icon"></svg-icon>
+    }
+  </div>
+}
+<ng-content></ng-content>

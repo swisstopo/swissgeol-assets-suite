@@ -31,6 +31,7 @@ import {
   PageHeaderComponent,
   SelectComponent,
   SmartTranslatePipe,
+  TextAreaComponent,
   TextInputComponent,
   ValueItemDescriptionPipe,
   ValueItemNamePipe,
@@ -189,6 +190,7 @@ export const canLeaveEdit: CanDeactivateFn<AssetEditorPageComponent> = (componen
     TextInputComponent,
     DatePickerComponent,
     SmartTranslatePipe,
+    TextAreaComponent,
   ],
   providers: [
     { provide: MAT_DATE_LOCALE, useValue: de },

@@ -1,37 +1,37 @@
-import { coerceBooleanProperty } from '@angular/cdk/coercion';
+import { CdkTextareaAutosize } from '@angular/cdk/text-field';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
-import { SvgIconComponent } from '@ngneat/svg-icon';
+import { MatInput } from '@angular/material/input';
 import { TranslateModule } from '@ngx-translate/core';
 import { noop } from 'rxjs';
 import { FormItemWrapperComponent } from '../form-item-wrapper';
 
 @Component({
-  selector: 'asset-sg-text-input',
-  templateUrl: './text-input.component.html',
-  styleUrls: ['./text-input.component.scss'],
+  selector: 'asset-sg-text-area',
+  templateUrl: './text-area.component.html',
+  styleUrls: ['./text-area.component.scss'],
   standalone: true,
-  imports: [SvgIconComponent, TranslateModule, FormsModule, FormItemWrapperComponent],
+  imports: [TranslateModule, FormsModule, CdkTextareaAutosize, MatInput, FormItemWrapperComponent],
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,
-      useExisting: TextInputComponent,
+      useExisting: TextAreaComponent,
       multi: true,
     },
   ],
 })
-export class TextInputComponent implements ControlValueAccessor {
+export class TextAreaComponent implements ControlValueAccessor {
   @Input() public title = '';
   @Input() public value = '';
-  @Input() public textFieldIcon = '';
-  @Input() public headerIcon = '';
+  @Input() public icon = '';
   @Input() public placeholder = '';
-  @Input({ transform: coerceBooleanProperty }) public disabled = false;
   @Output() valueChange = new EventEmitter<string>();
+
   private onChange: (value: string) => void = noop;
   private onTouched: () => void = noop;
 
   public writeValue(value: string) {
+    console.log(value);
     this.value = value;
   }
 
