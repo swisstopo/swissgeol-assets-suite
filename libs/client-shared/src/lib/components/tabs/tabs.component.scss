@@ -1,0 +1,9 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+:host > [role="tablist"] {
+  display: flex;
+}

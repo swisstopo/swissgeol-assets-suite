@@ -10,6 +10,8 @@ export * from './view-child-marker';
 export * from './smart-translate.pipe';
 export * from './language-selector';
 export * from './confirm-dialog';
+export * from './tab/tab.component';
+export * from './tabs/tabs.component';
 export * from './text-input';
 export * from './select';
 export * from './filter-selector';

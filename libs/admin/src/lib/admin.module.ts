@@ -41,6 +41,8 @@ import {
   SearchAndFilterComponent,
   SelectComponent,
   SmartTranslatePipe,
+  TabComponent,
+  TabsComponent,
   TextInputComponent,
   ToggleStatusComponent,
   ViewChildMarker,
@@ -144,6 +146,8 @@ import { adminReducer } from './state/admin.reducer';
     FormsModule,
     SelectComponent,
     PageHeaderComponent,
+    TabsComponent,
+    TabComponent,
   ],
 })
 export class AdminModule {}
