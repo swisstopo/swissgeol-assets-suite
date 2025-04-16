@@ -57,8 +57,11 @@
 
 :host,
 mat-form-field {
-  max-width: 400px;
   width: 100%;
+}
+
+:host([applyMaxWidth]) mat-form-field {
+  max-width: 400px;
 }
 
 h5 {

@@ -51,14 +51,12 @@ export class DatePickerComponent implements ControlValueAccessor {
   public onDateChange(date: MatDatepickerInputEvent<Date>): void {
     const value = date.value;
     this.date = value;
-    console.log(date, typeof date, value, typeof value);
     this.onChange(value);
     this.selectionChanged.emit(value);
   }
 
   public writeValue(value: Date): void {
     this.date = value;
-    console.log(this.date);
   }
 
   public registerOnChange(fn: (value: Date | null) => void): void {
