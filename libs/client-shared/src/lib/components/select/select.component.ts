@@ -1,11 +1,14 @@
 import { coerceBooleanProperty } from '@angular/cdk/coercion';
 import { Component, EventEmitter, forwardRef, Input, OnInit, Output } from '@angular/core';
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR, ReactiveFormsModule } from '@angular/forms';
-import { MatFormField, MatHint, MatOption, MatSelect } from '@angular/material/select';
+import { MatFormField, MatHint, MatOption, MatSelectModule } from '@angular/material/select';
 import { SvgIconComponent } from '@ngneat/svg-icon';
 import { TranslateModule } from '@ngx-translate/core';
 import { noop } from 'rxjs';
+import { FormItemWrapperComponent } from '../form-item-wrapper';
 import { SmartTranslatePipe } from '../smart-translate.pipe';
+
+type FormValue<T> = T | T[] | T[keyof T] | T[keyof T][];
 
 @Component({
   selector: 'asset-sg-select',
@@ -22,7 +25,7 @@ import { SmartTranslatePipe } from '../smart-translate.pipe';
     },
   ],
   imports: [
-    MatSelect,
+    MatSelectModule,
     MatOption,
     ReactiveFormsModule,
     SvgIconComponent,
@@ -31,21 +34,26 @@ import { SmartTranslatePipe } from '../smart-translate.pipe';
     MatFormField,
     SmartTranslatePipe,
     MatHint,
+    FormItemWrapperComponent,
   ],
 })
 export class SelectComponent<T> implements OnInit, ControlValueAccessor {
   @Input() public values: T[] = [];
   @Input() public bindLabel: keyof T | null = null;
+  @Input() public bindKey: keyof T | null = null;
   @Input() public title = '';
+  @Input() public icon = '';
   @Input({ transform: coerceBooleanProperty }) public multiple = false;
   @Input() public initialValues: T[] = [];
   @Input() public shouldShowError = false;
   @Input() public errorMessage = '';
+  @Input({ transform: coerceBooleanProperty }) public shouldShowTrigger = false;
+  @Input() triggerLabel = '';
   @Output() public selectionChanged = new EventEmitter<T[]>();
 
   public selectedValues?: T | T[] = this.multiple ? [] : undefined;
 
-  private onChange: (value: T | T[]) => void = noop;
+  private onChange: (value: FormValue<T>) => void = noop;
   private onTouched: () => void = noop;
 
   public ngOnInit(): void {
@@ -56,14 +64,29 @@ export class SelectComponent<T> implements OnInit, ControlValueAccessor {
   public onFilterChange(selectedValues: T | T[]): void {
     this.selectedValues = selectedValues;
     this.selectionChanged.emit(Array.isArray(selectedValues) ? selectedValues : [selectedValues]);
-    this.onChange(selectedValues);
+    if (this.bindKey) {
+      const newValues = Array.isArray(selectedValues)
+        ? selectedValues.map((value) => value[this.bindKey!])
+        : selectedValues[this.bindKey];
+      this.onChange(newValues);
+    } else {
+      this.onChange(selectedValues);
+    }
   }
 
-  public writeValue(value: T | T[]): void {
-    this.selectedValues = value;
+  // If there is a bindKey, we can assume that the value is a key of T or an array of keys of T.
+  // Otherwise, we can assume that the value is a T or an array of T.
+  public writeValue(value: FormValue<T>): void {
+    if (this.bindKey) {
+      this.selectedValues = Array.isArray(value)
+        ? this.values.filter((v) => (value as T[keyof T][]).includes(v[this.bindKey!]))
+        : this.values.find((v) => v[this.bindKey!] === value);
+    } else {
+      this.selectedValues = value as T | T[];
+    }
   }
 
-  public registerOnChange(fn: (value: T | T[]) => void): void {
+  public registerOnChange(fn: (value: FormValue<T>) => void): void {
     this.onChange = fn;
   }
 
@@ -74,4 +97,6 @@ export class SelectComponent<T> implements OnInit, ControlValueAccessor {
   public onBlur(): void {
     this.onTouched();
   }
+
+  protected readonly Array = Array;
 }

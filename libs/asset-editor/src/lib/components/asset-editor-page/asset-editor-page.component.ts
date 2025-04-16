@@ -10,7 +10,7 @@ import {
   ROUTER_SEGMENTS,
   RoutingService,
 } from '@asset-sg/client-shared';
-import { AssetEditDetail, Lang } from '@asset-sg/shared';
+import { AssetEditDetail, dateFromDateId, Lang } from '@asset-sg/shared';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { Store } from '@ngrx/store';
 import { Observable, Subscription, take, tap, withLatestFrom } from 'rxjs';
@@ -77,6 +77,21 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
   public initializeForm() {
     this.form.reset();
     this.form.controls.general.controls.titlePublic.setValue(this.asset?.titlePublic ?? null);
+    this.form.controls.general.controls.titleOriginal.setValue(this.asset?.titleOriginal ?? null);
+    this.form.controls.general.controls.workgroupId.setValue(this.asset?.workgroupId ?? null);
+    this.form.controls.general.controls.creationDate.setValue(
+      this.asset ? dateFromDateId(this.asset.createDate) : null,
+    );
+    this.form.controls.general.controls.receiptDate.setValue(
+      this.asset ? dateFromDateId(this.asset.receiptDate) : null,
+    );
+    this.form.controls.general.controls.assetLanguages.setValue(this.asset?.assetLanguages ?? null);
+    this.form.controls.general.controls.assetFormatItemCode.setValue(this.asset?.assetFormatItemCode ?? null);
+    this.form.controls.general.controls.assetKindItemCode.setValue(this.asset?.assetKindItemCode ?? null);
+    this.form.controls.general.controls.manCatLabelRefs.setValue(this.asset?.manCatLabelRefs ?? null);
+    this.form.controls.general.controls.isNatRel.setValue(this.asset?.isNatRel ?? false);
+    this.form.controls.general.controls.typeNatRels.setValue(this.asset?.typeNatRels ?? []);
+    this.form.controls.general.controls.ids.setValue(this.asset?.ids ?? []);
   }
 
   public openConfirmDialogForAssetDeletion(assetId: number) {
@@ -137,11 +152,20 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
 const buildForm = () => {
   return new FormGroup({
     general: new FormGroup({
+      workgroupId: new FormControl<number | null>(null, { validators: [Validators.required] }),
       titlePublic: new FormControl('', { validators: [Validators.required] }),
+      titleOriginal: new FormControl(''),
+      creationDate: new FormControl<Date | null>(null, { validators: [Validators.required] }),
+      receiptDate: new FormControl<Date | null>(null, { validators: [Validators.required] }),
+      assetLanguages: new FormControl<Array<{ languageItemCode: string }>>([]),
+      assetFormatItemCode: new FormControl<string>('', { validators: [Validators.required] }),
+      assetKindItemCode: new FormControl<string>('', { validators: [Validators.required] }),
+      manCatLabelRefs: new FormControl<string[]>([], { validators: [Validators.required] }),
+      isNatRel: new FormControl<boolean>(false),
+      typeNatRels: new FormControl<string[]>([]),
+      ids: new FormControl<AlternativeId[]>([], { validators: [Validators.required], nonNullable: true }),
     }),
-    files: new FormGroup({
-      other: new FormControl('', { validators: [Validators.required] }),
-    }),
+    files: new FormGroup({}),
     contacts: new FormGroup({}),
     references: new FormGroup({}),
     geometries: new FormGroup({}),
@@ -151,3 +175,9 @@ const buildForm = () => {
 };
 
 export type AssetForm = ReturnType<typeof buildForm>;
+
+export type AlternativeId = {
+  idId: number | null;
+  id: string;
+  description: string;
+};

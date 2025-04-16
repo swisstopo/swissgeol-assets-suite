@@ -4,30 +4,19 @@
   position: relative;
 }
 
-:host([small]) .search-input {
-  width: 360px;
-}
-
 .search-input {
   padding: 8px 12px;
   border: 1px solid variables.$grey-07;
-  width: 100%;
+  max-width: calc(948px - 16px - 25px - 24px);
+  width: calc((948px - 16px - 35px - 24px) / 2);
+  max-height: 150px;
   height: 44px;
   border-radius: 3px;
+  //resize: both;
+  font-family: Inter, sans-serif;
+  font-size: 16px;
 
   &::placeholder {
     color: variables.$grey-10;
   }
-}
-
-.has-icon {
-  padding-left: 48px;
-}
-
-.icon {
-  position: absolute;
-  left: 12px;
-  top: 0;
-  bottom: 0;
-  margin: auto 0;
 }
