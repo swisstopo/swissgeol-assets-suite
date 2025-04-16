@@ -1,17 +1,14 @@
 import { AssetId, Workflow, WorkflowChangeData, WorkflowStatus } from '@asset-sg/shared/v2';
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@/core/prisma.service';
-import {
-  mapWorkflowStatusToPrismaWorkflowStatus,
-  parseWorkflowFromPrisma,
-  workflowSelection,
-} from '@/features/assets/workflow/prisma-workflow';
+import { FindRepo } from '@/core/repo';
+import { parseWorkflowFromPrisma, workflowSelection } from '@/features/assets/workflow/prisma-workflow';
 
 @Injectable()
-export class WorkflowRepo {
+export class WorkflowRepo implements FindRepo<Workflow, AssetId> {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findByAssetId(assetId: AssetId): Promise<Workflow | null> {
+  async find(assetId: AssetId): Promise<Workflow | null> {
     const entry = await this.prisma.workflow.findUnique({
       select: workflowSelection,
       where: { assetId },
@@ -20,6 +17,7 @@ export class WorkflowRepo {
     return entry == null ? null : parseWorkflowFromPrisma(entry);
   }
 
+  // TODO If `WorkflowChangeData.assignee` was a UserId, we could merge most of these parameters - DVA 2025-04-15
   async addChange(
     assetId: AssetId,
     fromStatus: WorkflowStatus,
@@ -30,13 +28,13 @@ export class WorkflowRepo {
     const entry = await this.prisma.workflow.update({
       where: { assetId },
       data: {
-        status: mapWorkflowStatusToPrismaWorkflowStatus(data.toStatus),
+        status: data.status,
         assignee: { connect: { id: assigneeId } },
         workflowChanges: {
           create: {
             comment: data.comment,
-            fromStatus: mapWorkflowStatusToPrismaWorkflowStatus(fromStatus),
-            toStatus: mapWorkflowStatusToPrismaWorkflowStatus(data.toStatus),
+            fromStatus: fromStatus,
+            toStatus: data.status,
             createdBy: { connect: { id: createdById } },
             assignee: { connect: { id: assigneeId } },
           },
@@ -53,11 +51,11 @@ export class WorkflowRepo {
       where: { assetId },
       data: {
         assignee: { connect: { id: userId } },
-        status: mapWorkflowStatusToPrismaWorkflowStatus('published'),
+        status: WorkflowStatus.Published,
         workflowChanges: {
           create: {
-            fromStatus: mapWorkflowStatusToPrismaWorkflowStatus(fromStatus),
-            toStatus: mapWorkflowStatusToPrismaWorkflowStatus('published'),
+            fromStatus,
+            toStatus: WorkflowStatus.Published,
             createdBy: { connect: { id: userId } },
           },
         },

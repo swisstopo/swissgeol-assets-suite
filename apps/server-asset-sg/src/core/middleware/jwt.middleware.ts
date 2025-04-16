@@ -222,7 +222,7 @@ export class JwtMiddleware implements NestMiddleware {
     const swisstopoAssetsNamespace = '29248768-a9ac-4ef8-9dcb-d9847753208b';
     const id = uuidv5('anonymous', swisstopoAssetsNamespace); // a743fc8a-afec-5eab-8b9b-e4002c2a01be
     const workgroups = await this.workgroupRepo.list();
-    const roles = new Map<WorkgroupId, Role>(workgroups.map((workgroup) => [workgroup.id, Role.Viewer]));
+    const roles = new Map<WorkgroupId, Role>(workgroups.map((workgroup) => [workgroup.id, Role.Reader]));
     return {
       id,
       email: '',

@@ -1,5 +1,5 @@
-import { LocalDate, Workflow, WorkflowStatus } from '@asset-sg/shared/v2';
-import { $Enums, Prisma } from '@prisma/client';
+import { LocalDate, mapWorkflowStatusFromPrisma, Workflow, WorkflowChange } from '@asset-sg/shared/v2';
+import { Prisma } from '@prisma/client';
 import { satisfy } from '@/utils/define';
 
 type SelectedWorkflow = Prisma.WorkflowGetPayload<{ select: typeof workflowSelection }>;
@@ -18,6 +18,12 @@ const relatedUserSelection = satisfy<Prisma.AssetUserSelect>()({
 });
 
 export const workflowSelection = satisfy<Prisma.WorkflowSelect>()({
+  assetId: true,
+  asset: {
+    select: {
+      workgroupId: true,
+    },
+  },
   hasRequestedChanges: true,
   assignee: { select: relatedUserSelection },
   status: true,
@@ -41,49 +47,21 @@ export const workflowSelection = satisfy<Prisma.WorkflowSelect>()({
 
 export const parseWorkflowFromPrisma = (entry: SelectedWorkflow): Workflow => {
   return {
+    assetId: entry.assetId,
     hasRequestedChanges: entry.hasRequestedChanges,
-    status: mapPrismaWorkflowStatusToWorkflowStatus(entry.status),
-    workflowChanges: entry.workflowChanges.map((change) => {
-      return {
+    status: mapWorkflowStatusFromPrisma(entry.status),
+    workflowChanges: entry.workflowChanges.map(
+      (change): WorkflowChange => ({
         comment: change.comment,
         createdAt: LocalDate.fromDate(change.createdAt),
         createdBy: change.createdBy?.email ?? null,
         assignee: change.assignee?.email ?? null,
-        fromStatus: mapPrismaWorkflowStatusToWorkflowStatus(change.fromStatus),
-        toStatus: mapPrismaWorkflowStatusToWorkflowStatus(change.toStatus),
-      };
-    }),
-    reviewedTabs: {
-      ...entry.reviewedTabs,
-    },
-    publishedTabs: {
-      ...entry.publishedTabs,
-    },
+        fromStatus: mapWorkflowStatusFromPrisma(change.fromStatus),
+        toStatus: mapWorkflowStatusFromPrisma(change.toStatus),
+      }),
+    ),
+    reviewedTabs: entry.reviewedTabs,
+    publishedTabs: entry.publishedTabs,
+    workgroupId: entry.asset.workgroupId,
   };
-};
-
-const mapPrismaWorkflowStatusToWorkflowStatus = (prismaWorkflowStatus: $Enums.WorkflowStatus): WorkflowStatus => {
-  switch (prismaWorkflowStatus) {
-    case $Enums.WorkflowStatus.Draft:
-      return 'draft';
-    case $Enums.WorkflowStatus.InReview:
-      return 'inReview';
-    case $Enums.WorkflowStatus.Reviewed:
-      return 'reviewed';
-    case $Enums.WorkflowStatus.Published:
-      return 'published';
-  }
-};
-
-export const mapWorkflowStatusToPrismaWorkflowStatus = (workflowStatus: WorkflowStatus): $Enums.WorkflowStatus => {
-  switch (workflowStatus) {
-    case 'draft':
-      return $Enums.WorkflowStatus.Draft;
-    case 'inReview':
-      return $Enums.WorkflowStatus.InReview;
-    case 'reviewed':
-      return $Enums.WorkflowStatus.Reviewed;
-    case 'published':
-      return $Enums.WorkflowStatus.Published;
-  }
 };

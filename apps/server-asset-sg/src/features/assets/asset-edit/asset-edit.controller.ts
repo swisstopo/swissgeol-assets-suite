@@ -122,8 +122,8 @@ const validatePatch = (user: User, patch: PatchAsset, record?: AssetEditDetail) 
     return (
       hasChanged &&
       patch[key].statusAssetUseItemCode !== 'tobechecked' &&
-      ((record != null && !policy.hasRole(Role.MasterEditor, record.workgroupId)) ||
-        !policy.hasRole(Role.MasterEditor, patch.workgroupId))
+      ((record != null && !policy.hasRole(Role.Reviewer, record.workgroupId)) ||
+        !policy.hasRole(Role.Reviewer, patch.workgroupId))
     );
   };
 
@@ -140,11 +140,11 @@ const validatePatch = (user: User, patch: PatchAsset, record?: AssetEditDetail) 
   }
 
   // Specialization of the policy where we disallow the status work item code to be changed to `published`
-  // if the current user is not a master-editor for the asset's current or future workgroup.
+  // if the current user is not a publisher for the asset's current or future workgroup.
   if (
     O.toNullable(patch.newStatusWorkItemCode) === 'published' &&
-    ((record != null && !policy.hasRole(Role.MasterEditor, record.workgroupId)) ||
-      !policy.hasRole(Role.MasterEditor, patch.workgroupId))
+    ((record != null && !policy.hasRole(Role.Publisher, record.workgroupId)) ||
+      !policy.hasRole(Role.Publisher, patch.workgroupId))
   ) {
     throw new HttpException("Changing the asset's working status is not allowed", HttpStatus.FORBIDDEN);
   }

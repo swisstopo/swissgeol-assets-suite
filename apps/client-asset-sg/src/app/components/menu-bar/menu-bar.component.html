@@ -22,15 +22,16 @@
         menuBar.favourites
       </li>
     }
-    <li
-      *canCreate="AssetEditPolicy"
-      asset-sg-menu-bar-item
-      icon="add"
-      [link]="[translateService.currentLang, 'asset-admin', 'new']"
-      [isActive]="activeItem === 'create-asset'"
-    >
-      menuBar.createAsset
-    </li>
+    @if (canCreatesAsset$ | async) {
+      <li
+        asset-sg-menu-bar-item
+        icon="add"
+        [link]="[translateService.currentLang, 'asset-admin', 'new']"
+        [isActive]="activeItem === 'create-asset'"
+      >
+        menuBar.createAsset
+      </li>
+    }
   </ul>
 
   <ul class="submenu">
