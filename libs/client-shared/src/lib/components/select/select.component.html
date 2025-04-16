@@ -1,20 +1,19 @@
-@if (title) {
-  <h5>{{ title }}</h5>
-}
-<mat-form-field class="select">
-  <svg-icon key="arrow-down" class="icon" />
+<asset-sg-form-item-wrapper [title]="title" [icon]="icon">
+  <mat-form-field class="select">
+    <svg-icon key="arrow-down" class="icon" />
 
-  <mat-select [value]="selectedValues" (valueChange)="onFilterChange($event)" [multiple]="multiple" (blur)="onBlur()">
-    @if (shouldShowTrigger) {
-      <mat-select-trigger
-        >{{ Array.isArray(selectedValues) ? selectedValues.length : 0 }} {{ triggerLabel }}</mat-select-trigger
-      >
+    <mat-select [value]="selectedValues" (valueChange)="onFilterChange($event)" [multiple]="multiple" (blur)="onBlur()">
+      @if (shouldShowTrigger) {
+        <mat-select-trigger
+          >{{ Array.isArray(selectedValues) ? selectedValues.length : 0 }} {{ triggerLabel }}
+        </mat-select-trigger>
+      }
+      @for (value of values; track value) {
+        <mat-option [value]="value">{{ (bindLabel ? $any(value[bindLabel]) : value) | smartTranslate }}</mat-option>
+      }
+    </mat-select>
+    @if (shouldShowError) {
+      <mat-hint class="mat-mdc-form-field-error">{{ errorMessage }}</mat-hint>
     }
-    @for (value of values; track value) {
-      <mat-option [value]="value">{{ (bindLabel ? $any(value[bindLabel]) : value) | smartTranslate }}</mat-option>
-    }
-  </mat-select>
-  @if (shouldShowError) {
-    <mat-hint class="mat-mdc-form-field-error">{{ errorMessage }}</mat-hint>
-  }
-</mat-form-field>
+  </mat-form-field>
+</asset-sg-form-item-wrapper>
