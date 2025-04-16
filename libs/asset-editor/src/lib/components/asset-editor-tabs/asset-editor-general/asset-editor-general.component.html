@@ -13,16 +13,28 @@
   <asset-sg-detail-section [title]="'edit.tabs.general.title' | translate">
     <div content>
       <div class="content">
-        <asset-sg-text-input formControlName="titlePublic"></asset-sg-text-input>
-        <asset-sg-text-input formControlName="titleOriginal"></asset-sg-text-input>
+        <asset-sg-text-input
+          [title]="'edit.tabs.general.publicTitle' | translate"
+          formControlName="titlePublic"
+        ></asset-sg-text-input>
+        <asset-sg-text-input
+          [title]="'edit.tabs.general.originalTitle' | translate"
+          formControlName="titleOriginal"
+        ></asset-sg-text-input>
       </div>
     </div>
   </asset-sg-detail-section>
   <asset-sg-detail-section [title]="'edit.tabs.general.date' | translate">
     <div content>
       <div class="content">
-        <asset-sg-date-picker formControlName="creationDate"></asset-sg-date-picker>
-        <asset-sg-date-picker formControlName="receiptDate"></asset-sg-date-picker>
+        <asset-sg-date-picker
+          [title]="'edit.tabs.general.creationDate' | translate"
+          formControlName="creationDate"
+        ></asset-sg-date-picker>
+        <asset-sg-date-picker
+          [title]="'edit.tabs.general.dateReceived' | translate"
+          formControlName="receiptDate"
+        ></asset-sg-date-picker>
       </div>
     </div>
   </asset-sg-detail-section>
@@ -56,14 +68,31 @@
       </div>
     </div>
   </asset-sg-detail-section>
-  <asset-sg-detail-section [title]="'edit.tabs.general.title' | translate">
+  <asset-sg-detail-section [title]="'edit.tabs.usage.nationalInterest' | translate">
     <div content>
-      <mat-checkbox color="primary">fdsg</mat-checkbox>
+      <mat-checkbox formControlName="isNatRel" color="primary"
+        ><span translate>edit.tabs.usage.nationalInterest</span>
+      </mat-checkbox>
       <div class="content">
-        <asset-sg-select [title]="'workgroup.title' | translate"></asset-sg-select>
+        <asset-sg-select
+          [title]="'edit.tabs.usage.type' | translate"
+          [values]="natRelItems$ | push"
+          [bindLabel]="'value'"
+          [bindKey]="'code'"
+          [triggerLabel]="
+            (selectedNatRelItems.length === 1 ? 'edit.tabs.usage.type' : 'edit.tabs.usage.types') | translate
+          "
+          shouldShowTrigger
+          multiple
+          formControlName="typeNatRels"
+        ></asset-sg-select>
       </div>
       <mat-chip-set>
-        <asset-sg-chip type="secondary">dfgs</asset-sg-chip>
+        @for (topic of selectedNatRelItems; track topic.code) {
+          <asset-sg-chip type="secondary" icon="cancel" (click)="removeItemFromForm(topic, 'typeNatRels')"
+            >{{ topic.value | smartTranslate }}
+          </asset-sg-chip>
+        }
       </mat-chip-set>
     </div>
   </asset-sg-detail-section>
@@ -85,7 +114,9 @@
       </div>
       <mat-chip-set>
         @for (topic of selectedManCatLabels; track topic.code) {
-          <asset-sg-chip type="secondary">{{ topic.value | smartTranslate }}</asset-sg-chip>
+          <asset-sg-chip type="secondary" icon="cancel" (click)="removeItemFromForm(topic, 'manCatLabelRefs')"
+            >{{ topic.value | smartTranslate }}
+          </asset-sg-chip>
         }
       </mat-chip-set>
     </div>

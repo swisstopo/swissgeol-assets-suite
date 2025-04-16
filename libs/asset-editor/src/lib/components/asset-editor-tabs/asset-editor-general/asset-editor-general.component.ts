@@ -29,8 +29,19 @@ export class AssetEditorGeneralComponent implements OnInit, OnDestroy {
   public languages: { name: Translation; value: string }[] = [];
   public selectedLanguages: string[] = [];
   public selectedManCatLabels: TranslatedValueItem[] = [];
+  public selectedNatRelItems: TranslatedValueItem[] = [];
   private readonly store = inject(Store);
   private readonly subscription: Subscription = new Subscription();
+  public readonly natRelItems$: Observable<TranslatedValueItem[]> = this.store
+    .select(fromAppShared.selectNatRelItems)
+    .pipe(
+      map((natRelItems) => {
+        if (natRelItems == null) {
+          return [];
+        }
+        return Object.values(natRelItems).map(translatedValueItemFromValueItem);
+      }),
+    );
   public readonly manCatLabelItems$: Observable<TranslatedValueItem[]> = this.store
     .select(fromAppShared.selectManCatLabelItems)
     .pipe(
@@ -81,6 +92,14 @@ export class AssetEditorGeneralComponent implements OnInit, OnDestroy {
           this.selectedManCatLabels = manCatLabelItems.filter((item) => selectedValues?.includes(item.code));
         }),
     );
+    this.subscription.add(
+      this.formGroup.controls.typeNatRels.valueChanges
+        .pipe(startWith(this.formGroup.controls.typeNatRels.value), combineLatestWith(this.natRelItems$))
+        .subscribe(([selectedValues, natRelItems]) => {
+          this.selectedNatRelItems = natRelItems.filter((item) => selectedValues?.includes(item.code));
+        }),
+    );
+    this.subscription.add(this.formGroup.valueChanges.subscribe(console.log));
     this.selectedLanguages = this.formGroup.controls.assetLanguages.value?.map((lang) => lang.languageItemCode) ?? [];
   }
 
@@ -93,6 +112,12 @@ export class AssetEditorGeneralComponent implements OnInit, OnDestroy {
       languageItemCode: l,
     }));
     this.formGroup.controls.assetLanguages.setValue(languages);
+  }
+
+  public removeItemFromForm(item: TranslatedValueItem, controlName: 'manCatLabelRefs' | 'typeNatRels') {
+    const currentValues = this.formGroup.controls[controlName].value ?? [];
+    const newValues = currentValues.filter((value: string) => value !== item.code);
+    this.formGroup.controls[controlName].setValue(newValues);
   }
 }
 

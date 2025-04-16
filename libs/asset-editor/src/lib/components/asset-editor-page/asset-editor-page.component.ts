@@ -107,6 +107,8 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
     this.form.controls.general.controls.assetFormatItemCode.setValue(this.asset?.assetFormatItemCode ?? null);
     this.form.controls.general.controls.assetKindItemCode.setValue(this.asset?.assetKindItemCode ?? null);
     this.form.controls.general.controls.manCatLabelRefs.setValue(this.asset?.manCatLabelRefs ?? null);
+    this.form.controls.general.controls.isNatRel.setValue(this.asset?.isNatRel ?? false);
+    this.form.controls.general.controls.typeNatRels.setValue(this.asset?.typeNatRels ?? []);
   }
 
   public openConfirmDialogForAssetDeletion(assetId: number) {
@@ -176,6 +178,8 @@ const buildForm = () => {
       assetFormatItemCode: new FormControl<string>('', { validators: [Validators.required] }),
       assetKindItemCode: new FormControl<string>('', { validators: [Validators.required] }),
       manCatLabelRefs: new FormControl<string[]>([], { validators: [Validators.required] }),
+      isNatRel: new FormControl<boolean>(false, { validators: [Validators.required] }),
+      typeNatRels: new FormControl<string[]>([], { validators: [Validators.required] }),
     }),
     files: new FormGroup({
       other: new FormControl('', { validators: [Validators.required] }),
