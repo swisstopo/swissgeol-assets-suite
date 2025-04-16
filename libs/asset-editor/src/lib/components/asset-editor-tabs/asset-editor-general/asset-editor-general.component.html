@@ -55,9 +55,9 @@
         ></asset-sg-select>
         <asset-sg-select
           [title]="'edit.tabs.general.language' | translate"
-          [values]="languages"
-          [bindLabel]="'name'"
-          [bindKey]="'value'"
+          [values]="languageItems$ | push"
+          [bindLabel]="'value'"
+          [bindKey]="'code'"
           multiple
           [ngModel]="selectedLanguages"
           (ngModelChange)="setLangFromLangs($event)"
@@ -95,7 +95,7 @@
       </div>
       <mat-chip-set>
         @for (topic of selectedNatRelItems; track topic.code) {
-          <asset-sg-chip type="secondary" icon="cancel" (click)="removeItemFromForm(topic, 'typeNatRels')"
+          <asset-sg-chip type="primary" icon="cancel" (click)="removeItemFromForm(topic, 'typeNatRels')"
             >{{ topic.value | smartTranslate }}
           </asset-sg-chip>
         }
@@ -121,7 +121,7 @@
       </div>
       <mat-chip-set>
         @for (topic of selectedManCatLabels; track topic.code) {
-          <asset-sg-chip type="secondary" icon="cancel" (click)="removeItemFromForm(topic, 'manCatLabelRefs')"
+          <asset-sg-chip type="primary" icon="cancel" (click)="removeItemFromForm(topic, 'manCatLabelRefs')"
             >{{ topic.value | smartTranslate }}
           </asset-sg-chip>
         }

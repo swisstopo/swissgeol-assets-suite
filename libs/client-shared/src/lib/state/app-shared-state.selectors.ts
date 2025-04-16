@@ -22,6 +22,9 @@ export const selectRDUserProfile = createSelector(appSharedFeature, (state) => s
 
 export const selectUser = createSelector(selectRDUserProfile, RD.toNullable);
 
+export const selectLanguageItems = createSelector(appSharedFeature, (state) =>
+  RD.isSuccess(state.rdReferenceData) ? state.rdReferenceData.value.languageItems : null,
+);
 export const selectAssetFormatItems = createSelector(appSharedFeature, (state) =>
   RD.isSuccess(state.rdReferenceData) ? state.rdReferenceData.value.assetFormatItems : null,
 );
