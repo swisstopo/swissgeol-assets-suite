@@ -43,6 +43,8 @@ model Asset {
   publicUse           PublicUse       @relation(fields: [publicUseId], references: [publicUseId])
   assetMainId         Int?            @map("asset_main_id")
   assetMain           Asset?          @relation(name: "asset", fields: [assetMainId], references: [assetId])
+  creatorId           String?         @map("creator_id") @db.Uuid
+  creator             AssetUser?      @relation(name: "creator", fields: [creatorId], references: [id], onDelete: SetNull)
 
   assetContacts           AssetContact[]
   assetFiles              AssetFile[]
@@ -626,9 +628,11 @@ model AssetUser {
   firstName  String              @default("") @map("first_name")
   lastName   String              @default("") @map("last_name")
 
-  assignedWorkflowChanges WorkflowChange[] @relation(name: "assignee")
-  createdWorkflowChanges  WorkflowChange[] @relation(name: "created_by")
-  assignedWorkflows       Workflow[]
+  createdAssets               Asset[]          @relation(name: "creator")
+  assignedWorkflows           Workflow[]       @relation(name: "assignee")
+  createdWorkflowChanges      WorkflowChange[] @relation(name: "creator")
+  assignedFromWorkflowChanges WorkflowChange[] @relation(name: "from_assignee")
+  assignedToWorkflowChanges   WorkflowChange[] @relation(name: "to_assignee")
 
   @@map("asset_user")
 }
@@ -712,7 +716,7 @@ model Workflow {
   publishedTabs   TabStatus @relation(fields: [publishedTabsId], references: [tabStatusId], name: "published_tabs")
   publishedTabsId Int       @unique @map("published_tabs_id")
 
-  assignee   AssetUser? @relation(fields: [assigneeId], references: [id], onDelete: SetNull)
+  assignee   AssetUser? @relation(fields: [assigneeId], references: [id], onDelete: SetNull, name: "assignee")
   assigneeId String?    @map("assignee_id") @db.Uuid
 
   @@map("workflow")
@@ -725,14 +729,17 @@ model WorkflowChange {
   fromStatus       WorkflowStatus @map("from_status")
   toStatus         WorkflowStatus @map("to_status")
 
+  fromAssignee   AssetUser? @relation(fields: [fromAssigneeId], references: [id], onDelete: SetNull, name: "from_assignee")
+  fromAssigneeId String?    @map("from_assignee_id") @db.Uuid
+
+  toAssignee   AssetUser? @relation(fields: [toAssigneeId], references: [id], onDelete: SetNull, name: "to_assignee")
+  toAssigneeId String?    @map("to_assignee_id") @db.Uuid
+
   workflow   Workflow @relation(fields: [workflowId], references: [workflowId], onDelete: Cascade)
   workflowId Int      @map("workflow_id")
 
-  createdBy   AssetUser? @relation(fields: [createdById], references: [id], onDelete: SetNull, name: "created_by")
-  createdById String?    @map("created_by_id") @db.Uuid
-
-  assignee   AssetUser? @relation(fields: [assigneeId], references: [id], onDelete: SetNull, name: "assignee")
-  assigneeId String?    @map("assignee_id") @db.Uuid
+  creator   AssetUser? @relation(fields: [creatorId], references: [id], onDelete: SetNull, name: "creator")
+  creatorId String?    @map("creator_id") @db.Uuid
 
   @@map("workflow_change")
 }
