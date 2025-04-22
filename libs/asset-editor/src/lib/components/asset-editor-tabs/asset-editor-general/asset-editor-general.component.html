@@ -1,4 +1,4 @@
-<form [formGroup]="formGroup">
+<form [formGroup]="form">
   <asset-sg-detail-section [title]="'workgroup.title' | translate">
     <div content>
       <asset-sg-select
@@ -6,119 +6,107 @@
         [values]="availableWorkgroups$ | push"
         [bindLabel]="'name'"
         [bindKey]="'id'"
-        icon="failure"
+        isRequired
         formControlName="workgroupId"
       ></asset-sg-select>
     </div>
   </asset-sg-detail-section>
   <asset-sg-detail-section [title]="'edit.tabs.general.title' | translate">
-    <div content>
-      <div class="content">
-        <asset-sg-text-area
-          [title]="'edit.tabs.general.publicTitle' | translate"
-          icon="failure"
-          formControlName="titlePublic"
-        ></asset-sg-text-area>
-        <asset-sg-text-area
-          [title]="'edit.tabs.general.originalTitle' | translate"
-          formControlName="titleOriginal"
-        ></asset-sg-text-area>
-      </div>
+    <div class="content" content>
+      <asset-sg-text-area
+        [title]="'edit.tabs.general.publicTitle' | translate"
+        isRequired
+        formControlName="titlePublic"
+      ></asset-sg-text-area>
+      <asset-sg-text-area
+        [title]="'edit.tabs.general.originalTitle' | translate"
+        formControlName="titleOriginal"
+      ></asset-sg-text-area>
     </div>
   </asset-sg-detail-section>
   <asset-sg-detail-section [title]="'edit.tabs.general.date' | translate">
-    <div content>
-      <div class="content">
-        <asset-sg-date-picker
-          [title]="'edit.tabs.general.creationDate' | translate"
-          icon="failure"
-          formControlName="creationDate"
-        ></asset-sg-date-picker>
-        <asset-sg-date-picker
-          [title]="'edit.tabs.general.dateReceived' | translate"
-          icon="failure"
-          formControlName="receiptDate"
-        ></asset-sg-date-picker>
-      </div>
+    <div class="content" content>
+      <asset-sg-date-picker
+        [title]="'edit.tabs.general.creationDate' | translate"
+        isRequired
+        formControlName="creationDate"
+      ></asset-sg-date-picker>
+      <asset-sg-date-picker
+        [title]="'edit.tabs.general.dateReceived' | translate"
+        isRequired
+        formControlName="receiptDate"
+      ></asset-sg-date-picker>
     </div>
   </asset-sg-detail-section>
   <asset-sg-detail-section [title]="'edit.tabs.general.type' | translate">
-    <div content>
-      <div class="content">
-        <asset-sg-select
-          [title]="'edit.tabs.general.type' | translate"
-          [values]="assetKindItems$ | push"
-          [bindLabel]="'value'"
-          [bindKey]="'code'"
-          icon="failure"
-          formControlName="assetKindItemCode"
-        ></asset-sg-select>
-        <asset-sg-select
-          [title]="'edit.tabs.general.language' | translate"
-          [values]="languageItems$ | push"
-          [bindLabel]="'value'"
-          [bindKey]="'code'"
-          multiple
-          [ngModel]="selectedLanguages"
-          (ngModelChange)="setLangFromLangs($event)"
-          [ngModelOptions]="{ standalone: true }"
-        ></asset-sg-select>
-        <asset-sg-select
-          [title]="'edit.tabs.general.format' | translate"
-          [values]="assetFormatItems$ | push"
-          [bindLabel]="'value'"
-          [bindKey]="'code'"
-          icon="failure"
-          formControlName="assetFormatItemCode"
-        ></asset-sg-select>
-      </div>
+    <div class="content" content>
+      <asset-sg-select
+        [title]="'edit.tabs.general.type' | translate"
+        [values]="assetKindItems$ | push"
+        [bindLabel]="'value'"
+        [bindKey]="'code'"
+        isRequired
+        formControlName="assetKindItemCode"
+      ></asset-sg-select>
+      <asset-sg-select
+        [title]="'edit.tabs.general.language' | translate"
+        [values]="languageItems$ | push"
+        [bindLabel]="'value'"
+        [bindKey]="'code'"
+        multiple
+        [ngModel]="selectedLanguages"
+        (ngModelChange)="setLangFromLangs($event)"
+        [ngModelOptions]="{ standalone: true }"
+      ></asset-sg-select>
+      <asset-sg-select
+        [title]="'edit.tabs.general.format' | translate"
+        [values]="assetFormatItems$ | push"
+        [bindLabel]="'value'"
+        [bindKey]="'code'"
+        isRequired
+        formControlName="assetFormatItemCode"
+      ></asset-sg-select>
     </div>
   </asset-sg-detail-section>
   <asset-sg-detail-section [title]="'edit.tabs.usage.nationalInterest' | translate">
-    <div content>
+    <div class="content column" content>
       <mat-checkbox formControlName="isNatRel" color="primary"
         ><span translate>edit.tabs.usage.nationalInterest</span>
       </mat-checkbox>
-      <div class="content">
+      <div>
         <asset-sg-select
           [title]="'edit.tabs.usage.type' | translate"
           [values]="natRelItems$ | push"
           [bindLabel]="'value'"
           [bindKey]="'code'"
-          [triggerLabel]="
-            (selectedNatRelItems.length === 1 ? 'edit.tabs.usage.type' : 'edit.tabs.usage.types') | translate
-          "
-          shouldShowTrigger
+          [trigger]="(selectedNatRelItems.length === 1 ? 'edit.tabs.usage.type' : 'edit.tabs.usage.types') | translate"
           multiple
           formControlName="typeNatRels"
         ></asset-sg-select>
+        <mat-chip-set>
+          @for (topic of selectedNatRelItems; track topic.code) {
+            <asset-sg-chip type="primary" icon="cancel" (click)="removeItemFromForm(topic, 'typeNatRels')"
+              >{{ topic.value | smartTranslate }}
+            </asset-sg-chip>
+          }
+        </mat-chip-set>
       </div>
-      <mat-chip-set>
-        @for (topic of selectedNatRelItems; track topic.code) {
-          <asset-sg-chip type="primary" icon="cancel" (click)="removeItemFromForm(topic, 'typeNatRels')"
-            >{{ topic.value | smartTranslate }}
-          </asset-sg-chip>
-        }
-      </mat-chip-set>
     </div>
   </asset-sg-detail-section>
   <asset-sg-detail-section [title]="'edit.tabs.general.topic' | translate">
     <div content>
-      <div class="content">
-        <asset-sg-select
-          [title]="'edit.tabs.general.topic' | translate"
-          [values]="manCatLabelItems$ | push"
-          [bindLabel]="'value'"
-          [bindKey]="'code'"
-          [triggerLabel]="
-            (selectedManCatLabels.length === 1 ? 'edit.tabs.general.topic' : 'edit.tabs.general.topics') | translate
-          "
-          icon="failure"
-          shouldShowTrigger
-          multiple
-          formControlName="manCatLabelRefs"
-        ></asset-sg-select>
-      </div>
+      <asset-sg-select
+        [title]="'edit.tabs.general.topic' | translate"
+        [values]="manCatLabelItems$ | push"
+        [bindLabel]="'value'"
+        [bindKey]="'code'"
+        [trigger]="
+          (selectedManCatLabels.length === 1 ? 'edit.tabs.general.topic' : 'edit.tabs.general.topics') | translate
+        "
+        isRequired
+        multiple
+        formControlName="manCatLabelRefs"
+      ></asset-sg-select>
       <mat-chip-set>
         @for (topic of selectedManCatLabels; track topic.code) {
           <asset-sg-chip type="primary" icon="cancel" (click)="removeItemFromForm(topic, 'manCatLabelRefs')"
@@ -135,15 +123,13 @@
         <svg-icon key="add"></svg-icon>
       </button>
     </div>
-    <div content>
-      <div class="content column">
-        <asset-sg-asset-editor-id-list [control]="formGroup.controls.ids" />
-        <asset-sg-text-input
-          disabled
-          [value]="sgsId?.toString() ?? ''"
-          [title]="'edit.tabs.general.sgsId' | translate"
-        ></asset-sg-text-input>
-      </div>
+    <div class="content column" content>
+      <asset-sg-asset-editor-id-list [control]="form.controls.ids" />
+      <asset-sg-text-input
+        disabled
+        [value]="asset?.sgsId?.toString() ?? ''"
+        [label]="'edit.tabs.general.sgsId' | translate"
+      ></asset-sg-text-input>
     </div>
   </asset-sg-detail-section>
 </form>

@@ -1,19 +1,19 @@
-<asset-sg-form-item-wrapper [title]="title" [icon]="icon">
+<label asset-sg-form-item-wrapper [title]="title" [isRequired]="isRequired">
   <mat-form-field class="select">
     <svg-icon key="arrow-down" class="icon" />
 
     <mat-select [value]="selectedValues" (valueChange)="onFilterChange($event)" [multiple]="multiple" (blur)="onBlur()">
-      @if (shouldShowTrigger) {
+      @if (trigger) {
         <mat-select-trigger
-          >{{ Array.isArray(selectedValues) ? selectedValues.length : 0 }} {{ triggerLabel }}
+          >{{ Array.isArray(selectedValues) ? selectedValues.length : 0 }} {{ trigger }}
         </mat-select-trigger>
       }
       @for (value of values; track value) {
         <mat-option [value]="value">{{ (bindLabel ? $any(value[bindLabel]) : value) | smartTranslate }}</mat-option>
       }
     </mat-select>
-    @if (shouldShowError) {
+    @if (errorMessage) {
       <mat-hint class="mat-mdc-form-field-error">{{ errorMessage }}</mat-hint>
     }
   </mat-form-field>
-</asset-sg-form-item-wrapper>
+</label>

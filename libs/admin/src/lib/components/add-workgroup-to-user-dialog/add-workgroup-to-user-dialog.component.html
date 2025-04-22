@@ -7,8 +7,7 @@
     title="{{ 'admin.workgroups' | translate }}"
     [values]="workgroupValues"
     (selectionChanged)="setSelectedWorkgroups($event)"
-    [shouldShowError]="shouldShowError"
-    errorMessage="{{ 'admin.userPage.workgroupAddError' | translate }}"
+    errorMessage="{{ shouldShowError ? ('admin.userPage.workgroupAddError' | translate) : '' }}"
     multiple
   >
   </asset-sg-select>

@@ -4,7 +4,7 @@ import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/f
 import { SvgIconComponent } from '@ngneat/svg-icon';
 import { TranslateModule } from '@ngx-translate/core';
 import { noop } from 'rxjs';
-import { FormItemWrapperComponent } from '../form-item-wrapper';
+import { FormItemWrapperComponent } from '../form-item-wrapper/form-item-wrapper.component';
 
 @Component({
   selector: 'asset-sg-text-input',
@@ -21,10 +21,10 @@ import { FormItemWrapperComponent } from '../form-item-wrapper';
   ],
 })
 export class TextInputComponent implements ControlValueAccessor {
-  @Input() public title = '';
+  @Input() public label = '';
   @Input() public value = '';
-  @Input() public textFieldIcon = '';
-  @Input() public headerIcon = '';
+  @Input() public icon = '';
+  @Input({ transform: coerceBooleanProperty }) public isRequired = false;
   @Input() public placeholder = '';
   @Input({ transform: coerceBooleanProperty }) public disabled = false;
   @Output() valueChange = new EventEmitter<string>();
