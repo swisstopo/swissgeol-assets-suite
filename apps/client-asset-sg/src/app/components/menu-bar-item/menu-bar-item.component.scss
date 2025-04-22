@@ -22,15 +22,6 @@
 }
 
 .box > .icon {
-  @include mat.badge-overrides(
-    (
-      background-color: variables.$red,
-      text-color: variables.$white,
-      text-size: 12px,
-      text-weight: 700,
-      text-font: "Inter",
-    )
-  );
   display: flex;
   justify-content: center;
   align-items: center;
@@ -43,6 +34,16 @@
   .mat-badge-content {
     align-content: center;
   }
+
+  @include mat.badge-overrides(
+    (
+      background-color: variables.$red,
+      text-color: variables.$white,
+      text-size: 12px,
+      text-weight: 700,
+      text-font: "Inter",
+    )
+  );
 }
 
 .box {
