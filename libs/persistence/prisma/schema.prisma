@@ -701,20 +701,19 @@ enum StudyGeometryType {
 }
 
 model Workflow {
-  workflowId          Int            @id @default(autoincrement()) @map("workflow_id")
+  id    Int   @id
+  asset Asset @relation(fields: [id], references: [assetId], onDelete: Cascade)
+
   hasRequestedChanges Boolean        @default(false) @map("has_requested_changes")
   status              WorkflowStatus @default(Draft) @map("status")
 
-  asset   Asset @relation(fields: [assetId], references: [assetId], onDelete: Cascade)
-  assetId Int   @unique @map("asset_id")
+  changes WorkflowChange[]
 
-  workflowChanges WorkflowChange[]
+  review   WorkflowSelection @relation(fields: [reviewId], references: [id], name: "review")
+  reviewId Int               @unique @map("review_id")
 
-  reviewedTabs   TabStatus @relation(fields: [reviewedTabsId], references: [tabStatusId], name: "reviewed_tabs")
-  reviewedTabsId Int       @unique @map("reviewed_tabs_id")
-
-  publishedTabs   TabStatus @relation(fields: [publishedTabsId], references: [tabStatusId], name: "published_tabs")
-  publishedTabsId Int       @unique @map("published_tabs_id")
+  approval   WorkflowSelection @relation(fields: [approvalId], references: [id], name: "approval")
+  approvalId Int               @unique @map("approval_id")
 
   assignee   AssetUser? @relation(fields: [assigneeId], references: [id], onDelete: SetNull, name: "assignee")
   assigneeId String?    @map("assignee_id") @db.Uuid
@@ -723,11 +722,11 @@ model Workflow {
 }
 
 model WorkflowChange {
-  workflowChangeId Int            @id @default(autoincrement()) @map("workflow_change_id")
-  comment          String?
-  createdAt        DateTime       @default(now()) @map("created_at")
-  fromStatus       WorkflowStatus @map("from_status")
-  toStatus         WorkflowStatus @map("to_status")
+  id         Int            @id @default(autoincrement()) @map("id")
+  comment    String?
+  createdAt  DateTime       @default(now()) @map("created_at")
+  fromStatus WorkflowStatus @map("from_status")
+  toStatus   WorkflowStatus @map("to_status")
 
   fromAssignee   AssetUser? @relation(fields: [fromAssigneeId], references: [id], onDelete: SetNull, name: "from_assignee")
   fromAssigneeId String?    @map("from_assignee_id") @db.Uuid
@@ -735,7 +734,7 @@ model WorkflowChange {
   toAssignee   AssetUser? @relation(fields: [toAssigneeId], references: [id], onDelete: SetNull, name: "to_assignee")
   toAssigneeId String?    @map("to_assignee_id") @db.Uuid
 
-  workflow   Workflow @relation(fields: [workflowId], references: [workflowId], onDelete: Cascade)
+  workflow   Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
   workflowId Int      @map("workflow_id")
 
   creator   AssetUser? @relation(fields: [creatorId], references: [id], onDelete: SetNull, name: "creator")
@@ -753,18 +752,21 @@ enum WorkflowStatus {
   @@map("workflow_status")
 }
 
-model TabStatus {
-  tabStatusId Int @id @default(autoincrement()) @map("tab_status_id")
+model WorkflowSelection {
+  id Int @id @default(autoincrement())
 
-  general    Boolean @default(false)
-  files      Boolean @default(false)
-  usage      Boolean @default(false)
-  contacts   Boolean @default(false)
-  references Boolean @default(false)
-  geometries Boolean @default(false)
+  general     Boolean @default(false)
+  normalFiles Boolean @default(false) @map("normal_files")
+  legalFiles  Boolean @default(false) @map("legal_files")
+  authors     Boolean @default(false)
+  initiators  Boolean @default(false)
+  suppliers   Boolean @default(false)
+  references  Boolean @default(false)
+  geometries  Boolean @default(false)
+  legacy      Boolean @default(false)
 
-  workflowReview  Workflow? @relation("reviewed_tabs")
-  workflowPublish Workflow? @relation("published_tabs")
+  reviewWorkflow   Workflow? @relation("review")
+  approvalWorkflow Workflow? @relation("approval")
 
-  @@map("tab_status")
+  @@map("workflow_selection")
 }

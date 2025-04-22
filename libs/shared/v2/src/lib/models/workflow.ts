@@ -1,25 +1,26 @@
-import { WorkflowStatus as WorkflowStatusFromPrisma } from '@prisma/client';
+import {
+  WorkflowSelection as WorkflowSelectionFromPrisma,
+  WorkflowStatus as WorkflowStatusFromPrisma,
+} from '@prisma/client';
 import { AssetId } from './asset';
 import { LocalDate } from './base/local-date';
 import { SimpleUser, UserId } from './user';
 import { WorkgroupId } from './workgroup';
 
-// TODO Consider merging `assetId` and `workflowId` into one field - DVA 2025-04-15
-
 export interface Workflow {
-  assetId: AssetId;
+  id: AssetId;
   hasRequestedChanges: boolean;
-
-  // TODO Consider renaming this to just `changes` - DVA 2025-04-16
-  workflowChanges: WorkflowChange[];
-  reviewedTabs: TabStatus;
-  publishedTabs: TabStatus;
+  changes: WorkflowChange[];
+  review: WorkflowSelection;
+  approval: WorkflowSelection;
   status: WorkflowStatus;
   assignee: SimpleUser | null;
   creator: SimpleUser | null;
   createdAt: LocalDate;
   workgroupId: WorkgroupId;
 }
+
+export type WorkflowSelection = Omit<WorkflowSelectionFromPrisma, 'id'>;
 
 export interface WorkflowChange {
   comment: string | null;
@@ -35,16 +36,6 @@ export interface WorkflowChangeData {
   comment: string | null;
   status: UnpublishedWorkflowStatus;
   assigneeId: UserId | null;
-}
-
-// TODO consider renaming this to something like `WorkflowSelection` - DVA 2025-04-15
-export interface TabStatus {
-  general: boolean;
-  files: boolean;
-  usage: boolean;
-  contacts: boolean;
-  references: boolean;
-  geometries: boolean;
 }
 
 export enum WorkflowStatus {
