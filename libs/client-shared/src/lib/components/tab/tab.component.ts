@@ -93,6 +93,10 @@ export class TabComponent implements OnInit, AfterViewInit, OnChanges, OnDestroy
     return this._isSelected;
   }
 
+  get panelId(): string | null {
+    return this.generatedPanelId === null ? this.currentPanelId : null;
+  }
+
   select(): void {
     this.isManuallySelected = true;
     this.syncSelected();

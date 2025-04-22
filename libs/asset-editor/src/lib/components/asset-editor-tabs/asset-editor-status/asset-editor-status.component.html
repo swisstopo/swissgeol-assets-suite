@@ -10,19 +10,19 @@
     }
   </div>
 
-  <asset-sg-tabs>
+  <asset-sg-tabs shouldUseHash>
     <asset-sg-tab [panel]="changes" translate> Verlauf </asset-sg-tab>
     <asset-sg-tab [panel]="review" translate> Review </asset-sg-tab>
     <asset-sg-tab [panel]="approval" translate> Freigabe </asset-sg-tab>
 
     <ng-container slot="content">
-      <div role="tabpanel" #changes>
+      <div role="tabpanel" id="changes" #changes>
         <asset-sg-editor-status-changes [workflow]="workflow" />
       </div>
-      <div role="tabpanel" #review>
+      <div role="tabpanel" id="review" #review>
         <asset-sg-editor-status-review [workflow]="workflow" />
       </div>
-      <div role="tabpanel" #approval>
+      <div role="tabpanel" id="approval" #approval>
         <asset-sg-editor-status-approval [workflow]="workflow" />
       </div>
     </ng-container>
