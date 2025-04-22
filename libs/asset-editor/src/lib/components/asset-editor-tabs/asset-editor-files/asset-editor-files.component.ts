@@ -10,5 +10,5 @@ import { AssetForm } from '../../asset-editor-page/asset-editor-page.component';
   standalone: false,
 })
 export class AssetEditorFilesComponent {
-  @Input() formGroup!: AssetForm['controls']['files'];
+  @Input() form!: AssetForm['controls']['files'];
 }

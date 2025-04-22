@@ -1,5 +1,5 @@
 import { Component, inject, OnDestroy, OnInit } from '@angular/core';
-import { FormControl, FormGroup, Validators } from '@angular/forms';
+import { AbstractControl, FormControl, FormGroup, ValidationErrors, Validators } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, RouterStateSnapshot } from '@angular/router';
 import {
@@ -94,22 +94,19 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
 
   public initializeForm() {
     this.form.reset();
-    this.form.controls.general.controls.titlePublic.setValue(this.asset?.titlePublic ?? null);
-    this.form.controls.general.controls.titleOriginal.setValue(this.asset?.titleOriginal ?? null);
-    this.form.controls.general.controls.workgroupId.setValue(this.asset?.workgroupId ?? null);
-    this.form.controls.general.controls.creationDate.setValue(
-      this.asset ? dateFromDateId(this.asset.createDate) : null,
-    );
-    this.form.controls.general.controls.receiptDate.setValue(
-      this.asset ? dateFromDateId(this.asset.receiptDate) : null,
-    );
-    this.form.controls.general.controls.assetLanguages.setValue(this.asset?.assetLanguages ?? null);
-    this.form.controls.general.controls.assetFormatItemCode.setValue(this.asset?.assetFormatItemCode ?? null);
-    this.form.controls.general.controls.assetKindItemCode.setValue(this.asset?.assetKindItemCode ?? null);
-    this.form.controls.general.controls.manCatLabelRefs.setValue(this.asset?.manCatLabelRefs ?? null);
-    this.form.controls.general.controls.isNatRel.setValue(this.asset?.isNatRel ?? false);
-    this.form.controls.general.controls.typeNatRels.setValue(this.asset?.typeNatRels ?? []);
-    this.form.controls.general.controls.ids.setValue(this.asset?.ids ?? []);
+    const { controls: general } = this.form.controls.general;
+    general.titlePublic.setValue(this.asset?.titlePublic ?? null);
+    general.titleOriginal.setValue(this.asset?.titleOriginal ?? null);
+    general.workgroupId.setValue(this.asset?.workgroupId ?? null);
+    general.creationDate.setValue(this.asset ? dateFromDateId(this.asset.createDate) : null);
+    general.receiptDate.setValue(this.asset ? dateFromDateId(this.asset.receiptDate) : null);
+    general.assetLanguages.setValue(this.asset?.assetLanguages ?? null);
+    general.assetFormatItemCode.setValue(this.asset?.assetFormatItemCode ?? null);
+    general.assetKindItemCode.setValue(this.asset?.assetKindItemCode ?? null);
+    general.manCatLabelRefs.setValue(this.asset?.manCatLabelRefs ?? null);
+    general.isNatRel.setValue(this.asset?.isNatRel ?? false);
+    general.typeNatRels.setValue(this.asset?.typeNatRels ?? []);
+    general.ids.setValue(this.asset?.ids ?? []);
   }
 
   public openConfirmDialogForAssetDeletion(assetId: number) {
@@ -181,7 +178,10 @@ const buildForm = () => {
       manCatLabelRefs: new FormControl<string[]>([], { validators: [Validators.required] }),
       isNatRel: new FormControl<boolean>(false),
       typeNatRels: new FormControl<string[]>([]),
-      ids: new FormControl<AlternativeId[]>([], { validators: [Validators.required], nonNullable: true }),
+      ids: new FormControl<AlternativeId[]>([], {
+        validators: [allAlternativeIdsComplete],
+        nonNullable: true,
+      }),
     }),
     files: new FormGroup({}),
     contacts: new FormGroup({}),
@@ -199,3 +199,17 @@ export type AlternativeId = {
   id: string;
   description: string;
 };
+
+export function allAlternativeIdsComplete(control: AbstractControl): ValidationErrors | null {
+  const value = control.value as AlternativeId[];
+
+  if (!Array.isArray(value)) {
+    return { invalidFormat: true };
+  }
+
+  const hasInvalid = value.some(
+    (item) => !item || typeof item !== 'object' || !item.id?.trim() || !item.description?.trim(),
+  );
+
+  return hasInvalid ? { incompleteAlternativeIds: true } : null;
+}

@@ -1,17 +1,17 @@
-import { CdkTextareaAutosize } from '@angular/cdk/text-field';
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { coerceBooleanProperty } from '@angular/cdk/coercion';
+import { AfterViewInit, Component, ElementRef, EventEmitter, Input, Output, ViewChild } from '@angular/core';
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { MatInput } from '@angular/material/input';
 import { TranslateModule } from '@ngx-translate/core';
 import { noop } from 'rxjs';
-import { FormItemWrapperComponent } from '../form-item-wrapper';
+import { FormItemWrapperComponent } from '../form-item-wrapper/form-item-wrapper.component';
 
 @Component({
   selector: 'asset-sg-text-area',
   templateUrl: './text-area.component.html',
   styleUrls: ['./text-area.component.scss'],
   standalone: true,
-  imports: [TranslateModule, FormsModule, CdkTextareaAutosize, MatInput, FormItemWrapperComponent],
+  imports: [TranslateModule, FormsModule, MatInput, FormItemWrapperComponent],
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,
@@ -20,18 +20,24 @@ import { FormItemWrapperComponent } from '../form-item-wrapper';
     },
   ],
 })
-export class TextAreaComponent implements ControlValueAccessor {
+export class TextAreaComponent implements ControlValueAccessor, AfterViewInit {
   @Input() public title = '';
   @Input() public value = '';
-  @Input() public icon = '';
+  @Input({ transform: coerceBooleanProperty }) public isRequired = false;
   @Input() public placeholder = '';
   @Output() valueChange = new EventEmitter<string>();
+  @ViewChild('textarea') textarea!: ElementRef<HTMLTextAreaElement>;
 
   private onChange: (value: string) => void = noop;
   private onTouched: () => void = noop;
 
+  public ngAfterViewInit() {
+    this.resize();
+  }
+
   public writeValue(value: string) {
     this.value = value;
+    setTimeout(() => this.resize(), 0);
   }
 
   public registerOnChange(fn: (value: string) => void): void {
@@ -52,5 +58,13 @@ export class TextAreaComponent implements ControlValueAccessor {
 
   public onBlur(): void {
     this.onTouched();
+  }
+
+  private resize() {
+    if (this.textarea) {
+      const element = this.textarea.nativeElement;
+      element.style.height = 'auto';
+      element.style.height = element.scrollHeight + 'px';
+    }
   }
 }

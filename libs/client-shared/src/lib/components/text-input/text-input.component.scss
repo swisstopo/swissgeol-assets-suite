@@ -4,13 +4,14 @@
   position: relative;
 }
 
-:host([small]) .search-input {
+:host[small] input {
   width: 360px;
 }
 
-.search-input {
+input {
+  --border-color: #{variables.$grey-07};
   padding: 8px 12px;
-  border: 1px solid variables.$grey-07;
+  border: 1px solid var(--border-color);
   width: 100%;
   height: 44px;
   border-radius: 3px;
@@ -18,6 +19,11 @@
   &::placeholder {
     color: variables.$grey-10;
   }
+}
+
+input[disabled] {
+  --border-color: #{variables.$grey-02};
+  background-color: variables.$white;
 }
 
 .has-icon {

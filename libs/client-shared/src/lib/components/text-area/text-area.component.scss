@@ -4,17 +4,16 @@
   position: relative;
 }
 
-.search-input {
+textarea {
   padding: 8px 12px;
   border: 1px solid variables.$grey-07;
   max-width: calc(948px - 16px - 25px - 24px);
   width: calc((948px - 16px - 35px - 24px) / 2);
   max-height: 150px;
-  height: 44px;
   border-radius: 3px;
-  //resize: both;
   font-family: Inter, sans-serif;
   font-size: 16px;
+  resize: vertical;
 
   &::placeholder {
     color: variables.$grey-10;
