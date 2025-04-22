@@ -5,7 +5,7 @@ import { MatFormField, MatHint, MatOption, MatSelectModule } from '@angular/mate
 import { SvgIconComponent } from '@ngneat/svg-icon';
 import { TranslateModule } from '@ngx-translate/core';
 import { noop } from 'rxjs';
-import { FormItemWrapperComponent } from '../form-item-wrapper';
+import { FormItemWrapperComponent } from '../form-item-wrapper/form-item-wrapper.component';
 import { SmartTranslatePipe } from '../smart-translate.pipe';
 
 type FormValue<T> = T | T[] | T[keyof T] | T[keyof T][];
@@ -42,13 +42,11 @@ export class SelectComponent<T> implements OnInit, ControlValueAccessor {
   @Input() public bindLabel: keyof T | null = null;
   @Input() public bindKey: keyof T | null = null;
   @Input() public title = '';
-  @Input() public icon = '';
+  @Input({ transform: coerceBooleanProperty }) public isRequired = false;
   @Input({ transform: coerceBooleanProperty }) public multiple = false;
   @Input() public initialValues: T[] = [];
-  @Input() public shouldShowError = false;
   @Input() public errorMessage = '';
-  @Input({ transform: coerceBooleanProperty }) public shouldShowTrigger = false;
-  @Input() triggerLabel = '';
+  @Input() trigger = '';
   @Output() public selectionChanged = new EventEmitter<T[]>();
 
   public selectedValues?: T | T[] = this.multiple ? [] : undefined;
@@ -64,10 +62,11 @@ export class SelectComponent<T> implements OnInit, ControlValueAccessor {
   public onFilterChange(selectedValues: T | T[]): void {
     this.selectedValues = selectedValues;
     this.selectionChanged.emit(Array.isArray(selectedValues) ? selectedValues : [selectedValues]);
-    if (this.bindKey) {
+    const { bindKey } = this;
+    if (bindKey) {
       const newValues = Array.isArray(selectedValues)
-        ? selectedValues.map((value) => value[this.bindKey!])
-        : selectedValues[this.bindKey];
+        ? selectedValues.map((value) => value[bindKey])
+        : selectedValues[bindKey];
       this.onChange(newValues);
     } else {
       this.onChange(selectedValues);

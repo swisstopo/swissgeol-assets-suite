@@ -1,16 +1,11 @@
 import { Component, inject, Input, OnDestroy, OnInit } from '@angular/core';
 import { fromAppShared, TranslatedValue } from '@asset-sg/client-shared';
-import { ValueItem } from '@asset-sg/shared';
+import { AssetEditDetail, ValueItem } from '@asset-sg/shared';
 import { Role, SimpleWorkgroup } from '@asset-sg/shared/v2';
 import { UntilDestroy } from '@ngneat/until-destroy';
 import { Store } from '@ngrx/store';
 import { combineLatestWith, map, Observable, startWith, Subscription } from 'rxjs';
 import { AssetForm } from '../../asset-editor-page/asset-editor-page.component';
-
-interface TranslatedValueItem {
-  code: string;
-  value: TranslatedValue;
-}
 
 @UntilDestroy()
 @Component({
@@ -20,8 +15,8 @@ interface TranslatedValueItem {
   standalone: false,
 })
 export class AssetEditorGeneralComponent implements OnInit, OnDestroy {
-  @Input() formGroup!: AssetForm['controls']['general'];
-  @Input() sgsId: number | null = null;
+  @Input() form!: AssetForm['controls']['general'];
+  @Input() asset: AssetEditDetail | null = null;
 
   public workgroups: SimpleWorkgroup[] = [];
   public selectedLanguages: string[] = [];
@@ -31,42 +26,42 @@ export class AssetEditorGeneralComponent implements OnInit, OnDestroy {
   private readonly subscription: Subscription = new Subscription();
   public readonly natRelItems$: Observable<TranslatedValueItem[]> = this.store
     .select(fromAppShared.selectNatRelItems)
-    .pipe(map(translatedValueItemFromValueItemRecord));
+    .pipe(map(mapValueItemsToTranslatedItem));
   public readonly manCatLabelItems$: Observable<TranslatedValueItem[]> = this.store
     .select(fromAppShared.selectManCatLabelItems)
-    .pipe(map(translatedValueItemFromValueItemRecord));
+    .pipe(map(mapValueItemsToTranslatedItem));
   public readonly assetFormatItems$: Observable<TranslatedValueItem[]> = this.store
     .select(fromAppShared.selectAssetFormatItems)
-    .pipe(map(translatedValueItemFromValueItemRecord));
+    .pipe(map(mapValueItemsToTranslatedItem));
   public readonly assetKindItems$: Observable<TranslatedValueItem[]> = this.store
     .select(fromAppShared.selectAssetKindItems)
-    .pipe(map(translatedValueItemFromValueItemRecord));
+    .pipe(map(mapValueItemsToTranslatedItem));
   public readonly languageItems$: Observable<TranslatedValueItem[]> = this.store
     .select(fromAppShared.selectLanguageItems)
-    .pipe(map(translatedValueItemFromValueItemRecord));
+    .pipe(map(mapValueItemsToTranslatedItem));
   public readonly availableWorkgroups$ = this.store
     .select(fromAppShared.selectWorkgroups)
-    .pipe(map((workgroups) => workgroups.filter((it) => it.role != Role.Viewer)));
+    .pipe(map((workgroups) => workgroups.filter((it) => it.role != Role.Reader)));
 
   public ngOnInit() {
     this.subscription.add(this.availableWorkgroups$.subscribe((workgroups) => (this.workgroups = workgroups)));
     this.subscription.add(
-      this.formGroup.controls.manCatLabelRefs.valueChanges
-        .pipe(startWith(this.formGroup.controls.manCatLabelRefs.value), combineLatestWith(this.manCatLabelItems$))
+      this.form.controls.manCatLabelRefs.valueChanges
+        .pipe(startWith(this.form.controls.manCatLabelRefs.value), combineLatestWith(this.manCatLabelItems$))
         .subscribe(([selectedValues, manCatLabelItems]) => {
           this.selectedManCatLabels = manCatLabelItems.filter((item) => selectedValues?.includes(item.code));
         }),
     );
     this.subscription.add(
-      this.formGroup.controls.typeNatRels.valueChanges
-        .pipe(startWith(this.formGroup.controls.typeNatRels.value), combineLatestWith(this.natRelItems$))
+      this.form.controls.typeNatRels.valueChanges
+        .pipe(startWith(this.form.controls.typeNatRels.value), combineLatestWith(this.natRelItems$))
         .subscribe(([selectedValues, natRelItems]) => {
           this.selectedNatRelItems = natRelItems.filter((item) => selectedValues?.includes(item.code));
         }),
     );
     this.subscription.add(
-      this.formGroup.controls.assetLanguages.valueChanges
-        .pipe(startWith(this.formGroup.controls.assetLanguages.value))
+      this.form.controls.assetLanguages.valueChanges
+        .pipe(startWith(this.form.controls.assetLanguages.value))
         .subscribe((langs) => {
           this.selectedLanguages = langs?.map((lang) => lang.languageItemCode) ?? [];
         }),
@@ -81,38 +76,43 @@ export class AssetEditorGeneralComponent implements OnInit, OnDestroy {
     const languages = langs.map((l) => ({
       languageItemCode: l,
     }));
-    this.formGroup.controls.assetLanguages.setValue(languages);
-    this.formGroup.markAsDirty();
+    this.form.controls.assetLanguages.setValue(languages);
+    this.form.markAsDirty();
   }
 
   public removeItemFromForm(item: TranslatedValueItem, controlName: 'manCatLabelRefs' | 'typeNatRels') {
-    const currentValues = this.formGroup.controls[controlName].value ?? [];
+    const currentValues = this.form.controls[controlName].value ?? [];
     const newValues = currentValues.filter((value: string) => value !== item.code);
-    this.formGroup.controls[controlName].setValue(newValues);
-    this.formGroup.markAsDirty();
+    this.form.controls[controlName].setValue(newValues);
+    this.form.markAsDirty();
   }
 
   public addNewAlternativeId() {
-    this.formGroup.controls.ids.setValue([
-      ...this.formGroup.controls.ids.value,
+    this.form.controls.ids.setValue([
+      ...this.form.controls.ids.value,
       {
         idId: null,
         id: '',
         description: '',
       },
     ]);
-    this.formGroup.markAsDirty();
+    this.form.markAsDirty();
   }
 }
 
-const translatedValueItemFromValueItemRecord = (item: Record<string, ValueItem> | null): TranslatedValueItem[] => {
+interface TranslatedValueItem {
+  code: string;
+  value: TranslatedValue;
+}
+
+const mapValueItemsToTranslatedItem = (item: Record<string, ValueItem> | null): TranslatedValueItem[] => {
   if (item == null) {
     return [];
   }
-  return Object.values(item).map(translatedValueItemFromValueItem);
+  return Object.values(item).map(mapValueItemToTranslatedItem);
 };
 
-const translatedValueItemFromValueItem = (item: ValueItem): TranslatedValueItem => {
+const mapValueItemToTranslatedItem = (item: ValueItem): TranslatedValueItem => {
   return {
     code: item.code,
     value: {

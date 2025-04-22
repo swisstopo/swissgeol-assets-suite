@@ -1,14 +1,13 @@
-<asset-sg-form-item-wrapper [title]="title" [icon]="headerIcon">
+<label asset-sg-form-item-wrapper [title]="label" [isRequired]="isRequired">
   <input
-    class="search-input"
-    [class.has-icon]="textFieldIcon"
+    [class.has-icon]="icon"
     [ngModel]="value"
     (ngModelChange)="changeTerm($event)"
     (blur)="onBlur()"
     [disabled]="disabled"
     [placeholder]="placeholder"
   />
-  @if (textFieldIcon) {
-    <svg-icon [key]="textFieldIcon" class="icon" />
+  @if (icon) {
+    <svg-icon [key]="icon" class="icon" />
   }
-</asset-sg-form-item-wrapper>
+</label>

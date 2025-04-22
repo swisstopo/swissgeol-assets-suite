@@ -1,4 +1,4 @@
-<asset-sg-form-item-wrapper [title]="title" [icon]="icon">
+<label asset-sg-form-item-wrapper [title]="title" [isRequired]="isRequired">
   <mat-form-field>
     <input
       matInput
@@ -13,4 +13,7 @@
     </mat-datepicker-toggle>
     <mat-datepicker #picker></mat-datepicker>
   </mat-form-field>
-</asset-sg-form-item-wrapper>
+  @if (errorMessage) {
+    <mat-hint class="mat-mdc-form-field-error">{{ errorMessage }}</mat-hint>
+  }
+</label>

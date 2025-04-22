@@ -7,8 +7,7 @@
     title="{{ 'admin.users' | translate }}"
     [values]="userValues"
     (selectionChanged)="setSelectedUsers($event)"
-    [shouldShowError]="shouldShowError"
-    errorMessage="{{ 'admin.userPage.userAddError' | translate }}"
+    errorMessage="{{ shouldShowError ? ('admin.userPage.userAddError' | translate) : '' }}"
     multiple
   >
   </asset-sg-select>

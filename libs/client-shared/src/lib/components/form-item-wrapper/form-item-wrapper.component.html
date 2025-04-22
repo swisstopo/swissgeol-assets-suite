@@ -1,8 +1,8 @@
 @if (title) {
   <div>
-    <h5>{{ title }}</h5>
-    @if (icon) {
-      <svg-icon [key]="icon"></svg-icon>
+    <span>{{ title }}</span>
+    @if (isRequired) {
+      <svg-icon key="failure"></svg-icon>
     }
   </div>
 }

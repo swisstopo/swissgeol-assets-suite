@@ -1,4 +1,5 @@
-import { Component, EventEmitter, forwardRef, Input, Output } from '@angular/core';
+import { coerceBooleanProperty } from '@angular/cdk/coercion';
+import { Component, forwardRef, Input } from '@angular/core';
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR, ReactiveFormsModule } from '@angular/forms';
 import { MAT_DATE_LOCALE, provideNativeDateAdapter } from '@angular/material/core';
 import { MatDatepickerInputEvent, MatDatepickerModule, MatDatepickerToggleIcon } from '@angular/material/datepicker';
@@ -7,7 +8,7 @@ import { MatInput, MatSuffix } from '@angular/material/input';
 import { SvgIconComponent } from '@ngneat/svg-icon';
 import { TranslateModule } from '@ngx-translate/core';
 import { noop } from 'rxjs';
-import { FormItemWrapperComponent } from '../form-item-wrapper';
+import { FormItemWrapperComponent } from '../form-item-wrapper/form-item-wrapper.component';
 import { SmartTranslatePipe } from '../smart-translate.pipe';
 
 @Component({
@@ -41,10 +42,8 @@ import { SmartTranslatePipe } from '../smart-translate.pipe';
 })
 export class DatePickerComponent implements ControlValueAccessor {
   @Input() public title = '';
-  @Input() public icon = '';
-  @Input() public shouldShowError = false;
+  @Input({ transform: coerceBooleanProperty }) public isRequired = false;
   @Input() public errorMessage = '';
-  @Output() public selectionChanged = new EventEmitter<Date | null>();
 
   public date: Date | null = null;
 
@@ -55,7 +54,6 @@ export class DatePickerComponent implements ControlValueAccessor {
     const value = date.value;
     this.date = value;
     this.onChange(value);
-    this.selectionChanged.emit(value);
   }
 
   public writeValue(value: Date): void {
