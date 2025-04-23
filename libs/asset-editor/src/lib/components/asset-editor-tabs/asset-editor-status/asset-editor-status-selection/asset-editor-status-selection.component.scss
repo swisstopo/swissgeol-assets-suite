@@ -1,0 +1,7 @@
+@use "../../../../styles/variables";
+
+// Highlight item titles when they are selected but disabled.
+// This leaves the checkboxes themselves disabled, but also shows that the item itself is checked.
+asset-sg-checklist-header ::ng-deep asset-sg-checklist-item.is-disabled.is-checked > .title {
+  color: variables.$grey-10;
+}

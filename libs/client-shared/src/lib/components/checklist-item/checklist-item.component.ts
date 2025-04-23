@@ -1,4 +1,14 @@
-import { AfterContentInit, Component, ContentChildren, forwardRef, QueryList, ViewChild } from '@angular/core';
+import { coerceBooleanProperty } from '@angular/cdk/coercion';
+import {
+  AfterContentInit,
+  Component,
+  ContentChildren,
+  forwardRef,
+  HostBinding,
+  Input,
+  QueryList,
+  ViewChild,
+} from '@angular/core';
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { MatCheckbox } from '@angular/material/checkbox';
 import { TranslateModule } from '@ngx-translate/core';
@@ -19,6 +29,11 @@ import { noop } from 'rxjs';
   ],
 })
 export class ChecklistItemComponent implements AfterContentInit, ControlValueAccessor {
+  @Input()
+  set disabled(value: boolean | string) {
+    this.setDisabledState(coerceBooleanProperty(value));
+  }
+
   /**
    * The checkbox's state.
    */
@@ -55,6 +70,18 @@ export class ChecklistItemComponent implements AfterContentInit, ControlValueAcc
    */
   private activeChildCount = 0;
 
+  private disabledChildCount = 0;
+
+  /**
+   * Whether this item is disabled.
+   *
+   * - When {@link disabled} is non-null, `isDisabled` equals `disabled`.
+   * - Otherwise, if this item has a parent, `isDisabled` mirrors its disabled state.
+   * - Otherwise, this is `false`.
+   */
+  @HostBinding('class.is-disabled')
+  isDisabled = false;
+
   private publishChange: (value: boolean) => void = noop;
   private publishTouch: () => void = noop;
 
@@ -67,8 +94,11 @@ export class ChecklistItemComponent implements AfterContentInit, ControlValueAcc
     }
   }
 
-  setParent(parent: ChecklistItemComponent): void {
+  private setParent(parent: ChecklistItemComponent): void {
     this.parent = parent;
+    if (this.isDisabled) {
+      this.parent?.handleChildDisabledChange(this);
+    }
   }
 
   toggle(): void {
@@ -83,7 +113,7 @@ export class ChecklistItemComponent implements AfterContentInit, ControlValueAcc
     }
   }
 
-  setState(state: CheckboxState, options: { preventUp?: boolean } = {}): void {
+  private setState(state: CheckboxState, options: { preventUp?: boolean } = {}): void {
     const wasChecked = this.state !== CheckboxState.Unchecked;
     const isChecked = state !== CheckboxState.Unchecked;
 
@@ -133,6 +163,15 @@ export class ChecklistItemComponent implements AfterContentInit, ControlValueAcc
     }
   }
 
+  handleChildDisabledChange(child: ChecklistItemComponent): void {
+    this.disabledChildCount += child.isDisabled ? 1 : -1;
+    const wasDisabled = this.isDisabled;
+    this.isDisabled = this.disabledChildCount === this.children.length;
+    if (this.isDisabled !== wasDisabled) {
+      this.parent?.handleChildDisabledChange(this);
+    }
+  }
+
   public writeValue(value: unknown): void {
     const isChecked = !!value;
     this.setState(isChecked ? CheckboxState.Checked : CheckboxState.Unchecked);
@@ -144,6 +183,21 @@ export class ChecklistItemComponent implements AfterContentInit, ControlValueAcc
 
   public registerOnTouched(fn: () => void): void {
     this.publishTouch = fn;
+  }
+
+  public setDisabledState(isDisabled: boolean): void {
+    const wasDisabled = this.isDisabled;
+    this.isDisabled = isDisabled;
+    if (wasDisabled !== isDisabled) {
+      this.parent?.handleChildDisabledChange(this);
+    }
+  }
+
+  @HostBinding('class')
+  private get hostClasses(): object {
+    return {
+      [`is-checked`]: this.state !== CheckboxState.Unchecked,
+    };
   }
 
   protected readonly CheckboxState = CheckboxState;

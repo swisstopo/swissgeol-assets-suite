@@ -6,6 +6,7 @@
     [ngModel]="state !== CheckboxState.Unchecked"
     (ngModelChange)="toggle()"
     [indeterminate]="state === CheckboxState.Indeterminate"
+    [disabled]="isDisabled"
     color="primary"
   />
   <ng-content select="[slot=label]" />

@@ -1,6 +1,8 @@
-import { Component, inject, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, HostBinding, inject, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { FormControl, FormGroup } from '@angular/forms';
-import { getEntries, Workflow, WorkflowSelection } from '@asset-sg/shared/v2';
+import { can$ } from '@asset-sg/client-shared';
+import { getEntries, Workflow, WorkflowPolicy, WorkflowSelection, WorkflowStatus } from '@asset-sg/shared/v2';
+import { firstValueFrom } from 'rxjs';
 import { WorkflowApiService } from '../../../../services/workflow-api.service';
 
 @Component({
@@ -22,24 +24,49 @@ export class AssetEditorStatusSelectionComponent implements OnChanges {
 
   private readonly workflowApiService = inject(WorkflowApiService);
 
+  readonly canUpdate$ = can$(WorkflowPolicy, (it) => it.canUpdate(this.workflow));
+
   constructor() {
     this.submit = this.submit.bind(this);
   }
 
   ngOnChanges(changes: SimpleChanges): void {
     if ('workflow' in changes) {
-      this.initializeForm();
+      this.initializeForm().then();
     }
   }
 
-  private initializeForm(): void {
+  private async initializeForm(): Promise<void> {
     this.form = buildForm(this.workflow[this.selection]);
+    if (!this.hasCorrectStatus || !(await firstValueFrom(this.canUpdate$))) {
+      this.form.disable({ emitEvent: false });
+    } else if (this.selection === 'approval') {
+      this.configureDisabledApprovalFields();
+    }
     this.form.valueChanges.subscribe(() => {
       if (this.timeoutForSubmit !== null) {
         clearTimeout(this.timeoutForSubmit);
       }
       this.timeoutForSubmit = setTimeout(this.submit, 500);
     });
+  }
+
+  private configureDisabledApprovalFields(): void {
+    const { review } = this.workflow;
+    for (const [key, isReviewed] of getEntries(review)) {
+      if (!isReviewed) {
+        this.form.controls[key].disable({ emitEvent: false });
+      }
+    }
+  }
+
+  get hasCorrectStatus(): boolean {
+    switch (this.selection) {
+      case 'review':
+        return this.workflow.status === WorkflowStatus.InReview;
+      case 'approval':
+        return this.workflow.status === WorkflowStatus.Reviewed;
+    }
   }
 
   private submit(): void {
@@ -58,6 +85,13 @@ export class AssetEditorStatusSelectionComponent implements OnChanges {
         this.workflowApiService.updateApproval(this.workflow.id, patch).subscribe();
         break;
     }
+  }
+
+  @HostBinding('class')
+  private get hostClasses(): object {
+    return {
+      [`is-${this.selection}`]: true,
+    };
   }
 }
 

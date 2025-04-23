@@ -18,7 +18,6 @@ asset-sg-checklist-header:host {
 }
 
 // title + checkbox
-
 .title,
 .checkbox {
   flex: 0 0 50%;
@@ -30,10 +29,6 @@ asset-sg-checklist-header:host {
 asset-sg-checklist-header:host > .title,
 asset-sg-checklist-header:host > .checkbox {
   --border-color: var(--bg-color--header);
-}
-
-asset-sg-checklist-header:host > .title,
-asset-sg-checklist-header:host > .checkbox {
   font-weight: bold;
   background-color: var(--bg-color--header);
 }
@@ -41,6 +36,11 @@ asset-sg-checklist-header:host > .checkbox {
 asset-sg-checklist-header:host ::ng-deep > asset-sg-checklist-item:first-of-type > .title,
 asset-sg-checklist-header:host ::ng-deep > asset-sg-checklist-item:first-of-type > .checkbox {
   border-top: 2px solid var(--border-color--base);
+}
+
+:host:not(asset-sg-checklist-header).is-disabled > .title,
+:host:not(asset-sg-checklist-header).is-disabled > .checkbox {
+  color: #828e9a;
 }
 
 // title
