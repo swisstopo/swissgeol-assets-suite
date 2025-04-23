@@ -36,7 +36,7 @@ import { isNotNull } from '@asset-sg/core';
 import { AssetEditPolicy } from '@asset-sg/shared/v2';
 import { SvgIconComponent } from '@ngneat/svg-icon';
 import { EffectsModule } from '@ngrx/effects';
-import { Store } from '@ngrx/store';
+import { Store, StoreModule } from '@ngrx/store';
 import { TranslateModule } from '@ngx-translate/core';
 import { ForModule } from '@rx-angular/template/for';
 import { IfModule } from '@rx-angular/template/if';
@@ -70,6 +70,7 @@ import { AssetEditorStatusComponent } from './components/asset-editor-tabs/asset
 import { AssetMultiselectComponent } from './components/asset-multiselect/asset-multiselect.component';
 import { Lv95xWithoutPrefixPipe, Lv95yWithoutPrefixPipe } from './components/lv95-without-prefix';
 import { AssetEditorEffects } from './state/asset-editor.effects';
+import { assetEditorReducer } from './state/asset-editor.reducer';
 
 export const canLeaveEdit: CanDeactivateFn<AssetEditorPageComponent> = (component, _ars, _crss, target) =>
   component.canDeactivate(target);
@@ -104,6 +105,7 @@ export const canLeaveEdit: CanDeactivateFn<AssetEditorPageComponent> = (componen
   ],
   imports: [
     CommonModule,
+    StoreModule.forFeature('editor', assetEditorReducer),
     RouterModule.forChild([
       {
         path: '',
