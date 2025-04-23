@@ -1,28 +1,46 @@
 <asset-sg-checklist-header [formGroup]="form">
-  Tab
+  {{ "edit.tabs.status.selectionTabHeading" | translate }}
   <ng-container slot="label">
     @switch (this.selection) {
       @case ("review") {
-        Reviewed
+        {{ "edit.tabs.status.markAsReviewed" | translate }}
       }
       @case ("approval") {
-        Published
+        {{ "edit.tabs.status.markAsPublished" | translate }}
       }
     }
   </ng-container>
-  <asset-sg-checklist-item formControlName="general"> General </asset-sg-checklist-item>
-  <asset-sg-checklist-item>
-    Dateien
-    <asset-sg-checklist-item formControlName="normalFiles">Normale Dateien</asset-sg-checklist-item>
-    <asset-sg-checklist-item formControlName="legalFiles">Rechtliche Einwilligungen</asset-sg-checklist-item>
+  <asset-sg-checklist-item formControlName="general">
+    {{ "workflowSelection.general" | translate }}
   </asset-sg-checklist-item>
   <asset-sg-checklist-item>
-    Kontakte
-    <asset-sg-checklist-item formControlName="initiators">Auftraggeber</asset-sg-checklist-item>
-    <asset-sg-checklist-item formControlName="suppliers">Einlieferer</asset-sg-checklist-item>
-    <asset-sg-checklist-item formControlName="authors">Autoren</asset-sg-checklist-item>
+    {{ "edit.tabs.status.selectionCategories.files" | translate }}
+    <asset-sg-checklist-item formControlName="normalFiles">
+      {{ "workflowSelection.normalFiles" | translate }}
+    </asset-sg-checklist-item>
+    <asset-sg-checklist-item formControlName="legalFiles">
+      {{ "workflowSelection.legalFiles" | translate }}
+    </asset-sg-checklist-item>
   </asset-sg-checklist-item>
-  <asset-sg-checklist-item formControlName="references">Referenzen</asset-sg-checklist-item>
-  <asset-sg-checklist-item formControlName="geometries">Geometrien</asset-sg-checklist-item>
-  <asset-sg-checklist-item formControlName="legacy">Altdaten</asset-sg-checklist-item>
+  <asset-sg-checklist-item>
+    {{ "edit.tabs.status.selectionCategories.contacts" | translate }}
+    <asset-sg-checklist-item formControlName="initiators">
+      {{ "workflowSelection.initiators" | translate }}
+    </asset-sg-checklist-item>
+    <asset-sg-checklist-item formControlName="suppliers">
+      {{ "workflowSelection.suppliers" | translate }}
+    </asset-sg-checklist-item>
+    <asset-sg-checklist-item formControlName="authors">
+      {{ "workflowSelection.authors" | translate }}
+    </asset-sg-checklist-item>
+  </asset-sg-checklist-item>
+  <asset-sg-checklist-item formControlName="references">
+    {{ "workflowSelection.references" | translate }}
+  </asset-sg-checklist-item>
+  <asset-sg-checklist-item formControlName="geometries">
+    {{ "workflowSelection.geometries" | translate }}
+  </asset-sg-checklist-item>
+  <asset-sg-checklist-item formControlName="legacy">
+    {{ "workflowSelection.legacy" | translate }}
+  </asset-sg-checklist-item>
 </asset-sg-checklist-header>

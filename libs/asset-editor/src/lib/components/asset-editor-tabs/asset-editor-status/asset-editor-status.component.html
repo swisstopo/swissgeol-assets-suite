@@ -11,9 +11,9 @@
   </div>
 
   <asset-sg-tabs shouldUseHash>
-    <asset-sg-tab [panel]="changes" translate> Verlauf </asset-sg-tab>
-    <asset-sg-tab [panel]="review" translate> Review </asset-sg-tab>
-    <asset-sg-tab [panel]="approval" translate> Freigabe </asset-sg-tab>
+    <asset-sg-tab [panel]="changes">{{ "edit.tabs.status.tabs.history" | translate }}</asset-sg-tab>
+    <asset-sg-tab [panel]="review">{{ "edit.tabs.status.tabs.review" | translate }}</asset-sg-tab>
+    <asset-sg-tab [panel]="approval">{{ "edit.tabs.status.tabs.approval" | translate }}</asset-sg-tab>
 
     <ng-container slot="content">
       <div role="tabpanel" id="changes" #changes>
