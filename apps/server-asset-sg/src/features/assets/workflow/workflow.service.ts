@@ -32,6 +32,16 @@ export class WorkflowService {
     return handleMissing(await this.workflowRepo.reviews.update(workflow.id, review));
   }
 
+  async updateApproval(workflow: Workflow, approval: Partial<WorkflowSelection>): Promise<WorkflowSelection> {
+    if (workflow.status !== WorkflowStatus.Reviewed) {
+      throw new HttpException(
+        "Approval can only be changed for workflows with 'Reviewed' status.",
+        HttpStatus.CONFLICT,
+      );
+    }
+    return handleMissing(await this.workflowRepo.approvals.update(workflow.id, approval));
+  }
+
   async publish(workflow: Workflow, creatorId: UserId) {
     if (workflow.status !== WorkflowStatus.Reviewed) {
       throw new HttpException('Cannot publish workflow in current status', HttpStatus.BAD_REQUEST);
