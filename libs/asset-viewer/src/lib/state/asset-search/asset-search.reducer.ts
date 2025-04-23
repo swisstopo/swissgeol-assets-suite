@@ -23,12 +23,6 @@ import { mapAssetAccessToAccessType } from '../../utils/access-type';
 import * as actions from './asset-search.actions';
 import { PanelState } from './asset-search.actions';
 
-export enum LoadingState {
-  Initial = 'initial',
-  Loading = 'loading',
-  Loaded = 'loaded',
-}
-
 export interface AssetSearchState {
   query: AssetSearchQuery;
   results: AssetSearchResult;
