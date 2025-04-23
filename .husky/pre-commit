@@ -1,1 +1,2 @@
+echo "🚀 Running linter!"
 npx lint-staged
