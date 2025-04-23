@@ -2,47 +2,26 @@ import {
   WorkflowSelection as WorkflowSelectionFromPrisma,
   WorkflowStatus as WorkflowStatusFromPrisma,
 } from '@prisma/client';
+import { GenericWorkflow, WorkflowStatus, WorkflowChange } from '@swisstopo/swissgeol-ui-core';
 import { AssetId } from './asset';
-import { LocalDate } from './base/local-date';
-import { SimpleUser, UserId } from './user';
+import { UserId } from './user';
 import { WorkgroupId } from './workgroup';
 
-export interface Workflow {
+export { WorkflowStatus, WorkflowChange };
+
+export interface Workflow extends GenericWorkflow {
   id: AssetId;
-  hasRequestedChanges: boolean;
-  changes: WorkflowChange[];
   review: WorkflowSelection;
   approval: WorkflowSelection;
-  status: WorkflowStatus;
-  assignee: SimpleUser | null;
-  creator: SimpleUser | null;
-  createdAt: LocalDate;
   workgroupId: WorkgroupId;
 }
 
 export type WorkflowSelection = Omit<WorkflowSelectionFromPrisma, 'id'>;
 
-export interface WorkflowChange {
-  comment: string | null;
-  creator: SimpleUser | null;
-  fromAssignee: SimpleUser | null;
-  toAssignee: SimpleUser | null;
-  fromStatus: WorkflowStatus;
-  toStatus: WorkflowStatus;
-  createdAt: LocalDate;
-}
-
 export interface WorkflowChangeData {
   comment: string | null;
   status: UnpublishedWorkflowStatus;
   assigneeId: UserId | null;
-}
-
-export enum WorkflowStatus {
-  Draft = 'Draft',
-  InReview = 'InReview',
-  Reviewed = 'Reviewed',
-  Published = 'Published',
 }
 
 export const UnpublishedWorkflowStatus = [

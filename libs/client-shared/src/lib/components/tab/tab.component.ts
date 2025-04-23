@@ -137,9 +137,7 @@ export class TabComponent implements OnInit, AfterViewInit, OnChanges, OnDestroy
       return;
     }
     if (this.panel.id.length === 0) {
-      if (this.generatedPanelId === null) {
-        this.generatedPanelId = uuid();
-      }
+      this.generatedPanelId ??= uuid();
       this.panel.id = this.generatedPanelId;
     }
     this.currentPanel = this.panel;

@@ -4,6 +4,7 @@
 h2 {
   @include mixins.text-ellipsis(2);
   max-width: 70vw;
+  font-size: 16px;
 }
 
 .form-container {
