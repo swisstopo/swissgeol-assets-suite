@@ -206,7 +206,7 @@ export const deAppTranslations = {
         phone: 'Telefon',
         website: 'Website',
         create: 'Erstellen',
-        noContacts: 'Keine Kontakte',
+        noContacts: 'Noch keine Kontakte hinzugefügt ...',
         contactPlaceholder: 'Suche über Namen',
       },
       references: {

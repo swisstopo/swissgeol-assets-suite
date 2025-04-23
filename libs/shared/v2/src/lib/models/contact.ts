@@ -14,3 +14,7 @@ export interface Contact extends Model<ContactId> {
 
 export type ContactId = number;
 export type ContactData = Data<Contact>;
+
+export interface AssetContact extends Pick<Contact, 'id'> {
+  role: 'author' | 'initiator' | 'supplier';
+}
