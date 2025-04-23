@@ -19,6 +19,7 @@ import { downloadIcon } from './download';
 import { editIcon } from './edit';
 import { errorIcon } from './error';
 import { errorFilledIcon } from './error-filled';
+import { exportIcon } from './export';
 import { extLinkIcon } from './ext-link';
 import { failureIcon } from './failure';
 import { favoriteIcon } from './favorite';
@@ -42,6 +43,7 @@ import { searchIcon } from './search';
 import { settingsIcon } from './settings';
 import { successIcon } from './success';
 import { successFilledIcon } from './success-filled';
+import { uploadIcon } from './upload';
 import { userManagementIcon } from './user-management';
 import { viewExtendedIcon } from './view-extended';
 import { warnIcon } from './warn';
@@ -71,6 +73,7 @@ export const icons = [
   editIcon,
   errorIcon,
   errorFilledIcon,
+  exportIcon,
   extLinkIcon,
   failureIcon,
   favoriteIcon,
@@ -87,6 +90,7 @@ export const icons = [
   successIcon,
   successFilledIcon,
   changeIcon,
+  uploadIcon,
   userManagementIcon,
   viewExtendedIcon,
   warningFilledIcon,

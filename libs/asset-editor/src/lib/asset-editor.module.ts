@@ -13,6 +13,19 @@ import { MatInputModule } from '@angular/material/input';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSelectModule } from '@angular/material/select';
+import { MatSort, MatSortHeader } from '@angular/material/sort';
+import {
+  MatCell,
+  MatCellDef,
+  MatColumnDef,
+  MatHeaderCell,
+  MatHeaderCellDef,
+  MatHeaderRow,
+  MatHeaderRowDef,
+  MatRow,
+  MatRowDef,
+  MatTable,
+} from '@angular/material/table';
 import { CanActivateFn, CanDeactivateFn, RouterModule } from '@angular/router';
 import {
   AdminOnlyDirective,
@@ -225,6 +238,18 @@ export const canLeaveEdit: CanDeactivateFn<AssetEditorPageComponent> = (componen
     TabComponent,
     TabsComponent,
     UsernameComponent,
+    MatCell,
+    MatCellDef,
+    MatColumnDef,
+    MatHeaderCell,
+    MatHeaderRow,
+    MatHeaderRowDef,
+    MatRow,
+    MatRowDef,
+    MatSort,
+    MatSortHeader,
+    MatTable,
+    MatHeaderCellDef,
   ],
   providers: [
     { provide: MAT_DATE_LOCALE, useValue: de },
