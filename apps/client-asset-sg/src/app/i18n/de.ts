@@ -245,12 +245,6 @@ export const deAppTranslations = {
       },
       administration: {
         tabName: 'Administration',
-        infoGeol: 'InfoGeol',
-        sgsId: 'SGS-ID',
-        data: 'Daten',
-        contactData: 'Kontaktdaten',
-        auxData: 'Zusatzdaten',
-        municipality: 'Gemeinde',
         workStatus: 'Arbeitsstatus',
         lastProcessed: 'Letztes Update',
         by: 'Von',
@@ -259,6 +253,15 @@ export const deAppTranslations = {
           tab: 'Tab',
           hasValidationErrors: 'enthält Validierungsfehler',
         },
+      },
+      legacyData: {
+        tabName: 'Altdaten',
+        infoGeol: 'InfoGeol',
+        sgsId: 'SGS-ID',
+        data: 'Daten',
+        contactData: 'Kontaktdaten',
+        auxData: 'Zusatzdaten',
+        municipality: 'Gemeinde',
       },
       status: {
         tabName: 'Status',

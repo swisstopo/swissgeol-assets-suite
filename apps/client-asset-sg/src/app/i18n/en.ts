@@ -246,12 +246,6 @@ export const enAppTranslations: AppTranslations = {
       },
       administration: {
         tabName: 'Administration',
-        infoGeol: 'InfoGeol',
-        sgsId: 'SGS ID',
-        data: 'Data',
-        contactData: 'Contact data',
-        auxData: 'Auxiliary data',
-        municipality: 'Municipality',
         workStatus: 'Work status',
         lastProcessed: 'Last processed',
         by: 'By',
@@ -260,6 +254,15 @@ export const enAppTranslations: AppTranslations = {
           tab: 'Tab',
           hasValidationErrors: 'has validation errors',
         },
+      },
+      legacyData: {
+        tabName: 'Legacy data',
+        infoGeol: 'InfoGeol',
+        sgsId: 'SGS ID',
+        data: 'Data',
+        contactData: 'Contact data',
+        auxData: 'Auxiliary data',
+        municipality: 'Municipality',
       },
       status: {
         tabName: 'Status',
