@@ -206,7 +206,7 @@ export const frAppTranslations: AppTranslations = {
         phone: 'Téléphone',
         website: 'Site web',
         create: 'Créer',
-        noContacts: 'Aucun contact',
+        noContacts: 'Aucun contact ...',
         contactPlaceholder: 'Recherche par nom',
       },
       references: {
