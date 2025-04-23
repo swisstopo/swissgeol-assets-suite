@@ -3,27 +3,36 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@/core/prisma.service';
 import { FindRepo } from '@/core/repo';
 import { parseWorkflowFromPrisma, workflowSelection } from '@/features/assets/workflow/prisma-workflow';
+import { WorkflowSelectionRepo } from '@/features/assets/workflow/workflow-selection.repo';
 
 @Injectable()
 export class WorkflowRepo implements FindRepo<Workflow, AssetId> {
   constructor(private readonly prisma: PrismaService) {}
 
-  async find(assetId: AssetId): Promise<Workflow | null> {
+  get reviews(): WorkflowSelectionRepo {
+    return new WorkflowSelectionRepo(this.prisma, 'reviewWorkflow');
+  }
+
+  get approvals(): WorkflowSelectionRepo {
+    return new WorkflowSelectionRepo(this.prisma, 'approvalWorkflow');
+  }
+
+  async find(id: AssetId): Promise<Workflow | null> {
     const entry = await this.prisma.workflow.findUnique({
       select: workflowSelection,
-      where: { assetId },
+      where: { id },
     });
 
     return entry == null ? null : parseWorkflowFromPrisma(entry);
   }
 
-  async change(assetId: AssetId, { creatorId, comment, from, to }: ChangeOptions): Promise<Workflow> {
+  async change(id: AssetId, { creatorId, comment, from, to }: ChangeOptions): Promise<Workflow> {
     const entry = await this.prisma.workflow.update({
-      where: { assetId },
+      where: { id },
       data: {
         status: to.status ?? undefined,
         assignee: to.assigneeId === null ? { disconnect: true } : { connect: { id: to.assigneeId } },
-        workflowChanges: {
+        changes: {
           create: {
             comment,
             fromStatus: from.status,
