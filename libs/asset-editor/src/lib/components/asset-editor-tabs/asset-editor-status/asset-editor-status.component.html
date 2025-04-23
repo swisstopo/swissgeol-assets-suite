@@ -20,10 +20,10 @@
         <asset-sg-editor-status-changes [workflow]="workflow" />
       </div>
       <div role="tabpanel" id="review" #review>
-        <asset-sg-editor-status-review [workflow]="workflow" />
+        <asset-sg-editor-status-selection [workflow]="workflow" selection="review" />
       </div>
       <div role="tabpanel" id="approval" #approval>
-        <asset-sg-editor-status-approval [workflow]="workflow" />
+        <asset-sg-editor-status-selection [workflow]="workflow" selection="approval" />
       </div>
     </ng-container>
   </asset-sg-tabs>

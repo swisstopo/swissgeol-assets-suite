@@ -95,13 +95,12 @@ import { AssetEditorGeometriesComponent } from './components/asset-editor-tabs/a
 import { AssetEditorLegacyDataComponent } from './components/asset-editor-tabs/asset-editor-legacy-data/asset-editor-legacy-data.component';
 import { AddReferenceDialogComponent } from './components/asset-editor-tabs/asset-editor-references/add-reference-dialog/add-reference-dialog.component';
 import { AssetEditorReferencesComponent } from './components/asset-editor-tabs/asset-editor-references/asset-editor-references.component';
-import { AssetEditorStatusApprovalComponent } from './components/asset-editor-tabs/asset-editor-status/asset-editor-status-approval/asset-editor-status-approval.component';
 import { AssetEditorStatusAssigneeComponent } from './components/asset-editor-tabs/asset-editor-status/asset-editor-status-assignee/asset-editor-status-assignee.component';
 import { AssetEditorStatusChangeComponent } from './components/asset-editor-tabs/asset-editor-status/asset-editor-status-change/asset-editor-status-change.component';
 import { AssetEditorStatusChangeTemplateComponent } from './components/asset-editor-tabs/asset-editor-status/asset-editor-status-change-template/asset-editor-status-change-template.component';
 import { AssetEditorStatusChangesComponent } from './components/asset-editor-tabs/asset-editor-status/asset-editor-status-changes/asset-editor-status-changes.component';
 import { AssetEditorStatusPublicationComponent } from './components/asset-editor-tabs/asset-editor-status/asset-editor-status-publication/asset-editor-status-publication.component';
-import { AssetEditorStatusReviewComponent } from './components/asset-editor-tabs/asset-editor-status/asset-editor-status-review/asset-editor-status-review.component';
+import { AssetEditorStatusSelectionComponent } from './components/asset-editor-tabs/asset-editor-status/asset-editor-status-selection/asset-editor-status-selection.component';
 import { AssetEditorStatusStepComponent } from './components/asset-editor-tabs/asset-editor-status/asset-editor-status-step/asset-editor-status-step.component';
 import { AssetEditorStatusStepsComponent } from './components/asset-editor-tabs/asset-editor-status/asset-editor-status-steps/asset-editor-status-steps.component';
 import { AssetEditorStatusComponent } from './components/asset-editor-tabs/asset-editor-status/asset-editor-status.component';
@@ -134,13 +133,12 @@ export const canLeaveEdit: CanDeactivateFn<AssetEditorPageComponent> = (componen
     AssetEditorLegacyDataComponent,
     AssetEditorFilesComponent,
     AssetEditorStatusComponent,
-    AssetEditorStatusApprovalComponent,
     AssetEditorStatusAssigneeComponent,
     AssetEditorStatusChangeComponent,
     AssetEditorStatusChangeTemplateComponent,
     AssetEditorStatusChangesComponent,
     AssetEditorStatusPublicationComponent,
-    AssetEditorStatusReviewComponent,
+    AssetEditorStatusSelectionComponent,
     AssetEditorStatusStepComponent,
     AssetEditorStatusStepsComponent,
     AssetEditorSaveComponent,

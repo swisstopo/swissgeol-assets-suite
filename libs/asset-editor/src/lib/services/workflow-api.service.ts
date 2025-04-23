@@ -18,4 +18,8 @@ export class WorkflowApiService {
   public updateReview(id: AssetId, selection: Partial<WorkflowSelection>): Observable<void> {
     return this.httpClient.patch<void>(`/api/assets/${id}/workflow/review`, selection);
   }
+
+  public updateApproval(id: AssetId, selection: Partial<WorkflowSelection>): Observable<void> {
+    return this.httpClient.patch<void>(`/api/assets/${id}/workflow/approval`, selection);
+  }
 }

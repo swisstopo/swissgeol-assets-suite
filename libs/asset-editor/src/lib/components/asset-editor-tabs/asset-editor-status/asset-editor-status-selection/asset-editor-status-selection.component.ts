@@ -4,14 +4,17 @@ import { getEntries, Workflow, WorkflowSelection } from '@asset-sg/shared/v2';
 import { WorkflowApiService } from '../../../../services/workflow-api.service';
 
 @Component({
-  selector: 'asset-sg-editor-status-review',
-  styleUrls: ['./asset-editor-status-review.component.scss'],
-  templateUrl: './asset-editor-status-review.component.html',
+  selector: 'asset-sg-editor-status-selection',
+  styleUrls: ['./asset-editor-status-selection.component.scss'],
+  templateUrl: './asset-editor-status-selection.component.html',
   standalone: false,
 })
-export class AssetEditorStatusReviewComponent implements OnChanges {
+export class AssetEditorStatusSelectionComponent implements OnChanges {
   @Input({ required: true })
   workflow!: Workflow;
+
+  @Input({ required: true })
+  selection!: 'review' | 'approval';
 
   form!: SelectionForm;
 
@@ -30,7 +33,7 @@ export class AssetEditorStatusReviewComponent implements OnChanges {
   }
 
   private initializeForm(): void {
-    this.form = buildForm(this.workflow.review);
+    this.form = buildForm(this.workflow[this.selection]);
     this.form.valueChanges.subscribe(() => {
       if (this.timeoutForSubmit !== null) {
         clearTimeout(this.timeoutForSubmit);
@@ -40,15 +43,21 @@ export class AssetEditorStatusReviewComponent implements OnChanges {
   }
 
   private submit(): void {
-    console.log('submit!');
     this.timeoutForSubmit = null;
     const patch: Partial<WorkflowSelection> = {};
     for (const [key, field] of getEntries(this.form.controls)) {
-      if (field.value !== this.workflow.review[key]) {
+      if (field.value !== this.workflow[this.selection][key]) {
         patch[key] = field.value;
       }
     }
-    this.workflowApiService.updateReview(this.workflow.id, patch).subscribe();
+    switch (this.selection) {
+      case 'review':
+        this.workflowApiService.updateReview(this.workflow.id, patch).subscribe();
+        break;
+      case 'approval':
+        this.workflowApiService.updateApproval(this.workflow.id, patch).subscribe();
+        break;
+    }
   }
 }
 

@@ -1,6 +1,15 @@
 <asset-sg-checklist-header [formGroup]="form">
   Tab
-  <ng-container slot="label">Reviewed</ng-container>
+  <ng-container slot="label">
+    @switch (this.selection) {
+      @case ("review") {
+        Reviewed
+      }
+      @case ("approval") {
+        Published
+      }
+    }
+  </ng-container>
   <asset-sg-checklist-item formControlName="general"> General </asset-sg-checklist-item>
   <asset-sg-checklist-item>
     Dateien
