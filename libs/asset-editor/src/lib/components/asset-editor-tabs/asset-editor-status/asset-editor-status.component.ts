@@ -32,8 +32,7 @@ export class AssetEditorStatusComponent implements OnChanges {
 
       this.workflow = {
         ...this.workflow,
-        status: WorkflowStatus.Reviewed,
-        workflowChanges: [
+        changes: [
           {
             createdAt: LocalDate.of(2024, 8, 6),
             fromStatus: WorkflowStatus.Draft,

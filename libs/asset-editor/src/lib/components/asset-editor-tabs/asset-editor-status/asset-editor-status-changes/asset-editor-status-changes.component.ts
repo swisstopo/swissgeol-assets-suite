@@ -31,7 +31,7 @@ export class AssetEditorStatusChangesComponent implements OnInit, OnChanges {
 
   ngOnChanges(changes: SimpleChanges): void {
     if ('workflow' in changes) {
-      this.changes = [...this.workflow.workflowChanges].reverse();
+      this.changes = [...this.workflow.changes].reverse();
     }
   }
 }

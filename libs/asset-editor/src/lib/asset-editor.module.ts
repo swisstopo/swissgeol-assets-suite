@@ -34,6 +34,7 @@ import {
   AdminOnlyDirective,
   AnchorComponent,
   ButtonComponent,
+  ChecklistItemComponent,
   ChipComponent,
   DatePickerComponent,
   DatepickerToggleIconComponent,
@@ -273,6 +274,7 @@ export const canLeaveEdit: CanDeactivateFn<AssetEditorPageComponent> = (componen
     MatProgressSpinner,
     MatDialogContent,
     MatDialogActions,
+    ChecklistItemComponent,
   ],
   providers: [
     { provide: MAT_DATE_LOCALE, useValue: de },

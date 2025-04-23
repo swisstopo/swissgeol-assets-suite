@@ -61,6 +61,9 @@ export class ChecklistItemComponent implements AfterContentInit, ControlValueAcc
   ngAfterContentInit(): void {
     for (const child of this.children) {
       child.setParent(this);
+      if (child.state !== CheckboxState.Unchecked) {
+        this.handleChildChange(child);
+      }
     }
   }
 
@@ -89,7 +92,6 @@ export class ChecklistItemComponent implements AfterContentInit, ControlValueAcc
 
     this.state = state;
     this.checkbox.checked = isChecked;
-
     if (wasChecked !== isChecked && !options.preventUp) {
       this.parent?.handleChildChange(this);
     }
@@ -99,10 +101,12 @@ export class ChecklistItemComponent implements AfterContentInit, ControlValueAcc
       this.publishTouch();
 
       const childState = state === CheckboxState.Unchecked ? CheckboxState.Unchecked : CheckboxState.Checked;
-      for (const child of this.children) {
-        child.setState(childState, { preventUp: true });
+      if (this.children !== undefined) {
+        for (const child of this.children) {
+          child.setState(childState, { preventUp: true });
+        }
+        this.activeChildCount = isChecked ? this.children.length : 0;
       }
-      this.activeChildCount = isChecked ? this.children.length : 0;
     }
   }
 
