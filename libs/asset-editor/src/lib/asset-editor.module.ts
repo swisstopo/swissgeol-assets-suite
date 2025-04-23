@@ -27,6 +27,9 @@ import {
   fromAppShared,
   MatDateIdModule,
   PageHeaderComponent,
+  TabComponent,
+  TabsComponent,
+  UsernameComponent,
   ValueItemDescriptionPipe,
   ValueItemNamePipe,
   ViewChildMarker,
@@ -60,9 +63,13 @@ import { AssetEditorTabReferencesComponent } from './components/asset-editor-tab
 import { AssetEditorTabUsageComponent } from './components/asset-editor-tab-usage/asset-editor-tab-usage.component';
 import { AssetEditorFilesComponent } from './components/asset-editor-tabs/asset-editor-files/asset-editor-files.component';
 import { AssetEditorGeneralComponent } from './components/asset-editor-tabs/asset-editor-general/asset-editor-general.component';
+import { AssetEditorStatusApprovalComponent } from './components/asset-editor-tabs/asset-editor-status/asset-editor-status-approval/asset-editor-status-approval.component';
 import { AssetEditorStatusAssigneeComponent } from './components/asset-editor-tabs/asset-editor-status/asset-editor-status-assignee/asset-editor-status-assignee.component';
-import { AssetEditorStatusContentComponent } from './components/asset-editor-tabs/asset-editor-status/asset-editor-status-content/asset-editor-status-content.component';
+import { AssetEditorStatusChangeComponent } from './components/asset-editor-tabs/asset-editor-status/asset-editor-status-change/asset-editor-status-change.component';
+import { AssetEditorStatusChangeTemplateComponent } from './components/asset-editor-tabs/asset-editor-status/asset-editor-status-change-template/asset-editor-status-change-template.component';
+import { AssetEditorStatusChangesComponent } from './components/asset-editor-tabs/asset-editor-status/asset-editor-status-changes/asset-editor-status-changes.component';
 import { AssetEditorStatusPublicationComponent } from './components/asset-editor-tabs/asset-editor-status/asset-editor-status-publication/asset-editor-status-publication.component';
+import { AssetEditorStatusReviewComponent } from './components/asset-editor-tabs/asset-editor-status/asset-editor-status-review/asset-editor-status-review.component';
 import { AssetEditorStatusStepComponent } from './components/asset-editor-tabs/asset-editor-status/asset-editor-status-step/asset-editor-status-step.component';
 import { AssetEditorStatusStepsComponent } from './components/asset-editor-tabs/asset-editor-status/asset-editor-status-steps/asset-editor-status-steps.component';
 import { AssetEditorStatusComponent } from './components/asset-editor-tabs/asset-editor-status/asset-editor-status.component';
@@ -91,9 +98,13 @@ export const canLeaveEdit: CanDeactivateFn<AssetEditorPageComponent> = (componen
     AssetEditorGeneralComponent,
     AssetEditorFilesComponent,
     AssetEditorStatusComponent,
+    AssetEditorStatusApprovalComponent,
     AssetEditorStatusAssigneeComponent,
-    AssetEditorStatusContentComponent,
+    AssetEditorStatusChangeComponent,
+    AssetEditorStatusChangeTemplateComponent,
+    AssetEditorStatusChangesComponent,
     AssetEditorStatusPublicationComponent,
+    AssetEditorStatusReviewComponent,
     AssetEditorStatusStepComponent,
     AssetEditorStatusStepsComponent,
     AssetEditorSaveComponent,
@@ -195,6 +206,9 @@ export const canLeaveEdit: CanDeactivateFn<AssetEditorPageComponent> = (componen
     MatChipSet,
     ChipComponent,
     IfModule,
+    TabComponent,
+    TabsComponent,
+    UsernameComponent,
   ],
   providers: [
     { provide: MAT_DATE_LOCALE, useValue: de },

@@ -1,0 +1,10 @@
+@use "../../../../styles/variables";
+
+.comment {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  border-radius: 4px;
+  color: #1c2834;
+  background-color: #f1f3f5;
+}

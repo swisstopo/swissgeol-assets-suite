@@ -306,6 +306,12 @@ const mapDataToPrismaCreate = (data: FullAssetData): Prisma.AssetCreateInput => 
       skipDuplicates: true,
     },
   },
+
+  creator: {
+    connect: {
+      id: data.processor.id,
+    },
+  },
 });
 
 const mapDataToPrismaUpdate = (id: AssetId, data: FullAssetData): Prisma.AssetUpdateInput => ({

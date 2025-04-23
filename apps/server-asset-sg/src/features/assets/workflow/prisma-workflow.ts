@@ -19,6 +19,8 @@ export const workflowSelection = satisfy<Prisma.WorkflowSelect>()({
   asset: {
     select: {
       workgroupId: true,
+      creator: { select: simpleUserSelection },
+      createDate: true,
     },
   },
   hasRequestedChanges: true,
@@ -32,8 +34,9 @@ export const workflowSelection = satisfy<Prisma.WorkflowSelect>()({
   },
   workflowChanges: {
     select: {
-      assignee: { select: simpleUserSelection },
-      createdBy: { select: simpleUserSelection },
+      fromAssignee: { select: simpleUserSelection },
+      toAssignee: { select: simpleUserSelection },
+      creator: { select: simpleUserSelection },
       createdAt: true,
       fromStatus: true,
       toStatus: true,
@@ -52,14 +55,17 @@ export const parseWorkflowFromPrisma = (entry: SelectedWorkflow): Workflow => {
       (change): WorkflowChange => ({
         comment: change.comment,
         createdAt: LocalDate.fromDate(change.createdAt),
-        initiator: change.createdBy && parseSimpleUser(change.createdBy),
-        assignee: change.assignee && parseSimpleUser(change.assignee),
+        creator: change.creator && parseSimpleUser(change.creator),
+        fromAssignee: change.fromAssignee && parseSimpleUser(change.fromAssignee),
+        toAssignee: change.toAssignee && parseSimpleUser(change.toAssignee),
         fromStatus: mapWorkflowStatusFromPrisma(change.fromStatus),
         toStatus: mapWorkflowStatusFromPrisma(change.toStatus),
       }),
     ),
     reviewedTabs: entry.reviewedTabs,
     publishedTabs: entry.publishedTabs,
+    creator: entry.asset.creator && parseSimpleUser(entry.asset.creator),
+    createdAt: LocalDate.fromDate(entry.asset.createDate),
     workgroupId: entry.asset.workgroupId,
   };
 };

@@ -2,6 +2,7 @@
 
 :host {
   display: flex;
+  justify-content: center;
   position: relative;
   padding: 60px 60px 97px 60px;
   gap: 12px;
@@ -19,16 +20,29 @@
   flex-direction: column;
   gap: 12px;
   width: 300px;
+  min-width: 300px;
 }
 
 // panel
-.panel {
+.panel,
+[role="tabpanel"] {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding: 24px;
   border: 1px solid variables.$grey-02;
   background-color: variables.$white;
+
+  &[hidden] {
+    display: none;
+  }
+}
+
+.panel {
+  padding: 24px;
+}
+
+[role="tabpanel"] {
+  padding: 48px;
 }
 
 .panel ::ng-deep h2 {
@@ -37,4 +51,9 @@
   line-height: 20px;
   vertical-align: middle;
   margin: 0;
+}
+
+// tabs
+asset-sg-tabs {
+  max-width: 650px;
 }

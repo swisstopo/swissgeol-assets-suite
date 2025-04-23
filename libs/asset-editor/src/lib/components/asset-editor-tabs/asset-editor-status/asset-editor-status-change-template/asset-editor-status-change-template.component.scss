@@ -1,0 +1,70 @@
+@use "../../../../styles/variables";
+
+:host {
+  display: flex;
+  gap: 16px;
+
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 20px;
+  color: variables.$grey-07;
+  width: 100%;
+}
+
+:host ::ng-deep .highlight {
+  font-weight: 700;
+  color: #1c2834;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-bottom: 16px;
+}
+
+ul.mutations {
+  display: flex;
+  list-style: none;
+  flex-direction: column;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+}
+
+// sideline
+.sideline {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 8px;
+  padding-top: 8px;
+  overflow: hidden;
+}
+
+.sideline::before {
+  display: block;
+  content: " ";
+  min-width: 8px;
+  max-width: 8px;
+  min-height: 8px;
+  max-height: 8px;
+  background-color: variables.$cyan-08;
+  border-radius: 50%;
+}
+
+.sideline::after {
+  display: block;
+  content: " ";
+  height: 100%;
+  width: 2px;
+  background-image: repeating-linear-gradient(to bottom, #acb4bd, #acb4bd 4px, transparent 4px, transparent 8px);
+}
