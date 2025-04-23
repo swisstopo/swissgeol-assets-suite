@@ -32,10 +32,10 @@ import {
   PageHeaderComponent,
   SelectComponent,
   SmartTranslatePipe,
-  TextAreaComponent,
-  TextInputComponent,
   TabComponent,
   TabsComponent,
+  TextAreaComponent,
+  TextInputComponent,
   UsernameComponent,
   ValueItemDescriptionPipe,
   ValueItemNamePipe,
@@ -70,6 +70,7 @@ import { AssetEditorTabReferencesComponent } from './components/asset-editor-tab
 import { AssetEditorTabUsageComponent } from './components/asset-editor-tab-usage/asset-editor-tab-usage.component';
 import { AssetEditorFilesComponent } from './components/asset-editor-tabs/asset-editor-files/asset-editor-files.component';
 import { AssetEditorGeneralComponent } from './components/asset-editor-tabs/asset-editor-general/asset-editor-general.component';
+import { AssetEditorLegacyDataComponent } from './components/asset-editor-tabs/asset-editor-legacy-data/asset-editor-legacy-data.component';
 import { AssetEditorStatusApprovalComponent } from './components/asset-editor-tabs/asset-editor-status/asset-editor-status-approval/asset-editor-status-approval.component';
 import { AssetEditorStatusAssigneeComponent } from './components/asset-editor-tabs/asset-editor-status/asset-editor-status-assignee/asset-editor-status-assignee.component';
 import { AssetEditorStatusChangeComponent } from './components/asset-editor-tabs/asset-editor-status/asset-editor-status-change/asset-editor-status-change.component';
@@ -103,6 +104,7 @@ export const canLeaveEdit: CanDeactivateFn<AssetEditorPageComponent> = (componen
     AssetEditorTabReferencesComponent,
     AssetEditorTabUsageComponent,
     AssetEditorGeneralComponent,
+    AssetEditorLegacyDataComponent,
     AssetEditorFilesComponent,
     AssetEditorStatusComponent,
     AssetEditorStatusApprovalComponent,

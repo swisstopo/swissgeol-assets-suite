@@ -21,10 +21,12 @@ import { FormItemWrapperComponent } from '../form-item-wrapper/form-item-wrapper
   ],
 })
 export class TextAreaComponent implements ControlValueAccessor, AfterViewInit {
+  @Input() public rows?: number = undefined;
   @Input() public title = '';
   @Input() public value = '';
   @Input({ transform: coerceBooleanProperty }) public isRequired = false;
   @Input() public placeholder = '';
+  @Input({ transform: coerceBooleanProperty }) public disabled = false;
   @Output() valueChange = new EventEmitter<string>();
   @ViewChild('textarea') textarea!: ElementRef<HTMLTextAreaElement>;
 

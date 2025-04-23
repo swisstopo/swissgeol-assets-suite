@@ -20,7 +20,7 @@
   }
 </asset-sg-page-header>
 <div class="editor-container">
-  <asset-sg-editor-navigation [activeTab]="activeTab" [mode]="mode" />
+  <asset-sg-editor-navigation [tabs]="availableTabs" [activeTab]="activeTab" [mode]="mode" />
   <div>
     <div class="form-container">
       @switch (activeTab) {
@@ -33,6 +33,11 @@
         @case (Tab.Status) {
           @if (mode === EditorMode.Edit) {
             <asset-sg-editor-status [workflow]="workflow" />
+          }
+        }
+        @case (Tab.LegacyData) {
+          @if (asset) {
+            <asset-sg-editor-legacy-data [asset]="asset"></asset-sg-editor-legacy-data>
           }
         }
         @default {
