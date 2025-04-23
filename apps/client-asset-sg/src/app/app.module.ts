@@ -41,6 +41,8 @@ import { ForModule } from '@rx-angular/template/for';
 import { LetModule } from '@rx-angular/template/let';
 import { PushModule } from '@rx-angular/template/push';
 
+import { Language, SwissgeolCoreI18n } from '@swisstopo/swissgeol-ui-core';
+import { SwissgeolCoreModule } from '@swisstopo/swissgeol-ui-core-angular';
 import { environment } from '../environments/environment';
 import { adminGuard } from './app-guards';
 import { AppComponent } from './app.component';
@@ -67,6 +69,7 @@ registerLocaleData(locale_deCH, 'de-CH');
     SplashScreenComponent,
   ],
   imports: [
+    SwissgeolCoreModule,
     CommonModule,
     BrowserModule,
     AuthModule,
@@ -145,6 +148,24 @@ export class AppModule {
 
   constructor() {
     this.translateService.setDefaultLang('de');
+
+    // Sync language with swissgeol-ui-core.
+    this.translateService.onLangChange.subscribe((event) => {
+      switch (event.lang) {
+        case 'en':
+          SwissgeolCoreI18n.setLanguage(Language.English);
+          break;
+        case 'fr':
+          SwissgeolCoreI18n.setLanguage(Language.French);
+          break;
+        case 'it':
+          SwissgeolCoreI18n.setLanguage(Language.Italian);
+          break;
+        default:
+          SwissgeolCoreI18n.setLanguage(Language.German);
+          break;
+      }
+    });
   }
 }
 

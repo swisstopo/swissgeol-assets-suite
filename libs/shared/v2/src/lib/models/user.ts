@@ -1,6 +1,8 @@
 import { Data, Model } from './base/model';
 import { getRoleIndex, Role, WorkgroupId } from './workgroup';
 
+export { SimpleUser } from '@swisstopo/swissgeol-ui-core';
+
 export interface User extends Model<UserId> {
   email: string;
   lang: string;
@@ -13,8 +15,6 @@ export interface User extends Model<UserId> {
    */
   roles: Map<WorkgroupId, Role>;
 }
-
-export type SimpleUser = Pick<User, 'id' | 'firstName' | 'lastName'>;
 
 export type UserId = string;
 export type UserData = Omit<Data<User>, 'email'>;

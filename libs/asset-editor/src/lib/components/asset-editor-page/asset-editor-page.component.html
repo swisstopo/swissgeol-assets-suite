@@ -2,9 +2,9 @@
   <h2>{{ asset?.titlePublic }}</h2>
   <mat-chip-set>
     @if (mode === EditorMode.Create) {
-      <asset-sg-chip type="primary" translate>workflowStatus.Draft</asset-sg-chip>
+      <asset-sg-chip type="primary">{{ "workflowStatus.Draft" | translate }}</asset-sg-chip>
     } @else if (workflow !== null) {
-      <asset-sg-chip type="primary" translate>workflowStatus.{{ workflow.status }}</asset-sg-chip>
+      <asset-sg-chip type="primary" translate>{{ "workflowStatus." + workflow.status | translate }}</asset-sg-chip>
     }
     @if (asset?.processor) {
       <asset-sg-chip type="tertiary">{{ asset?.processor }}</asset-sg-chip>
