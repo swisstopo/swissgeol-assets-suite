@@ -18,14 +18,14 @@ export class WorkflowController {
   constructor(private readonly workflowService: WorkflowService) {}
 
   @Get('/')
-  async find(@Param('assetId', ParseIntPipe) assetId: number, @CurrentUser() user: User): Promise<Workflow> {
+  async show(@Param('assetId', ParseIntPipe) assetId: number, @CurrentUser() user: User): Promise<Workflow> {
     const record = await this.workflowService.find(assetId);
     authorize(WorkflowPolicy, user).canShow(record);
     return record;
   }
 
   @Patch('/review')
-  async review(
+  async updateReview(
     @ParseBody(PartialWorkflowSelectionSchema) data: Partial<PartialWorkflowSelectionSchema>,
     @Param('assetId', ParseIntPipe) assetId: number,
     @CurrentUser() user: User,
@@ -35,8 +35,19 @@ export class WorkflowController {
     return this.workflowService.updateReview(record, data);
   }
 
+  @Patch('/approval')
+  async updateApproval(
+    @ParseBody(PartialWorkflowSelectionSchema) data: Partial<PartialWorkflowSelectionSchema>,
+    @Param('assetId', ParseIntPipe) assetId: number,
+    @CurrentUser() user: User,
+  ): Promise<WorkflowSelection> {
+    const record = await this.workflowService.find(assetId);
+    authorize(WorkflowPolicy, user).canUpdate(record);
+    return this.workflowService.updateApproval(record, data);
+  }
+
   @Post('/change')
-  async change(
+  async createChange(
     @ParseBody(WorkflowChangeDataSchema) data: WorkflowChangeData,
     @Param('assetId', ParseIntPipe) assetId: number,
     @CurrentUser() user: User,
