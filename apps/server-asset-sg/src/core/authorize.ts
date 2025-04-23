@@ -2,29 +2,34 @@ import { User, Policy } from '@asset-sg/shared/v2';
 import { HttpException, HttpStatus } from '@nestjs/common';
 import { Class } from 'type-fest';
 
-export const authorize = <T>(policy: Class<Policy<T>>, currentUser: User): Authorize<T> => {
-  return new Authorize<T>(new policy(currentUser));
+export const authorize = <T, P extends Policy<T>>(policy: Class<P>, currentUser: User): Authorize<P> => {
+  const instance = new policy(currentUser);
+  const auth = {} as Authorize<P>;
+  for (const key of getProperties(instance) as Array<keyof Authorize<P>>) {
+    if (typeof key !== 'string' || !key.startsWith('can')) {
+      continue;
+    }
+    const can = instance[key];
+    if (typeof can !== 'function') {
+      continue;
+    }
+    const fn = (can as (...args: unknown[]) => boolean).bind(instance);
+    auth[key] = ((...args: unknown[]) => check(fn(...args))) as Authorize<P>[keyof Authorize<P>];
+  }
+  return auth;
 };
 
-class Authorize<T> {
-  constructor(private readonly policy: Policy<T>) {}
+const getProperties = (value: object): string[] => {
+  const props = Object.getOwnPropertyNames(value);
+  const parent = Object.getPrototypeOf(value);
+  return parent == null || parent === Object.prototype ? props : [...props, ...getProperties(parent)];
+};
 
-  canShow(value: T): void {
-    check(this.policy.canShow(value));
-  }
+type Authorize<P> = {
+  [K in keyof P]: K extends `can${string}` ? AuthFunction<P[K]> : never;
+};
 
-  canCreate(): void {
-    check(this.policy.canCreate());
-  }
-
-  canUpdate(value: T): void {
-    check(this.policy.canUpdate(value));
-  }
-
-  canDelete(value: T): void {
-    check(this.policy.canDelete(value));
-  }
-}
+type AuthFunction<F> = F extends (...args: infer A) => boolean ? (...args: A) => void : never;
 
 const check = (condition: boolean): void => {
   if (!condition) {
