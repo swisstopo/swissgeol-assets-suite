@@ -8,6 +8,7 @@ import {
   LineString,
   LV95,
   makeEmptyAssetSearchResults,
+  makeEmptyAssetSearchStats,
   Point,
   StudyPolygon,
 } from '@asset-sg/shared';
@@ -21,12 +22,6 @@ import { AllStudyDTO } from '../../models';
 import { mapAssetAccessToAccessType } from '../../utils/access-type';
 import * as actions from './asset-search.actions';
 import { PanelState } from './asset-search.actions';
-
-export enum LoadingState {
-  Initial = 'initial',
-  Loading = 'loading',
-  Loaded = 'loaded',
-}
 
 export interface AssetSearchState {
   query: AssetSearchQuery;
@@ -55,17 +50,7 @@ const initialState: AssetSearchState = {
   query: {},
   studies: [],
   results: makeEmptyAssetSearchResults(),
-  stats: {
-    total: 0,
-    authorIds: [],
-    assetKindItemCodes: [],
-    languageItemCodes: [],
-    geometryCodes: [],
-    manCatLabelItemCodes: [],
-    usageCodes: [],
-    workgroupIds: [],
-    createDate: null,
-  },
+  stats: makeEmptyAssetSearchStats(),
   ui: {
     filtersState: PanelState.OpenedAutomatically,
     resultsState: PanelState.ClosedAutomatically,

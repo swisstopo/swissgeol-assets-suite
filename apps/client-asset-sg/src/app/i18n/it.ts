@@ -31,6 +31,17 @@ export const itAppTranslations: AppTranslations = {
   favorites: {
     title: 'IT Favoriten',
   },
+  workflow: {
+    status: 'IT Status',
+    assignee: 'IT Zugewiesene Person',
+  },
+  workflowStatus: {
+    Draft: 'IT Draft',
+    InReview: 'IT Review',
+    Reviewed: 'IT Reviewed',
+    Published: 'IT Veröffentlicht',
+    notPublished: 'IT Nicht Veröffentlicht',
+  },
   menuBar: {
     filters: 'IT Filter',
     admin: 'IT Verwaltung',
@@ -248,6 +259,16 @@ export const itAppTranslations: AppTranslations = {
           tab: 'IT Tab',
           hasValidationErrors: 'IT enthält Validierungsfehler',
         },
+      },
+      status: {
+        tabName: 'IT Status',
+        changeStatus: 'IT Status manuell ändern',
+        requestReview: 'IT Review anfordern',
+        requestChanges: 'IT Änderungen anfordern',
+        finishReview: 'IT Review abschliessen',
+        assign: 'IT Neue Person zuweisen',
+        publication: 'IT Publikation',
+        publish: 'IT Publish',
       },
     },
     closeManageAsset: 'IT Asset verwalten schliessen',

@@ -1,7 +1,11 @@
 <asset-sg-page-header (backNavigation)="navigateToStart()">
   <h2>{{ asset?.titlePublic }}</h2>
   <mat-chip-set>
-    <asset-sg-chip type="primary">Review</asset-sg-chip>
+    @if (mode === EditorMode.Create) {
+      <asset-sg-chip type="primary" translate>workflowStatus.Draft</asset-sg-chip>
+    } @else if (workflow !== null) {
+      <asset-sg-chip type="primary" translate>workflowStatus.{{ workflow.status }}</asset-sg-chip>
+    }
     @if (asset?.processor) {
       <asset-sg-chip type="tertiary">{{ asset?.processor }}</asset-sg-chip>
     }
@@ -16,15 +20,20 @@
   }
 </asset-sg-page-header>
 <div class="editor-container">
-  <asset-sg-editor-navigation [activeTab]="activeTab"></asset-sg-editor-navigation>
+  <asset-sg-editor-navigation [activeTab]="activeTab" [mode]="mode" />
   <div>
     <div class="form-container">
       @switch (activeTab) {
         @case (Tab.General) {
-          <asset-sg-editor-general [formGroup]="form.controls.general"></asset-sg-editor-general>
+          <asset-sg-editor-general [formGroup]="form.controls.general" />
         }
         @case (Tab.Files) {
-          <asset-sg-editor-files [formGroup]="form.controls.files"></asset-sg-editor-files>
+          <asset-sg-editor-files [formGroup]="form.controls.files" />
+        }
+        @case (Tab.Status) {
+          @if (mode === EditorMode.Edit) {
+            <asset-sg-editor-status [workflow]="workflow" />
+          }
         }
         @default {
           <span>other</span>

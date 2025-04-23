@@ -9,7 +9,7 @@
   width: 280px;
 }
 
-.page {
+a {
   height: 40px;
   border-bottom: 1px solid variables.$grey-02;
   padding-left: 35px;
@@ -19,6 +19,10 @@
     cursor: pointer;
     background-color: variables.$grey-00;
   }
+}
+
+:host.is-create > a[data-tab="status"] {
+  display: none;
 }
 
 .active {

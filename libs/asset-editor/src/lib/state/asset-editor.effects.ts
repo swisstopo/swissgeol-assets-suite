@@ -1,43 +1,65 @@
 import { inject, Injectable } from '@angular/core';
-import { Alert, AlertType, appSharedStateActions, RoutingService, showAlert } from '@asset-sg/client-shared';
+import {
+  Alert,
+  AlertType,
+  appSharedStateActions,
+  fromAppShared,
+  RoutingService,
+  showAlert,
+} from '@asset-sg/client-shared';
 import { UntilDestroy } from '@ngneat/until-destroy';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
+import { Store } from '@ngrx/store';
 import { TranslateService } from '@ngx-translate/core';
-import { map, switchMap } from 'rxjs';
+import { filter, map, switchMap, withLatestFrom } from 'rxjs';
 import { AssetEditorService } from '../services/asset-editor.service';
+import { WorkflowApiService } from '../services/workflow-api.service';
 import * as actions from './asset-editor.actions';
+import { setWorkflow } from './asset-editor.actions';
 
 @UntilDestroy()
 @Injectable()
 export class AssetEditorEffects {
-  private readonly _actions$ = inject(Actions);
-  private readonly _assetEditorService = inject(AssetEditorService);
+  private readonly actions$ = inject(Actions);
+  private readonly store = inject(Store);
+  private readonly assetEditorService = inject(AssetEditorService);
+  private readonly workflowApiService = inject(WorkflowApiService);
   private readonly routingService = inject(RoutingService);
   private readonly translateService = inject(TranslateService);
 
   loadAsset$ = createEffect(() =>
-    this._actions$.pipe(
+    this.actions$.pipe(
       ofType(actions.loadAsset),
-      switchMap(({ assetId }) => this._assetEditorService.loadAsset(assetId)),
+      withLatestFrom(this.store.select(fromAppShared.selectCurrentAsset)),
+      filter(([{ assetId }, asset]) => asset?.assetId !== assetId),
+      switchMap(([{ assetId }]) => this.assetEditorService.fetchAsset(assetId)),
       map((asset) => appSharedStateActions.setCurrentAsset({ asset })),
     ),
   );
 
+  loadWorkflow$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(actions.loadAsset),
+      switchMap(({ assetId }) => this.workflowApiService.fetchWorkflow(assetId)),
+      map((workflow) => setWorkflow({ workflow })),
+    ),
+  );
+
   createAsset$ = createEffect(() =>
-    this._actions$.pipe(
+    this.actions$.pipe(
       ofType(actions.createNewAsset),
-      switchMap(({ patchAsset }) => this._assetEditorService.createAsset(patchAsset)),
+      switchMap(({ patchAsset }) => this.assetEditorService.createAsset(patchAsset)),
       map((data) => actions.updateAssetEditDetailResult({ asset: data })),
     ),
   );
 
   updateAssetEditDetail$ = createEffect(() =>
-    this._actions$.pipe(
+    this.actions$.pipe(
       ofType(actions.updateAssetEditDetail),
       switchMap(({ assetId, patchAsset, newFiles, filesToDelete }) =>
-        this._assetEditorService.deleteFiles(assetId, filesToDelete).pipe(
-          switchMap(() => this._assetEditorService.uploadFiles(assetId, newFiles)),
-          switchMap(() => this._assetEditorService.updateAssetDetail(assetId, patchAsset)),
+        this.assetEditorService.deleteFiles(assetId, filesToDelete).pipe(
+          switchMap(() => this.assetEditorService.uploadFiles(assetId, newFiles)),
+          switchMap(() => this.assetEditorService.updateAssetDetail(assetId, patchAsset)),
         ),
       ),
       map((asset) => actions.updateAssetEditDetailResult({ asset })),
@@ -45,15 +67,15 @@ export class AssetEditorEffects {
   );
 
   deleteAsset$ = createEffect(() =>
-    this._actions$.pipe(
+    this.actions$.pipe(
       ofType(actions.deleteAsset),
-      switchMap(({ assetId }) => this._assetEditorService.deleteAsset(assetId).pipe(map(() => assetId))),
+      switchMap(({ assetId }) => this.assetEditorService.deleteAsset(assetId).pipe(map(() => assetId))),
       map((assetId) => actions.handleSuccessfulDeletion({ assetId })),
     ),
   );
 
   displayAlertAfterDeletion$ = createEffect(() =>
-    this._actions$.pipe(
+    this.actions$.pipe(
       ofType(actions.handleSuccessfulDeletion),
       map(() => {
         const alert: Alert = {
@@ -68,7 +90,7 @@ export class AssetEditorEffects {
   );
 
   redirectToViewerAfterDeletion = createEffect(() =>
-    this._actions$.pipe(
+    this.actions$.pipe(
       ofType(actions.handleSuccessfulDeletion),
       switchMap(async ({ assetId }) => {
         await this.routingService.navigateToRoot();
@@ -79,7 +101,7 @@ export class AssetEditorEffects {
   );
 
   updateSearchAfterAssetChanged$ = createEffect(() =>
-    this._actions$.pipe(
+    this.actions$.pipe(
       ofType(actions.updateAssetEditDetailResult),
       map(({ asset }) =>
         appSharedStateActions.updateAsset({
@@ -97,17 +119,17 @@ export class AssetEditorEffects {
   );
 
   createContact$ = createEffect(() =>
-    this._actions$.pipe(
+    this.actions$.pipe(
       ofType(actions.createContact),
-      switchMap(({ contact }) => this._assetEditorService.createContact(contact)),
+      switchMap(({ contact }) => this.assetEditorService.createContact(contact)),
       map(appSharedStateActions.createContactResult),
     ),
   );
 
   updateContact$ = createEffect(() =>
-    this._actions$.pipe(
+    this.actions$.pipe(
       ofType(actions.editContact),
-      switchMap(({ contact }) => this._assetEditorService.updateContact(contact.id, contact)),
+      switchMap(({ contact }) => this.assetEditorService.updateContact(contact.id, contact)),
       map(appSharedStateActions.editContactResult),
     ),
   );
