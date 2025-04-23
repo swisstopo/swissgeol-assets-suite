@@ -98,12 +98,12 @@ export class AssetEditorGeneralComponent implements OnInit, OnDestroy {
   }
 }
 
-interface TranslatedValueItem {
+export interface TranslatedValueItem {
   code: string;
   value: TranslatedValue;
 }
 
-const mapValueItemsToTranslatedItem = (item: Record<string, ValueItem> | null): TranslatedValueItem[] => {
+export const mapValueItemsToTranslatedItem = (item: Record<string, ValueItem> | null): TranslatedValueItem[] => {
   if (item == null) {
     return [];
   }

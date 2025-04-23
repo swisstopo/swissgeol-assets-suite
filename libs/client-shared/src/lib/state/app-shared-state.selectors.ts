@@ -41,6 +41,8 @@ export const selectAssetKindItems = createReferenceDataSelector((rd) => rd.asset
 
 export const selectNatRelItems = createReferenceDataSelector((rd) => rd.natRelItems);
 
+export const selectLegalDocItems = createReferenceDataSelector((rd) => rd.legalDocItems);
+
 const _makeReferenceDataVM = (referenceData: ReferenceData) => ({
   ...referenceData,
   assetFormItemArray: valueItemRecordToArray(referenceData.assetFormatItems),
