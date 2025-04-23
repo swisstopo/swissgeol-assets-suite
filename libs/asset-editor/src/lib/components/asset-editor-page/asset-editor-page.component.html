@@ -46,6 +46,9 @@
         @case (Tab.Geometries) {
           <asset-sg-edit-geometries [form]="form.controls.geometries"></asset-sg-edit-geometries>
         }
+        @case (Tab.Contacts) {
+          <asset-sg-editor-contacts [form]="form.controls.contacts" [asset]="asset ?? null"></asset-sg-editor-contacts>
+        }
         @default {
           <span>other</span>
         }
