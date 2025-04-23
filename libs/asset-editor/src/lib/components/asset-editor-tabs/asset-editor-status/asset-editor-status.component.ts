@@ -1,6 +1,5 @@
-import { Component, inject, Input, OnInit } from '@angular/core';
-import { AssetId, Workflow, WorkflowStatus } from '@asset-sg/shared/v2';
-import { WorkflowApiService } from '../../../services/workflow-api.service';
+import { Component, Input } from '@angular/core';
+import { Workflow, WorkflowStatus } from '@asset-sg/shared/v2';
 
 @Component({
   selector: 'asset-sg-editor-status',
@@ -8,19 +7,9 @@ import { WorkflowApiService } from '../../../services/workflow-api.service';
   templateUrl: './asset-editor-status.component.html',
   standalone: false,
 })
-export class AssetEditorStatusComponent implements OnInit {
+export class AssetEditorStatusComponent {
   @Input({ required: true })
-  assetId!: AssetId;
-
-  workflow: Workflow | null = null;
-
-  private readonly workflowApiService = inject(WorkflowApiService);
-
-  ngOnInit(): void {
-    this.workflowApiService.fetchWorkflow(this.assetId).subscribe((workflow) => {
-      this.workflow = { ...workflow, status: WorkflowStatus.Reviewed };
-    });
-  }
+  workflow!: Workflow | null;
 
   protected readonly WorkflowStatus = WorkflowStatus;
 }

@@ -11,11 +11,13 @@ import {
   RoutingService,
 } from '@asset-sg/client-shared';
 import { AssetEditDetail, Lang } from '@asset-sg/shared';
+import { Workflow } from '@asset-sg/shared/v2';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { Store } from '@ngrx/store';
-import { Observable, Subscription, take, tap, withLatestFrom } from 'rxjs';
+import { Observable, Subscription, take, tap } from 'rxjs';
 import { EditorMode } from '../../models';
 import * as actions from '../../state/asset-editor.actions';
+import { selectWorkflow } from '../../state/asset-editor.selector';
 import { Tab } from '../asset-editor-navigation/asset-editor-navigation.component';
 
 @UntilDestroy()
@@ -28,8 +30,16 @@ import { Tab } from '../asset-editor-navigation/asset-editor-navigation.componen
 export class AssetEditorPageComponent implements OnInit, OnDestroy {
   public mode = EditorMode.Create;
 
-  // When creating a new asset, the asset is null
+  /**
+   * The current asset. This is `null` while the asset is being loaded, or when a new asset is being created.
+   */
   public asset: AssetEditDetail | null = null;
+
+  /**
+   * The asset's workflow. This is `null` while the workflow is being loaded, or when a new asset is being created.
+   */
+  public workflow: Workflow | null = null;
+
   public form!: AssetForm;
   public activeTab: Tab = Tab.General;
   private currentLang: Lang = 'de';
@@ -40,7 +50,6 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
   private readonly currentLang$ = inject(CURRENT_LANG);
   private readonly routerSegments$ = inject(ROUTER_SEGMENTS);
 
-  private readonly assetEditDetail$ = this.store.select(fromAppShared.selectCurrentAsset);
   private readonly subscriptions: Subscription = new Subscription();
 
   public ngOnInit() {
@@ -58,17 +67,24 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
     );
     this.form = buildForm();
     this.loadAssetFromRouteParams();
+
     this.subscriptions.add(
-      this.assetEditDetail$.subscribe((assetDetail) => {
+      this.store.select(fromAppShared.selectCurrentAsset).subscribe((asset) => {
         if (this.mode === EditorMode.Edit) {
-          this.asset = assetDetail;
+          this.asset = asset;
         }
         this.initializeForm();
+      }),
+    );
+    this.subscriptions.add(
+      this.store.select(selectWorkflow).subscribe((workflow) => {
+        this.workflow = workflow;
       }),
     );
   }
 
   public ngOnDestroy() {
+    this.store.dispatch(actions.reset());
     this.subscriptions.unsubscribe();
   }
 
@@ -115,30 +131,25 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
 
   private loadAssetFromRouteParams() {
     this.subscriptions.add(
-      this.route.paramMap
-        .pipe(withLatestFrom(this.store.select(fromAppShared.selectCurrentAsset)), take(1))
-        .subscribe(([params, currentAsset]) => {
-          const assetIdFromParam = params.get('assetId');
-          if (!assetIdFromParam) {
-            return;
-          }
-          const assetId = parseInt(assetIdFromParam);
-          if (isNaN(assetId)) {
-            this.mode = EditorMode.Create;
-            return;
-          }
+      this.route.paramMap.pipe(take(1)).subscribe((params) => {
+        const assetIdFromParam = params.get('assetId');
+        if (!assetIdFromParam) {
+          return;
+        }
+        const assetId = parseInt(assetIdFromParam);
+        if (isNaN(assetId)) {
+          this.mode = EditorMode.Create;
+          return;
+        }
 
-          this.mode = EditorMode.Edit;
-          if (currentAsset?.assetId === assetId) {
-            this.asset = currentAsset;
-          } else {
-            this.store.dispatch(actions.loadAsset({ assetId }));
-          }
-        }),
+        this.mode = EditorMode.Edit;
+        this.store.dispatch(actions.loadAsset({ assetId }));
+      }),
     );
   }
 
   protected readonly Tab = Tab;
+  protected readonly EditorMode = EditorMode;
 }
 
 const buildForm = () => {

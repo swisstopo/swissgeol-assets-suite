@@ -1,7 +1,11 @@
 <asset-sg-page-header (backNavigation)="navigateToStart()">
   <h2>{{ asset?.titlePublic }}</h2>
   <mat-chip-set>
-    <asset-sg-chip type="primary">Review</asset-sg-chip>
+    @if (mode === EditorMode.Create) {
+      <asset-sg-chip type="primary" translate>workflowStatus.Draft</asset-sg-chip>
+    } @else if (workflow !== null) {
+      <asset-sg-chip type="primary" translate>workflowStatus.{{ workflow.status }}</asset-sg-chip>
+    }
     @if (asset?.processor) {
       <asset-sg-chip type="tertiary">{{ asset?.processor }}</asset-sg-chip>
     }
@@ -27,8 +31,8 @@
           <asset-sg-editor-files [formGroup]="form.controls.files" />
         }
         @case (Tab.Status) {
-          @if (asset !== null) {
-            <asset-sg-editor-status [assetId]="asset.assetId" />
+          @if (mode === EditorMode.Edit) {
+            <asset-sg-editor-status [workflow]="workflow" />
           }
         }
         @default {

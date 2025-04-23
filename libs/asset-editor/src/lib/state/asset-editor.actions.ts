@@ -1,4 +1,5 @@
 import { AssetEditDetail, ContactEdit, PatchAsset, PatchContact } from '@asset-sg/shared';
+import { Workflow } from '@asset-sg/shared/v2';
 import { createAction, props } from '@ngrx/store';
 
 import { AssetEditorNewFile } from '../components/asset-editor-form-group';
@@ -30,3 +31,7 @@ export const handleSuccessfulDeletion = createAction(
 export const editContact = createAction('[Asset Editor] Edit contact', props<{ contact: ContactEdit }>());
 
 export const createContact = createAction('[Asset Editor] Create contact', props<{ contact: PatchContact }>());
+
+export const setWorkflow = createAction('[Asset Editor] Set Workflow', props<{ workflow: Workflow }>());
+
+export const reset = createAction('[Asset Editor] Reset');
