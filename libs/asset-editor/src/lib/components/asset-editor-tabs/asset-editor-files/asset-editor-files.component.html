@@ -1,7 +1,7 @@
 <form [formGroup]="form">
   <asset-sg-tabs>
-    <asset-sg-tab (click)="switchFileType()" translate>edit.tabs.files.Normal.many</asset-sg-tab>
-    <asset-sg-tab (click)="switchFileType()" translate>edit.tabs.files.Legal.many</asset-sg-tab>
+    <asset-sg-tab (click)="switchFileType('Normal')" translate>edit.tabs.files.Normal.many</asset-sg-tab>
+    <asset-sg-tab (click)="switchFileType('Legal')" translate>edit.tabs.files.Legal.many</asset-sg-tab>
 
     <ng-container slot="content">
       <div class="content">
@@ -29,11 +29,11 @@
         @if (dataSource.data.length > 0) {
           <div>
             <div class="actions">
-              <button asset-sg-secondary (click)="selectFilesForDeletion()" [disabled]="areButtonsDisabled">
+              <button asset-sg-secondary (click)="selectFilesForDeletion()" [disabled]="isDisabled">
                 <svg-icon key="delete"></svg-icon>
                 <span translate>delete</span>
               </button>
-              <button asset-sg-secondary [disabled]="areButtonsDisabled" (click)="downloadSelectedFiles()">
+              <button asset-sg-secondary [disabled]="isDisabled" (click)="downloadSelectedFiles()">
                 <svg-icon key="export"></svg-icon>
                 <span translate>edit.tabs.files.export</span>
               </button>

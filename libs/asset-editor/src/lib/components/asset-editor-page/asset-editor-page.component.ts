@@ -121,10 +121,9 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
     general.typeNatRels.setValue(this.asset?.typeNatRels ?? []);
     general.ids.setValue(this.asset?.ids ?? []);
 
-    files.assetFiles.setValue(this.asset?.assetFiles ?? []);
-    files.testFiles.clear();
+    files.assetFiles.clear();
     this.asset?.assetFiles.forEach((file) => {
-      files.testFiles.push(
+      files.assetFiles.push(
         new FormControl<FormAssetFile>(
           {
             ...file,
@@ -221,10 +220,7 @@ const buildForm = () => {
       }),
     }),
     files: new FormGroup({
-      assetFiles: new FormControl<AssetFile[]>([]),
-      filesToDelete: new FormControl<number[]>([]),
-      addedFiles: new FormArray<FormControl<FormAssetFile>>([]),
-      testFiles: new FormArray<FormControl<FormAssetFile>>([]),
+      assetFiles: new FormArray<FormControl<FormAssetFile>>([]),
     }),
     contacts: new FormGroup({}),
     references: new FormGroup({}),
