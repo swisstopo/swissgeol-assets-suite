@@ -128,7 +128,7 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
         new FormControl<FormAssetFile>(
           {
             ...file,
-            selected: true,
+            selected: false,
             willBeDeleted: false,
           },
           { nonNullable: true },
