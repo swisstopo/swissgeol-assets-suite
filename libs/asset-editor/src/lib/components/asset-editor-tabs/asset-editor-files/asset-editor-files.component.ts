@@ -44,9 +44,11 @@ export class AssetEditorFilesComponent implements OnInit, OnDestroy {
 
   public ngOnInit() {
     this.subscriptions.add(
-      this.form.controls.testFiles.valueChanges.pipe(startWith(this.form.controls.testFiles.controls)).subscribe(() => {
-        this.setDataSource(this.form.controls.testFiles.controls);
-      }),
+      this.form.controls.assetFiles.valueChanges
+        .pipe(startWith(this.form.controls.assetFiles.controls))
+        .subscribe(() => {
+          this.setDataSource(this.form.controls.assetFiles.controls);
+        }),
     );
     this.subscriptions.add(
       this.searchTerm$
@@ -76,7 +78,7 @@ export class AssetEditorFilesComponent implements OnInit, OnDestroy {
     this.dataSource.data = this.fileType$.value === 'Legal' ? this.legalFiles : this.normalFiles;
   }
 
-  get areButtonsDisabled(): boolean {
+  get isDisabled(): boolean {
     return !this.dataSource.data.some((file) => file.value.selected);
   }
 
@@ -113,7 +115,7 @@ export class AssetEditorFilesComponent implements OnInit, OnDestroy {
         return;
       }
       this.isFileTooLarge = false;
-      this.form.controls.testFiles.push(
+      this.form.controls.assetFiles.push(
         new FormControl(
           {
             id: 0,
@@ -136,12 +138,8 @@ export class AssetEditorFilesComponent implements OnInit, OnDestroy {
     this.searchTerm$.next(term);
   }
 
-  public switchFileType() {
-    if (this.fileType$.value === 'Normal') {
-      this.fileType$.next('Legal');
-    } else {
-      this.fileType$.next('Normal');
-    }
+  public switchFileType(type: AssetFileType) {
+    this.fileType$.next(type);
   }
 
   public updateLegalDocItemCode(control: FormControl<FormAssetFile>, event: LegalDocItemCode[]) {
@@ -150,7 +148,7 @@ export class AssetEditorFilesComponent implements OnInit, OnDestroy {
   }
 
   public toggleAll(event: MatCheckboxChange) {
-    this.form.controls.testFiles.value.forEach((file) => {
+    this.form.controls.assetFiles.value.forEach((file) => {
       file.selected = file.type === this.fileType$.value ? event.checked : file.selected;
     });
   }
@@ -160,8 +158,8 @@ export class AssetEditorFilesComponent implements OnInit, OnDestroy {
   }
 
   public selectFilesForDeletion() {
-    this.form.controls.testFiles.setValue(
-      this.form.controls.testFiles.value.map((file) => {
+    this.form.controls.assetFiles.setValue(
+      this.form.controls.assetFiles.value.map((file) => {
         if (file.type !== this.fileType$.value) {
           return file;
         }
