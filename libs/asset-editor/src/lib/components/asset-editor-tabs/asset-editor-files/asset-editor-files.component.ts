@@ -1,3 +1,4 @@
+import { HttpClient } from '@angular/common/http';
 import { Component, inject, Input, OnDestroy, OnInit } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { MatCheckboxChange } from '@angular/material/checkbox';
@@ -5,8 +6,9 @@ import { Sort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import { fromAppShared } from '@asset-sg/client-shared';
 import { AssetFileType, LegalDocItemCode } from '@asset-sg/shared';
+import { AssetId } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
-import { BehaviorSubject, combineLatestWith, map, Observable, startWith, Subscription, tap } from 'rxjs';
+import { BehaviorSubject, combineLatestWith, forkJoin, map, Observable, startWith, Subscription, tap } from 'rxjs';
 import { AssetForm, FormAssetFile } from '../../asset-editor-page/asset-editor-page.component';
 import {
   mapValueItemsToTranslatedItem,
@@ -21,8 +23,10 @@ import {
 })
 export class AssetEditorFilesComponent implements OnInit, OnDestroy {
   @Input() form!: AssetForm['controls']['files'];
+  @Input() assetId?: AssetId;
   public isDragging = false;
   public isFileTooLarge = false;
+  public activeFileDownload: Set<number> = new Set();
   protected readonly searchTerm$ = new BehaviorSubject<string>('');
   protected readonly fileType$ = new BehaviorSubject<AssetFileType>('Normal');
   public legalFiles: FormControl<FormAssetFile>[] = [];
@@ -35,6 +39,7 @@ export class AssetEditorFilesComponent implements OnInit, OnDestroy {
   public readonly legalDocItems$: Observable<TranslatedValueItem[]> = this.store
     .select(fromAppShared.selectLegalDocItems)
     .pipe(map(mapValueItemsToTranslatedItem));
+  private readonly httpClient = inject(HttpClient);
   private readonly subscriptions: Subscription = new Subscription();
 
   public ngOnInit() {
@@ -123,6 +128,7 @@ export class AssetEditorFilesComponent implements OnInit, OnDestroy {
           { nonNullable: true },
         ),
       );
+      this.form.markAsDirty();
     }
   }
 
@@ -168,7 +174,77 @@ export class AssetEditorFilesComponent implements OnInit, OnDestroy {
     this.form.markAsDirty();
   }
 
-  public downloadSelectedFiles() {}
+  public downloadSelectedFiles() {
+    if (!this.assetId) {
+      return;
+    }
+    const filesToDownload: SimpleFile[] = this.dataSource.data
+      .filter((file) => file.value.selected && file.value.id !== 0)
+      .map((file) => ({
+        name: file.value.name,
+        id: file.value.id,
+      }));
 
-  protected sortChange(sort: Sort): void {}
+    const downloadRequests: Observable<FileBlob>[] = filesToDownload.map((file) => {
+      this.activeFileDownload.add(file.id);
+      return this.httpClient.get(`/api/assets/${this.assetId}/files/${file.id}`, { responseType: 'blob' }).pipe(
+        map((blob) => {
+          return {
+            blob,
+            file,
+          };
+        }),
+      );
+    });
+
+    forkJoin(downloadRequests).subscribe({
+      next: (fileBlobs: FileBlob[]) => {
+        fileBlobs.forEach(async (fileBlob: FileBlob) => {
+          await triggerDownload(fileBlob);
+          this.activeFileDownload.delete(fileBlob.file.id);
+        });
+      },
+    });
+  }
+
+  protected sortChange(sort: Sort): void {
+    const data = this.dataSource.data.slice();
+    this.dataSource.data = data.sort((a, b) => {
+      const isAsc = sort.direction === 'asc';
+      return (a < b ? -1 : 1) * (isAsc ? 1 : -1);
+    });
+  }
 }
+
+interface SimpleFile {
+  name: string;
+  id: number;
+}
+
+interface FileBlob {
+  blob: Blob;
+  file: SimpleFile;
+}
+
+const triggerDownload = async ({ blob, file }: FileBlob) => {
+  const isPdf = file.name.endsWith('.pdf');
+  if (isPdf) {
+    blob = await blob.arrayBuffer().then((buffer) => new Blob([buffer], { type: 'application/pdf' }));
+  }
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+
+  anchor.setAttribute('style', 'display: none');
+  anchor.href = url;
+  if (!isPdf) {
+    anchor.download = file.name;
+  } else {
+    anchor.target = '_blank';
+  }
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  setTimeout(() => {
+    window.URL.revokeObjectURL(url);
+  });
+};

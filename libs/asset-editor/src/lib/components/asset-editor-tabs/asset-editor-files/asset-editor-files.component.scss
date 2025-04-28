@@ -79,5 +79,9 @@ form {
   display: flex;
   align-items: center;
   gap: 6px;
-  color: red;
+  color: variables.$red;
+}
+
+.will-be-deleted {
+  text-decoration: line-through;
 }

@@ -12,6 +12,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSort, MatSortHeader } from '@angular/material/sort';
 import {
@@ -250,6 +251,7 @@ export const canLeaveEdit: CanDeactivateFn<AssetEditorPageComponent> = (componen
     MatSortHeader,
     MatTable,
     MatHeaderCellDef,
+    MatProgressSpinner,
   ],
   providers: [
     { provide: MAT_DATE_LOCALE, useValue: de },
