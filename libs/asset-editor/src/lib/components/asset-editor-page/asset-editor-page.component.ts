@@ -223,7 +223,9 @@ const buildForm = () => {
       assetFiles: new FormArray<FormControl<FormAssetFile>>([]),
     }),
     contacts: new FormGroup({}),
-    references: new FormGroup({}),
+    references: new FormGroup({
+      parent: new FormControl(),
+    }),
     geometries: new FormGroup({}),
     status: new FormGroup({}),
   });
