@@ -73,7 +73,7 @@ export class AssetSearchService {
       this.elastic,
       this.prisma,
       this.studyRepo,
-      options ?? { index: INDEX, shouldRefresh: true }
+      options ?? { index: INDEX, shouldRefresh: true },
     );
   }
 
