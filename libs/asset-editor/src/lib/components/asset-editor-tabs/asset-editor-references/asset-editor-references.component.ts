@@ -1,8 +1,10 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, inject, Input, OnDestroy, OnInit } from '@angular/core';
+import { MatDialog } from '@angular/material/dialog';
 import { MatTableDataSource } from '@angular/material/table';
-import { LinkedAsset } from '@asset-sg/shared';
-import { Subscription } from 'rxjs';
+import { AssetEditDetail, LinkedAsset } from '@asset-sg/shared';
+import { startWith, Subscription } from 'rxjs';
 import { AssetForm } from '../../asset-editor-page/asset-editor-page.component';
+import { AddReferenceDialogComponent } from './add-reference-dialog/add-reference-dialog.component';
 
 @Component({
   selector: 'asset-sg-editor-references',
@@ -10,21 +12,22 @@ import { AssetForm } from '../../asset-editor-page/asset-editor-page.component';
   templateUrl: './asset-editor-references.component.html',
   standalone: false,
 })
-export class AssetEditorReferencesComponent implements OnInit {
+export class AssetEditorReferencesComponent implements OnInit, OnDestroy {
   @Input() form!: AssetForm['controls']['references'];
+  @Input() asset: AssetEditDetail | null = null;
   public COLUMNS = ['name', 'assetId', 'type', 'actions'];
   public dataSource: MatTableDataSource<FormLinkedAsset> = new MatTableDataSource();
   private readonly subscriptions: Subscription = new Subscription();
+  private readonly dialogService = inject(MatDialog);
 
   public ngOnInit() {
     this.subscriptions.add(
-      this.form.valueChanges.subscribe((references) => {
+      this.form.valueChanges.pipe(startWith(this.form.value)).subscribe((references) => {
         const data: FormLinkedAsset[] = [];
         if (references.mainAsset) {
           data.push({
             ...references.mainAsset,
             type: LinkedAssetType.Main,
-            readonly: false,
           });
         }
         if (references.siblingAssets) {
@@ -32,7 +35,6 @@ export class AssetEditorReferencesComponent implements OnInit {
             ...references.siblingAssets.map((asset) => ({
               ...asset,
               type: LinkedAssetType.Sibling,
-              readonly: false,
             })),
           );
         }
@@ -41,13 +43,16 @@ export class AssetEditorReferencesComponent implements OnInit {
             ...references.subordinateAssets.map((asset) => ({
               ...asset,
               type: LinkedAssetType.Subordinate,
-              readonly: true,
             })),
           );
         }
         this.dataSource.data = data;
       }),
     );
+  }
+
+  public ngOnDestroy() {
+    this.subscriptions.unsubscribe();
   }
 
   public removeReference(reference: FormLinkedAsset) {
@@ -61,9 +66,30 @@ export class AssetEditorReferencesComponent implements OnInit {
     }
     this.form.markAsDirty();
   }
+
+  openDialog() {
+    const dialogRef = this.dialogService.open<AddReferenceDialogComponent>(AddReferenceDialogComponent, {
+      width: '674px',
+      restoreFocus: false,
+      data: {
+        form: this.form,
+        asset: this.asset,
+      },
+    });
+
+    this.subscriptions.add(
+      dialogRef.afterClosed().subscribe((wasReferenceAdded) => {
+        if (wasReferenceAdded) {
+          this.form.markAsDirty();
+        }
+      }),
+    );
+  }
+
+  protected readonly LinkedAssetType = LinkedAssetType;
 }
 
-enum LinkedAssetType {
+export enum LinkedAssetType {
   Main = 'parent',
   Sibling = 'sibling',
   Subordinate = 'subordinate',
@@ -71,5 +97,4 @@ enum LinkedAssetType {
 
 interface FormLinkedAsset extends LinkedAsset {
   type: LinkedAssetType;
-  readonly: boolean;
 }

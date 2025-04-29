@@ -6,7 +6,18 @@
     (blur)="onBlur()"
     [disabled]="disabled"
     [placeholder]="placeholder"
+    [matAutocomplete]="auto"
   />
+
+  <mat-autocomplete #auto="matAutocomplete">
+    @for (value of autoCompleteValues; track value) {
+      <mat-option [value]="value[bindLabel]" class="author" (onSelectionChange)="onSelectionChange(value)">
+        <div class="author__name">
+          {{ value[bindLabel] }}
+        </div>
+      </mat-option>
+    }
+  </mat-autocomplete>
   @if (icon) {
     <svg-icon [key]="icon" class="icon" />
   }
