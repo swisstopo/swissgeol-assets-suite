@@ -22,7 +22,7 @@ export class AssetSearchWriter {
     private readonly elastic: ElasticsearchClient,
     private readonly prisma: PrismaClient,
     private readonly studyRepo: StudyRepo,
-    private readonly options: AssetSearchWriterOptions
+    private readonly options: AssetSearchWriterOptions,
   ) {
     this.eager = options.isEager ? this.fetchEager() : Promise.resolve(null);
   }
