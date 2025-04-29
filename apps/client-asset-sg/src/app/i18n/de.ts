@@ -211,8 +211,10 @@ export const deAppTranslations = {
       },
       references: {
         tabName: 'Verweise',
+        assetId: 'Asset ID',
         assetTitlePublic: 'Öffentlicher Titel',
         assetTitlePublicPlaceholder: 'Suche über den öffentlichen Titel',
+        noReferencesAdded: 'Noch keine Verweise hinzugefügt...',
         referenceHeadings: {
           parent: 'Übergeordneter Asset',
           subordinate: 'Untergeordnete Assets',

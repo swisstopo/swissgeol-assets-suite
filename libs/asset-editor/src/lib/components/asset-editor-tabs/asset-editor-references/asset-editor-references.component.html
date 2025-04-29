@@ -1,10 +1,49 @@
 <form [formGroup]="form">
-  <div class="header">
-    <asset-sg-tabs>
-      <asset-sg-tab translate>edit.tabs.references.referenceHeadings.parent</asset-sg-tab>
-      <asset-sg-tab translate>edit.tabs.references.referenceHeadings.sibling</asset-sg-tab>
-    </asset-sg-tabs>
-    <button asset-sg-primary translate>edit.tabs.references.referenceHeadings.newReference</button>
-    <ng-container slot="content"> </ng-container>
-  </div>
+  <asset-sg-detail-section [title]="'edit.tabs.references.tabName' | translate">
+    <div actions>
+      <button asset-sg-primary translate>
+        edit.tabs.references.referenceHeadings.newReference
+        <svg-icon key="add"></svg-icon>
+      </button>
+    </div>
+    <div content>
+      @if (dataSource.data.length > 0) {
+        <table mat-table [dataSource]="dataSource" class="mat-elevation-z1 table">
+          <ng-container matColumnDef="name">
+            <th mat-header-cell *matHeaderCellDef>
+              <span translate> edit.tabs.contacts.name</span>
+            </th>
+            <td mat-cell *matCellDef="let reference">{{ reference.titlePublic }}</td>
+          </ng-container>
+          <ng-container matColumnDef="assetId">
+            <th mat-header-cell *matHeaderCellDef><span translate>edit.tabs.references.assetId</span></th>
+            <td mat-cell *matCellDef="let reference">{{ reference.assetId }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="type">
+            <th mat-header-cell *matHeaderCellDef><span translate>edit.tabs.general.kind</span></th>
+            <td mat-cell *matCellDef="let reference">
+              <mat-chip-set>
+                <asset-sg-chip type="tertiary">
+                  {{ "edit.tabs.references.referenceType." + reference.type | translate }}
+                </asset-sg-chip>
+              </mat-chip-set>
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef translate></th>
+            <td mat-cell *matCellDef="let reference">
+              <button asset-sg-secondary isIcon [disabled]="reference.readonly" (click)="removeReference(reference)">
+                <svg-icon key="delete"></svg-icon>
+              </button>
+            </td>
+          </ng-container>
+          <tr mat-header-row *matHeaderRowDef="COLUMNS" class="table__header"></tr>
+          <tr mat-row *matRowDef="let row; columns: COLUMNS"></tr>
+        </table>
+      } @else {
+        <span translate>edit.tabs.references.noReferencesAdded</span>
+      }
+    </div>
+  </asset-sg-detail-section>
 </form>
