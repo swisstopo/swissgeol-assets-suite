@@ -159,10 +159,7 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
 
   private initializeTabs() {
     this.availableTabs = Object.values(Tab).filter((tab) => {
-      if (tab === Tab.LegacyData) {
-        return !!(this.asset && hasHistoricalData(this.asset));
-      }
-      return true;
+      return tab !== Tab.LegacyData || !!(this.asset && hasHistoricalData(this.asset))
     });
   }
 
