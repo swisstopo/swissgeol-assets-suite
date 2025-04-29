@@ -165,6 +165,7 @@ export const enAppTranslations: AppTranslations = {
         willBeDeleted: 'Will be deleted',
         willBeUploaded: 'Will be uploaded',
         fileSizeToLarge: 'File size may not exceed 2GB',
+        uploadedAt: 'Uploaded',
       },
       usage: {
         tabName: 'Usage',

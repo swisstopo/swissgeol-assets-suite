@@ -381,12 +381,13 @@ const selectPrismaAsset = selectOnAsset({
       file: {
         select: {
           id: true,
-          fileName: true,
-          fileNameAlias: true,
+          name: true,
+          nameAlias: true,
           size: true,
           type: true,
           legalDocItemCode: true,
           pageCount: true,
+          lastModifiedAt: true,
         },
       },
     },

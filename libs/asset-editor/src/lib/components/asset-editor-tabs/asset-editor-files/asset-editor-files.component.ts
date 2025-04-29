@@ -126,6 +126,7 @@ export class AssetEditorFilesComponent implements OnInit, OnDestroy {
             selected: false,
             willBeDeleted: false,
             file: element,
+            lastModifiedAt: new Date(),
           },
           { nonNullable: true },
         ),

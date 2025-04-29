@@ -18,12 +18,13 @@ export class FileRepo
       where: { id, AssetFile: { some: { assetId } } },
       select: {
         id: true,
-        fileName: true,
-        fileNameAlias: true,
+        name: true,
+        nameAlias: true,
         size: true,
         type: true,
         legalDocItemCode: true,
         pageCount: true,
+        lastModifiedAt: true,
       },
     });
     if (entry == null) {
@@ -39,6 +40,7 @@ export class FileRepo
 
   async create(data: CreateFileData): Promise<AssetFile> {
     const { fileName, fileNameAlias } = await determineUniqueFilename(data.name, data.assetId, this.prisma);
+    const lastModifiedAt = new Date();
     const { id } = await this.prisma.file.create({
       select: { id: true },
       data: {
@@ -48,7 +50,7 @@ export class FileRepo
         ocrStatus: data.ocrStatus,
         type: data.type,
         legalDocItemCode: data.legalDocItemCode,
-        lastModifiedAt: new Date(),
+        lastModifiedAt,
       },
     });
     await this.prisma.asset.update({
@@ -72,6 +74,7 @@ export class FileRepo
       type: data.type,
       legalDocItemCode: data.legalDocItemCode,
       pageCount: null, // this is filled (if at all) by postprocessing via OCR
+      lastModifiedAt,
     };
   }
 

@@ -165,6 +165,7 @@ export const itAppTranslations: AppTranslations = {
         willBeDeleted: 'IT Wird gelöscht werden',
         willBeUploaded: 'IT Wird hochgeladen werden',
         fileSizeToLarge: 'IT Die Dateigrösse darf 2 GB nicht überschreiten.',
+        uploadedAt: 'IT Hochgeladen',
       },
       usage: {
         tabName: 'IT Nutzung',

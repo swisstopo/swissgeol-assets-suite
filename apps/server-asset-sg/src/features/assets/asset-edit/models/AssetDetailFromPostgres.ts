@@ -15,12 +15,13 @@ import { PostgresAllStudies } from '@/features/assets/asset-edit/utils/postgres-
 
 export const AssetFileFromPostgres = D.struct({
   id: D.number,
-  fileName: D.string,
-  fileNameAlias: D.nullable(D.string),
+  name: D.string,
+  nameAlias: D.nullable(D.string),
   size: DT.numberFromBigint,
   type: AssetFileType,
   legalDocItemCode: D.nullable(LegalDocItemCode),
   pageCount: D.nullable(D.number),
+  lastModifiedAt: DT.date,
 });
 
 export const AssetFilesFromPostgres = pipe(

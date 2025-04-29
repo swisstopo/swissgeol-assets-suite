@@ -62,12 +62,13 @@ export const eqAssetContactEdit = struct({
 
 export const AssetFile = C.struct({
   id: C.number,
-  fileName: C.string,
-  fileNameAlias: C.nullable(C.string),
+  name: C.string,
+  nameAlias: C.nullable(C.string),
   size: C.number,
   type: AssetFileType,
   legalDocItemCode: C.nullable(LegalDocItemCode),
   pageCount: C.nullable(C.number),
+  lastModifiedAt: CT.DateFromISOString,
 });
 
 export type AssetFile = C.TypeOf<typeof AssetFile>;

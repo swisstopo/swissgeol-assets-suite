@@ -166,6 +166,7 @@ export const frAppTranslations: AppTranslations = {
         willBeDeleted: 'Sera supprimé',
         willBeUploaded: 'Sera téléchargé',
         fileSizeToLarge: 'La taille du fichier ne doit pas dépasser 2 Go.',
+        uploadedAt: 'Téléchargé',
       },
       usage: {
         tabName: 'Utilisation',

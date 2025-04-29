@@ -164,6 +164,7 @@ export const deAppTranslations = {
         willBeDeleted: 'Wird gelöscht werden',
         willBeUploaded: 'Wird hochgeladen werden',
         fileSizeToLarge: 'Die Dateigrösse darf 2 GB nicht überschreiten.',
+        uploadedAt: 'Hochgeladen',
       },
       usage: {
         tabName: 'Nutzung',
