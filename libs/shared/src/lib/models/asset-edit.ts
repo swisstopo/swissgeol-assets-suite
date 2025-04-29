@@ -115,5 +115,11 @@ export type AssetEditDetail = C.TypeOf<typeof AssetEditDetail>;
 
 // todo: once AssetEditDetail is removed, a similar property could exist on the new model to avoid this helper method
 export const hasHistoricalData = (asset: AssetEditDetail): boolean => {
-  return !!(asset.geolAuxDataInfo || asset.geolContactDataInfo || asset.geolDataInfo || asset.municipality || asset.sgsId);
+  return !!(
+    asset.geolAuxDataInfo ||
+    asset.geolContactDataInfo ||
+    asset.geolDataInfo ||
+    asset.municipality ||
+    asset.sgsId
+  );
 };
