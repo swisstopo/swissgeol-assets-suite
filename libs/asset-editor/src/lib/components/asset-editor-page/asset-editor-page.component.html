@@ -40,6 +40,9 @@
             <asset-sg-editor-legacy-data [asset]="asset"></asset-sg-editor-legacy-data>
           }
         }
+        @case (Tab.References) {
+          <asset-sg-editor-references [form]="form.controls.references"></asset-sg-editor-references>
+        }
         @default {
           <span>other</span>
         }
