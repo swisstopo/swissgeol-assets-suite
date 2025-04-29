@@ -211,8 +211,10 @@ export const frAppTranslations: AppTranslations = {
       },
       references: {
         tabName: 'Références',
+        assetId: "ID de l'asset",
         assetTitlePublic: 'Titre public',
         assetTitlePublicPlaceholder: 'Recherche par titre public',
+        noReferencesAdded: 'Pas de références ajoutées...',
         referenceHeadings: {
           parent: 'Asset parent',
           subordinate: 'Assets parents',
