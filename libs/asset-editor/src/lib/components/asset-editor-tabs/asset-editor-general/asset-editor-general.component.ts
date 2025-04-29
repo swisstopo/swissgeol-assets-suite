@@ -2,12 +2,10 @@ import { Component, inject, Input, OnDestroy, OnInit } from '@angular/core';
 import { fromAppShared, TranslatedValue } from '@asset-sg/client-shared';
 import { AssetEditDetail, ValueItem } from '@asset-sg/shared';
 import { Role, SimpleWorkgroup } from '@asset-sg/shared/v2';
-import { UntilDestroy } from '@ngneat/until-destroy';
 import { Store } from '@ngrx/store';
 import { combineLatestWith, map, Observable, startWith, Subscription } from 'rxjs';
 import { AssetForm } from '../../asset-editor-page/asset-editor-page.component';
 
-@UntilDestroy()
 @Component({
   selector: 'asset-sg-editor-general',
   styleUrls: ['./asset-editor-general.component.scss'],
@@ -23,7 +21,6 @@ export class AssetEditorGeneralComponent implements OnInit, OnDestroy {
   public selectedManCatLabels: TranslatedValueItem[] = [];
   public selectedNatRelItems: TranslatedValueItem[] = [];
   private readonly store = inject(Store);
-  private readonly subscription: Subscription = new Subscription();
   public readonly natRelItems$: Observable<TranslatedValueItem[]> = this.store
     .select(fromAppShared.selectNatRelItems)
     .pipe(map(mapValueItemsToTranslatedItem));
@@ -42,6 +39,7 @@ export class AssetEditorGeneralComponent implements OnInit, OnDestroy {
   public readonly availableWorkgroups$ = this.store
     .select(fromAppShared.selectWorkgroups)
     .pipe(map((workgroups) => workgroups.filter((it) => it.role != Role.Reader)));
+  private readonly subscription: Subscription = new Subscription();
 
   public ngOnInit() {
     this.subscription.add(this.availableWorkgroups$.subscribe((workgroups) => (this.workgroups = workgroups)));

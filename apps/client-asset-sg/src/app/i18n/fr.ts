@@ -247,12 +247,6 @@ export const frAppTranslations: AppTranslations = {
       },
       administration: {
         tabName: 'Administration',
-        infoGeol: 'InfoGeol',
-        sgsId: 'SGS-ID',
-        data: 'Données',
-        contactData: 'Données de contact',
-        auxData: 'Données supplémentaires',
-        municipality: 'Commune',
         workStatus: 'Statut de travail',
         lastProcessed: 'Dernière mise à jour',
         by: 'de',
@@ -261,6 +255,15 @@ export const frAppTranslations: AppTranslations = {
           tab: 'Onglet',
           hasValidationErrors: 'Contient des erreurs de validation',
         },
+      },
+      legacyData: {
+        tabName: 'Administration',
+        infoGeol: 'InfoGeol',
+        sgsId: 'SGS-ID',
+        data: 'Données',
+        contactData: 'Données de contact',
+        auxData: 'Données supplémentaires',
+        municipality: 'Commune',
       },
       status: {
         tabName: 'FR Status',

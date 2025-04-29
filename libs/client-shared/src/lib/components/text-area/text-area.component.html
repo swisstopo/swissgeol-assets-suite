@@ -1,3 +1,11 @@
 <label asset-sg-form-item-wrapper [title]="title" [isRequired]="isRequired">
-  <textarea #textarea matInput [ngModel]="value" (ngModelChange)="changeTerm($event)" (blur)="onBlur()"></textarea>
+  <textarea
+    #textarea
+    matInput
+    [rows]="rows"
+    [ngModel]="value"
+    (ngModelChange)="changeTerm($event)"
+    (blur)="onBlur()"
+    [disabled]="disabled"
+  ></textarea>
 </label>

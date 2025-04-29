@@ -17,12 +17,11 @@ export class AssetEditorNavigationComponent {
   @Input({ required: true })
   public mode!: EditorMode;
 
+  @Input({ required: true })
+  public tabs!: Tab[];
+
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
-
-  public get tabs(): Tab[] {
-    return Object.values(Tab);
-  }
 
   selectTab(tab: Tab): void {
     if (this.activeTab === tab) {
@@ -48,6 +47,6 @@ export enum Tab {
   Contacts = 'contacts',
   References = 'references',
   Geometries = 'geometries',
-  Administration = 'administration',
+  LegacyData = 'legacyData',
   Status = 'status',
 }

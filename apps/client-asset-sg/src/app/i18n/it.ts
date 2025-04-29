@@ -246,12 +246,6 @@ export const itAppTranslations: AppTranslations = {
       },
       administration: {
         tabName: 'IT Administration',
-        infoGeol: 'IT InfoGeol',
-        sgsId: 'IT SGS-ID',
-        data: 'IT Daten',
-        contactData: 'IT Kontaktdaten',
-        auxData: 'IT Zusatzdaten',
-        municipality: 'IT Gemeinde',
         workStatus: 'IT Arbeitsstatus',
         lastProcessed: 'IT Letztes Update',
         by: 'IT Von',
@@ -260,6 +254,15 @@ export const itAppTranslations: AppTranslations = {
           tab: 'IT Tab',
           hasValidationErrors: 'IT enthält Validierungsfehler',
         },
+      },
+      legacyData: {
+        tabName: 'IT Administration',
+        infoGeol: 'IT InfoGeol',
+        sgsId: 'IT SGS-ID',
+        data: 'IT Daten',
+        contactData: 'IT Kontaktdaten',
+        auxData: 'IT Zusatzdaten',
+        municipality: 'IT Gemeinde',
       },
       status: {
         tabName: 'IT Status',
