@@ -14,7 +14,7 @@ import { AssetEditDetail, dateFromDateId, hasHistoricalData, Lang } from '@asset
 import { Workflow } from '@asset-sg/shared/v2';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { Store } from '@ngrx/store';
-import { EMPTY, filter, Observable, of, Subscription, switchMap, take, tap } from 'rxjs';
+import { filter, Observable, Subscription, take, tap } from 'rxjs';
 import { EditorMode } from '../../models';
 import * as actions from '../../state/asset-editor.actions';
 import { selectWorkflow } from '../../state/asset-editor.selector';
@@ -69,29 +69,25 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
     this.form = buildForm();
     this.loadAssetFromRouteParams();
 
-    this.subscriptions.add(
-      of(this.mode)
-        .pipe(
-          switchMap((mode) => {
-            if (mode === EditorMode.Edit) {
-              return this.store.select(fromAppShared.selectCurrentAsset).pipe(
-                filter((asset) => !!asset),
-                take(1),
-                tap((asset) => {
-                  this.asset = asset;
-                  this.initializeTabs();
-                  this.initializeForm();
-                }),
-              );
-            } else {
+    if (this.mode === EditorMode.Edit) {
+      this.subscriptions.add(
+        this.store
+          .select(fromAppShared.selectCurrentAsset)
+          .pipe(
+            filter((asset) => !!asset),
+            take(1),
+            tap((asset) => {
+              this.asset = asset;
               this.initializeTabs();
               this.initializeForm();
-              return EMPTY;
-            }
-          }),
-        )
-        .subscribe(),
-    );
+            }),
+          )
+          .subscribe(),
+      );
+    } else {
+      this.initializeTabs();
+      this.initializeForm();
+    }
     this.subscriptions.add(
       this.store.select(selectWorkflow).subscribe((workflow) => {
         this.workflow = workflow;
@@ -159,7 +155,7 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
 
   private initializeTabs() {
     this.availableTabs = Object.values(Tab).filter((tab) => {
-      return tab !== Tab.LegacyData || !!(this.asset && hasHistoricalData(this.asset))
+      return tab !== Tab.LegacyData || !!(this.asset && hasHistoricalData(this.asset));
     });
   }
 
