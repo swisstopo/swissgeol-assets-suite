@@ -139,14 +139,9 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
     this.form.controls.references.controls.mainAsset.setValue(
       this.asset?.assetMain ? O.toNullable(this.asset.assetMain) : null,
     );
-    const siblings = [
-      ...(this.asset?.siblingYAssets ? this.asset.siblingYAssets : []),
-      ...(this.asset?.siblingXAssets ?? []),
-    ];
+    const siblings = [...(this.asset?.siblingYAssets ?? []), ...(this.asset?.siblingXAssets ?? [])];
     this.form.controls.references.controls.siblingAssets.setValue(siblings);
-    this.form.controls.references.controls.subordinateAssets.setValue(
-      this.asset?.subordinateAssets ? this.asset.subordinateAssets : [],
-    );
+    this.form.controls.references.controls.subordinateAssets.setValue(this.asset?.subordinateAssets ?? []);
   }
 
   public openConfirmDialogForAssetDeletion(assetId: number) {
@@ -238,8 +233,8 @@ const buildForm = () => {
     contacts: new FormGroup({}),
     references: new FormGroup({
       mainAsset: new FormControl<LinkedAsset | null>(null),
-      siblingAssets: new FormControl<LinkedAsset[]>([]),
-      subordinateAssets: new FormControl<LinkedAsset[]>([]),
+      siblingAssets: new FormControl<LinkedAsset[]>([], { nonNullable: true }),
+      subordinateAssets: new FormControl<LinkedAsset[]>([], { nonNullable: true }),
     }),
     geometries: new FormGroup({}),
     status: new FormGroup({}),
