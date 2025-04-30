@@ -188,7 +188,7 @@ export const frAppTranslations: AppTranslations = {
       },
       contacts: {
         tabName: 'Contact',
-        linkContact: 'Ajouter un nouveau lien de contact',
+        linkContact: 'Ajouter lien de contact',
         link: 'Créer un lien',
         createNewContact: 'Créer un nouveau contact',
         editContact: 'Modifier le contact',

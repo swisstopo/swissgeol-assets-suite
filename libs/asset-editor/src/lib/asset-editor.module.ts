@@ -84,6 +84,7 @@ import { AssetEditorTabGeneralComponent } from './components/asset-editor-tab-ge
 import { AssetEditorTabGeometriesComponent } from './components/asset-editor-tab-geometries/asset-editor-tab-geometries.component';
 import { AssetEditorTabReferencesComponent } from './components/asset-editor-tab-references/asset-editor-tab-references.component';
 import { AssetEditorTabUsageComponent } from './components/asset-editor-tab-usage/asset-editor-tab-usage.component';
+import { AddContactDialogComponent } from './components/asset-editor-tabs/asset-editor-contacts/add-contact-dialog/add-contact-dialog.component';
 import { AssetEditorContactsComponent } from './components/asset-editor-tabs/asset-editor-contacts/asset-editor-contacts.component';
 import { AssetEditorFilesComponent } from './components/asset-editor-tabs/asset-editor-files/asset-editor-files.component';
 import { FileDropZoneComponent } from './components/asset-editor-tabs/asset-editor-files/file-drop-zone/file-drop-zone.component';
@@ -112,6 +113,7 @@ export const canLeaveEdit: CanDeactivateFn<AssetEditorPageComponent> = (componen
 
 @NgModule({
   declarations: [
+    AddContactDialogComponent,
     AssetEditorIdFormComponent,
     AssetEditorIdListComponent,
     AssetEditorLaunchComponent,
@@ -267,6 +269,8 @@ export const canLeaveEdit: CanDeactivateFn<AssetEditorPageComponent> = (componen
     MatDialogActions,
     MatTooltip,
     MatProgressSpinner,
+    MatDialogContent,
+    MatDialogActions,
   ],
   providers: [
     { provide: MAT_DATE_LOCALE, useValue: de },

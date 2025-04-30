@@ -1,6 +1,6 @@
 <form [formGroup]="form">
   <asset-sg-detail-section [title]="'edit.tabs.contacts.tabName' | translate">
-    <button actions asset-sg-primary translate>
+    <button actions asset-sg-primary translate (click)="openDialog()">
       edit.tabs.contacts.newContact
       <svg-icon key="add"></svg-icon>
     </button>

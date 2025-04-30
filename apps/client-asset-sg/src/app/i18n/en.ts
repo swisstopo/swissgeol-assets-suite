@@ -187,7 +187,7 @@ export const enAppTranslations: AppTranslations = {
       },
       contacts: {
         tabName: 'Contacts',
-        linkContact: 'Add new Contact-Link',
+        linkContact: 'Link existing contact',
         link: 'Link',
         unlink: 'Unlink contact',
         viewDetails: 'Show contact details',
