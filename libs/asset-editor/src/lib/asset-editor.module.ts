@@ -82,6 +82,7 @@ import { AssetEditorTabGeometriesComponent } from './components/asset-editor-tab
 import { AssetEditorTabReferencesComponent } from './components/asset-editor-tab-references/asset-editor-tab-references.component';
 import { AssetEditorTabUsageComponent } from './components/asset-editor-tab-usage/asset-editor-tab-usage.component';
 import { AssetEditorFilesComponent } from './components/asset-editor-tabs/asset-editor-files/asset-editor-files.component';
+import { FileDropZoneComponent } from './components/asset-editor-tabs/asset-editor-files/file-drop-zone/file-drop-zone.component';
 import { AssetEditorGeneralComponent } from './components/asset-editor-tabs/asset-editor-general/asset-editor-general.component';
 import { AssetEditorLegacyDataComponent } from './components/asset-editor-tabs/asset-editor-legacy-data/asset-editor-legacy-data.component';
 import { AssetEditorStatusApprovalComponent } from './components/asset-editor-tabs/asset-editor-status/asset-editor-status-approval/asset-editor-status-approval.component';
@@ -134,6 +135,7 @@ export const canLeaveEdit: CanDeactivateFn<AssetEditorPageComponent> = (componen
     Lv95yWithoutPrefixPipe,
     ReplaceBrPipe,
     AssetEditorNavigationComponent,
+    FileDropZoneComponent,
   ],
   imports: [
     CommonModule,
