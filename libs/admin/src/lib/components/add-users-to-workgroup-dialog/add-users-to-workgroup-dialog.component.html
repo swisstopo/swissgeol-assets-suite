@@ -15,7 +15,7 @@
     title="{{ 'admin.role' | translate }}"
     [values]="roles"
     (selectionChanged)="setSelectedRole($event)"
-    [initialValues]="[selectedRole]"
+    [initialKeys]="[selectedRole]"
   >
   </asset-sg-select>
 </div>

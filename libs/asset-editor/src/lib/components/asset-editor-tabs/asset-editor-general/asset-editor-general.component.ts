@@ -1,9 +1,10 @@
 import { Component, inject, Input, OnDestroy, OnInit } from '@angular/core';
-import { fromAppShared, TranslatedValue } from '@asset-sg/client-shared';
+import { fromAppShared } from '@asset-sg/client-shared';
 import { AssetEditDetail, ValueItem } from '@asset-sg/shared';
 import { Role, SimpleWorkgroup } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
 import { combineLatestWith, map, Observable, startWith, Subscription } from 'rxjs';
+import { TranslatedValueItem } from '../../../models/translated-value-item.interface';
 import { AssetForm } from '../../asset-editor-page/asset-editor-page.component';
 
 @Component({
@@ -98,12 +99,7 @@ export class AssetEditorGeneralComponent implements OnInit, OnDestroy {
   }
 }
 
-interface TranslatedValueItem {
-  code: string;
-  value: TranslatedValue;
-}
-
-const mapValueItemsToTranslatedItem = (item: Record<string, ValueItem> | null): TranslatedValueItem[] => {
+export const mapValueItemsToTranslatedItem = (item: Record<string, ValueItem> | null): TranslatedValueItem[] => {
   if (item == null) {
     return [];
   }

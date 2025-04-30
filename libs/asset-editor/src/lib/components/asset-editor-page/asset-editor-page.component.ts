@@ -1,5 +1,5 @@
 import { Component, inject, OnDestroy, OnInit } from '@angular/core';
-import { AbstractControl, FormControl, FormGroup, ValidationErrors, Validators } from '@angular/forms';
+import { AbstractControl, FormArray, FormControl, FormGroup, ValidationErrors, Validators } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, RouterStateSnapshot } from '@angular/router';
 import {
@@ -10,7 +10,7 @@ import {
   ROUTER_SEGMENTS,
   RoutingService,
 } from '@asset-sg/client-shared';
-import { AssetEditDetail, dateFromDateId, hasHistoricalData, Lang } from '@asset-sg/shared';
+import { AssetEditDetail, AssetFile, dateFromDateId, hasHistoricalData, Lang } from '@asset-sg/shared';
 import { Workflow } from '@asset-sg/shared/v2';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { Store } from '@ngrx/store';
@@ -119,6 +119,21 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
     general.isNatRel.setValue(this.asset?.isNatRel ?? false);
     general.typeNatRels.setValue(this.asset?.typeNatRels ?? []);
     general.ids.setValue(this.asset?.ids ?? []);
+
+    const { controls: files } = this.form.controls.files;
+    files.assetFiles.clear();
+    this.asset?.assetFiles.forEach((file) => {
+      files.assetFiles.push(
+        new FormControl<FormAssetFile>(
+          {
+            ...file,
+            selected: false,
+            willBeDeleted: false,
+          },
+          { nonNullable: true },
+        ),
+      );
+    });
   }
 
   public openConfirmDialogForAssetDeletion(assetId: number) {
@@ -179,6 +194,12 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
   }
 }
 
+export interface FormAssetFile extends AssetFile {
+  selected: boolean;
+  file?: File;
+  willBeDeleted: boolean;
+}
+
 const buildForm = () => {
   return new FormGroup({
     general: new FormGroup({
@@ -198,7 +219,9 @@ const buildForm = () => {
         nonNullable: true,
       }),
     }),
-    files: new FormGroup({}),
+    files: new FormGroup({
+      assetFiles: new FormArray<FormControl<FormAssetFile>>([]),
+    }),
     contacts: new FormGroup({}),
     references: new FormGroup({}),
     geometries: new FormGroup({}),

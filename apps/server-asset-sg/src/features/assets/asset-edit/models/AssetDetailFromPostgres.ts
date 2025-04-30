@@ -19,6 +19,7 @@ export const AssetFileFromPostgres = D.struct({
   size: DT.numberFromBigint,
   type: AssetFileType,
   legalDocItemCode: D.nullable(LegalDocItemCode),
+  lastModifiedAt: DT.date,
 });
 
 export const AssetFilesFromPostgres = pipe(

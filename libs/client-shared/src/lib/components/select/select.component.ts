@@ -37,17 +37,17 @@ type FormValue<T> = T | T[] | T[keyof T] | T[keyof T][];
     FormItemWrapperComponent,
   ],
 })
-export class SelectComponent<T> implements OnInit, ControlValueAccessor {
+export class SelectComponent<T, K> implements OnInit, ControlValueAccessor {
   @Input() public values: T[] = [];
   @Input() public bindLabel: keyof T | null = null;
   @Input() public bindKey: keyof T | null = null;
   @Input() public title = '';
   @Input({ transform: coerceBooleanProperty }) public isRequired = false;
   @Input({ transform: coerceBooleanProperty }) public multiple = false;
-  @Input() public initialValues: T[] = [];
+  @Input() public initialKeys: K[] = [];
   @Input() public errorMessage = '';
   @Input() trigger = '';
-  @Output() public selectionChanged = new EventEmitter<T[]>();
+  @Output() public selectionChanged = new EventEmitter<K[]>();
 
   public selectedValues?: T | T[] = this.multiple ? [] : undefined;
 
@@ -55,13 +55,24 @@ export class SelectComponent<T> implements OnInit, ControlValueAccessor {
   private onTouched: () => void = noop;
 
   public ngOnInit(): void {
-    const filteredValues = this.values.filter((value) => this.initialValues.includes(value));
+    const filteredValues = this.values.filter((value) => {
+      return this.initialKeys.includes(this.getKey(value));
+    });
     this.selectedValues = this.multiple ? filteredValues : filteredValues[0];
+  }
+
+  getKey(value: T): K {
+    if (this.bindKey) {
+      return value[this.bindKey] as K;
+    }
+    return value as unknown as K;
   }
 
   public onFilterChange(selectedValues: T | T[]): void {
     this.selectedValues = selectedValues;
-    this.selectionChanged.emit(Array.isArray(selectedValues) ? selectedValues : [selectedValues]);
+    this.selectionChanged.emit(
+      Array.isArray(selectedValues) ? selectedValues.map((it) => this.getKey(it)) : [this.getKey(selectedValues)],
+    );
     const { bindKey } = this;
     if (bindKey) {
       const newValues = Array.isArray(selectedValues)

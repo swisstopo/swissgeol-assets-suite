@@ -28,7 +28,7 @@
           <asset-sg-editor-general [form]="form.controls.general" [asset]="asset ?? null"></asset-sg-editor-general>
         }
         @case (Tab.Files) {
-          <asset-sg-editor-files [form]="form.controls.files"></asset-sg-editor-files>
+          <asset-sg-editor-files [form]="form.controls.files" [asset]="asset"></asset-sg-editor-files>
         }
         @case (Tab.Status) {
           @if (mode === EditorMode.Edit) {

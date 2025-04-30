@@ -22,6 +22,7 @@ export class FileRepo
         size: true,
         type: true,
         legalDocItemCode: true,
+        lastModifiedAt: true,
       },
     });
     if (entry == null) {
@@ -37,6 +38,7 @@ export class FileRepo
 
   async create(data: CreateFileData): Promise<AssetFile> {
     const name = await determineUniqueFilename(data.name, data.assetId, this.prisma);
+    const lastModifiedAt = new Date();
     const { id } = await this.prisma.file.create({
       select: { id: true },
       data: {
@@ -45,7 +47,7 @@ export class FileRepo
         ocrStatus: data.ocrStatus,
         type: data.type,
         legalDocItemCode: data.legalDocItemCode,
-        lastModifiedAt: new Date(),
+        lastModifiedAt,
       },
     });
     await this.prisma.asset.update({
@@ -67,6 +69,7 @@ export class FileRepo
       size: data.size,
       type: data.type,
       legalDocItemCode: data.legalDocItemCode,
+      lastModifiedAt,
     };
   }
 
