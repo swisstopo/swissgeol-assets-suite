@@ -8,6 +8,7 @@ import { plainToInstance } from 'class-transformer';
 import * as E from 'fp-ts/Either';
 import * as O from 'fp-ts/Option';
 import { combineLatest, debounceTime, map, Observable, of, startWith, Subject, switchMap } from 'rxjs';
+import { NewReferenceDialogData } from '../../../../models/new-reference-dialog-data.interface';
 import { AssetForm } from '../../../asset-editor-page/asset-editor-page.component';
 import { LinkedAssetType } from '../asset-editor-references.component';
 
@@ -38,15 +39,12 @@ export class AddReferenceDialogComponent implements OnInit {
   private assetsToChooseFrom$: Observable<AssetEditDetail[]> = new Observable<AssetEditDetail[]>();
   public optionsToDisplay$!: Observable<LinkedAsset[]>;
   public searchTerm$ = new Subject<string>();
-  private readonly data = inject<{
-    form: AssetForm['controls']['references'];
-    asset: AssetEditDetail | null;
-  }>(MAT_DIALOG_DATA);
+  private readonly data = inject<NewReferenceDialogData>(MAT_DIALOG_DATA);
 
   private readonly httpClient = inject(HttpClient);
   private readonly dialogRef = inject(MatDialogRef<AddReferenceDialogComponent>);
 
-  constructor() {
+  public ngOnInit() {
     this.form = this.data.form;
     this.asset = this.data.asset;
     this.types = this.asset
@@ -59,15 +57,13 @@ export class AddReferenceDialogComponent implements OnInit {
           ]
         : this.types
       : this.types;
-  }
 
-  public ngOnInit() {
     this.assetsToIgnore$ = this.form.valueChanges.pipe(
       startWith(this.form.value),
       map((references) => [
         ...(references.mainAsset ? [references.mainAsset.assetId] : []),
-        ...(references.siblingAssets ? references.siblingAssets.map((reference) => reference.assetId) : []),
-        ...(references.subordinateAssets ? references.subordinateAssets.map((reference) => reference.assetId) : []),
+        ...(references.siblingAssets?.map((reference) => reference.assetId) ?? []),
+        ...(references.subordinateAssets?.map((reference) => reference.assetId) ?? []),
       ]),
     );
     this.assetsToChooseFrom$ = this.searchTerm$.pipe(
@@ -114,8 +110,7 @@ export class AddReferenceDialogComponent implements OnInit {
   }
 
   public addReference() {
-    const linkedAsset = this.newReferenceForm.controls.linkedAsset.value;
-    const type = this.newReferenceForm.controls.type.value;
+    const { linkedAsset, type } = this.newReferenceForm.value;
     if (!linkedAsset || !type) {
       return;
     }

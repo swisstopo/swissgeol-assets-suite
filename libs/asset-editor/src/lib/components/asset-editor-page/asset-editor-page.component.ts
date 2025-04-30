@@ -139,7 +139,7 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
     this.form.controls.references.controls.mainAsset.setValue(
       this.asset?.assetMain ? O.toNullable(this.asset.assetMain) : null,
     );
-    const siblings = [...(this.asset?.siblingYAssets ?? []), ...(this.asset?.siblingXAssets ?? [])];
+    const siblings = this.asset == null ? [] : [...this.asset.siblingYAssets, ...this.asset.siblingXAssets];
     this.form.controls.references.controls.siblingAssets.setValue(siblings);
     this.form.controls.references.controls.subordinateAssets.setValue(this.asset?.subordinateAssets ?? []);
   }

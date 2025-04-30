@@ -6,18 +6,18 @@
   <form [formGroup]="newReferenceForm">
     <div class="content">
       <asset-sg-text-input
-        [label]="'edit.tabs.general.publicTitle' | translate"
+        [title]="'edit.tabs.general.publicTitle' | translate"
         (valueChange)="inputChange($event)"
         [autoCompleteValues]="optionsToDisplay$ | push"
-        [bindLabel]="'titlePublic'"
+        bindLabel="titlePublic"
         (selectionChange)="setSelectedAsset($event)"
         isRequired
       ></asset-sg-text-input>
       <asset-sg-select
         [title]="'edit.tabs.general.kind' | translate"
         [values]="types"
-        [bindLabel]="'translation'"
-        [bindKey]="'key'"
+        bindLabel="translation"
+        bindKey="key"
         isRequired
         formControlName="type"
       ></asset-sg-select>
