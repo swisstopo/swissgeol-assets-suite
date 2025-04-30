@@ -41,47 +41,6 @@ form {
   }
 }
 
-.file-drop-zone {
-  border: 2px dashed variables.$cyan-08;
-  height: 84px;
-  align-content: center;
-  text-align: center;
-  border-radius: 4px;
-  cursor: pointer;
-  transition:
-    border-color 0.3s,
-    background-color 0.3s;
-
-  &.dragover {
-    border-color: #2f4356;
-    background-color: #adc6cd;
-
-    span {
-      color: #2f4356;
-    }
-  }
-
-  span {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 12px;
-    color: variables.$cyan-08;
-  }
-
-  p {
-    margin: 0;
-    color: #828e9a;
-  }
-}
-
-.file-size-error {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: variables.$red;
-}
-
 .will-be-deleted {
   text-decoration: line-through;
 }

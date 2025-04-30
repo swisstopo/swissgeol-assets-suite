@@ -5,15 +5,12 @@ import { MatCheckboxChange } from '@angular/material/checkbox';
 import { Sort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import { fromAppShared } from '@asset-sg/client-shared';
-import { AssetFileType, LegalDocItemCode } from '@asset-sg/shared';
-import { AssetId } from '@asset-sg/shared/v2';
+import { AssetEditDetail, AssetFileType, LegalDocItemCode } from '@asset-sg/shared';
 import { Store } from '@ngrx/store';
 import { BehaviorSubject, combineLatestWith, forkJoin, map, Observable, startWith, Subscription, tap } from 'rxjs';
+import { TranslatedValueItem } from '../../../models/translated-value-item.interface';
 import { AssetForm, FormAssetFile } from '../../asset-editor-page/asset-editor-page.component';
-import {
-  mapValueItemsToTranslatedItem,
-  TranslatedValueItem,
-} from '../asset-editor-general/asset-editor-general.component';
+import { mapValueItemsToTranslatedItem } from '../asset-editor-general/asset-editor-general.component';
 
 @Component({
   selector: 'asset-sg-editor-files',
@@ -23,22 +20,27 @@ import {
 })
 export class AssetEditorFilesComponent implements OnInit, OnDestroy {
   @Input() form!: AssetForm['controls']['files'];
-  @Input() assetId?: AssetId;
-  public isDragging = false;
-  public isFileTooLarge = false;
+  @Input() asset: AssetEditDetail | null = null;
+
   public activeFileDownload: Set<number> = new Set();
+
   protected readonly searchTerm$ = new BehaviorSubject<string>('');
   protected readonly fileType$ = new BehaviorSubject<AssetFileType>('Normal');
+
   public legalFiles: FormControl<FormAssetFile>[] = [];
   public normalFiles: FormControl<FormAssetFile>[] = [];
+
   protected dataSource: MatTableDataSource<FormControl<FormAssetFile>> = new MatTableDataSource();
   private readonly COLUMNS = ['select', 'name', 'lastModifiedAt', 'legalDocItemCode'];
   public displayedColumns: string[] = this.COLUMNS.filter((col) => col !== 'legalDocItemCode');
+
   private readonly store = inject(Store);
+
   public legalDocItems: TranslatedValueItem[] = [];
   public readonly legalDocItems$: Observable<TranslatedValueItem[]> = this.store
     .select(fromAppShared.selectLegalDocItems)
     .pipe(map(mapValueItemsToTranslatedItem));
+
   private readonly httpClient = inject(HttpClient);
   private readonly subscriptions: Subscription = new Subscription();
 
@@ -82,59 +84,6 @@ export class AssetEditorFilesComponent implements OnInit, OnDestroy {
     return !this.dataSource.data.some((file) => file.value.selected);
   }
 
-  public onDragOver(event: DragEvent) {
-    event.preventDefault();
-    this.isDragging = true;
-  }
-
-  public onDragLeave() {
-    this.isDragging = false;
-  }
-
-  public onDrop(event: DragEvent) {
-    event.preventDefault();
-    this.isDragging = false;
-
-    const files = event.dataTransfer?.files;
-    if (files && files.length > 0) {
-      this.handleFiles(files);
-    }
-  }
-
-  onFileSelected(event: Event) {
-    const input = event.target as HTMLInputElement;
-    if (input.files && input.files.length > 0) {
-      this.handleFiles(input.files);
-    }
-  }
-
-  private handleFiles(files: FileList) {
-    for (const element of Array.from(files)) {
-      if (element.size > 2000 * 1024 * 1024) {
-        this.isFileTooLarge = true;
-        return;
-      }
-      this.isFileTooLarge = false;
-      this.form.controls.assetFiles.push(
-        new FormControl(
-          {
-            id: 0,
-            name: element.name,
-            size: element.size,
-            legalDocItemCode: null as unknown as LegalDocItemCode,
-            type: this.fileType$.value,
-            selected: false,
-            willBeDeleted: false,
-            file: element,
-            lastModifiedAt: new Date(),
-          },
-          { nonNullable: true },
-        ),
-      );
-      this.form.markAsDirty();
-    }
-  }
-
   public setSearchTerm(term: string) {
     this.searchTerm$.next(term);
   }
@@ -174,7 +123,7 @@ export class AssetEditorFilesComponent implements OnInit, OnDestroy {
   }
 
   public downloadSelectedFiles() {
-    if (!this.assetId) {
+    if (!this.asset) {
       return;
     }
     const filesToDownload: SimpleFile[] = this.dataSource.data
@@ -184,9 +133,10 @@ export class AssetEditorFilesComponent implements OnInit, OnDestroy {
         id: file.value.id,
       }));
 
+    const assetId = this.asset.assetId;
     const downloadRequests: Observable<FileBlob>[] = filesToDownload.map((file) => {
       this.activeFileDownload.add(file.id);
-      return this.httpClient.get(`/api/assets/${this.assetId}/files/${file.id}`, { responseType: 'blob' }).pipe(
+      return this.httpClient.get(`/api/assets/${assetId}/files/${file.id}`, { responseType: 'blob' }).pipe(
         map((blob) => {
           return {
             blob,
@@ -196,13 +146,11 @@ export class AssetEditorFilesComponent implements OnInit, OnDestroy {
       );
     });
 
-    forkJoin(downloadRequests).subscribe({
-      next: (fileBlobs: FileBlob[]) => {
-        fileBlobs.forEach(async (fileBlob: FileBlob) => {
-          await triggerDownload(fileBlob);
-          this.activeFileDownload.delete(fileBlob.file.id);
-        });
-      },
+    forkJoin(downloadRequests).subscribe((fileBlobs: FileBlob[]) => {
+      fileBlobs.forEach(async (fileBlob: FileBlob) => {
+        await triggerDownload(fileBlob);
+        this.activeFileDownload.delete(fileBlob.file.id);
+      });
     });
   }
 

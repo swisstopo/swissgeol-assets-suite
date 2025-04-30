@@ -5,27 +5,7 @@
 
     <ng-container slot="content">
       <div class="content">
-        <div
-          class="file-drop-zone"
-          [class.dragover]="isDragging"
-          (click)="fileInput.click()"
-          (dragover)="onDragOver($event)"
-          (dragleave)="onDragLeave()"
-          (drop)="onDrop($event)"
-        >
-          <span translate>
-            <svg-icon key="upload"></svg-icon>
-            edit.tabs.files.uploadFile
-          </span>
-          <p translate>edit.tabs.files.clickOrDrop</p>
-          <input type="file" #fileInput class="file-input" (change)="onFileSelected($event)" hidden />
-        </div>
-        @if (isFileTooLarge) {
-          <div class="file-size-error">
-            <svg-icon key="error-filled" />
-            <span translate>edit.tabs.files.fileSizeToLarge</span>
-          </div>
-        }
+        <asset-sg-file-drop-zone [form]="form" [fileType]="fileType$.value"></asset-sg-file-drop-zone>
         @if (dataSource.data.length > 0) {
           <div>
             <div class="actions">

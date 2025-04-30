@@ -107,7 +107,6 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
   public initializeForm() {
     this.form.reset();
     const { controls: general } = this.form.controls.general;
-    const { controls: files } = this.form.controls.files;
     general.titlePublic.setValue(this.asset?.titlePublic ?? null);
     general.titleOriginal.setValue(this.asset?.titleOriginal ?? null);
     general.workgroupId.setValue(this.asset?.workgroupId ?? null);
@@ -121,6 +120,7 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
     general.typeNatRels.setValue(this.asset?.typeNatRels ?? []);
     general.ids.setValue(this.asset?.ids ?? []);
 
+    const { controls: files } = this.form.controls.files;
     files.assetFiles.clear();
     this.asset?.assetFiles.forEach((file) => {
       files.assetFiles.push(
