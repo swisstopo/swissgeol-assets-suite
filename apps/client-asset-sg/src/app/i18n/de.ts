@@ -184,7 +184,7 @@ export const deAppTranslations = {
       },
       contacts: {
         tabName: 'Kontakte',
-        linkContact: 'Neuen Kontakt-Link hinzufügen',
+        linkContact: 'Kontakt verlinken',
         link: 'Verlinken',
         createNewContact: 'Neuen Kontakt erstellen',
         editContact: 'Konktakt bearbeiten',
