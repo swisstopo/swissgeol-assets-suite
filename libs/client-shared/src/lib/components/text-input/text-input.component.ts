@@ -30,7 +30,7 @@ import { FormItemWrapperComponent } from '../form-item-wrapper/form-item-wrapper
   ],
 })
 export class TextInputComponent<T> implements ControlValueAccessor {
-  @Input() public label = '';
+  @Input() public title = '';
   @Input() public value = '';
   @Input() public icon = '';
   @Input({ transform: coerceBooleanProperty }) public isRequired = false;

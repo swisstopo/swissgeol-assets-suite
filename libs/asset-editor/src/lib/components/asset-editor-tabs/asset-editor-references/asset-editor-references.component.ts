@@ -3,6 +3,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatTableDataSource } from '@angular/material/table';
 import { AssetEditDetail, LinkedAsset } from '@asset-sg/shared';
 import { startWith, Subscription } from 'rxjs';
+import { NewReferenceDialogData } from '../../../models/new-reference-dialog-data.interface';
 import { AssetForm } from '../../asset-editor-page/asset-editor-page.component';
 import { AddReferenceDialogComponent } from './add-reference-dialog/add-reference-dialog.component';
 
@@ -68,14 +69,17 @@ export class AssetEditorReferencesComponent implements OnInit, OnDestroy {
   }
 
   openDialog() {
-    const dialogRef = this.dialogService.open<AddReferenceDialogComponent>(AddReferenceDialogComponent, {
-      width: '674px',
-      restoreFocus: false,
-      data: {
-        form: this.form,
-        asset: this.asset,
+    const dialogRef = this.dialogService.open<AddReferenceDialogComponent, NewReferenceDialogData>(
+      AddReferenceDialogComponent,
+      {
+        width: '674px',
+        restoreFocus: false,
+        data: {
+          form: this.form,
+          asset: this.asset,
+        },
       },
-    });
+    );
 
     this.subscriptions.add(
       dialogRef.afterClosed().subscribe((wasReferenceAdded) => {

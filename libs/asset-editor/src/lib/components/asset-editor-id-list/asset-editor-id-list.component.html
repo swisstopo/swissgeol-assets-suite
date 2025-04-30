@@ -3,13 +3,13 @@
     <asset-sg-text-input
       [value]="id.id"
       (valueChange)="updateAlternativeId($event, 'id', $index)"
-      [label]="'edit.tabs.general.alternativeId' | translate"
+      [title]="'edit.tabs.general.alternativeId' | translate"
       isRequired
     ></asset-sg-text-input>
     <asset-sg-text-input
       [value]="id.description"
       (valueChange)="updateAlternativeId($event, 'description', $index)"
-      [label]="'edit.tabs.general.alternativeIdDescription' | translate"
+      [title]="'edit.tabs.general.alternativeIdDescription' | translate"
       isRequired
     ></asset-sg-text-input>
     <button asset-sg-tertiary isIcon (click)="delete(id)">
