@@ -9,10 +9,19 @@ import {
   fromAppShared,
   ROUTER_SEGMENTS,
   RoutingService,
+  wktToGeoJSON,
 } from '@asset-sg/client-shared';
-import { AssetEditDetail, AssetFile, dateFromDateId, hasHistoricalData, Lang, LinkedAsset } from '@asset-sg/shared';
+import {
+  AssetEditDetail,
+  AssetFile,
+  dateFromDateId,
+  hasHistoricalData,
+  Lang,
+  LinkedAsset,
+  Studies,
+} from '@asset-sg/shared';
 import { Workflow } from '@asset-sg/shared/v2';
-import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { Store } from '@ngrx/store';
 import * as O from 'fp-ts/lib/Option';
 import { filter, Observable, Subscription, take, tap } from 'rxjs';
@@ -21,7 +30,6 @@ import * as actions from '../../state/asset-editor.actions';
 import { selectWorkflow } from '../../state/asset-editor.selector';
 import { Tab } from '../asset-editor-navigation/asset-editor-navigation.component';
 
-@UntilDestroy()
 @Component({
   selector: 'asset-sg-editor-page',
   templateUrl: './asset-editor-page.component.html',
@@ -142,6 +150,13 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
     const siblings = this.asset == null ? [] : [...this.asset.siblingYAssets, ...this.asset.siblingXAssets];
     this.form.controls.references.controls.siblingAssets.setValue(siblings);
     this.form.controls.references.controls.subordinateAssets.setValue(this.asset?.subordinateAssets ?? []);
+
+    this.form.controls.geometries.controls.studies.setValue(
+      this.asset?.studies.map((study) => ({
+        studyId: study.studyId,
+        geom: wktToGeoJSON(study.geomText),
+      })) ?? [],
+    );
   }
 
   public openConfirmDialogForAssetDeletion(assetId: number) {
@@ -236,7 +251,7 @@ const buildForm = () => {
       siblingAssets: new FormControl<LinkedAsset[]>([], { nonNullable: true }),
       subordinateAssets: new FormControl<LinkedAsset[]>([], { nonNullable: true }),
     }),
-    geometries: new FormGroup({}),
+    geometries: new FormGroup({ studies: new FormControl<Studies>([], { nonNullable: true }) }),
     status: new FormGroup({}),
   });
 };

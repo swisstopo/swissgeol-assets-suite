@@ -43,6 +43,9 @@
         @case (Tab.References) {
           <asset-sg-editor-references [form]="form.controls.references" [asset]="asset"></asset-sg-editor-references>
         }
+        @case (Tab.Geometries) {
+          <asset-sg-edit-geometries [form]="form.controls.geometries"></asset-sg-edit-geometries>
+        }
         @default {
           <span>other</span>
         }
