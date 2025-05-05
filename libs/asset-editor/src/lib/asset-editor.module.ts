@@ -86,6 +86,7 @@ import { AssetEditorTabUsageComponent } from './components/asset-editor-tab-usag
 import { AssetEditorFilesComponent } from './components/asset-editor-tabs/asset-editor-files/asset-editor-files.component';
 import { FileDropZoneComponent } from './components/asset-editor-tabs/asset-editor-files/file-drop-zone/file-drop-zone.component';
 import { AssetEditorGeneralComponent } from './components/asset-editor-tabs/asset-editor-general/asset-editor-general.component';
+import { AssetEditorGeometriesComponent } from './components/asset-editor-tabs/asset-editor-geometry/asset-editor-geometries.component';
 import { AssetEditorLegacyDataComponent } from './components/asset-editor-tabs/asset-editor-legacy-data/asset-editor-legacy-data.component';
 import { AddReferenceDialogComponent } from './components/asset-editor-tabs/asset-editor-references/add-reference-dialog/add-reference-dialog.component';
 import { AssetEditorReferencesComponent } from './components/asset-editor-tabs/asset-editor-references/asset-editor-references.component';
@@ -142,6 +143,7 @@ export const canLeaveEdit: CanDeactivateFn<AssetEditorPageComponent> = (componen
     AssetEditorReferencesComponent,
     AddReferenceDialogComponent,
     FileDropZoneComponent,
+    AssetEditorGeometriesComponent,
   ],
   imports: [
     CommonModule,
