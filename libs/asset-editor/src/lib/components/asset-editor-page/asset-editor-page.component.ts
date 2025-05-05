@@ -10,10 +10,11 @@ import {
   ROUTER_SEGMENTS,
   RoutingService,
 } from '@asset-sg/client-shared';
-import { AssetEditDetail, AssetFile, dateFromDateId, hasHistoricalData, Lang } from '@asset-sg/shared';
+import { AssetEditDetail, AssetFile, dateFromDateId, hasHistoricalData, Lang, LinkedAsset } from '@asset-sg/shared';
 import { Workflow } from '@asset-sg/shared/v2';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { Store } from '@ngrx/store';
+import * as O from 'fp-ts/lib/Option';
 import { filter, Observable, Subscription, take, tap } from 'rxjs';
 import { EditorMode } from '../../models';
 import * as actions from '../../state/asset-editor.actions';
@@ -134,6 +135,13 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
         ),
       );
     });
+
+    this.form.controls.references.controls.mainAsset.setValue(
+      this.asset?.assetMain ? O.toNullable(this.asset.assetMain) : null,
+    );
+    const siblings = this.asset == null ? [] : [...this.asset.siblingYAssets, ...this.asset.siblingXAssets];
+    this.form.controls.references.controls.siblingAssets.setValue(siblings);
+    this.form.controls.references.controls.subordinateAssets.setValue(this.asset?.subordinateAssets ?? []);
   }
 
   public openConfirmDialogForAssetDeletion(assetId: number) {
@@ -223,7 +231,11 @@ const buildForm = () => {
       assetFiles: new FormArray<FormControl<FormAssetFile>>([]),
     }),
     contacts: new FormGroup({}),
-    references: new FormGroup({}),
+    references: new FormGroup({
+      mainAsset: new FormControl<LinkedAsset | null>(null),
+      siblingAssets: new FormControl<LinkedAsset[]>([], { nonNullable: true }),
+      subordinateAssets: new FormControl<LinkedAsset[]>([], { nonNullable: true }),
+    }),
     geometries: new FormGroup({}),
     status: new FormGroup({}),
   });

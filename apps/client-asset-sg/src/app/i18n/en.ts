@@ -210,8 +210,10 @@ export const enAppTranslations: AppTranslations = {
       },
       references: {
         tabName: 'References',
+        assetId: 'Asset ID',
         assetTitlePublic: 'Public title',
         assetTitlePublicPlaceholder: 'Search via public title',
+        noReferencesAdded: 'No references added yet...',
         referenceHeadings: {
           parent: 'Main asset',
           subordinate: 'Subordinate assets',

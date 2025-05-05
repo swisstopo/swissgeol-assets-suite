@@ -25,7 +25,7 @@
     <div class="form-container">
       @switch (activeTab) {
         @case (Tab.General) {
-          <asset-sg-editor-general [form]="form.controls.general" [asset]="asset ?? null"></asset-sg-editor-general>
+          <asset-sg-editor-general [form]="form.controls.general" [asset]="asset"></asset-sg-editor-general>
         }
         @case (Tab.Files) {
           <asset-sg-editor-files [form]="form.controls.files" [asset]="asset"></asset-sg-editor-files>
@@ -39,6 +39,9 @@
           @if (asset) {
             <asset-sg-editor-legacy-data [asset]="asset"></asset-sg-editor-legacy-data>
           }
+        }
+        @case (Tab.References) {
+          <asset-sg-editor-references [form]="form.controls.references" [asset]="asset"></asset-sg-editor-references>
         }
         @default {
           <span>other</span>

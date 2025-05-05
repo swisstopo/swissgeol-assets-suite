@@ -1,0 +1,33 @@
+<div class="header">
+  <h2 translate>edit.tabs.references.referenceHeadings.newReference</h2>
+</div>
+<hr />
+<div mat-dialog-content>
+  <form [formGroup]="newReferenceForm">
+    <div class="content">
+      <asset-sg-text-input
+        [title]="'edit.tabs.general.publicTitle' | translate"
+        (valueChange)="inputChange($event)"
+        [autoCompleteValues]="optionsToDisplay$ | push"
+        bindLabel="titlePublic"
+        (selectionChange)="setSelectedAsset($event)"
+        isRequired
+      ></asset-sg-text-input>
+      <asset-sg-select
+        [title]="'edit.tabs.general.kind' | translate"
+        [values]="types"
+        bindLabel="translation"
+        bindKey="key"
+        isRequired
+        formControlName="type"
+      ></asset-sg-select>
+    </div>
+  </form>
+</div>
+<hr />
+<div mat-dialog-actions class="actions">
+  <button asset-sg-secondary (click)="cancel()" translate>cancel</button>
+  <button asset-sg-primary (click)="addReference()" [disabled]="newReferenceForm.invalid" translate>
+    edit.tabs.references.referenceHeadings.newReference
+  </button>
+</div>

@@ -210,8 +210,10 @@ export const itAppTranslations: AppTranslations = {
       },
       references: {
         tabName: 'IT Verweise',
+        assetId: 'IT Asset ID',
         assetTitlePublic: 'IT Öffentlicher Titel',
         assetTitlePublicPlaceholder: 'IT Suche über den öffentlichen Titel',
+        noReferencesAdded: 'IT Noch keine Verweise hinzugefügt...',
         referenceHeadings: {
           parent: 'IT Übergeordneter Asset',
           subordinate: 'IT Untergeordnete Assets',

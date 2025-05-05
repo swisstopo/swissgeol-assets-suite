@@ -8,6 +8,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatChipSet } from '@angular/material/chips';
 import { MAT_DATE_FORMATS, MAT_DATE_LOCALE } from '@angular/material/core';
 import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatDialogActions, MatDialogContent } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatMenuModule } from '@angular/material/menu';
@@ -27,6 +28,7 @@ import {
   MatRowDef,
   MatTable,
 } from '@angular/material/table';
+import { MatTooltip } from '@angular/material/tooltip';
 import { CanActivateFn, CanDeactivateFn, RouterModule } from '@angular/router';
 import {
   AdminOnlyDirective,
@@ -85,6 +87,8 @@ import { AssetEditorFilesComponent } from './components/asset-editor-tabs/asset-
 import { FileDropZoneComponent } from './components/asset-editor-tabs/asset-editor-files/file-drop-zone/file-drop-zone.component';
 import { AssetEditorGeneralComponent } from './components/asset-editor-tabs/asset-editor-general/asset-editor-general.component';
 import { AssetEditorLegacyDataComponent } from './components/asset-editor-tabs/asset-editor-legacy-data/asset-editor-legacy-data.component';
+import { AddReferenceDialogComponent } from './components/asset-editor-tabs/asset-editor-references/add-reference-dialog/add-reference-dialog.component';
+import { AssetEditorReferencesComponent } from './components/asset-editor-tabs/asset-editor-references/asset-editor-references.component';
 import { AssetEditorStatusApprovalComponent } from './components/asset-editor-tabs/asset-editor-status/asset-editor-status-approval/asset-editor-status-approval.component';
 import { AssetEditorStatusAssigneeComponent } from './components/asset-editor-tabs/asset-editor-status/asset-editor-status-assignee/asset-editor-status-assignee.component';
 import { AssetEditorStatusChangeComponent } from './components/asset-editor-tabs/asset-editor-status/asset-editor-status-change/asset-editor-status-change.component';
@@ -135,6 +139,8 @@ export const canLeaveEdit: CanDeactivateFn<AssetEditorPageComponent> = (componen
     Lv95yWithoutPrefixPipe,
     ReplaceBrPipe,
     AssetEditorNavigationComponent,
+    AssetEditorReferencesComponent,
+    AddReferenceDialogComponent,
     FileDropZoneComponent,
   ],
   imports: [
@@ -239,6 +245,8 @@ export const canLeaveEdit: CanDeactivateFn<AssetEditorPageComponent> = (componen
     TabComponent,
     TabsComponent,
     UsernameComponent,
+    MatTable,
+    MatSort,
     MatCell,
     MatCellDef,
     MatColumnDef,
@@ -247,10 +255,11 @@ export const canLeaveEdit: CanDeactivateFn<AssetEditorPageComponent> = (componen
     MatHeaderRowDef,
     MatRow,
     MatRowDef,
-    MatSort,
     MatSortHeader,
-    MatTable,
     MatHeaderCellDef,
+    MatDialogContent,
+    MatDialogActions,
+    MatTooltip,
     MatProgressSpinner,
   ],
   providers: [
