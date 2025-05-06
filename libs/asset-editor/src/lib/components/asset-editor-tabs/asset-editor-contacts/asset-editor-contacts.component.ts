@@ -8,7 +8,7 @@ import { AssetContact } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
 import { combineLatestWith, Subscription, tap } from 'rxjs';
 import { AssetForm } from '../../asset-editor-page/asset-editor-page.component';
-import { AddContactDialogComponent } from './add-contact-dialog/add-contact-dialog.component';
+import { LinkContactDialogComponent } from './link-contact-dialog/link-contact-dialog.component';
 
 interface ContactItem {
   role: 'author' | 'supplier' | 'initiator';
@@ -62,8 +62,8 @@ export class AssetEditorContactsComponent implements OnInit, OnDestroy {
   }
 
   protected openDialog() {
-    const dialogRef = this.dialogService.open<AddContactDialogComponent, undefined, AssetContact>(
-      AddContactDialogComponent,
+    const dialogRef = this.dialogService.open<LinkContactDialogComponent, undefined, AssetContact>(
+      LinkContactDialogComponent,
       {
         width: '674px',
         restoreFocus: false,
