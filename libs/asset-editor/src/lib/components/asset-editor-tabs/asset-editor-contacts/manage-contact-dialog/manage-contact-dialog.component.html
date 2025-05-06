@@ -3,7 +3,7 @@
 </div>
 <hr />
 <div mat-dialog-content>
-  <form [formGroup]="createContactForm">
+  <form [formGroup]="manageContactForm">
     <div class="content">
       <asset-sg-select
         [title]="'edit.tabs.contacts.role' | translate"
@@ -84,7 +84,7 @@
 <hr />
 <div class="actions" mat-dialog-actions>
   <button (click)="cancel()" asset-sg-secondary translate>cancel</button>
-  <button (click)="createContact()" [disabled]="createContactForm.invalid" asset-sg-primary translate>
+  <button (click)="createOrUpdateContact()" [disabled]="manageContactForm.invalid" asset-sg-primary translate>
     {{ existingContactId ? "edit.tabs.contacts.editContact" : "edit.tabs.contacts.createNewContact" }}
   </button>
 </div>

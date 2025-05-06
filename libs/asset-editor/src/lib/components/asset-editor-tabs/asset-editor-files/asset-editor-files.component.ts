@@ -9,8 +9,8 @@ import { AssetEditDetail, AssetFileType, LegalDocItemCode } from '@asset-sg/shar
 import { Store } from '@ngrx/store';
 import { BehaviorSubject, combineLatestWith, forkJoin, map, Observable, startWith, Subscription, tap } from 'rxjs';
 import { TranslatedValueItem } from '../../../models/translated-value-item.interface';
+import { mapValueItemsToTranslatedItem } from '../../../utils/map-value-items-to-translated-item.utils';
 import { AssetForm, FormAssetFile } from '../../asset-editor-page/asset-editor-page.component';
-import { mapValueItemsToTranslatedItem } from '../asset-editor-general/asset-editor-general.component';
 
 @Component({
   selector: 'asset-sg-editor-files',

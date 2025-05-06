@@ -1,10 +1,11 @@
 import { Component, inject, Input, OnDestroy, OnInit } from '@angular/core';
 import { fromAppShared } from '@asset-sg/client-shared';
-import { AssetEditDetail, ValueItem } from '@asset-sg/shared';
+import { AssetEditDetail } from '@asset-sg/shared';
 import { Role, SimpleWorkgroup } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
 import { combineLatestWith, map, Observable, startWith, Subscription } from 'rxjs';
 import { TranslatedValueItem } from '../../../models/translated-value-item.interface';
+import { mapValueItemsToTranslatedItem } from '../../../utils/map-value-items-to-translated-item.utils';
 import { AssetForm } from '../../asset-editor-page/asset-editor-page.component';
 
 @Component({
@@ -98,22 +99,3 @@ export class AssetEditorGeneralComponent implements OnInit, OnDestroy {
     this.form.markAsDirty();
   }
 }
-
-export const mapValueItemsToTranslatedItem = (item: Record<string, ValueItem> | null): TranslatedValueItem[] => {
-  if (item == null) {
-    return [];
-  }
-  return Object.values(item).map(mapValueItemToTranslatedItem);
-};
-
-const mapValueItemToTranslatedItem = (item: ValueItem): TranslatedValueItem => {
-  return {
-    code: item.code,
-    value: {
-      de: item.nameDe,
-      en: item.nameEn,
-      fr: item.nameFr,
-      it: item.nameIt,
-    },
-  };
-};

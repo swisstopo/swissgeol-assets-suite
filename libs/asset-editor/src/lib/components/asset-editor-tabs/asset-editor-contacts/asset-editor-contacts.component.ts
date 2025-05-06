@@ -8,8 +8,8 @@ import { AssetContact, AssetContactRole, Contact } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
 import { combineLatestWith, startWith, Subscription, tap } from 'rxjs';
 import { AssetForm } from '../../asset-editor-page/asset-editor-page.component';
-import { CreateContactDialogComponent } from './create-contact-dialog/create-contact-dialog.component';
 import { LinkContactDialogComponent } from './link-contact-dialog/link-contact-dialog.component';
+import { ManageContactDialogComponent } from './manage-contact-dialog/manage-contact-dialog.component';
 
 export type ContactWithRoles = Contact & { roles: AssetContactRole[] };
 
@@ -57,6 +57,7 @@ export class AssetEditorContactsComponent implements OnInit, OnDestroy {
           combineLatestWith(this.existingContacts$),
           tap(([assetContacts, contacts]) => {
             if (contacts) {
+              // first we combine the asset contacts with the existing contacts and then group roles per contact
               this.dataSource.data = Object.values(
                 assetContacts
                   .filter((contactMatch) => contacts[contactMatch.id])
@@ -109,8 +110,8 @@ export class AssetEditorContactsComponent implements OnInit, OnDestroy {
   protected openDetailDialog(contact: ContactItem) {
     const roles = this.dataSource.data.find((contactMatch) => contactMatch.id === contact.id);
     const existingContact: ContactWithRoles = { ...this.existingContacts[contact.id], roles: roles?.roles ?? [] };
-    const dialogRef = this.dialogService.open<CreateContactDialogComponent, ContactWithRoles, AssetContact[]>(
-      CreateContactDialogComponent,
+    const dialogRef = this.dialogService.open<ManageContactDialogComponent, ContactWithRoles, AssetContact[]>(
+      ManageContactDialogComponent,
       {
         width: '674px',
         restoreFocus: false,
