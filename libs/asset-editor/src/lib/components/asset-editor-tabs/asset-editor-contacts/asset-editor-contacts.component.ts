@@ -121,25 +121,28 @@ export class AssetEditorContactsComponent implements OnInit, OnDestroy {
 
     this.subscriptions.add(
       dialogRef.afterClosed().subscribe((assetContacts) => {
-        this.handleAssetContactFormUpdate(assetContacts, contact.id);
+        this.handleAssetContactFormUpdate(assetContacts);
       }),
     );
   }
 
-  protected removeContact(element: ContactItem) {
+  protected removeContact(event: Event, element: ContactItem) {
+    event.stopPropagation();
     this.form.controls.assetContacts.controls
-      .filter((control) => control.value.id === element.id)
-      .forEach((contact) => {
-        const idx = this.form.controls.assetContacts.controls.findIndex(
-          (control) => control.value.id === contact.value.id,
-        );
+      .map((control, idx) => ({ control, idx }))
+      .filter(({ control }) => control.value.id === element.id)
+      .map(({ idx }) => idx)
+      .sort((a, b) => b - a)
+      .forEach((idx) => {
         this.form.controls.assetContacts.removeAt(idx);
-        this.form.markAsDirty();
       });
+
+    this.form.markAsDirty();
   }
 
-  private handleAssetContactFormUpdate(assetContacts?: AssetContact[], contactId?: number) {
-    if (assetContacts) {
+  private handleAssetContactFormUpdate(assetContacts?: AssetContact[]) {
+    if (assetContacts && assetContacts.length > 0) {
+      const contactId = assetContacts[0].id;
       this.form.controls.assetContacts.controls = this.form.controls.assetContacts.controls.filter(
         (contact) => contact.value.id !== contactId,
       );
