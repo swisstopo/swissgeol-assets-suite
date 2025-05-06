@@ -30,7 +30,7 @@
 <div mat-dialog-actions class="actions">
   <button asset-sg-secondary translate (click)="cancel()">cancel</button>
   <button asset-sg-primary translate (click)="createNewContact()">edit.tabs.contacts.createNewContact</button>
-  <button asset-sg-primary translate [disabled]="linkContactForm.invalid" (click)="linkContact()">
+  <button asset-sg-primary translate [disabled]="linkContactForm.invalid" (click)="handleContactLink()">
     edit.tabs.contacts.linkContact
   </button>
 </div>
