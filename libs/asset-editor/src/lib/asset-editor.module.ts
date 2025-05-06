@@ -84,8 +84,8 @@ import { AssetEditorTabGeneralComponent } from './components/asset-editor-tab-ge
 import { AssetEditorTabGeometriesComponent } from './components/asset-editor-tab-geometries/asset-editor-tab-geometries.component';
 import { AssetEditorTabReferencesComponent } from './components/asset-editor-tab-references/asset-editor-tab-references.component';
 import { AssetEditorTabUsageComponent } from './components/asset-editor-tab-usage/asset-editor-tab-usage.component';
-import { AddContactDialogComponent } from './components/asset-editor-tabs/asset-editor-contacts/add-contact-dialog/add-contact-dialog.component';
 import { AssetEditorContactsComponent } from './components/asset-editor-tabs/asset-editor-contacts/asset-editor-contacts.component';
+import { LinkContactDialogComponent } from './components/asset-editor-tabs/asset-editor-contacts/link-contact-dialog/link-contact-dialog.component';
 import { AssetEditorFilesComponent } from './components/asset-editor-tabs/asset-editor-files/asset-editor-files.component';
 import { FileDropZoneComponent } from './components/asset-editor-tabs/asset-editor-files/file-drop-zone/file-drop-zone.component';
 import { AssetEditorGeneralComponent } from './components/asset-editor-tabs/asset-editor-general/asset-editor-general.component';
@@ -113,7 +113,7 @@ export const canLeaveEdit: CanDeactivateFn<AssetEditorPageComponent> = (componen
 
 @NgModule({
   declarations: [
-    AddContactDialogComponent,
+    LinkContactDialogComponent,
     AssetEditorIdFormComponent,
     AssetEditorIdListComponent,
     AssetEditorLaunchComponent,

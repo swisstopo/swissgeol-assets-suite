@@ -10,12 +10,12 @@ import { combineLatestWith, debounceTime, Subject, Subscription, tap } from 'rxj
 type AssetContactWithoutRole = Pick<Contact, 'name' | 'id'>;
 
 @Component({
-  selector: 'asset-sg-add-contacts-dialog',
-  templateUrl: './add-contact-dialog.component.html',
-  styleUrls: ['./add-contact-dialog.component.scss'],
+  selector: 'asset-sg-link-contact-dialog',
+  templateUrl: './link-contact-dialog.component.html',
+  styleUrls: ['./link-contact-dialog.component.scss'],
   standalone: false,
 })
-export class AddContactDialogComponent implements OnInit {
+export class LinkContactDialogComponent implements OnInit {
   protected roles = AssetContactRoles.map((role) => ({
     key: role,
     translation: { key: `contactRoles.${role}` },
@@ -26,7 +26,7 @@ export class AddContactDialogComponent implements OnInit {
   });
   protected searchTerm$ = new Subject<string>();
   protected filteredContacts$ = new Subject<AssetContactWithoutRole[]>();
-  private readonly dialogRef = inject(MatDialogRef<AddContactDialogComponent, AssetContact>);
+  private readonly dialogRef = inject(MatDialogRef<LinkContactDialogComponent, AssetContact>);
   private readonly store = inject(Store);
   private subscriptions: Subscription = new Subscription();
 
