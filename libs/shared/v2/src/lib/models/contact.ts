@@ -22,3 +22,5 @@ export type AssetContactRole = (typeof AssetContactRoles)[number];
 export interface AssetContact extends Pick<Contact, 'id'> {
   role: AssetContactRole;
 }
+
+export type ContactWithRole = Contact & AssetContact;

@@ -1,5 +1,5 @@
 <div class="header">
-  <h2 translate>edit.tabs.references.referenceHeadings.newReference</h2>
+  <h2 translate>edit.tabs.contacts.createNewContact</h2>
 </div>
 <hr />
 <div mat-dialog-content>
@@ -28,7 +28,7 @@
 <hr />
 <div mat-dialog-actions class="actions">
   <button asset-sg-secondary translate (click)="cancel()">cancel</button>
-  <button asset-sg-primary translate>edit.tabs.contacts.createNewContact</button>
+  <button asset-sg-primary translate (click)="createNewContact()">edit.tabs.contacts.createNewContact</button>
   <button asset-sg-primary translate [disabled]="linkContactForm.invalid" (click)="linkContact()">
     edit.tabs.contacts.linkContact
   </button>

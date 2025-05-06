@@ -1,0 +1,21 @@
+.header {
+  padding: 24px 24px 16px 24px;
+}
+
+h2,
+hr {
+  margin: 0;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 16px;
+  padding: 24px;
+}

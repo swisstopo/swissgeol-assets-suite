@@ -189,7 +189,7 @@ export const enAppTranslations: AppTranslations = {
         link: 'Link',
         unlink: 'Unlink contact',
         viewDetails: 'Show contact details',
-        createNewContact: 'Create new contact',
+        createNewContact: 'Add Contact',
         editContact: 'Edit contact',
         contact: 'Contact',
         role: 'Role',

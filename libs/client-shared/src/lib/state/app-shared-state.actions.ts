@@ -1,5 +1,5 @@
-import { AssetEditDetail, Contact, Lang, ReferenceData } from '@asset-sg/shared';
-import { AssetId, SimpleWorkgroup, User } from '@asset-sg/shared/v2';
+import { AssetEditDetail, Lang, ReferenceData } from '@asset-sg/shared';
+import { AssetId, Contact, SimpleWorkgroup, User } from '@asset-sg/shared/v2';
 import * as RD from '@devexperts/remote-data-ts';
 import { createAction, props } from '@ngrx/store';
 
@@ -11,14 +11,8 @@ export const loadReferenceDataResult = createAction(
   props<RD.RemoteData<ApiError, ReferenceData>>(),
 );
 
-export const createContactResult = createAction(
-  '[App Shared State] Create Contact Result',
-  props<RD.RemoteData<ApiError, Contact>>(),
-);
-export const editContactResult = createAction(
-  '[App Shared State] Edit Contact Result',
-  props<RD.RemoteData<ApiError, Contact>>(),
-);
+export const createContactResult = createAction('[App Shared State] Create Contact Result', props<Contact>());
+export const editContactResult = createAction('[App Shared State] Edit Contact Result', props<Contact>());
 
 export const loadUserProfile = createAction('[App Shared State] Load User Profile');
 
