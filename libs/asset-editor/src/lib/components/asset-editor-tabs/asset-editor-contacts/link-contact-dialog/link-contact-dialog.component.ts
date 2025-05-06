@@ -1,13 +1,11 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, EventEmitter, inject, OnInit, Output } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
-import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { fromAppShared } from '@asset-sg/client-shared';
 import { AssetContactRole } from '@asset-sg/shared';
 import { AssetContact, AssetContactRoles, Contact, ContactId } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
 import { combineLatestWith, debounceTime, Subject, Subscription, tap } from 'rxjs';
 import { ContactWithRoles } from '../asset-editor-contacts.component';
-import { ManageContactDialogComponent } from '../manage-contact-dialog/manage-contact-dialog.component';
 
 type SelectableContact = Pick<Contact, 'name' | 'id'>;
 
@@ -18,6 +16,9 @@ type SelectableContact = Pick<Contact, 'name' | 'id'>;
   standalone: false,
 })
 export class LinkContactDialogComponent implements OnInit {
+  @Output() linkContact: EventEmitter<AssetContact[]> = new EventEmitter();
+  @Output() closeDialog: EventEmitter<void> = new EventEmitter();
+  @Output() createContact: EventEmitter<Partial<Pick<ContactWithRoles, 'roles' | 'name'>>> = new EventEmitter();
   protected readonly roles = AssetContactRoles.map((role) => ({
     key: role,
     translation: { key: `contactRoles.${role}` },
@@ -28,10 +29,8 @@ export class LinkContactDialogComponent implements OnInit {
   });
   protected readonly searchTerm$ = new Subject<string>();
   protected readonly filteredContacts$ = new Subject<SelectableContact[]>();
-  private readonly dialogRef = inject(MatDialogRef<LinkContactDialogComponent, AssetContact[]>);
   private readonly store = inject(Store);
   private readonly subscriptions: Subscription = new Subscription();
-  private readonly dialogService = inject(MatDialog);
   private searchTerm = '';
 
   public ngOnInit() {
@@ -65,48 +64,24 @@ export class LinkContactDialogComponent implements OnInit {
     this.linkContactForm.controls.linkedContact.setValue(contact.id);
   }
 
-  protected linkContact() {
+  protected handleContactLink() {
     const assetContacts = this.linkContactForm.controls.roles.value.map((role) => {
       return {
         id: this.linkContactForm.controls.linkedContact.value,
         role,
       } as AssetContact;
     });
-    this.dialogRef.close(assetContacts);
-  }
-
-  private linkNewContact(newContact: AssetContact) {
-    this.dialogRef.close(newContact);
+    this.linkContact.emit(assetContacts);
   }
 
   protected cancel() {
-    this.dialogRef.close();
+    this.closeDialog.emit();
   }
 
   protected createNewContact() {
-    this.subscriptions.add(
-      this.dialogService
-        .open<ManageContactDialogComponent, Partial<ContactWithRoles>, AssetContact>(ManageContactDialogComponent, {
-          width: '674px',
-          restoreFocus: false,
-          enterAnimationDuration: '0ms',
-          exitAnimationDuration: '0ms',
-          data: {
-            name: this.searchTerm ?? '',
-            roles: this.linkContactForm.value.roles,
-          },
-        })
-        .afterClosed()
-        .pipe(
-          tap((newContact) => {
-            if (newContact) {
-              this.linkNewContact(newContact);
-            } else {
-              this.cancel();
-            }
-          }),
-        )
-        .subscribe(),
-    );
+    this.createContact.emit({
+      name: this.searchTerm ?? '',
+      roles: this.linkContactForm.value.roles,
+    });
   }
 }

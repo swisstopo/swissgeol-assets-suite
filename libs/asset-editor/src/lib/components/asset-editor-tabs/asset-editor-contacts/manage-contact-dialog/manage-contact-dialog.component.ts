@@ -1,6 +1,5 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, EventEmitter, inject, Input, OnInit, Output } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
-import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { appSharedStateActions, fromAppShared } from '@asset-sg/client-shared';
 import { AssetContactRole } from '@asset-sg/shared';
 import { AssetContact, AssetContactRoles, ContactData } from '@asset-sg/shared/v2';
@@ -18,6 +17,9 @@ import { ContactWithRoles } from '../asset-editor-contacts.component';
   standalone: false,
 })
 export class ManageContactDialogComponent implements OnInit {
+  @Output() public createContact: EventEmitter<AssetContact[]> = new EventEmitter();
+  @Output() public closeDialog: EventEmitter<void> = new EventEmitter();
+  @Input() public data: Partial<ContactWithRoles> | undefined;
   protected readonly roles = AssetContactRoles.map((role) => ({
     key: role,
     translation: { key: `contactRoles.${role}` },
@@ -36,14 +38,12 @@ export class ManageContactDialogComponent implements OnInit {
     contactKindItemCode: new FormControl('', { nonNullable: true }),
   });
   protected existingContactId: number | null = null;
-  private readonly dialogRef = inject(MatDialogRef<ManageContactDialogComponent, AssetContact[]>);
   private readonly subscriptions: Subscription = new Subscription();
   private readonly assetEditorService: AssetEditorService = inject(AssetEditorService);
   private readonly store = inject(Store);
   protected readonly contactKindItems$: Observable<TranslatedValueItem[]> = this.store
     .select(fromAppShared.selectContactKindItems)
     .pipe(map(mapValueItemsToTranslatedItem));
-  private readonly data: Partial<ContactWithRoles> = inject(MAT_DIALOG_DATA);
 
   public ngOnInit() {
     if (this.data) {
@@ -66,19 +66,15 @@ export class ManageContactDialogComponent implements OnInit {
                 role,
               } as AssetContact;
             });
-            this.close(assetContacts);
+            this.createContact.emit(assetContacts);
           }),
         )
         .subscribe(),
     );
   }
 
-  protected close(assetContacts: AssetContact[]) {
-    this.dialogRef.close(assetContacts);
-  }
-
   protected cancel() {
-    this.dialogRef.close();
+    this.closeDialog.emit();
   }
 
   private createOrSaveContact(data: ContactData) {

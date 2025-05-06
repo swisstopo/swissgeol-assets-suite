@@ -8,8 +8,7 @@ import { AssetContact, AssetContactRole, Contact } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
 import { combineLatestWith, startWith, Subscription, tap } from 'rxjs';
 import { AssetForm } from '../../asset-editor-page/asset-editor-page.component';
-import { LinkContactDialogComponent } from './link-contact-dialog/link-contact-dialog.component';
-import { ManageContactDialogComponent } from './manage-contact-dialog/manage-contact-dialog.component';
+import { DialogWrapperComponent } from './dialog-wrapper/dialog-wrapper.component';
 
 export type ContactWithRoles = Contact & { roles: AssetContactRole[] };
 
@@ -92,8 +91,8 @@ export class AssetEditorContactsComponent implements OnInit, OnDestroy {
   }
 
   protected openLinkDialog() {
-    const dialogRef = this.dialogService.open<LinkContactDialogComponent, undefined, AssetContact[]>(
-      LinkContactDialogComponent,
+    const dialogRef = this.dialogService.open<DialogWrapperComponent, undefined, AssetContact[]>(
+      DialogWrapperComponent,
       {
         width: '674px',
         restoreFocus: false,
@@ -110,8 +109,8 @@ export class AssetEditorContactsComponent implements OnInit, OnDestroy {
   protected openDetailDialog(contact: ContactItem) {
     const roles = this.dataSource.data.find((contactMatch) => contactMatch.id === contact.id);
     const existingContact: ContactWithRoles = { ...this.existingContacts[contact.id], roles: roles?.roles ?? [] };
-    const dialogRef = this.dialogService.open<ManageContactDialogComponent, ContactWithRoles, AssetContact[]>(
-      ManageContactDialogComponent,
+    const dialogRef = this.dialogService.open<DialogWrapperComponent, ContactWithRoles, AssetContact[]>(
+      DialogWrapperComponent,
       {
         width: '674px',
         restoreFocus: false,
