@@ -7,9 +7,9 @@ import { AssetContact, AssetContactRoles, Contact, ContactId } from '@asset-sg/s
 import { Store } from '@ngrx/store';
 import { combineLatestWith, debounceTime, Subject, Subscription, tap } from 'rxjs';
 import { ContactWithRoles } from '../asset-editor-contacts.component';
-import { CreateContactDialogComponent } from '../create-contact-dialog/create-contact-dialog.component';
+import { ManageContactDialogComponent } from '../manage-contact-dialog/manage-contact-dialog.component';
 
-type AssetContactWithoutRole = Pick<Contact, 'name' | 'id'>;
+type SelectableContact = Pick<Contact, 'name' | 'id'>;
 
 @Component({
   selector: 'asset-sg-link-contact-dialog',
@@ -27,7 +27,7 @@ export class LinkContactDialogComponent implements OnInit {
     roles: new FormControl<AssetContactRole[]>([], { nonNullable: true, validators: Validators.required }),
   });
   protected readonly searchTerm$ = new Subject<string>();
-  protected readonly filteredContacts$ = new Subject<AssetContactWithoutRole[]>();
+  protected readonly filteredContacts$ = new Subject<SelectableContact[]>();
   private readonly dialogRef = inject(MatDialogRef<LinkContactDialogComponent, AssetContact[]>);
   private readonly store = inject(Store);
   private readonly subscriptions: Subscription = new Subscription();
@@ -43,7 +43,7 @@ export class LinkContactDialogComponent implements OnInit {
           combineLatestWith(this.store.select(fromAppShared.selectContactItems)),
           tap(([searchTerm, contacts]) => {
             if (contacts) {
-              const filteredContacts: AssetContactWithoutRole[] = Object.values(contacts)
+              const filteredContacts: SelectableContact[] = Object.values(contacts)
                 .filter((contact) => contact.name.toLowerCase().includes(searchTerm.toLowerCase()))
                 .map((contact) => ({
                   id: contact.id,
@@ -61,7 +61,7 @@ export class LinkContactDialogComponent implements OnInit {
     this.searchTerm$.next(event);
   }
 
-  protected setSelectedContact(contact: AssetContactWithoutRole) {
+  protected setSelectedContact(contact: SelectableContact) {
     this.linkContactForm.controls.linkedContact.setValue(contact.id);
   }
 
@@ -86,7 +86,7 @@ export class LinkContactDialogComponent implements OnInit {
   protected createNewContact() {
     this.subscriptions.add(
       this.dialogService
-        .open<CreateContactDialogComponent, Partial<ContactWithRoles>, AssetContact>(CreateContactDialogComponent, {
+        .open<ManageContactDialogComponent, Partial<ContactWithRoles>, AssetContact>(ManageContactDialogComponent, {
           width: '674px',
           restoreFocus: false,
           enterAnimationDuration: '0ms',

@@ -8,21 +8,21 @@ import { Store } from '@ngrx/store';
 import { map, Observable, Subscription, tap } from 'rxjs';
 import { TranslatedValueItem } from '../../../../models/translated-value-item.interface';
 import { AssetEditorService } from '../../../../services/asset-editor.service';
-import { mapValueItemsToTranslatedItem } from '../../asset-editor-general/asset-editor-general.component';
+import { mapValueItemsToTranslatedItem } from '../../../../utils/map-value-items-to-translated-item.utils';
 import { ContactWithRoles } from '../asset-editor-contacts.component';
 
 @Component({
-  selector: 'asset-sg-create-contact-dialog',
-  templateUrl: './create-contact-dialog.component.html',
-  styleUrls: ['./create-contact-dialog.component.scss'],
+  selector: 'asset-sg-manage-contact-dialog',
+  templateUrl: './manage-contact-dialog.component.html',
+  styleUrls: ['./manage-contact-dialog.component.scss'],
   standalone: false,
 })
-export class CreateContactDialogComponent implements OnInit {
+export class ManageContactDialogComponent implements OnInit {
   protected readonly roles = AssetContactRoles.map((role) => ({
     key: role,
     translation: { key: `contactRoles.${role}` },
   }));
-  protected readonly createContactForm = new FormGroup({
+  protected readonly manageContactForm = new FormGroup({
     name: new FormControl('', { nonNullable: true, validators: Validators.required }),
     roles: new FormControl<AssetContactRole[]>([], { nonNullable: true, validators: Validators.required }),
     street: new FormControl(''),
@@ -36,7 +36,7 @@ export class CreateContactDialogComponent implements OnInit {
     contactKindItemCode: new FormControl('', { nonNullable: true }),
   });
   protected existingContactId: number | null = null;
-  private readonly dialogRef = inject(MatDialogRef<CreateContactDialogComponent, AssetContact[]>);
+  private readonly dialogRef = inject(MatDialogRef<ManageContactDialogComponent, AssetContact[]>);
   private readonly subscriptions: Subscription = new Subscription();
   private readonly assetEditorService: AssetEditorService = inject(AssetEditorService);
   private readonly store = inject(Store);
@@ -50,12 +50,12 @@ export class CreateContactDialogComponent implements OnInit {
       if (this.data.id) {
         this.existingContactId = this.data.id;
       }
-      this.createContactForm.patchValue(this.data);
+      this.manageContactForm.patchValue(this.data);
     }
   }
 
-  protected createContact() {
-    const { roles, ...contactData } = this.createContactForm.getRawValue();
+  protected createOrUpdateContact() {
+    const { roles, ...contactData } = this.manageContactForm.getRawValue();
     this.subscriptions.add(
       this.createOrSaveContact(contactData)
         .pipe(
