@@ -208,6 +208,7 @@ export const frAppTranslations: AppTranslations = {
         create: 'Créer',
         noContacts: 'Aucun contact ...',
         contactPlaceholder: 'Recherche par nom',
+        editWarnMessage: 'FR Changes to the fields below will be synced across all assets that share the same contact.',
       },
       references: {
         tabName: 'Références',

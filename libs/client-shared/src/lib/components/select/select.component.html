@@ -1,5 +1,5 @@
 <label asset-sg-form-item-wrapper [title]="title" [isRequired]="isRequired">
-  <mat-form-field class="select">
+  <mat-form-field class="select" subscriptSizing="dynamic">
     <svg-icon key="arrow-down" class="icon" />
 
     <mat-select [value]="selectedValues" (valueChange)="onFilterChange($event)" [multiple]="multiple" (blur)="onBlur()">
@@ -13,7 +13,7 @@
       }
     </mat-select>
     @if (errorMessage) {
-      <mat-hint class="mat-mdc-form-field-error">{{ errorMessage }}</mat-hint>
+      <mat-hint class="mat-mdc-form-field-error">{{ errorMessage }}a</mat-hint>
     }
   </mat-form-field>
 </label>

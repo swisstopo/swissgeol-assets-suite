@@ -32,7 +32,7 @@ export class CreateContactDialogComponent implements OnInit {
     telephone: new FormControl(''),
     email: new FormControl(''),
     website: new FormControl(''),
-    contactKindItemCode: new FormControl('unknown', { nonNullable: true }),
+    contactKindItemCode: new FormControl('', { nonNullable: true }),
   });
   protected existingContactId: number | null = null;
   private readonly dialogRef = inject(MatDialogRef<CreateContactDialogComponent, AssetContact>);
