@@ -10,7 +10,8 @@
         [values]="roles"
         bindKey="key"
         bindLabel="translation"
-        formControlName="role"
+        formControlName="roles"
+        multiple
         isRequired
       ></asset-sg-select>
       <hr />
@@ -19,7 +20,7 @@
           <div class="info-box__icon-container">
             <svg-icon class="info-box__icon-container__icon" key="info"></svg-icon>
           </div>
-          <p class="info-box__content" translate>edit.tabs.contacts.editContact</p>
+          <p class="info-box__content" translate>edit.tabs.contacts.editWarnMessage</p>
         </div>
       }
       <asset-sg-select
