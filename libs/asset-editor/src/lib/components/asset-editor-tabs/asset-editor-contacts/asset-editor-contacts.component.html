@@ -1,6 +1,6 @@
 <form [formGroup]="form">
   <asset-sg-detail-section [title]="'edit.tabs.contacts.tabName' | translate">
-    <button actions asset-sg-primary translate (click)="openLinkDialog()">
+    <button (click)="openLinkDialog()" actions asset-sg-primary translate>
       edit.tabs.contacts.newContact
       <svg-icon key="add"></svg-icon>
     </button>
@@ -11,11 +11,13 @@
             <th *matHeaderCellDef mat-header-cell translate>edit.tabs.contacts.name</th>
             <td *matCellDef="let contact" mat-cell>{{ contact.name }}</td>
           </ng-container>
-          <ng-container matColumnDef="role">
+          <ng-container matColumnDef="roles">
             <th *matHeaderCellDef mat-header-cell translate>edit.tabs.contacts.role</th>
             <td *matCellDef="let element" mat-cell>
               <mat-chip-set>
-                <asset-sg-chip type="tertiary">{{ "contactRoles." + element.role | translate }}</asset-sg-chip>
+                @for (role of element.roles; track $index) {
+                  <asset-sg-chip type="tertiary">{{ "contactRoles." + role | translate }}</asset-sg-chip>
+                }
               </mat-chip-set>
             </td>
           </ng-container>

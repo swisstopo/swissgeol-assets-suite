@@ -3,9 +3,10 @@ import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { fromAppShared } from '@asset-sg/client-shared';
 import { AssetContactRole } from '@asset-sg/shared';
-import { AssetContact, AssetContactRoles, Contact, ContactId, ContactWithRole } from '@asset-sg/shared/v2';
+import { AssetContact, AssetContactRoles, Contact, ContactId } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
 import { combineLatestWith, debounceTime, Subject, Subscription, tap } from 'rxjs';
+import { ContactWithRoles } from '../asset-editor-contacts.component';
 import { CreateContactDialogComponent } from '../create-contact-dialog/create-contact-dialog.component';
 
 type AssetContactWithoutRole = Pick<Contact, 'name' | 'id'>;
@@ -23,11 +24,11 @@ export class LinkContactDialogComponent implements OnInit {
   }));
   protected readonly linkContactForm = new FormGroup({
     linkedContact: new FormControl<ContactId | null>(null, { validators: Validators.required }),
-    role: new FormControl<AssetContactRole | null>(null, { validators: Validators.required }),
+    roles: new FormControl<AssetContactRole[]>([], { nonNullable: true, validators: Validators.required }),
   });
   protected readonly searchTerm$ = new Subject<string>();
   protected readonly filteredContacts$ = new Subject<AssetContactWithoutRole[]>();
-  private readonly dialogRef = inject(MatDialogRef<LinkContactDialogComponent, AssetContact>);
+  private readonly dialogRef = inject(MatDialogRef<LinkContactDialogComponent, AssetContact[]>);
   private readonly store = inject(Store);
   private readonly subscriptions: Subscription = new Subscription();
   private readonly dialogService = inject(MatDialog);
@@ -57,7 +58,6 @@ export class LinkContactDialogComponent implements OnInit {
   }
 
   protected inputChange(event: string) {
-    // todo: this does currently not reset when changing the search term and _not_ selecting a contact
     this.searchTerm$.next(event);
   }
 
@@ -66,14 +66,16 @@ export class LinkContactDialogComponent implements OnInit {
   }
 
   protected linkContact() {
-    this.dialogRef.close({
-      id: this.linkContactForm.controls.linkedContact.value,
-      role: this.linkContactForm.controls.role.value,
-    } as AssetContact);
+    const assetContacts = this.linkContactForm.controls.roles.value.map((role) => {
+      return {
+        id: this.linkContactForm.controls.linkedContact.value,
+        role,
+      } as AssetContact;
+    });
+    this.dialogRef.close(assetContacts);
   }
 
   private linkNewContact(newContact: AssetContact) {
-    console.log('linking ->', newContact);
     this.dialogRef.close(newContact);
   }
 
@@ -84,21 +86,20 @@ export class LinkContactDialogComponent implements OnInit {
   protected createNewContact() {
     this.subscriptions.add(
       this.dialogService
-        .open<CreateContactDialogComponent, Partial<ContactWithRole>, AssetContact>(CreateContactDialogComponent, {
+        .open<CreateContactDialogComponent, Partial<ContactWithRoles>, AssetContact>(CreateContactDialogComponent, {
           width: '674px',
           restoreFocus: false,
           enterAnimationDuration: '0ms',
           exitAnimationDuration: '0ms',
           data: {
             name: this.searchTerm ?? '',
-            role: this.linkContactForm.value.role ?? undefined,
+            roles: this.linkContactForm.value.roles,
           },
         })
         .afterClosed()
         .pipe(
           tap((newContact) => {
             if (newContact) {
-              console.log('linking');
               this.linkNewContact(newContact);
             } else {
               this.cancel();
