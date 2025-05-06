@@ -4,10 +4,11 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatTableDataSource } from '@angular/material/table';
 import { fromAppShared } from '@asset-sg/client-shared';
 import { AssetEditDetail } from '@asset-sg/shared';
-import { AssetContact } from '@asset-sg/shared/v2';
+import { AssetContact, Contact, ContactWithRole } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
 import { combineLatestWith, startWith, Subscription, tap } from 'rxjs';
 import { AssetForm } from '../../asset-editor-page/asset-editor-page.component';
+import { CreateContactDialogComponent } from './create-contact-dialog/create-contact-dialog.component';
 import { LinkContactDialogComponent } from './link-contact-dialog/link-contact-dialog.component';
 
 interface ContactItem {
@@ -27,21 +28,35 @@ type TableColumns = keyof ContactItem | 'delete';
 export class AssetEditorContactsComponent implements OnInit, OnDestroy {
   @Input() public form!: AssetForm['controls']['contacts'];
   @Input() public asset: AssetEditDetail | null = null;
-  protected dataSource: MatTableDataSource<ContactItem> = new MatTableDataSource();
-  protected displayedColumns: TableColumns[] = ['name', 'role', 'delete'];
-  private subscriptions: Subscription = new Subscription();
+  protected readonly dataSource: MatTableDataSource<ContactItem> = new MatTableDataSource();
+  protected readonly displayedColumns: TableColumns[] = ['name', 'role', 'delete'];
+  private readonly subscriptions: Subscription = new Subscription();
+  private existingContacts: Record<string, Contact> = {};
   private readonly store = inject(Store);
   private readonly dialogService: MatDialog = inject(MatDialog);
+  private readonly existingContacts$ = this.store.select(fromAppShared.selectContactItems);
 
   public ngOnInit() {
+    this.subscriptions.add(
+      this.existingContacts$
+        .pipe(
+          tap((contacts) => {
+            if (contacts) {
+              this.existingContacts = contacts;
+            }
+          }),
+        )
+        .subscribe(),
+    );
     this.subscriptions.add(
       this.form.controls.assetContacts.valueChanges
         .pipe(
           startWith(this.form.controls.assetContacts.value),
-          combineLatestWith(this.store.select(fromAppShared.selectContactItems)),
+          combineLatestWith(this.existingContacts$),
           tap(([assetContacts, contacts]) => {
             if (contacts) {
               this.dataSource.data = assetContacts
+                .filter((contactMatch) => contacts[contactMatch.id])
                 .map((contactMatch) => {
                   const contact = contacts[contactMatch.id];
                   return {
@@ -62,12 +77,33 @@ export class AssetEditorContactsComponent implements OnInit, OnDestroy {
     this.subscriptions.unsubscribe();
   }
 
-  protected openDialog() {
+  protected openLinkDialog() {
     const dialogRef = this.dialogService.open<LinkContactDialogComponent, undefined, AssetContact>(
       LinkContactDialogComponent,
       {
         width: '674px',
         restoreFocus: false,
+      },
+    );
+
+    this.subscriptions.add(
+      dialogRef.afterClosed().subscribe((assetContact) => {
+        if (assetContact) {
+          this.form.controls.assetContacts.push(new FormControl<AssetContact>(assetContact, { nonNullable: true }));
+          this.form.markAsDirty();
+        }
+      }),
+    );
+  }
+
+  protected openDetailDialog(contact: ContactItem) {
+    const existingContact: AssetContact & Contact = { ...this.existingContacts[contact.id], role: 'author' };
+    const dialogRef = this.dialogService.open<CreateContactDialogComponent, ContactWithRole, AssetContact>(
+      CreateContactDialogComponent,
+      {
+        width: '674px',
+        restoreFocus: false,
+        data: existingContact,
       },
     );
 

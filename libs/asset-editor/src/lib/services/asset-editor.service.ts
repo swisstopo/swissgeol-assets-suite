@@ -1,11 +1,12 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { ApiError, httpErrorResponseError } from '@asset-sg/client-shared';
-import { decodeError, OE, ORD, unknownError } from '@asset-sg/core';
-import { AssetEditDetail, Contact, PatchAsset, PatchContact } from '@asset-sg/shared';
+import { OE, ORD, unknownError } from '@asset-sg/core';
+import { AssetEditDetail, PatchAsset } from '@asset-sg/shared';
+import { Contact, ContactData, ContactId } from '@asset-sg/shared/v2';
 import * as RD from '@devexperts/remote-data-ts';
+import { Store } from '@ngrx/store';
 import * as E from 'fp-ts/Either';
-import { flow } from 'fp-ts/function';
 import { concat, forkJoin, map, Observable, of, startWith, toArray } from 'rxjs';
 
 import { AssetEditorNewFile } from '../components/asset-editor-form-group';
@@ -13,6 +14,7 @@ import { AssetEditorNewFile } from '../components/asset-editor-form-group';
 @Injectable({ providedIn: 'root' })
 export class AssetEditorService {
   private readonly httpClient = inject(HttpClient);
+  private readonly store = inject(Store);
 
   public fetchAsset(assetId: number): Observable<AssetEditDetail> {
     return this.httpClient
@@ -84,25 +86,11 @@ export class AssetEditorService {
       : of(RD.success(undefined));
   }
 
-  public updateContact(contactId: number, patchContact: PatchContact): ORD.ObservableRemoteData<ApiError, Contact> {
-    return this.httpClient
-      .put(`/api/contacts/${contactId}`, PatchContact.encode(patchContact))
-      .pipe(
-        map(flow(Contact.decode, E.mapLeft(decodeError))),
-        OE.catchErrorW(httpErrorResponseError),
-        map(RD.fromEither),
-        startWith(RD.pending),
-      );
+  public updateContact(contactId: ContactId, patchContact: ContactData): Observable<Contact> {
+    return this.httpClient.put<Contact>(`/api/contacts/${contactId}`, patchContact);
   }
 
-  public createContact(patchContact: PatchContact): ORD.ObservableRemoteData<ApiError, Contact> {
-    return this.httpClient
-      .post(`/api/contacts`, PatchContact.encode(patchContact))
-      .pipe(
-        map(flow(Contact.decode, E.mapLeft(decodeError))),
-        OE.catchErrorW(httpErrorResponseError),
-        map(RD.fromEither),
-        startWith(RD.pending),
-      );
+  public createContact(patchContact: ContactData): Observable<Contact> {
+    return this.httpClient.post<Contact>(`/api/contacts`, patchContact);
   }
 }

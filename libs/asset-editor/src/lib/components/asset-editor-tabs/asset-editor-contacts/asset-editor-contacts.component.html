@@ -1,6 +1,6 @@
 <form [formGroup]="form">
   <asset-sg-detail-section [title]="'edit.tabs.contacts.tabName' | translate">
-    <button actions asset-sg-primary translate (click)="openDialog()">
+    <button actions asset-sg-primary translate (click)="openLinkDialog()">
       edit.tabs.contacts.newContact
       <svg-icon key="add"></svg-icon>
     </button>
@@ -28,7 +28,7 @@
             </td>
           </ng-container>
           <tr mat-header-row *matHeaderRowDef="displayedColumns" class="table__header"></tr>
-          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns" (click)="openDetailDialog(row)"></tr>
         </table>
       } @else {
         <span translate>edit.tabs.contacts.noContacts</span>

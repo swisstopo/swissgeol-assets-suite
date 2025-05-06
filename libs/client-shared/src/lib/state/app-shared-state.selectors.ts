@@ -41,6 +41,7 @@ export const selectAssetKindItems = createReferenceDataSelector((rd) => rd.asset
 
 export const selectNatRelItems = createReferenceDataSelector((rd) => rd.natRelItems);
 export const selectContactItems = createReferenceDataSelector((rd) => rd.contacts);
+export const selectContactKindItems = createReferenceDataSelector((rd) => rd.contactKindItems);
 
 export const selectLegalDocItems = createReferenceDataSelector((rd) => rd.legalDocItems);
 

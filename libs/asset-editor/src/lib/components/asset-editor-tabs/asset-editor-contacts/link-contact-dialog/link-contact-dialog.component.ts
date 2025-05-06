@@ -1,11 +1,12 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
-import { MatDialogRef } from '@angular/material/dialog';
+import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { fromAppShared } from '@asset-sg/client-shared';
 import { AssetContactRole } from '@asset-sg/shared';
-import { AssetContact, AssetContactRoles, Contact, ContactId } from '@asset-sg/shared/v2';
+import { AssetContact, AssetContactRoles, Contact, ContactId, ContactWithRole } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
 import { combineLatestWith, debounceTime, Subject, Subscription, tap } from 'rxjs';
+import { CreateContactDialogComponent } from '../create-contact-dialog/create-contact-dialog.component';
 
 type AssetContactWithoutRole = Pick<Contact, 'name' | 'id'>;
 
@@ -16,7 +17,7 @@ type AssetContactWithoutRole = Pick<Contact, 'name' | 'id'>;
   standalone: false,
 })
 export class LinkContactDialogComponent implements OnInit {
-  protected roles = AssetContactRoles.map((role) => ({
+  protected readonly roles = AssetContactRoles.map((role) => ({
     key: role,
     translation: { key: `contactRoles.${role}` },
   }));
@@ -24,13 +25,16 @@ export class LinkContactDialogComponent implements OnInit {
     linkedContact: new FormControl<ContactId | null>(null, { validators: Validators.required }),
     role: new FormControl<AssetContactRole | null>(null, { validators: Validators.required }),
   });
-  protected searchTerm$ = new Subject<string>();
-  protected filteredContacts$ = new Subject<AssetContactWithoutRole[]>();
+  protected readonly searchTerm$ = new Subject<string>();
+  protected readonly filteredContacts$ = new Subject<AssetContactWithoutRole[]>();
   private readonly dialogRef = inject(MatDialogRef<LinkContactDialogComponent, AssetContact>);
   private readonly store = inject(Store);
-  private subscriptions: Subscription = new Subscription();
+  private readonly subscriptions: Subscription = new Subscription();
+  private readonly dialogService = inject(MatDialog);
+  private searchTerm = '';
 
   public ngOnInit() {
+    this.subscriptions.add(this.searchTerm$.pipe(tap((searchTerm) => (this.searchTerm = searchTerm))).subscribe());
     this.subscriptions.add(
       this.searchTerm$
         .pipe(
@@ -68,7 +72,40 @@ export class LinkContactDialogComponent implements OnInit {
     } as AssetContact);
   }
 
+  private linkNewContact(newContact: AssetContact) {
+    console.log('linking ->', newContact);
+    this.dialogRef.close(newContact);
+  }
+
   protected cancel() {
     this.dialogRef.close();
+  }
+
+  protected createNewContact() {
+    this.subscriptions.add(
+      this.dialogService
+        .open<CreateContactDialogComponent, Partial<ContactWithRole>, AssetContact>(CreateContactDialogComponent, {
+          width: '674px',
+          restoreFocus: false,
+          enterAnimationDuration: '0ms',
+          exitAnimationDuration: '0ms',
+          data: {
+            name: this.searchTerm ?? '',
+            role: this.linkContactForm.value.role ?? undefined,
+          },
+        })
+        .afterClosed()
+        .pipe(
+          tap((newContact) => {
+            if (newContact) {
+              console.log('linking');
+              this.linkNewContact(newContact);
+            } else {
+              this.cancel();
+            }
+          }),
+        )
+        .subscribe(),
+    );
   }
 }
