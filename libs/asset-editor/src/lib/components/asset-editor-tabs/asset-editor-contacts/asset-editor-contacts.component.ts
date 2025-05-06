@@ -6,7 +6,7 @@ import { fromAppShared } from '@asset-sg/client-shared';
 import { AssetEditDetail } from '@asset-sg/shared';
 import { AssetContact } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
-import { combineLatestWith, Subscription, tap } from 'rxjs';
+import { combineLatestWith, startWith, Subscription, tap } from 'rxjs';
 import { AssetForm } from '../../asset-editor-page/asset-editor-page.component';
 import { LinkContactDialogComponent } from './link-contact-dialog/link-contact-dialog.component';
 
@@ -37,6 +37,7 @@ export class AssetEditorContactsComponent implements OnInit, OnDestroy {
     this.subscriptions.add(
       this.form.controls.assetContacts.valueChanges
         .pipe(
+          startWith(this.form.controls.assetContacts.value),
           combineLatestWith(this.store.select(fromAppShared.selectContactItems)),
           tap(([assetContacts, contacts]) => {
             if (contacts) {
