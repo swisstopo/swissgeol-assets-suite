@@ -161,6 +161,7 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
       })) ?? [],
     );
 
+    contacts.assetContacts.clear();
     this.asset?.assetContacts.forEach((contact) => {
       return contacts.assetContacts.push(
         new FormControl<AssetContact>({ id: contact.contactId, role: contact.role }, { nonNullable: true }),
