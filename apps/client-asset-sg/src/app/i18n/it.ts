@@ -209,6 +209,7 @@ export const itAppTranslations: AppTranslations = {
         create: 'IT Erstellen',
         noContacts: 'IT Keine Kontakte',
         contactPlaceholder: 'IT Suche über Namen',
+        editWarnMessage: 'IT Changes to the fields below will be synced across all assets that share the same contact.',
       },
       references: {
         tabName: 'IT Verweise',

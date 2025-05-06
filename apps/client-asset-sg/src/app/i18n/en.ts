@@ -209,6 +209,7 @@ export const enAppTranslations: AppTranslations = {
         create: 'Create',
         noContacts: 'No contacts added yet ...',
         contactPlaceholder: 'Search by name',
+        editWarnMessage: 'Changes to the fields below will be synced across all assets that share the same contact.',
       },
       references: {
         tabName: 'References',

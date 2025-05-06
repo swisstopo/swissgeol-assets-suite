@@ -208,6 +208,9 @@ export const deAppTranslations = {
         create: 'Erstellen',
         noContacts: 'Noch keine Kontakte hinzugefügt ...',
         contactPlaceholder: 'Suche über Namen',
+        editWarnMessage:
+          'Änderungen an den untenstehenden Feldern werden über alle Assets synchronisiert, die' +
+          ' diesen Kontakt teilen.',
       },
       references: {
         tabName: 'Verweise',
