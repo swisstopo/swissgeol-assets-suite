@@ -1,53 +1,19 @@
 import { Transform, Type } from 'class-transformer';
-import { IsArray, IsBoolean, IsEnum, IsIn, IsNumber, IsString, ValidateNested } from 'class-validator';
+import { IsArray, IsBoolean, IsEnum, IsIn, IsNumber, IsObject, IsString, ValidateNested } from 'class-validator';
 import { AssetId } from '../models/asset';
 import { LocalDate } from '../models/base/local-date';
 import { SimpleUser, UserId } from '../models/user';
 import {
-  TabStatus,
   UnpublishedWorkflowStatus,
   Workflow,
   WorkflowChange,
   WorkflowChangeData,
+  WorkflowSelection,
   WorkflowStatus,
 } from '../models/workflow';
 import { WorkgroupId } from '../models/workgroup';
 import { IsNullable, messageNullableString } from '../utils/class-validator/is-nullable.decorator';
 import { Schema } from './base/schema';
-
-export class WorkflowSchema extends Schema implements Workflow {
-  @IsNumber()
-  assetId!: AssetId;
-
-  @IsBoolean()
-  hasRequestedChanges!: boolean;
-
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => WorkflowChangeSchema)
-  workflowChanges!: WorkflowChangeSchema[];
-
-  reviewedTabs!: TabStatus;
-
-  publishedTabs!: TabStatus;
-
-  @IsEnum(WorkflowStatus)
-  status!: WorkflowStatus;
-
-  @IsNullable()
-  assignee!: SimpleUser | null;
-
-  @IsNullable()
-  creator!: SimpleUser | null;
-
-  @IsNumber()
-  workgroupId!: WorkgroupId;
-
-  @ValidateNested()
-  @Type(() => String)
-  @Transform(({ value }) => LocalDate.tryParse(value))
-  createdAt!: LocalDate;
-}
 
 export class WorkflowChangeSchema extends Schema implements WorkflowChange {
   @IsString({ message: messageNullableString })
@@ -86,4 +52,73 @@ export class WorkflowChangeDataSchema extends Schema implements WorkflowChangeDa
 
   @IsIn(UnpublishedWorkflowStatus)
   status!: UnpublishedWorkflowStatus;
+}
+
+export class WorkflowSelectionSchema extends Schema implements WorkflowSelection {
+  @IsBoolean()
+  general!: boolean;
+
+  @IsBoolean()
+  normalFiles!: boolean;
+
+  @IsBoolean()
+  legalFiles!: boolean;
+
+  @IsBoolean()
+  authors!: boolean;
+
+  @IsBoolean()
+  initiators!: boolean;
+
+  @IsBoolean()
+  suppliers!: boolean;
+
+  @IsBoolean()
+  references!: boolean;
+
+  @IsBoolean()
+  geometries!: boolean;
+
+  @IsBoolean()
+  legacy!: boolean;
+}
+
+export class WorkflowSchema extends Schema implements Workflow {
+  @IsNumber()
+  id!: AssetId;
+
+  @IsBoolean()
+  hasRequestedChanges!: boolean;
+
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => WorkflowChangeSchema)
+  changes!: WorkflowChangeSchema[];
+
+  @IsObject()
+  @ValidateNested()
+  @Type(() => WorkflowSelectionSchema)
+  review!: WorkflowSelectionSchema;
+
+  @IsObject()
+  @ValidateNested()
+  @Type(() => WorkflowSelectionSchema)
+  approval!: WorkflowSelectionSchema;
+
+  @IsEnum(WorkflowStatus)
+  status!: WorkflowStatus;
+
+  @IsNullable()
+  assignee!: SimpleUser | null;
+
+  @IsNullable()
+  creator!: SimpleUser | null;
+
+  @IsNumber()
+  workgroupId!: WorkgroupId;
+
+  @ValidateNested()
+  @Type(() => String)
+  @Transform(({ value }) => LocalDate.tryParse(value))
+  createdAt!: LocalDate;
 }

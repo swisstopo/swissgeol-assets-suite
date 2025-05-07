@@ -1,0 +1,87 @@
+@use "../../styles/variables";
+
+:host {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+
+  --bg-color--header: #dfe4e9;
+  --bg-color--item: #f0f4f7;
+  --border-color--base: #acb4bd;
+  --border-color: var(--border-color--base);
+}
+
+asset-sg-checklist-header:host {
+  overflow: hidden;
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
+}
+
+// title + checkbox
+.title,
+.checkbox {
+  flex: 0 0 50%;
+  background-color: var(--bg-color--item);
+  border: 1px solid var(--border-color);
+  border-top: none;
+}
+
+asset-sg-checklist-header:host > .title,
+asset-sg-checklist-header:host > .checkbox {
+  --border-color: var(--bg-color--header);
+  font-weight: bold;
+  background-color: var(--bg-color--header);
+}
+
+asset-sg-checklist-header:host ::ng-deep > asset-sg-checklist-item:first-of-type > .title,
+asset-sg-checklist-header:host ::ng-deep > asset-sg-checklist-item:first-of-type > .checkbox {
+  border-top: 2px solid var(--border-color--base);
+}
+
+:host:not(asset-sg-checklist-header).is-disabled > .title,
+:host:not(asset-sg-checklist-header).is-disabled > .checkbox {
+  color: #828e9a;
+}
+
+// title
+.title {
+  display: flex;
+  align-items: center;
+  padding: 8px 16px;
+  border-right: none;
+
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 24px;
+  color: variables.$grey-10;
+}
+
+// checkbox
+.checkbox {
+  display: flex;
+  gap: 8px;
+  padding: 12px;
+  border-left: none;
+}
+
+.checkbox > mat-checkbox {
+  display: flex;
+  align-items: center;
+  --mdc-checkbox-state-layer-size: 20px;
+}
+
+// nested items
+:host > ::ng-deep asset-sg-checklist-item {
+  flex: 0 0 100%;
+}
+
+asset-sg-checklist-item:host > ::ng-deep asset-sg-checklist-item {
+  > .title {
+    padding-left: 32px;
+  }
+
+  > .title,
+  > .checkbox {
+    background-color: variables.$white;
+  }
+}

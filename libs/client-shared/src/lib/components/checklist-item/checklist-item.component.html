@@ -1,0 +1,15 @@
+<div class="title">
+  <ng-content />
+</div>
+<div class="checkbox">
+  <mat-checkbox
+    [ngModel]="state !== CheckboxState.Unchecked"
+    (ngModelChange)="toggle()"
+    [indeterminate]="state === CheckboxState.Indeterminate"
+    [disabled]="isDisabled"
+    color="primary"
+  />
+  <ng-content select="[slot=label]" />
+</div>
+
+<ng-content select="asset-sg-checklist-item" />

@@ -1,21 +1,30 @@
-import { LocalDate, mapWorkflowStatusFromPrisma, Workflow, WorkflowChange } from '@asset-sg/shared/v2';
+import {
+  LocalDate,
+  mapWorkflowStatusFromPrisma,
+  Workflow,
+  WorkflowChange,
+  WorkflowSelection,
+} from '@asset-sg/shared/v2';
 import { Prisma } from '@prisma/client';
 import { parseSimpleUser, simpleUserSelection } from '@/features/users/user.repo';
 import { satisfy } from '@/utils/define';
 
 type SelectedWorkflow = Prisma.WorkflowGetPayload<{ select: typeof workflowSelection }>;
 
-const tabStatusSelection = satisfy<Prisma.TabStatusSelect>()({
-  files: true,
-  usage: true,
+export const workflowSelectionSelection = satisfy<Prisma.WorkflowSelectionSelect>()({
   general: true,
-  geometries: true,
+  normalFiles: true,
+  legalFiles: true,
+  authors: true,
+  initiators: true,
+  suppliers: true,
   references: true,
-  contacts: true,
+  geometries: true,
+  legacy: true,
 });
 
 export const workflowSelection = satisfy<Prisma.WorkflowSelect>()({
-  assetId: true,
+  id: true,
   asset: {
     select: {
       workgroupId: true,
@@ -26,13 +35,13 @@ export const workflowSelection = satisfy<Prisma.WorkflowSelect>()({
   hasRequestedChanges: true,
   assignee: { select: simpleUserSelection },
   status: true,
-  publishedTabs: {
-    select: tabStatusSelection,
+  review: {
+    select: workflowSelectionSelection,
   },
-  reviewedTabs: {
-    select: tabStatusSelection,
+  approval: {
+    select: workflowSelectionSelection,
   },
-  workflowChanges: {
+  changes: {
     select: {
       fromAssignee: { select: simpleUserSelection },
       toAssignee: { select: simpleUserSelection },
@@ -45,27 +54,37 @@ export const workflowSelection = satisfy<Prisma.WorkflowSelect>()({
   },
 });
 
-export const parseWorkflowFromPrisma = (entry: SelectedWorkflow): Workflow => {
-  return {
-    assetId: entry.assetId,
-    hasRequestedChanges: entry.hasRequestedChanges,
-    status: mapWorkflowStatusFromPrisma(entry.status),
-    assignee: entry.assignee && parseSimpleUser(entry.assignee),
-    workflowChanges: entry.workflowChanges.map(
-      (change): WorkflowChange => ({
-        comment: change.comment,
-        createdAt: LocalDate.fromDate(change.createdAt),
-        creator: change.creator && parseSimpleUser(change.creator),
-        fromAssignee: change.fromAssignee && parseSimpleUser(change.fromAssignee),
-        toAssignee: change.toAssignee && parseSimpleUser(change.toAssignee),
-        fromStatus: mapWorkflowStatusFromPrisma(change.fromStatus),
-        toStatus: mapWorkflowStatusFromPrisma(change.toStatus),
-      }),
-    ),
-    reviewedTabs: entry.reviewedTabs,
-    publishedTabs: entry.publishedTabs,
-    creator: entry.asset.creator && parseSimpleUser(entry.asset.creator),
-    createdAt: LocalDate.fromDate(entry.asset.createDate),
-    workgroupId: entry.asset.workgroupId,
-  };
-};
+export const parseWorkflowFromPrisma = (entry: SelectedWorkflow): Workflow => ({
+  id: entry.id,
+  hasRequestedChanges: entry.hasRequestedChanges,
+  status: mapWorkflowStatusFromPrisma(entry.status),
+  assignee: entry.assignee && parseSimpleUser(entry.assignee),
+  changes: entry.changes.map(
+    (change): WorkflowChange => ({
+      comment: change.comment,
+      createdAt: LocalDate.fromDate(change.createdAt),
+      creator: change.creator && parseSimpleUser(change.creator),
+      fromAssignee: change.fromAssignee && parseSimpleUser(change.fromAssignee),
+      toAssignee: change.toAssignee && parseSimpleUser(change.toAssignee),
+      fromStatus: mapWorkflowStatusFromPrisma(change.fromStatus),
+      toStatus: mapWorkflowStatusFromPrisma(change.toStatus),
+    }),
+  ),
+  review: parseWorkflowSelectionFromPrisma(entry.review),
+  approval: parseWorkflowSelectionFromPrisma(entry.approval),
+  creator: entry.asset.creator && parseSimpleUser(entry.asset.creator),
+  createdAt: LocalDate.fromDate(entry.asset.createDate),
+  workgroupId: entry.asset.workgroupId,
+});
+
+export const parseWorkflowSelectionFromPrisma = (entry: SelectedWorkflow['review']): WorkflowSelection => ({
+  general: entry.general,
+  normalFiles: entry.normalFiles,
+  legalFiles: entry.legalFiles,
+  authors: entry.authors,
+  initiators: entry.initiators,
+  suppliers: entry.suppliers,
+  references: entry.references,
+  geometries: entry.geometries,
+  legacy: entry.legacy,
+});

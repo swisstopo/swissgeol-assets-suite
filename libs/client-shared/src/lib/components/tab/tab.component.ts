@@ -93,6 +93,10 @@ export class TabComponent implements OnInit, AfterViewInit, OnChanges, OnDestroy
     return this._isSelected;
   }
 
+  get panelId(): string | null {
+    return this.generatedPanelId === null ? this.currentPanelId : null;
+  }
+
   select(): void {
     this.isManuallySelected = true;
     this.syncSelected();
@@ -133,9 +137,7 @@ export class TabComponent implements OnInit, AfterViewInit, OnChanges, OnDestroy
       return;
     }
     if (this.panel.id.length === 0) {
-      if (this.generatedPanelId === null) {
-        this.generatedPanelId = uuid();
-      }
+      this.generatedPanelId ??= uuid();
       this.panel.id = this.generatedPanelId;
     }
     this.currentPanel = this.panel;

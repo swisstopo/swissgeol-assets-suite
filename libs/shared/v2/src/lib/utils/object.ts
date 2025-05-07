@@ -8,3 +8,7 @@ export const extend = <T>(base: T, extension: Partial<T>): T => {
   }
   return result;
 };
+
+export const getKeys = Object.keys as <T extends object>(value: T) => Array<keyof T>;
+
+export const getEntries = Object.entries as <T extends object>(value: T) => Array<[keyof T, T[keyof T]]>;

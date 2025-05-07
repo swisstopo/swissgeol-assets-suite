@@ -111,8 +111,8 @@ export class AssetEditRepo implements Repo<AssetEditDetail, number, AssetEditDat
           },
           workflow: {
             create: {
-              reviewedTabs: { create: {} },
-              publishedTabs: { create: {} },
+              review: { create: {} },
+              approval: { create: {} },
               assignee: { connect: { id: data.user.id } },
             },
           },
@@ -302,10 +302,10 @@ export class AssetEditRepo implements Repo<AssetEditDetail, number, AssetEditDat
         });
 
         // Delete all `tabStatus` records that are not in use anymore.
-        await this.prismaService.tabStatus.deleteMany({
+        await this.prismaService.workflowSelection.deleteMany({
           where: {
-            workflowPublish: null,
-            workflowReview: null,
+            reviewWorkflow: null,
+            approvalWorkflow: null,
           },
         });
       });

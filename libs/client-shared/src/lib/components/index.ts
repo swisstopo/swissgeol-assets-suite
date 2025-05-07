@@ -1,5 +1,6 @@
 export * from './animate-number';
 export * from './button';
+export * from './checklist-item/checklist-item.component';
 export * from './date';
 export * from './datepicker-toggle-icon';
 export * from './drag-handle';
