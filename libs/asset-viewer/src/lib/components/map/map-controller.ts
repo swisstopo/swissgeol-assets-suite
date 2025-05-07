@@ -1,4 +1,4 @@
-import { olCoordsFromLV95, SWISS_CENTER, SWISS_EXTENT } from '@asset-sg/client-shared';
+import { olCoordsFromLV95, SWISS_CENTER, SWISS_EXTENT, wktToGeoJSON } from '@asset-sg/client-shared';
 import { AssetEditDetail, getCoordsFromStudy, Study } from '@asset-sg/shared';
 import { extend } from '@asset-sg/shared/v2';
 import { buffer } from '@turf/buffer';
@@ -21,7 +21,6 @@ import { AllStudyDTO } from '../../models';
 import { CustomFeatureProperties } from '../../shared/map-configuration/custom-feature-properties.enum';
 import { availableLayerStyles, defaultLayerStyle } from '../../shared/map-configuration/map-layer-styles';
 import { interactionStyles } from '../../shared/map-configuration/styles/system-styles.map-layer-style';
-import { wktToGeoJSON } from '../../state/asset-search/asset-search.selector';
 import { mapAssetAccessToAccessType } from '../../utils/access-type';
 
 export const DEFAULT_MAP_POSITION: MapPosition = {
