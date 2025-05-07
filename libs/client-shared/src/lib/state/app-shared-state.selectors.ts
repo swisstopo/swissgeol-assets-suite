@@ -40,6 +40,8 @@ export const selectManCatLabelItems = createReferenceDataSelector((rd) => rd.man
 export const selectAssetKindItems = createReferenceDataSelector((rd) => rd.assetKindItems);
 
 export const selectNatRelItems = createReferenceDataSelector((rd) => rd.natRelItems);
+export const selectContactItems = createReferenceDataSelector((rd) => rd.contacts);
+export const selectContactKindItems = createReferenceDataSelector((rd) => rd.contactKindItems);
 
 export const selectLegalDocItems = createReferenceDataSelector((rd) => rd.legalDocItems);
 

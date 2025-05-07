@@ -20,7 +20,7 @@ import {
   LinkedAsset,
   Studies,
 } from '@asset-sg/shared';
-import { Workflow } from '@asset-sg/shared/v2';
+import { AssetContact, Workflow } from '@asset-sg/shared/v2';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { Store } from '@ngrx/store';
 import * as O from 'fp-ts/lib/Option';
@@ -115,7 +115,10 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
 
   public initializeForm() {
     this.form.reset();
-    const { controls: general } = this.form.controls.general;
+    const {
+      general: { controls: general },
+      contacts: { controls: contacts },
+    } = this.form.controls;
     general.titlePublic.setValue(this.asset?.titlePublic ?? null);
     general.titleOriginal.setValue(this.asset?.titleOriginal ?? null);
     general.workgroupId.setValue(this.asset?.workgroupId ?? null);
@@ -157,6 +160,13 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
         geom: wktToGeoJSON(study.geomText),
       })) ?? [],
     );
+
+    contacts.assetContacts.clear();
+    this.asset?.assetContacts.forEach((contact) => {
+      return contacts.assetContacts.push(
+        new FormControl<AssetContact>({ id: contact.contactId, role: contact.role }, { nonNullable: true }),
+      );
+    });
   }
 
   public openConfirmDialogForAssetDeletion(assetId: number) {
@@ -245,7 +255,7 @@ const buildForm = () => {
     files: new FormGroup({
       assetFiles: new FormArray<FormControl<FormAssetFile>>([]),
     }),
-    contacts: new FormGroup({}),
+    contacts: new FormGroup({ assetContacts: new FormArray<FormControl<AssetContact>>([]) }),
     references: new FormGroup({
       mainAsset: new FormControl<LinkedAsset | null>(null),
       siblingAssets: new FormControl<LinkedAsset[]>([], { nonNullable: true }),

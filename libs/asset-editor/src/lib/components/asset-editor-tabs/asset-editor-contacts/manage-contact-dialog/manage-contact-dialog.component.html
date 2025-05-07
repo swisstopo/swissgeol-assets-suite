@@ -1,0 +1,90 @@
+<div class="header">
+  <h2 translate>{{ existingContactId ? "edit.tabs.contacts.editContact" : "edit.tabs.contacts.createNewContact" }}</h2>
+</div>
+<hr />
+<div mat-dialog-content>
+  <form [formGroup]="manageContactForm">
+    <div class="content">
+      <asset-sg-select
+        [title]="'edit.tabs.contacts.role' | translate"
+        [values]="roles"
+        bindKey="key"
+        bindLabel="translation"
+        formControlName="roles"
+        multiple
+        isRequired
+      ></asset-sg-select>
+      <hr />
+      @if (existingContactId) {
+        <div class="info-box">
+          <div class="info-box__icon-container">
+            <svg-icon class="info-box__icon-container__icon" key="info"></svg-icon>
+          </div>
+          <p class="info-box__content" translate>edit.tabs.contacts.editWarnMessage</p>
+        </div>
+      }
+      <asset-sg-select
+        [title]="'edit.tabs.contacts.contactKind' | translate"
+        [values]="contactKindItems$ | push"
+        bindKey="code"
+        bindLabel="value"
+        formControlName="contactKindItemCode"
+        isRequired
+      ></asset-sg-select>
+      <asset-sg-text-input
+        [title]="'edit.tabs.contacts.name' | translate"
+        formControlName="name"
+        isRequired
+      ></asset-sg-text-input>
+      <div class="content__grouped-input">
+        <asset-sg-text-input
+          [title]="'edit.tabs.contacts.street' | translate"
+          class="content__grouped-input__large"
+          formControlName="street"
+        ></asset-sg-text-input>
+        <asset-sg-text-input
+          [title]="'edit.tabs.contacts.number' | translate"
+          class="content__grouped-input__small"
+          formControlName="houseNumber"
+        ></asset-sg-text-input>
+      </div>
+      <div class="content__grouped-input">
+        <asset-sg-text-input
+          [title]="'edit.tabs.contacts.postCode' | translate"
+          class="content__grouped-input__small"
+          formControlName="plz"
+        ></asset-sg-text-input>
+        <asset-sg-text-input
+          [title]="'edit.tabs.contacts.locality' | translate"
+          class="content__grouped-input__large"
+          formControlName="locality"
+        ></asset-sg-text-input>
+      </div>
+      <div class="content__grouped-input content__grouped-input--equal">
+        <asset-sg-text-input
+          [title]="'edit.tabs.contacts.country' | translate"
+          formControlName="country"
+        ></asset-sg-text-input>
+        <asset-sg-text-input
+          [title]="'edit.tabs.contacts.phone' | translate"
+          formControlName="telephone"
+        ></asset-sg-text-input>
+      </div>
+      <asset-sg-text-input
+        [title]="'edit.tabs.contacts.email' | translate"
+        formControlName="email"
+      ></asset-sg-text-input>
+      <asset-sg-text-input
+        [title]="'edit.tabs.contacts.website' | translate"
+        formControlName="website"
+      ></asset-sg-text-input>
+    </div>
+  </form>
+</div>
+<hr />
+<div class="actions" mat-dialog-actions>
+  <button (click)="cancel()" asset-sg-secondary translate>cancel</button>
+  <button (click)="createOrUpdateContact()" [disabled]="manageContactForm.invalid" asset-sg-primary translate>
+    {{ existingContactId ? "edit.tabs.contacts.editContact" : "edit.tabs.contacts.createNewContact" }}
+  </button>
+</div>

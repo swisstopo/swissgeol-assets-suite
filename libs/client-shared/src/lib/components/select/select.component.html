@@ -1,5 +1,5 @@
 <label asset-sg-form-item-wrapper [title]="title" [isRequired]="isRequired">
-  <mat-form-field class="select">
+  <mat-form-field class="select" subscriptSizing="dynamic">
     <svg-icon key="arrow-down" class="icon" />
 
     <mat-select [value]="selectedValues" (valueChange)="onFilterChange($event)" [multiple]="multiple" (blur)="onBlur()">

@@ -1,0 +1,13 @@
+@if (mode === "link") {
+  <asset-sg-link-contact-dialog
+    (linkContact)="handleClose($event)"
+    (closeDialog)="handleClose()"
+    (createContact)="switchToCreateMode($event)"
+  ></asset-sg-link-contact-dialog>
+} @else if (mode === "manage") {
+  <asset-sg-manage-contact-dialog
+    [data]="data"
+    (createContact)="handleClose($event)"
+    (closeDialog)="handleClose()"
+  ></asset-sg-manage-contact-dialog>
+}

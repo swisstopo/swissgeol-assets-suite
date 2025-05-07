@@ -184,7 +184,7 @@ export const deAppTranslations = {
       },
       contacts: {
         tabName: 'Kontakte',
-        linkContact: 'Neuen Kontakt-Link hinzufügen',
+        linkContact: 'Kontakt verlinken',
         link: 'Verlinken',
         createNewContact: 'Neuen Kontakt erstellen',
         editContact: 'Konktakt bearbeiten',
@@ -204,8 +204,11 @@ export const deAppTranslations = {
         phone: 'Telefon',
         website: 'Website',
         create: 'Erstellen',
-        noContacts: 'Keine Kontakte',
+        noContacts: 'Noch keine Kontakte hinzugefügt ...',
         contactPlaceholder: 'Suche über Namen',
+        editWarnMessage:
+          'Änderungen an den untenstehenden Feldern werden über alle Assets synchronisiert, die' +
+          ' diesen Kontakt teilen.',
       },
       references: {
         tabName: 'Verweise',

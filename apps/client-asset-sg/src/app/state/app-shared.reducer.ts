@@ -77,34 +77,31 @@ export const appSharedStateReducer = createReducer(
   on(appSharedStateActions.setLang, (state, { lang }): AppSharedState => ({ ...state, lang })),
   on(
     appSharedStateActions.createContactResult,
-    (state, contact): AppSharedState => ({
+    (state, { type, ...contact }): AppSharedState => ({
       ...state,
       rdReferenceData: pipe(
-        RD.combine(state.rdReferenceData, contact),
-        RD.map(([rd, contact]) =>
-          RD.success({ ...rd, contacts: pipe(rd.contacts, R.upsertAt(String(contact.id), contact)) }),
-        ),
-        RD.getOrElse(() => state.rdReferenceData),
+        state.rdReferenceData,
+        RD.map((rd) => ({
+          ...rd,
+          contacts: pipe(rd.contacts, R.upsertAt(String(contact.id), contact)),
+        })),
       ),
     }),
   ),
   on(
     appSharedStateActions.editContactResult,
-    (state, contact): AppSharedState => ({
+    (state, { type, ...contact }): AppSharedState => ({
       ...state,
       rdReferenceData: pipe(
-        RD.combine(state.rdReferenceData, contact),
-        RD.map(([rd, contact]) =>
-          RD.success({
-            ...rd,
-            contacts: pipe(
-              rd.contacts,
-              R.updateAt(String(contact.id), contact),
-              O.getOrElse(() => rd.contacts),
-            ),
-          }),
-        ),
-        RD.getOrElse(() => state.rdReferenceData),
+        state.rdReferenceData,
+        RD.map((rd) => ({
+          ...rd,
+          contacts: pipe(
+            rd.contacts,
+            R.updateAt(String(contact.id), contact),
+            O.getOrElse(() => rd.contacts),
+          ),
+        })),
       ),
     }),
   ),

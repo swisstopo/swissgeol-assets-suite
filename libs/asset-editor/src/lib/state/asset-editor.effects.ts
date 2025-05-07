@@ -117,20 +117,4 @@ export class AssetEditorEffects {
       ),
     ),
   );
-
-  createContact$ = createEffect(() =>
-    this.actions$.pipe(
-      ofType(actions.createContact),
-      switchMap(({ contact }) => this.assetEditorService.createContact(contact)),
-      map(appSharedStateActions.createContactResult),
-    ),
-  );
-
-  updateContact$ = createEffect(() =>
-    this.actions$.pipe(
-      ofType(actions.editContact),
-      switchMap(({ contact }) => this.assetEditorService.updateContact(contact.id, contact)),
-      map(appSharedStateActions.editContactResult),
-    ),
-  );
 }

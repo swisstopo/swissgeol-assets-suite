@@ -1,0 +1,36 @@
+<div class="header">
+  <h2 translate>edit.tabs.contacts.createNewContact</h2>
+</div>
+<hr />
+<div mat-dialog-content>
+  <form [formGroup]="linkContactForm">
+    <div class="content">
+      <asset-sg-text-input
+        [title]="'edit.tabs.contacts.name' | translate"
+        (valueChange)="inputChange($event)"
+        [autoCompleteValues]="filteredContacts$ | push"
+        bindLabel="name"
+        (selectionChange)="setSelectedContact($event)"
+        isRequired
+      ></asset-sg-text-input>
+
+      <asset-sg-select
+        [title]="'edit.tabs.contacts.role' | translate"
+        [values]="roles"
+        bindLabel="translation"
+        bindKey="key"
+        isRequired
+        multiple
+        formControlName="roles"
+      ></asset-sg-select>
+    </div>
+  </form>
+</div>
+<hr />
+<div mat-dialog-actions class="actions">
+  <button asset-sg-secondary translate (click)="cancel()">cancel</button>
+  <button asset-sg-primary translate (click)="createNewContact()">edit.tabs.contacts.createNewContact</button>
+  <button asset-sg-primary translate [disabled]="linkContactForm.invalid" (click)="handleContactLink()">
+    edit.tabs.contacts.linkContact
+  </button>
+</div>

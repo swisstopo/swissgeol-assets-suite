@@ -186,7 +186,7 @@ export const frAppTranslations: AppTranslations = {
       },
       contacts: {
         tabName: 'Contact',
-        linkContact: 'Ajouter un nouveau lien de contact',
+        linkContact: 'Ajouter lien de contact',
         link: 'Créer un lien',
         createNewContact: 'Créer un nouveau contact',
         editContact: 'Modifier le contact',
@@ -206,8 +206,9 @@ export const frAppTranslations: AppTranslations = {
         phone: 'Téléphone',
         website: 'Site web',
         create: 'Créer',
-        noContacts: 'Aucun contact',
+        noContacts: 'Aucun contact ...',
         contactPlaceholder: 'Recherche par nom',
+        editWarnMessage: 'FR Changes to the fields below will be synced across all assets that share the same contact.',
       },
       references: {
         tabName: 'Références',
