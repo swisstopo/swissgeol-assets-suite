@@ -2,6 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { AssetId, Workflow, WorkflowSchema } from '@asset-sg/shared/v2';
 import { WorkflowSelection } from '@prisma/client';
+import { Id } from '@swisstopo/swissgeol-ui-core';
 import { plainToInstance } from 'class-transformer';
 import { map, Observable } from 'rxjs';
 
@@ -15,11 +16,11 @@ export class WorkflowApiService {
       .pipe(map((data) => plainToInstance(WorkflowSchema, data)));
   }
 
-  public updateReview(id: AssetId, selection: Partial<WorkflowSelection>): Observable<void> {
+  public updateReview(id: Id<Workflow>, selection: Partial<WorkflowSelection>): Observable<void> {
     return this.httpClient.patch<void>(`/api/assets/${id}/workflow/review`, selection);
   }
 
-  public updateApproval(id: AssetId, selection: Partial<WorkflowSelection>): Observable<void> {
+  public updateApproval(id: Id<Workflow>, selection: Partial<WorkflowSelection>): Observable<void> {
     return this.httpClient.patch<void>(`/api/assets/${id}/workflow/approval`, selection);
   }
 }

@@ -20,7 +20,7 @@ export class WorkflowService {
     return this.workflowRepo.change(workflow.id, {
       creatorId,
       comment: change.comment,
-      from: { status: workflow.status, assigneeId: workflow.assignee?.id ?? null },
+      from: { status: workflow.status, assigneeId: (workflow.assignee?.id ?? null) as string | null },
       to: { status: change.status, assigneeId: change.assigneeId },
     });
   }
@@ -49,8 +49,8 @@ export class WorkflowService {
     return this.workflowRepo.change(workflow.id, {
       creatorId: creatorId,
       comment: null,
-      from: { status: workflow.status, assigneeId: workflow.assignee?.id ?? null },
-      to: { status: WorkflowStatus.Published, assigneeId: workflow.assignee?.id ?? null },
+      from: { status: workflow.status, assigneeId: (workflow.assignee?.id ?? null) as string | null },
+      to: { status: WorkflowStatus.Published, assigneeId: (workflow.assignee?.id ?? null) as string | null },
     });
   }
 }
