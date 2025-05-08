@@ -17,7 +17,7 @@ import {
   LifecycleHooks,
   LifecycleHooksDirective,
 } from '@asset-sg/client-shared';
-import { AssetEditDetail } from '@asset-sg/shared';
+import { AssetSearchResultItem } from '@asset-sg/shared/v2';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { Store } from '@ngrx/store';
 import * as A from 'fp-ts/Array';
@@ -102,7 +102,7 @@ export class AssetViewerPageComponent implements OnInit, OnDestroy {
   );
 
   public assetClicked$ = new Subject<number[]>();
-  public assetsForPicker$: Observable<AssetEditDetail[]>;
+  public assetsForPicker$: Observable<AssetSearchResultItem[]>;
   public highlightedAssetId: number | null = null;
 
   constructor() {

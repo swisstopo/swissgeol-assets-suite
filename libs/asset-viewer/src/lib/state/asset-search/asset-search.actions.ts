@@ -1,4 +1,5 @@
-import { AssetSearchQuery, AssetSearchResult, AssetSearchStats } from '@asset-sg/shared';
+import { AssetSearchQuery, AssetSearchStats } from '@asset-sg/shared';
+import { AssetSearchResult } from '@asset-sg/shared/v2';
 import { createAction, props } from '@ngrx/store';
 import { MapPosition } from '../../components/map/map-controller';
 import { AllStudyDTO } from '../../models';
