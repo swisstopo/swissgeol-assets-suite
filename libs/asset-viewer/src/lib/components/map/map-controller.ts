@@ -1,6 +1,6 @@
 import { olCoordsFromLV95, SWISS_CENTER, SWISS_EXTENT, wktToGeoJSON } from '@asset-sg/client-shared';
-import { AssetEditDetail, getCoordsFromStudy, Study } from '@asset-sg/shared';
-import { extend } from '@asset-sg/shared/v2';
+import { getCoordsFromStudy, Study } from '@asset-sg/shared';
+import { AssetSearchResultItem, extend } from '@asset-sg/shared/v2';
 import { buffer } from '@turf/buffer';
 import { Control } from 'ol/control';
 import { Coordinate } from 'ol/coordinate';
@@ -46,7 +46,7 @@ export class MapController {
    * The id of all visible assets, mapped to their {@link AssetEditDetail} object.
    * @private
    */
-  private readonly assetsById = new Map<number, AssetEditDetail>();
+  private readonly assetsById = new Map<number, AssetSearchResultItem>();
 
   /**
    * The IDs of all available studies, mapped to the id of the asset that they belong to.
@@ -58,7 +58,7 @@ export class MapController {
    * The currently selected asset.
    * @private
    */
-  private activeAsset: AssetEditDetail | null = null;
+  private activeAsset: AssetSearchResultItem | null = null;
 
   /**
    * Whether clicking things on the map is currently allowed.
@@ -159,7 +159,7 @@ export class MapController {
     });
   }
 
-  setAssets(assets: AssetEditDetail[]): void {
+  setAssets(assets: AssetSearchResultItem[]): void {
     this.assetsById.clear();
     if (this.showHeatmap) {
       window.requestAnimationFrame(() => {
@@ -231,7 +231,7 @@ export class MapController {
     this.sources.picker.clear();
   }
 
-  setActiveAsset(asset: AssetEditDetail): void {
+  setActiveAsset(asset: AssetSearchResultItem): void {
     this.resetActiveAssetStyle();
     this.activeAsset = asset;
 
