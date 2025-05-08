@@ -27,7 +27,8 @@
           "earcut",
           "@prisma/client",
           "validator",
-          "@turf/jsts"
+          "@turf/jsts",
+          "fp-ts"
         ]
       },
       "configurations": {
