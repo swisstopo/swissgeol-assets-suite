@@ -3,7 +3,6 @@ import {
   AssetByTitle,
   AssetEditDetail,
   AssetSearchQuery,
-  AssetSearchResult,
   AssetSearchStats,
   dateFromDateId,
   DateId,
@@ -17,7 +16,13 @@ import {
   UsageCode,
   ValueCount,
 } from '@asset-sg/shared';
-import { AssetId, User } from '@asset-sg/shared/v2';
+import {
+  AssetId,
+  AssetSearchResult,
+  AssetSearchResultItem,
+  AssetSearchResultItemStudy,
+  User,
+} from '@asset-sg/shared/v2';
 import { Client as ElasticsearchClient } from '@elastic/elasticsearch';
 import {
   AggregationsAggregationContainer,
@@ -27,7 +32,6 @@ import {
   SearchTotalHits,
 } from '@elastic/elasticsearch/lib/api/types';
 import { Injectable, Logger } from '@nestjs/common';
-import * as E from 'fp-ts/Either';
 
 // eslint-disable-next-line @nx/enforce-module-boundaries
 import indexMapping from '../../../../../../../development/init/elasticsearch/mappings/swissgeol_asset_asset.json';
@@ -187,10 +191,10 @@ export class AssetSearchService {
     const [serializedAssets, total] = await this.searchAssetsByQuery(query, user, { limit, offset });
 
     // Load the matched assets from the database.
-    const data: AssetEditDetail[] = [];
+    const data: AssetSearchResultItem[] = [];
     for (const serializedAsset of serializedAssets.values()) {
-      const asset = JSON.parse(serializedAsset);
-      data.push(decode ? (AssetEditDetail.decode(asset) as E.Right<AssetEditDetail>).right : asset);
+      const parsedAsset = this.parseSerializedAsset(serializedAsset);
+      data.push(parsedAsset);
     }
 
     // Return the matched data in a paginated format.
@@ -688,6 +692,37 @@ export class AssetSearchService {
           usageCode: makeUsageCode(entity.publicUse.isAvailable, entity.internalUse.isAvailable),
         };
       }),
+    };
+  }
+
+  private parseSerializedAsset(serializedAsset: SerializedAssetEditDetail): AssetSearchResultItem {
+    const {
+      assetContacts,
+      assetId,
+      createDate,
+      titlePublic,
+      studies,
+      assetKindItemCode,
+      assetFormatItemCode,
+      manCatLabelRefs,
+      publicUse,
+      internalUse,
+    } = JSON.parse(serializedAsset);
+
+    return {
+      assetContacts,
+      assetId,
+      createDate,
+      titlePublic,
+      studies: studies.map((study: AssetSearchResultItemStudy) => ({
+        studyId: study.studyId,
+        geomText: study.geomText,
+      })),
+      assetKindItemCode,
+      assetFormatItemCode,
+      manCatLabelRefs,
+      publicUse: { isAvailable: publicUse.isAvailable },
+      internalUse: { isAvailable: internalUse.isAvailable },
     };
   }
 }

@@ -99,7 +99,7 @@ export const selectAssetEditDetailVM = createSelector(
       return {
         assetId: asset.assetId,
         titlePublic: asset.titlePublic,
-        createDate: asset.createDate,
+        createDate: asset.createDate as number & DateIdBrand,
         assetKindItem,
         assetFormatItem,
         contacts,

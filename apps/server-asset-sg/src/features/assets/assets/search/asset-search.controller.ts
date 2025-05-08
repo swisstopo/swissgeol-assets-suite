@@ -1,12 +1,5 @@
-import {
-  AssetSearchQuery,
-  AssetSearchQueryDTO,
-  AssetSearchResult,
-  AssetSearchResultDTO,
-  AssetSearchStats,
-  AssetSearchStatsDTO,
-} from '@asset-sg/shared';
-import { User } from '@asset-sg/shared/v2';
+import { AssetSearchQuery, AssetSearchQueryDTO, AssetSearchStats, AssetSearchStatsDTO } from '@asset-sg/shared';
+import { AssetSearchResult, AssetSearchResultDTO, User } from '@asset-sg/shared/v2';
 import { Controller, HttpCode, HttpStatus, Post, Query } from '@nestjs/common';
 import { plainToInstance } from 'class-transformer';
 import { Authorize } from '@/core/decorators/authorize.decorator';

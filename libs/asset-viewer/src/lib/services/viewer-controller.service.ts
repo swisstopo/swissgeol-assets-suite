@@ -1,8 +1,8 @@
 import { inject, Injectable } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
 import { appSharedStateActions } from '@asset-sg/client-shared';
-import { AssetSearchQuery, isEmptySearchQuery, makeEmptyAssetSearchResults } from '@asset-sg/shared';
-import { AssetId } from '@asset-sg/shared/v2';
+import { AssetSearchQuery, isEmptySearchQuery } from '@asset-sg/shared';
+import { AssetId, makeEmptyAssetSearchResults } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
 import {
   distinctUntilChanged,
