@@ -12,10 +12,7 @@ export class AssetSearchService {
 
   public search(searchQuery: AssetSearchQuery): Observable<AssetSearchResult> {
     return this._httpClient.post('/api/assets/search?limit=1000', searchQuery).pipe(
-      map((res) => {
-        return plainToInstance(AssetSearchResultDTO, res);
-      }),
-    );
+      map((res) => plainToInstance(AssetSearchResultDTO, res)));
   }
 
   public searchStats(searchQuery: AssetSearchQuery): Observable<AssetSearchStats> {
