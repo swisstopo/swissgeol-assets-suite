@@ -110,7 +110,7 @@ export class AssetSearchResultDTO implements AssetSearchResult {
   page!: PageStats;
   @Expose()
   @Type(() => AssetSearchResultItemDTO)
-  data!: AssetSearchResultItemDTO[];
+  data!: AssetSearchResultItem[];
 }
 
 export interface PageStats {
