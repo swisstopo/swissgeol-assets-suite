@@ -1,3 +1,4 @@
+// todo LME: These types should be moved to v2 when refactoring is prioritized, since they rely on io-ts types
 import { Type } from 'class-transformer';
 import { DateRangeDTO } from '../date-range.dto';
 import { UsageCode } from '../usage';
