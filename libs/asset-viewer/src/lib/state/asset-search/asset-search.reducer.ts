@@ -1,17 +1,15 @@
 import { appSharedStateActions, AppState } from '@asset-sg/client-shared';
 import {
-  AssetEditDetail,
   AssetSearchQuery,
-  AssetSearchResult,
   AssetSearchStats,
   GeomFromGeomText,
   LineString,
   LV95,
-  makeEmptyAssetSearchResults,
   makeEmptyAssetSearchStats,
   Point,
   StudyPolygon,
 } from '@asset-sg/shared';
+import { AssetSearchResult, makeEmptyAssetSearchResults } from '@asset-sg/shared/v2';
 import { createReducer, on } from '@ngrx/store';
 import * as E from 'fp-ts/Either';
 
@@ -156,12 +154,11 @@ export const assetSearchReducer = createReducer(
   ),
 
   on(appSharedStateActions.updateAsset, (state, { asset }): AssetSearchState => {
-    const mapAsset = (it: AssetEditDetail): AssetEditDetail => (it.assetId === asset.assetId ? asset : it);
     return {
       ...state,
       results: {
         ...state.results,
-        data: state.results.data.map(mapAsset),
+        data: state.results.data,
       },
       studies:
         state.studies

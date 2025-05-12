@@ -10,7 +10,7 @@ import {
   ViewChild,
 } from '@angular/core';
 import { DragHandleOffset, getCssCustomPropertyNumberValue } from '@asset-sg/client-shared';
-import { AssetEditDetail } from '@asset-sg/shared';
+import { AssetSearchResultItem } from '@asset-sg/shared/v2';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { Store } from '@ngrx/store';
 import { RxState } from '@rx-angular/state';
@@ -31,7 +31,7 @@ import {
 import { ViewerControllerService } from '../../services/viewer-controller.service';
 
 interface AssetPickerState {
-  assets: AssetEditDetail[];
+  assets: AssetSearchResultItem[];
   show: boolean;
   currentAssetId: O.Option<number>;
 }
@@ -66,7 +66,7 @@ export class AssetPickerComponent extends RxState<AssetPickerState> {
 
   @ViewChild('pickerContainer') _pickerContainer!: ElementRef<HTMLElement>;
 
-  @Input() set assets(assets$: Observable<AssetEditDetail[]>) {
+  @Input() set assets(assets$: Observable<AssetSearchResultItem[]>) {
     this.connect('assets', assets$);
   }
 
