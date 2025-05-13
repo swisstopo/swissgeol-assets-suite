@@ -1,6 +1,13 @@
 import { Component, inject, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { can$ } from '@asset-sg/client-shared';
-import { LocalDate, SimpleUser, Workflow, WorkflowPolicy, WorkflowStatus } from '@asset-sg/shared/v2';
+import {
+  LocalDate,
+  SimpleUser,
+  Workflow,
+  WorkflowPolicy,
+  WorkflowSelection,
+  WorkflowStatus,
+} from '@asset-sg/shared/v2';
 import { TranslateService } from '@ngx-translate/core';
 import type { SgcWorkflowSelectionEntry } from '@swisstopo/swissgeol-ui-core';
 import { SgcWorkflowSelectionChangeEvent } from '@swisstopo/swissgeol-ui-core/dist/types/components/sgc-workflow/sgc-workflow-selection/sgc-workflow-selection';
