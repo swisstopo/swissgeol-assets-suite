@@ -67,10 +67,14 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node_modules_e2e-
       - name: Install node dependencies
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npm install
       - name: Generate prisma types
         run: npm run prisma -- generate
       - name: Install e2e node dependencies
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: cd e2e && npm ci
 
   test:
