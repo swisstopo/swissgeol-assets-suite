@@ -43,7 +43,6 @@ export class AssetEditorNavigationComponent {
 export enum Tab {
   General = 'general',
   Files = 'files',
-  Usage = 'usage',
   Contacts = 'contacts',
   References = 'references',
   Geometries = 'geometries',
