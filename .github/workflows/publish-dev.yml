@@ -38,7 +38,7 @@ jobs:
             } = await import('${{ github.workspace }}/.github/scripts/version.utils.mjs');
 
             const [source, target] = await findSourceAndTargetBranches(context);
-            const nextVersion = await determineNextDevVersion(prevVersion, source);
+            const nextVersion = await determineNextDevVersion(source);
 
             return stringifyVersion(nextVersion);
 
