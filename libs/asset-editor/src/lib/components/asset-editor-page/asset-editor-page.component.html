@@ -25,7 +25,11 @@
     <div class="form-container">
       @switch (activeTab) {
         @case (Tab.General) {
-          <asset-sg-editor-general [form]="form.controls.general" [asset]="asset"></asset-sg-editor-general>
+          <asset-sg-editor-general
+            [form]="form.controls.general"
+            [asset]="asset"
+            [hasReferences]="hasReferences"
+          ></asset-sg-editor-general>
         }
         @case (Tab.Files) {
           <asset-sg-editor-files [form]="form.controls.files" [asset]="asset"></asset-sg-editor-files>
@@ -56,6 +60,7 @@
       [isSaveDisabled]="form.invalid || !form.dirty"
       [hasUnsavedChanges]="form.dirty"
       (discard)="initializeForm()"
+      (save)="save()"
     ></asset-sg-editor-save>
   </div>
 </div>

@@ -17,6 +17,7 @@ import { AssetForm } from '../../asset-editor-page/asset-editor-page.component';
 export class AssetEditorGeneralComponent implements OnInit, OnDestroy {
   @Input() form!: AssetForm['controls']['general'];
   @Input() asset: AssetEditDetail | null = null;
+  @Input() hasReferences = false;
 
   public workgroups: SimpleWorkgroup[] = [];
   public selectedLanguages: string[] = [];

@@ -47,6 +47,7 @@ export class SelectComponent<T, K> implements OnInit, ControlValueAccessor {
   @Input() public initialKeys: K[] = [];
   @Input() public errorMessage = '';
   @Input() trigger = '';
+  @Input() disabled = false;
   @Output() public selectionChanged = new EventEmitter<K[]>();
 
   public selectedValues?: T | T[] = this.multiple ? [] : undefined;

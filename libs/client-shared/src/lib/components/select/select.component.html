@@ -2,7 +2,13 @@
   <mat-form-field class="select" subscriptSizing="dynamic">
     <svg-icon key="arrow-down" class="icon" />
 
-    <mat-select [value]="selectedValues" (valueChange)="onFilterChange($event)" [multiple]="multiple" (blur)="onBlur()">
+    <mat-select
+      [value]="selectedValues"
+      (valueChange)="onFilterChange($event)"
+      [multiple]="multiple"
+      (blur)="onBlur()"
+      [disabled]="disabled"
+    >
       @if (trigger) {
         <mat-select-trigger
           >{{ Array.isArray(selectedValues) ? selectedValues.length : 0 }} {{ trigger }}
