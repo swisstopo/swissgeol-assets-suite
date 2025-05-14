@@ -3,9 +3,8 @@ import { Component, inject, OnInit } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { AssetEditDetail, LinkedAsset } from '@asset-sg/shared';
-import { AssetId, AssetSearchResultDTO } from '@asset-sg/shared/v2';
+import { AssetId, AssetSearchResultDTO, AssetSearchResultItem } from '@asset-sg/shared/v2';
 import { plainToInstance } from 'class-transformer';
-import * as E from 'fp-ts/Either';
 import * as O from 'fp-ts/Option';
 import { combineLatest, debounceTime, map, Observable, of, startWith, Subject, switchMap } from 'rxjs';
 import { NewReferenceDialogData } from '../../../../models/new-reference-dialog-data.interface';
@@ -36,7 +35,7 @@ export class AddReferenceDialogComponent implements OnInit {
     type: new FormControl<LinkedAssetType>(LinkedAssetType.Sibling, { validators: Validators.required }),
   });
   private assetsToIgnore$: Observable<AssetId[]> = new Observable<AssetId[]>();
-  private assetsToChooseFrom$: Observable<AssetEditDetail[]> = new Observable<AssetEditDetail[]>();
+  private assetsToChooseFrom$: Observable<AssetSearchResultItem[]> = new Observable<AssetSearchResultItem[]>();
   public optionsToDisplay$!: Observable<LinkedAsset[]>;
   public searchTerm$ = new Subject<string>();
   private readonly data = inject<NewReferenceDialogData>(MAT_DIALOG_DATA);
@@ -69,7 +68,7 @@ export class AddReferenceDialogComponent implements OnInit {
     this.assetsToChooseFrom$ = this.searchTerm$.pipe(
       debounceTime(300),
       switchMap(
-        (value): Observable<AssetEditDetail[]> =>
+        (value): Observable<AssetSearchResultItem[]> =>
           value.length >= 3
             ? this.httpClient
                 .post(`/api/assets/search?limit=10`, {
@@ -78,9 +77,7 @@ export class AddReferenceDialogComponent implements OnInit {
                 })
                 .pipe(
                   map((res) => plainToInstance(AssetSearchResultDTO, res)),
-                  map((result) =>
-                    result.data.map((asset) => (AssetEditDetail.decode(asset) as E.Right<AssetEditDetail>).right),
-                  ),
+                  map((res) => res.data),
                 )
             : of([]),
       ),
