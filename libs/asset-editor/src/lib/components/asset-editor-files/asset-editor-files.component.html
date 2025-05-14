@@ -6,7 +6,7 @@
         *ngFor="let file of existingFiles; let index = index; let last = last"
         class="list-none bg-grey-00 py-2 pl-4 files mb-2"
       >
-        <div class="name ellipsis">{{ file.name }}</div>
+        <div class="name ellipsis">{{ file | fileName }}</div>
 
         <ng-container *ngIf="file.willBeDeleted; else fileFormFields">
           <div *ngIf="file.willBeDeleted" class="notice text-sm text-grey-08" translate>
@@ -68,7 +68,7 @@
     [class]="{
       'hover:bg-cyan-06': !isDisabled,
       'bg-grey-03': isDisabled,
-      'hover:bg-grey-03': isDisabled | push
+      'hover:bg-grey-03': isDisabled | push,
     }"
     translate
     >edit.tabs.files.selectFile</span

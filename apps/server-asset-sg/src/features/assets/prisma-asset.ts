@@ -1,14 +1,14 @@
 import {
   Asset,
   AssetInfo,
+  AssetStudy,
+  AssetStudyId,
   AssetUsage,
   ContactAssignmentRole,
   LinkedAsset,
-  AssetStudy,
-  AssetStudyId,
-  UsageStatusCode,
   LocalDate,
   StudyType,
+  UsageStatusCode,
 } from '@asset-sg/shared/v2';
 import { Prisma } from '@prisma/client';
 import { satisfy } from '@/utils/define';
@@ -88,7 +88,7 @@ export const assetInfoSelection = satisfy<Prisma.AssetSelect>()({
       file: {
         select: {
           id: true,
-          name: true,
+          fileName: true,
           size: true,
         },
       },
@@ -159,7 +159,7 @@ export const parseAssetInfoFromPrisma = (data: SelectedAssetInfo): AssetInfo => 
   files: data.assetFiles.map((it) => ({
     id: it.file.id,
     size: Number(it.file.size),
-    name: it.file.name,
+    name: it.file.fileName,
   })),
   createdAt: LocalDate.fromDate(data.createDate),
   receivedAt: LocalDate.fromDate(data.receiptDate),

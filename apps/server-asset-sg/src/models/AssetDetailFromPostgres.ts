@@ -15,7 +15,8 @@ import { PostgresAllStudies } from '@/utils/postgres-studies/postgres-studies';
 
 export const AssetFileFromPostgres = D.struct({
   id: D.number,
-  name: D.string,
+  fileName: D.string,
+  fileNameAlias: D.nullable(D.string),
   size: DT.numberFromBigint,
   type: AssetFileType,
   legalDocItemCode: D.nullable(LegalDocItemCode),

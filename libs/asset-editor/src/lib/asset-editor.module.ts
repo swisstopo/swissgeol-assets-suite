@@ -22,6 +22,7 @@ import {
   DateTimePipe,
   DrawerComponent,
   DrawerPanelComponent,
+  FileNamePipe,
   fromAppShared,
   MatDateIdModule,
   ValueItemDescriptionPipe,
@@ -155,6 +156,7 @@ export const canLeaveEdit: CanDeactivateFn<AssetEditorPageComponent> = (c) => c.
     ValueItemDescriptionPipe,
     DatePipe,
     DateTimePipe,
+    FileNamePipe,
 
     ViewChildMarker,
     ButtonComponent,

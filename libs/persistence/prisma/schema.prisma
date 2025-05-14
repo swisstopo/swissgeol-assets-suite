@@ -144,7 +144,10 @@ enum FileType {
 
 model File {
   id             Int      @id @default(autoincrement()) @map("id")
-  name           String   @map("name")
+  /// the filename as stored in the bucket, must be unique and may not be equal to the original file name
+  fileName       String   @map("file_name")
+  /// alias for the given file, typically the original file name
+  fileNameAlias  String?  @map("file_name_alias")
   ocrStatus      OcrState @default(created) @map("ocr_status")
   size           BigInt   @map("size")
   lastModifiedAt DateTime @map("last_modified_at")
@@ -156,7 +159,7 @@ model File {
   AssetObjectInfo AssetObjectInfo[]
   AssetFile       AssetFile[]
 
-  @@unique([name])
+  @@unique([fileName])
   @@index([type])
   @@map("file")
 }
