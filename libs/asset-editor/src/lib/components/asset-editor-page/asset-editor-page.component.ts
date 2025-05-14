@@ -15,17 +15,21 @@ import {
   AssetEditDetail,
   AssetFile,
   dateFromDateId,
+  dateIdFromDate,
+  GeomFromGeomText,
   hasHistoricalData,
   Lang,
   LinkedAsset,
+  PatchAsset,
   Studies,
 } from '@asset-sg/shared';
 import { AssetContact, Workflow } from '@asset-sg/shared/v2';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { Store } from '@ngrx/store';
 import * as O from 'fp-ts/lib/Option';
-import { filter, Observable, Subscription, take, tap } from 'rxjs';
+import { filter, Observable, Subscription, switchMap, take, tap } from 'rxjs';
 import { EditorMode } from '../../models';
+import { AssetEditorService } from '../../services/asset-editor.service';
 import * as actions from '../../state/asset-editor.actions';
 import { selectWorkflow } from '../../state/asset-editor.selector';
 import { Tab } from '../asset-editor-navigation/asset-editor-navigation.component';
@@ -57,6 +61,7 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
   private readonly store = inject(Store<AppSharedState>);
   private readonly route = inject(ActivatedRoute);
   private readonly routingService = inject(RoutingService);
+  private readonly assetEditorService = inject(AssetEditorService);
   private readonly dialogService = inject(MatDialog);
   private readonly currentLang$ = inject(CURRENT_LANG);
   private readonly routerSegments$ = inject(ROUTER_SEGMENTS);
@@ -107,6 +112,14 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
   public ngOnDestroy() {
     this.store.dispatch(actions.reset());
     this.subscriptions.unsubscribe();
+  }
+
+  get hasReferences() {
+    return (
+      this.form.controls.references.controls.siblingAssets.value.length > 0 ||
+      this.form.controls.references.controls.subordinateAssets.value.length > 0 ||
+      !!this.form.controls.references.controls.mainAsset.value
+    );
   }
 
   public navigateToStart() {
@@ -183,6 +196,74 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
           this.store.dispatch(actions.deleteAsset({ assetId }));
         }
       });
+  }
+
+  public save() {
+    const assetId = this.asset?.assetId;
+    if (!assetId || !this.asset) {
+      return;
+    }
+    const {
+      general: { controls: general },
+      geometries: { controls: geometries },
+      contacts: { controls: contacts },
+      references: { controls: references },
+      files: { controls: files },
+    } = this.form.controls;
+
+    const filesToDelete = files.assetFiles.controls
+      .filter((file) => file.value.willBeDeleted)
+      .map((file) => file.value.id);
+    const newFiles = files.assetFiles.controls
+      .filter((file) => file.value.file)
+      .map((formAssetFile) => ({
+        file: formAssetFile.value.file!,
+        type: formAssetFile.value.type,
+        legalDocItemCode: formAssetFile.value.legalDocItemCode,
+      }));
+    const filesToKeep = files.assetFiles.controls
+      .filter((file) => !filesToDelete.includes(file.value.id) && !file.value.file)
+      .map((file) => file.value);
+
+    const patchAsset: PatchAsset = {
+      titlePublic: general.titlePublic.value!,
+      titleOriginal: general.titleOriginal.value,
+      createDate: dateIdFromDate(general.creationDate.value!),
+      receiptDate: dateIdFromDate(general.receiptDate.value!),
+      assetLanguages: general.assetLanguages.value!,
+      workgroupId: general.workgroupId.value!,
+      assetFormatItemCode: general.assetFormatItemCode.value!,
+      assetKindItemCode: general.assetKindItemCode.value!,
+      isNatRel: general.isNatRel.value!,
+      typeNatRels: general.typeNatRels.value!,
+      manCatLabelRefs: general.manCatLabelRefs.value!,
+      ids: general.ids.value.map((id) => ({ ...id, idId: O.fromNullable(id.idId) })),
+      assetFiles: filesToKeep,
+      assetContacts: contacts.assetContacts.value.map((contact) => ({ contactId: contact.id, role: contact.role })),
+      assetMainId: O.fromNullable(references.mainAsset.value?.assetId),
+      siblingAssetIds: references.siblingAssets.value.map((sibling) => sibling.assetId),
+      studies: geometries.studies.value
+        .filter((study) => !study.studyId.includes('_new'))
+        .map((study) => ({
+          ...study,
+          geomText: GeomFromGeomText.encode(study.geom),
+        })),
+      newStudies: geometries.studies.value
+        .filter((study) => study.studyId.includes('_new'))
+        .map((newStudy) => GeomFromGeomText.encode(newStudy.geom)),
+      internalUse: this.asset.internalUse,
+      publicUse: this.asset.publicUse,
+      newStatusWorkItemCode: O.fromNullable(this.asset.statusWorks[0].statusWorkItemCode),
+    };
+    this.subscriptions.add(
+      this.assetEditorService
+        .deleteFiles(assetId, filesToDelete)
+        .pipe(
+          switchMap(() => this.assetEditorService.uploadFiles(assetId, newFiles)),
+          switchMap(() => this.assetEditorService.updateAssetDetail(assetId, patchAsset)),
+        )
+        .subscribe(console.log),
+    );
   }
 
   public canDeactivate(targetRoute: RouterStateSnapshot): boolean | Observable<boolean> {
