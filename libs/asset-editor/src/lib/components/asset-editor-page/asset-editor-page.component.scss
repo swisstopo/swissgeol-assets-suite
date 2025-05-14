@@ -1,6 +1,13 @@
 @use "../../styles/mixins";
 @use "../../styles/variables";
 
+.loading-bar {
+  position: absolute;
+  inset: 0;
+  z-index: 100;
+  background-color: variables.$grey-03;
+}
+
 h2 {
   @include mixins.text-ellipsis(2);
   max-width: 70vw;
