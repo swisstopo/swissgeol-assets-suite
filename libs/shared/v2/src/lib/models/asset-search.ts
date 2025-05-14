@@ -100,6 +100,7 @@ export class AssetSearchResultItemDTO implements AssetSearchResultItem {
   @Expose()
   @Type(() => AssetSearchResultItemUseDTO)
   internalUse!: AssetSearchResultItemUseDTO;
+
   @Expose()
   @Type(() => AssetSearchResultItemUseDTO)
   publicUse!: AssetSearchResultItemUse;

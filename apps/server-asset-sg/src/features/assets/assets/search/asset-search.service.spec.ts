@@ -77,7 +77,7 @@ describe(AssetSearchService, () => {
     return asset;
   };
 
-  const createAssetSearchResultItem = async (data: AssetEditData): Promise<AssetSearchResultItem> => {
+  const createItem = async (data: AssetEditData): Promise<AssetSearchResultItem> => {
     const asset = await create(data);
     return {
       assetId: asset.assetId,
@@ -163,8 +163,8 @@ describe(AssetSearchService, () => {
         // Given
         const user = await userRepo.create(fakeUserData());
         const patch = await setup(fakeAssetPatch(), text);
-        const asset = await createAssetSearchResultItem({ patch, user });
-        await createAssetSearchResultItem({ patch: fakeAssetPatch(), user });
+        const asset = await createItem({ patch, user });
+        await createItem({ patch: fakeAssetPatch(), user });
 
         // When
         const result = await service.search({ text: `${text}` }, user);
@@ -206,8 +206,8 @@ describe(AssetSearchService, () => {
     it('finds assets by minimum createDate', async () => {
       // Given
       const user = await userRepo.create(fakeUserData());
-      const asset = await createAssetSearchResultItem({ patch: fakeAssetPatch(), user });
-      await createAssetSearchResultItem({
+      const asset = await createItem({ patch: fakeAssetPatch(), user });
+      await createItem({
         patch: {
           ...fakeAssetPatch(),
           createDate: dateIdFromDate(new Date(dateFromDateId(asset.createDate).getTime() - millisPerDay * 2)),
@@ -232,8 +232,8 @@ describe(AssetSearchService, () => {
     it('finds assets by maximum createDate', async () => {
       // Given
       const user = await userRepo.create(fakeUserData());
-      const asset = await createAssetSearchResultItem({ patch: fakeAssetPatch(), user });
-      await createAssetSearchResultItem({
+      const asset = await createItem({ patch: fakeAssetPatch(), user });
+      await createItem({
         patch: {
           ...fakeAssetPatch(),
           createDate: dateIdFromDate(new Date(dateFromDateId(asset.createDate).getTime() + millisPerDay * 2)),
@@ -257,18 +257,18 @@ describe(AssetSearchService, () => {
 
     it('finds assets by createDate range', async () => {
       // Given
-      const asset = await createAssetSearchResultItem({
+      const asset = await createItem({
         patch: fakeAssetPatch(),
         user: await userRepo.create(fakeUserData()),
       });
-      await createAssetSearchResultItem({
+      await createItem({
         patch: {
           ...fakeAssetPatch(),
           createDate: dateIdFromDate(new Date(dateFromDateId(asset.createDate).getTime() + millisPerDay * 2)),
         },
         user: await userRepo.create(fakeUserData()),
       });
-      await createAssetSearchResultItem({
+      await createItem({
         patch: {
           ...fakeAssetPatch(),
           createDate: dateIdFromDate(new Date(dateFromDateId(asset.createDate).getTime() - millisPerDay * 2)),
@@ -297,15 +297,15 @@ describe(AssetSearchService, () => {
       const code1 = languageItems[0].languageItemCode;
       const code2 = languageItems[1].languageItemCode;
       const code3 = languageItems[2].languageItemCode;
-      const asset = await createAssetSearchResultItem({
+      const asset = await createItem({
         patch: { ...fakeAssetPatch(), assetLanguages: [{ languageItemCode: code1 }] },
         user: await userRepo.create(fakeUserData()),
       });
-      await createAssetSearchResultItem({
+      await createItem({
         patch: { ...fakeAssetPatch(), assetLanguages: [{ languageItemCode: code2 }] },
         user: await userRepo.create(fakeUserData()),
       });
-      await createAssetSearchResultItem({
+      await createItem({
         patch: { ...fakeAssetPatch(), assetLanguages: [{ languageItemCode: code3 }] },
         user: await userRepo.create(fakeUserData()),
       });
@@ -324,12 +324,12 @@ describe(AssetSearchService, () => {
       const code2 = assetKindItems[1].assetKindItemCode;
       const code3 = assetKindItems[2].assetKindItemCode;
       const user = await userRepo.create(fakeUserData());
-      const asset = await createAssetSearchResultItem({
+      const asset = await createItem({
         patch: { ...fakeAssetPatch(), assetKindItemCode: code1 },
         user,
       });
-      await createAssetSearchResultItem({ patch: { ...fakeAssetPatch(), assetKindItemCode: code2 }, user });
-      await createAssetSearchResultItem({ patch: { ...fakeAssetPatch(), assetKindItemCode: code3 }, user });
+      await createItem({ patch: { ...fakeAssetPatch(), assetKindItemCode: code2 }, user });
+      await createItem({ patch: { ...fakeAssetPatch(), assetKindItemCode: code3 }, user });
 
       // When
       const result = await service.search({ assetKindItemCodes: [code1] }, user);
@@ -344,12 +344,12 @@ describe(AssetSearchService, () => {
       const code2 = manCatLabelItems[1].manCatLabelItemCode;
       const code3 = manCatLabelItems[2].manCatLabelItemCode;
       const user = await userRepo.create(fakeUserData());
-      const asset = await createAssetSearchResultItem({
+      const asset = await createItem({
         patch: { ...fakeAssetPatch(), manCatLabelRefs: [code1] },
         user,
       });
-      await createAssetSearchResultItem({ patch: { ...fakeAssetPatch(), manCatLabelRefs: [code2] }, user });
-      await createAssetSearchResultItem({ patch: { ...fakeAssetPatch(), manCatLabelRefs: [code3] }, user });
+      await createItem({ patch: { ...fakeAssetPatch(), manCatLabelRefs: [code2] }, user });
+      await createItem({ patch: { ...fakeAssetPatch(), manCatLabelRefs: [code3] }, user });
 
       // When
       const result = await service.search({ manCatLabelItemCodes: [code1] }, user);
@@ -362,7 +362,7 @@ describe(AssetSearchService, () => {
       // Given
       const usageCode: UsageCode = 'public';
       const user = await userRepo.create(fakeUserData());
-      const asset = await createAssetSearchResultItem({
+      const asset = await createItem({
         patch: {
           ...fakeAssetPatch(),
           publicUse: { ...fakeAssetUsage(), isAvailable: true },
@@ -370,7 +370,7 @@ describe(AssetSearchService, () => {
         },
         user,
       });
-      await createAssetSearchResultItem({
+      await createItem({
         patch: {
           ...fakeAssetPatch(),
           publicUse: { ...fakeAssetUsage(), isAvailable: false },
@@ -378,7 +378,7 @@ describe(AssetSearchService, () => {
         },
         user,
       });
-      await createAssetSearchResultItem({
+      await createItem({
         patch: {
           ...fakeAssetPatch(),
           publicUse: { ...fakeAssetUsage(), isAvailable: false },
@@ -399,15 +399,15 @@ describe(AssetSearchService, () => {
       const contact1 = await prisma.contact.create({ data: fakeContact() });
       const contact2 = await prisma.contact.create({ data: fakeContact() });
       const user = await userRepo.create(fakeUserData());
-      const asset = await createAssetSearchResultItem({
+      const asset = await createItem({
         patch: { ...fakeAssetPatch(), assetContacts: [{ contactId: contact1.contactId, role: 'author' }] },
         user,
       });
-      await createAssetSearchResultItem({
+      await createItem({
         patch: { ...fakeAssetPatch(), assetContacts: [{ contactId: contact1.contactId, role: 'supplier' }] },
         user,
       });
-      await createAssetSearchResultItem({
+      await createItem({
         patch: { ...fakeAssetPatch(), assetContacts: [{ contactId: contact2.contactId, role: 'author' }] },
         user,
       });

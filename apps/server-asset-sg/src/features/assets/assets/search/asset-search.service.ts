@@ -16,7 +16,7 @@ import {
   UsageCode,
   ValueCount,
 } from '@asset-sg/shared';
-import { AssetId, AssetSearchResult, AssetSearchResultItem, User } from '@asset-sg/shared/v2';
+import { AssetId, AssetSearchResult, AssetSearchResultItem, AssetSearchResultItemDTO, User } from '@asset-sg/shared/v2';
 import { Client as ElasticsearchClient } from '@elastic/elasticsearch';
 import {
   AggregationsAggregationContainer,
@@ -26,6 +26,9 @@ import {
   SearchTotalHits,
 } from '@elastic/elasticsearch/lib/api/types';
 import { Injectable, Logger } from '@nestjs/common';
+
+import { plainToInstance } from 'class-transformer';
+
 // eslint-disable-next-line @nx/enforce-module-boundaries
 import indexMapping from '../../../../../../../development/init/elasticsearch/mappings/swissgeol_asset_asset.json';
 
@@ -186,7 +189,12 @@ export class AssetSearchService {
     // Load the matched assets from the database.
     const data: AssetSearchResultItem[] = [];
     for (const serializedAsset of serializedAssets.values()) {
-      data.push(JSON.parse(serializedAsset));
+      const encodedAsset = JSON.parse(serializedAsset);
+      data.push(
+        decode
+          ? plainToInstance(AssetSearchResultItemDTO, encodedAsset, { excludeExtraneousValues: true })
+          : encodedAsset,
+      );
     }
 
     // Return the matched data in a paginated format.

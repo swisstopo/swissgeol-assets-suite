@@ -1,57 +1,27 @@
-import { WorkflowStatus as WorkflowStatusFromPrisma } from '@prisma/client';
+import {
+  WorkflowSelection as WorkflowSelectionFromPrisma,
+  WorkflowStatus as WorkflowStatusFromPrisma,
+} from '@prisma/client';
+import { GenericWorkflow, WorkflowStatus, WorkflowChange } from '@swisstopo/swissgeol-ui-core';
 import { AssetId } from './asset';
-import { LocalDate } from './base/local-date';
-import { SimpleUser, UserId } from './user';
+import { UserId } from './user';
 import { WorkgroupId } from './workgroup';
 
-// TODO Consider merging `assetId` and `workflowId` into one field - DVA 2025-04-15
+export { WorkflowStatus, WorkflowChange };
 
-export interface Workflow {
-  assetId: AssetId;
-  hasRequestedChanges: boolean;
-
-  // TODO Consider renaming this to just `changes` - DVA 2025-04-16
-  workflowChanges: WorkflowChange[];
-  reviewedTabs: TabStatus;
-  publishedTabs: TabStatus;
-  status: WorkflowStatus;
-  assignee: SimpleUser | null;
-  creator: SimpleUser | null;
-  createdAt: LocalDate;
+export interface Workflow extends GenericWorkflow {
+  id: AssetId;
+  review: WorkflowSelection;
+  approval: WorkflowSelection;
   workgroupId: WorkgroupId;
 }
 
-export interface WorkflowChange {
-  comment: string | null;
-  creator: SimpleUser | null;
-  fromAssignee: SimpleUser | null;
-  toAssignee: SimpleUser | null;
-  fromStatus: WorkflowStatus;
-  toStatus: WorkflowStatus;
-  createdAt: LocalDate;
-}
+export type WorkflowSelection = Omit<WorkflowSelectionFromPrisma, 'id'>;
 
 export interface WorkflowChangeData {
   comment: string | null;
   status: UnpublishedWorkflowStatus;
   assigneeId: UserId | null;
-}
-
-// TODO consider renaming this to something like `WorkflowSelection` - DVA 2025-04-15
-export interface TabStatus {
-  general: boolean;
-  files: boolean;
-  usage: boolean;
-  contacts: boolean;
-  references: boolean;
-  geometries: boolean;
-}
-
-export enum WorkflowStatus {
-  Draft = 'Draft',
-  InReview = 'InReview',
-  Reviewed = 'Reviewed',
-  Published = 'Published',
 }
 
 export const UnpublishedWorkflowStatus = [
