@@ -1,7 +1,7 @@
 import { Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { AbstractControl, FormArray, FormControl, FormGroup, ValidationErrors, Validators } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
-import { ActivatedRoute, RouterStateSnapshot } from '@angular/router';
+import { ActivatedRoute, Router, RouterStateSnapshot } from '@angular/router';
 import {
   AppSharedState,
   ConfirmDialogComponent,
@@ -55,6 +55,7 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
   public form!: AssetForm;
   public activeTab: Tab = Tab.General;
   protected availableTabs: Tab[] = [];
+  protected isLoading = false;
   protected readonly Tab = Tab;
   protected readonly EditorMode = EditorMode;
   private currentLang: Lang = 'de';
@@ -63,6 +64,7 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
   private readonly routingService = inject(RoutingService);
   private readonly assetEditorService = inject(AssetEditorService);
   private readonly dialogService = inject(MatDialog);
+  private readonly router = inject(Router);
   private readonly currentLang$ = inject(CURRENT_LANG);
   private readonly routerSegments$ = inject(ROUTER_SEGMENTS);
   private readonly subscriptions: Subscription = new Subscription();
@@ -89,9 +91,9 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
           .select(fromAppShared.selectCurrentAsset)
           .pipe(
             filter((asset) => !!asset),
-            take(1),
             tap((asset) => {
               this.asset = asset;
+              console.log('asset', asset);
               this.initializeTabs();
               this.initializeForm();
             }),
@@ -132,12 +134,12 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
       general: { controls: general },
       contacts: { controls: contacts },
     } = this.form.controls;
-    general.titlePublic.setValue(this.asset?.titlePublic ?? null);
+    general.titlePublic.setValue(this.asset?.titlePublic ?? '');
     general.titleOriginal.setValue(this.asset?.titleOriginal ?? null);
     general.workgroupId.setValue(this.asset?.workgroupId ?? null);
     general.creationDate.setValue(this.asset ? dateFromDateId(this.asset.createDate) : null);
     general.receiptDate.setValue(this.asset ? dateFromDateId(this.asset.receiptDate) : null);
-    general.assetLanguages.setValue(this.asset?.assetLanguages ?? null);
+    general.assetLanguages.setValue(this.asset?.assetLanguages ?? []);
     general.assetFormatItemCode.setValue(this.asset?.assetFormatItemCode ?? null);
     general.assetKindItemCode.setValue(this.asset?.assetKindItemCode ?? null);
     general.manCatLabelRefs.setValue(this.asset?.manCatLabelRefs ?? null);
@@ -199,8 +201,8 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
   }
 
   public save() {
-    const assetId = this.asset?.assetId;
-    if (!assetId || !this.asset) {
+    const asset = this.asset;
+    if (!asset && this.mode === EditorMode.Edit) {
       return;
     }
     const {
@@ -226,17 +228,17 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
       .map((file) => file.value);
 
     const patchAsset: PatchAsset = {
-      titlePublic: general.titlePublic.value!,
+      titlePublic: general.titlePublic.value,
       titleOriginal: general.titleOriginal.value,
-      createDate: dateIdFromDate(general.creationDate.value!),
-      receiptDate: dateIdFromDate(general.receiptDate.value!),
-      assetLanguages: general.assetLanguages.value!,
+      createDate: dateIdFromDate(general.creationDate.value ?? new Date()),
+      receiptDate: dateIdFromDate(general.receiptDate.value ?? new Date()),
+      assetLanguages: general.assetLanguages.value,
       workgroupId: general.workgroupId.value!,
       assetFormatItemCode: general.assetFormatItemCode.value!,
       assetKindItemCode: general.assetKindItemCode.value!,
-      isNatRel: general.isNatRel.value!,
-      typeNatRels: general.typeNatRels.value!,
       manCatLabelRefs: general.manCatLabelRefs.value!,
+      isNatRel: general.isNatRel.value,
+      typeNatRels: general.typeNatRels.value,
       ids: general.ids.value.map((id) => ({ ...id, idId: O.fromNullable(id.idId) })),
       assetFiles: filesToKeep,
       assetContacts: contacts.assetContacts.value.map((contact) => ({ contactId: contact.id, role: contact.role })),
@@ -251,18 +253,37 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
       newStudies: geometries.studies.value
         .filter((study) => study.studyId.includes('_new'))
         .map((newStudy) => GeomFromGeomText.encode(newStudy.geom)),
-      internalUse: this.asset.internalUse,
-      publicUse: this.asset.publicUse,
-      newStatusWorkItemCode: O.fromNullable(this.asset.statusWorks[0].statusWorkItemCode),
+      internalUse: asset?.internalUse ?? {
+        isAvailable: true,
+        startAvailabilityDate: O.fromNullable(dateIdFromDate(new Date())),
+        statusAssetUseItemCode: 'approved',
+      },
+      publicUse: asset?.publicUse ?? {
+        isAvailable: true,
+        startAvailabilityDate: O.fromNullable(dateIdFromDate(new Date())),
+        statusAssetUseItemCode: 'approved',
+      },
+      newStatusWorkItemCode: O.fromNullable(asset?.statusWorks[0].statusWorkItemCode),
     };
+    this.isLoading = true;
     this.subscriptions.add(
-      this.assetEditorService
-        .deleteFiles(assetId, filesToDelete)
-        .pipe(
-          switchMap(() => this.assetEditorService.uploadFiles(assetId, newFiles)),
-          switchMap(() => this.assetEditorService.updateAssetDetail(assetId, patchAsset)),
-        )
-        .subscribe(console.log),
+      this.mode === EditorMode.Edit
+        ? this.assetEditorService
+            .deleteFiles(asset!.assetId, filesToDelete)
+            .pipe(
+              switchMap(() => this.assetEditorService.uploadFiles(asset!.assetId, newFiles)),
+              switchMap(() => this.assetEditorService.updateAssetDetail(asset!.assetId, patchAsset)),
+            )
+            .subscribe((asset) => {
+              this.isLoading = false;
+              this.store.dispatch(actions.updateAssetEditDetailResult({ asset }));
+            })
+        : this.assetEditorService.createAsset(patchAsset).subscribe((asset) => {
+            this.isLoading = false;
+            this.form.markAsPristine();
+            this.store.dispatch(actions.updateAssetEditDetailResult({ asset }));
+            this.router.navigate([this.currentLang, 'asset-admin', asset.assetId]);
+          }),
     );
   }
 
@@ -270,13 +291,13 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
     if (
       this.form === undefined ||
       !this.form.dirty ||
-      targetRoute.url.startsWith(`/${this.currentLang}/asset-admin/${this.asset?.assetId}`)
+      targetRoute.url.startsWith(`/${this.currentLang}/asset-admin/${this.asset?.assetId ?? 'new'}`)
     ) {
       return true;
     }
     const dialogRef = this.dialogService.open<ConfirmDialogComponent>(ConfirmDialogComponent, {
       data: {
-        text: 'confirmDiscardChanges',
+        text: 'edit.questionDiscardChanges',
       },
     });
     return dialogRef.afterClosed();
@@ -318,16 +339,16 @@ const buildForm = () => {
   return new FormGroup({
     general: new FormGroup({
       workgroupId: new FormControl<number | null>(null, { validators: [Validators.required] }),
-      titlePublic: new FormControl('', { validators: [Validators.required] }),
+      titlePublic: new FormControl<string>('', { validators: [Validators.required], nonNullable: true }),
       titleOriginal: new FormControl(''),
       creationDate: new FormControl<Date | null>(null, { validators: [Validators.required] }),
       receiptDate: new FormControl<Date | null>(null, { validators: [Validators.required] }),
-      assetLanguages: new FormControl<Array<{ languageItemCode: string }>>([]),
+      assetLanguages: new FormControl<Array<{ languageItemCode: string }>>([], { nonNullable: true }),
       assetFormatItemCode: new FormControl<string>('', { validators: [Validators.required] }),
       assetKindItemCode: new FormControl<string>('', { validators: [Validators.required] }),
       manCatLabelRefs: new FormControl<string[]>([], { validators: [Validators.required] }),
-      isNatRel: new FormControl<boolean>(false),
-      typeNatRels: new FormControl<string[]>([]),
+      isNatRel: new FormControl<boolean>(false, { nonNullable: true }),
+      typeNatRels: new FormControl<string[]>([], { nonNullable: true }),
       ids: new FormControl<AlternativeId[]>([], {
         validators: [allAlternativeIdsComplete],
         nonNullable: true,
