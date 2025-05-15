@@ -352,8 +352,12 @@ const selectPrismaAsset = selectOnAsset({
   siblingYAssets: { select: { assetX: { select: { assetId: true, titlePublic: true } } } },
   statusWorks: { select: { statusWorkItemCode: true, statusWorkDate: true } },
   assetFiles: {
-    select: { file: { select: { id: true, name: true, size: true, type: true, legalDocItemCode: true } } },
-    orderBy: [{ file: { type: 'asc' } }, { file: { name: 'asc' } }],
+    select: {
+      file: {
+        select: { id: true, fileName: true, fileNameAlias: true, size: true, type: true, legalDocItemCode: true },
+      },
+    },
+    orderBy: [{ file: { type: 'asc' } }, { file: { fileNameAlias: 'asc' } }, { file: { fileName: 'asc' } }],
   },
   workgroupId: true,
 });

@@ -22,9 +22,7 @@ import { pipe } from 'fp-ts/function';
 import * as D from 'io-ts/Decoder';
 import { authorize } from '@/core/authorize';
 import { CurrentUser } from '@/core/decorators/current-user.decorator';
-import { PrismaService } from '@/core/prisma.service';
 import { AssetEditRepo } from '@/features/asset-edit/asset-edit.repo';
-import { FileOcrService } from '@/features/files/file-ocr.service';
 import { FileS3Service } from '@/features/files/file-s3.service';
 import { FileRepo } from '@/features/files/file.repo';
 import { FileService } from '@/features/files/file.service';
@@ -33,10 +31,8 @@ import { FileService } from '@/features/files/file.service';
 export class FilesController {
   constructor(
     private readonly fileRepo: FileRepo,
-    private readonly fileOcrService: FileOcrService,
     private readonly fileS3Service: FileS3Service,
     private readonly assetEditRepo: AssetEditRepo,
-    private readonly prismaService: PrismaService,
     private readonly fileService: FileService
   ) {}
 
@@ -58,7 +54,7 @@ export class FilesController {
       throw new HttpException('not found', HttpStatus.NOT_FOUND);
     }
 
-    const file = await this.fileS3Service.load(record.name);
+    const file = await this.fileS3Service.load(record.fileName);
     if (file == null) {
       throw new HttpException('not found', HttpStatus.NOT_FOUND);
     }
@@ -69,7 +65,7 @@ export class FilesController {
     if (file.metadata.byteCount != null) {
       res.setHeader('Content-Length', file.metadata.byteCount.toString());
     }
-    res.setHeader('Content-Disposition', `filename="${file.metadata.name}"`);
+    res.setHeader('Content-Disposition', `filename="${record.fileName}"`);
     file.content.pipe(res);
   }
 
