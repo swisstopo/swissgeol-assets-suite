@@ -115,6 +115,7 @@ export const assetSearchReducer = createReducer(
       ...state,
       results: results ?? state.results,
       isLoadingResults: isLoading ?? state.isLoadingResults,
+      currentAsset: results?.data.length === 1 ? results.data[0] : null,
     })
   ),
   on(
