@@ -20,7 +20,10 @@ import { handlePrismaMutationError } from '@/utils/prisma';
 
 @Injectable()
 export class AssetEditRepo implements Repo<AssetEditDetail, number, AssetEditData> {
-  constructor(private readonly prismaService: PrismaService, private readonly fileRepo: FileRepo) {}
+  constructor(
+    private readonly prismaService: PrismaService,
+    private readonly fileRepo: FileRepo,
+  ) {}
 
   async find(id: number): Promise<AssetEditDetail | null> {
     const asset = await this.prismaService.asset.findUnique({
@@ -231,7 +234,7 @@ export class AssetEditRepo implements Repo<AssetEditDetail, number, AssetEditDat
       await deleteStudies(
         this.prismaService,
         id,
-        data.patch.studies.map((it) => it.studyId)
+        data.patch.studies.map((it) => it.studyId),
       )();
 
       // Update the asset's old studies that are still present in the update.
@@ -352,7 +355,9 @@ const selectPrismaAsset = selectOnAsset({
   siblingYAssets: { select: { assetX: { select: { assetId: true, titlePublic: true } } } },
   statusWorks: { select: { statusWorkItemCode: true, statusWorkDate: true } },
   assetFiles: {
-    select: { file: { select: { id: true, name: true, size: true, type: true, legalDocItemCode: true } } },
+    select: {
+      file: { select: { id: true, name: true, size: true, type: true, legalDocItemCode: true, pageCount: true } },
+    },
     orderBy: [{ file: { type: 'asc' } }, { file: { name: 'asc' } }],
   },
   workgroupId: true,

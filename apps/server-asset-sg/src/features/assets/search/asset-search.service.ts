@@ -61,7 +61,7 @@ export class AssetSearchService {
     private readonly elastic: ElasticsearchClient,
     private readonly prisma: PrismaService,
     private readonly assetRepo: AssetEditRepo,
-    private readonly studyRepo: StudyRepo
+    private readonly studyRepo: StudyRepo,
   ) {}
 
   register(asset: AssetEditDetail): Promise<void> {
@@ -73,7 +73,7 @@ export class AssetSearchService {
       this.elastic,
       this.prisma,
       this.studyRepo,
-      options ?? { index: INDEX, shouldRefresh: true }
+      options ?? { index: INDEX, shouldRefresh: true },
     );
   }
 
@@ -174,13 +174,14 @@ export class AssetSearchService {
    * @param user The user that is executing the query.
    * @param limit The maximum amount of assets to load. Defaults to `100`.
    * @param offset The amount of assets being skipped before loading the assets.
-   * @param decode Whether to decode the assets. If this is set to `false`, the assets should be decoded via `AssetEditDetail` before accessing them.
-   *               This option primarily exists so that the assets are not decoded and directly re-encoded when returning them via API.
+   * @param decode Whether to decode the assets. If this is set to `false`, the assets should be decoded via
+   *   `AssetEditDetail` before accessing them. This option primarily exists so that the assets are not decoded and
+   *   directly re-encoded when returning them via API.
    */
   async search(
     query: AssetSearchQuery,
     user: User,
-    { limit = 100, offset = 0, decode = true }: PageOptions & { decode?: boolean } = {}
+    { limit = 100, offset = 0, decode = true }: PageOptions & { decode?: boolean } = {},
   ): Promise<AssetSearchResult> {
     // Apply the query to find all matching ids.
     const [serializedAssets, total] = await this.searchAssetsByQuery(query, user, { limit, offset });
@@ -250,7 +251,7 @@ export class AssetSearchService {
     const makeAggregation = (
       operator: 'terms' | 'min' | 'max',
       groupName: string,
-      fieldName?: string
+      fieldName?: string,
     ): AggregationsAggregationContainer => {
       const NUMBER_OF_BUCKETS = 10_000;
       const { filter } = mapQueryToElasticDslParts({ ...query, [groupName]: undefined }, user);
@@ -367,7 +368,7 @@ export class AssetSearchService {
   private async searchAssetsByQuery(
     query: AssetSearchQuery,
     user: User,
-    page: PageOptions = {}
+    page: PageOptions = {},
   ): Promise<[Map<AssetId, SerializedAssetEditDetail>, number]> {
     const elasticQuery = mapQueryToElasticDsl(query, user);
 
@@ -400,7 +401,7 @@ export class AssetSearchService {
   private async doOffsetForSearch(
     elasticQuery: QueryDslQueryContainer,
     page: PageOptions,
-    state: SearchState
+    state: SearchState,
   ): Promise<boolean> {
     const offset = page.offset ?? 0;
     let remainingOffset = offset;
@@ -477,7 +478,7 @@ export class AssetSearchService {
   private async executeSearchQuery(
     elasticQuery: QueryDslQueryContainer,
     state: SearchState,
-    options: { limit: number; fields: string[] }
+    options: { limit: number; fields: string[] },
   ): Promise<SearchResponse> {
     const response = await this.elastic.search({
       index: INDEX,
@@ -703,7 +704,7 @@ const mapQueryToElasticDsl = (query: AssetSearchQuery, user: User): QueryDslQuer
 
 const mapQueryToElasticDslParts = (
   query: AssetSearchQuery,
-  user: User
+  user: User,
 ): { must: QueryDslQueryContainer[]; filter: QueryDslQueryContainer[] } => {
   const scope = ['titlePublic', 'titleOriginal', 'contactNames', 'sgsId'];
   const queries: QueryDslQueryContainer[] = [];
@@ -800,7 +801,7 @@ const mapQueryToElasticDslParts = (
  */
 const makeArrayFilter = <T extends string | number>(
   field: keyof ElasticSearchAsset,
-  query: T[]
+  query: T[],
 ): QueryDslQueryContainer => {
   if (query.length === 0) {
     return { bool: { must_not: { exists: { field } } } };

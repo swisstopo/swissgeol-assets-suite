@@ -2,6 +2,7 @@ import {
   DeleteObjectCommand,
   GetObjectCommand,
   HeadObjectCommand,
+  HeadObjectCommandOutput,
   PutObjectCommand,
   S3Client,
   S3ClientConfig,
@@ -29,7 +30,7 @@ export class FileS3Service {
         Body: content,
         Bucket: this.bucket,
         ContentType: options.mediaType,
-      })
+      }),
     );
   }
 
@@ -39,15 +40,11 @@ export class FileS3Service {
         new GetObjectCommand({
           Key: this.getKey(name),
           Bucket: this.bucket,
-        })
+        }),
       );
       return {
         content: output.Body as NodeJS.ReadableStream,
-        metadata: {
-          name,
-          byteCount: output.ContentLength ?? null,
-          mediaType: output.ContentType ?? null,
-        },
+        metadata: this.createMetadata(output, name),
       };
     } catch (e) {
       return handleS3Error(e);
@@ -60,13 +57,9 @@ export class FileS3Service {
         new HeadObjectCommand({
           Key: this.getKey(name),
           Bucket: this.bucket,
-        })
+        }),
       );
-      return {
-        name,
-        byteCount: output.ContentLength ?? null,
-        mediaType: output.ContentType ?? null,
-      };
+      return this.createMetadata(output, name);
     } catch (e) {
       return handleS3Error(e);
     }
@@ -78,7 +71,7 @@ export class FileS3Service {
         new DeleteObjectCommand({
           Key: this.getKey(name),
           Bucket: this.bucket,
-        })
+        }),
       );
       return true;
     } catch (e) {
@@ -86,6 +79,14 @@ export class FileS3Service {
     }
   }
 
+  private createMetadata(output: HeadObjectCommandOutput, name: string): FileS3Metadata {
+    return {
+      name,
+      byteCount: output.ContentLength ?? null,
+      mediaType: output.ContentType ?? null,
+      pageCount: Number(output.Metadata?.pagecount) ?? null,
+    };
+  }
   private getKey(name: string): string {
     return this.folder === null ? name : `${this.folder}/${name}`;
   }
@@ -104,6 +105,7 @@ interface FileS3Metadata {
   name: string;
   byteCount: number | null;
   mediaType: string | null;
+  pageCount: number | null;
 }
 
 const loadS3ClientConfig = (): S3ClientConfig => {
