@@ -212,6 +212,7 @@ export const itAppTranslations: AppTranslations = {
         editWarnMessage: 'IT Changes to the fields below will be synced across all assets that share the same contact.',
       },
       references: {
+        workgroupWarning: 'IT Um Verweise hinzuzufügen müssen Sie erst eine Arbeitsgruppe wählen.',
         tabName: 'IT Verweise',
         assetId: 'IT Asset ID',
         assetTitlePublic: 'IT Öffentlicher Titel',

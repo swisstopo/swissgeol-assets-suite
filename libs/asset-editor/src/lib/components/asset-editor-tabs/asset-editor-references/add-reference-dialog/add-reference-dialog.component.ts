@@ -30,6 +30,7 @@ export class AddReferenceDialogComponent implements OnInit {
   ];
   public asset: AssetEditDetail | null = null;
   public form!: AssetForm['controls']['references'];
+  public hasWorkgroupId = false;
   public newReferenceForm = new FormGroup({
     linkedAsset: new FormControl<LinkedAsset | null>(null, { validators: Validators.required }),
     type: new FormControl<LinkedAssetType>(LinkedAssetType.Sibling, { validators: Validators.required }),
@@ -46,6 +47,7 @@ export class AddReferenceDialogComponent implements OnInit {
   public ngOnInit() {
     this.form = this.data.form;
     this.asset = this.data.asset;
+    this.hasWorkgroupId = this.data.hasWorkgroupId;
     this.types = this.asset
       ? O.toNullable(this.asset.assetMain)
         ? [
