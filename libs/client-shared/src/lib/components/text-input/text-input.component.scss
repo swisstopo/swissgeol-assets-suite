@@ -1,5 +1,12 @@
 @use "../../styles/variables";
 
+::ng-deep .mat-mdc-option.author > .mdc-list-item__primary-text > .author__name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 580px;
+}
+
 :host {
   position: relative;
 }

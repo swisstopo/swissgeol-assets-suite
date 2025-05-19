@@ -107,7 +107,14 @@ export class HttpInterceptor implements AngularHttpInterceptor, OnDestroy {
         break;
       default: {
         if (error.status < 500) {
-          throw error;
+          showAlert({
+            alert: {
+              id: `request-error-${error.status}-${error.url}`,
+              text: error.error.message,
+              type: AlertType.Error,
+              isPersistent: true,
+            },
+          });
         }
 
         // In some requests, the error is returned as Blob,
