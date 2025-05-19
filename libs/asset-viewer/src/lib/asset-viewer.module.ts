@@ -143,6 +143,7 @@ import { mapControlReducer } from './state/map-control/map-control.reducer';
   providers: [
     TranslatePipe,
     DecimalPipe,
+    FileNamePipe,
     ViewerParamsService,
     { provide: MAT_DATE_LOCALE, useValue: de },
     {
