@@ -1,6 +1,6 @@
 import { Component, Input } from '@angular/core';
 import { FormControl } from '@angular/forms';
-import { AssetFileType, LegalDocItemCode } from '@asset-sg/shared';
+import { AssetFileType } from '@asset-sg/shared';
 import { AssetForm } from '../../../asset-editor-page/asset-editor-page.component';
 
 @Component({
@@ -54,7 +54,7 @@ export class FileDropZoneComponent {
             id: 0,
             name: element.name,
             size: element.size,
-            legalDocItemCode: null as unknown as LegalDocItemCode,
+            legalDocItemCode: this.fileType === 'Legal' ? 'federalData' : null,
             type: this.fileType,
             selected: false,
             willBeDeleted: false,
