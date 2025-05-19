@@ -23,6 +23,7 @@ export class FileRepo
         size: true,
         type: true,
         legalDocItemCode: true,
+        pageCount: true,
       },
     });
     if (entry == null) {
@@ -70,6 +71,7 @@ export class FileRepo
       size: data.size,
       type: data.type,
       legalDocItemCode: data.legalDocItemCode,
+      pageCount: null, // this is filled (if at all) by postprocessing via OCR
     };
   }
 

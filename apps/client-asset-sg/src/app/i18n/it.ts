@@ -94,6 +94,8 @@ export const itAppTranslations: AppTranslations = {
     workgroup: 'IT Arbeitsgruppe',
     resetSearch: 'IT Filter zurücksetzen',
     file: 'IT Datei',
+    filePageSingular: 'IT 1 Seite',
+    filePagePlural: 'IT {{pageCount}} Seiten',
     legalFile: 'IT Rechtliche Einwilligungen',
     openFileInNewTab: 'IT {{fileName}} in neuem Tab öffnen',
     downloadFile: 'IT {{fileName}} herunterladen',

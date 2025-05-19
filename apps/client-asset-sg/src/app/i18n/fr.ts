@@ -94,6 +94,8 @@ export const frAppTranslations: AppTranslations = {
     workgroup: 'groupe de travail',
     resetSearch: 'Réinitialiser les filtres',
     file: 'Fichier',
+    filePageSingular: 'FR 1 Seite',
+    filePagePlural: 'FR {{pageCount}} Seiten',
     legalFile: 'Consentements légaux',
     openFileInNewTab: 'Ouvrir {{fileName}} dans un nouvel onglet',
     downloadFile: 'Télécharger {{fileName}}',
