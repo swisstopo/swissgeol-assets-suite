@@ -27,7 +27,7 @@ import { AssetContact, Workflow } from '@asset-sg/shared/v2';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { Store } from '@ngrx/store';
 import * as O from 'fp-ts/lib/Option';
-import { filter, Observable, Subscription, switchMap, take, tap } from 'rxjs';
+import { filter, map, Observable, Subscription, switchMap, take, tap } from 'rxjs';
 import { EditorMode } from '../../models';
 import { AssetEditorService } from '../../services/asset-editor.service';
 import * as actions from '../../state/asset-editor.actions';
@@ -277,12 +277,20 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
               this.isLoading = false;
               this.store.dispatch(actions.updateAssetEditDetailResult({ asset }));
             })
-        : this.assetEditorService.createAsset(patchAsset).subscribe((asset) => {
-            this.isLoading = false;
-            this.form.markAsPristine();
-            this.store.dispatch(actions.updateAssetEditDetailResult({ asset }));
-            this.router.navigate([this.currentLang, 'asset-admin', asset.assetId]);
-          }),
+        : this.assetEditorService
+            .createAsset(patchAsset)
+            .pipe(
+              switchMap((newAsset) =>
+                this.assetEditorService.uploadFiles(newAsset.assetId, newFiles).pipe(map(() => newAsset)),
+              ),
+              switchMap((newAsset) => this.assetEditorService.fetchAsset(newAsset.assetId)),
+            )
+            .subscribe((asset) => {
+              this.isLoading = false;
+              this.form.markAsPristine();
+              this.store.dispatch(actions.updateAssetEditDetailResult({ asset }));
+              this.router.navigate([this.currentLang, 'asset-admin', asset.assetId]);
+            }),
     );
   }
 

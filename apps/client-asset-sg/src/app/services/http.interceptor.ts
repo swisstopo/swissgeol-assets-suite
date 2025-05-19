@@ -115,6 +115,7 @@ export class HttpInterceptor implements AngularHttpInterceptor, OnDestroy {
               isPersistent: true,
             },
           });
+          break;
         }
 
         // In some requests, the error is returned as Blob,
