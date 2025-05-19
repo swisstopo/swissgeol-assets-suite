@@ -211,6 +211,7 @@ export const deAppTranslations = {
           ' diesen Kontakt teilen.',
       },
       references: {
+        workgroupWarning: 'Um Verweise hinzuzufügen müssen Sie erst eine Arbeitsgruppe wählen.',
         tabName: 'Verweise',
         assetId: 'Asset ID',
         assetTitlePublic: 'Öffentlicher Titel',

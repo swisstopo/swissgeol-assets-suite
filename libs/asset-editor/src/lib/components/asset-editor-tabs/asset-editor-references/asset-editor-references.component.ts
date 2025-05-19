@@ -16,6 +16,7 @@ import { AddReferenceDialogComponent } from './add-reference-dialog/add-referenc
 export class AssetEditorReferencesComponent implements OnInit, OnDestroy {
   @Input() form!: AssetForm['controls']['references'];
   @Input() asset: AssetEditDetail | null = null;
+  @Input() hasWorkgroupId = false;
   public COLUMNS = ['name', 'assetId', 'type', 'actions'];
   public dataSource: MatTableDataSource<FormLinkedAsset> = new MatTableDataSource();
   private readonly subscriptions: Subscription = new Subscription();
@@ -77,6 +78,7 @@ export class AssetEditorReferencesComponent implements OnInit, OnDestroy {
         data: {
           form: this.form,
           asset: this.asset,
+          hasWorkgroupId: this.hasWorkgroupId,
         },
       },
     );

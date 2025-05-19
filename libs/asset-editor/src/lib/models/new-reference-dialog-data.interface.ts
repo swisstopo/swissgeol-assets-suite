@@ -4,4 +4,5 @@ import { AssetForm } from '../components/asset-editor-page/asset-editor-page.com
 export interface NewReferenceDialogData {
   form: AssetForm['controls']['references'];
   asset: AssetEditDetail | null;
+  hasWorkgroupId: boolean;
 }

@@ -210,6 +210,7 @@ export const enAppTranslations: AppTranslations = {
         editWarnMessage: 'Changes to the fields below will be synced across all assets that share the same contact.',
       },
       references: {
+        workgroupWarning: 'To add references, you must first choose a workgroup.',
         tabName: 'References',
         assetId: 'Asset ID',
         assetTitlePublic: 'Public title',

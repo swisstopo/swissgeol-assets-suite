@@ -93,7 +93,6 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
             filter((asset) => !!asset),
             tap((asset) => {
               this.asset = asset;
-              console.log('asset', asset);
               this.initializeTabs();
               this.initializeForm();
             }),
@@ -135,7 +134,7 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
       contacts: { controls: contacts },
     } = this.form.controls;
     general.titlePublic.setValue(this.asset?.titlePublic ?? '');
-    general.titleOriginal.setValue(this.asset?.titleOriginal ?? null);
+    general.titleOriginal.setValue(this.asset?.titleOriginal ?? '');
     general.workgroupId.setValue(this.asset?.workgroupId ?? null);
     general.creationDate.setValue(this.asset ? dateFromDateId(this.asset.createDate) : null);
     general.receiptDate.setValue(this.asset ? dateFromDateId(this.asset.receiptDate) : null);
@@ -202,7 +201,7 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
 
   public save() {
     const asset = this.asset;
-    if (!asset && this.mode === EditorMode.Edit) {
+    if (!this.asset && this.mode === EditorMode.Edit) {
       return;
     }
     const {

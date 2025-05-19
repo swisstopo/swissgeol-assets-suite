@@ -211,6 +211,7 @@ export const frAppTranslations: AppTranslations = {
         editWarnMessage: 'FR Changes to the fields below will be synced across all assets that share the same contact.',
       },
       references: {
+        workgroupWarning: "Pour ajouter des références, vous devez d'abord sélectionner un groupe de travail.",
         tabName: 'Références',
         assetId: "ID de l'asset",
         assetTitlePublic: 'Titre public',

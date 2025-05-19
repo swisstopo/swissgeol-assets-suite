@@ -11,6 +11,8 @@
         [autoCompleteValues]="optionsToDisplay$ | push"
         bindLabel="titlePublic"
         (selectionChange)="setSelectedAsset($event)"
+        [disabled]="!hasWorkgroupId"
+        [errorMessage]="hasWorkgroupId ? '' : ('edit.tabs.references.workgroupWarning' | translate)"
         isRequired
       ></asset-sg-text-input>
       <asset-sg-select
