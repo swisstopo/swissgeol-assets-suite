@@ -120,6 +120,7 @@ export class FileOcrService implements OnModuleInit {
         data.ocrStatus = OcrState.error;
       } else {
         data.size = metadata.byteCount ?? 0;
+        data.pageCount = metadata.pageCount;
       }
     }
     await this.prisma.file.update({

@@ -67,6 +67,7 @@ export const AssetFile = C.struct({
   size: C.number,
   type: AssetFileType,
   legalDocItemCode: C.nullable(LegalDocItemCode),
+  pageCount: C.nullable(C.number),
 });
 
 export type AssetFile = C.TypeOf<typeof AssetFile>;

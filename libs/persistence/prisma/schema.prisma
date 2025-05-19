@@ -152,6 +152,7 @@ model File {
   size           BigInt   @map("size")
   lastModifiedAt DateTime @map("last_modified_at")
   type           FileType @default(Normal) @map("type")
+  pageCount      Int?     @map("page_count")
 
   legalDocItemCode String?       @map("legal_doc_item_code")
   legalDocItem     LegalDocItem? @relation(fields: [legalDocItemCode], references: [legalDocItemCode])

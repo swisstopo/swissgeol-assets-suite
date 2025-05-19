@@ -354,7 +354,15 @@ const selectPrismaAsset = selectOnAsset({
   assetFiles: {
     select: {
       file: {
-        select: { id: true, fileName: true, fileNameAlias: true, size: true, type: true, legalDocItemCode: true },
+        select: {
+          id: true,
+          fileName: true,
+          fileNameAlias: true,
+          size: true,
+          type: true,
+          legalDocItemCode: true,
+          pageCount: true,
+        },
       },
     },
     orderBy: [{ file: { type: 'asc' } }, { file: { fileNameAlias: 'asc' } }, { file: { fileName: 'asc' } }],

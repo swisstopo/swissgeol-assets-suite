@@ -93,6 +93,8 @@ export const deAppTranslations = {
     workgroup: 'Arbeitsgruppe',
     resetSearch: 'Filter zurücksetzen',
     file: 'Datei',
+    filePageSingular: '1 Seite',
+    filePagePlural: '{{pageCount}} Seiten',
     legalFile: 'Rechtliche Einwilligungen',
     openFileInNewTab: '{{fileName}} in neuem Tab öffnen',
     downloadFile: '{{fileName}} herunterladen',
