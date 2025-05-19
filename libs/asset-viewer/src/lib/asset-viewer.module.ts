@@ -37,6 +37,7 @@ import {
   DragHandleComponent,
   DrawerComponent,
   DrawerPanelComponent,
+  FileNamePipe,
   SmartTranslatePipe,
   ValueItemDescriptionPipe,
   ValueItemNamePipe,
@@ -137,6 +138,7 @@ import { mapControlReducer } from './state/map-control/map-control.reducer';
     MatChipSet,
     ChipComponent,
     MapLegendComponent,
+    FileNamePipe,
   ],
   providers: [
     TranslatePipe,

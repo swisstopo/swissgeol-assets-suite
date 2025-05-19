@@ -18,7 +18,8 @@ export class FileRepo
       where: { id, AssetFile: { some: { assetId } } },
       select: {
         id: true,
-        name: true,
+        fileName: true,
+        fileNameAlias: true,
         size: true,
         type: true,
         legalDocItemCode: true,
@@ -36,11 +37,12 @@ export class FileRepo
   }
 
   async create(data: CreateFileData): Promise<AssetFile> {
-    const name = await determineUniqueFilename(data.name, data.assetId, this.prisma);
+    const { fileName, fileNameAlias } = await determineUniqueFilename(data.name, data.assetId, this.prisma);
     const { id } = await this.prisma.file.create({
       select: { id: true },
       data: {
-        name,
+        fileName,
+        fileNameAlias,
         size: data.size,
         ocrStatus: data.ocrStatus,
         type: data.type,
@@ -63,7 +65,8 @@ export class FileRepo
     });
     return {
       id,
-      name,
+      fileName,
+      fileNameAlias,
       size: data.size,
       type: data.type,
       legalDocItemCode: data.legalDocItemCode,
@@ -75,9 +78,9 @@ export class FileRepo
       const fileName = (
         await this.prisma.file.findUnique({
           where: { id: file.id },
-          select: { name: true },
+          select: { fileName: true },
         })
-      )?.name;
+      )?.fileName;
       if (fileName == null) {
         return false;
       }
@@ -124,11 +127,16 @@ export interface CreateFileData {
   user: User;
 }
 
+export interface UniqueFileName {
+  fileName: string;
+  fileNameAlias: string;
+}
+
 export const determineUniqueFilename = async (
   fileName: string,
   assetId: AssetId,
   prisma: PrismaService
-): Promise<string> => {
+): Promise<UniqueFileName> => {
   const name = fileName.startsWith('a' + assetId + '_') ? fileName : 'a' + assetId + '_' + fileName;
 
   const lastDotIndex = name.lastIndexOf('.');
@@ -143,23 +151,27 @@ export const determineUniqueFilename = async (
     (await prisma.file.findFirst({
       select: { id: true },
       where: {
-        name: {
+        fileName: {
           contains: nameToSearchFor,
         },
       },
     }));
   if (isUniqueName) {
-    return name;
+    return { fileName: name, fileNameAlias: fileName };
   }
   const now = new Date();
   const pad = (value: number): string => value.toString().padStart(2, '0');
-  return (
+  const uniqueName =
     `${nameWithoutTs}_${now.getFullYear()}` +
     `${pad(now.getMonth() + 1)}` +
     `${pad(now.getDate())}` +
     `${pad(now.getHours())}` +
     `${pad(now.getMinutes())}` +
     `${pad(now.getSeconds())}` +
-    `.${extension}`
-  );
+    `.${extension}`;
+
+  return {
+    fileName: uniqueName,
+    fileNameAlias: fileName,
+  };
 };

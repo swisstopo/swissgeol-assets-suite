@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Component, inject, Input, OnDestroy, OnInit } from '@angular/core';
-import { AppState, fromAppShared } from '@asset-sg/client-shared';
+import { AppState, FileNamePipe, fromAppShared } from '@asset-sg/client-shared';
 import { AssetFile, AssetFileType } from '@asset-sg/shared';
 import { AssetId } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
@@ -22,6 +22,8 @@ export class AssetViewerFilesComponent implements OnInit, OnDestroy {
 
   @Input({ required: true })
   type!: AssetFileType;
+
+  private readonly fileNamePipe = inject(FileNamePipe);
 
   private readonly store = inject(Store<AppState>);
 
@@ -62,7 +64,7 @@ export class AssetViewerFilesComponent implements OnInit, OnDestroy {
     this.activeFileDownloads.add(key);
     this.httpClient.get(`/api/assets/${this.assetId}/files/${file.id}`, { responseType: 'blob' }).subscribe({
       next: async (blob) => {
-        const isPdf = file.name.endsWith('.pdf');
+        const isPdf = file.fileName.endsWith('.pdf');
         if (isPdf) {
           blob = await blob.arrayBuffer().then((buffer) => new Blob([buffer], { type: 'application/pdf' }));
         }
@@ -72,7 +74,7 @@ export class AssetViewerFilesComponent implements OnInit, OnDestroy {
         anchor.setAttribute('style', 'display: none');
         anchor.href = url;
         if (!isPdf || downloadType === 'save-file') {
-          anchor.download = file.name;
+          anchor.download = this.fileNamePipe.transform(file);
         } else {
           anchor.target = '_blank';
         }

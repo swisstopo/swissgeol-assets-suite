@@ -2,7 +2,7 @@ import { faker } from '@faker-js/faker';
 // eslint-disable-next-line @nx/enforce-module-boundaries
 import { clearPrismaAssets, setupDB } from '../../../../../test/setup-db';
 import { PrismaService } from '@/core/prisma.service';
-import { determineUniqueFilename, FileRepo } from '@/features/files/file.repo';
+import { determineUniqueFilename, FileRepo, UniqueFileName } from '@/features/files/file.repo';
 
 describe(FileRepo, () => {
   const prisma = new PrismaService();
@@ -25,7 +25,11 @@ describe(FileRepo, () => {
       const actual = await determineUniqueFilename(original, assetId, prisma);
 
       // Then
-      expect(actual).toEqual(`a${assetId}_${original}`);
+      const expected: UniqueFileName = {
+        fileName: `a${assetId}_${original}`,
+        fileNameAlias: original,
+      };
+      expect(actual).toEqual(expected);
     });
 
     it('uses the name as-is if it is already prefixed with the assetId', async () => {
@@ -37,7 +41,11 @@ describe(FileRepo, () => {
       const actual = await determineUniqueFilename(original, assetId, prisma);
 
       // Then
-      expect(actual).toEqual(original);
+      const expected: UniqueFileName = {
+        fileName: original,
+        fileNameAlias: original,
+      };
+      expect(actual).toEqual(expected);
     });
 
     it('makes the file name unique by appending the current date and time', async () => {
@@ -50,7 +58,7 @@ describe(FileRepo, () => {
       // When
       await prisma.file.create({
         data: {
-          name: `a${assetId}_${fullFileName}`,
+          fileName: `a${assetId}_${fullFileName}`,
           size: faker.number.int({ min: 0 }),
           lastModifiedAt: faker.date.past(),
           type: faker.helpers.arrayElement(['Normal', 'Legal']),
@@ -60,7 +68,10 @@ describe(FileRepo, () => {
       const actual = await determineUniqueFilename(fullFileName, assetId, prisma);
 
       // Then
-      expect(actual).toMatch(new RegExp(`^a${assetId}_${fileName}_\\d{4}\\d{2}\\d{2}\\d{2}\\d{2}\\d{2}\\.${fileExt}$`));
+      expect(actual.fileNameAlias).toEqual(fullFileName);
+      expect(actual.fileName).toMatch(
+        new RegExp(`^a${assetId}_${fileName}_\\d{4}\\d{2}\\d{2}\\d{2}\\d{2}\\d{2}\\.${fileExt}$`)
+      );
     });
   });
 });
