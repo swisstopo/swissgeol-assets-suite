@@ -46,7 +46,6 @@ export class ExportToViewService {
       await this.export('publicUse', 'publicUseId', publicUseIds);
       await this.exportAssets(assetIds);
       await this.export('assetLanguage', 'assetId', assetIds);
-      await this.exportPublications(assetIds);
 
       await this.export('manCatLabelRef', 'assetId', assetIds);
       await this.export('statusWork', 'assetId', assetIds);
@@ -218,7 +217,6 @@ export class ExportToViewService {
       'LegalDocItem',
       'ManCatLabelItem',
       'NatRelItem',
-      'PubChannelItem',
       'StatusAssetUseItem',
       'StatusWorkItem',
     ];
@@ -268,23 +266,6 @@ export class ExportToViewService {
     log(`Created ${fileResult.count} files.`);
     const assetFileResult = await this.destinationPrisma.assetFile.createMany({ data: assetFiles });
     log(`Created ${assetFileResult.count} AssetFiles.`);
-  }
-
-  /**
-   * Export publications.
-   *       'asset_publication',
-   *       'publication',
-   */
-  private async exportPublications(assetIds: number[]) {
-    const assetPublications = await this.sourcePrisma.assetPublication.findMany({
-      where: { assetId: { in: assetIds } },
-    });
-    const publicationIds = assetPublications.map((af) => af.publicationId);
-
-    await this.export('publication', 'publicationId', publicationIds);
-
-    const assetFileResult = await this.destinationPrisma.assetPublication.createMany({ data: assetPublications });
-    log(`Created ${assetFileResult.count} publications.`);
   }
 
   /**

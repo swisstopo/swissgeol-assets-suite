@@ -46,17 +46,16 @@ model Asset {
   creatorId           String?         @map("creator_id") @db.Uuid
   creator             AssetUser?      @relation(name: "creator", fields: [creatorId], references: [id], onDelete: SetNull)
 
-  assetContacts     AssetContact[]
-  assetFiles        AssetFile[]
-  assetPublications AssetPublication[]
-  assetLanguages    AssetLanguage[]
-  ids               Id[]
-  manCatLabelRefs   ManCatLabelRef[]
-  statusWorks       StatusWork[]
-  studyAreas        StudyArea[]
-  studyLocations    StudyLocation[]
-  studyTraces       StudyTrace[]
-  typeNatRels       TypeNatRel[]
+  assetContacts   AssetContact[]
+  assetFiles      AssetFile[]
+  assetLanguages  AssetLanguage[]
+  ids             Id[]
+  manCatLabelRefs ManCatLabelRef[]
+  statusWorks     StatusWork[]
+  studyAreas      StudyArea[]
+  studyLocations  StudyLocation[]
+  studyTraces     StudyTrace[]
+  typeNatRels     TypeNatRel[]
 
   workgroup   Workgroup @relation(fields: [workgroupId], references: [id])
   workgroupId Int       @map("workgroup_id")
@@ -224,29 +223,6 @@ model AssetContact {
 
   @@id([assetId, contactId, role])
   @@map("asset_contact")
-}
-
-model Publication {
-  publicationId      Int            @id @default(autoincrement()) @map("publication_id")
-  pubChannelItemCode String         @map("pub_channel_item_code")
-  pubChannelItem     PubChannelItem @relation(fields: [pubChannelItemCode], references: [pubChannelItemCode])
-  publicationDate    DateTime       @map("publication_date")
-  description        String         @map("description")
-  link               String         @map("link")
-
-  assetPublications AssetPublication[]
-
-  @@map("publication")
-}
-
-model AssetPublication {
-  assetId       Int         @map("asset_id")
-  asset         Asset       @relation(fields: [assetId], references: [assetId], onDelete: Cascade)
-  publicationId Int         @map("publication_id")
-  publication   Publication @relation(fields: [publicationId], references: [publicationId])
-
-  @@id([assetId, publicationId])
-  @@map("asset_publication")
 }
 
 model StudyArea {
@@ -446,25 +422,6 @@ model LegalDocItem {
   File             File[]
 
   @@map("legal_doc_item")
-}
-
-model PubChannelItem {
-  pubChannelItemCode String @id @map("pub_channel_item_code")
-  geolCode           String @map("geol_code")
-  name               String @map("name")
-  nameDe             String @map("name_de")
-  nameFr             String @map("name_fr")
-  nameIt             String @map("name_it")
-  nameEn             String @map("name_en")
-  description        String @map("description")
-  descriptionDe      String @map("description_de")
-  descriptionFr      String @map("description_fr")
-  descriptionIt      String @map("description_it")
-  descriptionEn      String @map("description_en")
-
-  publications Publication[]
-
-  @@map("pub_channel_item")
 }
 
 model StatusAssetUseItem {

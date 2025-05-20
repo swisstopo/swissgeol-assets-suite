@@ -72,7 +72,6 @@ export const emptyReferenceDataVM: ReferenceDataVM = {
   legalDocItems: {},
   manCatLabelItems: {},
   natRelItems: {},
-  pubChannelItems: {},
   statusAssetUseItems: {
     tobechecked: emptyValueItem,
     underclarification: emptyValueItem,

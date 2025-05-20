@@ -129,7 +129,6 @@ export const ReferenceData = C.struct({
   legalDocItems: ValueItemRecord,
   manCatLabelItems: ValueItemRecord,
   natRelItems: ValueItemRecord,
-  pubChannelItems: ValueItemRecord,
   statusAssetUseItems: C.struct({
     tobechecked: ValueItem,
     underclarification: ValueItem,

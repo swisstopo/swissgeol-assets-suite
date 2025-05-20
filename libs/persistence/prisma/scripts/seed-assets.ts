@@ -33,7 +33,6 @@ export const importAssets = async () => {
   await prisma.$executeRawUnsafe(`truncate table public.man_cat_label_item cascade;`);
   await prisma.$executeRawUnsafe(`truncate table public.man_cat_label_ref cascade;`);
   await prisma.$executeRawUnsafe(`truncate table public.nat_rel_item cascade;`);
-  await prisma.$executeRawUnsafe(`truncate table public.pub_channel_item cascade;`);
   await prisma.$executeRawUnsafe(`truncate table public.status_work_item cascade;`);
   await prisma.$executeRawUnsafe(`truncate table public.asset_x_asset_y cascade;`);
   await prisma.$executeRawUnsafe(`truncate table public.asset cascade;`);
@@ -75,7 +74,6 @@ export const importAssets = async () => {
   const natRelItems = await importValueList('NatRelItem', 'natrelitem', 'natRelItemCode');
   const languageItems = await importValueList('LanguageItem', 'languageitem', 'languageItemCode');
   const legalDocItems = await importValueList('LegalDocItem', 'legaldocitem', 'legalDocItemCode');
-  const pubChannelItems = await importValueList('PubChannelItem', 'pubchannelitem', 'pubChannelItemCode');
   const statusAssetUseItems = await importValueList(
     'StatusAssetUseItem',
     'statusassetuseitem',
@@ -264,19 +262,6 @@ export const importAssets = async () => {
     assetId: Number(parsed[0]),
     contactId: Number(parsed[1]),
     role: parsed[2],
-  }));
-
-  await importToTable('Publication', buildPath('publication'), (parsed) => ({
-    publicationId: Number(parsed[0]),
-    pubChannelItemCode: lookupCode(pubChannelItems, Number(parsed[1])),
-    datePublication: createDate(parsed[2]),
-    description: parsed[3] || null,
-    link: parsed[4] || null,
-  }));
-
-  await importToTable('AssetPublication', buildPath('asset_publication'), (parsed) => ({
-    assetId: Number(parsed[0]),
-    publicationId: Number(parsed[1]),
   }));
 
   await exec('./import-shapes.sh');
@@ -507,12 +492,6 @@ const updateAllValueListData20230309 = async () => {
   await updateValueListData(importValueListUpdatedData20230309, 'NatRelItem', 'natrelitem', 'natRelItemCode');
   await updateValueListData(
     importValueListUpdatedData20230309,
-    'PubChannelItem',
-    'pubchannelitem',
-    'pubChannelItemCode'
-  );
-  await updateValueListData(
-    importValueListUpdatedData20230309,
     'StatusAssetUseItem',
     'statusassetuseitem',
     'statusAssetUseItemCode'
@@ -590,7 +569,6 @@ const updateSequences = async (toMax: boolean) => {
     ['internal_use', 'internal_use_id'],
     ['legal_doc', 'legal_doc_id'],
     ['public_use', 'public_use_id'],
-    ['publication', 'publication_id'],
     ['status_work', 'status_work_id'],
     ['study_area', 'study_area_id'],
     ['study_location', 'study_location_id'],
