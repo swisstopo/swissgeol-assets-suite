@@ -14,14 +14,11 @@ Then(/^The user should see asset details$/, () => {
 });
 
 When(/^The user edits asset information$/, () => {
-  cy.get('mat-label:contains("Alternativ-ID")')
-    .first()
-    .type('BeschreibungTest');
+  cy.get('textarea').first().type('Neuer Titel');
   cy.wait(1000);
 });
 When(/^The user clicks save$/, () => {
   cy.intercept('http://localhost:4200/api/asset-edit/**').as('edit');
-  cy.get('button:contains("Administration")').click();
   cy.get('button:contains("Speichern")').click();
   cy.wait(1000);
 });
