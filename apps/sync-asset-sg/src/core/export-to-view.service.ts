@@ -45,7 +45,6 @@ export class ExportToViewService {
       await this.export('internalUse', 'internalUseId', internalUseIds);
       await this.export('publicUse', 'publicUseId', publicUseIds);
       await this.exportAssets(assetIds);
-      await this.exportInternalProjects(assetIds);
       await this.export('assetLanguage', 'assetId', assetIds);
       await this.exportPublications(assetIds);
 
@@ -290,22 +289,6 @@ export class ExportToViewService {
 
     const assetFileResult = await this.destinationPrisma.assetPublication.createMany({ data: assetPublications });
     log(`Created ${assetFileResult.count} publications.`);
-  }
-
-  /**
-   * Export internal projects.
-   *       'asset_internal_project',
-   *       'internal_project',
-   */
-  private async exportInternalProjects(assetIds: number[]) {
-    const aip = await this.sourcePrisma.assetInternalProject.findMany({ where: { assetId: { in: assetIds } } });
-    const ips = await this.sourcePrisma.internalProject.findMany({
-      where: { internalProjectId: { in: aip.map((af) => af.internalProjectId) } },
-    });
-    const fileResult = await this.destinationPrisma.internalProject.createMany({ data: ips, skipDuplicates: true });
-    log(`Created ${fileResult.count} internal_project.`);
-    const assetFileResult = await this.destinationPrisma.assetInternalProject.createMany({ data: aip });
-    log(`Created ${assetFileResult.count} asset_internal_project.`);
   }
 
   /**

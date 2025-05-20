@@ -65,10 +65,9 @@ model Asset {
   siblingXAssets AssetXAssetY[] @relation("sibling_x_asset")
   siblingYAssets AssetXAssetY[] @relation("sibling_y_asset")
 
-  assetInternalProjects AssetInternalProject[]
-  subordinateAssets     Asset[]                @relation("asset")
-  favorites             Favorite[]
-  allStudies            AllStudy[]
+  subordinateAssets Asset[]    @relation("asset")
+  favorites         Favorite[]
+  allStudies        AllStudy[]
 
   workflow Workflow?
 
@@ -275,27 +274,6 @@ model AssetPublication {
 
   @@id([assetId, publicationId])
   @@map("asset_publication")
-}
-
-model InternalProject {
-  internalProjectId Int     @id @default(autoincrement()) @map("internal_project_id")
-  name              String  @map("name")
-  description       String? @map("description")
-  dateDelivered     String  @map("date_delivered")
-
-  assetInternalProjects AssetInternalProject[]
-
-  @@map("internal_project")
-}
-
-model AssetInternalProject {
-  assetId           Int             @map("asset_id")
-  asset             Asset           @relation(fields: [assetId], references: [assetId], onDelete: Cascade)
-  internalProjectId Int             @map("internal_project_id")
-  internalProject   InternalProject @relation(fields: [internalProjectId], references: [internalProjectId])
-
-  @@id([assetId, internalProjectId])
-  @@map("asset_internal_project")
 }
 
 model StudyArea {

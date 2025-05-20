@@ -290,18 +290,6 @@ export const importAssets = async () => {
     publicationId: Number(parsed[1]),
   }));
 
-  await importToTable('InternalProject', buildPath('internalproject'), (parsed) => ({
-    internalProjectId: Number(parsed[0]),
-    name: parsed[1],
-    description: parsed[2] || null,
-    dateDelivered: createDate(parsed[3]),
-  }));
-
-  await importToTable('AssetInternalProject', buildPath('asset_internalproject'), (parsed) => ({
-    assetId: Number(parsed[0]),
-    internalProjectId: Number(parsed[1]),
-  }));
-
   await exec('./import-shapes.sh');
 
   const shapeAreasRaw = (
@@ -619,15 +607,12 @@ const updateValueListData = async <T extends string>(
 const updateSequences = async (toMax: boolean) => {
   const sequences = [
     ['asset', 'asset_id'],
-    ['asset_format_composition', 'asset_format_composition_id'],
-    ['asset_kind_composition', 'asset_kind_composition_id'],
     ['asset_object_info', 'asset_object_info_id'],
     ['auto_cat', 'auto_cat_id'],
     ['contact', 'contact_id'],
     ['file', 'file_id'],
     ['id', 'id_id'],
     ['internal_use', 'internal_use_id'],
-    ['internal_project', 'internal_project_id'],
     ['legal_doc', 'legal_doc_id'],
     ['public_use', 'public_use_id'],
     ['publication', 'publication_id'],
