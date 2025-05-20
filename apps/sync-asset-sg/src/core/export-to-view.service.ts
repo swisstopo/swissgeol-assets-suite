@@ -48,7 +48,6 @@ export class ExportToViewService {
       await this.export('assetLanguage', 'assetId', assetIds);
       await this.exportPublications(assetIds);
 
-      await this.export('autoCat', 'assetId', assetIds);
       await this.export('manCatLabelRef', 'assetId', assetIds);
       await this.export('statusWork', 'assetId', assetIds);
       await this.exportStudyAreas(assetIds);
@@ -213,8 +212,6 @@ export class ExportToViewService {
     const tables = [
       'AssetFormatItem',
       'AssetKindItem',
-      'AutoCatLabelItem',
-      'AutoObjectCatItem',
       'ContactKindItem',
       'GeomQualityItem',
       'LanguageItem',
@@ -269,7 +266,6 @@ export class ExportToViewService {
       skipDuplicates: true,
     });
     log(`Created ${fileResult.count} files.`);
-    await this.export('assetObjectInfo', 'fileId', fileIds);
     const assetFileResult = await this.destinationPrisma.assetFile.createMany({ data: assetFiles });
     log(`Created ${assetFileResult.count} AssetFiles.`);
   }

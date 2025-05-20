@@ -25,8 +25,6 @@ const prisma = new PrismaClient();
 export const importAssets = async () => {
   await prisma.$executeRawUnsafe(`truncate table public.asset_format_item cascade;`);
   await prisma.$executeRawUnsafe(`truncate table public.asset_kind_item cascade;`);
-  await prisma.$executeRawUnsafe(`truncate table public.auto_object_cat_item cascade;`);
-  await prisma.$executeRawUnsafe(`truncate table public.auto_cat_label_item cascade;`);
   await prisma.$executeRawUnsafe(`truncate table public.contact_kind_item cascade;`);
   await prisma.$executeRawUnsafe(`truncate table public.geom_quality_item cascade;`);
   await prisma.$executeRawUnsafe(`truncate table public.language_item cascade;`);
@@ -64,8 +62,6 @@ export const importAssets = async () => {
 
   const assetFormItems = await importValueList('AssetFormatItem', 'assetformatitem', 'assetFormatItemCode');
   const assetKindItems = await importValueList('AssetKindItem', 'assetkinditem', 'assetKindItemCode');
-  const autoCatLabelItems = await importValueList('AutoCatLabelItem', 'autocatlabelitem', 'autoCatLabelItemCode');
-  const autoObjectCatItems = await importValueList('AutoObjectCatItem', 'autoobjectcatitem', 'autoObjectCatItemCode');
   const contactKindItems = await importValueList('ContactKindItem', 'contactkinditem', 'contactKindItemCode');
 
   const geomQualityItems = await importValueList('GeomQualityItem', 'geomqualityitem', 'geomQualityItemCode');
@@ -231,13 +227,6 @@ export const importAssets = async () => {
     statusWorkItemCode: lookupCode(statusWorkItems, Number(parsed[1])),
     statusWorkDate: createDate(parsed[2]),
     assetId: Number(parsed[3]),
-  }));
-
-  await importToTable('AutoCat', buildPath('autocat'), (parsed) => ({
-    autoCatId: Number(parsed[0]),
-    assetId: Number(parsed[1]),
-    autoCatLabelItemCode: lookupCode(autoCatLabelItems, Number(parsed[2])),
-    autoCatLabelScore: Number(parsed[3]),
   }));
 
   await importToTable('TypeNatRel', buildPath('typenatrel'), (parsed) => ({
@@ -493,18 +482,6 @@ const updateAllValueListData20230309 = async () => {
   await updateValueListData(importValueListUpdatedData20230309, 'AssetKindItem', 'assetkinditem', 'assetKindItemCode');
   await updateValueListData(
     importValueListUpdatedData20230309,
-    'AutoCatLabelItem',
-    'autocatlabelitem',
-    'autoCatLabelItemCode'
-  );
-  await updateValueListData(
-    importValueListUpdatedData20230309,
-    'AutoObjectCatItem',
-    'autoobjectcatitem',
-    'autoObjectCatItemCode'
-  );
-  await updateValueListData(
-    importValueListUpdatedData20230309,
     'ContactKindItem',
     'contactkinditem',
     'contactKindItemCode'
@@ -607,8 +584,6 @@ const updateValueListData = async <T extends string>(
 const updateSequences = async (toMax: boolean) => {
   const sequences = [
     ['asset', 'asset_id'],
-    ['asset_object_info', 'asset_object_info_id'],
-    ['auto_cat', 'auto_cat_id'],
     ['contact', 'contact_id'],
     ['file', 'file_id'],
     ['id', 'id_id'],

@@ -64,8 +64,6 @@ const getReferenceData = (user: User, prismaService: PrismaService) => {
     // These records are all static (i.e. never change) and are shared across all assets.
     assetFormatItems: qt(() => prismaService.assetFormatItem.findMany(), 'assetFormatItemCode', 'code'),
     assetKindItems: qt(() => prismaService.assetKindItem.findMany(), 'assetKindItemCode', 'code'),
-    autoCatLabelItems: qt(() => prismaService.autoCatLabelItem.findMany(), 'autoCatLabelItemCode', 'code'),
-    autoObjectCatItems: qt(() => prismaService.autoObjectCatItem.findMany(), 'autoObjectCatItemCode', 'code'),
     contactKindItems: qt(() => prismaService.contactKindItem.findMany(), 'contactKindItemCode', 'code'),
     geomQualityItems: qt(() => prismaService.geomQualityItem.findMany(), 'geomQualityItemCode', 'code'),
     languageItems: qt(() => prismaService.languageItem.findMany(), 'languageItemCode', 'code'),

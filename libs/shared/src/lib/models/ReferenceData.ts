@@ -3,11 +3,11 @@ import * as A from 'fp-ts/Array';
 import { Eq, struct } from 'fp-ts/Eq';
 import { pipe } from 'fp-ts/function';
 import { Eq as EqNumber } from 'fp-ts/number';
-import { Ord, contramap } from 'fp-ts/Ord';
+import { contramap, Ord } from 'fp-ts/Ord';
 import * as R from 'fp-ts/Record';
 import * as S from 'fp-ts/string';
 import * as C from 'io-ts/Codec';
-import { Equals, assert } from 'tsafe';
+import { assert, Equals } from 'tsafe';
 
 import { Lang } from './lang';
 
@@ -123,8 +123,6 @@ export const getValueItemDescriptionKey = (
 export const ReferenceData = C.struct({
   assetFormatItems: ValueItemRecord,
   assetKindItems: ValueItemRecord,
-  autoCatLabelItems: ValueItemRecord,
-  autoObjectCatItems: ValueItemRecord,
   contactKindItems: ValueItemRecord,
   geomQualityItems: ValueItemRecord,
   languageItems: ValueItemRecord,

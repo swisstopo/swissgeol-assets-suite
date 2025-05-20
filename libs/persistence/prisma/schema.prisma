@@ -50,7 +50,6 @@ model Asset {
   assetFiles        AssetFile[]
   assetPublications AssetPublication[]
   assetLanguages    AssetLanguage[]
-  autoCats          AutoCat[]
   ids               Id[]
   manCatLabelRefs   ManCatLabelRef[]
   statusWorks       StatusWork[]
@@ -158,26 +157,11 @@ model File {
   legalDocItemCode String?       @map("legal_doc_item_code")
   legalDocItem     LegalDocItem? @relation(fields: [legalDocItemCode], references: [legalDocItemCode])
 
-  AssetObjectInfo AssetObjectInfo[]
-  AssetFile       AssetFile[]
+  AssetFile AssetFile[]
 
   @@unique([name])
   @@index([type])
   @@map("file")
-}
-
-model AssetObjectInfo {
-  assetObjectInfoId     Int               @id @default(autoincrement()) @map("asset_object_info_id")
-  fileId                Int               @map("file_id")
-  file                  File              @relation(fields: [fileId], references: [id])
-  autoObjectCatItemCode String            @map("auto_object_cat_item_code")
-  autoObjectCatItem     AutoObjectCatItem @relation(fields: [autoObjectCatItemCode], references: [autoObjectCatItemCode])
-  objectPage            String            @map("object_page")
-  objectBbox            String            @map("object_bbox")
-  objectScore           String            @map("object_score")
-  pathToImage           String            @map("path_to_image")
-
-  @@map("asset_object_info")
 }
 
 model ManCatLabelRef {
@@ -200,17 +184,6 @@ model StatusWork {
   processor          String?        @map("processor")
 
   @@map("status_work")
-}
-
-model AutoCat {
-  autoCatId            Int              @id @default(autoincrement()) @map("auto_cat_id")
-  assetId              Int              @map("asset_id")
-  asset                Asset            @relation(fields: [assetId], references: [assetId], onDelete: Cascade)
-  autoCatLabelItemCode String           @map("auto_cat_label_item_code")
-  autoCatLabelItem     AutoCatLabelItem @relation(fields: [autoCatLabelItemCode], references: [autoCatLabelItemCode])
-  autoCatLabelScore    Int              @map("auto_cat_label_score")
-
-  @@map("auto_cat")
 }
 
 model TypeNatRel {
@@ -348,44 +321,6 @@ model AssetKindItem {
   assets Asset[]
 
   @@map("asset_kind_item")
-}
-
-model AutoCatLabelItem {
-  autoCatLabelItemCode String @id @map("asset_cat_label_item_code")
-  geolCode             String @map("geol_code")
-  name                 String @map("name")
-  nameDe               String @map("name_de")
-  nameFr               String @map("name_fr")
-  nameIt               String @map("name_it")
-  nameEn               String @map("name_en")
-  description          String @map("description")
-  descriptionDe        String @map("description_de")
-  descriptionFr        String @map("description_fr")
-  descriptionIt        String @map("description_it")
-  descriptionEn        String @map("description_en")
-
-  autoCats AutoCat[]
-
-  @@map("auto_cat_label_item")
-}
-
-model AutoObjectCatItem {
-  autoObjectCatItemCode String @id @map("auto_object_cat_item_code")
-  geolCode              String @map("geol_code")
-  name                  String @map("name")
-  nameDe                String @map("name_de")
-  nameFr                String @map("name_fr")
-  nameIt                String @map("name_it")
-  nameEn                String @map("name_en")
-  description           String @map("description")
-  descriptionDe         String @map("description_de")
-  descriptionFr         String @map("description_fr")
-  descriptionIt         String @map("description_it")
-  descriptionEn         String @map("description_en")
-
-  assetObjectInfos AssetObjectInfo[]
-
-  @@map("auto_object_cat_item")
 }
 
 model ContactKindItem {
