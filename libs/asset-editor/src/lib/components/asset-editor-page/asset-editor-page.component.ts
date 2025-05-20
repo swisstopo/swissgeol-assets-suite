@@ -141,7 +141,7 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
     general.assetLanguages.setValue(this.asset?.assetLanguages ?? []);
     general.assetFormatItemCode.setValue(this.asset?.assetFormatItemCode ?? null);
     general.assetKindItemCode.setValue(this.asset?.assetKindItemCode ?? null);
-    general.manCatLabelRefs.setValue(this.asset?.manCatLabelRefs ?? null);
+    general.manCatLabelRefs.setValue(this.asset?.manCatLabelRefs ?? []);
     general.isNatRel.setValue(this.asset?.isNatRel ?? false);
     general.typeNatRels.setValue(this.asset?.typeNatRels ?? []);
     general.ids.setValue(this.asset?.ids ?? []);
@@ -235,7 +235,7 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
       workgroupId: general.workgroupId.value!,
       assetFormatItemCode: general.assetFormatItemCode.value!,
       assetKindItemCode: general.assetKindItemCode.value!,
-      manCatLabelRefs: general.manCatLabelRefs.value!,
+      manCatLabelRefs: general.manCatLabelRefs.value,
       isNatRel: general.isNatRel.value,
       typeNatRels: general.typeNatRels.value,
       ids: general.ids.value.map((id) => ({ ...id, idId: O.fromNullable(id.idId) })),
@@ -353,7 +353,7 @@ const buildForm = () => {
       assetLanguages: new FormControl<Array<{ languageItemCode: string }>>([], { nonNullable: true }),
       assetFormatItemCode: new FormControl<string>('', { validators: [Validators.required] }),
       assetKindItemCode: new FormControl<string>('', { validators: [Validators.required] }),
-      manCatLabelRefs: new FormControl<string[]>([], { validators: [Validators.required] }),
+      manCatLabelRefs: new FormControl<string[]>([], { validators: [Validators.required], nonNullable: true }),
       isNatRel: new FormControl<boolean>(false, { nonNullable: true }),
       typeNatRels: new FormControl<string[]>([], { nonNullable: true }),
       ids: new FormControl<AlternativeId[]>([], {
