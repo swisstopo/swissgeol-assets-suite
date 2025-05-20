@@ -46,19 +46,18 @@ model Asset {
   creatorId           String?         @map("creator_id") @db.Uuid
   creator             AssetUser?      @relation(name: "creator", fields: [creatorId], references: [id], onDelete: SetNull)
 
-  assetContacts         AssetContact[]
-  assetFiles            AssetFile[]
-  assetKindCompositions AssetKindComposition[]
-  assetPublications     AssetPublication[]
-  assetLanguages        AssetLanguage[]
-  autoCats              AutoCat[]
-  ids                   Id[]
-  manCatLabelRefs       ManCatLabelRef[]
-  statusWorks           StatusWork[]
-  studyAreas            StudyArea[]
-  studyLocations        StudyLocation[]
-  studyTraces           StudyTrace[]
-  typeNatRels           TypeNatRel[]
+  assetContacts     AssetContact[]
+  assetFiles        AssetFile[]
+  assetPublications AssetPublication[]
+  assetLanguages    AssetLanguage[]
+  autoCats          AutoCat[]
+  ids               Id[]
+  manCatLabelRefs   ManCatLabelRef[]
+  statusWorks       StatusWork[]
+  studyAreas        StudyArea[]
+  studyLocations    StudyLocation[]
+  studyTraces       StudyTrace[]
+  typeNatRels       TypeNatRel[]
 
   workgroup   Workgroup @relation(fields: [workgroupId], references: [id])
   workgroupId Int       @map("workgroup_id")
@@ -190,16 +189,6 @@ model ManCatLabelRef {
 
   @@unique([assetId, manCatLabelItemCode])
   @@map("man_cat_label_ref")
-}
-
-model AssetKindComposition {
-  assetKindCompositionId Int           @id @default(autoincrement()) @map("asset_kind_composition_id")
-  assetId                Int           @map("asset_id")
-  asset                  Asset         @relation(fields: [assetId], references: [assetId], onDelete: Cascade)
-  assetKindItemCode      String        @map("asset_kind_item_code")
-  assetKindItem          AssetKindItem @relation(fields: [assetKindItemCode], references: [assetKindItemCode])
-
-  @@map("asset_kind_composition")
 }
 
 model StatusWork {
@@ -378,8 +367,7 @@ model AssetKindItem {
   descriptionIt     String @map("description_it")
   descriptionEn     String @map("description_en")
 
-  assets                Asset[]
-  assetKindCompositions AssetKindComposition[]
+  assets Asset[]
 
   @@map("asset_kind_item")
 }

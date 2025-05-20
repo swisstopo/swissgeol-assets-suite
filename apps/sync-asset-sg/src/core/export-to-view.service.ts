@@ -45,7 +45,6 @@ export class ExportToViewService {
       await this.export('internalUse', 'internalUseId', internalUseIds);
       await this.export('publicUse', 'publicUseId', publicUseIds);
       await this.exportAssets(assetIds);
-      await this.export('assetKindComposition', 'assetId', assetIds);
       await this.exportInternalProjects(assetIds);
       await this.export('assetLanguage', 'assetId', assetIds);
       await this.exportPublications(assetIds);
@@ -89,7 +88,7 @@ export class ExportToViewService {
 
     const formattedStudyAreas = studyAreas.map(
       (sa) =>
-        Prisma.sql`(${sa.studyAreaId}, ${sa.assetId}, ${sa.geomQualityItemCode}, ST_GeomFromText(${sa.geom}, 2056))`,
+        Prisma.sql`(${sa.studyAreaId}, ${sa.assetId}, ${sa.geomQualityItemCode}, ST_GeomFromText(${sa.geom}, 2056))`
     );
 
     // insert into destination as raw query
@@ -119,7 +118,7 @@ export class ExportToViewService {
 
     const formattedStudyLocations = studyLocations.map(
       (sa) =>
-        Prisma.sql`(${sa.studyLocationId}, ${sa.assetId}, ${sa.geomQualityItemCode}, ST_GeomFromText(${sa.geom}, 2056))`,
+        Prisma.sql`(${sa.studyLocationId}, ${sa.assetId}, ${sa.geomQualityItemCode}, ST_GeomFromText(${sa.geom}, 2056))`
     );
 
     // insert into destination as raw query
@@ -149,7 +148,7 @@ export class ExportToViewService {
 
     const formattedStudyTraces = studyTraces.map(
       (sa) =>
-        Prisma.sql`(${sa.studyTraceId}, ${sa.assetId}, ${sa.geomQualityItemCode}, ST_GeomFromText(${sa.geom}, 2056))`,
+        Prisma.sql`(${sa.studyTraceId}, ${sa.assetId}, ${sa.geomQualityItemCode}, ST_GeomFromText(${sa.geom}, 2056))`
     );
 
     // insert into destination as raw query

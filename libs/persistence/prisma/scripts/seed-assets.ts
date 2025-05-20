@@ -71,7 +71,7 @@ export const importAssets = async () => {
   const geomQualityItems = await importValueList('GeomQualityItem', 'geomqualityitem', 'geomQualityItemCode');
   for await (const item of geomQualityItems) {
     await prisma.$executeRawUnsafe(
-      `insert into public.tmp_geom_quality_mapping (id, code) values (${item.id}, '${item.code}')`,
+      `insert into public.tmp_geom_quality_mapping (id, code) values (${item.id}, '${item.code}')`
     );
   }
 
@@ -83,7 +83,7 @@ export const importAssets = async () => {
   const statusAssetUseItems = await importValueList(
     'StatusAssetUseItem',
     'statusassetuseitem',
-    'statusAssetUseItemCode',
+    'statusAssetUseItemCode'
   );
   const statusWorkItems = await importValueList('StatusWorkItem', 'statusworkitem', 'statusWorkItemCode');
 
@@ -180,10 +180,10 @@ export const importAssets = async () => {
                 fileName: f.name.replace('asset_files/', ''),
                 fileSize: f.size,
                 lastModified: f.lastModified,
-              })),
+              }))
             ),
           }),
-        unknownToError,
+        unknownToError
       );
     }),
     TE.bindW('readFiles', () => TE.tryCatch(() => prisma.file.findMany(), unknownToError)),
@@ -194,8 +194,8 @@ export const importAssets = async () => {
           pipe(
             assets,
             A.findFirst((asset) => asset.sgsId === m.sgsId),
-            O.map((asset) => ({ assetId: asset.assetId, filenames: m.filenames })),
-          ),
+            O.map((asset) => ({ assetId: asset.assetId, filenames: m.filenames }))
+          )
         ),
         A.compact,
         A.map((m) =>
@@ -205,16 +205,16 @@ export const importAssets = async () => {
               pipe(
                 readFiles,
                 A.findFirst((rf) => rf.name === f),
-                O.map((a) => ({ assetId: m.assetId, fileId: a.fileId })),
-              ),
-            ),
-          ),
+                O.map((a) => ({ assetId: m.assetId, fileId: a.fileId }))
+              )
+            )
+          )
         ),
         A.flatten,
-        A.compact,
-      ),
+        A.compact
+      )
     ),
-    TE.chainW((files) => TE.tryCatch(() => prisma.assetFile.createMany({ data: files }), unknownToError)),
+    TE.chainW((files) => TE.tryCatch(() => prisma.assetFile.createMany({ data: files }), unknownToError))
   )();
   if (E.isLeft(insertFilesResult)) {
     throw insertFilesResult.left;
@@ -223,11 +223,6 @@ export const importAssets = async () => {
 
   await importToTable('ManCatLabelRef', buildPath('mancatlabel'), (parsed) => ({
     manCatLabelItemCode: lookupCode(manCatLabelItems, Number(parsed[0])),
-    assetId: Number(parsed[1]),
-  }));
-
-  await importToTable('AssetKindComposition', buildPath('assetkindcomposition'), (parsed) => ({
-    assetKindItemCode: lookupCode(assetKindItems, Number(parsed[0])),
     assetId: Number(parsed[1]),
   }));
 
@@ -321,13 +316,13 @@ export const importAssets = async () => {
       (a) =>
         `(${a.study_area_id}, ${a.asset_id}, '${a.geom_quality_item_code}', st_geomfromtext('${a.geom.replace(
           /(\d+\.\d+)/g,
-          (a) => Math.round(a * 1000) / 1000,
-        )}', 2056))`,
+          (a) => Math.round(a * 1000) / 1000
+        )}', 2056))`
     )
     .join(',\n');
 
   await prisma.$queryRawUnsafe(
-    `insert into study_area (study_area_id, asset_id, geom_quality_item_code, geom) values ${shapeAreasRaw}`,
+    `insert into study_area (study_area_id, asset_id, geom_quality_item_code, geom) values ${shapeAreasRaw}`
   );
   console.log(`✅ Successfully imported area shape file (${shapeAreasRaw.length} rows)`);
 
@@ -343,13 +338,13 @@ export const importAssets = async () => {
       (a) =>
         `(${a.study_location_id}, ${a.asset_id}, '${a.geom_quality_item_code}', st_geomfromtext('${a.geom.replace(
           /(\d+\.\d+)/g,
-          (a) => Math.round(a * 1000) / 1000,
-        )}', 2056))`,
+          (a) => Math.round(a * 1000) / 1000
+        )}', 2056))`
     )
     .join(',\n');
 
   await prisma.$queryRawUnsafe(
-    `insert into study_location (study_location_id, asset_id, geom_quality_item_code, geom) values ${shapeLocationsRaw}`,
+    `insert into study_location (study_location_id, asset_id, geom_quality_item_code, geom) values ${shapeLocationsRaw}`
   );
   console.log(`✅ Successfully imported location shape file (${shapeLocationsRaw.length} rows)`);
 
@@ -365,13 +360,13 @@ export const importAssets = async () => {
       (a) =>
         `(${a.study_trace_id}, ${a.asset_id}, '${a.geom_quality_item_code}', st_geomfromtext('${a.geom.replace(
           /(\d+\.\d+)/g,
-          (a) => Math.round(a * 1000) / 1000,
-        )}', 2056))`,
+          (a) => Math.round(a * 1000) / 1000
+        )}', 2056))`
     )
     .join(',\n');
 
   await prisma.$queryRawUnsafe(
-    `insert into study_trace (study_trace_id, asset_id, geom_quality_item_code, geom) values ${shapeTracesRaw}`,
+    `insert into study_trace (study_trace_id, asset_id, geom_quality_item_code, geom) values ${shapeTracesRaw}`
   );
   console.log(`✅ Successfully imported trace shape file (${shapeTracesRaw.length} rows)`);
 
@@ -411,7 +406,7 @@ const makeImportValueList =
   async <T extends string>(
     tableName: string,
     valueListFileName: string,
-    codeName: T,
+    codeName: T
   ): Promise<(ValueList & { id: number })[]> => {
     const createModelFromParsedCsv = (withKey: boolean) => (parsed: string[]) => {
       const model = {
@@ -447,7 +442,7 @@ const makeImportValueList =
 const importToTable = async <T>(
   tableName: string,
   filePath: string,
-  createModelFromParsedCsv: (parsed: string[]) => T,
+  createModelFromParsedCsv: (parsed: string[]) => T
 ) => {
   try {
     const { models, count } = (await readFromFileToModel(filePath, createModelFromParsedCsv))!;
@@ -505,32 +500,32 @@ const updateAllValueListData20230309 = async () => {
     importValueListUpdatedData20230309,
     'AssetFormatItem',
     'assetformatitem',
-    'assetFormatItemCode',
+    'assetFormatItemCode'
   );
   await updateValueListData(importValueListUpdatedData20230309, 'AssetKindItem', 'assetkinditem', 'assetKindItemCode');
   await updateValueListData(
     importValueListUpdatedData20230309,
     'AutoCatLabelItem',
     'autocatlabelitem',
-    'autoCatLabelItemCode',
+    'autoCatLabelItemCode'
   );
   await updateValueListData(
     importValueListUpdatedData20230309,
     'AutoObjectCatItem',
     'autoobjectcatitem',
-    'autoObjectCatItemCode',
+    'autoObjectCatItemCode'
   );
   await updateValueListData(
     importValueListUpdatedData20230309,
     'ContactKindItem',
     'contactkinditem',
-    'contactKindItemCode',
+    'contactKindItemCode'
   );
   await updateValueListData(
     importValueListUpdatedData20230309,
     'GeomQualityItem',
     'geomqualityitem',
-    'geomQualityItemCode',
+    'geomQualityItemCode'
   );
   await updateValueListData(importValueListUpdatedData20230309, 'LanguageItem', 'languageitem', 'languageItemCode');
   await updateValueListData(importValueListUpdatedData20230309, 'LegalDocItem', 'legaldocitem', 'legalDocItemCode');
@@ -542,26 +537,26 @@ const updateAllValueListData20230309 = async () => {
     async () => {
       const { count } = await prisma.manCatLabelRef.updateMany({ data: { manCatLabelItemCode: 'other' } });
       console.log(`✅ Updated ${count} rows from 'unknown' to 'other' in table ManCatLabelRef`);
-    },
+    }
   );
   await updateValueListData(importValueListUpdatedData20230309, 'NatRelItem', 'natrelitem', 'natRelItemCode');
   await updateValueListData(
     importValueListUpdatedData20230309,
     'PubChannelItem',
     'pubchannelitem',
-    'pubChannelItemCode',
+    'pubChannelItemCode'
   );
   await updateValueListData(
     importValueListUpdatedData20230309,
     'StatusAssetUseItem',
     'statusassetuseitem',
-    'statusAssetUseItemCode',
+    'statusAssetUseItemCode'
   );
   await updateValueListData(
     importValueListUpdatedData20230309,
     'StatusWorkItem',
     'statusworkitem',
-    'statusWorkItemCode',
+    'statusWorkItemCode'
   );
 };
 
@@ -570,7 +565,7 @@ const updateAllValueListData20230405 = async () => {
     importValueListUpdatedData20230405,
     'ContactKindItem',
     'contactkinditem',
-    'contactKindItemCode',
+    'contactKindItemCode'
   );
 };
 
@@ -579,7 +574,7 @@ const updateValueListData = async <T extends string>(
   tableName: string,
   valueListFileName: string,
   codeName: T,
-  operationBeforeDelete?: () => any,
+  operationBeforeDelete?: () => any
 ) => {
   const items = await importFn(tableName, valueListFileName, codeName);
 
@@ -647,7 +642,7 @@ const updateSequences = async (toMax: boolean) => {
     const result = await prisma.$queryRawUnsafe(
       `select setval(pg_get_serial_sequence('${seq[0]}', '${seq[1]}'), ${
         toMax ? `(select max(${seq[1]}) + 1 from ${seq[0]})` : 1
-      });`,
+      });`
     );
     if (toMax) {
       console.log(`✅ Set ${seq[0]}_${seq[1]} to ${result[0]['setval']}`);
