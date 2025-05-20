@@ -2,7 +2,7 @@ import { faker } from '@faker-js/faker';
 // eslint-disable-next-line @nx/enforce-module-boundaries
 import { clearPrismaAssets, setupDB } from '../../../../../../test/setup-db';
 import { PrismaService } from '@/core/prisma.service';
-import { determineUniqueFilename, FileRepo, UniqueFileName } from "@/features/assets/files/file.repo";
+import { determineUniqueFilename, FileRepo, UniqueFileName } from '@/features/assets/files/file.repo';
 
 describe(FileRepo, () => {
   const prisma = new PrismaService();
@@ -27,7 +27,7 @@ describe(FileRepo, () => {
       // Then
       const expected: UniqueFileName = {
         fileName: `a${assetId}_${original}`,
-        fileNameAlias: original,
+        nameAlias: original,
       };
       expect(actual).toEqual(expected);
     });
@@ -43,7 +43,7 @@ describe(FileRepo, () => {
       // Then
       const expected: UniqueFileName = {
         fileName: original,
-        fileNameAlias: original,
+        nameAlias: original,
       };
       expect(actual).toEqual(expected);
     });
@@ -58,7 +58,7 @@ describe(FileRepo, () => {
       // When
       await prisma.file.create({
         data: {
-          fileName: `a${assetId}_${fullFileName}`,
+          name: `a${assetId}_${fullFileName}`,
           size: faker.number.int({ min: 0 }),
           lastModifiedAt: faker.date.past(),
           type: faker.helpers.arrayElement(['Normal', 'Legal']),
@@ -68,9 +68,9 @@ describe(FileRepo, () => {
       const actual = await determineUniqueFilename(fullFileName, assetId, prisma);
 
       // Then
-      expect(actual.fileNameAlias).toEqual(fullFileName);
+      expect(actual.nameAlias).toEqual(fullFileName);
       expect(actual.fileName).toMatch(
-        new RegExp(`^a${assetId}_${fileName}_\\d{4}\\d{2}\\d{2}\\d{2}\\d{2}\\d{2}\\.${fileExt}$`)
+        new RegExp(`^a${assetId}_${fileName}_\\d{4}\\d{2}\\d{2}\\d{2}\\d{2}\\d{2}\\.${fileExt}$`),
       );
     });
   });

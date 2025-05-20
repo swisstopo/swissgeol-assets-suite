@@ -1,7 +1,8 @@
 import { CT } from '@asset-sg/core';
 import * as C from 'io-ts/Codec';
 
-import { AssetContactEdit, AssetFile, AssetLanguageEdit } from './asset-edit';
+import { AssetFileType, LegalDocItemCode } from './asset-detail';
+import { AssetContactEdit, AssetLanguageEdit } from './asset-edit';
 import { AssetUsage } from './asset-usage';
 import { DateId } from './DateStruct';
 
@@ -19,7 +20,15 @@ export const PatchAsset = C.struct({
   typeNatRels: C.array(C.string),
   assetLanguages: C.array(AssetLanguageEdit),
   assetContacts: C.array(AssetContactEdit),
-  assetFiles: C.array(AssetFile),
+  assetFiles: C.array(
+    C.struct({
+      id: C.number,
+      name: C.string,
+      size: C.number,
+      type: AssetFileType,
+      legalDocItemCode: C.nullable(LegalDocItemCode),
+    }),
+  ),
   ids: C.array(
     C.struct({
       idId: CT.optionFromNullable(C.number),

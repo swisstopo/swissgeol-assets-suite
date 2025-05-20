@@ -26,13 +26,13 @@ import { AssetEditRepo } from '@/features/assets/asset-edit/asset-edit.repo';
 import { FileS3Service } from '@/features/assets/files/file-s3.service';
 import { FileRepo } from '@/features/assets/files/file.repo';
 import { FileService } from '@/features/assets/files/file.service';
+
 @Controller('/assets/:assetId/files')
 export class FilesController {
   constructor(
     private readonly fileRepo: FileRepo,
     private readonly fileS3Service: FileS3Service,
     private readonly assetEditRepo: AssetEditRepo,
-    private readonly prismaService: PrismaService,
     private readonly fileService: FileService,
   ) {}
 
@@ -54,7 +54,7 @@ export class FilesController {
       throw new HttpException('not found', HttpStatus.NOT_FOUND);
     }
 
-    const file = await this.fileS3Service.load(record.fileName);
+    const file = await this.fileS3Service.load(record.name);
     if (file == null) {
       throw new HttpException('not found', HttpStatus.NOT_FOUND);
     }
@@ -65,7 +65,7 @@ export class FilesController {
     if (file.metadata.byteCount != null) {
       res.setHeader('Content-Length', file.metadata.byteCount.toString());
     }
-    res.setHeader('Content-Disposition', `filename="${record.fileName}"`);
+    res.setHeader('Content-Disposition', `filename="${record.name}"`);
     file.content.pipe(res);
   }
 

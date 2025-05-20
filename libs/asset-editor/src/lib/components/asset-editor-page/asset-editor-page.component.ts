@@ -336,11 +336,11 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
   }
 }
 
-export interface FormAssetFile extends AssetFile {
+export type FormAssetFile = Omit<AssetFile, 'nameAlias' | 'pageCount' | 'lastModifiedAt'> & {
   selected: boolean;
   file?: File;
   willBeDeleted: boolean;
-}
+};
 
 const buildForm = () => {
   return new FormGroup({

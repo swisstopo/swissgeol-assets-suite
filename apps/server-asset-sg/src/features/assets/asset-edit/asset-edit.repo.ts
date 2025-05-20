@@ -391,7 +391,7 @@ const selectPrismaAsset = selectOnAsset({
         },
       },
     },
-    orderBy: [{ file: { type: 'asc' } }, { file: { fileNameAlias: 'asc' } }, { file: { fileName: 'asc' } }],
+    orderBy: [{ file: { type: 'asc' } }, { file: { nameAlias: 'asc' } }, { file: { name: 'asc' } }],
   },
   workgroupId: true,
 });

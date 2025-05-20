@@ -204,7 +204,7 @@ export const importAssets = async () => {
             A.map((f) =>
               pipe(
                 readFiles,
-                A.findFirst((rf) => rf.fileName === f),
+                A.findFirst((rf) => rf.name === f),
                 O.map((a) => ({ assetId: m.assetId, fileId: a.fileId })),
               ),
             ),

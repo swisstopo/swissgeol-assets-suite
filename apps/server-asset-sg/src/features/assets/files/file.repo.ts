@@ -39,13 +39,13 @@ export class FileRepo
   }
 
   async create(data: CreateFileData): Promise<AssetFile> {
-    const { fileName, fileNameAlias } = await determineUniqueFilename(data.name, data.assetId, this.prisma);
+    const { fileName, nameAlias } = await determineUniqueFilename(data.name, data.assetId, this.prisma);
     const lastModifiedAt = new Date();
     const { id } = await this.prisma.file.create({
       select: { id: true },
       data: {
-        fileName,
-        fileNameAlias,
+        name: fileName,
+        nameAlias,
         size: data.size,
         ocrStatus: data.ocrStatus,
         type: data.type,
@@ -68,8 +68,8 @@ export class FileRepo
     });
     return {
       id,
-      fileName,
-      fileNameAlias,
+      name: fileName,
+      nameAlias,
       size: data.size,
       type: data.type,
       legalDocItemCode: data.legalDocItemCode,
@@ -83,9 +83,9 @@ export class FileRepo
       const fileName = (
         await this.prisma.file.findUnique({
           where: { id: file.id },
-          select: { fileName: true },
+          select: { name: true },
         })
-      )?.fileName;
+      )?.name;
       if (fileName == null) {
         return false;
       }
@@ -134,7 +134,7 @@ export interface CreateFileData {
 
 export interface UniqueFileName {
   fileName: string;
-  fileNameAlias: string;
+  nameAlias: string;
 }
 
 export const determineUniqueFilename = async (
@@ -156,13 +156,13 @@ export const determineUniqueFilename = async (
     (await prisma.file.findFirst({
       select: { id: true },
       where: {
-        fileName: {
+        name: {
           contains: nameToSearchFor,
         },
       },
     }));
   if (isUniqueName) {
-    return { fileName: name, fileNameAlias: fileName };
+    return { fileName: name, nameAlias: fileName };
   }
   const now = new Date();
   const pad = (value: number): string => value.toString().padStart(2, '0');
@@ -177,6 +177,6 @@ export const determineUniqueFilename = async (
 
   return {
     fileName: uniqueName,
-    fileNameAlias: fileName,
+    nameAlias: fileName,
   };
 };

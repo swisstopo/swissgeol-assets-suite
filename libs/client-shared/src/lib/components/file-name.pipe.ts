@@ -7,6 +7,6 @@ import { AssetFile } from '@asset-sg/shared';
 })
 export class FileNamePipe implements PipeTransform {
   transform(value: AssetFile): string {
-    return value.fileNameAlias ?? value.fileName;
+    return value.nameAlias ?? value.name;
   }
 }

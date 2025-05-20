@@ -60,7 +60,7 @@ export class FileService {
     if (!isDbOk) {
       return false;
     }
-    return await this.fileS3Service.delete(file.fileName);
+    return await this.fileS3Service.delete(file.name);
   }
 
   private async saveFileOrDeleteRecord(
@@ -70,7 +70,7 @@ export class FileService {
     options: SaveFileS3Options,
   ): Promise<void> {
     try {
-      await this.fileS3Service.save(record.fileName, content, options);
+      await this.fileS3Service.save(record.name, content, options);
     } catch (e) {
       await this.deleteRecordSilently({ id: record.id, assetId }, { reason: `S3 upload failed (${e})` });
       throw e;

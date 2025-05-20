@@ -12,7 +12,7 @@ if (serviceUrl == null || serviceUrl.length == 0) {
   exit(1);
 }
 
-type OcrFile = Pick<AssetFile, 'id' | 'fileName'>;
+type OcrFile = Pick<AssetFile, 'id' | 'name'>;
 
 const BATCH_SIZE = 1;
 
@@ -31,7 +31,7 @@ export class FileOcrService implements OnModuleInit {
 
   async processRemaining(): Promise<void> {
     const unprocessedFiles = await this.prisma.file.findMany({
-      select: { id: true, fileName: true, ocrStatus: true },
+      select: { id: true, name: true, ocrStatus: true },
       where: { ocrStatus: { notIn: ['success', 'error', 'willNotBeProcessed'] } },
     });
     const errorCount = await this.prisma.file.count({
@@ -72,14 +72,14 @@ export class FileOcrService implements OnModuleInit {
 
   async processRemainingFile(file: OcrFile & { ocrStatus: OcrState }): Promise<boolean> {
     if (file.ocrStatus === 'processing') {
-      this.logger.log('Ongoing OCR found, will attempt to finish it.', { file: file.fileName });
+      this.logger.log('Ongoing OCR found, will attempt to finish it.', { file: file.name });
       try {
         await this.finishProcessing(file);
-        this.logger.log('Ongoing OCR finished.', { file: file.fileName });
+        this.logger.log('Ongoing OCR finished.', { file: file.name });
         return true;
       } catch (e) {
         this.logger.error(`Failed to finish ongoing OCR, a retry will be attempted.`, {
-          file: file.fileName,
+          file: file.name,
           error: e,
         });
       }
@@ -90,15 +90,15 @@ export class FileOcrService implements OnModuleInit {
 
   async process(file: OcrFile): Promise<boolean> {
     try {
-      this.logger.log('Starting OCR.', { file: file.fileName });
+      this.logger.log('Starting OCR.', { file: file.name });
       await this.startProcessing(file);
       await this.updateStatus(file, 'processing');
       await this.finishProcessing(file);
-      this.logger.log('OCR finished.', { file: file.fileName });
+      this.logger.log('OCR finished.', { file: file.name });
       return true;
     } catch (e) {
       await this.updateStatus(file, 'error');
-      this.logger.error('OCR failed.', { file: file.fileName, error: e });
+      this.logger.error('OCR failed.', { file: file.name, error: e });
       return false;
     }
   }
@@ -117,9 +117,9 @@ export class FileOcrService implements OnModuleInit {
   private async updateStatus(file: OcrFile, status: OcrState): Promise<void> {
     const data: Prisma.FileUpdateInput = { ocrStatus: status };
     if (status === OcrState.success) {
-      const metadata = await this.fileS3Service.loadMetadata(file.fileName);
+      const metadata = await this.fileS3Service.loadMetadata(file.name);
       if (metadata === null) {
-        this.logger.error('Processed file not found in S3', { file: file.fileName });
+        this.logger.error('Processed file not found in S3', { file: file.name });
         data.ocrStatus = OcrState.error;
       } else {
         data.size = metadata.byteCount ?? 0;
@@ -134,7 +134,7 @@ export class FileOcrService implements OnModuleInit {
   }
 
   private async startProcessing(file: OcrFile): Promise<void> {
-    await this.fetch('/', { file: file.fileName });
+    await this.fetch('/', { file: file.name });
   }
 
   private async collectResult(file: OcrFile): Promise<boolean> {
@@ -148,7 +148,7 @@ export class FileOcrService implements OnModuleInit {
       error: string;
     }
 
-    const data = await this.fetch<ApiData | ApiError>('/collect', { file: file.fileName });
+    const data = await this.fetch<ApiData | ApiError>('/collect', { file: file.name });
     if ('error' in data) {
       throw new Error(data.error);
     }
