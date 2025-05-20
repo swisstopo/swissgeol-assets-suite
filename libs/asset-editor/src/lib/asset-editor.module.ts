@@ -77,14 +77,6 @@ import { AssetEditorNavigationComponent } from './components/asset-editor-naviga
 import { AssetEditorPageComponent } from './components/asset-editor-page/asset-editor-page.component';
 import { AssetEditorSaveComponent } from './components/asset-editor-save/asset-editor-save.component';
 import { AssetEditorSyncComponent } from './components/asset-editor-sync/asset-editor-sync.component';
-import { AssetEditorTabAdministrationComponent } from './components/asset-editor-tab-administration/asset-editor-tab-administration.component';
-import { ReplaceBrPipe } from './components/asset-editor-tab-administration/replace-br.pipe';
-import { AssetEditorTabContactsComponent } from './components/asset-editor-tab-contacts/asset-editor-tab-contacts.component';
-import { AssetEditorTabFilesComponent } from './components/asset-editor-tab-files/asset-editor-tab-files.component';
-import { AssetEditorTabGeneralComponent } from './components/asset-editor-tab-general/asset-editor-tab-general.component';
-import { AssetEditorTabGeometriesComponent } from './components/asset-editor-tab-geometries/asset-editor-tab-geometries.component';
-import { AssetEditorTabReferencesComponent } from './components/asset-editor-tab-references/asset-editor-tab-references.component';
-import { AssetEditorTabUsageComponent } from './components/asset-editor-tab-usage/asset-editor-tab-usage.component';
 import { AssetEditorContactsComponent } from './components/asset-editor-tabs/asset-editor-contacts/asset-editor-contacts.component';
 import { DialogWrapperComponent } from './components/asset-editor-tabs/asset-editor-contacts/dialog-wrapper/dialog-wrapper.component';
 import { LinkContactDialogComponent } from './components/asset-editor-tabs/asset-editor-contacts/link-contact-dialog/link-contact-dialog.component';
@@ -97,7 +89,6 @@ import { AssetEditorLegacyDataComponent } from './components/asset-editor-tabs/a
 import { AddReferenceDialogComponent } from './components/asset-editor-tabs/asset-editor-references/add-reference-dialog/add-reference-dialog.component';
 import { AssetEditorReferencesComponent } from './components/asset-editor-tabs/asset-editor-references/asset-editor-references.component';
 import { AssetEditorStatusComponent } from './components/asset-editor-tabs/asset-editor-status/asset-editor-status.component';
-import { AssetMultiselectComponent } from './components/asset-multiselect/asset-multiselect.component';
 import { Lv95xWithoutPrefixPipe, Lv95yWithoutPrefixPipe } from './components/lv95-without-prefix';
 import { AssetEditorEffects } from './state/asset-editor.effects';
 import { assetEditorReducer } from './state/asset-editor.reducer';
@@ -115,13 +106,6 @@ export const canLeaveEdit: CanDeactivateFn<AssetEditorPageComponent> = (componen
     AssetEditorLaunchComponent,
     AssetEditorSyncComponent,
     AssetEditorPageComponent,
-    AssetEditorTabAdministrationComponent,
-    AssetEditorTabContactsComponent,
-    AssetEditorTabFilesComponent,
-    AssetEditorTabGeneralComponent,
-    AssetEditorTabGeometriesComponent,
-    AssetEditorTabReferencesComponent,
-    AssetEditorTabUsageComponent,
     AssetEditorGeneralComponent,
     AssetEditorLegacyDataComponent,
     AssetEditorFilesComponent,
@@ -129,7 +113,6 @@ export const canLeaveEdit: CanDeactivateFn<AssetEditorPageComponent> = (componen
     AssetEditorSaveComponent,
     Lv95xWithoutPrefixPipe,
     Lv95yWithoutPrefixPipe,
-    ReplaceBrPipe,
     AssetEditorNavigationComponent,
     AssetEditorReferencesComponent,
     AddReferenceDialogComponent,
@@ -202,7 +185,6 @@ export const canLeaveEdit: CanDeactivateFn<AssetEditorPageComponent> = (componen
     SvgIconComponent,
     DialogModule,
     A11yModule,
-    AssetMultiselectComponent,
 
     ValueItemNamePipe,
     ValueItemDescriptionPipe,
