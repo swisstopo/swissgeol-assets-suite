@@ -74,8 +74,12 @@ export class ExportToViewService {
     const studyAreas = await this.sourcePrisma.$queryRaw<
       { studyAreaId: number; assetId: number; geomQualityItemCode: string; geom: string }[]
     >`
-      SELECT study_area_id as "studyAreaId", asset_id as "assetId", geom_quality_item_code as "geomQualityItemCode", st_astext(geom, 2056) as geom
-      FROM study_area WHERE asset_id IN (${Prisma.join(assetIds)})
+      SELECT study_area_id          as "studyAreaId",
+             asset_id               as "assetId",
+             geom_quality_item_code as "geomQualityItemCode",
+             st_astext(geom, 2056)  as geom
+      FROM study_area
+      WHERE asset_id IN (${Prisma.join(assetIds)})
     `;
 
     if (studyAreas.length === 0) {
@@ -85,7 +89,7 @@ export class ExportToViewService {
 
     const formattedStudyAreas = studyAreas.map(
       (sa) =>
-        Prisma.sql`(${sa.studyAreaId}, ${sa.assetId}, ${sa.geomQualityItemCode}, ST_GeomFromText(${sa.geom}, 2056))`
+        Prisma.sql`(${sa.studyAreaId}, ${sa.assetId}, ${sa.geomQualityItemCode}, ST_GeomFromText(${sa.geom}, 2056))`,
     );
 
     // insert into destination as raw query
@@ -104,8 +108,12 @@ export class ExportToViewService {
     const studyLocations = await this.sourcePrisma.$queryRaw<
       { studyLocationId: number; assetId: number; geomQualityItemCode: string; geom: string }[]
     >`
-      SELECT study_location_id as "studyLocationId", asset_id as "assetId", geom_quality_item_code as "geomQualityItemCode", st_astext(geom, 2056) as geom
-      FROM study_location WHERE asset_id IN (${Prisma.join(assetIds)})
+      SELECT study_location_id      as "studyLocationId",
+             asset_id               as "assetId",
+             geom_quality_item_code as "geomQualityItemCode",
+             st_astext(geom, 2056)  as geom
+      FROM study_location
+      WHERE asset_id IN (${Prisma.join(assetIds)})
     `;
 
     if (studyLocations.length === 0) {
@@ -115,7 +123,7 @@ export class ExportToViewService {
 
     const formattedStudyLocations = studyLocations.map(
       (sa) =>
-        Prisma.sql`(${sa.studyLocationId}, ${sa.assetId}, ${sa.geomQualityItemCode}, ST_GeomFromText(${sa.geom}, 2056))`
+        Prisma.sql`(${sa.studyLocationId}, ${sa.assetId}, ${sa.geomQualityItemCode}, ST_GeomFromText(${sa.geom}, 2056))`,
     );
 
     // insert into destination as raw query
@@ -134,8 +142,12 @@ export class ExportToViewService {
     const studyTraces = await this.sourcePrisma.$queryRaw<
       { studyTraceId: number; assetId: number; geomQualityItemCode: string; geom: string }[]
     >`
-      SELECT study_trace_id as "studyTraceId", asset_id as "assetId", geom_quality_item_code as "geomQualityItemCode", st_astext(geom, 2056) as geom
-      FROM study_trace WHERE asset_id IN (${Prisma.join(assetIds)})
+      SELECT study_trace_id         as "studyTraceId",
+             asset_id               as "assetId",
+             geom_quality_item_code as "geomQualityItemCode",
+             st_astext(geom, 2056)  as geom
+      FROM study_trace
+      WHERE asset_id IN (${Prisma.join(assetIds)})
     `;
 
     if (studyTraces.length === 0) {
@@ -145,7 +157,7 @@ export class ExportToViewService {
 
     const formattedStudyTraces = studyTraces.map(
       (sa) =>
-        Prisma.sql`(${sa.studyTraceId}, ${sa.assetId}, ${sa.geomQualityItemCode}, ST_GeomFromText(${sa.geom}, 2056))`
+        Prisma.sql`(${sa.studyTraceId}, ${sa.assetId}, ${sa.geomQualityItemCode}, ST_GeomFromText(${sa.geom}, 2056))`,
     );
 
     // insert into destination as raw query
@@ -284,19 +296,23 @@ export class ExportToViewService {
    * Find public asset ids.
    */
   private async findPublicAssetIds() {
-    return this.sourcePrisma.$queryRaw<AssetInfo[]>`SELECT
-          a.asset_id as "assetId",
-          a.public_use_id as "publicUseId",
-          a.internal_use_id as "internalUseId",
-          a.workgroup_id as "workgroupId"
-      FROM asset a
-      LEFT JOIN public_use p ON a.public_use_id = p.public_use_id
-      LEFT JOIN LATERAL (SELECT * FROM status_work WHERE asset_id = a.asset_id ORDER BY status_work_date DESC LIMIT 1) AS sw ON a.asset_id = sw.asset_id
-      WHERE p.is_available
-            AND p.status_asset_use_item_code = 'approved'
-            AND sw.status_work_item_code = 'published'
-            AND workgroup_id IN (${Prisma.join(this.allowedWorkgroupIds)})
-      ORDER BY a.asset_id
+    return this.sourcePrisma.$queryRaw<AssetInfo[]>`SELECT a.asset_id        as "assetId",
+                                                           a.public_use_id   as "publicUseId",
+                                                           a.internal_use_id as "internalUseId",
+                                                           a.workgroup_id    as "workgroupId"
+                                                    FROM asset a
+                                                           LEFT JOIN public_use p ON a.public_use_id = p.public_use_id
+                                                           LEFT JOIN LATERAL (SELECT *
+                                                                              FROM status_work
+                                                                              WHERE asset_id = a.asset_id
+                                                                              ORDER BY status_work_date
+                                                                                DESC LIMIT 1) AS sw
+                                                    ON a.asset_id = sw.asset_id
+                                                    WHERE p.is_available
+                                                      AND p.status_asset_use_item_code = 'approved'
+                                                      AND sw.status_work_item_code = 'published'
+                                                      AND workgroup_id IN (${Prisma.join(this.allowedWorkgroupIds)})
+                                                    ORDER BY a.asset_id
     `;
   }
 

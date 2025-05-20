@@ -16,15 +16,10 @@ import { AssetDetailFileVM, selectCurrentAssetDetailVM } from '../../state/asset
   standalone: false,
 })
 export class AssetSearchDetailComponent {
-  private readonly router = inject(Router);
   private readonly store = inject(Store<AppStateWithAssetSearch>);
   public readonly currentLang$ = inject(CURRENT_LANG);
-  private readonly viewerControllerService = inject(ViewerControllerService);
-
   public readonly asset$ = this.store.select(selectCurrentAssetDetailVM);
-
   public readonly canUpdate$ = can$(AssetEditPolicy, this.asset$, (it, asset) => it.canUpdate(asset));
-
   public readonly filesByType$: Observable<Record<AssetFileType, AssetDetailFileVM[]>> = this.asset$.pipe(
     map((asset) => {
       const mapping: Record<AssetFileType, AssetDetailFileVM[]> = {
@@ -40,6 +35,8 @@ export class AssetSearchDetailComponent {
       return mapping;
     }),
   );
+  private readonly router = inject(Router);
+  private readonly viewerControllerService = inject(ViewerControllerService);
 
   public navigateToAssetEdit(lang: string | null, assetId: number) {
     this.router.navigate([lang, 'asset-admin', assetId]);
