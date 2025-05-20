@@ -124,7 +124,6 @@ export const ReferenceData = C.struct({
   assetFormatItems: ValueItemRecord,
   assetKindItems: ValueItemRecord,
   contactKindItems: ValueItemRecord,
-  geomQualityItems: ValueItemRecord,
   languageItems: ValueItemRecord,
   legalDocItems: ValueItemRecord,
   manCatLabelItems: ValueItemRecord,

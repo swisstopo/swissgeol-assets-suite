@@ -65,7 +65,6 @@ const getReferenceData = (user: User, prismaService: PrismaService) => {
     assetFormatItems: qt(() => prismaService.assetFormatItem.findMany(), 'assetFormatItemCode', 'code'),
     assetKindItems: qt(() => prismaService.assetKindItem.findMany(), 'assetKindItemCode', 'code'),
     contactKindItems: qt(() => prismaService.contactKindItem.findMany(), 'contactKindItemCode', 'code'),
-    geomQualityItems: qt(() => prismaService.geomQualityItem.findMany(), 'geomQualityItemCode', 'code'),
     languageItems: qt(() => prismaService.languageItem.findMany(), 'languageItemCode', 'code'),
     legalDocItems: qt(() => prismaService.legalDocItem.findMany(), 'legalDocItemCode', 'code'),
     manCatLabelItems: qt(() => prismaService.manCatLabelItem.findMany(), 'manCatLabelItemCode', 'code'),

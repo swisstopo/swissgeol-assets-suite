@@ -229,8 +229,8 @@ model StudyArea {
   studyAreaId         Int                      @id @default(autoincrement()) @map("study_area_id")
   assetId             Int                      @map("asset_id")
   asset               Asset                    @relation(fields: [assetId], references: [assetId], onDelete: Cascade)
+  /// this referenced geom_quality_item table, but contained only unkown (sic!) and revised; kept for records
   geomQualityItemCode String                   @map("geom_quality_item_code")
-  geomQualityItem     GeomQualityItem          @relation(fields: [geomQualityItemCode], references: [geomQualityItemCode])
   geom                Unsupported("geometry")?
 
   @@index([geom], type: Gist)
@@ -241,8 +241,8 @@ model StudyLocation {
   studyLocationId     Int                      @id @default(autoincrement()) @map("study_location_id")
   assetId             Int                      @map("asset_id")
   asset               Asset                    @relation(fields: [assetId], references: [assetId], onDelete: Cascade)
+  /// this referenced geom_quality_item table, but contained only unkown (sic!) and revised; kept for records
   geomQualityItemCode String                   @map("geom_quality_item_code")
-  geomQualityItem     GeomQualityItem          @relation(fields: [geomQualityItemCode], references: [geomQualityItemCode])
   geom                Unsupported("geometry")?
 
   @@index([geom], type: Gist)
@@ -253,8 +253,8 @@ model StudyTrace {
   studyTraceId        Int                      @id @default(autoincrement()) @map("study_trace_id")
   assetId             Int                      @map("asset_id")
   asset               Asset                    @relation(fields: [assetId], references: [assetId], onDelete: Cascade)
+  /// this referenced geom_quality_item table, but contained only unkown (sic!) and revised; kept for records
   geomQualityItemCode String                   @map("geom_quality_item_code")
-  geomQualityItem     GeomQualityItem          @relation(fields: [geomQualityItemCode], references: [geomQualityItemCode])
   geom                Unsupported("geometry")?
 
   @@index([geom], type: Gist)
@@ -316,27 +316,6 @@ model ContactKindItem {
   contacts Contact[]
 
   @@map("contact_kind_item")
-}
-
-model GeomQualityItem {
-  geomQualityItemCode String @id @map("geom_quality_item_code")
-  geolCode            String @map("geol_code")
-  name                String @map("name")
-  nameDe              String @map("name_de")
-  nameFr              String @map("name_fr")
-  nameIt              String @map("name_it")
-  nameEn              String @map("name_en")
-  description         String @map("description")
-  descriptionDe       String @map("description_de")
-  descriptionFr       String @map("description_fr")
-  descriptionIt       String @map("description_it")
-  descriptionEn       String @map("description_en")
-
-  studyAreas     StudyArea[]
-  studyLocations StudyLocation[]
-  studyTraces    StudyTrace[]
-
-  @@map("geom_quality_item")
 }
 
 model LanguageItem {

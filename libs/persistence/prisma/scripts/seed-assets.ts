@@ -26,7 +26,6 @@ export const importAssets = async () => {
   await prisma.$executeRawUnsafe(`truncate table public.asset_format_item cascade;`);
   await prisma.$executeRawUnsafe(`truncate table public.asset_kind_item cascade;`);
   await prisma.$executeRawUnsafe(`truncate table public.contact_kind_item cascade;`);
-  await prisma.$executeRawUnsafe(`truncate table public.geom_quality_item cascade;`);
   await prisma.$executeRawUnsafe(`truncate table public.language_item cascade;`);
   await prisma.$executeRawUnsafe(`truncate table public.legal_doc_item cascade;`);
   await prisma.$executeRawUnsafe(`truncate table public.status_asset_use_item cascade;`);
@@ -62,13 +61,6 @@ export const importAssets = async () => {
   const assetFormItems = await importValueList('AssetFormatItem', 'assetformatitem', 'assetFormatItemCode');
   const assetKindItems = await importValueList('AssetKindItem', 'assetkinditem', 'assetKindItemCode');
   const contactKindItems = await importValueList('ContactKindItem', 'contactkinditem', 'contactKindItemCode');
-
-  const geomQualityItems = await importValueList('GeomQualityItem', 'geomqualityitem', 'geomQualityItemCode');
-  for await (const item of geomQualityItems) {
-    await prisma.$executeRawUnsafe(
-      `insert into public.tmp_geom_quality_mapping (id, code) values (${item.id}, '${item.code}')`
-    );
-  }
 
   const manCatLabelItems = await importValueList('ManCatLabelItem', 'mancatlabelitem', 'manCatLabelItemCode');
   const natRelItems = await importValueList('NatRelItem', 'natrelitem', 'natRelItemCode');
@@ -470,12 +462,6 @@ const updateAllValueListData20230309 = async () => {
     'ContactKindItem',
     'contactkinditem',
     'contactKindItemCode'
-  );
-  await updateValueListData(
-    importValueListUpdatedData20230309,
-    'GeomQualityItem',
-    'geomqualityitem',
-    'geomQualityItemCode'
   );
   await updateValueListData(importValueListUpdatedData20230309, 'LanguageItem', 'languageitem', 'languageItemCode');
   await updateValueListData(importValueListUpdatedData20230309, 'LegalDocItem', 'legaldocitem', 'legalDocItemCode');

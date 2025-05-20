@@ -212,7 +212,6 @@ export class ExportToViewService {
       'AssetFormatItem',
       'AssetKindItem',
       'ContactKindItem',
-      'GeomQualityItem',
       'LanguageItem',
       'LegalDocItem',
       'ManCatLabelItem',

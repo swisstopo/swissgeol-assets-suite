@@ -67,7 +67,6 @@ export type ReferenceDataVM = ReturnType<typeof _makeReferenceDataVM>;
 export const emptyReferenceDataVM: ReferenceDataVM = {
   assetFormatItems: {},
   assetKindItems: {},
-  geomQualityItems: {},
   languageItems: {},
   legalDocItems: {},
   manCatLabelItems: {},
