@@ -226,36 +226,36 @@ model AssetContact {
 }
 
 model StudyArea {
-  studyAreaId         Int                      @id @default(autoincrement()) @map("study_area_id")
-  assetId             Int                      @map("asset_id")
-  asset               Asset                    @relation(fields: [assetId], references: [assetId], onDelete: Cascade)
+  studyAreaId         Int                                     @id @default(autoincrement()) @map("study_area_id")
+  assetId             Int                                     @map("asset_id")
+  asset               Asset                                   @relation(fields: [assetId], references: [assetId], onDelete: Cascade)
   /// this referenced geom_quality_item table, but contained only unkown (sic!) and revised; kept for records
-  geomQualityItemCode String                   @map("geom_quality_item_code")
-  geom                Unsupported("geometry")?
+  geomQualityItemCode String                                  @map("geom_quality_item_code")
+  geom                Unsupported("geometry(Polygon, 2056)")?
 
   @@index([geom], type: Gist)
   @@map("study_area")
 }
 
 model StudyLocation {
-  studyLocationId     Int                      @id @default(autoincrement()) @map("study_location_id")
-  assetId             Int                      @map("asset_id")
-  asset               Asset                    @relation(fields: [assetId], references: [assetId], onDelete: Cascade)
+  studyLocationId     Int                                   @id @default(autoincrement()) @map("study_location_id")
+  assetId             Int                                   @map("asset_id")
+  asset               Asset                                 @relation(fields: [assetId], references: [assetId], onDelete: Cascade)
   /// this referenced geom_quality_item table, but contained only unkown (sic!) and revised; kept for records
-  geomQualityItemCode String                   @map("geom_quality_item_code")
-  geom                Unsupported("geometry")?
+  geomQualityItemCode String                                @map("geom_quality_item_code")
+  geom                Unsupported("geometry(Point, 2056)")?
 
   @@index([geom], type: Gist)
   @@map("study_location")
 }
 
 model StudyTrace {
-  studyTraceId        Int                      @id @default(autoincrement()) @map("study_trace_id")
-  assetId             Int                      @map("asset_id")
-  asset               Asset                    @relation(fields: [assetId], references: [assetId], onDelete: Cascade)
+  studyTraceId        Int                                        @id @default(autoincrement()) @map("study_trace_id")
+  assetId             Int                                        @map("asset_id")
+  asset               Asset                                      @relation(fields: [assetId], references: [assetId], onDelete: Cascade)
   /// this referenced geom_quality_item table, but contained only unkown (sic!) and revised; kept for records
-  geomQualityItemCode String                   @map("geom_quality_item_code")
-  geom                Unsupported("geometry")?
+  geomQualityItemCode String                                     @map("geom_quality_item_code")
+  geom                Unsupported("geometry(LineString, 2056)")?
 
   @@index([geom], type: Gist)
   @@map("study_trace")
