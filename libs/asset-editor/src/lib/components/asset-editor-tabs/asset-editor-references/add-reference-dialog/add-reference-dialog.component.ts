@@ -78,8 +78,10 @@ export class AddReferenceDialogComponent implements OnInit {
                   workgroupIds: [this.asset?.workgroupId],
                 })
                 .pipe(
-                  map((res) => plainToInstance(AssetSearchResultDTO, res)),
-                  map((res) => res.data),
+                  map((res) => {
+                    const data = plainToInstance(AssetSearchResultDTO, res);
+                    return data.data;
+                  }),
                 )
             : of([]),
       ),
