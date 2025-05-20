@@ -226,11 +226,6 @@ export const importAssets = async () => {
     assetId: Number(parsed[1]),
   }));
 
-  await importToTable('AssetFormatComposition', buildPath('assetformatcomposition'), (parsed) => ({
-    assetKindFormatItemCode: lookupCode(assetKindItems, Number(parsed[0])),
-    assetId: Number(parsed[1]),
-  }));
-
   await importToTable('AssetKindComposition', buildPath('assetkindcomposition'), (parsed) => ({
     assetKindItemCode: lookupCode(assetKindItems, Number(parsed[0])),
     assetId: Number(parsed[1]),

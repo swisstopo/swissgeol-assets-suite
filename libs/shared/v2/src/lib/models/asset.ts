@@ -5,11 +5,6 @@ import { StudyType } from './study';
 // `usageCode` will need to be determined in the frontend - it is no longer included here.
 // See `makeUsageCode`.
 
-// `assetFormatCompositions` seems to be fully unused.
-// The table on INT is empty, and there's no way to edit it.
-// The field would theoretically be displayed in the search, but since it is empty,
-// it's always skipped.
-
 export interface AssetInfo extends Model<AssetId> {
   title: string;
   originalTitle: string | null;

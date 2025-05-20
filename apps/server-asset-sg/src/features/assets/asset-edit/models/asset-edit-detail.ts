@@ -48,12 +48,6 @@ export const AssetEditDetailFromPostgres = pipe(
         D.map((a) => a.manCatLabelItemCode),
       ),
     ),
-    assetFormatCompositions: D.array(
-      pipe(
-        D.struct({ assetFormatItemCode: D.string }),
-        D.map((a) => a.assetFormatItemCode),
-      ),
-    ),
     typeNatRels: D.array(
       pipe(
         D.struct({ natRelItemCode: D.string }),

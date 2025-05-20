@@ -345,7 +345,6 @@ const makeAssetDetailVMNew = (referenceData: ReferenceData, assetDetail: AssetEd
     assetContacts,
     assetLanguages,
     manCatLabelRefs,
-    assetFormatCompositions,
     typeNatRels,
     assetMain,
     subordinateAssets,
@@ -366,9 +365,6 @@ const makeAssetDetailVMNew = (referenceData: ReferenceData, assetDetail: AssetEd
       .map((contact) => makeAssetDetailContactVM(referenceData, contact)),
     languages: assetLanguages.map(({ languageItemCode: code }) => referenceData.languageItems[code]),
     manCatLabels: manCatLabelRefs.map((manCatLabelItemCode) => referenceData.manCatLabelItems[manCatLabelItemCode]),
-    assetFormatCompositions: assetFormatCompositions.map(
-      (assetFormatItemCode) => referenceData.assetFormatItems[assetFormatItemCode],
-    ),
     typeNatRels: typeNatRels.map((natRelItemCode) => referenceData.natRelItems[natRelItemCode]),
     referenceAssets: [
       ...pipe(

@@ -137,7 +137,6 @@ describe(AssetEditRepo, () => {
       expect(record.assetContacts).toEqual(patch.assetContacts);
       expect(record.assetLanguages).toEqual(patch.assetLanguages);
       expect(record.manCatLabelRefs).toEqual(patch.manCatLabelRefs);
-      expect(record.assetFormatCompositions).toEqual([]);
       expect(record.typeNatRels).toEqual(patch.typeNatRels);
       expect(record.assetMain).toEqual(Option.none);
       expect(record.subordinateAssets).toEqual([]);
@@ -196,7 +195,6 @@ describe(AssetEditRepo, () => {
       expect(updated.assetContacts).toEqual(patch.assetContacts);
       expect(updated.assetLanguages).toEqual(patch.assetLanguages);
       expect(updated.manCatLabelRefs).toEqual(patch.manCatLabelRefs);
-      expect(updated.assetFormatCompositions).toEqual([]);
       expect(updated.typeNatRels).toEqual(patch.typeNatRels);
       expect(updated.assetMain).toEqual(Option.none);
       expect(updated.subordinateAssets).toEqual([]);

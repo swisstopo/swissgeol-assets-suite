@@ -82,7 +82,6 @@ export const BaseAssetDetail = {
     }),
   ),
   manCatLabelRefs: C.array(C.string),
-  assetFormatCompositions: C.array(C.string),
   typeNatRels: C.array(C.string),
   assetMain: CT.optionFromNullable(LinkedAsset),
   subordinateAssets: C.array(LinkedAsset),

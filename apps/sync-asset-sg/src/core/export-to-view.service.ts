@@ -45,7 +45,6 @@ export class ExportToViewService {
       await this.export('internalUse', 'internalUseId', internalUseIds);
       await this.export('publicUse', 'publicUseId', publicUseIds);
       await this.exportAssets(assetIds);
-      await this.export('assetFormatComposition', 'assetId', assetIds);
       await this.export('assetKindComposition', 'assetId', assetIds);
       await this.exportInternalProjects(assetIds);
       await this.export('assetLanguage', 'assetId', assetIds);
