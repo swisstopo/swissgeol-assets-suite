@@ -11,8 +11,8 @@ WORKDIR /app
 COPY . .
 
 RUN --mount=type=secret,id=github_token \
-    GITHUB_TOKEN=$(cat /run/secrets/github_token) \
-    npm install --ignore-scripts \
+    export GITHUB_TOKEN=$(cat /run/secrets/github_token) \
+ && npm install --ignore-scripts \
  && npm run prisma -- generate   \
  && npx nx build server-asset-sg --configuration=production
 

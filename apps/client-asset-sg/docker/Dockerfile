@@ -16,8 +16,8 @@ WORKDIR /app
 COPY . .
 
 RUN --mount=type=secret,id=github_token \
-    GITHUB_TOKEN=$(cat /run/secrets/github_token) \
-    sed -i ''s/0.0.0-local/${APP_VERSION}/g'' apps/client-asset-sg/src/assets/version.json \
+    export GITHUB_TOKEN=$(cat /run/secrets/github_token) \
+ && sed -i ''s/0.0.0-local/${APP_VERSION}/g'' apps/client-asset-sg/src/assets/version.json \
  && npm install --ignore-scripts \
  && npm run prisma -- generate   \
  && npx nx build client-asset-sg --configuration=production
