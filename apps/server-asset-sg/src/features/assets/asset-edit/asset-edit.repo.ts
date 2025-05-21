@@ -369,7 +369,6 @@ const selectPrismaAsset = selectOnAsset({
   assetContacts: { select: { role: true, contactId: true } },
   assetLanguages: { select: { languageItemCode: true } },
   manCatLabelRefs: { select: { manCatLabelItemCode: true } },
-  assetFormatCompositions: { select: { assetFormatItemCode: true } },
   typeNatRels: { select: { natRelItemCode: true } },
   assetMain: { select: { assetId: true, titlePublic: true } },
   subordinateAssets: { select: { assetId: true, titlePublic: true } },

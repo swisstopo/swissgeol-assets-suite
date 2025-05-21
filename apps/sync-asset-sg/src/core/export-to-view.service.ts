@@ -45,13 +45,8 @@ export class ExportToViewService {
       await this.export('internalUse', 'internalUseId', internalUseIds);
       await this.export('publicUse', 'publicUseId', publicUseIds);
       await this.exportAssets(assetIds);
-      await this.export('assetFormatComposition', 'assetId', assetIds);
-      await this.export('assetKindComposition', 'assetId', assetIds);
-      await this.exportInternalProjects(assetIds);
       await this.export('assetLanguage', 'assetId', assetIds);
-      await this.exportPublications(assetIds);
 
-      await this.export('autoCat', 'assetId', assetIds);
       await this.export('manCatLabelRef', 'assetId', assetIds);
       await this.export('statusWork', 'assetId', assetIds);
       await this.exportStudyAreas(assetIds);
@@ -79,8 +74,12 @@ export class ExportToViewService {
     const studyAreas = await this.sourcePrisma.$queryRaw<
       { studyAreaId: number; assetId: number; geomQualityItemCode: string; geom: string }[]
     >`
-      SELECT study_area_id as "studyAreaId", asset_id as "assetId", geom_quality_item_code as "geomQualityItemCode", st_astext(geom, 2056) as geom
-      FROM study_area WHERE asset_id IN (${Prisma.join(assetIds)})
+      SELECT study_area_id          as "studyAreaId",
+             asset_id               as "assetId",
+             geom_quality_item_code as "geomQualityItemCode",
+             st_astext(geom, 2056)  as geom
+      FROM study_area
+      WHERE asset_id IN (${Prisma.join(assetIds)})
     `;
 
     if (studyAreas.length === 0) {
@@ -109,8 +108,12 @@ export class ExportToViewService {
     const studyLocations = await this.sourcePrisma.$queryRaw<
       { studyLocationId: number; assetId: number; geomQualityItemCode: string; geom: string }[]
     >`
-      SELECT study_location_id as "studyLocationId", asset_id as "assetId", geom_quality_item_code as "geomQualityItemCode", st_astext(geom, 2056) as geom
-      FROM study_location WHERE asset_id IN (${Prisma.join(assetIds)})
+      SELECT study_location_id      as "studyLocationId",
+             asset_id               as "assetId",
+             geom_quality_item_code as "geomQualityItemCode",
+             st_astext(geom, 2056)  as geom
+      FROM study_location
+      WHERE asset_id IN (${Prisma.join(assetIds)})
     `;
 
     if (studyLocations.length === 0) {
@@ -139,8 +142,12 @@ export class ExportToViewService {
     const studyTraces = await this.sourcePrisma.$queryRaw<
       { studyTraceId: number; assetId: number; geomQualityItemCode: string; geom: string }[]
     >`
-      SELECT study_trace_id as "studyTraceId", asset_id as "assetId", geom_quality_item_code as "geomQualityItemCode", st_astext(geom, 2056) as geom
-      FROM study_trace WHERE asset_id IN (${Prisma.join(assetIds)})
+      SELECT study_trace_id         as "studyTraceId",
+             asset_id               as "assetId",
+             geom_quality_item_code as "geomQualityItemCode",
+             st_astext(geom, 2056)  as geom
+      FROM study_trace
+      WHERE asset_id IN (${Prisma.join(assetIds)})
     `;
 
     if (studyTraces.length === 0) {
@@ -216,15 +223,11 @@ export class ExportToViewService {
     const tables = [
       'AssetFormatItem',
       'AssetKindItem',
-      'AutoCatLabelItem',
-      'AutoObjectCatItem',
       'ContactKindItem',
-      'GeomQualityItem',
       'LanguageItem',
       'LegalDocItem',
       'ManCatLabelItem',
       'NatRelItem',
-      'PubChannelItem',
       'StatusAssetUseItem',
       'StatusWorkItem',
     ];
@@ -272,42 +275,8 @@ export class ExportToViewService {
       skipDuplicates: true,
     });
     log(`Created ${fileResult.count} files.`);
-    await this.export('assetObjectInfo', 'fileId', fileIds);
     const assetFileResult = await this.destinationPrisma.assetFile.createMany({ data: assetFiles });
     log(`Created ${assetFileResult.count} AssetFiles.`);
-  }
-
-  /**
-   * Export publications.
-   *       'asset_publication',
-   *       'publication',
-   */
-  private async exportPublications(assetIds: number[]) {
-    const assetPublications = await this.sourcePrisma.assetPublication.findMany({
-      where: { assetId: { in: assetIds } },
-    });
-    const publicationIds = assetPublications.map((af) => af.publicationId);
-
-    await this.export('publication', 'publicationId', publicationIds);
-
-    const assetFileResult = await this.destinationPrisma.assetPublication.createMany({ data: assetPublications });
-    log(`Created ${assetFileResult.count} publications.`);
-  }
-
-  /**
-   * Export internal projects.
-   *       'asset_internal_project',
-   *       'internal_project',
-   */
-  private async exportInternalProjects(assetIds: number[]) {
-    const aip = await this.sourcePrisma.assetInternalProject.findMany({ where: { assetId: { in: assetIds } } });
-    const ips = await this.sourcePrisma.internalProject.findMany({
-      where: { internalProjectId: { in: aip.map((af) => af.internalProjectId) } },
-    });
-    const fileResult = await this.destinationPrisma.internalProject.createMany({ data: ips, skipDuplicates: true });
-    log(`Created ${fileResult.count} internal_project.`);
-    const assetFileResult = await this.destinationPrisma.assetInternalProject.createMany({ data: aip });
-    log(`Created ${assetFileResult.count} asset_internal_project.`);
   }
 
   /**
@@ -327,19 +296,23 @@ export class ExportToViewService {
    * Find public asset ids.
    */
   private async findPublicAssetIds() {
-    return this.sourcePrisma.$queryRaw<AssetInfo[]>`SELECT
-          a.asset_id as "assetId",
-          a.public_use_id as "publicUseId",
-          a.internal_use_id as "internalUseId",
-          a.workgroup_id as "workgroupId"
-      FROM asset a
-      LEFT JOIN public_use p ON a.public_use_id = p.public_use_id
-      LEFT JOIN LATERAL (SELECT * FROM status_work WHERE asset_id = a.asset_id ORDER BY status_work_date DESC LIMIT 1) AS sw ON a.asset_id = sw.asset_id
-      WHERE p.is_available
-            AND p.status_asset_use_item_code = 'approved'
-            AND sw.status_work_item_code = 'published'
-            AND workgroup_id IN (${Prisma.join(this.allowedWorkgroupIds)})
-      ORDER BY a.asset_id
+    return this.sourcePrisma.$queryRaw<AssetInfo[]>`SELECT a.asset_id        as "assetId",
+                                                           a.public_use_id   as "publicUseId",
+                                                           a.internal_use_id as "internalUseId",
+                                                           a.workgroup_id    as "workgroupId"
+                                                    FROM asset a
+                                                           LEFT JOIN public_use p ON a.public_use_id = p.public_use_id
+                                                           LEFT JOIN LATERAL (SELECT *
+                                                                              FROM status_work
+                                                                              WHERE asset_id = a.asset_id
+                                                                              ORDER BY status_work_date
+                                                                                DESC LIMIT 1) AS sw
+                                                    ON a.asset_id = sw.asset_id
+                                                    WHERE p.is_available
+                                                      AND p.status_asset_use_item_code = 'approved'
+                                                      AND sw.status_work_item_code = 'published'
+                                                      AND workgroup_id IN (${Prisma.join(this.allowedWorkgroupIds)})
+                                                    ORDER BY a.asset_id
     `;
   }
 

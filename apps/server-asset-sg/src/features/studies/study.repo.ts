@@ -1,6 +1,4 @@
-import { parseLV95 } from '@asset-sg/shared';
-import { Study, StudyAccessType, StudyId } from '@asset-sg/shared/v2';
-import { WorkgroupId } from '@asset-sg/shared/v2';
+import { Study, StudyAccessType, StudyId, WorkgroupId } from '@asset-sg/shared/v2';
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '@/core/prisma.service';
@@ -58,24 +56,26 @@ export class StudyRepo implements ReadRepo<Study, StudyId> {
   }
 
   private async query(condition: Prisma.Sql): Promise<Study[]> {
-    type RawStudy = Omit<Study, 'center'> & { center: string };
+    type RawStudy = Omit<Study, 'center'> & { centerX: number; centerY: number };
     const studies: RawStudy[] = await this.prisma.$queryRaw`
-      SELECT s.study_id                                                                  AS "id",
-             s.asset_id                                                                  AS "assetId",
-             s.geometry_type                                                             AS "geometryType",
-             SUBSTRING(s.centroid_geom_text FROM 7 FOR length(s.centroid_geom_text) - 7) AS "center",
+      SELECT s.study_id                AS "id",
+             s.asset_id                AS "assetId",
+             s.geometry_type           AS "geometryType",
+             ST_X(s.centroid) AS "centerX",
+             ST_Y(s.centroid) AS "centerY",
              CASE
                WHEN s.is_public THEN 0
                WHEN NOT s.is_public AND s.is_internal THEN 1
                WHEN NOT s.is_public AND NOT s.is_internal THEN 2
-               END                                                                       AS "accessType"
+               END                     AS "accessType"
       FROM public.all_study s
         ${condition}
     `;
     return studies.map((study) => {
       return {
         ...study,
-        center: parseLV95(study.center, { separator: ' ' }),
+        // todo #553: fix reversed coordinates in frontend
+        center: { y: study.centerX, x: study.centerY },
         accessType: this.parseAccessType(study.accessType),
       };
     });

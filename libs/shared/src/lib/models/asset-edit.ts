@@ -95,7 +95,6 @@ export const BaseAssetEditDetail = {
   assetLanguages: C.array(AssetLanguageEdit),
   assetContacts: C.array(AssetContactEdit),
   manCatLabelRefs: C.array(C.string),
-  assetFormatCompositions: C.array(C.string),
   typeNatRels: C.array(C.string),
   assetMain: CT.optionFromNullable(LinkedAsset),
   subordinateAssets: C.array(LinkedAsset),

@@ -46,20 +46,16 @@ model Asset {
   creatorId           String?         @map("creator_id") @db.Uuid
   creator             AssetUser?      @relation(name: "creator", fields: [creatorId], references: [id], onDelete: SetNull)
 
-  assetContacts           AssetContact[]
-  assetFiles              AssetFile[]
-  assetFormatCompositions AssetFormatComposition[]
-  assetKindCompositions   AssetKindComposition[]
-  assetPublications       AssetPublication[]
-  assetLanguages          AssetLanguage[]
-  autoCats                AutoCat[]
-  ids                     Id[]
-  manCatLabelRefs         ManCatLabelRef[]
-  statusWorks             StatusWork[]
-  studyAreas              StudyArea[]
-  studyLocations          StudyLocation[]
-  studyTraces             StudyTrace[]
-  typeNatRels             TypeNatRel[]
+  assetContacts   AssetContact[]
+  assetFiles      AssetFile[]
+  assetLanguages  AssetLanguage[]
+  ids             Id[]
+  manCatLabelRefs ManCatLabelRef[]
+  statusWorks     StatusWork[]
+  studyAreas      StudyArea[]
+  studyLocations  StudyLocation[]
+  studyTraces     StudyTrace[]
+  typeNatRels     TypeNatRel[]
 
   workgroup   Workgroup @relation(fields: [workgroupId], references: [id])
   workgroupId Int       @map("workgroup_id")
@@ -67,10 +63,9 @@ model Asset {
   siblingXAssets AssetXAssetY[] @relation("sibling_x_asset")
   siblingYAssets AssetXAssetY[] @relation("sibling_y_asset")
 
-  assetInternalProjects AssetInternalProject[]
-  subordinateAssets     Asset[]                @relation("asset")
-  favorites             Favorite[]
-  allStudies            AllStudy[]
+  subordinateAssets Asset[]    @relation("asset")
+  favorites         Favorite[]
+  allStudies        AllStudy[]
 
   workflow Workflow?
 
@@ -161,26 +156,11 @@ model File {
   legalDocItemCode String?       @map("legal_doc_item_code")
   legalDocItem     LegalDocItem? @relation(fields: [legalDocItemCode], references: [legalDocItemCode])
 
-  AssetObjectInfo AssetObjectInfo[]
-  AssetFile       AssetFile[]
+  AssetFile AssetFile[]
 
   @@unique([name])
   @@index([type])
   @@map("file")
-}
-
-model AssetObjectInfo {
-  assetObjectInfoId     Int               @id @default(autoincrement()) @map("asset_object_info_id")
-  fileId                Int               @map("file_id")
-  file                  File              @relation(fields: [fileId], references: [id])
-  autoObjectCatItemCode String            @map("auto_object_cat_item_code")
-  autoObjectCatItem     AutoObjectCatItem @relation(fields: [autoObjectCatItemCode], references: [autoObjectCatItemCode])
-  objectPage            String            @map("object_page")
-  objectBbox            String            @map("object_bbox")
-  objectScore           String            @map("object_score")
-  pathToImage           String            @map("path_to_image")
-
-  @@map("asset_object_info")
 }
 
 model ManCatLabelRef {
@@ -193,26 +173,6 @@ model ManCatLabelRef {
   @@map("man_cat_label_ref")
 }
 
-model AssetFormatComposition {
-  assetFormatCompositionId Int             @id @default(autoincrement()) @map("asset_format_composition_id")
-  assetId                  Int             @map("asset_id")
-  asset                    Asset           @relation(fields: [assetId], references: [assetId], onDelete: Cascade)
-  assetFormatItemCode      String          @map("asset_format_item_code")
-  assetFormatItem          AssetFormatItem @relation(fields: [assetFormatItemCode], references: [assetFormatItemCode])
-
-  @@map("asset_format_composition")
-}
-
-model AssetKindComposition {
-  assetKindCompositionId Int           @id @default(autoincrement()) @map("asset_kind_composition_id")
-  assetId                Int           @map("asset_id")
-  asset                  Asset         @relation(fields: [assetId], references: [assetId], onDelete: Cascade)
-  assetKindItemCode      String        @map("asset_kind_item_code")
-  assetKindItem          AssetKindItem @relation(fields: [assetKindItemCode], references: [assetKindItemCode])
-
-  @@map("asset_kind_composition")
-}
-
 model StatusWork {
   statusWorkId       Int            @id @default(autoincrement()) @map("status_work_id")
   assetId            Int            @map("asset_id")
@@ -223,17 +183,6 @@ model StatusWork {
   processor          String?        @map("processor")
 
   @@map("status_work")
-}
-
-model AutoCat {
-  autoCatId            Int              @id @default(autoincrement()) @map("auto_cat_id")
-  assetId              Int              @map("asset_id")
-  asset                Asset            @relation(fields: [assetId], references: [assetId], onDelete: Cascade)
-  autoCatLabelItemCode String           @map("auto_cat_label_item_code")
-  autoCatLabelItem     AutoCatLabelItem @relation(fields: [autoCatLabelItemCode], references: [autoCatLabelItemCode])
-  autoCatLabelScore    Int              @map("auto_cat_label_score")
-
-  @@map("auto_cat")
 }
 
 model TypeNatRel {
@@ -276,81 +225,37 @@ model AssetContact {
   @@map("asset_contact")
 }
 
-model Publication {
-  publicationId      Int            @id @default(autoincrement()) @map("publication_id")
-  pubChannelItemCode String         @map("pub_channel_item_code")
-  pubChannelItem     PubChannelItem @relation(fields: [pubChannelItemCode], references: [pubChannelItemCode])
-  publicationDate    DateTime       @map("publication_date")
-  description        String         @map("description")
-  link               String         @map("link")
-
-  assetPublications AssetPublication[]
-
-  @@map("publication")
-}
-
-model AssetPublication {
-  assetId       Int         @map("asset_id")
-  asset         Asset       @relation(fields: [assetId], references: [assetId], onDelete: Cascade)
-  publicationId Int         @map("publication_id")
-  publication   Publication @relation(fields: [publicationId], references: [publicationId])
-
-  @@id([assetId, publicationId])
-  @@map("asset_publication")
-}
-
-model InternalProject {
-  internalProjectId Int     @id @default(autoincrement()) @map("internal_project_id")
-  name              String  @map("name")
-  description       String? @map("description")
-  dateDelivered     String  @map("date_delivered")
-
-  assetInternalProjects AssetInternalProject[]
-
-  @@map("internal_project")
-}
-
-model AssetInternalProject {
-  assetId           Int             @map("asset_id")
-  asset             Asset           @relation(fields: [assetId], references: [assetId], onDelete: Cascade)
-  internalProjectId Int             @map("internal_project_id")
-  internalProject   InternalProject @relation(fields: [internalProjectId], references: [internalProjectId])
-
-  @@id([assetId, internalProjectId])
-  @@map("asset_internal_project")
-}
-
 model StudyArea {
-  studyAreaId         Int                      @id @default(autoincrement()) @map("study_area_id")
-  assetId             Int                      @map("asset_id")
-  asset               Asset                    @relation(fields: [assetId], references: [assetId], onDelete: Cascade)
-  geomQualityItemCode String                   @map("geom_quality_item_code")
-  geomQualityItem     GeomQualityItem          @relation(fields: [geomQualityItemCode], references: [geomQualityItemCode])
-  geom                Unsupported("geometry")?
+  studyAreaId Int                                     @id @default(autoincrement()) @map("study_area_id")
+  assetId     Int                                     @map("asset_id")
+  asset       Asset                                   @relation(fields: [assetId], references: [assetId], onDelete: Cascade)
+  /// this referenced geom_quality_item table, but contained only unkown (sic!) and revised; kept for records
+  isRevised   Boolean                                 @default(false) @map("is_revised")
+  geom        Unsupported("geometry(Polygon, 2056)")?
 
   @@index([geom], type: Gist)
   @@map("study_area")
 }
 
 model StudyLocation {
-  studyLocationId     Int                      @id @default(autoincrement()) @map("study_location_id")
-  assetId             Int                      @map("asset_id")
-  asset               Asset                    @relation(fields: [assetId], references: [assetId], onDelete: Cascade)
-  geomQualityItemCode String                   @map("geom_quality_item_code")
-  geomQualityItem     GeomQualityItem          @relation(fields: [geomQualityItemCode], references: [geomQualityItemCode])
-  geom                Unsupported("geometry")?
+  studyLocationId Int                                   @id @default(autoincrement()) @map("study_location_id")
+  assetId         Int                                   @map("asset_id")
+  asset           Asset                                 @relation(fields: [assetId], references: [assetId], onDelete: Cascade)
+  /// this referenced geom_quality_item table, but contained only unkown (sic!) and revised; kept for records
+  isRevised       Boolean                               @default(false) @map("is_revised")
+  geom            Unsupported("geometry(Point, 2056)")?
 
   @@index([geom], type: Gist)
   @@map("study_location")
 }
 
 model StudyTrace {
-  studyTraceId        Int                      @id @default(autoincrement()) @map("study_trace_id")
-  assetId             Int                      @map("asset_id")
-  asset               Asset                    @relation(fields: [assetId], references: [assetId], onDelete: Cascade)
-  geomQualityItemCode String                   @map("geom_quality_item_code")
-  geomQualityItem     GeomQualityItem          @relation(fields: [geomQualityItemCode], references: [geomQualityItemCode])
-  geom                Unsupported("geometry")?
+  studyTraceId Int                                        @id @default(autoincrement()) @map("study_trace_id")
+  assetId      Int                                        @map("asset_id")
+  asset        Asset                                      @relation(fields: [assetId], references: [assetId], onDelete: Cascade)
+  /// this referenced geom_quality_item table, but contained only unkown (sic!) and revised; kept for records
+  isRevised    Boolean                                    @default(false) @map("is_revised")
+  geom         Unsupported("geometry(LineString, 2056)")?
 
   @@index([geom], type: Gist)
   @@map("study_trace")
@@ -370,8 +275,7 @@ model AssetFormatItem {
   descriptionIt       String @map("description_it")
   descriptionEn       String @map("description_en")
 
-  assets                  Asset[]
-  assetFormatCompositions AssetFormatComposition[]
+  assets Asset[]
 
   @@map("asset_format_item")
 }
@@ -390,48 +294,9 @@ model AssetKindItem {
   descriptionIt     String @map("description_it")
   descriptionEn     String @map("description_en")
 
-  assets                Asset[]
-  assetKindCompositions AssetKindComposition[]
+  assets Asset[]
 
   @@map("asset_kind_item")
-}
-
-model AutoCatLabelItem {
-  autoCatLabelItemCode String @id @map("asset_cat_label_item_code")
-  geolCode             String @map("geol_code")
-  name                 String @map("name")
-  nameDe               String @map("name_de")
-  nameFr               String @map("name_fr")
-  nameIt               String @map("name_it")
-  nameEn               String @map("name_en")
-  description          String @map("description")
-  descriptionDe        String @map("description_de")
-  descriptionFr        String @map("description_fr")
-  descriptionIt        String @map("description_it")
-  descriptionEn        String @map("description_en")
-
-  autoCats AutoCat[]
-
-  @@map("auto_cat_label_item")
-}
-
-model AutoObjectCatItem {
-  autoObjectCatItemCode String @id @map("auto_object_cat_item_code")
-  geolCode              String @map("geol_code")
-  name                  String @map("name")
-  nameDe                String @map("name_de")
-  nameFr                String @map("name_fr")
-  nameIt                String @map("name_it")
-  nameEn                String @map("name_en")
-  description           String @map("description")
-  descriptionDe         String @map("description_de")
-  descriptionFr         String @map("description_fr")
-  descriptionIt         String @map("description_it")
-  descriptionEn         String @map("description_en")
-
-  assetObjectInfos AssetObjectInfo[]
-
-  @@map("auto_object_cat_item")
 }
 
 model ContactKindItem {
@@ -451,27 +316,6 @@ model ContactKindItem {
   contacts Contact[]
 
   @@map("contact_kind_item")
-}
-
-model GeomQualityItem {
-  geomQualityItemCode String @id @map("geom_quality_item_code")
-  geolCode            String @map("geol_code")
-  name                String @map("name")
-  nameDe              String @map("name_de")
-  nameFr              String @map("name_fr")
-  nameIt              String @map("name_it")
-  nameEn              String @map("name_en")
-  description         String @map("description")
-  descriptionDe       String @map("description_de")
-  descriptionFr       String @map("description_fr")
-  descriptionIt       String @map("description_it")
-  descriptionEn       String @map("description_en")
-
-  studyAreas     StudyArea[]
-  studyLocations StudyLocation[]
-  studyTraces    StudyTrace[]
-
-  @@map("geom_quality_item")
 }
 
 model LanguageItem {
@@ -557,25 +401,6 @@ model LegalDocItem {
   File             File[]
 
   @@map("legal_doc_item")
-}
-
-model PubChannelItem {
-  pubChannelItemCode String @id @map("pub_channel_item_code")
-  geolCode           String @map("geol_code")
-  name               String @map("name")
-  nameDe             String @map("name_de")
-  nameFr             String @map("name_fr")
-  nameIt             String @map("name_it")
-  nameEn             String @map("name_en")
-  description        String @map("description")
-  descriptionDe      String @map("description_de")
-  descriptionFr      String @map("description_fr")
-  descriptionIt      String @map("description_it")
-  descriptionEn      String @map("description_en")
-
-  publications Publication[]
-
-  @@map("pub_channel_item")
 }
 
 model StatusAssetUseItem {

@@ -90,7 +90,6 @@ export const fakeAssetEditDetail = (): AssetEditDetail => ({
   titlePublic: faker.commerce.productName(),
   assetContacts: [],
   assetFiles: [],
-  assetFormatCompositions: [],
   assetFormatItemCode: fakeAssetFormatItemCode(),
   assetKindItemCode: fakeAssetKindItemCode(),
   assetMain: O.none,

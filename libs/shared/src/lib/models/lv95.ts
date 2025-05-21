@@ -47,9 +47,7 @@ export const eqLV95 = TEq.struct({
 export const toPosition = (lv95: LV95) => [lv95.x, lv95.y];
 
 export const LV95Array = C.array(LV95);
-export type LV95Array = C.TypeOf<typeof LV95Array>;
 export const eqLV95Array = TEq.array(eqLV95);
-export const toPositions = (lv95s: LV95[]) => lv95s.map(toPosition);
 
 const makeLV95FromSeparatedString = (codecName: string, separator: string) => {
   const decoder = pipe(
@@ -68,10 +66,8 @@ const makeLV95FromSeparatedString = (codecName: string, separator: string) => {
 };
 
 export const LV95FromSpaceSeparatedString = makeLV95FromSeparatedString('LV95FromSpaceSeparatedString', ' ');
-type LV95FromSpaceSeparatedString = D.TypeOf<typeof LV95FromSpaceSeparatedString>;
 
 export const LV95FromCommaSeparatedString = makeLV95FromSeparatedString('LV95FromCommaSeparatedString', ',');
-type LV95FromCommaSeparatedString = D.TypeOf<typeof LV95FromCommaSeparatedString>;
 
 export const roundToMillimeter = (n: number) => Math.round(n * 1000) / 1000;
 
@@ -84,11 +80,3 @@ export const lv95RoundedToMillimeter = (lv95: LV95): LV95 => ({
   x: roundToMillimeter(lv95.x) as LV95X,
   y: roundToMillimeter(lv95.y) as LV95Y,
 });
-
-export const parseLV95 = (value: string, { separator }: { separator: string }): LV95 => {
-  const [y, x] = value.split(separator, 2);
-  return {
-    x: parseFloat(x) as LV95X,
-    y: parseFloat(y) as LV95Y,
-  };
-};

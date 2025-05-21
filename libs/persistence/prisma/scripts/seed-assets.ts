@@ -25,17 +25,13 @@ const prisma = new PrismaClient();
 export const importAssets = async () => {
   await prisma.$executeRawUnsafe(`truncate table public.asset_format_item cascade;`);
   await prisma.$executeRawUnsafe(`truncate table public.asset_kind_item cascade;`);
-  await prisma.$executeRawUnsafe(`truncate table public.auto_object_cat_item cascade;`);
-  await prisma.$executeRawUnsafe(`truncate table public.auto_cat_label_item cascade;`);
   await prisma.$executeRawUnsafe(`truncate table public.contact_kind_item cascade;`);
-  await prisma.$executeRawUnsafe(`truncate table public.geom_quality_item cascade;`);
   await prisma.$executeRawUnsafe(`truncate table public.language_item cascade;`);
   await prisma.$executeRawUnsafe(`truncate table public.legal_doc_item cascade;`);
   await prisma.$executeRawUnsafe(`truncate table public.status_asset_use_item cascade;`);
   await prisma.$executeRawUnsafe(`truncate table public.man_cat_label_item cascade;`);
   await prisma.$executeRawUnsafe(`truncate table public.man_cat_label_ref cascade;`);
   await prisma.$executeRawUnsafe(`truncate table public.nat_rel_item cascade;`);
-  await prisma.$executeRawUnsafe(`truncate table public.pub_channel_item cascade;`);
   await prisma.$executeRawUnsafe(`truncate table public.status_work_item cascade;`);
   await prisma.$executeRawUnsafe(`truncate table public.asset_x_asset_y cascade;`);
   await prisma.$executeRawUnsafe(`truncate table public.asset cascade;`);
@@ -52,34 +48,40 @@ export const importAssets = async () => {
   await updateSequences(false);
 
   await prisma.$executeRawUnsafe(`
-        create table if not exists public.tmp_geom_quality_mapping
-        (
-            id integer not null,
-            code text collate pg_catalog."default" not null,
-            constraint tmp_geom_quality_mapping_pkey primary key (id)
-        );
-    `);
+    create table if not exists public.tmp_geom_quality_mapping
+    (
+      id
+      integer
+      not
+      null,
+      code
+      text
+      collate
+      pg_catalog
+      .
+      "default"
+      not
+      null,
+      constraint
+      tmp_geom_quality_mapping_pkey
+      primary
+      key
+    (
+      id
+    )
+      );
+  `);
   // await prisma.$executeRawUnsafe(`alter table tmp_geom_quality_mapping owner to swissgeol_asset;`);
   //
 
   const assetFormItems = await importValueList('AssetFormatItem', 'assetformatitem', 'assetFormatItemCode');
   const assetKindItems = await importValueList('AssetKindItem', 'assetkinditem', 'assetKindItemCode');
-  const autoCatLabelItems = await importValueList('AutoCatLabelItem', 'autocatlabelitem', 'autoCatLabelItemCode');
-  const autoObjectCatItems = await importValueList('AutoObjectCatItem', 'autoobjectcatitem', 'autoObjectCatItemCode');
   const contactKindItems = await importValueList('ContactKindItem', 'contactkinditem', 'contactKindItemCode');
-
-  const geomQualityItems = await importValueList('GeomQualityItem', 'geomqualityitem', 'geomQualityItemCode');
-  for await (const item of geomQualityItems) {
-    await prisma.$executeRawUnsafe(
-      `insert into public.tmp_geom_quality_mapping (id, code) values (${item.id}, '${item.code}')`,
-    );
-  }
 
   const manCatLabelItems = await importValueList('ManCatLabelItem', 'mancatlabelitem', 'manCatLabelItemCode');
   const natRelItems = await importValueList('NatRelItem', 'natrelitem', 'natRelItemCode');
   const languageItems = await importValueList('LanguageItem', 'languageitem', 'languageItemCode');
   const legalDocItems = await importValueList('LegalDocItem', 'legaldocitem', 'legalDocItemCode');
-  const pubChannelItems = await importValueList('PubChannelItem', 'pubchannelitem', 'pubChannelItemCode');
   const statusAssetUseItems = await importValueList(
     'StatusAssetUseItem',
     'statusassetuseitem',
@@ -226,28 +228,11 @@ export const importAssets = async () => {
     assetId: Number(parsed[1]),
   }));
 
-  await importToTable('AssetFormatComposition', buildPath('assetformatcomposition'), (parsed) => ({
-    assetKindFormatItemCode: lookupCode(assetKindItems, Number(parsed[0])),
-    assetId: Number(parsed[1]),
-  }));
-
-  await importToTable('AssetKindComposition', buildPath('assetkindcomposition'), (parsed) => ({
-    assetKindItemCode: lookupCode(assetKindItems, Number(parsed[0])),
-    assetId: Number(parsed[1]),
-  }));
-
   await importToTable('StatusWork', buildPath('statuswork'), (parsed) => ({
     statusWorkId: Number(parsed[0]),
     statusWorkItemCode: lookupCode(statusWorkItems, Number(parsed[1])),
     statusWorkDate: createDate(parsed[2]),
     assetId: Number(parsed[3]),
-  }));
-
-  await importToTable('AutoCat', buildPath('autocat'), (parsed) => ({
-    autoCatId: Number(parsed[0]),
-    assetId: Number(parsed[1]),
-    autoCatLabelItemCode: lookupCode(autoCatLabelItems, Number(parsed[2])),
-    autoCatLabelScore: Number(parsed[3]),
   }));
 
   await importToTable('TypeNatRel', buildPath('typenatrel'), (parsed) => ({
@@ -287,39 +272,14 @@ export const importAssets = async () => {
     role: parsed[2],
   }));
 
-  await importToTable('Publication', buildPath('publication'), (parsed) => ({
-    publicationId: Number(parsed[0]),
-    pubChannelItemCode: lookupCode(pubChannelItems, Number(parsed[1])),
-    datePublication: createDate(parsed[2]),
-    description: parsed[3] || null,
-    link: parsed[4] || null,
-  }));
-
-  await importToTable('AssetPublication', buildPath('asset_publication'), (parsed) => ({
-    assetId: Number(parsed[0]),
-    publicationId: Number(parsed[1]),
-  }));
-
-  await importToTable('InternalProject', buildPath('internalproject'), (parsed) => ({
-    internalProjectId: Number(parsed[0]),
-    name: parsed[1],
-    description: parsed[2] || null,
-    dateDelivered: createDate(parsed[3]),
-  }));
-
-  await importToTable('AssetInternalProject', buildPath('asset_internalproject'), (parsed) => ({
-    assetId: Number(parsed[0]),
-    internalProjectId: Number(parsed[1]),
-  }));
-
   await exec('./import-shapes.sh');
 
   const shapeAreasRaw = (
     (await prisma.$queryRawUnsafe(`
-        select a.study_area_id, a.asset_id, m.code as geom_quality_item_code, st_astext(a.wkb_geometry) as geom
-        from tmp_study_area a
-        inner join tmp_geom_quality_mapping m
-        on a.geom_quality_item_id = m.id
+      select a.study_area_id, a.asset_id, m.code as geom_quality_item_code, st_astext(a.wkb_geometry) as geom
+      from tmp_study_area a
+             inner join tmp_geom_quality_mapping m
+                        on a.geom_quality_item_id = m.id
     `)) as any[]
   )
     .map(
@@ -332,16 +292,17 @@ export const importAssets = async () => {
     .join(',\n');
 
   await prisma.$queryRawUnsafe(
-    `insert into study_area (study_area_id, asset_id, geom_quality_item_code, geom) values ${shapeAreasRaw}`,
+    `insert into study_area (study_area_id, asset_id, geom_quality_item_code, geom)
+     values ${shapeAreasRaw}`,
   );
   console.log(`✅ Successfully imported area shape file (${shapeAreasRaw.length} rows)`);
 
   const shapeLocationsRaw = (
     (await prisma.$queryRawUnsafe(`
-        select a.study_location_id, a.asset_id, m.code as geom_quality_item_code, st_astext(a.wkb_geometry) as geom
-        from tmp_study_location a
-        inner join tmp_geom_quality_mapping m
-        on a.geom_quality_item_id = m.id
+      select a.study_location_id, a.asset_id, m.code as geom_quality_item_code, st_astext(a.wkb_geometry) as geom
+      from tmp_study_location a
+             inner join tmp_geom_quality_mapping m
+                        on a.geom_quality_item_id = m.id
     `)) as any[]
   )
     .map(
@@ -354,16 +315,17 @@ export const importAssets = async () => {
     .join(',\n');
 
   await prisma.$queryRawUnsafe(
-    `insert into study_location (study_location_id, asset_id, geom_quality_item_code, geom) values ${shapeLocationsRaw}`,
+    `insert into study_location (study_location_id, asset_id, geom_quality_item_code, geom)
+     values ${shapeLocationsRaw}`,
   );
   console.log(`✅ Successfully imported location shape file (${shapeLocationsRaw.length} rows)`);
 
   const shapeTracesRaw = (
     (await prisma.$queryRawUnsafe(`
-        select a.study_trace_id, a.asset_id, m.code as geom_quality_item_code, st_astext(a.wkb_geometry) as geom
-        from tmp_study_trace a
-        inner join tmp_geom_quality_mapping m
-        on a.geom_quality_item_id = m.id
+      select a.study_trace_id, a.asset_id, m.code as geom_quality_item_code, st_astext(a.wkb_geometry) as geom
+      from tmp_study_trace a
+             inner join tmp_geom_quality_mapping m
+                        on a.geom_quality_item_id = m.id
     `)) as any[]
   )
     .map(
@@ -376,7 +338,8 @@ export const importAssets = async () => {
     .join(',\n');
 
   await prisma.$queryRawUnsafe(
-    `insert into study_trace (study_trace_id, asset_id, geom_quality_item_code, geom) values ${shapeTracesRaw}`,
+    `insert into study_trace (study_trace_id, asset_id, geom_quality_item_code, geom)
+     values ${shapeTracesRaw}`,
   );
   console.log(`✅ Successfully imported trace shape file (${shapeTracesRaw.length} rows)`);
 
@@ -515,27 +478,9 @@ const updateAllValueListData20230309 = async () => {
   await updateValueListData(importValueListUpdatedData20230309, 'AssetKindItem', 'assetkinditem', 'assetKindItemCode');
   await updateValueListData(
     importValueListUpdatedData20230309,
-    'AutoCatLabelItem',
-    'autocatlabelitem',
-    'autoCatLabelItemCode',
-  );
-  await updateValueListData(
-    importValueListUpdatedData20230309,
-    'AutoObjectCatItem',
-    'autoobjectcatitem',
-    'autoObjectCatItemCode',
-  );
-  await updateValueListData(
-    importValueListUpdatedData20230309,
     'ContactKindItem',
     'contactkinditem',
     'contactKindItemCode',
-  );
-  await updateValueListData(
-    importValueListUpdatedData20230309,
-    'GeomQualityItem',
-    'geomqualityitem',
-    'geomQualityItemCode',
   );
   await updateValueListData(importValueListUpdatedData20230309, 'LanguageItem', 'languageitem', 'languageItemCode');
   await updateValueListData(importValueListUpdatedData20230309, 'LegalDocItem', 'legaldocitem', 'legalDocItemCode');
@@ -550,12 +495,6 @@ const updateAllValueListData20230309 = async () => {
     },
   );
   await updateValueListData(importValueListUpdatedData20230309, 'NatRelItem', 'natrelitem', 'natRelItemCode');
-  await updateValueListData(
-    importValueListUpdatedData20230309,
-    'PubChannelItem',
-    'pubchannelitem',
-    'pubChannelItemCode',
-  );
   await updateValueListData(
     importValueListUpdatedData20230309,
     'StatusAssetUseItem',
@@ -629,18 +568,12 @@ const updateValueListData = async <T extends string>(
 const updateSequences = async (toMax: boolean) => {
   const sequences = [
     ['asset', 'asset_id'],
-    ['asset_format_composition', 'asset_format_composition_id'],
-    ['asset_kind_composition', 'asset_kind_composition_id'],
-    ['asset_object_info', 'asset_object_info_id'],
-    ['auto_cat', 'auto_cat_id'],
     ['contact', 'contact_id'],
     ['file', 'file_id'],
     ['id', 'id_id'],
     ['internal_use', 'internal_use_id'],
-    ['internal_project', 'internal_project_id'],
     ['legal_doc', 'legal_doc_id'],
     ['public_use', 'public_use_id'],
-    ['publication', 'publication_id'],
     ['status_work', 'status_work_id'],
     ['study_area', 'study_area_id'],
     ['study_location', 'study_location_id'],

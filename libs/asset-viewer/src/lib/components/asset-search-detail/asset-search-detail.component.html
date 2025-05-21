@@ -118,15 +118,6 @@
           <td>{{ assetDetail.assetFormatItem | valueItemName }}</td>
         </tr>
         <tr>
-          <th translate="search.content"></th>
-          <td>
-            <ng-container *ngIf="assetDetail.assetFormatCompositions.length === 0">&ndash;</ng-container>
-            <ng-container *rxFor="let assetFormatComposition of assetDetail.assetFormatCompositions; let last = last">
-              {{ (assetFormatComposition | valueItemName) + (last ? "" : ", ") }}
-            </ng-container>
-          </td>
-        </tr>
-        <tr>
           <th translate="search.nationalInterest"></th>
           <td>
             <ng-container *ngIf="assetDetail.typeNatRels.length === 0">&ndash;</ng-container>
