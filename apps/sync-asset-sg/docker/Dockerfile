@@ -10,7 +10,9 @@ ENV NODE_ENV=development
 WORKDIR /app
 COPY . .
 
-RUN npm install --ignore-scripts \
+RUN --mount=type=secret,id=github_token \
+    export GITHUB_TOKEN=$(cat /run/secrets/github_token) \
+ && npm install --ignore-scripts \
  && npx nx build sync-asset-sg --configuration=production
 
 # final image build
