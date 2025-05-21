@@ -64,10 +64,11 @@
     </div>
 
     <asset-sg-editor-save
-      [isSaveDisabled]="form.invalid || !form.dirty"
+      [isSaveDisabled]="form.invalid || !form.dirty || activeTab === Tab.Geometries"
       [hasUnsavedChanges]="form.dirty"
       (discard)="initializeForm()"
       (save)="save()"
+      [tooltip]="activeTab === Tab.Geometries ? ('edit.tabs.geometries.disabledSave' | translate) : undefined"
     ></asset-sg-editor-save>
   </div>
 </div>

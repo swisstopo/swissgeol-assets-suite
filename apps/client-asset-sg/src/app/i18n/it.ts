@@ -253,6 +253,8 @@ export const itAppTranslations: AppTranslations = {
         instructionsPolygonOrLIne: 'IT Zeichnen Sie mindestens {{ count }} Punkte',
         instructionsMorePolygonOrLIne: 'IT Zeichnen Sie mindestens {{ count }} weitere Punkte',
         createGeometry: 'IT Geometrie erstellen',
+        disabledSave:
+          'IT Speichern im Geometrie-Tab ist momentan nicht möglich. Bitte wechseln Sie auf einen anderen Tab.',
       },
       administration: {
         tabName: 'IT Administration',
