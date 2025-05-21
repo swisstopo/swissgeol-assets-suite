@@ -2,10 +2,10 @@ type EnvType = typeof String | typeof Number | typeof Boolean;
 type Env<T extends EnvType> = T extends typeof String
   ? string
   : T extends typeof Number
-  ? number
-  : T extends typeof Boolean
-  ? boolean
-  : never;
+    ? number
+    : T extends typeof Boolean
+      ? boolean
+      : never;
 
 export const readEnv = <T extends EnvType = typeof String>(name: string, type: T = String as T): Env<T> | null => {
   const value = process.env[name];

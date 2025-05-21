@@ -4,15 +4,15 @@
     (shouldShowFiltersChanged)="toggleFilters($event)"
   ></asset-sg-search-and-filter>
   @if (shouldShowFilters) {
-  <div>
-    <asset-sg-filter-selector
-      (filterAdded)="addFilter($event)"
-      (filterRemoved)="removeFilter($event)"
-      title="{{ 'search.status' | translate }}"
-      [filters]="filterForIsActive"
-      multiple
-    ></asset-sg-filter-selector>
-  </div>
+    <div>
+      <asset-sg-filter-selector
+        (filterAdded)="addFilter($event)"
+        (filterRemoved)="removeFilter($event)"
+        title="{{ 'search.status' | translate }}"
+        [filters]="filterForIsActive"
+        multiple
+      ></asset-sg-filter-selector>
+    </div>
   }
 
   <table
@@ -37,9 +37,9 @@
       <td mat-cell *matCellDef="let workgroup">
         <mat-chip-set>
           @for (usersPerRole of workgroup.usersPerRole; track usersPerRole) {
-          <asset-sg-chip [disabled]="workgroup.disabledAt" type="tertiary"
-            >{{ usersPerRole[0] }} ({{ usersPerRole[1] }})
-          </asset-sg-chip>
+            <asset-sg-chip [disabled]="workgroup.disabledAt" type="tertiary"
+              >{{ usersPerRole[0] }} ({{ usersPerRole[1] }})
+            </asset-sg-chip>
           }
         </mat-chip-set>
       </td>

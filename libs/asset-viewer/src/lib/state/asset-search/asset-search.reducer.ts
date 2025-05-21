@@ -1,16 +1,15 @@
 import { appSharedStateActions, AppState } from '@asset-sg/client-shared';
 import {
-  AssetEditDetail,
   AssetSearchQuery,
-  AssetSearchResult,
   AssetSearchStats,
   GeomFromGeomText,
   LineString,
   LV95,
-  makeEmptyAssetSearchResults,
+  makeEmptyAssetSearchStats,
   Point,
   StudyPolygon,
 } from '@asset-sg/shared';
+import { AssetSearchResult, makeEmptyAssetSearchResults } from '@asset-sg/shared/v2';
 import { createReducer, on } from '@ngrx/store';
 import * as E from 'fp-ts/Either';
 
@@ -22,24 +21,16 @@ import { mapAssetAccessToAccessType } from '../../utils/access-type';
 import * as actions from './asset-search.actions';
 import { PanelState } from './asset-search.actions';
 
-export enum LoadingState {
-  Initial = 'initial',
-  Loading = 'loading',
-  Loaded = 'loaded',
-}
-
 export interface AssetSearchState {
   query: AssetSearchQuery;
   results: AssetSearchResult;
   stats: AssetSearchStats;
   studies: AllStudyDTO[];
-  currentAsset: AssetEditDetail | null;
   ui: AssetSearchUiState;
 
   isLoadingStudies: boolean;
   isLoadingResults: boolean;
   isLoadingStats: boolean;
-  isLoadingAsset: boolean;
 }
 
 export interface AssetSearchUiState {
@@ -57,18 +48,7 @@ const initialState: AssetSearchState = {
   query: {},
   studies: [],
   results: makeEmptyAssetSearchResults(),
-  stats: {
-    total: 0,
-    authorIds: [],
-    assetKindItemCodes: [],
-    languageItemCodes: [],
-    geometryCodes: [],
-    manCatLabelItemCodes: [],
-    usageCodes: [],
-    workgroupIds: [],
-    createDate: null,
-  },
-  currentAsset: null,
+  stats: makeEmptyAssetSearchStats(),
   ui: {
     filtersState: PanelState.OpenedAutomatically,
     resultsState: PanelState.ClosedAutomatically,
@@ -79,7 +59,6 @@ const initialState: AssetSearchState = {
   isLoadingStudies: false,
   isLoadingResults: false,
   isLoadingStats: false,
-  isLoadingAsset: false,
 };
 
 export const assetSearchReducer = createReducer(
@@ -89,7 +68,7 @@ export const assetSearchReducer = createReducer(
     (state, { query }): AssetSearchState => ({
       ...state,
       query,
-    })
+    }),
   ),
   on(
     actions.updateSearchQuery,
@@ -99,7 +78,7 @@ export const assetSearchReducer = createReducer(
         ...state.query,
         ...query,
       },
-    })
+    }),
   ),
   on(
     actions.setStudies,
@@ -107,7 +86,7 @@ export const assetSearchReducer = createReducer(
       ...state,
       studies: studies ?? state.studies,
       isLoadingStudies: isLoading ?? state.isLoadingStudies,
-    })
+    }),
   ),
   on(
     actions.setResults,
@@ -115,8 +94,7 @@ export const assetSearchReducer = createReducer(
       ...state,
       results: results ?? state.results,
       isLoadingResults: isLoading ?? state.isLoadingResults,
-      currentAsset: results?.data.length === 1 ? results.data[0] : null,
-    })
+    }),
   ),
   on(
     actions.setStats,
@@ -124,29 +102,21 @@ export const assetSearchReducer = createReducer(
       ...state,
       stats: stats ?? state.stats,
       isLoadingStats: isLoading ?? state.isLoadingStats,
-    })
-  ),
-  on(
-    actions.setCurrentAsset,
-    (state, { asset, isLoading }): AssetSearchState => ({
-      ...state,
-      currentAsset: asset === undefined ? state.currentAsset : asset,
-      isLoadingAsset: isLoading ?? state.isLoadingAsset,
-    })
+    }),
   ),
   on(
     actions.setFiltersState,
     (state, { state: filtersState }): AssetSearchState => ({
       ...state,
       ui: { ...state.ui, filtersState },
-    })
+    }),
   ),
   on(
     actions.setResultsState,
     (state, { state: resultsState }): AssetSearchState => ({
       ...state,
       ui: { ...state.ui, resultsState },
-    })
+    }),
   ),
   on(actions.setScrollOffsetForResults, (state, { offset }): AssetSearchState => {
     return {
@@ -165,34 +135,30 @@ export const assetSearchReducer = createReducer(
     (state): AssetSearchState => ({
       ...state,
       query: {},
-      currentAsset: null,
       ui: {
         ...state.ui,
         resultsState: PanelState.OpenedManually,
       },
-    })
+    }),
   ),
   on(
-    appSharedStateActions.removeAssetFromSearch,
+    appSharedStateActions.removeAsset,
     (state, { assetId }): AssetSearchState => ({
       ...state,
-      currentAsset: state.currentAsset?.assetId === assetId ? null : state.currentAsset,
       results: {
         ...state.results,
         data: state.results.data.filter((it) => it.assetId !== assetId),
       },
       studies: state.studies?.filter((study) => study.assetId !== assetId) ?? null,
-    })
+    }),
   ),
 
-  on(appSharedStateActions.updateAssetInSearch, (state, { asset }): AssetSearchState => {
-    const mapAsset = (it: AssetEditDetail): AssetEditDetail => (it.assetId === asset.assetId ? asset : it);
+  on(appSharedStateActions.updateAsset, (state, { asset }): AssetSearchState => {
     return {
       ...state,
-      currentAsset: state.currentAsset === null ? null : mapAsset(state.currentAsset),
       results: {
         ...state.results,
-        data: state.results.data.map(mapAsset),
+        data: state.results.data,
       },
       studies:
         state.studies
@@ -207,10 +173,10 @@ export const assetSearchReducer = createReducer(
                 centroid,
                 accessType: mapAssetAccessToAccessType(asset),
               };
-            })
+            }),
           ) ?? null,
     };
-  })
+  }),
 );
 
 function extractCentroidFromStudy(study: { assetId: number; studyId: string; geomText: string }): {

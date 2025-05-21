@@ -74,12 +74,12 @@ export class WorkgroupsComponent
           return { ...workgroup, usersPerRole };
         });
         this.dataSource.data = this.data;
-      })
+      }),
     );
     this.subscriptions.add(
       this.users$.subscribe((users) => {
         this.users = users;
-      })
+      }),
     );
   }
 }

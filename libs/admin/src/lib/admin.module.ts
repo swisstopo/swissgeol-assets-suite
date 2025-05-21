@@ -34,12 +34,16 @@ import {
   AnchorComponent,
   ButtonComponent,
   ChipComponent,
+  DetailSectionComponent,
   DrawerComponent,
   DrawerPanelComponent,
   FilterSelectorComponent,
+  PageHeaderComponent,
   SearchAndFilterComponent,
   SelectComponent,
   SmartTranslatePipe,
+  TabComponent,
+  TabsComponent,
   TextInputComponent,
   ToggleStatusComponent,
   ViewChildMarker,
@@ -56,7 +60,6 @@ import { AdminPageRoutingModule } from './admin-routing.module';
 import { AddUsersToWorkgroupDialogComponent } from './components/add-users-to-workgroup-dialog/add-users-to-workgroup-dialog.component';
 import { AddWorkgroupToUserDialogComponent } from './components/add-workgroup-to-user-dialog/add-workgroup-to-user-dialog.component';
 import { AdminPageComponent } from './components/admin-page';
-import { DetailSectionComponent } from './components/detail-section/detail-section.component';
 import { UserEditComponent } from './components/user-edit/user-edit.component';
 import { UsersComponent } from './components/users/users.component';
 import { WorkgroupEditComponent } from './components/workgroup-edit/workgroup-edit.component';
@@ -74,7 +77,6 @@ import { adminReducer } from './state/admin.reducer';
     UserEditComponent,
     AddUsersToWorkgroupDialogComponent,
     AddWorkgroupToUserDialogComponent,
-    DetailSectionComponent,
   ],
   providers: [
     {
@@ -138,10 +140,14 @@ import { adminReducer } from './state/admin.reducer';
     MatSort,
     MatSortHeader,
     ChipComponent,
+    DetailSectionComponent,
     SearchAndFilterComponent,
     ToggleStatusComponent,
     FormsModule,
     SelectComponent,
+    PageHeaderComponent,
+    TabsComponent,
+    TabComponent,
   ],
 })
 export class AdminModule {}

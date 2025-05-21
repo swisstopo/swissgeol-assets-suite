@@ -1,0 +1,5 @@
+@for (tab of tabs; track tab) {
+  <a [class.active]="activeTab === tab" [attr.data-tab]="tab" (click)="selectTab(tab)" translate>
+    edit.tabs.{{ tab }}.tabName
+  </a>
+}

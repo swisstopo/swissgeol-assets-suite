@@ -1,7 +1,73 @@
-<ng-template #templateDrawerPortalContent>
-  <asset-sg-drawer #tabPageComponent>
-    <asset-sg-drawer-panel widthPercentageOfViewPanel="1" [display]="true">
-      <asset-sg-editor-tab-page></asset-sg-editor-tab-page>
-    </asset-sg-drawer-panel>
-  </asset-sg-drawer>
-</ng-template>
+@if (isLoading) {
+  <mat-progress-bar mode="indeterminate" class="loading-bar" />
+}
+<asset-sg-page-header (backNavigation)="navigateToStart()">
+  <h2>{{ asset?.titlePublic }}</h2>
+  <mat-chip-set>
+    @if (mode === EditorMode.Create) {
+      <asset-sg-chip type="primary">{{ "workflowStatus.Draft" | translate }}</asset-sg-chip>
+    } @else if (workflow !== null) {
+      <asset-sg-chip type="primary" translate>{{ "workflowStatus." + workflow.status | translate }}</asset-sg-chip>
+    }
+    @if (asset?.processor) {
+      <asset-sg-chip type="tertiary">{{ asset?.processor }}</asset-sg-chip>
+    }
+  </mat-chip-set>
+  <div class="spacer"></div>
+
+  @if (asset) {
+    <button asset-sg-secondary (click)="openConfirmDialogForAssetDeletion(asset.assetId)" translate>
+      delete
+      <svg-icon key="delete"></svg-icon>
+    </button>
+  }
+</asset-sg-page-header>
+<div class="editor-container">
+  <asset-sg-editor-navigation [tabs]="availableTabs" [activeTab]="activeTab" [mode]="mode" />
+  <div>
+    <div class="form-container">
+      @switch (activeTab) {
+        @case (Tab.General) {
+          <asset-sg-editor-general
+            [form]="form.controls.general"
+            [asset]="asset"
+            [hasReferences]="hasReferences"
+          ></asset-sg-editor-general>
+        }
+        @case (Tab.Files) {
+          <asset-sg-editor-files [form]="form.controls.files" [asset]="asset"></asset-sg-editor-files>
+        }
+        @case (Tab.Status) {
+          @if (mode === EditorMode.Edit) {
+            <asset-sg-editor-status [workflow]="workflow" />
+          }
+        }
+        @case (Tab.LegacyData) {
+          @if (asset) {
+            <asset-sg-editor-legacy-data [asset]="asset"></asset-sg-editor-legacy-data>
+          }
+        }
+        @case (Tab.References) {
+          <asset-sg-editor-references
+            [form]="form.controls.references"
+            [asset]="asset"
+            [hasWorkgroupId]="!!asset?.workgroupId || !!form.controls.general.controls.workgroupId.value"
+          ></asset-sg-editor-references>
+        }
+        @case (Tab.Geometries) {
+          <asset-sg-edit-geometries [form]="form.controls.geometries"></asset-sg-edit-geometries>
+        }
+        @case (Tab.Contacts) {
+          <asset-sg-editor-contacts [form]="form.controls.contacts" [asset]="asset ?? null"></asset-sg-editor-contacts>
+        }
+      }
+    </div>
+
+    <asset-sg-editor-save
+      [isSaveDisabled]="form.invalid || !form.dirty"
+      [hasUnsavedChanges]="form.dirty"
+      (discard)="initializeForm()"
+      (save)="save()"
+    ></asset-sg-editor-save>
+  </div>
+</div>

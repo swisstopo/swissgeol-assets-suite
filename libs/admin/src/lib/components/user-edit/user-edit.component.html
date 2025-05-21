@@ -1,23 +1,23 @@
 <asset-sg-detail-section [title]="'admin.userPage.general' | translate">
   <div content class="user-data">
     @if (user) {
-    <div class="filter-container">
-      <asset-sg-select
-        [title]="'admin.userPage.lang' | translate"
-        [values]="languageSelector"
-        [initialValues]="[lang]"
-        (selectionChanged)="handleLanguageChanged($event)"
-      ></asset-sg-select>
-    </div>
-    <mat-checkbox
-      [checked]="user.isAdmin"
-      (change)="handleIsAdminChanged($event)"
-      color="primary"
-      class="checkbox"
-      [disabled]="isCurrentUser"
-    >
-      <span translate>admin.userPage.admin</span>
-    </mat-checkbox>
+      <div class="filter-container">
+        <asset-sg-select
+          [title]="'admin.userPage.lang' | translate"
+          [values]="languageSelector"
+          [initialKeys]="[lang]"
+          (selectionChanged)="handleLanguageChanged($event)"
+        ></asset-sg-select>
+      </div>
+      <mat-checkbox
+        [checked]="user.isAdmin"
+        (change)="handleIsAdminChanged($event)"
+        color="primary"
+        class="checkbox"
+        [disabled]="isCurrentUser"
+      >
+        <span translate>admin.userPage.admin</span>
+      </mat-checkbox>
     }
   </div>
 </asset-sg-detail-section>
@@ -34,15 +34,15 @@
       (shouldShowFiltersChanged)="toggleFilters($event)"
     ></asset-sg-search-and-filter>
     @if (shouldShowFilters) {
-    <div class="filters">
-      <asset-sg-filter-selector
-        [title]="'admin.role' | translate"
-        [filters]="roleSelectors"
-        (filterAdded)="addFilter($event)"
-        (filterRemoved)="removeFilter($event)"
-        multiple
-      ></asset-sg-filter-selector>
-    </div>
+      <div class="filters">
+        <asset-sg-filter-selector
+          [title]="'admin.role' | translate"
+          [filters]="roleSelectors"
+          (filterAdded)="addFilter($event)"
+          (filterRemoved)="removeFilter($event)"
+          multiple
+        ></asset-sg-filter-selector>
+      </div>
     }
 
     <table
@@ -72,7 +72,7 @@
         <th mat-header-cell *matHeaderCellDef translate>admin.role</th>
         <td mat-cell *matCellDef="let workgroup">
           <asset-sg-select
-            [initialValues]="[workgroup.role]"
+            [initialKeys]="[workgroup.role]"
             [values]="roles"
             (selectionChanged)="updateWorkgroupRole($event, workgroup.id)"
             small

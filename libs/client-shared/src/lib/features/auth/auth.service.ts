@@ -96,7 +96,7 @@ export class AuthService {
   getUserProfile(): ORD.ObservableRemoteData<ApiError, User> {
     return this.getUserProfile$().pipe(
       map((it) => RD.success(it)),
-      startWith(RD.pending)
+      startWith(RD.pending),
     );
   }
 

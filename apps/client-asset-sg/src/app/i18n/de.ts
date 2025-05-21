@@ -20,6 +20,7 @@ export const deAppTranslations = {
   delete: 'Löschen',
   close: 'Schliessen',
   datePlaceholder: 'JJJJ-MM-TT',
+  deletedUserName: 'gelöschter Benutzer',
   workgroup: {
     title: 'Arbeitsgruppe',
     errors: {
@@ -28,6 +29,17 @@ export const deAppTranslations = {
   },
   favorites: {
     title: 'Favoriten',
+  },
+  workflow: {
+    status: 'Status',
+    assignee: 'Zugewiesene Person',
+  },
+  workflowStatus: {
+    Draft: 'Draft',
+    InReview: 'Review',
+    Reviewed: 'Reviewed',
+    Published: 'Veröffentlicht',
+    notPublished: 'Nicht Veröffentlicht',
   },
   menuBar: {
     filters: 'Filter',
@@ -143,12 +155,16 @@ export const deAppTranslations = {
         },
         legalDocItemCode: 'Typ',
         or: 'oder',
+        export: 'Export',
+        clickOrDrop: 'Zum Durchsuchen klicken oder Datei hierher ziehen und ablegen',
+        uploadFile: 'Datei hochladen',
         dragFileHere: 'Datei hierher ziehen',
         selectFile: 'Datei auswählen',
         addNewFile: 'Neue Datei hinzufügen',
         willBeDeleted: 'Wird gelöscht werden',
         willBeUploaded: 'Wird hochgeladen werden',
-        fileSizeToLarge: 'Die Dateigrösse darf 250 MB nicht überschreiten.',
+        fileSizeToLarge: 'Die Dateigrösse darf 2 GB nicht überschreiten.',
+        uploadedAt: 'Hochgeladen',
       },
       usage: {
         tabName: 'Nutzung',
@@ -170,7 +186,7 @@ export const deAppTranslations = {
       },
       contacts: {
         tabName: 'Kontakte',
-        linkContact: 'Neuen Kontakt-Link hinzufügen',
+        linkContact: 'Kontakt verlinken',
         link: 'Verlinken',
         createNewContact: 'Neuen Kontakt erstellen',
         editContact: 'Konktakt bearbeiten',
@@ -190,13 +206,19 @@ export const deAppTranslations = {
         phone: 'Telefon',
         website: 'Website',
         create: 'Erstellen',
-        noContacts: 'Keine Kontakte',
+        noContacts: 'Noch keine Kontakte hinzugefügt ...',
         contactPlaceholder: 'Suche über Namen',
+        editWarnMessage:
+          'Änderungen an den untenstehenden Feldern werden über alle Assets synchronisiert, die' +
+          ' diesen Kontakt teilen.',
       },
       references: {
+        workgroupWarning: 'Um Verweise hinzuzufügen müssen Sie erst eine Arbeitsgruppe wählen.',
         tabName: 'Verweise',
+        assetId: 'Asset ID',
         assetTitlePublic: 'Öffentlicher Titel',
         assetTitlePublicPlaceholder: 'Suche über den öffentlichen Titel',
+        noReferencesAdded: 'Noch keine Verweise hinzugefügt...',
         referenceHeadings: {
           parent: 'Übergeordneter Asset',
           subordinate: 'Untergeordnete Assets',
@@ -235,12 +257,6 @@ export const deAppTranslations = {
       },
       administration: {
         tabName: 'Administration',
-        infoGeol: 'InfoGeol',
-        sgsId: 'SGS-ID',
-        data: 'Daten',
-        contactData: 'Kontaktdaten',
-        auxData: 'Zusatzdaten',
-        municipality: 'Gemeinde',
         workStatus: 'Arbeitsstatus',
         lastProcessed: 'Letztes Update',
         by: 'Von',
@@ -250,8 +266,19 @@ export const deAppTranslations = {
           hasValidationErrors: 'enthält Validierungsfehler',
         },
       },
+      legacyData: {
+        tabName: 'Altdaten',
+        infoGeol: 'InfoGeol',
+        sgsId: 'SGS-ID',
+        data: 'Daten',
+        contactData: 'Kontaktdaten',
+        auxData: 'Zusatzdaten',
+        municipality: 'Gemeinde',
+      },
     },
     closeManageAsset: 'Asset verwalten schliessen',
+    unsavedChanges: 'Ungespeicherte Änderungen',
+    discardChanges: 'Änderungen verwerfen',
     questionDiscardChanges: 'Möchten Sie die Änderungen verwerfen?',
     userManagementHeading: 'Benutzer',
     userManagementButton: 'Benutzer verwalten',

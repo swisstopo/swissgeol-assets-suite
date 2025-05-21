@@ -1,0 +1,33 @@
+@use "../../styles/mixins";
+@use "../../styles/variables";
+
+.loading-bar {
+  position: absolute;
+  inset: 0;
+  z-index: 100;
+  background-color: variables.$grey-03;
+}
+
+h2 {
+  @include mixins.text-ellipsis(2);
+  max-width: 70vw;
+  font-size: 16px;
+}
+
+.form-container {
+  display: flex;
+  background-color: variables.$grey-01;
+  height: calc(100vh - 88px - 84px - 56px);
+  width: calc(100vw - 280px);
+  overflow-y: scroll;
+  flex-direction: column;
+  align-items: center;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.editor-container {
+  display: flex;
+}

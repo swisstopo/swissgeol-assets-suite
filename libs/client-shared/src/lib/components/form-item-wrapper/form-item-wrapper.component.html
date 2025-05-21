@@ -1,0 +1,9 @@
+@if (title) {
+  <div>
+    <span>{{ title }}</span>
+    @if (isRequired) {
+      <svg-icon key="failure"></svg-icon>
+    }
+  </div>
+}
+<ng-content></ng-content>

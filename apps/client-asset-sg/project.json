@@ -16,8 +16,19 @@
         "polyfills": ["zone.js"],
         "tsConfig": "apps/client-asset-sg/tsconfig.app.json",
         "inlineStyleLanguage": "scss",
-        "assets": ["apps/client-asset-sg/src/favicon.ico", "apps/client-asset-sg/src/assets"],
-        "styles": ["apps/client-asset-sg/src/styles.scss"],
+        "assets": [
+          "apps/client-asset-sg/src/favicon.ico",
+          "apps/client-asset-sg/src/assets",
+          {
+            "glob": "**/*",
+            "input": "node_modules/@swisstopo/swissgeol-ui-core/dist/swissgeol-ui-core/assets/fonts",
+            "output": "/assets/fonts"
+          }
+        ],
+        "styles": [
+          "node_modules/@swisstopo/swissgeol-ui-core/dist/swissgeol-ui-core/swissgeol-ui-core.css",
+          "apps/client-asset-sg/src/styles.scss"
+        ],
         "scripts": [],
         "allowedCommonJsDependencies": [
           "tsafe",
@@ -27,7 +38,8 @@
           "earcut",
           "@prisma/client",
           "validator",
-          "@turf/jsts"
+          "@turf/jsts",
+          "fp-ts"
         ]
       },
       "configurations": {
@@ -35,8 +47,8 @@
           "budgets": [
             {
               "type": "initial",
-              "maximumWarning": "1.8mb",
-              "maximumError": "2.0mb"
+              "maximumWarning": "2.6mb",
+              "maximumError": "3.0mb"
             },
             {
               "type": "anyComponentStyle",

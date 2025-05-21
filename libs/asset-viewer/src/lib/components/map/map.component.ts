@@ -104,7 +104,7 @@ export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
   ngAfterViewInit(): void {
     // Set the initial map position by its stored value.
     const storedPosition$ = this.viewerControllerService.viewerReady$.pipe(
-      switchMap(() => this.store.select(selectMapPosition))
+      switchMap(() => this.store.select(selectMapPosition)),
     );
 
     storedPosition$.pipe(take(1)).subscribe((position) => {
@@ -122,7 +122,7 @@ export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
           this.timeoutForSetPosition = null;
         }
         this.controller.setPosition(position);
-      })
+      }),
     );
   }
 
@@ -179,10 +179,10 @@ export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
     this.subscription.add(
       this.store.select(selectSearchQuery).subscribe((query) => {
         this.controller.setShowHeatmap(isEmptySearchQuery(query));
-      })
+      }),
     );
     this.subscription.add(
-      this.store.select(selectSearchResults).subscribe((results) => this.controller.setAssets(results.data))
+      this.store.select(selectSearchResults).subscribe((results) => this.controller.setAssets(results.data)),
     );
 
     this.subscription.add(
@@ -192,14 +192,14 @@ export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
         } else {
           setTimeout(() => this.controller.setActiveAsset(asset));
         }
-      })
+      }),
     );
 
     this.subscription.add(
       this.store
         .select(selectStudies)
         .pipe(filter(isNotNull))
-        .subscribe((studies) => this.controller.setStudies(studies))
+        .subscribe((studies) => this.controller.setStudies(studies)),
     );
   }
 
@@ -209,26 +209,26 @@ export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
         .select(selectSearchQuery)
         .pipe(
           map((it) => it.polygon),
-          distinctUntilChanged()
+          distinctUntilChanged(),
         )
         .subscribe((polygon) => {
           this.controls.draw.setPolygon(polygon ?? null);
-        })
+        }),
     );
     this.subscription.add(
       this.controls.draw.polygon$
         .pipe(
           filterNullish(),
           withLatestFrom(this.store.select(selectSearchQuery).pipe(map((query) => query.polygon))),
-          filter(([polygon, storePolygon]) => !arrayEqual(polygon, storePolygon))
+          filter(([polygon, storePolygon]) => !arrayEqual(polygon, storePolygon)),
         )
         .subscribe(([polygon, _]) =>
           this.store.dispatch(
             searchActions.updateSearchQuery({
               query: { polygon: polygon },
-            })
-          )
-        )
+            }),
+          ),
+        ),
     );
   }
 

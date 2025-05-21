@@ -166,7 +166,7 @@ const overviewStylesAccess: LayerStyleByAccess = {
  */
 const getPointRepresentationForGeometry = (
   feature: FeatureLike,
-  accessStyles: keyof AccessTypeKey
+  accessStyles: keyof AccessTypeKey,
 ): Style | Style[] => {
   const geomType = feature.get(CustomFeatureProperties.GeometryType) as StudyGeometryType;
   const styleKey = getGeometryToPointRepresentationMapping()[geomType];

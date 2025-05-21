@@ -1,6 +1,6 @@
-import { olCoordsFromLV95, SWISS_CENTER, SWISS_EXTENT } from '@asset-sg/client-shared';
-import { AssetEditDetail, getCoordsFromStudy, Study } from '@asset-sg/shared';
-import { extend } from '@asset-sg/shared/v2';
+import { olCoordsFromLV95, SWISS_CENTER, SWISS_EXTENT, wktToGeoJSON } from '@asset-sg/client-shared';
+import { getCoordsFromStudy, Study } from '@asset-sg/shared';
+import { AssetSearchResultItem, extend } from '@asset-sg/shared/v2';
 import { buffer } from '@turf/buffer';
 import { Control } from 'ol/control';
 import { Coordinate } from 'ol/coordinate';
@@ -21,7 +21,6 @@ import { AllStudyDTO } from '../../models';
 import { CustomFeatureProperties } from '../../shared/map-configuration/custom-feature-properties.enum';
 import { availableLayerStyles, defaultLayerStyle } from '../../shared/map-configuration/map-layer-styles';
 import { interactionStyles } from '../../shared/map-configuration/styles/system-styles.map-layer-style';
-import { wktToGeoJSON } from '../../state/asset-search/asset-search.selector';
 import { mapAssetAccessToAccessType } from '../../utils/access-type';
 
 export const DEFAULT_MAP_POSITION: MapPosition = {
@@ -47,7 +46,7 @@ export class MapController {
    * The id of all visible assets, mapped to their {@link AssetEditDetail} object.
    * @private
    */
-  private readonly assetsById = new Map<number, AssetEditDetail>();
+  private readonly assetsById = new Map<number, AssetSearchResultItem>();
 
   /**
    * The IDs of all available studies, mapped to the id of the asset that they belong to.
@@ -59,7 +58,7 @@ export class MapController {
    * The currently selected asset.
    * @private
    */
-  private activeAsset: AssetEditDetail | null = null;
+  private activeAsset: AssetSearchResultItem | null = null;
 
   /**
    * Whether clicking things on the map is currently allowed.
@@ -160,7 +159,7 @@ export class MapController {
     });
   }
 
-  setAssets(assets: AssetEditDetail[]): void {
+  setAssets(assets: AssetSearchResultItem[]): void {
     this.assetsById.clear();
     if (this.showHeatmap) {
       window.requestAnimationFrame(() => {
@@ -232,7 +231,7 @@ export class MapController {
     this.sources.picker.clear();
   }
 
-  setActiveAsset(asset: AssetEditDetail): void {
+  setActiveAsset(asset: AssetSearchResultItem): void {
     this.resetActiveAssetStyle();
     this.activeAsset = asset;
 
@@ -376,7 +375,7 @@ export class MapController {
   private makePositionChange$(): Observable<MapPosition> {
     return fromEventPattern((h) => this.map.getView().on('change:center', h)).pipe(
       map(() => this.getPosition()),
-      filter((it) => it !== null)
+      filter((it) => it !== null),
     );
   }
 
@@ -391,7 +390,7 @@ export class MapController {
   private makeAssetsClick$(): Observable<number[]> {
     return fromEventPattern<MapBrowserEvent<PointerEvent>>(
       (h) => this.map.on('click', h),
-      (h) => this.map.un('click', h)
+      (h) => this.map.un('click', h),
     ).pipe(
       filter(() => this.isClickEnabled),
 
@@ -415,7 +414,7 @@ export class MapController {
           },
           {
             layerFilter: (layer) => layer === this.layers.studies,
-          }
+          },
         );
         return [event, assetId] as const;
       }),
@@ -442,17 +441,17 @@ export class MapController {
           },
           {
             layerFilter: (layer) => layer === this.layers.assets,
-          }
+          },
         );
         return [...assetIds];
-      })
+      }),
     );
   }
 
   private makeAssetsHover$(): Observable<number[]> {
     return fromEventPattern<MapBrowserEvent<PointerEvent>>(
       (h) => this.map.on('pointermove', h),
-      (h) => this.map.un('pointermove', h)
+      (h) => this.map.un('pointermove', h),
     ).pipe(
       switchMap((event) => this.layers.assets.getFeatures(event.pixel)),
 
@@ -478,7 +477,7 @@ export class MapController {
           }
         }
         return assetIds;
-      })
+      }),
     );
   }
 

@@ -40,9 +40,9 @@ export class AnimateNumberComponent {
       duration(225).pipe(
         map((t) => Math.round(from + (to - from) * t)),
         endWith(to as number),
-        distinctUntilChanged()
-      )
-    )
+        distinctUntilChanged(),
+      ),
+    ),
   );
 }
 
@@ -54,5 +54,5 @@ const msElapsed = (scheduler = animationFrameScheduler) => {
 const duration = (ms: number, scheduler = animationFrameScheduler) =>
   msElapsed(scheduler).pipe(
     map((ems) => ems / ms),
-    takeWhile((t) => t <= 1, true)
+    takeWhile((t) => t <= 1, true),
   );

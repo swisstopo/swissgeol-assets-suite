@@ -9,7 +9,10 @@ import { TranslatePipe } from '@ngx-translate/core';
   standalone: false,
 })
 export class FileMetadataPipe implements PipeTransform {
-  constructor(private readonly decimalPipe: DecimalPipe, private readonly translatePipe: TranslatePipe) {}
+  constructor(
+    private readonly decimalPipe: DecimalPipe,
+    private readonly translatePipe: TranslatePipe,
+  ) {}
 
   transform({ size, pageCount }: AssetFile, locale: string): string {
     const _fileSize = Math.round((size / 1024 / 1024) * 10) / 10;

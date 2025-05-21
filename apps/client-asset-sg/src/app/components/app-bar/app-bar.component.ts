@@ -44,7 +44,7 @@ export class AppBarComponent implements OnInit {
       map((ev) => {
         const value = (ev.target as HTMLInputElement).value;
         return value ? O.some(value) : O.none;
-      })
+      }),
     );
     // TODO use new pattern here
     this._ngOnInit$

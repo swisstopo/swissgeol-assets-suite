@@ -130,7 +130,7 @@ export class WorkgroupEditComponent
         this.dataSource.paginator = this.paginator;
       });
       return users;
-    })
+    }),
   );
 
   public cancel() {
@@ -165,7 +165,7 @@ export class WorkgroupEditComponent
         if (workgroup) {
           this.workgroup$.next(workgroup);
         }
-      })
+      }),
     );
   }
 
@@ -186,7 +186,7 @@ export class WorkgroupEditComponent
             numberOfAssets: 0,
           });
         }
-      })
+      }),
     );
   }
 }

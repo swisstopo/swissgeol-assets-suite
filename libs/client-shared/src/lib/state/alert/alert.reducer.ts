@@ -35,5 +35,5 @@ export const alertReducer = createReducer(
     const newState = { ...state };
     delete newState[id];
     return newState;
-  })
+  }),
 );

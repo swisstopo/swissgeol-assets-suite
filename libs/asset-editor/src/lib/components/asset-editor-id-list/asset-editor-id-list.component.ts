@@ -1,7 +1,6 @@
-import { Component, HostBinding, Input } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { FormControl } from '@angular/forms';
-import * as O from 'fp-ts/Option';
-import { IdVM } from '../../models';
+import { AlternativeId } from '../asset-editor-page/asset-editor-page.component';
 
 @Component({
   selector: 'asset-sg-asset-editor-id-list',
@@ -11,74 +10,23 @@ import { IdVM } from '../../models';
 })
 export class AssetEditorIdListComponent {
   @Input({ required: true })
-  public control!: FormControl<IdVM[]>;
+  public control!: FormControl<AlternativeId[]>;
 
-  private _formValue: NewId | IdVM | null = null;
+  public updateAlternativeId(value: string, field: 'id' | 'description', index: number): void {
+    const ids = this.ids.map((id, idx) => {
+      if (idx === index) {
+        return { ...id, [field]: value };
+      }
+      return id;
+    });
+    this.control.setValue(ids);
+  }
 
-  get ids(): IdVM[] {
+  get ids(): AlternativeId[] {
     return this.control.value;
   }
 
-  @HostBinding('class.is-editing')
-  get isFormOpen(): boolean {
-    return this._formValue !== null || this.ids.length <= 1;
-  }
-
-  get formValue(): IdVM | null {
-    if (this._formValue === null) {
-      return this.ids.length === 1 ? this.ids[0] : null;
-    }
-    return this._formValue === NewId ? null : this._formValue;
-  }
-
-  get isNewFormOpen(): boolean {
-    return this._formValue === NewId;
-  }
-
-  isFormValue(id: IdVM): boolean {
-    return this._formValue === null || this._formValue === NewId
-      ? false
-      : O.toNullable(id.idId) === O.toNullable(this._formValue.idId);
-  }
-
-  openForm(id?: IdVM): void {
-    this._formValue = id ?? NewId;
-  }
-
-  saveId(id: IdVM): void {
-    const { formValue: oldId } = this;
-    if (oldId == null) {
-      this.control.setValue([...this.ids, id]);
-      return;
-    }
-    this.mutateId(oldId, (ids, i) => {
-      ids[i] = id;
-    });
-    this._formValue = id;
-  }
-
-  deleteId(id: IdVM): void {
-    this.mutateId(id, (ids, i) => {
-      ids.splice(i, 1);
-    });
-    this._formValue = null;
-  }
-
-  private mutateId(id: IdVM, action: (ids: IdVM[], index: number) => void) {
-    const i = this.ids.indexOf(id);
-    if (i < 0) {
-      return;
-    }
-    const newIds = [...this.ids];
-    action(newIds, i);
-    this.control.setValue(newIds);
-  }
-
-  closeForm(): void {
-    this._formValue = null;
-  }
-
-  delete(id: IdVM): void {
+  delete(id: AlternativeId): void {
     const i = this.ids.indexOf(id);
     const ids = [...this.ids];
     ids.splice(i, 1);
@@ -86,10 +34,3 @@ export class AssetEditorIdListComponent {
     this.control.markAsDirty();
   }
 }
-
-/**
- * Symbol that signals that the id form should create a new record
- * instead of modifying an existing one.
- * */
-const NewId = Symbol('NewId');
-type NewId = typeof NewId;

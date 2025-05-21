@@ -62,12 +62,13 @@ export const eqAssetContactEdit = struct({
 
 export const AssetFile = C.struct({
   id: C.number,
-  fileName: C.string,
-  fileNameAlias: C.nullable(C.string),
+  name: C.string,
+  nameAlias: C.nullable(C.string),
   size: C.number,
   type: AssetFileType,
   legalDocItemCode: C.nullable(LegalDocItemCode),
   pageCount: C.nullable(C.number),
+  lastModifiedAt: CT.DateFromISOString,
 });
 
 export type AssetFile = C.TypeOf<typeof AssetFile>;
@@ -112,3 +113,14 @@ export const AssetEditDetail = C.struct({
   studies: C.array(C.struct({ assetId: C.number, studyId: C.string, geomText: C.string })),
 });
 export type AssetEditDetail = C.TypeOf<typeof AssetEditDetail>;
+
+// todo: once AssetEditDetail is removed, a similar property could exist on the new model to avoid this helper method
+export const hasHistoricalData = (asset: AssetEditDetail): boolean => {
+  return !!(
+    asset.geolAuxDataInfo ||
+    asset.geolContactDataInfo ||
+    asset.geolDataInfo ||
+    asset.municipality ||
+    asset.sgsId
+  );
+};

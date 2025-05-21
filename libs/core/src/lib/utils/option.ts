@@ -4,7 +4,7 @@ import * as O from 'fp-ts/Option';
 export const oGetOrElse = <T>(a: O.Option<T>, fallback: T) =>
   pipe(
     a,
-    O.getOrElse(() => fallback)
+    O.getOrElse(() => fallback),
   );
 
 export const toBoolean = <T>(a: O.Option<T>) =>
@@ -12,8 +12,8 @@ export const toBoolean = <T>(a: O.Option<T>) =>
     a,
     O.fold(
       () => false,
-      () => true
-    )
+      () => true,
+    ),
   );
 
 export const toBooleanReverse = <T>(a: O.Option<T>) => !pipe(a, toBoolean);

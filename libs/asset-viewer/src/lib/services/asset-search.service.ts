@@ -1,28 +1,19 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import {
-  AssetEditDetail,
-  AssetSearchQuery,
-  AssetSearchResult,
-  AssetSearchResultDTO,
-  AssetSearchStats,
-  AssetSearchStatsDTO,
-} from '@asset-sg/shared';
+import { AssetEditDetail, AssetSearchQuery, AssetSearchStats, AssetSearchStatsDTO } from '@asset-sg/shared';
+import { AssetSearchResult, AssetSearchResultDTO } from '@asset-sg/shared/v2';
 import { plainToInstance } from 'class-transformer';
 import * as E from 'fp-ts/Either';
-import { map, Observable, tap } from 'rxjs';
+import { map, Observable } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class AssetSearchService {
   constructor(private _httpClient: HttpClient) {}
 
   public search(searchQuery: AssetSearchQuery): Observable<AssetSearchResult> {
-    return this._httpClient.post('/api/assets/search?limit=1000', searchQuery).pipe(
-      map((res) => plainToInstance(AssetSearchResultDTO, res)),
-      tap((result) => {
-        result.data = result.data.map((asset) => (AssetEditDetail.decode(asset) as E.Right<AssetEditDetail>).right);
-      })
-    );
+    return this._httpClient
+      .post('/api/assets/search?limit=1000', searchQuery)
+      .pipe(map((res) => plainToInstance(AssetSearchResultDTO, res)));
   }
 
   public searchStats(searchQuery: AssetSearchQuery): Observable<AssetSearchStats> {

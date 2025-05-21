@@ -42,7 +42,7 @@ export class DisclaimerDialogComponent implements AfterViewInit {
     map((lang) => {
       const url = `https://www.swissgeol.ch/pages/legal/${lang}.html`;
       return `<a href="${url}" target="_blank" rel="noopener nofollow">${url}</a>`;
-    })
+    }),
   );
 
   @ViewChild('consentCheckbox') consentCheckbox!: MatCheckbox;

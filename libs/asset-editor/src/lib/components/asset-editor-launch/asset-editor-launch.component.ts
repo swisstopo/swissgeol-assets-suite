@@ -33,7 +33,7 @@ export class AssetEditorLaunchComponent implements OnDestroy {
     this.lc.afterViewInit$.pipe(observeOn(asyncScheduler)).subscribe(() => {
       this.appPortalService.setAppBarPortalContent(null);
       this.appPortalService.setDrawerPortalContent(
-        new TemplatePortal(this._templateDrawerPortalContent, this.viewContainerRef)
+        new TemplatePortal(this._templateDrawerPortalContent, this.viewContainerRef),
       );
       this.cd.detectChanges();
     });

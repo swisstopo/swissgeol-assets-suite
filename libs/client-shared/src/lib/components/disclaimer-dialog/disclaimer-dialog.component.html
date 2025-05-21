@@ -9,7 +9,7 @@
     <p [innerHTML]="'disclaimer.liability.content' | translate"></p>
 
     <h3 translate>disclaimer.tracking.title</h3>
-    <p [innerHTML]="'disclaimer.tracking.content' | translate : { external: legalAnchor$ | async }"></p>
+    <p [innerHTML]="'disclaimer.tracking.content' | translate: { external: legalAnchor$ | async }"></p>
   </div>
   <div mat-dialog-content>
     <mat-checkbox #consentCheckbox [(ngModel)]="hasConsented" color="primary" class="checkbox" tabIndex="0">

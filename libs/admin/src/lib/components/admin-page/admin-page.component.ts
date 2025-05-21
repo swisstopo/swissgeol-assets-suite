@@ -63,7 +63,7 @@ export class AdminPageComponent implements OnInit, OnDestroy {
       actions.updateWorkgroup({
         workgroupId: workgroup.id,
         workgroup: { disabledAt, name: workgroup.name, users: workgroup.users },
-      })
+      }),
     );
   }
 
@@ -90,13 +90,13 @@ export class AdminPageComponent implements OnInit, OnDestroy {
     this.subscriptions.add(
       this.selectedWorkgroup$.subscribe((workgroup) => {
         this.workgroup = workgroup;
-      })
+      }),
     );
 
     this.subscriptions.add(
       this.selectedUser$.subscribe((user) => {
         this.user = user;
-      })
+      }),
     );
   }
 }

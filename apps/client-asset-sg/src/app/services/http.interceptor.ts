@@ -89,7 +89,7 @@ export class HttpInterceptor implements AngularHttpInterceptor, OnDestroy {
                 type: AlertType.Error,
                 isPersistent: false,
               },
-            })
+            }),
           );
         }
         break;
@@ -102,12 +102,20 @@ export class HttpInterceptor implements AngularHttpInterceptor, OnDestroy {
               type: AlertType.Error,
               isPersistent: true,
             },
-          })
+          }),
         );
         break;
       default: {
         if (error.status < 500) {
-          throw error;
+          showAlert({
+            alert: {
+              id: `request-error-${error.status}-${error.url}`,
+              text: error.error.message,
+              type: AlertType.Error,
+              isPersistent: true,
+            },
+          });
+          break;
         }
 
         // In some requests, the error is returned as Blob,
@@ -115,7 +123,7 @@ export class HttpInterceptor implements AngularHttpInterceptor, OnDestroy {
         const text =
           error.error instanceof Blob
             ? JSON.parse(await error.error.text()).message
-            : error.error.message ?? error.message;
+            : (error.error.message ?? error.message);
         this.store.dispatch(
           showAlert({
             alert: {
@@ -124,7 +132,7 @@ export class HttpInterceptor implements AngularHttpInterceptor, OnDestroy {
               type: AlertType.Error,
               isPersistent: true,
             },
-          })
+          }),
         );
       }
     }
@@ -138,7 +146,7 @@ export class HttpInterceptor implements AngularHttpInterceptor, OnDestroy {
     this.subscription.add(
       this.store.select(fromAppShared.selectIsAnonymousMode).subscribe((isAnonymousMode) => {
         this.isAnonymousMode = isAnonymousMode;
-      })
+      }),
     );
   }
 
@@ -156,7 +164,7 @@ export class HttpInterceptor implements AngularHttpInterceptor, OnDestroy {
           this.isNavigating = false;
           this.resetAuthState();
         }
-      })
+      }),
     );
   }
 

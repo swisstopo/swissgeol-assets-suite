@@ -1,10 +1,11 @@
 import { inject, Injectable } from '@angular/core';
 import { Params, Router } from '@angular/router';
+import { AppSharedState } from '@asset-sg/client-shared';
 import { isNotNull } from '@asset-sg/core';
 import { AssetSearchQuery, isEmptySearchQuery, LV95, Polygon } from '@asset-sg/shared';
 import { AssetId } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
-import { firstValueFrom, map, Observable } from 'rxjs';
+import { firstValueFrom, map } from 'rxjs';
 import { DEFAULT_MAP_POSITION } from '../components/map/map-controller';
 
 import { isPanelOpen, PanelState } from '../state/asset-search/asset-search.actions';
@@ -20,13 +21,14 @@ export class ViewerParamsService {
   private readonly store = inject(Store<AppStateWithAssetSearch>);
 
   async readParamsFromStore(): Promise<ViewerParams> {
-    const state = await firstValueFrom(
-      this.store.pipe(map((store) => store.assetSearch)) as Observable<AssetSearchState>
+    const [searchState, sharedState] = await firstValueFrom(
+      this.store.pipe(map((store) => [store.assetSearch, store.shared] as [AssetSearchState, AppSharedState])),
     );
+
     return {
-      assetId: state.currentAsset?.assetId ?? null,
-      query: state.query,
-      ui: state.ui,
+      assetId: sharedState.currentAsset?.assetId ?? null,
+      query: searchState.query,
+      ui: searchState.ui,
     };
   }
 
@@ -49,11 +51,11 @@ export class ViewerParamsService {
     query.favoritesOnly = this.parseFavoritesOnlyFromUrl();
     const ui: AssetSearchUiState = {
       filtersState:
-        readBooleanParam(params, UI_PARAM_MAPPING.filtersState) ?? true
+        (readBooleanParam(params, UI_PARAM_MAPPING.filtersState) ?? true)
           ? PanelState.OpenedAutomatically
           : PanelState.ClosedAutomatically,
       resultsState:
-        readBooleanParam(params, UI_PARAM_MAPPING.resultsState) ?? false
+        (readBooleanParam(params, UI_PARAM_MAPPING.resultsState) ?? false)
           ? PanelState.OpenedAutomatically
           : PanelState.ClosedAutomatically,
       scrollOffsetForResults: readNumberParam(params, UI_PARAM_MAPPING.scrollOffsetForResults) ?? 0,
@@ -74,7 +76,7 @@ export class ViewerParamsService {
     updateArrayParam(
       params,
       QUERY_PARAM_MAPPING.polygon,
-      query.polygon?.map(({ x, y }) => `${x}:${y}`)
+      query.polygon?.map(({ x, y }) => `${x}:${y}`),
     );
     updatePlainParam(params, QUERY_PARAM_MAPPING.authorId, query.authorId);
     updateDateParam(params, QUERY_PARAM_MAPPING.createDate.min, query.createDate?.min);
@@ -157,7 +159,7 @@ const updatePlainParam = <T extends string | number | boolean>(
   params: Params,
   name: string,
   value: T | null | undefined,
-  options: { defaultValue?: T } = {}
+  options: { defaultValue?: T } = {},
 ): void => {
   params[name] = value == null || value === '' || value === options.defaultValue ? null : value;
 };

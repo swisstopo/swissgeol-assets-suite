@@ -1,7 +1,8 @@
 import { inject, Injectable } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
-import { AssetSearchQuery, isEmptySearchQuery, makeEmptyAssetSearchResults } from '@asset-sg/shared';
-import { AssetId } from '@asset-sg/shared/v2';
+import { appSharedStateActions } from '@asset-sg/client-shared';
+import { AssetSearchQuery, isEmptySearchQuery } from '@asset-sg/shared';
+import { AssetId, makeEmptyAssetSearchResults } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
 import {
   distinctUntilChanged,
@@ -22,7 +23,6 @@ import {
   isPanelAutomaticallyToggled,
   isPanelOpen,
   PanelState,
-  setCurrentAsset,
   setFiltersState,
   setMapPosition,
   setQuery,
@@ -133,6 +133,11 @@ export class ViewerControllerService {
     this.store.dispatch(actions.setResults({ isLoading: true }));
     const results = await firstValueFrom(this.assetSearchService.search(query));
     this.store.dispatch(actions.setResults({ results, isLoading: false }));
+    if (results.data.length === 1) {
+      await this.loadAsset(results.data[0].assetId);
+    } else {
+      this.store.dispatch(appSharedStateActions.setCurrentAsset({ asset: undefined, isLoading: false }));
+    }
   }
 
   private async loadStats(query: AssetSearchQuery): Promise<void> {
@@ -143,12 +148,12 @@ export class ViewerControllerService {
 
   private async loadAsset(id: AssetId | null): Promise<void> {
     if (id === null) {
-      this.store.dispatch(setCurrentAsset({ asset: null }));
+      this.store.dispatch(appSharedStateActions.setCurrentAsset({ asset: null }));
       return;
     }
-    this.store.dispatch(actions.setCurrentAsset({ isLoading: true }));
+    this.store.dispatch(appSharedStateActions.setCurrentAsset({ isLoading: true }));
     const asset = await firstValueFrom(this.assetSearchService.fetchAssetEditDetail(id));
-    this.store.dispatch(actions.setCurrentAsset({ asset, isLoading: false }));
+    this.store.dispatch(appSharedStateActions.setCurrentAsset({ asset, isLoading: false }));
   }
 
   private async updateByQuery(query: AssetSearchQuery): Promise<void> {
@@ -160,14 +165,14 @@ export class ViewerControllerService {
     this.store.dispatch(
       actions.setResultsState({
         state: results.page.total === 0 ? PanelState.ClosedAutomatically : PanelState.OpenedAutomatically,
-      })
+      }),
     );
   }
 
   private syncUrlParams(): Subscription {
     const prepareEvent = <T>(
       event$: Observable<T>,
-      shouldReplaceUrl: boolean | ((value: T) => boolean)
+      shouldReplaceUrl: boolean | ((value: T) => boolean),
     ): Observable<boolean> => {
       const transform = typeof shouldReplaceUrl === 'boolean' ? () => shouldReplaceUrl : shouldReplaceUrl;
       return event$.pipe(skip(1), distinctUntilChanged(), map(transform));

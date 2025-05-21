@@ -8,12 +8,9 @@ import {
   DateIdBrand,
   DateRange,
   GeometryCode,
-  LineString,
-  LV95,
+  makeEmptyAssetSearchStats,
   ordStatusWorkByDate,
-  Point,
   ReferenceData,
-  StudyPolygon,
   UsageCode,
   usageCodes,
   ValueCount,
@@ -30,7 +27,6 @@ import { isPanelOpen } from './asset-search.actions';
 import { AppStateWithAssetSearch } from './asset-search.reducer';
 
 const assetSearchFeature = (state: AppStateWithAssetSearch) => state.assetSearch;
-
 export const selectFiltersState = createSelector(assetSearchFeature, (state) => state.ui.filtersState);
 
 export const selectResultsState = createSelector(assetSearchFeature, (state) => state.ui.resultsState);
@@ -43,20 +39,24 @@ export const selectMapPosition = createSelector(assetSearchFeature, (state) => s
 
 export const selectScrollOffsetForResults = createSelector(
   assetSearchFeature,
-  (state) => state.ui.scrollOffsetForResults
+  (state) => state.ui.scrollOffsetForResults,
 );
 
 export const selectSearchQuery = createSelector(assetSearchFeature, (state) => state?.query ?? {});
 
 export const selectSearchResults = createSelector(assetSearchFeature, (state) => state.results);
 
-export const selectSearchStats = createSelector(assetSearchFeature, (state) => state.stats);
+export const selectSearchStats = createSelector(
+  assetSearchFeature,
+  (state) => state?.stats ?? makeEmptyAssetSearchStats(),
+);
 
-export const selectCurrentAsset = createSelector(assetSearchFeature, (state) => state.currentAsset);
+export const selectCurrentAsset = createSelector(fromAppShared.selectCurrentAsset, (currentAsset) => currentAsset);
 
 export const selectHasCurrentAsset = createSelector(
-  assetSearchFeature,
-  (state) => state.currentAsset !== null || state.isLoadingAsset
+  fromAppShared.selectCurrentAsset,
+  fromAppShared.selectIsLoadingAsset,
+  (currentAsset, isLoadingAsset) => currentAsset !== null || isLoadingAsset,
 );
 
 export const selectStudies = createSelector(assetSearchFeature, (state) => state.studies);
@@ -69,7 +69,7 @@ export const selectCurrentAssetDetailVM = createSelector(
       return makeAssetDetailVMNew(referenceData.value, currentAssetDetail);
     }
     return null as AssetDetailVM | null;
-  }
+  },
 );
 
 export const selectAssetEditDetailVM = createSelector(
@@ -81,29 +81,32 @@ export const selectAssetEditDetailVM = createSelector(
     }
     return assets.data.map((asset) => {
       const manCatLabelItems: ValueItem[] = asset.manCatLabelRefs.map(
-        (manCatLabelItemCode) => referenceData.value.manCatLabelItems[manCatLabelItemCode]
+        (manCatLabelItemCode) => referenceData.value.manCatLabelItems[manCatLabelItemCode],
       );
       const assetFormatItem: ValueItem = referenceData.value.assetFormatItems[asset.assetFormatItemCode];
       const assetKindItem: ValueItem = referenceData.value.assetKindItems[asset.assetKindItemCode];
-      const contacts = asset.assetContacts.reduce((contacts, contact) => {
-        contacts[contact.role] ??= [];
-        contacts[contact.role].push({
-          ...referenceData.value.contacts[contact.contactId],
-          role: contact.role,
-        });
-        return contacts;
-      }, {} as AssetEditDetailVM['contacts']);
+      const contacts = asset.assetContacts.reduce(
+        (contacts, contact) => {
+          contacts[contact.role] ??= [];
+          contacts[contact.role].push({
+            ...referenceData.value.contacts[contact.contactId],
+            role: contact.role,
+          });
+          return contacts;
+        },
+        {} as AssetEditDetailVM['contacts'],
+      );
       return {
         assetId: asset.assetId,
         titlePublic: asset.titlePublic,
-        createDate: asset.createDate,
+        createDate: asset.createDate as number & DateIdBrand,
         assetKindItem,
         assetFormatItem,
         contacts,
         manCatLabelItems,
       };
     });
-  }
+  },
 );
 
 export const selectAvailableAuthors = createSelector(
@@ -120,7 +123,7 @@ export const selectAvailableAuthors = createSelector(
       });
     }
     return null;
-  }
+  },
 );
 
 export const selectCreateDate = createSelector(selectSearchStats, (stats): DateRange | null => stats.createDate);
@@ -129,7 +132,7 @@ const makeFilters = <T>(
   configs: Array<FilterConfig<T>>,
   counts: Array<ValueCount<T>>,
   activeValues: T[] | undefined,
-  queryKey: keyof AssetSearchQuery
+  queryKey: keyof AssetSearchQuery,
 ): Array<Filter<T>> => {
   return configs.map((filter) => makeFilter(filter, activeValues, counts, queryKey));
 };
@@ -138,7 +141,7 @@ const makeFilter = <T>(
   filter: FilterConfig<T>,
   activeValues: T[] | undefined,
   counts: Array<ValueCount<T>>,
-  queryKey: keyof AssetSearchQuery
+  queryKey: keyof AssetSearchQuery,
 ): Filter<T> => {
   const count = counts.find((counter) => counter.value === filter.value)?.count ?? 0;
   return {
@@ -155,7 +158,7 @@ const makeFilter = <T>(
 
 export const selectFilters = <T extends string>(
   queryKey: keyof AssetSearchQuery & keyof AssetSearchStats,
-  getFilters: (referenceData: ReferenceData) => Array<FilterConfig<T>>
+  getFilters: (referenceData: ReferenceData) => Array<FilterConfig<T>>,
 ) =>
   createSelector(
     fromAppShared.selectRDReferenceData,
@@ -177,9 +180,9 @@ export const selectFilters = <T extends string>(
         stats[queryKey] as Array<ValueCount<T>>,
         query[queryKey] as T[] | undefined,
 
-        queryKey
+        queryKey,
       );
-    }
+    },
   );
 
 export const selectWorkgroupFilters = createSelector(
@@ -219,21 +222,21 @@ export const selectWorkgroupFilters = createSelector(
     configs.sort((a, b) => (a.name as string).localeCompare(b.name as string));
 
     return makeFilters(configs, stats.workgroupIds, query.workgroupIds, 'workgroupIds');
-  }
+  },
 );
 
 export const selectUsageCodeFilters = selectFilters<UsageCode>('usageCodes', () =>
   usageCodes.map((code) => ({
     name: { key: `search.usageCode.${code}` },
     value: code,
-  }))
+  })),
 );
 
 export const selectAssetKindFilters = selectFilters<string>('assetKindItemCodes', (data) =>
   Object.values(data.assetKindItems).map((item) => ({
     name: makeTranslatedValueFromItemName(item),
     value: item.code,
-  }))
+  })),
 );
 
 export const selectLanguageFilters = selectFilters<string>('languageItemCodes', (data) => [
@@ -262,7 +265,7 @@ export const selectManCatLabelFilters = selectFilters<string>('manCatLabelItemCo
   Object.values(data.manCatLabelItems).map((item) => ({
     name: makeTranslatedValueFromItemName(item),
     value: item.code,
-  }))
+  })),
 );
 
 export const selectActiveFilters = createSelector(
@@ -274,11 +277,11 @@ export const selectActiveFilters = createSelector(
   selectWorkgroupFilters,
   (...filterGroups) => {
     return filterGroups.flatMap((filters) => filters.filter((filter) => filter.isActive));
-  }
+  },
 );
 
 export const selectHasNoActiveFilters = createSelector(assetSearchFeature, ({ query }) =>
-  Object.values(query).every((value) => value === undefined || value == false)
+  Object.values(query).every((value) => value === undefined || value == false),
 );
 
 export interface AvailableAuthor {
@@ -364,14 +367,14 @@ const makeAssetDetailVMNew = (referenceData: ReferenceData, assetDetail: AssetEd
     languages: assetLanguages.map(({ languageItemCode: code }) => referenceData.languageItems[code]),
     manCatLabels: manCatLabelRefs.map((manCatLabelItemCode) => referenceData.manCatLabelItems[manCatLabelItemCode]),
     assetFormatCompositions: assetFormatCompositions.map(
-      (assetFormatItemCode) => referenceData.assetFormatItems[assetFormatItemCode]
+      (assetFormatItemCode) => referenceData.assetFormatItems[assetFormatItemCode],
     ),
     typeNatRels: typeNatRels.map((natRelItemCode) => referenceData.natRelItems[natRelItemCode]),
     referenceAssets: [
       ...pipe(
         assetMain,
         O.map((a) => [a]),
-        O.getOrElseW(() => [])
+        O.getOrElseW(() => []),
       ),
       ...subordinateAssets,
       ...siblingXAssets,
@@ -383,7 +386,7 @@ const makeAssetDetailVMNew = (referenceData: ReferenceData, assetDetail: AssetEd
       A.map((a) => {
         const { statusWorkItemCode, ...rest } = a;
         return { ...rest, statusWork: referenceData.statusWorkItems[statusWorkItemCode] };
-      })
+      }),
     ),
     assetFiles: assetFiles.map((it) => ({
       ...it,
@@ -397,7 +400,7 @@ const makeAssetDetailContactVM = (
   assetContact: {
     role: AssetContactRole;
     contact: Contact;
-  }
+  },
 ) => {
   const {
     role,
@@ -411,42 +414,3 @@ const makeAssetDetailContactVM = (
     contactKindItem: referenceData.contactKindItems[contactKindItemCode],
   };
 };
-
-export function wktToGeoJSON(wkt: string) {
-  if (wkt.startsWith('POINT')) {
-    return parsePoint(wkt);
-  } else if (wkt.startsWith('LINESTRING')) {
-    return parseLineString(wkt);
-  } else if (wkt.startsWith('POLYGON')) {
-    return parsePolygon(wkt);
-  } else {
-    throw new Error(`Unsupported geometry type: ${wkt}`);
-  }
-}
-
-function parsePoint(wkt: string): Point {
-  const coord = getCoordinatesFromWKT(wkt)[0];
-  return { _tag: 'Point', coord };
-}
-
-function parseLineString(wkt: string): LineString {
-  const coords = getCoordinatesFromWKT(wkt);
-  return { _tag: 'LineString', coords };
-}
-
-function parsePolygon(wkt: string): StudyPolygon {
-  const coords = getCoordinatesFromWKT(wkt);
-  return { _tag: 'Polygon', coords };
-}
-
-function getCoordinatesFromWKT(wkt: string): LV95[] {
-  const match = wkt.startsWith('POLYGON') ? wkt.match(/\(\(([^)]+)\)\)/) : wkt.match(/\(([^)]+)\)/);
-  if (!match) {
-    return [];
-  }
-  const coordinateStrings = match[1].split(',');
-  return coordinateStrings.map((coordStr) => {
-    const [y, x] = coordStr.trim().split(' ').map(Number);
-    return { x, y } as LV95;
-  });
-}

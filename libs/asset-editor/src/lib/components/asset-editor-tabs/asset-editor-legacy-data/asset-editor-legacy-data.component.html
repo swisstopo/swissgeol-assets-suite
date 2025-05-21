@@ -1,0 +1,34 @@
+<div class="wrapper">
+  <asset-sg-detail-section [title]="'edit.tabs.legacyData.infoGeol' | translate">
+    <div class="content column" content>
+      <asset-sg-text-input
+        disabled
+        [value]="asset?.sgsId?.toString() ?? ''"
+        [title]="'edit.tabs.legacyData.sgsId' | translate"
+      ></asset-sg-text-input>
+      <asset-sg-text-area
+        [rows]="5"
+        disabled
+        [value]="asset?.geolDataInfo?.toString() ?? ''"
+        [title]="'edit.tabs.legacyData.data' | translate"
+      ></asset-sg-text-area>
+      <asset-sg-text-area
+        [rows]="5"
+        disabled
+        [value]="asset?.geolContactDataInfo?.toString() ?? ''"
+        [title]="'edit.tabs.legacyData.contactData' | translate"
+      ></asset-sg-text-area>
+      <asset-sg-text-area
+        [rows]="5"
+        disabled
+        [value]="asset?.geolAuxDataInfo?.toString() ?? ''"
+        [title]="'edit.tabs.legacyData.auxData' | translate"
+      ></asset-sg-text-area>
+      <asset-sg-text-input
+        disabled
+        [value]="asset?.municipality?.toString() ?? ''"
+        [title]="'edit.tabs.legacyData.municipality' | translate"
+      ></asset-sg-text-input>
+    </div>
+  </asset-sg-detail-section>
+</div>

@@ -26,8 +26,8 @@ export function getEqArrayUnordered<A>(E: Eq<A>): Eq<ReadonlyArray<A>> {
             pipe(
               ys,
               RA.findFirst((y) => E.equals(x, y)),
-              toBoolean
-            )
+              toBoolean,
+            ),
         )),
   };
 }

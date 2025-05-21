@@ -119,7 +119,7 @@ cd development
 docker compose exec db sh -c 'psql --dbname=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:5432/${POSTGRES_DB} -c "DELETE FROM workgroup"'
 
 # Import example data:
-docker compose exec db sh -c 'psql --dbname=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:5432/${POSTGRES_DB} -v ON_ERROR_STOP=1 -f /docker-entrypoint-initdb.d/01_roles.sql -f /dump.sql'
+docker compose exec db sh -c 'psql --dbname=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:5432/${POSTGRES_DB} -v ON_ERROR_STOP=1 -f /dump.sql -f /docker-entrypoint-initdb.d/01_roles.sql'
 ```
 
 > You will need to manually sync the data to Elasticsearch via the admin panel in the web UI via the cogwheel symbol in the bottom left of the GUI (requires `is_admin` to be true for the given user).

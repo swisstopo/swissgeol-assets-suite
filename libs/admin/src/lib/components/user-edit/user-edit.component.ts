@@ -48,7 +48,7 @@ export class UserEditComponent extends AbstractAdminTableComponent<WorkgroupOfUs
     map((currentUser) => (RD.isSuccess(currentUser) ? currentUser.value : null)),
     filter(isNotNull),
     combineLatestWith(this.user$.pipe(filter(isNotNull))),
-    map(([currentUser, user]) => currentUser.id === user.id)
+    map(([currentUser, user]) => currentUser.id === user.id),
   );
 
   public readonly userWorkgroups$: Observable<WorkgroupOfUser[]> = this.user$.pipe(
@@ -74,7 +74,7 @@ export class UserEditComponent extends AbstractAdminTableComponent<WorkgroupOfUs
         });
       }
       return result;
-    })
+    }),
   );
 
   public override ngOnInit() {
@@ -145,7 +145,7 @@ export class UserEditComponent extends AbstractAdminTableComponent<WorkgroupOfUs
         if (userId) {
           this.store.dispatch(actions.findUser({ userId }));
         }
-      })
+      }),
     );
   }
 
@@ -156,7 +156,7 @@ export class UserEditComponent extends AbstractAdminTableComponent<WorkgroupOfUs
         this.lang = user
           ? this.languageSelector.find((lang) => lang.key.includes(user.lang))!
           : this.languageSelector[0];
-      })
+      }),
     );
 
     this.subscriptions.add(
@@ -164,20 +164,20 @@ export class UserEditComponent extends AbstractAdminTableComponent<WorkgroupOfUs
         if (workgroups) {
           this.workgroups = workgroups;
         }
-      })
+      }),
     );
 
     this.subscriptions.add(
       this.isCurrentUser$.subscribe((isCurrentUser) => {
         this.isCurrentUser = isCurrentUser;
-      })
+      }),
     );
 
     this.subscriptions.add(
       this.userWorkgroups$.subscribe((userWorkgroups) => {
         this.data = userWorkgroups;
         this.dataSource.data = userWorkgroups;
-      })
+      }),
     );
   }
 }

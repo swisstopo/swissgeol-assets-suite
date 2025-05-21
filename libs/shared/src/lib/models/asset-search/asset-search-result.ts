@@ -1,19 +1,7 @@
-import { AssetEditDetail } from '../asset-edit';
 import { DateRange } from '../date-range';
 import { UsageCode } from '../usage';
 
 import { GeometryCode } from './asset-search-query';
-
-export interface AssetSearchResult {
-  page: PageStats;
-  data: AssetEditDetail[];
-}
-
-export interface PageStats {
-  size: number;
-  offset: number;
-  total: number;
-}
 
 export interface AssetSearchStats {
   total: number;
@@ -32,11 +20,14 @@ export interface ValueCount<T> {
   count: number;
 }
 
-export const makeEmptyAssetSearchResults = (): AssetSearchResult => ({
-  page: {
-    size: 0,
-    offset: 0,
-    total: 0,
-  },
-  data: [],
+export const makeEmptyAssetSearchStats = (): AssetSearchStats => ({
+  total: 0,
+  authorIds: [],
+  assetKindItemCodes: [],
+  languageItemCodes: [],
+  geometryCodes: [],
+  manCatLabelItemCodes: [],
+  usageCodes: [],
+  workgroupIds: [],
+  createDate: null,
 });

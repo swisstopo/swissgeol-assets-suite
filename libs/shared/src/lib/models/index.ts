@@ -2,7 +2,6 @@ export * from './asset-detail';
 export * from './asset-by-title';
 export * from './asset-edit';
 export * from './asset-search-params';
-export * from './old-asset-search-result';
 export * from './asset-usage';
 export * from './DateStruct';
 export * from './elastic-search-asset';

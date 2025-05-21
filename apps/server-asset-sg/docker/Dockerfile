@@ -10,7 +10,9 @@ ENV NODE_ENV=development
 WORKDIR /app
 COPY . .
 
-RUN npm install --ignore-scripts \
+RUN --mount=type=secret,id=github_token \
+    GITHUB_TOKEN=$(cat /run/secrets/github_token) \
+    npm install --ignore-scripts \
  && npm run prisma -- generate   \
  && npx nx build server-asset-sg --configuration=production
 

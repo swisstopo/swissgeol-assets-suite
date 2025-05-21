@@ -35,7 +35,11 @@
   font-size: 12px;
   z-index: 11;
   color: #000000;
-  text-shadow: -2px 0 #ffffff, 0 2px #ffffff, 2px 0 #ffffff, 0 -2px #ffffff;
+  text-shadow:
+    -2px 0 #ffffff,
+    0 2px #ffffff,
+    2px 0 #ffffff,
+    0 -2px #ffffff;
 }
 .ol-scale-text {
   position: absolute;
@@ -43,7 +47,11 @@
   text-align: center;
   bottom: 25px;
   color: #000000;
-  text-shadow: -2px 0 #ffffff, 0 2px #ffffff, 2px 0 #ffffff, 0 -2px #ffffff;
+  text-shadow:
+    -2px 0 #ffffff,
+    0 2px #ffffff,
+    2px 0 #ffffff,
+    0 -2px #ffffff;
 }
 .ol-scale-singlebar {
   position: relative;
@@ -102,12 +110,16 @@
 .ol-rotate {
   top: 0.5em;
   right: 0.5em;
-  transition: opacity 0.25s linear, visibility 0s linear;
+  transition:
+    opacity 0.25s linear,
+    visibility 0s linear;
 }
 .ol-rotate.ol-hidden {
   opacity: 0;
   visibility: hidden;
-  transition: opacity 0.25s linear, visibility 0s linear 0.25s;
+  transition:
+    opacity 0.25s linear,
+    visibility 0s linear 0.25s;
 }
 .ol-zoom-extent {
   top: 4.643em;

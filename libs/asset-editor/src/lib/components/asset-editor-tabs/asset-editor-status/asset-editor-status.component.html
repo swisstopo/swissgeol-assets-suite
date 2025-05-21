@@ -1,0 +1,13 @@
+@if (workflow === null) {
+  <mat-progress-bar mode="query" class="loader" />
+} @else {
+  <sgc-workflow
+    [workflow]="workflow"
+    [selection]="selection"
+    [review]="workflow.review"
+    [approval]="workflow.approval"
+    [isReadOnly]="(canUpdate$ | async) === false"
+    (workflowReviewChange)="handleReviewChange($event)"
+    (workflowApprovalChange)="handleApprovalChange($event)"
+  />
+}

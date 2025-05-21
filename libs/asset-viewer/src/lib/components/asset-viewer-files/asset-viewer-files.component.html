@@ -1,12 +1,12 @@
 <li *rxFor="let assetFile of files" class="link">
   @if (assetFile.legalDocItem != null) {
-  <span class="legal-doc-item-code"> {{ assetFile.legalDocItem | valueItemName }}: </span>
+    <span class="legal-doc-item-code"> {{ assetFile.legalDocItem | valueItemName }}: </span>
   }
-  <span class="name"> {{ assetFile | fileName }} ({{ assetFile | fileMetadata : locale }}) </span>
+  <span class="name"> {{ assetFile | fileName }} ({{ assetFile | fileMetadata: locale }}) </span>
   <button
     asset-sg-icon-button
     *ngIf="!isActiveFileDownload(assetFile, 'open-in-tab'); else downloadSpinner"
-    [title]="'search.openFileInNewTab' | translate : { fileName: assetFile | fileName }"
+    [title]="'search.openFileInNewTab' | translate: { fileName: assetFile | fileName }"
     (click)="downloadFile(assetFile, 'open-in-tab')"
   >
     <svg-icon key="ext-link"></svg-icon>
@@ -14,7 +14,7 @@
   <button
     asset-sg-icon-button
     *ngIf="!isActiveFileDownload(assetFile, 'save-file'); else downloadSpinner"
-    [title]="'search.downloadFile' | translate : { fileName: assetFile | fileName }"
+    [title]="'search.downloadFile' | translate: { fileName: assetFile | fileName }"
     (click)="downloadFile(assetFile, 'save-file')"
   >
     <svg-icon key="download"></svg-icon>

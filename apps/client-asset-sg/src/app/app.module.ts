@@ -22,12 +22,13 @@ import {
   assetsPageMatcher,
   AuthModule,
   ButtonComponent,
-  CanCreateDirective,
   CURRENT_LANG,
   currentLangFactory,
   ErrorService,
   icons,
   LanguageSelectorComponent,
+  ROUTER_SEGMENTS,
+  routerSegmentsFactory,
   TranslateTsLoader,
 } from '@asset-sg/client-shared';
 import { storeLogger } from '@asset-sg/core';
@@ -40,6 +41,8 @@ import { ForModule } from '@rx-angular/template/for';
 import { LetModule } from '@rx-angular/template/let';
 import { PushModule } from '@rx-angular/template/push';
 
+import { Language, SwissgeolCoreI18n } from '@swisstopo/swissgeol-ui-core';
+import { SwissgeolCoreModule } from '@swisstopo/swissgeol-ui-core-angular';
 import { environment } from '../environments/environment';
 import { adminGuard } from './app-guards';
 import { AppComponent } from './app.component';
@@ -66,6 +69,7 @@ registerLocaleData(locale_deCH, 'de-CH');
     SplashScreenComponent,
   ],
   imports: [
+    SwissgeolCoreModule,
     CommonModule,
     BrowserModule,
     AuthModule,
@@ -100,7 +104,7 @@ registerLocaleData(locale_deCH, 'de-CH');
         runtimeChecks: {
           strictStateImmutability: false,
         },
-      }
+      },
     ),
     EffectsModule.forRoot([AppSharedStateEffects]),
     ForModule,
@@ -118,7 +122,6 @@ registerLocaleData(locale_deCH, 'de-CH');
     NgOptimizedImage,
     MatProgressSpinnerModule,
     AdminOnlyDirective,
-    CanCreateDirective,
     MatTooltip,
     MatButton,
     MatMenuTrigger,
@@ -134,6 +137,7 @@ registerLocaleData(locale_deCH, 'de-CH');
     provideHttpClient(withFetch(), withInterceptorsFromDi()),
     ErrorService,
     { provide: CURRENT_LANG, useFactory: currentLangFactory },
+    { provide: ROUTER_SEGMENTS, useFactory: routerSegmentsFactory },
     { provide: HTTP_INTERCEPTORS, useClass: HttpInterceptor, multi: true },
     { provide: MAT_FORM_FIELD_DEFAULT_OPTIONS, useValue: { appearance: 'fill', floatLabel: 'auto' } },
   ],
@@ -144,6 +148,24 @@ export class AppModule {
 
   constructor() {
     this.translateService.setDefaultLang('de');
+
+    // Sync language with swissgeol-ui-core.
+    this.translateService.onLangChange.subscribe((event) => {
+      switch (event.lang) {
+        case 'en':
+          SwissgeolCoreI18n.setLanguage(Language.English);
+          break;
+        case 'fr':
+          SwissgeolCoreI18n.setLanguage(Language.French);
+          break;
+        case 'it':
+          SwissgeolCoreI18n.setLanguage(Language.Italian);
+          break;
+        default:
+          SwissgeolCoreI18n.setLanguage(Language.German);
+          break;
+      }
+    });
   }
 }
 

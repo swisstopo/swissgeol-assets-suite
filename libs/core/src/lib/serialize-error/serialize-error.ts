@@ -148,7 +148,7 @@ export type ErrorObject = {
 
 export function serializeError<ErrorType>(
   error: ErrorType,
-  options?: Options
+  options?: Options,
 ): ErrorType extends Primitive ? ErrorType : ErrorObject;
 export function serializeError(value, options = {}) {
   const { maxDepth = Number.POSITIVE_INFINITY, useToJSON = true } = options;

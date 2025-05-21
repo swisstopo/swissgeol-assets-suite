@@ -38,12 +38,12 @@ export class DragHandleComponent {
           map((mouseEvent) => ({
             offsetX: mouseEvent.pageX - startPageX,
             offsetY: mouseEvent.pageY - startPageY,
-          }))
+          })),
         );
       };
       setTimeout(() => {
         this.dragOffset$$.next(
-          isDragging$.pipe(switchMap((mouseEvent) => (mouseEvent ? createMouseMoveOffset$(mouseEvent) : of(null))))
+          isDragging$.pipe(switchMap((mouseEvent) => (mouseEvent ? createMouseMoveOffset$(mouseEvent) : of(null)))),
         );
       });
     });

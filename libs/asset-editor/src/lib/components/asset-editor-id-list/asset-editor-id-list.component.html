@@ -1,38 +1,19 @@
-<div class="font-bold mb-4 mt-2" translate>edit.tabs.general.alternativeId</div>
-
-@if (ids.length > 1 || isNewFormOpen) {
-<ul>
-  @for (id of ids; track id.id) {
-  <li class="bg-grey-00" [class.is-being-edited]="isFormValue(id)">
-    <span class="basis-full"> {{ id.id }} [{{ id.description }}] </span>
-    <button asset-sg-icon-button class="actions basis-10" [matMenuTriggerFor]="idListMenu">
-      <svg-icon key="action-menu"></svg-icon>
+@for (id of ids; track $index) {
+  <div class="alternative-id">
+    <asset-sg-text-input
+      [value]="id.id"
+      (valueChange)="updateAlternativeId($event, 'id', $index)"
+      [title]="'edit.tabs.general.alternativeId' | translate"
+      isRequired
+    ></asset-sg-text-input>
+    <asset-sg-text-input
+      [value]="id.description"
+      (valueChange)="updateAlternativeId($event, 'description', $index)"
+      [title]="'edit.tabs.general.alternativeIdDescription' | translate"
+      isRequired
+    ></asset-sg-text-input>
+    <button asset-sg-tertiary isIcon (click)="delete(id)">
+      <svg-icon key="delete"></svg-icon>
     </button>
-    <mat-menu #idListMenu="matMenu">
-      <button mat-menu-item (click)="openForm(id)">
-        <svg-icon key="edit" matMenuItemIcon class="mr-3 text-cyan-09"></svg-icon>
-        {{ "labelEdit" | translate }}
-      </button>
-      <button mat-menu-item (click)="delete(id)">
-        <svg-icon key="delete" matMenuItemIcon class="mr-3 text-cyan-09"></svg-icon>
-        {{ "delete" | translate }}
-      </button>
-    </mat-menu>
-  </li>
-  }
-</ul>
-} @if (isFormOpen) {
-<asset-sg-asset-editor-id-form
-  [value]="formValue"
-  [isStandalone]="ids.length === 0 || (ids.length === 1 && formValue !== null)"
-  [isDisabled]="control.disabled"
-  (save)="saveId($event)"
-  (delete)="deleteId($event)"
-  (closeForm)="closeForm()"
-/>
-} @if (!isFormOpen || (ids.length === 1 && !isNewFormOpen)) {
-<button asset-sg-secondary class="mb-2 -mt-2 self-start" (click)="openForm()" translate>
-  <svg-icon key="zoom-plus" class="mr-4"></svg-icon>
-  edit.tabs.general.addNewAlternativeId
-</button>
+  </div>
 }

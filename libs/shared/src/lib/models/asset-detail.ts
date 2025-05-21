@@ -25,7 +25,7 @@ export const ordStatusWorkByDate = contramap((sw: StatusWork) => sw.statusWorkDa
 export const ordStatusWorkByDateDesc = reverse(ordStatusWorkByDate);
 
 export const AssetContactRole = C.fromDecoder(
-  D.union(D.literal('author'), D.literal('initiator'), D.literal('supplier'))
+  D.union(D.literal('author'), D.literal('initiator'), D.literal('supplier')),
 );
 export type AssetContactRole = C.TypeOf<typeof AssetContactRole>;
 export const eqAssetContactRole: Eq<AssetContactRole> = eqString;
@@ -34,7 +34,7 @@ export const AssetFileType = C.fromDecoder(D.union(D.literal('Normal'), D.litera
 export type AssetFileType = C.TypeOf<typeof AssetFileType>;
 
 export const LegalDocItemCode = C.fromDecoder(
-  D.union(D.literal('federalData'), D.literal('permissionForm'), D.literal('contract'), D.literal('other'))
+  D.union(D.literal('federalData'), D.literal('permissionForm'), D.literal('contract'), D.literal('other')),
 );
 export type LegalDocItemCode = C.TypeOf<typeof LegalDocItemCode>;
 
@@ -51,7 +51,7 @@ export const BaseAssetDetail = {
     C.struct({
       id: C.string,
       description: C.string,
-    })
+    }),
   ),
   assetLanguages: C.array(
     C.struct({
@@ -69,7 +69,7 @@ export const BaseAssetDetail = {
         descriptionIt: C.string,
         descriptionEn: C.string,
       }),
-    })
+    }),
   ),
   assetContacts: C.array(
     C.struct({
@@ -79,7 +79,7 @@ export const BaseAssetDetail = {
         locality: C.nullable(C.string),
         contactKindItemCode: C.string,
       }),
-    })
+    }),
   ),
   manCatLabelRefs: C.array(C.string),
   assetFormatCompositions: C.array(C.string),
@@ -96,6 +96,6 @@ export const BaseAssetDetail = {
       size: C.number,
       type: AssetFileType,
       legalDocItemCode: C.nullable(LegalDocItemCode),
-    })
+    }),
   ),
 };

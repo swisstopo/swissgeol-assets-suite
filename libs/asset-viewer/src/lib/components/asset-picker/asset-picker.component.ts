@@ -10,7 +10,7 @@ import {
   ViewChild,
 } from '@angular/core';
 import { DragHandleOffset, getCssCustomPropertyNumberValue } from '@asset-sg/client-shared';
-import { AssetEditDetail } from '@asset-sg/shared';
+import { AssetSearchResultItem } from '@asset-sg/shared/v2';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { Store } from '@ngrx/store';
 import { RxState } from '@rx-angular/state';
@@ -31,7 +31,7 @@ import {
 import { ViewerControllerService } from '../../services/viewer-controller.service';
 
 interface AssetPickerState {
-  assets: AssetEditDetail[];
+  assets: AssetSearchResultItem[];
   show: boolean;
   currentAssetId: O.Option<number>;
 }
@@ -66,7 +66,7 @@ export class AssetPickerComponent extends RxState<AssetPickerState> {
 
   @ViewChild('pickerContainer') _pickerContainer!: ElementRef<HTMLElement>;
 
-  @Input() set assets(assets$: Observable<AssetEditDetail[]>) {
+  @Input() set assets(assets$: Observable<AssetSearchResultItem[]>) {
     this.connect('assets', assets$);
   }
 
@@ -113,9 +113,9 @@ export class AssetPickerComponent extends RxState<AssetPickerState> {
             pickerContainerRect: null as DOMRect | null,
             transformX: 0,
             transformY: 0,
-          }
+          },
         ),
-        untilDestroyed(this)
+        untilDestroyed(this),
       )
       .subscribe(({ dragHandleOffset, hostRect, pickerContainerRect, fontSizePx, transformX, transformY }) => {
         this._ngZone.runOutsideAngular(() => {
@@ -128,14 +128,14 @@ export class AssetPickerComponent extends RxState<AssetPickerState> {
                 pickerContainerRect.left + dragHandleOffset.offsetX <= hostRect.left + fontSizePx
                   ? hostRect.left - pickerContainerRect.left + transformX + fontSizePx + 1
                   : pickerContainerRect.right + dragHandleOffset.offsetX >= hostRect.right
-                  ? hostRect.right - pickerContainerRect.right + transformX
-                  : dragHandleOffset.offsetX + transformX;
+                    ? hostRect.right - pickerContainerRect.right + transformX
+                    : dragHandleOffset.offsetX + transformX;
               const offsetY =
                 pickerContainerRect.top + dragHandleOffset.offsetY <= hostRect.top
                   ? hostRect.top - pickerContainerRect.top + transformY
                   : pickerContainerRect.bottom + dragHandleOffset.offsetY >= hostRect.bottom
-                  ? hostRect.bottom - pickerContainerRect.bottom + transformY
-                  : dragHandleOffset.offsetY + transformY;
+                    ? hostRect.bottom - pickerContainerRect.bottom + transformY
+                    : dragHandleOffset.offsetY + transformY;
               this._pickerContainer.nativeElement.style.transform = `translate3d(${offsetX}px, ${offsetY}px, 0)`;
             }
           }
@@ -147,14 +147,14 @@ export class AssetPickerComponent extends RxState<AssetPickerState> {
       merge(
         this.assets$.pipe(
           filter((as) => as.length > 0),
-          map(() => true)
+          map(() => true),
         ),
         this.currentAssetId$.pipe(
           filter(O.isSome),
-          map(() => false)
+          map(() => false),
         ),
-        this.closePicker$.pipe(map(() => false))
-      )
+        this.closePicker$.pipe(map(() => false)),
+      ),
     );
 
     this.closePicker$.pipe(untilDestroyed(this)).subscribe(() => this.assetMouseOver.emit(null));

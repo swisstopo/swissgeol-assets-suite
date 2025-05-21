@@ -39,7 +39,7 @@ export class AssetViewerFilesComponent implements OnInit, OnDestroy {
     this.subscriptions.add(
       this.store.select(fromAppShared.selectLocale).subscribe((locale) => {
         this.locale = locale;
-      })
+      }),
     );
   }
 
@@ -64,7 +64,7 @@ export class AssetViewerFilesComponent implements OnInit, OnDestroy {
     this.activeFileDownloads.add(key);
     this.httpClient.get(`/api/assets/${this.assetId}/files/${file.id}`, { responseType: 'blob' }).subscribe({
       next: async (blob) => {
-        const isPdf = file.fileName.endsWith('.pdf');
+        const isPdf = file.name.endsWith('.pdf');
         if (isPdf) {
           blob = await blob.arrayBuffer().then((buffer) => new Blob([buffer], { type: 'application/pdf' }));
         }

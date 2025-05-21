@@ -19,7 +19,3 @@ export const eqIdVM: Eq<IdVM> = struct({
   id: eqString,
   description: eqString,
 });
-
-export interface AssetEditDetailVM extends Omit<AssetEditDetail, 'ids'> {
-  ids: IdVM[];
-}

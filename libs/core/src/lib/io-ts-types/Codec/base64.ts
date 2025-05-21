@@ -18,7 +18,7 @@ const StringFromBase64Decoder = pipe(
     } catch (e) {
       return D.failure(s, 'Base64. ' + String(e));
     }
-  })
+  }),
 );
 
 export const StringFromBase64 = C.make(StringFromBase64Decoder, {

@@ -1,54 +1,35 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { ApiError, httpErrorResponseError } from '@asset-sg/client-shared';
-import { decodeError, OE, ORD, unknownError } from '@asset-sg/core';
-import { Contact, PatchAsset, PatchContact } from '@asset-sg/shared';
+import { OE, ORD, unknownError } from '@asset-sg/core';
+import { AssetEditDetail, PatchAsset } from '@asset-sg/shared';
+import { Contact, ContactData, ContactId } from '@asset-sg/shared/v2';
 import * as RD from '@devexperts/remote-data-ts';
 import * as E from 'fp-ts/Either';
-import { flow } from 'fp-ts/function';
 import { concat, forkJoin, map, Observable, of, startWith, toArray } from 'rxjs';
 
-import { AssetEditorNewFile } from '../components/asset-editor-form-group';
-import { AssetEditDetail } from '../models';
+import { AssetEditorNewFile } from '../models/asset-editor-new-file';
 
 @Injectable({ providedIn: 'root' })
 export class AssetEditorService {
   private readonly httpClient = inject(HttpClient);
 
-  public loadAssetDetailData(assetId: number): ORD.ObservableRemoteData<ApiError, AssetEditDetail> {
+  public fetchAsset(assetId: number): Observable<AssetEditDetail> {
     return this.httpClient
       .get(`/api/asset-edit/${assetId}`)
-      .pipe(
-        map(flow(AssetEditDetail.decode, E.mapLeft(decodeError))),
-        OE.catchErrorW(httpErrorResponseError),
-        map(RD.fromEither),
-        startWith(RD.pending)
-      );
+      .pipe(map((res) => (AssetEditDetail.decode(res) as E.Right<AssetEditDetail>).right));
   }
 
-  public createAsset(patchAsset: PatchAsset): ORD.ObservableRemoteData<ApiError, AssetEditDetail> {
+  public createAsset(patchAsset: PatchAsset): Observable<AssetEditDetail> {
     return this.httpClient
       .post(`/api/asset-edit`, PatchAsset.encode(patchAsset))
-      .pipe(
-        map(flow(AssetEditDetail.decode, E.mapLeft(decodeError))),
-        OE.catchErrorW(httpErrorResponseError),
-        map(RD.fromEither),
-        startWith(RD.pending)
-      );
+      .pipe(map((res) => (AssetEditDetail.decode(res) as E.Right<AssetEditDetail>).right));
   }
 
-  public updateAssetDetail(
-    assetId: number,
-    patchAsset: PatchAsset
-  ): ORD.ObservableRemoteData<ApiError, AssetEditDetail> {
+  public updateAssetDetail(assetId: number, patchAsset: PatchAsset): Observable<AssetEditDetail> {
     return this.httpClient
       .put(`/api/asset-edit/${assetId}`, PatchAsset.encode(patchAsset))
-      .pipe(
-        map(flow(AssetEditDetail.decode, E.mapLeft(decodeError))),
-        OE.catchErrorW(httpErrorResponseError),
-        map(RD.fromEither),
-        startWith(RD.pending)
-      );
+      .pipe(map((res) => (AssetEditDetail.decode(res) as E.Right<AssetEditDetail>).right));
   }
 
   public deleteAsset(assetId: number): Observable<void> {
@@ -62,7 +43,7 @@ export class AssetEditorService {
             return this.httpClient
               .delete(`/api/assets/${assetId}/files/${fileId}`)
               .pipe(map(E.right), OE.catchErrorW(httpErrorResponseError), map(RD.fromEither), startWith(RD.pending));
-          })
+          }),
         ).pipe(
           map((rds) => {
             const error = rds.find(RD.isFailure);
@@ -70,7 +51,7 @@ export class AssetEditorService {
             if (!rds.every(RD.isSuccess))
               return RD.failure(unknownError(new Error('uploadFiles stream completed without success or failure')));
             return RD.success(undefined);
-          })
+          }),
         )
       : of(RD.success(undefined));
   }
@@ -88,7 +69,7 @@ export class AssetEditorService {
             return this.httpClient
               .post(`/api/assets/${assetId}/files`, formData)
               .pipe(map(E.right), OE.catchErrorW(httpErrorResponseError));
-          })
+          }),
         ).pipe(
           toArray(),
           map((rds) => {
@@ -98,30 +79,16 @@ export class AssetEditorService {
               ? RD.failure(unknownError(new Error('uploadFiles stream completed without success or failure')))
               : RD.success(undefined);
           }),
-          startWith(RD.pending)
+          startWith(RD.pending),
         )
       : of(RD.success(undefined));
   }
 
-  public updateContact(contactId: number, patchContact: PatchContact): ORD.ObservableRemoteData<ApiError, Contact> {
-    return this.httpClient
-      .put(`/api/contacts/${contactId}`, PatchContact.encode(patchContact))
-      .pipe(
-        map(flow(Contact.decode, E.mapLeft(decodeError))),
-        OE.catchErrorW(httpErrorResponseError),
-        map(RD.fromEither),
-        startWith(RD.pending)
-      );
+  public updateContact(contactId: ContactId, patchContact: ContactData): Observable<Contact> {
+    return this.httpClient.put<Contact>(`/api/contacts/${contactId}`, patchContact);
   }
 
-  public createContact(patchContact: PatchContact): ORD.ObservableRemoteData<ApiError, Contact> {
-    return this.httpClient
-      .post(`/api/contacts`, PatchContact.encode(patchContact))
-      .pipe(
-        map(flow(Contact.decode, E.mapLeft(decodeError))),
-        OE.catchErrorW(httpErrorResponseError),
-        map(RD.fromEither),
-        startWith(RD.pending)
-      );
+  public createContact(patchContact: ContactData): Observable<Contact> {
+    return this.httpClient.post<Contact>(`/api/contacts`, patchContact);
   }
 }

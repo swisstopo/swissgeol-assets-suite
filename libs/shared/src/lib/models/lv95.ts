@@ -15,7 +15,7 @@ const maxLV95X = 1999999 as LV95X;
 export type LV95X = number & LV95XBrand;
 export const LV95X = pipe(
   C.number,
-  C.refine((n): n is LV95X => n >= minLV95X && n <= maxLV95X, 'LV95X')
+  C.refine((n): n is LV95X => n >= minLV95X && n <= maxLV95X, 'LV95X'),
 );
 export const eqLV95X = TEq.number;
 
@@ -30,7 +30,7 @@ const maxLV95Y = 2999999 as LV95Y;
 export type LV95Y = number & LV95YBrand;
 export const LV95Y = pipe(
   C.number,
-  C.refine((n): n is LV95Y => n >= minLV95Y && n <= maxLV95Y, 'LV95Y')
+  C.refine((n): n is LV95Y => n >= minLV95Y && n <= maxLV95Y, 'LV95Y'),
 );
 export const eqLV95Y = TEq.number;
 
@@ -59,7 +59,7 @@ const makeLV95FromSeparatedString = (codecName: string, separator: string) => {
       if (parts.length !== 2) return D.failure(s, `${codecName}: expected 2 parts, got ${parts.length}`);
       const [y, x] = parts;
       return LV95.decode({ y: +y, x: +x });
-    })
+    }),
   );
   const encoder = {
     encode: (lv95: LV95) => `${lv95.y}${separator}${lv95.x}`,
