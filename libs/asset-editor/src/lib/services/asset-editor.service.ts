@@ -5,16 +5,14 @@ import { OE, ORD, unknownError } from '@asset-sg/core';
 import { AssetEditDetail, PatchAsset } from '@asset-sg/shared';
 import { Contact, ContactData, ContactId } from '@asset-sg/shared/v2';
 import * as RD from '@devexperts/remote-data-ts';
-import { Store } from '@ngrx/store';
 import * as E from 'fp-ts/Either';
 import { concat, forkJoin, map, Observable, of, startWith, toArray } from 'rxjs';
 
-import { AssetEditorNewFile } from '../components/asset-editor-form-group';
+import { AssetEditorNewFile } from '../models/asset-editor-new-file';
 
 @Injectable({ providedIn: 'root' })
 export class AssetEditorService {
   private readonly httpClient = inject(HttpClient);
-  private readonly store = inject(Store);
 
   public fetchAsset(assetId: number): Observable<AssetEditDetail> {
     return this.httpClient
