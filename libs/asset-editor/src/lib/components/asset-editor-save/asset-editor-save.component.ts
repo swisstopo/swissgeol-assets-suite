@@ -9,6 +9,7 @@ import { UntilDestroy } from '@ngneat/until-destroy';
   standalone: false,
 })
 export class AssetEditorSaveComponent {
+  @Input() public tooltip?: string;
   @Input() public isSaveDisabled = false;
   @Input() public hasUnsavedChanges = false;
   @Output() public save = new EventEmitter<void>();
