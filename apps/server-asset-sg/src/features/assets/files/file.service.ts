@@ -20,7 +20,7 @@ export class FileService {
   async create(data: UploadFileData): Promise<AssetFile> {
     const { content, mediaType, ...createData } = data;
 
-    const isOcrCompatible = data.type !== 'Legal' && mediaType == 'application/pdf';
+    const isOcrCompatible = mediaType == 'application/pdf';
 
     // Store file in DB.
     const record = await this.fileRepo.create({
