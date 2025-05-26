@@ -9,7 +9,6 @@ import {
   DateRange,
   GeometryCode,
   makeEmptyAssetSearchStats,
-  ordStatusWorkByDate,
   ReferenceData,
   UsageCode,
   usageCodes,
@@ -19,7 +18,6 @@ import {
 import { SimpleWorkgroup, WorkgroupId } from '@asset-sg/shared/v2';
 import * as RD from '@devexperts/remote-data-ts';
 import { createSelector } from '@ngrx/store';
-import * as A from 'fp-ts/Array';
 import { pipe } from 'fp-ts/function';
 import * as O from 'fp-ts/Option';
 
@@ -350,7 +348,6 @@ const makeAssetDetailVMNew = (referenceData: ReferenceData, assetDetail: AssetEd
     subordinateAssets,
     siblingXAssets,
     siblingYAssets,
-    statusWorks,
     assetFiles,
     ...rest
   } = assetDetail;
@@ -376,14 +373,6 @@ const makeAssetDetailVMNew = (referenceData: ReferenceData, assetDetail: AssetEd
       ...siblingXAssets,
       ...siblingYAssets,
     ],
-    statusWorks: pipe(
-      statusWorks,
-      A.sort(ordStatusWorkByDate),
-      A.map((a) => {
-        const { statusWorkItemCode, ...rest } = a;
-        return { ...rest, statusWork: referenceData.statusWorkItems[statusWorkItemCode] };
-      }),
-    ),
     assetFiles: assetFiles.map((it) => ({
       ...it,
       legalDocItem: it.legalDocItemCode == null ? null : referenceData.legalDocItems[it.legalDocItemCode],

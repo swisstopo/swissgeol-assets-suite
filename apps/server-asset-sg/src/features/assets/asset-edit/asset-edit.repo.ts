@@ -1,5 +1,5 @@
 import { decodeError, isNotNull } from '@asset-sg/core';
-import { AssetEditDetail, AssetUsage, dateFromDateId, DateIdFromDate, PatchAsset } from '@asset-sg/shared';
+import { AssetEditDetail, DateIdFromDate, PatchAsset } from '@asset-sg/shared';
 import { User } from '@asset-sg/shared/v2';
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
@@ -89,18 +89,6 @@ export class AssetEditRepo implements Repo<AssetEditDetail, number, AssetEditDat
             createMany: {
               data: data.patch.typeNatRels.map((natRelItemCode) => ({ natRelItemCode })),
               skipDuplicates: true,
-            },
-          },
-          internalUse: {
-            create: makeUsageInput(data.patch.internalUse),
-          },
-          publicUse: {
-            create: makeUsageInput(data.patch.publicUse),
-          },
-          statusWorks: {
-            create: {
-              statusWorkDate: new Date(),
-              statusWorkItemCode: 'initiateAsset',
             },
           },
           workgroup: { connect: { id: data.patch.workgroupId } },
@@ -203,14 +191,6 @@ export class AssetEditRepo implements Repo<AssetEditDetail, number, AssetEditDat
               skipDuplicates: true,
             },
           },
-          statusWorks: {
-            create: O.isSome(data.patch.newStatusWorkItemCode)
-              ? {
-                  statusWorkDate: new Date(),
-                  statusWorkItemCode: data.patch.newStatusWorkItemCode.value,
-                }
-              : [],
-          },
           workgroupId: data.patch.workgroupId,
         },
       });
@@ -222,20 +202,6 @@ export class AssetEditRepo implements Repo<AssetEditDetail, number, AssetEditDat
       await this.prismaService.assetXAssetY.createMany({
         data: data.patch.siblingAssetIds.map((assetYId) => ({ assetXId: id, assetYId })),
         skipDuplicates: true,
-      });
-
-      // Update the many-to-one relations of the asset.
-      // These can't be combined with the other updates, so we run them in a separate query.
-      await this.prismaService.asset.update({
-        where: { assetId: id },
-        data: {
-          internalUse: {
-            update: makeUsageInput(data.patch.internalUse),
-          },
-          publicUse: {
-            update: makeUsageInput(data.patch.publicUse),
-          },
-        },
       });
 
       // For now, handling of studies is passed to the pre-existing functions.
@@ -286,20 +252,6 @@ export class AssetEditRepo implements Repo<AssetEditDetail, number, AssetEditDat
 
         // Delete the record.
         await this.prismaService.asset.delete({ where: { assetId: id } });
-
-        // Delete all `internalUse` records that are not in use anymore.
-        await this.prismaService.internalUse.deleteMany({
-          where: {
-            Asset: { none: {} },
-          },
-        });
-
-        // Delete all `publicUse` records that are not in use anymore.
-        await this.prismaService.publicUse.deleteMany({
-          where: {
-            Asset: { none: {} },
-          },
-        });
 
         // Delete all `tabStatus` records that are not in use anymore.
         await this.prismaService.workflowSelection.deleteMany({
@@ -357,8 +309,6 @@ const selectPrismaAsset = selectOnAsset({
   processor: true,
   assetKindItemCode: true,
   assetFormatItemCode: true,
-  internalUse: true,
-  publicUse: true,
   isNatRel: true,
   sgsId: true,
   geolDataInfo: true,
@@ -366,6 +316,7 @@ const selectPrismaAsset = selectOnAsset({
   geolAuxDataInfo: true,
   municipality: true,
   ids: true,
+  isPublic: true,
   assetContacts: { select: { role: true, contactId: true } },
   assetLanguages: { select: { languageItemCode: true } },
   manCatLabelRefs: { select: { manCatLabelItemCode: true } },
@@ -374,7 +325,6 @@ const selectPrismaAsset = selectOnAsset({
   subordinateAssets: { select: { assetId: true, titlePublic: true } },
   siblingXAssets: { select: { assetY: { select: { assetId: true, titlePublic: true } } } },
   siblingYAssets: { select: { assetX: { select: { assetId: true, titlePublic: true } } } },
-  statusWorks: { select: { statusWorkItemCode: true, statusWorkDate: true } },
   assetFiles: {
     select: {
       file: {
@@ -399,23 +349,3 @@ const selectPrismaAsset = selectOnAsset({
  * The type of values selected by {@link selectPrismaAsset}.
  */
 type PrismaAsset = Prisma.AssetGetPayload<{ select: typeof selectPrismaAsset }>;
-
-/**
- * The type of the input that creates or updates {@link PrismaAssetUsageInput} records.
- */
-type PrismaAssetUsageInput = Prisma.InternalUseUncheckedCreateWithoutAssetInput;
-
-/**
- * Create the {@link PrismaAssetUsageInput} for the given {@link AssetUsage}.
- * @param usage The usage to create or update.
- */
-const makeUsageInput = (usage: AssetUsage): PrismaAssetUsageInput => {
-  const startAvailabilityDate = O.isNone(usage.startAvailabilityDate)
-    ? null
-    : dateFromDateId(usage.startAvailabilityDate.value);
-  return {
-    isAvailable: usage.isAvailable,
-    statusAssetUseItemCode: usage.statusAssetUseItemCode,
-    startAvailabilityDate,
-  };
-};

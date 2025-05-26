@@ -128,12 +128,6 @@ export const ReferenceData = C.struct({
   legalDocItems: ValueItemRecord,
   manCatLabelItems: ValueItemRecord,
   natRelItems: ValueItemRecord,
-  statusAssetUseItems: C.struct({
-    tobechecked: ValueItem,
-    underclarification: ValueItem,
-    approved: ValueItem,
-  }),
-  statusWorkItems: ValueItemRecord,
   contacts: C.record(Contact),
 });
 export type ReferenceData = C.TypeOf<typeof ReferenceData>;

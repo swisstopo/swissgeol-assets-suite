@@ -133,10 +133,9 @@ export class AssetDataSchema extends Schema implements AssetData {
   @Type(() => AssetIdentifierSchema)
   identifiers!: AssetIdentifierSchema[];
 
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => WorkStatusSchema)
-  statuses!: WorkStatusSchema[];
+  @IsBoolean()
+  @IsNullable()
+  isPublic!: boolean;
 
   @IsArray()
   @ValidateNested({ each: true })

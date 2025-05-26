@@ -1,5 +1,5 @@
 import { DT } from '@asset-sg/core';
-import { AssetContactEdit, AssetLanguageEdit, DateIdFromDate, LinkedAsset, StatusAssetUseCode } from '@asset-sg/shared';
+import { AssetContactEdit, AssetLanguageEdit, DateIdFromDate, LinkedAsset } from '@asset-sg/shared';
 import { pipe } from 'fp-ts/function';
 import * as D from 'io-ts/Decoder';
 
@@ -15,16 +15,7 @@ export const AssetEditDetailFromPostgres = pipe(
     receiptDate: DateIdFromDate,
     lastProcessedDate: DT.date,
     processor: D.nullable(D.string),
-    publicUse: D.struct({
-      isAvailable: D.boolean,
-      statusAssetUseItemCode: StatusAssetUseCode,
-      startAvailabilityDate: DT.optionFromNullable(DateIdFromDate),
-    }),
-    internalUse: D.struct({
-      isAvailable: D.boolean,
-      statusAssetUseItemCode: StatusAssetUseCode,
-      startAvailabilityDate: DT.optionFromNullable(DateIdFromDate),
-    }),
+    isPublic: D.boolean,
     assetKindItemCode: D.string,
     assetFormatItemCode: D.string,
     isNatRel: D.boolean,
@@ -69,12 +60,6 @@ export const AssetEditDetailFromPostgres = pipe(
         D.struct({ assetX: LinkedAsset }),
         D.map((a) => a.assetX),
       ),
-    ),
-    statusWorks: D.array(
-      D.struct({
-        statusWorkItemCode: D.string,
-        statusWorkDate: DT.date,
-      }),
     ),
     assetFiles: AssetFilesFromPostgres,
     workgroupId: D.number,

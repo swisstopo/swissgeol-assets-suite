@@ -69,8 +69,6 @@ const getReferenceData = (user: User, prismaService: PrismaService) => {
     legalDocItems: qt(() => prismaService.legalDocItem.findMany(), 'legalDocItemCode', 'code'),
     manCatLabelItems: qt(() => prismaService.manCatLabelItem.findMany(), 'manCatLabelItemCode', 'code'),
     natRelItems: qt(() => prismaService.natRelItem.findMany(), 'natRelItemCode', 'code'),
-    statusAssetUseItems: qt(() => prismaService.statusAssetUseItem.findMany(), 'statusAssetUseItemCode', 'code'),
-    statusWorkItems: qt(() => prismaService.statusWorkItem.findMany(), 'statusWorkItemCode', 'code'),
 
     // Include only the contacts which are assigned to at least one asset to which the user has access.
     contacts: qt(

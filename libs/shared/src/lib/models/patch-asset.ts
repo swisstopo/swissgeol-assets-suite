@@ -3,7 +3,6 @@ import * as C from 'io-ts/Codec';
 
 import { AssetFileType, LegalDocItemCode } from './asset-detail';
 import { AssetContactEdit, AssetLanguageEdit } from './asset-edit';
-import { AssetUsage } from './asset-usage';
 import { DateId } from './DateStruct';
 
 export const PatchAsset = C.struct({
@@ -11,8 +10,6 @@ export const PatchAsset = C.struct({
   titleOriginal: C.nullable(C.string),
   createDate: DateId,
   receiptDate: DateId,
-  publicUse: AssetUsage,
-  internalUse: AssetUsage,
   assetKindItemCode: C.string,
   assetFormatItemCode: C.string,
   isNatRel: C.boolean,
@@ -45,7 +42,6 @@ export const PatchAsset = C.struct({
   assetMainId: CT.optionFromNullable(C.number),
   siblingAssetIds: C.array(C.number),
   newStudies: C.array(C.string),
-  newStatusWorkItemCode: CT.optionFromNullable(C.string),
   workgroupId: C.number,
 });
 export type PatchAsset = C.TypeOf<typeof PatchAsset>;

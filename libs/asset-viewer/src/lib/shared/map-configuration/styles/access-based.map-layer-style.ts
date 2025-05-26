@@ -9,7 +9,6 @@ import { makeLineShape, makeSimpleCircle, makeTriangleShape } from '../utils';
 import { getGeometryToPointRepresentationMapping, LayerStyle } from './layer-style.type';
 
 type AccessTypeKey = {
-  restricted: Style | Style[];
   internal: Style | Style[];
   public: Style | Style[];
 };
@@ -21,10 +20,6 @@ const publicAccess = {
   strokeColor: '#064E3B',
 };
 const internalAccess = {
-  fillColor: (opacityOverride = 1.0) => `rgba(245, 158, 11, ${opacityOverride})`,
-  strokeColor: '#78350F',
-};
-const restrictedAccess = {
   fillColor: (opacityOverride = 1.0) => `rgba(229, 57, 64, ${opacityOverride})`,
   strokeColor: '#801519',
 };
@@ -32,16 +27,6 @@ const restrictedAccess = {
 const accessTypeMapping: { [key in StudyAccessType]: keyof AccessTypeKey } = {
   0: 'public',
   1: 'internal',
-  2: 'restricted',
-};
-
-/**
- * Used to extract the point representation for a given geometry from the layer style.
- */
-const geometryToPointRepresentationMapping: { [key in StudyGeometryType]: keyof LayerStyleByAccess['point'] } = {
-  Point: 'pointInstance',
-  Line: 'lineInstance',
-  Polygon: 'polygonInstance',
 };
 
 const overviewStylesAccess: LayerStyleByAccess = {
@@ -55,10 +40,6 @@ const overviewStylesAccess: LayerStyleByAccess = {
         zIndex: LAYER_Z_INDEX.POINT,
         image: makeSimpleCircle(internalAccess.fillColor(), internalAccess.strokeColor),
       }),
-      restricted: new Style({
-        zIndex: LAYER_Z_INDEX.POINT,
-        image: makeSimpleCircle(restrictedAccess.fillColor(), restrictedAccess.strokeColor),
-      }),
     },
     lineInstance: {
       public: new Style({
@@ -69,10 +50,6 @@ const overviewStylesAccess: LayerStyleByAccess = {
         zIndex: LAYER_Z_INDEX.POINT,
         image: makeLineShape(internalAccess.fillColor(), internalAccess.strokeColor),
       }),
-      restricted: new Style({
-        zIndex: LAYER_Z_INDEX.POINT,
-        image: makeLineShape(restrictedAccess.fillColor(), restrictedAccess.strokeColor),
-      }),
     },
     polygonInstance: {
       public: new Style({
@@ -82,10 +59,6 @@ const overviewStylesAccess: LayerStyleByAccess = {
       internal: new Style({
         zIndex: LAYER_Z_INDEX.POINT,
         image: makeTriangleShape(internalAccess.fillColor(), internalAccess.strokeColor),
-      }),
-      restricted: new Style({
-        zIndex: LAYER_Z_INDEX.POINT,
-        image: makeTriangleShape(restrictedAccess.fillColor(), restrictedAccess.strokeColor),
       }),
     },
   },
@@ -122,22 +95,6 @@ const overviewStylesAccess: LayerStyleByAccess = {
         zIndex: LAYER_Z_INDEX.LINE,
       }),
     ],
-    restricted: [
-      new Style({
-        stroke: new Stroke({
-          color: restrictedAccess.strokeColor,
-          width: DEFAULT_LINE_WIDTHS.STROKE,
-        }),
-        zIndex: LAYER_Z_INDEX.LINE,
-      }),
-      new Style({
-        stroke: new Stroke({
-          color: restrictedAccess.fillColor(),
-          width: DEFAULT_LINE_WIDTHS.FILL,
-        }),
-        zIndex: LAYER_Z_INDEX.LINE,
-      }),
-    ],
   },
   polygon: {
     public: new Style({
@@ -148,11 +105,6 @@ const overviewStylesAccess: LayerStyleByAccess = {
     internal: new Style({
       stroke: new Stroke({ color: internalAccess.strokeColor, width: DEFAULT_STROKE_WIDTH }),
       fill: new Fill({ color: internalAccess.fillColor(0.3) }),
-      zIndex: LAYER_Z_INDEX.POLYGON,
-    }),
-    restricted: new Style({
-      stroke: new Stroke({ color: restrictedAccess.strokeColor, width: DEFAULT_STROKE_WIDTH }),
-      fill: new Fill({ color: restrictedAccess.fillColor(0.3) }),
       zIndex: LAYER_Z_INDEX.POLYGON,
     }),
   },

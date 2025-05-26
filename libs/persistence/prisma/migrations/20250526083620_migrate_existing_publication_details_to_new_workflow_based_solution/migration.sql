@@ -99,7 +99,6 @@ $$
     UPDATE workflow_selection
     SET general      = true,
         normal_files = true,
-        legal_files  = true,
         "references" = true,
         geometries   = true
     WHERE id IN (SELECT approval_id FROM workflow WHERE id = ANY (assets_to_publish));

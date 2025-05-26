@@ -20,8 +20,8 @@ model Asset {
   municipality        String?         @map("municipality")
   url                 String?         @map("url")
   locationAnalog      String?         @map("location_analog")
-  processor           String?         @map("processor")
-  lastProcessedDate   DateTime        @map("last_processed_date")
+  processor           String?         @map("processor") /// todo lme: remove
+  lastProcessedDate   DateTime        @map("last_processed_date") /// todo lme: remove
   textBody            String?         @map("text_body")
   sgsId               Int?            @unique @map("sgs_id")
   geolDataInfo        String?         @map("geol_data_info")
@@ -37,10 +37,6 @@ model Asset {
   sourceProject       String?         @map("source_project")
   description         String?         @map("description")
   isExtract           Boolean         @map("is_extract")
-  internalUseId       Int             @map("internal_use_id")
-  internalUse         InternalUse     @relation(fields: [internalUseId], references: [internalUseId])
-  publicUseId         Int             @map("public_use_id")
-  publicUse           PublicUse       @relation(fields: [publicUseId], references: [publicUseId])
   assetMainId         Int?            @map("asset_main_id")
   assetMain           Asset?          @relation(name: "asset", fields: [assetMainId], references: [assetId])
   creatorId           String?         @map("creator_id") @db.Uuid
@@ -52,7 +48,6 @@ model Asset {
   assetLanguages  AssetLanguage[]
   ids             Id[]
   manCatLabelRefs ManCatLabelRef[]
-  statusWorks     StatusWork[]
   studyAreas      StudyArea[]
   studyLocations  StudyLocation[]
   studyTraces     StudyTrace[]
@@ -92,30 +87,6 @@ model AssetXAssetY {
 
   @@id([assetXId, assetYId])
   @@map("asset_x_asset_y")
-}
-
-model InternalUse {
-  internalUseId          Int                @id @default(autoincrement()) @map("internal_use_id")
-  isAvailable            Boolean            @map("is_available")
-  statusAssetUseItemCode String             @map("status_asset_use_item_code")
-  statusAssetUseItem     StatusAssetUseItem @relation(fields: [statusAssetUseItemCode], references: [statusAssetUseItemCode])
-  startAvailabilityDate  DateTime?          @map("start_availability_date")
-
-  Asset Asset[]
-
-  @@map("internal_use")
-}
-
-model PublicUse {
-  publicUseId            Int                @id @default(autoincrement()) @map("public_use_id")
-  isAvailable            Boolean            @map("is_available")
-  statusAssetUseItemCode String             @map("status_asset_use_item_code")
-  statusAssetUseItem     StatusAssetUseItem @relation(fields: [statusAssetUseItemCode], references: [statusAssetUseItemCode])
-  startAvailabilityDate  DateTime?          @map("start_availability_date")
-
-  Asset Asset[]
-
-  @@map("public_use")
 }
 
 model AssetFile {
@@ -172,18 +143,6 @@ model ManCatLabelRef {
 
   @@unique([assetId, manCatLabelItemCode])
   @@map("man_cat_label_ref")
-}
-
-model StatusWork {
-  statusWorkId       Int            @id @default(autoincrement()) @map("status_work_id")
-  assetId            Int            @map("asset_id")
-  asset              Asset          @relation(fields: [assetId], references: [assetId], onDelete: Cascade)
-  statusWorkItemCode String         @map("status_work_item_code")
-  statusWorkItem     StatusWorkItem @relation(fields: [statusWorkItemCode], references: [statusWorkItemCode])
-  statusWorkDate     DateTime       @map("status_work_date")
-  processor          String?        @map("processor")
-
-  @@map("status_work")
 }
 
 model TypeNatRel {
@@ -402,45 +361,6 @@ model LegalDocItem {
   File             File[]
 
   @@map("legal_doc_item")
-}
-
-model StatusAssetUseItem {
-  statusAssetUseItemCode String @id @map("status_asset_use_item_code")
-  geolCode               String @map("geol_code")
-  name                   String @map("name")
-  nameDe                 String @map("name_de")
-  nameFr                 String @map("name_fr")
-  nameIt                 String @map("name_it")
-  nameEn                 String @map("name_en")
-  description            String @map("description")
-  descriptionDe          String @map("description_de")
-  descriptionFr          String @map("description_fr")
-  descriptionIt          String @map("description_it")
-  descriptionEn          String @map("description_en")
-
-  publicUses   PublicUse[]
-  internalUses InternalUse[]
-
-  @@map("status_asset_use_item")
-}
-
-model StatusWorkItem {
-  statusWorkItemCode String @id @map("status_work_item_code")
-  geolCode           String @map("geol_code")
-  name               String @map("name")
-  nameDe             String @map("name_de")
-  nameFr             String @map("name_fr")
-  nameIt             String @map("name_it")
-  nameEn             String @map("name_en")
-  description        String @map("description")
-  descriptionDe      String @map("description_de")
-  descriptionFr      String @map("description_fr")
-  descriptionIt      String @map("description_it")
-  descriptionEn      String @map("description_en")
-
-  statusWorks StatusWork[]
-
-  @@map("status_work_item")
 }
 
 model AssetUser {

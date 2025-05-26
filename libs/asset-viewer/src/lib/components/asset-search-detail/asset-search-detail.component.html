@@ -26,7 +26,7 @@
         }
       </div>
       <div class="asset-status">
-        <ng-container *ngIf="assetDetail.publicUse.isAvailable; else internalUse">
+        <ng-container *ngIf="assetDetail.isPublic; else internalUse">
           <svg-icon
             [attr.aria-hidden]="false"
             key="success-filled"
@@ -34,20 +34,11 @@
           />
         </ng-container>
         <ng-template #internalUse>
-          <ng-container *ngIf="assetDetail.internalUse.isAvailable; else onRequest">
-            <svg-icon
-              [attr.aria-hidden]="false"
-              key="warning-filled"
-              [attr.alt]="'search.usageCode.internal' | translate"
-            />
-          </ng-container>
-          <ng-template #onRequest>
-            <svg-icon
-              [attr.aria-hidden]="false"
-              key="error-filled"
-              [attr.alt]="'search.usageCode.useOnRequest' | translate"
-            />
-          </ng-template>
+          <svg-icon
+            [attr.aria-hidden]="false"
+            key="warning-filled"
+            [attr.alt]="'search.usageCode.internal' | translate"
+          />
         </ng-template>
       </div>
       <table class="asset-details" *rxLet="filesByType$; let files">
@@ -147,19 +138,6 @@
         <tr>
           <th translate="search.lastProcessedDate"></th>
           <td>{{ assetDetail.lastProcessedDate | assetSgDate }}</td>
-        </tr>
-        <tr>
-          <th translate="search.status"></th>
-          <td>
-            <ng-container *ngIf="assetDetail.statusWorks.length === 0">&ndash;</ng-container>
-            <table class="status-works">
-              <caption></caption>
-              <tr *rxFor="let statusWork of assetDetail.statusWorks">
-                <th>{{ statusWork.statusWorkDate | assetSgDate }}</th>
-                <td>{{ statusWork.statusWork | valueItemName }}</td>
-              </tr>
-            </table>
-          </td>
         </tr>
       </table>
     </div>

@@ -40,14 +40,7 @@ export const AssetDetailFromPostgres = pipe(
     titleOriginal: D.string,
     createDate: DateIdFromDate,
     lastProcessedDate: DateIdFromDate,
-    publicUse: pipe(
-      D.struct({ isAvailable: D.boolean }),
-      D.map((a) => a.isAvailable),
-    ),
-    internalUse: pipe(
-      D.struct({ isAvailable: D.boolean }),
-      D.map((a) => a.isAvailable),
-    ),
+    isPublic: D.boolean,
     assetKindItemCode: D.string,
     assetFormatItemCode: D.string,
     ids: D.array(
@@ -112,20 +105,14 @@ export const AssetDetailFromPostgres = pipe(
         D.map((a) => a.assetY),
       ),
     ),
-    statusWorks: D.array(
-      D.struct({
-        statusWorkItemCode: D.string,
-        statusWorkDate: DT.date,
-      }),
-    ),
     assetFiles: AssetFilesFromPostgres,
     studies: PostgresAllStudies,
   }),
   D.map((a) => {
-    const { publicUse, internalUse, ...rest } = a;
+    const { isPublic, ...rest } = a;
     return {
       ...rest,
-      usageCode: makeUsageCode(publicUse, internalUse),
+      usageCode: makeUsageCode(isPublic),
     };
   }),
 );

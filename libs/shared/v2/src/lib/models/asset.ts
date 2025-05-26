@@ -44,10 +44,9 @@ export interface AssetDetails {
   processor: string | null;
   isNatRel: boolean;
   infoGeol: InfoGeol;
-  usage: AssetUsages;
-  statuses: WorkStatus[];
   studies: AssetStudy[];
   workgroupId: number;
+  isPublic: boolean;
 }
 
 export interface AssetUsages {
@@ -62,7 +61,6 @@ type NonDataKeys = 'processor' | 'identifiers' | 'studies' | 'statuses' | 'links
 export interface AssetData extends Omit<Data<Asset>, NonDataKeys> {
   links: AssetLinksData;
   identifiers: (AssetIdentifier | AssetIdentifierData)[];
-  statuses: (WorkStatus | WorkStatusData)[];
   studies: (AssetStudy | StudyData)[];
 }
 
@@ -122,12 +120,6 @@ export interface FileReference {
   id: number;
   name: string;
   size: number;
-}
-
-export enum UsageCode {
-  Public = 'public',
-  Internal = 'internal',
-  UseOnRequest = 'useOnRequest',
 }
 
 export interface AssetStudy extends Model<AssetStudyId> {

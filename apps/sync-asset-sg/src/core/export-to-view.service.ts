@@ -4,8 +4,6 @@ import { log } from './log';
 
 interface AssetInfo {
   assetId: number;
-  publicUseId: number;
-  internalUseId: number;
   workgroupId: number;
 }
 
@@ -40,15 +38,10 @@ export class ExportToViewService {
     for (const batch of batches) {
       const time = Date.now();
       const assetIds = batch.map((item) => item.assetId);
-      const internalUseIds = batch.map((item) => item.internalUseId);
-      const publicUseIds = batch.map((item) => item.publicUseId);
-      await this.export('internalUse', 'internalUseId', internalUseIds);
-      await this.export('publicUse', 'publicUseId', publicUseIds);
       await this.exportAssets(assetIds);
       await this.export('assetLanguage', 'assetId', assetIds);
 
       await this.export('manCatLabelRef', 'assetId', assetIds);
-      await this.export('statusWork', 'assetId', assetIds);
       await this.exportStudyAreas(assetIds);
       await this.exportStudyLocations(assetIds);
       await this.exportStudyTraces(assetIds);
@@ -71,12 +64,9 @@ export class ExportToViewService {
    * Export study areas as raw query with st_astext.
    */
   private async exportStudyAreas(assetIds: number[]) {
-    const studyAreas = await this.sourcePrisma.$queryRaw<
-      { studyAreaId: number; assetId: number; geomQualityItemCode: string; geom: string }[]
-    >`
+    const studyAreas = await this.sourcePrisma.$queryRaw<{ studyAreaId: number; assetId: number; geom: string }[]>`
       SELECT study_area_id          as "studyAreaId",
              asset_id               as "assetId",
-             geom_quality_item_code as "geomQualityItemCode",
              st_astext(geom, 2056)  as geom
       FROM study_area
       WHERE asset_id IN (${Prisma.join(assetIds)})
@@ -88,13 +78,12 @@ export class ExportToViewService {
     }
 
     const formattedStudyAreas = studyAreas.map(
-      (sa) =>
-        Prisma.sql`(${sa.studyAreaId}, ${sa.assetId}, ${sa.geomQualityItemCode}, ST_GeomFromText(${sa.geom}, 2056))`,
+      (sa) => Prisma.sql`(${sa.studyAreaId}, ${sa.assetId}, ST_GeomFromText(${sa.geom}, 2056))`,
     );
 
     // insert into destination as raw query
     const result = await this.destinationPrisma.$executeRaw`
-      INSERT INTO study_area (study_area_id, asset_id, geom_quality_item_code, geom)
+      INSERT INTO study_area (study_area_id, asset_id, geom)
       VALUES ${Prisma.join(formattedStudyAreas)}
     `;
 
@@ -106,11 +95,10 @@ export class ExportToViewService {
    */
   private async exportStudyLocations(assetIds: number[]) {
     const studyLocations = await this.sourcePrisma.$queryRaw<
-      { studyLocationId: number; assetId: number; geomQualityItemCode: string; geom: string }[]
+      { studyLocationId: number; assetId: number; geom: string }[]
     >`
       SELECT study_location_id      as "studyLocationId",
              asset_id               as "assetId",
-             geom_quality_item_code as "geomQualityItemCode",
              st_astext(geom, 2056)  as geom
       FROM study_location
       WHERE asset_id IN (${Prisma.join(assetIds)})
@@ -122,13 +110,12 @@ export class ExportToViewService {
     }
 
     const formattedStudyLocations = studyLocations.map(
-      (sa) =>
-        Prisma.sql`(${sa.studyLocationId}, ${sa.assetId}, ${sa.geomQualityItemCode}, ST_GeomFromText(${sa.geom}, 2056))`,
+      (sa) => Prisma.sql`(${sa.studyLocationId}, ${sa.assetId}, ST_GeomFromText(${sa.geom}, 2056))`,
     );
 
     // insert into destination as raw query
     const result = await this.destinationPrisma.$executeRaw`
-      INSERT INTO study_location (study_location_id, asset_id, geom_quality_item_code, geom)
+      INSERT INTO study_location (study_location_id, asset_id, geom)
       VALUES ${Prisma.join(formattedStudyLocations)}
     `;
 
@@ -139,12 +126,9 @@ export class ExportToViewService {
    * Export study traces as raw query with st_astext.
    */
   private async exportStudyTraces(assetIds: number[]) {
-    const studyTraces = await this.sourcePrisma.$queryRaw<
-      { studyTraceId: number; assetId: number; geomQualityItemCode: string; geom: string }[]
-    >`
+    const studyTraces = await this.sourcePrisma.$queryRaw<{ studyTraceId: number; assetId: number; geom: string }[]>`
       SELECT study_trace_id         as "studyTraceId",
              asset_id               as "assetId",
-             geom_quality_item_code as "geomQualityItemCode",
              st_astext(geom, 2056)  as geom
       FROM study_trace
       WHERE asset_id IN (${Prisma.join(assetIds)})
@@ -156,13 +140,12 @@ export class ExportToViewService {
     }
 
     const formattedStudyTraces = studyTraces.map(
-      (sa) =>
-        Prisma.sql`(${sa.studyTraceId}, ${sa.assetId}, ${sa.geomQualityItemCode}, ST_GeomFromText(${sa.geom}, 2056))`,
+      (sa) => Prisma.sql`(${sa.studyTraceId}, ${sa.assetId}, ST_GeomFromText(${sa.geom}, 2056))`,
     );
 
     // insert into destination as raw query
     const result = await this.destinationPrisma.$executeRaw`
-      INSERT INTO study_trace (study_trace_id, asset_id, geom_quality_item_code, geom)
+      INSERT INTO study_trace (study_trace_id, asset_id, geom)
       VALUES ${Prisma.join(formattedStudyTraces)}
     `;
 
@@ -196,11 +179,8 @@ export class ExportToViewService {
         sourceProject: true,
         description: true,
         isExtract: true,
-        internalUseId: true,
-        publicUseId: true,
         assetMainId: true,
         workgroupId: true,
-
         titleOriginal: false,
         sgsId: false,
         geolDataInfo: false,
@@ -228,8 +208,6 @@ export class ExportToViewService {
       'LegalDocItem',
       'ManCatLabelItem',
       'NatRelItem',
-      'StatusAssetUseItem',
-      'StatusWorkItem',
     ];
 
     for (const table of tables) {
@@ -297,20 +275,11 @@ export class ExportToViewService {
    */
   private async findPublicAssetIds() {
     return this.sourcePrisma.$queryRaw<AssetInfo[]>`SELECT a.asset_id        as "assetId",
-                                                           a.public_use_id   as "publicUseId",
-                                                           a.internal_use_id as "internalUseId",
                                                            a.workgroup_id    as "workgroupId"
                                                     FROM asset a
-                                                           LEFT JOIN public_use p ON a.public_use_id = p.public_use_id
-                                                           LEFT JOIN LATERAL (SELECT *
-                                                                              FROM status_work
-                                                                              WHERE asset_id = a.asset_id
-                                                                              ORDER BY status_work_date
-                                                                                DESC LIMIT 1) AS sw
-                                                    ON a.asset_id = sw.asset_id
-                                                    WHERE p.is_available
-                                                      AND p.status_asset_use_item_code = 'approved'
-                                                      AND sw.status_work_item_code = 'published'
+                                                           LEFT JOIN workflow w ON a.asset_id = w.id
+                                                    WHERE a.is_public
+                                                      AND w.status = 'Published'
                                                       AND workgroup_id IN (${Prisma.join(this.allowedWorkgroupIds)})
                                                     ORDER BY a.asset_id
     `;

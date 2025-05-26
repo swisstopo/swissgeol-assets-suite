@@ -4,15 +4,7 @@ import { Eq as eqNumber } from 'fp-ts/number';
 import { Eq as eqString } from 'fp-ts/string';
 import * as C from 'io-ts/Codec';
 
-import {
-  AssetContactRole,
-  AssetFileType,
-  eqAssetContactRole,
-  LegalDocItemCode,
-  LinkedAsset,
-  StatusWork,
-} from './asset-detail';
-import { AssetUsage } from './asset-usage';
+import { AssetContactRole, AssetFileType, eqAssetContactRole, LegalDocItemCode, LinkedAsset } from './asset-detail';
 import { DateId } from './DateStruct';
 
 const _PatchContact = {
@@ -81,8 +73,7 @@ export const BaseAssetEditDetail = {
   receiptDate: DateId,
   lastProcessedDate: CT.DateFromISOString,
   processor: C.nullable(C.string),
-  publicUse: AssetUsage,
-  internalUse: AssetUsage,
+  isPublic: C.boolean,
   assetKindItemCode: C.string,
   assetFormatItemCode: C.string,
   isNatRel: C.boolean,
@@ -100,7 +91,6 @@ export const BaseAssetEditDetail = {
   subordinateAssets: C.array(LinkedAsset),
   siblingXAssets: C.array(LinkedAsset),
   siblingYAssets: C.array(LinkedAsset),
-  statusWorks: C.array(StatusWork),
   assetFiles: C.array(AssetFile),
   workgroupId: C.number,
 };

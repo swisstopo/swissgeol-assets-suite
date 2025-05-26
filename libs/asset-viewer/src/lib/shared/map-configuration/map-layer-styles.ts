@@ -62,10 +62,6 @@ export const availableLayerStyles: AvailableLayerStyles = {
       },
       {
         translationKey: 'mapLayers.access.items.internal',
-        iconKey: 'access-internal',
-      },
-      {
-        translationKey: 'mapLayers.access.items.restricted',
         iconKey: 'access-locked',
       },
     ],

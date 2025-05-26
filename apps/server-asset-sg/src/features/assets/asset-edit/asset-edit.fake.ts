@@ -1,4 +1,4 @@
-import { AssetEditDetail, AssetUsage, Contact, dateIdFromDate, PatchAsset } from '@asset-sg/shared';
+import { AssetEditDetail, Contact, dateIdFromDate, PatchAsset } from '@asset-sg/shared';
 import { Role, User, UserData, WorkgroupId } from '@asset-sg/shared/v2';
 import { fakerDE_CH as faker } from '@faker-js/faker';
 import * as O from 'fp-ts/Option';
@@ -14,12 +14,6 @@ import { define } from '@/utils/define';
 
 let nextUniqueId = 0;
 const fakeIdNumber = (): number => nextUniqueId++;
-
-export const fakeAssetUsage = (): AssetUsage => ({
-  isAvailable: faker.datatype.boolean(),
-  startAvailabilityDate: O.fromNullable(faker.helpers.maybe(() => dateIdFromDate(faker.date.past()))),
-  statusAssetUseItemCode: faker.helpers.arrayElement(['tobechecked', 'underclarification', 'approved']),
-});
 
 export const fakeUser = () => {
   const roles = new Map<WorkgroupId, Role>();
@@ -67,12 +61,9 @@ export const fakeAssetPatch = (): PatchAsset => ({
   assetMainId: O.none,
   createDate: dateIdFromDate(faker.date.past()),
   ids: [],
-  internalUse: fakeAssetUsage(),
-  publicUse: fakeAssetUsage(),
   isNatRel: false,
   assetLanguages: [],
   manCatLabelRefs: [],
-  newStatusWorkItemCode: O.none,
   newStudies: [],
   receiptDate: dateIdFromDate(faker.date.past()),
   siblingAssetIds: [],
@@ -98,8 +89,7 @@ export const fakeAssetEditDetail = (): AssetEditDetail => ({
   geolContactDataInfo: faker.vehicle.manufacturer(),
   geolDataInfo: faker.word.words({ count: { min: 4, max: 25 } }),
   ids: [],
-  internalUse: fakeAssetUsage(),
-  publicUse: fakeAssetUsage(),
+  isPublic: true,
   isNatRel: false,
   assetLanguages: [],
   lastProcessedDate: new Date(),
@@ -109,7 +99,6 @@ export const fakeAssetEditDetail = (): AssetEditDetail => ({
   receiptDate: dateIdFromDate(faker.date.past()),
   siblingXAssets: [],
   siblingYAssets: [],
-  statusWorks: [],
   studies: [],
   subordinateAssets: [],
   typeNatRels: [],

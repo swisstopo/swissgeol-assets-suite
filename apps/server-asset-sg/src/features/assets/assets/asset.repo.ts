@@ -4,12 +4,11 @@ import {
   AssetId,
   AssetStudy,
   AssetStudyId,
-  AssetUsage,
+  isNotPersisted,
+  isPersisted,
   StudyData,
   StudyType,
   User,
-  isNotPersisted,
-  isPersisted,
 } from '@asset-sg/shared/v2';
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
@@ -91,27 +90,8 @@ export class AssetRepo implements FindRepo<Asset, AssetId>, MutateRepo<Asset, As
           where: { assetId: id },
         });
 
-        // Delete the record's `statusWork` records.
-        await this.prisma.statusWork.deleteMany({
-          where: { assetId: id },
-        });
-
         // Delete the record.
         await this.prisma.asset.delete({ where: { assetId: id } });
-
-        // Delete all `internalUse` records that are not in use anymore.
-        await this.prisma.internalUse.deleteMany({
-          where: {
-            Asset: { none: {} },
-          },
-        });
-
-        // Delete all `publicUse` records that are not in use anymore.
-        await this.prisma.publicUse.deleteMany({
-          where: {
-            Asset: { none: {} },
-          },
-        });
       });
       return true;
     } catch (e) {
@@ -274,22 +254,6 @@ const mapDataToPrismaCreate = (data: FullAssetData): Prisma.AssetCreateInput => 
       skipDuplicates: true,
     },
   },
-  statusWorks: {
-    createMany: {
-      data: data.statuses.map((it) => ({
-        statusWorkId: isPersisted(it) ? it.id : undefined,
-        statusWorkDate: it.createdAt,
-        statusWorkItemCode: it.itemCode,
-      })),
-      skipDuplicates: true,
-    },
-  },
-  publicUse: {
-    create: makeUsageInput(data.usage.public),
-  },
-  internalUse: {
-    create: makeUsageInput(data.usage.internal),
-  },
 
   // In the mapping of this repo,
   // `siblingYAssets` contains mappings to siblings whose `id` is greater than our own,
@@ -399,34 +363,6 @@ const mapDataToPrismaUpdate = (id: AssetId, data: FullAssetData): Prisma.AssetUp
       skipDuplicates: true,
     },
   },
-  statusWorks: {
-    deleteMany: {
-      statusWorkId: { notIn: data.statuses.filter(isPersisted).map((it) => it.id) },
-    },
-    createMany: {
-      data: data.statuses.filter(isNotPersisted).map((it) => ({
-        statusWorkDate: it.createdAt,
-        statusWorkItemCode: it.itemCode,
-      })),
-      skipDuplicates: true,
-    },
-    update: data.statuses.filter(isPersisted).map((it) => ({
-      where: {
-        statusWorkId: it.id,
-      },
-      data: {
-        id: it.id,
-        statusWorkDate: it.createdAt,
-        statusWorkItemCode: it.itemCode,
-      },
-    })),
-  },
-  publicUse: {
-    update: makeUsageInput(data.usage.public),
-  },
-  internalUse: {
-    update: makeUsageInput(data.usage.internal),
-  },
 
   // In the mapping of this repo,
   // `siblingYAssets` contains mappings to siblings whose `id` is greater than our own,
@@ -461,20 +397,3 @@ const mapDataToPrismaUpdate = (id: AssetId, data: FullAssetData): Prisma.AssetUp
     },
   },
 });
-
-/**
- * The type of the input that creates or updates {@link PrismaAssetUsageInput} records.
- */
-type PrismaAssetUsageInput = Prisma.InternalUseUncheckedCreateWithoutAssetInput;
-
-/**
- * Create the {@link PrismaAssetUsageInput} for the given {@link AssetUsage}.
- * @param usage The usage to create or update.
- */
-const makeUsageInput = (usage: AssetUsage): PrismaAssetUsageInput => {
-  return {
-    isAvailable: usage.isAvailable,
-    statusAssetUseItemCode: usage.statusCode,
-    startAvailabilityDate: usage.availableAt?.toDate() ?? null,
-  };
-};

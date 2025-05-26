@@ -69,7 +69,7 @@ export class AssetSearchWriter {
       createDate: asset.createDate,
       assetKindItemCode: asset.assetKindItemCode,
       languageItemCodes,
-      usageCode: makeUsageCode(asset.publicUse.isAvailable, asset.internalUse.isAvailable),
+      usageCode: makeUsageCode(asset.isPublic),
       authorIds: asset.assetContacts.filter((it) => it.role === 'author').map((it) => it.contactId),
       contactNames: await contactNamesPromise,
       manCatLabelItemCodes: asset.manCatLabelRefs,
