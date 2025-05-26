@@ -9,105 +9,19 @@ on:
 concurrency:
   group: "publish"
 
-permissions: write-all
-
 jobs:
-  determine-version:
-    name: "determine version"
-    runs-on: ubuntu-latest
-    outputs:
-      version: ${{ steps.find-version.outputs.result }}
-    steps:
-      - name: "Checkout repository"
-        uses: actions/checkout@v4
-      - name: "Install dependencies"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npm install @octokit/rest
-      - name: "Find version"
-        id: find-version
-        uses: actions/github-script@v7
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          BASE_IMAGE_NAME: ${{ vars.BASE_IMAGE_NAME }}
-        with:
-          result-encoding: string
-          script: |
-            const { findSourceAndTargetBranches } = await import('${{ github.workspace }}/.github/scripts/branch.utils.mjs');
-            const {
-              determineNextDevVersion,
-              stringifyVersion,
-            } = await import('${{ github.workspace }}/.github/scripts/version.utils.mjs');
+  publish:
+    uses: "./.github/workflows/publish.yml"
+    with:
+      tag: edge
+      version_script: |
+        const { findSourceAndTargetBranches } = await import(`${process.env.GITHUB_WORKSPACE}/.github/scripts/branch.utils.mjs`);
+        const {
+          determineNextDevVersion,
+          stringifyVersion,
+        } = await import(`${process.env.GITHUB_WORKSPACE}/.github/scripts/version.utils.mjs`);
 
-            const [source, target] = await findSourceAndTargetBranches(context);
-            const nextVersion = await determineNextDevVersion(source);
+        const [source, target] = await findSourceAndTargetBranches(context);
+        const nextVersion = await determineNextDevVersion(source);
 
-            return stringifyVersion(nextVersion);
-
-  build-and-push-api:
-    name: "build and push api"
-    needs:
-      - determine-version
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: Create image
-        uses: ./.github/actions/create-image
-        with:
-          IMAGE_NAME: ${{ vars.BASE_IMAGE_NAME }}-api
-          TAG: edge
-          VERSION: ${{ needs.determine-version.outputs.version }}
-          DOCKERFILE: ./apps/server-asset-sg/docker/Dockerfile
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  build-and-push-app:
-    name: "build and push app"
-    needs:
-      - determine-version
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: Create image
-        uses: ./.github/actions/create-image
-        with:
-          IMAGE_NAME: ${{ vars.BASE_IMAGE_NAME }}-app
-          TAG: edge
-          VERSION: ${{ needs.determine-version.outputs.version }}
-          DOCKERFILE: ./apps/client-asset-sg/docker/Dockerfile
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  build-and-push-sync:
-    name: "build and push sync"
-    needs:
-      - determine-version
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: Create image
-        uses: ./.github/actions/create-image
-        with:
-          IMAGE_NAME: ${{ vars.BASE_IMAGE_NAME }}-sync
-          TAG: edge
-          VERSION: ${{ needs.determine-version.outputs.version }}
-          DOCKERFILE: ./apps/sync-asset-sg/docker/Dockerfile
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  tag-commit:
-    name: "tag commit"
-    needs:
-      - determine-version
-      - build-and-push-api
-      - build-and-push-app
-      - build-and-push-sync
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: tag edge
-        uses: ./.github/actions/tag-commit
-        with:
-          TAG_NAME: edge
-          SHA: ${{ github.sha }}
+        return stringifyVersion(nextVersion);

@@ -21,138 +21,59 @@ jobs:
             exit 1
           fi
 
-  determine-version:
-    name: "determine version"
+  publish:
     needs:
       - enforce-main
-    runs-on: ubuntu-latest
-    outputs:
-      version: ${{ steps.find-version.outputs.result }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: Install dependencies
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npm install @octokit/rest
-      - name: Find version
-        id: find-version
-        uses: actions/github-script@v7
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          BASE_IMAGE_NAME: ${{ vars.BASE_IMAGE_NAME }}
-        with:
-          result-encoding: string
-          script: |
-            const { findLatestReleasableVersion } = await import('${{ github.workspace }}/.github/scripts/package.utils.mjs');
-            const {
-              determineNextRcVersionBySourceBranch,
-              stringifyVersion,
-            } = await import('${{ github.workspace }}/.github/scripts/version.utils.mjs');
+    uses: "./.github/workflows/publish.yml"
+    with:
+      tag: latest
+      version_script: |
+        const { findLatestReleasableVersion } = await import(`${process.env.GITHUB_WORKSPACE}/.github/scripts/package.utils.mjs`);
+        const {
+        determineNextRcVersionBySourceBranch,
+        stringifyVersion,
+        } = await import(`${process.env.GITHUB_WORKSPACE}/.github/scripts/version.utils.mjs`);
 
-            const releasableVersion = await findLatestReleasableVersion();
-            if (releasableVersion === null) {
-              throw new Error('No releasable version found');
-            }
-            return stringifyVersion({ ...releasableVersion, preRelease: null });
-
-  build-and-push-api:
-    name: "build and push api"
-    needs:
-      - determine-version
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: Create image
-        uses: ./.github/actions/create-image
-        with:
-          IMAGE_NAME: ${{ vars.BASE_IMAGE_NAME }}-api
-          TAG: latest
-          VERSION: ${{ needs.determine-version.outputs.version }}
-          DOCKERFILE: ./apps/server-asset-sg/docker/Dockerfile
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  build-and-push-app:
-    name: "build and push app"
-    needs:
-      - determine-version
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: Create image
-        uses: ./.github/actions/create-image
-        with:
-          IMAGE_NAME: ${{ vars.BASE_IMAGE_NAME }}-app
-          TAG: latest
-          VERSION: ${{ needs.determine-version.outputs.version }}
-          DOCKERFILE: ./apps/client-asset-sg/docker/Dockerfile
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  build-and-push-sync:
-    name: "build and push sync"
-    needs:
-      - determine-version
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: Create image
-        uses: ./.github/actions/create-image
-        with:
-          IMAGE_NAME: ${{ vars.BASE_IMAGE_NAME }}-sync
-          TAG: latest
-          VERSION: ${{ needs.determine-version.outputs.version }}
-          DOCKERFILE: ./apps/sync-asset-sg/docker/Dockerfile
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  tag-commit:
-    name: "tag commit"
-    needs:
-      - determine-version
-      - build-and-push-api
-      - build-and-push-app
-      - build-and-push-sync
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: tag latest
-        uses: ./.github/actions/tag-commit
-        with:
-          TAG_NAME: latest
-          SHA: ${{ github.sha }}
-      - name: Tag version
-        uses: ./.github/actions/tag-commit
-        with:
-          TAG_NAME: ${{ needs.determine-version.outputs.version }}
-          SHA: ${{ github.sha }}
+        const releasableVersion = await findLatestReleasableVersion();
+        if (releasableVersion === null) {
+        throw new Error('No releasable version found');
+        }
+        return stringifyVersion({ ...releasableVersion, preRelease: null });
 
   create-release:
     name: "create release"
     needs:
-      - determine-version
-      - build-and-push-api
-      - build-and-push-app
-      - build-and-push-sync
+      - publish
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+      - name: Extract CHANGELOG entry
+        id: extract-changelog
+        run: |
+          content=$(awk '
+            BEGIN { found = 0 }
+            /^## \[/ {
+              if (found++) exit
+            }
+            found { print }
+          ' CHANGELOG.md)
+          echo "content<<EOF" >> $GITHUB_OUTPUT
+          echo "$content" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: "${{ needs.determine-version.outputs.version }}"
-          name: "swissgeol Assets v${{ needs.determine-version.outputs.version }}"
+          tag_name: "${{ needs.publish.outputs.version }}"
+          name: "swissgeol Viewer v${{ needs.publish.outputs.version }}"
+          body: ${{ steps.extract-changelog.outputs.content }}
           token: ${{ secrets.GITHUB_TOKEN }}
+          generate_release_notes: false
 
   cleanup:
     name: "cleanup"
     needs:
-      - determine-version
-      - create-release
-      - tag-commit
+      - publish
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -166,11 +87,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BASE_IMAGE_NAME: ${{ vars.BASE_IMAGE_NAME }}
-          CURRENT_VERSION: ${{ needs.determine-version.outputs.version }}
+          CURRENT_VERSION: ${{ needs.publish.outputs.version }}
+          GITHUB_WORKSPACE: ${{ github.workspace }}
         with:
           script: |
-            const { findOutdatedVersions, removePackageVersions } = await import('${{ github.workspace }}/.github/scripts/package.utils.mjs');
-            const { parseVersion, stringifyVersion } = await import('${{ github.workspace }}/.github/scripts/version.utils.mjs');
+            const { findOutdatedVersions, removePackageVersions } = await import(`${process.env.GITHUB_WORKSPACE}/.github/scripts/package.utils.mjs`);
+            const { parseVersion, stringifyVersion } = await import(`${process.env.GITHUB_WORKSPACE}/.github/scripts/version.utils.mjs`);
 
             const version = parseVersion(process.env.CURRENT_VERSION);
             const outdatedVersions = await findOutdatedVersions(version);
