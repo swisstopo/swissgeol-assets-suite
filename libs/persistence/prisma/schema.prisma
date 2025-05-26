@@ -45,6 +45,7 @@ model Asset {
   assetMain           Asset?          @relation(name: "asset", fields: [assetMainId], references: [assetId])
   creatorId           String?         @map("creator_id") @db.Uuid
   creator             AssetUser?      @relation(name: "creator", fields: [creatorId], references: [id], onDelete: SetNull)
+  isPublic            Boolean         @default(false) @map("is_public")
 
   assetContacts   AssetContact[]
   assetFiles      AssetFile[]
