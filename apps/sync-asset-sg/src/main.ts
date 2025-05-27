@@ -9,10 +9,10 @@ import {
   SyncExternService,
 } from './core';
 
-log('Starting data export to view');
+log('Starting data export to view', 'main');
 
 const config = getConfig();
-log(`Found configuration ${JSON.stringify(maskSecrets(config))}`);
+log(`Found configuration ${JSON.stringify(maskSecrets(config))}`, 'main');
 
 const sourcePrisma = new PrismaClient(prismaConfig(config.source.connectionString));
 const destinationPrisma = new PrismaClient(prismaConfig(config.destination.connectionString));
@@ -24,13 +24,13 @@ switch (config.mode) {
     // Export data from source to destination database
     new ExportToViewService(sourcePrisma, destinationPrisma, config)
       .exportToView()
-      .then(() => log('Export to view completed'))
+      .then(() => log('Export to view completed', 'main'))
       .catch((error) => console.error(error));
     break;
   case 'extern':
     new SyncExternService(sourcePrisma, destinationPrisma, config)
       .syncProdAndExtern()
-      .then(() => log('Export to extern completed'))
+      .then(() => log('Export to extern completed', 'main'))
       .catch((error) => console.error(error));
     break;
   default:
