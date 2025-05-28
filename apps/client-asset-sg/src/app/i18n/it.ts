@@ -43,6 +43,17 @@ export const itAppTranslations: AppTranslations = {
     Published: 'IT Veröffentlicht',
     notPublished: 'IT Nicht Veröffentlicht',
   },
+  workflowSelection: {
+    general: 'IT General',
+    normalFiles: 'IT Normale Dateien',
+    legalFiles: 'IT Rechtliche Einwilligungen',
+    initiators: 'IT Auftraggeber',
+    suppliers: 'IT Einlieferer',
+    authors: 'IT Authoren',
+    references: 'IT Referenzen',
+    geometries: 'IT Geometrien',
+    legacy: 'IT Altdaten',
+  },
   menuBar: {
     filters: 'IT Filter',
     admin: 'IT Verwaltung',
@@ -265,6 +276,13 @@ export const itAppTranslations: AppTranslations = {
         tabValidationErrors: {
           tab: 'IT Tab',
           hasValidationErrors: 'IT enthält Validierungsfehler',
+        },
+      },
+      status: {
+        tabName: 'IT Status',
+        selectionCategories: {
+          files: 'IT Dateien',
+          contacts: 'IT Kontakte',
         },
       },
       legacyData: {
