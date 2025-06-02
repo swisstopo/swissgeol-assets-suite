@@ -47,6 +47,7 @@ import {
   MatDateIdModule,
   PageHeaderComponent,
   SelectComponent,
+  SelectOptionComponent,
   SmartTranslatePipe,
   TabComponent,
   TabsComponent,
@@ -241,6 +242,7 @@ export const canLeaveEdit: CanDeactivateFn<AssetEditorPageComponent> = (componen
     MatDialogContent,
     MatDialogActions,
     SwissgeolCoreModule,
+    SelectOptionComponent,
   ],
   providers: [
     { provide: MAT_DATE_LOCALE, useValue: de },

@@ -15,14 +15,14 @@
         [errorMessage]="hasWorkgroupId ? '' : ('edit.tabs.references.workgroupWarning' | translate)"
         isRequired
       ></asset-sg-text-input>
-      <asset-sg-select
-        [title]="'edit.tabs.general.kind' | translate"
-        [values]="types"
-        bindLabel="translation"
-        bindKey="key"
-        isRequired
-        formControlName="type"
-      ></asset-sg-select>
+      <asset-sg-select [title]="'edit.tabs.general.kind' | translate" isRequired formControlName="type">
+        <asset-sg-select-option [value]="LinkedAssetType.Sibling">
+          {{ "edit.tabs.references.referenceType.sibling" | translate }}
+        </asset-sg-select-option>
+        <asset-sg-select-option [value]="LinkedAssetType.Main" [isDisabled]="form.value.mainAsset != null">
+          {{ "edit.tabs.references.referenceType.parent" | translate }}
+        </asset-sg-select-option>
+      </asset-sg-select>
     </div>
   </form>
 </div>

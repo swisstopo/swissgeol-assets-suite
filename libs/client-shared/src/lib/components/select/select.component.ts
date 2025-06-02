@@ -92,8 +92,6 @@ export class SelectComponent<T, K> implements OnInit, AfterViewInit, ControlValu
   }
 
   public onFilterChange(selectedValues: T | T[]): void {
-    console.log(selectedValues);
-
     this.selectedValues = selectedValues;
     this.selectionChanged.emit(
       Array.isArray(selectedValues) ? selectedValues.map((it) => this.getKey(it)) : [this.getKey(selectedValues)],
