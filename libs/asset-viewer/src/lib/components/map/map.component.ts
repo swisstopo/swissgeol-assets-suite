@@ -137,11 +137,11 @@ export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
 
   ngOnDestroy(): void {
     this.subscription.unsubscribe();
-    this.controller.dispose();
   }
 
   private initializeMap(initialPosition: MapPosition): void {
     this.controller = new MapController(this.mapElement.nativeElement, initialPosition);
+    this.subscription.add(() => this.controller.dispose());
 
     this.controls = {
       zoom: new ZoomControl({

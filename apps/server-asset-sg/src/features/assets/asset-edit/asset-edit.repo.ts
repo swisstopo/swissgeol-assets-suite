@@ -118,6 +118,9 @@ export class AssetEditRepo implements Repo<AssetEditDetail, number, AssetEditDat
           },
         },
       });
+
+      await createStudies(this.prismaService, asset.assetId, data.patch.newStudies)();
+
       return (await this.find(asset.assetId)) as AssetEditDetail;
     });
   }

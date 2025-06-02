@@ -130,8 +130,8 @@ export const createStudies = (prismaClient: PrismaClient, assetId: number, study
           TE.tryCatch(
             () =>
               prismaClient.$executeRawUnsafe(
-                `insert into public.study_${type} (asset_id, geom_quality_item_code, geom)
-                                 values (${assetId}, 'unkown', st_geomfromtext('${geomText}', 2056))`,
+                `insert into public.study_${type} (asset_id, geom)
+                                 values (${assetId}, st_geomfromtext('${geomText}', 2056))`,
               ),
             unknownToUnknownError,
           ),
