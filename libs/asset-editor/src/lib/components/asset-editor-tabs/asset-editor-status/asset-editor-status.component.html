@@ -3,11 +3,14 @@
 } @else {
   <sgc-workflow
     [workflow]="workflow"
+    [availableAssignees]="availableAssignees"
     [selection]="selection"
     [review]="workflow.review"
     [approval]="workflow.approval"
     [isReadOnly]="(canUpdate$ | async) === false"
     (workflowReviewChange)="handleReviewChange($event)"
     (workflowApprovalChange)="handleApprovalChange($event)"
+    (workflowChange)="handleWorkflowChange($event)"
+    (workflowPublish)="handleWorkflowPublish()"
   />
 }

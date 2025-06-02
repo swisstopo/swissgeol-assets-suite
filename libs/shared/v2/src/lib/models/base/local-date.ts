@@ -68,7 +68,7 @@ export class LocalDate {
   private constructor(date: Date) {
     this.year = date.getFullYear();
     this.month = date.getMonth() + 1;
-    this.day = date.getDay();
+    this.day = date.getDate();
   }
 
   toString(): string {
