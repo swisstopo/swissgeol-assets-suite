@@ -1,4 +1,4 @@
-import { Component, EventEmitter, inject, Input, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, inject, Input, OnDestroy, OnInit, Output } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { appSharedStateActions, fromAppShared } from '@asset-sg/client-shared';
 import { AssetContactRole } from '@asset-sg/shared';
@@ -16,7 +16,7 @@ import { ContactWithRoles } from '../asset-editor-contacts.component';
   styleUrls: ['./manage-contact-dialog.component.scss'],
   standalone: false,
 })
-export class ManageContactDialogComponent implements OnInit {
+export class ManageContactDialogComponent implements OnInit, OnDestroy {
   @Output() public createContact: EventEmitter<AssetContact[]> = new EventEmitter();
   @Output() public closeDialog: EventEmitter<void> = new EventEmitter();
   @Input() public data: Partial<ContactWithRoles> | undefined;
@@ -45,7 +45,7 @@ export class ManageContactDialogComponent implements OnInit {
     .select(fromAppShared.selectContactKindItems)
     .pipe(map(mapValueItemsToTranslatedItem));
 
-  public ngOnInit() {
+  public ngOnInit(): void {
     if (this.data) {
       if (this.data.id) {
         this.existingContactId = this.data.id;
@@ -54,22 +54,22 @@ export class ManageContactDialogComponent implements OnInit {
     }
   }
 
+  public ngOnDestroy(): void {
+    this.subscriptions.unsubscribe();
+  }
+
   protected createOrUpdateContact() {
     const { roles, ...contactData } = this.manageContactForm.getRawValue();
     this.subscriptions.add(
-      this.createOrSaveContact(contactData)
-        .pipe(
-          tap((res) => {
-            const assetContacts = roles.map((role) => {
-              return {
-                id: res.id,
-                role,
-              } as AssetContact;
-            });
-            this.createContact.emit(assetContacts);
-          }),
-        )
-        .subscribe(),
+      this.createOrSaveContact(contactData).subscribe((res) => {
+        const assetContacts = roles.map((role) => {
+          return {
+            id: res.id,
+            role,
+          } as AssetContact;
+        });
+        this.createContact.emit(assetContacts);
+      }),
     );
   }
 
