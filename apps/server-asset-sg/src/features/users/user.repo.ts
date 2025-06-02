@@ -142,8 +142,10 @@ export const simpleUserSelection = satisfy<Prisma.AssetUserSelect>()({
 
 type SelectedSimpleUser = Prisma.AssetUserGetPayload<{ select: typeof simpleUserSelection }>;
 
-export const parseSimpleUser = (data: SelectedSimpleUser): SimpleUser => ({
-  id: data.id,
-  firstName: data.firstName,
-  lastName: data.lastName,
-});
+export const parseSimpleUser = (data: SelectedSimpleUser): SimpleUser =>
+  ({
+    id: data.id,
+    firstName: data.firstName,
+    lastName: data.lastName,
+    role: Role.Publisher,
+  }) as SimpleUser;
