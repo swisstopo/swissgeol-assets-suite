@@ -9,46 +9,41 @@ export class AssetEditService {
   constructor(private readonly prismaService: PrismaService) {}
 
   public async validateReferencesOrThrow(data: AssetEditData, id?: number): Promise<void> {
-    // check if any of the siblings are in another workgroup
+    // Validate siblings.
     for (const assetYId of data.patch.siblingAssetIds) {
+      // Ensure that the sibling is not the asset itself.
+      if (assetYId === id) {
+        throw new HttpException('Cannot assign asset as its own sibling', HttpStatus.UNPROCESSABLE_ENTITY);
+      }
+
+      // Ensure that the sibling is in the same workgroup.
       const siblingCandidate = await this.prismaService.asset.findUnique({
         where: { assetId: assetYId },
         select: { workgroupId: true },
       });
       if (siblingCandidate?.workgroupId !== data.patch.workgroupId) {
         throw new HttpException(
-          'Sibling assets must be in the same workgroup as the edited asset',
+          'Cannot assign sibling asset from different workgroup',
           HttpStatus.UNPROCESSABLE_ENTITY,
         );
       }
     }
 
-    // check if the parent asset is in another workgroup
+    // Validate parent asset.
     const assetMainId = O.toUndefined(data.patch.assetMainId);
     if (assetMainId) {
+      // Ensure that the parent is not the asset itself.
+      if (assetMainId === id) {
+        throw new HttpException('Cannot assign asset as its own parent', HttpStatus.UNPROCESSABLE_ENTITY);
+      }
+
+      // Ensure that the parent is in the same workgroup.
       const assetMain = await this.prismaService.asset.findUnique({
         where: { assetId: assetMainId },
         select: { workgroupId: true },
       });
       if (assetMain?.workgroupId !== data.patch.workgroupId) {
         throw new HttpException('Cannot assign parent asset from different workgroup', HttpStatus.UNPROCESSABLE_ENTITY);
-      }
-    }
-
-    // check if any of the subordinate assets are in another workgroup for exisiting assets
-    if (id) {
-      const childAssets = await this.prismaService.asset.findMany({
-        where: { assetMainId: id },
-        select: { workgroupId: true },
-      });
-
-      for (const child of childAssets) {
-        if (child.workgroupId !== data.patch.workgroupId) {
-          throw new HttpException(
-            'Child assets must be in the same workgroup as the parent asset',
-            HttpStatus.UNPROCESSABLE_ENTITY,
-          );
-        }
       }
     }
   }

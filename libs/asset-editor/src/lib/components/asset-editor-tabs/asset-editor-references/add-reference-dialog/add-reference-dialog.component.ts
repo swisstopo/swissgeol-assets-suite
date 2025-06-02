@@ -61,11 +61,22 @@ export class AddReferenceDialogComponent implements OnInit {
 
     this.assetsToIgnore$ = this.form.valueChanges.pipe(
       startWith(this.form.value),
-      map((references) => [
-        ...(references.mainAsset ? [references.mainAsset.assetId] : []),
-        ...(references.siblingAssets?.map((reference) => reference.assetId) ?? []),
-        ...(references.subordinateAssets?.map((reference) => reference.assetId) ?? []),
-      ]),
+      map((references) => {
+        const ids = [] as AssetId[];
+        if (this.asset !== null) {
+          ids.push(this.asset.assetId);
+        }
+        if (references.mainAsset != null) {
+          ids.push(references.mainAsset.assetId);
+        }
+        if (references.siblingAssets != null) {
+          ids.push(...references.siblingAssets.map((it) => it.assetId));
+        }
+        if (references.subordinateAssets != null) {
+          ids.push(...references.subordinateAssets.map((it) => it.assetId));
+        }
+        return ids;
+      }),
     );
     this.assetsToChooseFrom$ = this.searchTerm$.pipe(
       debounceTime(300),
