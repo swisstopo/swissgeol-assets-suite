@@ -158,12 +158,12 @@ export class AssetRepo implements FindRepo<Asset, AssetId>, MutateRepo<Asset, As
     }
     const values = data.map(
       (it) => Prisma.sql`
-      (${assetId}, 'unkown', st_geomfromtext('${it.geom}', 2056))
+      (${assetId}, st_geomfromtext('${it.geom}', 2056))
     `,
     );
     await this.prisma.$queryRaw`
       INSERT INTO public.study_${type}
-        (asset_id, geom_quality_item_code, geom)
+        (asset_id, geom)
       VALUES
         ${Prisma.join(values, ',')}
     `;
