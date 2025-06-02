@@ -56,12 +56,11 @@ jobs:
           IMAGE_NAME: ${{ vars.BASE_IMAGE_NAME }}-api
           TAG: ${{ inputs.tag }}
           VERSION: ${{ needs.determine-version.outputs.version }}
-          DOCKERFILE: ./api/Dockerfile
+          DOCKERFILE: ./apps/server-asset-sg/docker/Dockerfile
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CONTEXT: "./api"
 
-  build-and-push-ui:
-    name: "build and push ui"
+  build-and-push-app:
+    name: "build and push app"
     needs:
       - determine-version
     runs-on: ubuntu-latest
@@ -71,14 +70,14 @@ jobs:
       - name: Create image
         uses: ./.github/actions/create-image
         with:
-          IMAGE_NAME: ${{ vars.BASE_IMAGE_NAME }}-ui
+          IMAGE_NAME: ${{ vars.BASE_IMAGE_NAME }}-app
           TAG: ${{ inputs.tag }}
           VERSION: ${{ needs.determine-version.outputs.version }}
-          DOCKERFILE: ./ui/Dockerfile
+          DOCKERFILE: ./apps/client-asset-sg/docker/Dockerfile
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  build-and-push-titiler:
-    name: "build and push titiler"
+  build-and-push-sync:
+    name: "build and push sync"
     needs:
       - determine-version
     runs-on: ubuntu-latest
@@ -88,20 +87,19 @@ jobs:
       - name: Create image
         uses: ./.github/actions/create-image
         with:
-          IMAGE_NAME: ${{ vars.BASE_IMAGE_NAME }}-titiler
+          IMAGE_NAME: ${{ vars.BASE_IMAGE_NAME }}-sync
           TAG: ${{ inputs.tag }}
           VERSION: ${{ needs.determine-version.outputs.version }}
-          DOCKERFILE: ./titiler/Dockerfile
+          DOCKERFILE: ./apps/sync-asset-sg/docker/Dockerfile
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CONTEXT: ./titiler
 
   tag-commit:
     name: "tag commit"
     needs:
       - determine-version
       - build-and-push-api
-      - build-and-push-ui
-      - build-and-push-titiler
+      - build-and-push-app
+      - build-and-push-sync
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
