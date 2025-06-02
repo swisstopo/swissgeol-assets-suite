@@ -5,8 +5,7 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { AssetEditDetail, LinkedAsset } from '@asset-sg/shared';
 import { AssetId, AssetSearchResultDTO, AssetSearchResultItem } from '@asset-sg/shared/v2';
 import { plainToInstance } from 'class-transformer';
-import * as O from 'fp-ts/Option';
-import { combineLatest, debounceTime, map, Observable, of, startWith, Subject, switchMap, tap } from 'rxjs';
+import { combineLatest, debounceTime, map, Observable, of, startWith, Subject, switchMap } from 'rxjs';
 import { NewReferenceDialogData } from '../../../../models/new-reference-dialog-data.interface';
 import { AssetForm } from '../../../asset-editor-page/asset-editor-page.component';
 import { LinkedAssetType } from '../asset-editor-references.component';
@@ -18,16 +17,6 @@ import { LinkedAssetType } from '../asset-editor-references.component';
   standalone: false,
 })
 export class AddReferenceDialogComponent implements OnInit {
-  public types = [
-    {
-      key: LinkedAssetType.Sibling,
-      translation: { key: `edit.tabs.references.referenceType.sibling` },
-    },
-    {
-      key: LinkedAssetType.Main,
-      translation: { key: `edit.tabs.references.referenceType.parent` },
-    },
-  ];
   public asset: AssetEditDetail | null = null;
   public form!: AssetForm['controls']['references'];
 
@@ -48,16 +37,6 @@ export class AddReferenceDialogComponent implements OnInit {
   public ngOnInit() {
     this.form = this.data.form;
     this.asset = this.data.asset;
-    this.types = this.asset
-      ? O.toNullable(this.asset.assetMain)
-        ? [
-            {
-              key: LinkedAssetType.Sibling,
-              translation: { key: `edit.tabs.references.referenceType.sibling` },
-            },
-          ]
-        : this.types
-      : this.types;
 
     this.assetsToIgnore$ = this.form.valueChanges.pipe(
       startWith(this.form.value),
@@ -80,26 +59,24 @@ export class AddReferenceDialogComponent implements OnInit {
     );
     this.assetsToChooseFrom$ = this.searchTerm$.pipe(
       debounceTime(300),
-      switchMap(
-        (value): Observable<AssetSearchResultItem[]> =>
-          value.length >= 3
-            ? this.httpClient
-                .post(`/api/assets/search?limit=10`, {
-                  text: value,
-                  workgroupIds: [this.data.workgroupId],
-                })
-                .pipe(
-                  map((res) => {
-                    console.log(res);
-                    const data = plainToInstance(AssetSearchResultDTO, res);
-                    return data.data;
-                  }),
-                )
-            : of([]),
-      ),
+      switchMap((term): Observable<AssetSearchResultItem[]> => {
+        if (term.length < 3 || (this.linkedAsset != null && this.linkedAsset.titlePublic === term)) {
+          return of([]);
+        }
+        return this.httpClient
+          .post(`/api/assets/search?limit=10`, {
+            text: term,
+            workgroupIds: [this.data.workgroupId],
+          })
+          .pipe(
+            map((res) => {
+              const data = plainToInstance(AssetSearchResultDTO, res);
+              return data.data;
+            }),
+          );
+      }),
     );
     this.optionsToDisplay$ = combineLatest([this.assetsToIgnore$, this.assetsToChooseFrom$]).pipe(
-      tap((it) => console.log('tapped', it)),
       map(([assetIdsToIgnore, queriedAssets]) =>
         queriedAssets
           .filter((asset) => !assetIdsToIgnore.includes(asset.assetId))
@@ -127,6 +104,10 @@ export class AddReferenceDialogComponent implements OnInit {
     this.dialogRef.close(false);
   }
 
+  get linkedAsset(): LinkedAsset | null | undefined {
+    return this.newReferenceForm.value.linkedAsset;
+  }
+
   public addReference() {
     const { linkedAsset, type } = this.newReferenceForm.value;
     if (!linkedAsset || !type) {
@@ -139,4 +120,6 @@ export class AddReferenceDialogComponent implements OnInit {
     }
     this.dialogRef.close(true);
   }
+
+  protected readonly LinkedAssetType = LinkedAssetType;
 }

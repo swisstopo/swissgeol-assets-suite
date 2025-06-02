@@ -15,6 +15,7 @@ export * from './tabs/tabs.component';
 export * from './text-input';
 export * from './text-area/text-area.component';
 export * from './select';
+export * from './select-option/select-option.component';
 export * from './filter-selector';
 export * from './chip';
 export * from './search-and-filter';
