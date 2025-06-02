@@ -15,11 +15,23 @@
         </mat-select-trigger>
       }
       @for (value of values; track value) {
-        <mat-option [value]="value">{{ (bindLabel ? $any(value[bindLabel]) : value) | smartTranslate }}</mat-option>
+        <mat-option [value]="value">
+          {{ (bindLabel ? $any(value[bindLabel]) : value) | smartTranslate }}
+        </mat-option>
+      }
+
+      @for (option of customOptionsToRender; track option.value) {
+        <mat-option [value]="option.value" [disabled]="option.isDisabled">
+          <ng-container *ngTemplateOutlet="option.template" />
+        </mat-option>
       }
     </mat-select>
     @if (errorMessage) {
       <mat-hint class="mat-mdc-form-field-error">{{ errorMessage }}</mat-hint>
     }
   </mat-form-field>
+
+  <div style="display: none">
+    <ng-content />
+  </div>
 </label>

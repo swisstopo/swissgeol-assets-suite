@@ -1,11 +1,23 @@
 import { coerceBooleanProperty } from '@angular/cdk/coercion';
-import { Component, EventEmitter, forwardRef, Input, OnInit, Output } from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
+import {
+  AfterViewInit,
+  Component,
+  ContentChildren,
+  EventEmitter,
+  forwardRef,
+  Input,
+  OnInit,
+  Output,
+  QueryList,
+} from '@angular/core';
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR, ReactiveFormsModule } from '@angular/forms';
-import { MatFormField, MatHint, MatOption, MatSelectModule } from '@angular/material/select';
+import { MatFormField, MatHint, MatSelectModule } from '@angular/material/select';
 import { SvgIconComponent } from '@ngneat/svg-icon';
 import { TranslateModule } from '@ngx-translate/core';
-import { noop } from 'rxjs';
+import { delay, noop, startWith } from 'rxjs';
 import { FormItemWrapperComponent } from '../form-item-wrapper/form-item-wrapper.component';
+import { SelectOptionComponent } from '../select-option/select-option.component';
 import { SmartTranslatePipe } from '../smart-translate.pipe';
 
 type FormValue<T> = T | T[] | T[keyof T] | T[keyof T][];
@@ -26,7 +38,6 @@ type FormValue<T> = T | T[] | T[keyof T] | T[keyof T][];
   ],
   imports: [
     MatSelectModule,
-    MatOption,
     ReactiveFormsModule,
     SvgIconComponent,
     TranslateModule,
@@ -35,9 +46,10 @@ type FormValue<T> = T | T[] | T[keyof T] | T[keyof T][];
     SmartTranslatePipe,
     MatHint,
     FormItemWrapperComponent,
+    NgTemplateOutlet,
   ],
 })
-export class SelectComponent<T, K> implements OnInit, ControlValueAccessor {
+export class SelectComponent<T, K> implements OnInit, AfterViewInit, ControlValueAccessor {
   @Input() public values: T[] = [];
   @Input() public bindLabel: keyof T | null = null;
   @Input() public bindKey: keyof T | null = null;
@@ -50,16 +62,26 @@ export class SelectComponent<T, K> implements OnInit, ControlValueAccessor {
   @Input() disabled = false;
   @Output() public selectionChanged = new EventEmitter<K[]>();
 
+  @ContentChildren(SelectOptionComponent)
+  customOptions!: QueryList<SelectOptionComponent<T>>;
+  customOptionsToRender: Array<SelectOptionComponent<T>> = [];
+
   public selectedValues?: T | T[] = this.multiple ? [] : undefined;
 
   private onChange: (value: FormValue<T>) => void = noop;
   private onTouched: () => void = noop;
 
-  public ngOnInit(): void {
+  ngOnInit(): void {
     const filteredValues = this.values.filter((value) => {
       return this.initialKeys.includes(this.getKey(value));
     });
     this.selectedValues = this.multiple ? filteredValues : filteredValues[0];
+  }
+
+  ngAfterViewInit(): void {
+    this.customOptions.changes.pipe(startWith(null), delay(1)).subscribe(() => {
+      this.customOptionsToRender = this.customOptions.toArray();
+    });
   }
 
   getKey(value: T): K {
@@ -70,6 +92,8 @@ export class SelectComponent<T, K> implements OnInit, ControlValueAccessor {
   }
 
   public onFilterChange(selectedValues: T | T[]): void {
+    console.log(selectedValues);
+
     this.selectedValues = selectedValues;
     this.selectionChanged.emit(
       Array.isArray(selectedValues) ? selectedValues.map((it) => this.getKey(it)) : [this.getKey(selectedValues)],
