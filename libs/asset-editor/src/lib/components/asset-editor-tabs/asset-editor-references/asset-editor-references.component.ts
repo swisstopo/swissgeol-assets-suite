@@ -2,6 +2,7 @@ import { Component, inject, Input, OnDestroy, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { MatTableDataSource } from '@angular/material/table';
 import { AssetEditDetail, LinkedAsset } from '@asset-sg/shared';
+import { WorkgroupId } from '@asset-sg/shared/v2';
 import { startWith, Subscription } from 'rxjs';
 import { NewReferenceDialogData } from '../../../models/new-reference-dialog-data.interface';
 import { AssetForm } from '../../asset-editor-page/asset-editor-page.component';
@@ -15,8 +16,11 @@ import { AddReferenceDialogComponent } from './add-reference-dialog/add-referenc
 })
 export class AssetEditorReferencesComponent implements OnInit, OnDestroy {
   @Input() form!: AssetForm['controls']['references'];
+
   @Input() asset: AssetEditDetail | null = null;
-  @Input() hasWorkgroupId = false;
+
+  @Input() workgroupId!: WorkgroupId | null;
+
   public COLUMNS = ['name', 'assetId', 'type', 'actions'];
   public dataSource: MatTableDataSource<FormLinkedAsset> = new MatTableDataSource();
   private readonly subscriptions: Subscription = new Subscription();
@@ -78,7 +82,7 @@ export class AssetEditorReferencesComponent implements OnInit, OnDestroy {
         data: {
           form: this.form,
           asset: this.asset,
-          hasWorkgroupId: this.hasWorkgroupId,
+          workgroupId: this.workgroupId,
         },
       },
     );
