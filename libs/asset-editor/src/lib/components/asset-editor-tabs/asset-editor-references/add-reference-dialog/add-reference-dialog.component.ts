@@ -6,7 +6,7 @@ import { AssetEditDetail, LinkedAsset } from '@asset-sg/shared';
 import { AssetId, AssetSearchResultDTO, AssetSearchResultItem } from '@asset-sg/shared/v2';
 import { plainToInstance } from 'class-transformer';
 import * as O from 'fp-ts/Option';
-import { combineLatest, debounceTime, map, Observable, of, startWith, Subject, switchMap } from 'rxjs';
+import { combineLatest, debounceTime, map, Observable, of, startWith, Subject, switchMap, tap } from 'rxjs';
 import { NewReferenceDialogData } from '../../../../models/new-reference-dialog-data.interface';
 import { AssetForm } from '../../../asset-editor-page/asset-editor-page.component';
 import { LinkedAssetType } from '../asset-editor-references.component';
@@ -30,15 +30,16 @@ export class AddReferenceDialogComponent implements OnInit {
   ];
   public asset: AssetEditDetail | null = null;
   public form!: AssetForm['controls']['references'];
-  public hasWorkgroupId = false;
+
   public newReferenceForm = new FormGroup({
     linkedAsset: new FormControl<LinkedAsset | null>(null, { validators: Validators.required }),
     type: new FormControl<LinkedAssetType>(LinkedAssetType.Sibling, { validators: Validators.required }),
   });
-  private assetsToIgnore$: Observable<AssetId[]> = new Observable<AssetId[]>();
-  private assetsToChooseFrom$: Observable<AssetSearchResultItem[]> = new Observable<AssetSearchResultItem[]>();
+  private assetsToIgnore$!: Observable<AssetId[]>;
+  private assetsToChooseFrom$!: Observable<AssetSearchResultItem[]>;
   public optionsToDisplay$!: Observable<LinkedAsset[]>;
   public searchTerm$ = new Subject<string>();
+
   private readonly data = inject<NewReferenceDialogData>(MAT_DIALOG_DATA);
 
   private readonly httpClient = inject(HttpClient);
@@ -47,7 +48,6 @@ export class AddReferenceDialogComponent implements OnInit {
   public ngOnInit() {
     this.form = this.data.form;
     this.asset = this.data.asset;
-    this.hasWorkgroupId = this.data.hasWorkgroupId;
     this.types = this.asset
       ? O.toNullable(this.asset.assetMain)
         ? [
@@ -75,10 +75,11 @@ export class AddReferenceDialogComponent implements OnInit {
             ? this.httpClient
                 .post(`/api/assets/search?limit=10`, {
                   text: value,
-                  workgroupIds: [this.asset?.workgroupId],
+                  workgroupIds: [this.data.workgroupId],
                 })
                 .pipe(
                   map((res) => {
+                    console.log(res);
                     const data = plainToInstance(AssetSearchResultDTO, res);
                     return data.data;
                   }),
@@ -87,6 +88,7 @@ export class AddReferenceDialogComponent implements OnInit {
       ),
     );
     this.optionsToDisplay$ = combineLatest([this.assetsToIgnore$, this.assetsToChooseFrom$]).pipe(
+      tap((it) => console.log('tapped', it)),
       map(([assetIdsToIgnore, queriedAssets]) =>
         queriedAssets
           .filter((asset) => !assetIdsToIgnore.includes(asset.assetId))
@@ -96,6 +98,10 @@ export class AddReferenceDialogComponent implements OnInit {
           })),
       ),
     );
+  }
+
+  get hasWorkgroupId(): boolean {
+    return this.data.workgroupId !== null;
   }
 
   public inputChange(event: string) {

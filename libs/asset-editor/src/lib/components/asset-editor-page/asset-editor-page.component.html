@@ -51,7 +51,7 @@
           <asset-sg-editor-references
             [form]="form.controls.references"
             [asset]="asset"
-            [hasWorkgroupId]="!!asset?.workgroupId || !!form.controls.general.controls.workgroupId.value"
+            [workgroupId]="form.controls.general.controls.workgroupId.value ?? asset?.workgroupId ?? null"
           ></asset-sg-editor-references>
         }
         @case (Tab.Geometries) {
