@@ -58,14 +58,13 @@ export class AssetEditRepo implements Repo<AssetEditDetail, number, AssetEditDat
         data: {
           titlePublic: data.patch.titlePublic,
           titleOriginal: data.patch.titleOriginal,
+          isPublic: data.patch.isPublic, // todo @TIL-EBP: this needs validation
           createDate: DateIdFromDate.encode(data.patch.createDate),
           receiptDate: DateIdFromDate.encode(data.patch.receiptDate),
           assetKindItem: { connect: { assetKindItemCode: data.patch.assetKindItemCode } },
           assetFormatItem: { connect: { assetFormatItemCode: data.patch.assetFormatItemCode } },
           isExtract: false,
           isNatRel: data.patch.isNatRel,
-          lastProcessedDate: new Date(),
-          processor: data.user.email,
           manCatLabelRefs: {
             createMany: {
               data: data.patch.manCatLabelRefs.map((manCatLabelItemCode) => ({
@@ -132,8 +131,7 @@ export class AssetEditRepo implements Repo<AssetEditDetail, number, AssetEditDat
           assetFormatItemCode: data.patch.assetFormatItemCode,
           isNatRel: data.patch.isNatRel,
           assetMainId: O.toNullable(data.patch.assetMainId),
-          lastProcessedDate: new Date(),
-          processor: data.user.email,
+          isPublic: data.patch.isPublic, // todo @TIL-EBP: this needs validation in controllers
           manCatLabelRefs: {
             deleteMany: {},
             createMany: {
@@ -305,8 +303,6 @@ const selectPrismaAsset = selectOnAsset({
   titleOriginal: true,
   createDate: true,
   receiptDate: true,
-  lastProcessedDate: true,
-  processor: true,
   assetKindItemCode: true,
   assetFormatItemCode: true,
   isNatRel: true,

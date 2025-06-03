@@ -20,8 +20,6 @@ model Asset {
   municipality        String?         @map("municipality")
   url                 String?         @map("url")
   locationAnalog      String?         @map("location_analog")
-  processor           String?         @map("processor") /// todo lme: remove
-  lastProcessedDate   DateTime        @map("last_processed_date") /// todo lme: remove
   textBody            String?         @map("text_body")
   sgsId               Int?            @unique @map("sgs_id")
   geolDataInfo        String?         @map("geol_data_info")

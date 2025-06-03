@@ -72,6 +72,7 @@ export const fakeAssetPatch = (): PatchAsset => ({
   titlePublic: faker.commerce.productName(),
   typeNatRels: [],
   workgroupId: 1,
+  isPublic: faker.datatype.boolean(),
 });
 
 export const fakeAssetEditDetail = (): AssetEditDetail => ({
@@ -89,13 +90,11 @@ export const fakeAssetEditDetail = (): AssetEditDetail => ({
   geolContactDataInfo: faker.vehicle.manufacturer(),
   geolDataInfo: faker.word.words({ count: { min: 4, max: 25 } }),
   ids: [],
-  isPublic: true,
+  isPublic: faker.datatype.boolean(),
   isNatRel: false,
   assetLanguages: [],
-  lastProcessedDate: new Date(),
   manCatLabelRefs: [],
   municipality: '',
-  processor: '',
   receiptDate: dateIdFromDate(faker.date.past()),
   siblingXAssets: [],
   siblingYAssets: [],

@@ -8,7 +8,6 @@ import {
   isPersisted,
   StudyData,
   StudyType,
-  User,
 } from '@asset-sg/shared/v2';
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
@@ -19,7 +18,7 @@ import { satisfy } from '@/utils/define';
 import { handlePrismaMutationError } from '@/utils/prisma';
 
 @Injectable()
-export class AssetRepo implements FindRepo<Asset, AssetId>, MutateRepo<Asset, AssetId, FullAssetData> {
+export class AssetRepo implements FindRepo<Asset, AssetId>, MutateRepo<Asset, AssetId, AssetData> {
   constructor(private readonly prisma: PrismaService) {}
 
   async count(): Promise<number> {
@@ -34,7 +33,7 @@ export class AssetRepo implements FindRepo<Asset, AssetId>, MutateRepo<Asset, As
     return entry == null ? null : parseAssetFromPrisma(entry);
   }
 
-  async create(data: FullAssetData): Promise<Asset> {
+  async create(data: AssetData): Promise<Asset> {
     const id = await this.prisma.$transaction(async () => {
       const { assetId } = await this.prisma.asset.create({
         data: mapDataToPrismaCreate(data),
@@ -46,7 +45,7 @@ export class AssetRepo implements FindRepo<Asset, AssetId>, MutateRepo<Asset, As
     return (await this.find(id)) as Asset;
   }
 
-  async update(id: AssetId, data: FullAssetData): Promise<Asset | null> {
+  async update(id: AssetId, data: AssetData): Promise<Asset | null> {
     try {
       return await this.prisma.$transaction(async () => {
         await this.manageStudies(id, data.studies);
@@ -171,18 +170,12 @@ export class AssetRepo implements FindRepo<Asset, AssetId>, MutateRepo<Asset, As
   }
 }
 
-interface FullAssetData extends AssetData {
-  processor: User;
-}
-
-const mapDataToPrisma = (data: FullAssetData) =>
+const mapDataToPrisma = (data: AssetData) =>
   satisfy<Partial<Prisma.AssetCreateInput & Prisma.AssetUpdateInput>>()({
     titlePublic: data.title,
     titleOriginal: data.originalTitle,
-    processor: data.processor.email,
     createDate: data.createdAt.toDate(),
     receiptDate: data.receivedAt.toDate(),
-    lastProcessedDate: new Date(),
     isNatRel: data.isNatRel,
     assetKindItem: {
       connect: {
@@ -201,7 +194,7 @@ const mapDataToPrisma = (data: FullAssetData) =>
     },
   });
 
-const mapDataToPrismaCreate = (data: FullAssetData): Prisma.AssetCreateInput => ({
+const mapDataToPrismaCreate = (data: AssetData): Prisma.AssetCreateInput => ({
   ...mapDataToPrisma(data),
   isExtract: false,
   assetMain:
@@ -270,15 +263,9 @@ const mapDataToPrismaCreate = (data: FullAssetData): Prisma.AssetCreateInput => 
       skipDuplicates: true,
     },
   },
-
-  creator: {
-    connect: {
-      id: data.processor.id,
-    },
-  },
 });
 
-const mapDataToPrismaUpdate = (id: AssetId, data: FullAssetData): Prisma.AssetUpdateInput => ({
+const mapDataToPrismaUpdate = (id: AssetId, data: AssetData): Prisma.AssetUpdateInput => ({
   ...mapDataToPrisma(data),
   assetMain:
     data.links.parent == null

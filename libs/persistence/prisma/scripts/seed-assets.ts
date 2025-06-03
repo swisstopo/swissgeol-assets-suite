@@ -136,8 +136,6 @@ export const importAssets = async () => {
     municipality: parsed[5] || null,
     url: parsed[6] || null,
     locationAnalog: parsed[8],
-    processor: parsed[9] || null,
-    lastProcessedDate: createDate(parsed[10]),
     textBody: parsed[11] || null,
     sgsId: Number(parsed[12]),
     geolDataInfo: parsed[13],

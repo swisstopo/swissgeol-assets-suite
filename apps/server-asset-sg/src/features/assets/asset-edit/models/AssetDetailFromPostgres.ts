@@ -39,7 +39,6 @@ export const AssetDetailFromPostgres = pipe(
     titlePublic: D.string,
     titleOriginal: D.string,
     createDate: DateIdFromDate,
-    lastProcessedDate: DateIdFromDate,
     isPublic: D.boolean,
     assetKindItemCode: D.string,
     assetFormatItemCode: D.string,

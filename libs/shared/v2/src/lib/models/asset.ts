@@ -21,7 +21,6 @@ export interface AssetInfo extends Model<AssetId> {
 
   createdAt: LocalDate;
   receivedAt: LocalDate;
-  lastProcessedAt: Date;
 }
 
 export interface AssetLinks {
@@ -41,7 +40,6 @@ export interface AssetLinksData {
 export interface AssetDetails {
   sgsId: number | null;
   municipality: string | null;
-  processor: string | null;
   isNatRel: boolean;
   infoGeol: InfoGeol;
   studies: AssetStudy[];
@@ -56,7 +54,7 @@ export interface AssetUsages {
 
 export type Asset = AssetInfo & AssetDetails;
 
-type NonDataKeys = 'processor' | 'identifiers' | 'studies' | 'statuses' | 'links' | 'lastProcessedAt' | 'files';
+type NonDataKeys = 'identifiers' | 'studies' | 'statuses' | 'links' | 'files';
 
 export interface AssetData extends Omit<Data<Asset>, NonDataKeys> {
   links: AssetLinksData;

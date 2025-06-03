@@ -43,5 +43,6 @@ export const PatchAsset = C.struct({
   siblingAssetIds: C.array(C.number),
   newStudies: C.array(C.string),
   workgroupId: C.number,
+  isPublic: C.boolean,
 });
 export type PatchAsset = C.TypeOf<typeof PatchAsset>;

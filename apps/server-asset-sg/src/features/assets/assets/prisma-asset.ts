@@ -87,7 +87,6 @@ export const assetInfoSelection = satisfy<Prisma.AssetSelect>()({
   },
   createDate: true,
   receiptDate: true,
-  lastProcessedDate: true,
   workgroupId: true,
 });
 
@@ -95,7 +94,6 @@ export const assetSelection = satisfy<Prisma.AssetSelect>()({
   ...assetInfoSelection,
   sgsId: true,
   municipality: true,
-  processor: true,
   isNatRel: true,
   geolDataInfo: true,
   geolContactDataInfo: true,
@@ -149,14 +147,12 @@ export const parseAssetInfoFromPrisma = (data: SelectedAssetInfo): AssetInfo => 
   })),
   createdAt: LocalDate.fromDate(data.createDate),
   receivedAt: LocalDate.fromDate(data.receiptDate),
-  lastProcessedAt: data.lastProcessedDate,
 });
 
 export const parseAssetFromPrisma = (data: SelectedAsset): Asset => ({
   ...parseAssetInfoFromPrisma(data),
   sgsId: data.sgsId,
   municipality: data.municipality,
-  processor: data.processor,
   isNatRel: data.isNatRel,
   infoGeol: {
     main: data.geolDataInfo,

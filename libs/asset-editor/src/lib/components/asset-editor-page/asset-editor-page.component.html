@@ -9,9 +9,6 @@
     } @else if (workflow !== null) {
       <asset-sg-chip type="primary" translate>{{ "workflowStatus." + workflow.status | translate }}</asset-sg-chip>
     }
-    @if (asset?.processor) {
-      <asset-sg-chip type="tertiary">{{ asset?.processor }}</asset-sg-chip>
-    }
   </mat-chip-set>
   <div class="spacer"></div>
 

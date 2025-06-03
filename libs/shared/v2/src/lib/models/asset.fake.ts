@@ -29,5 +29,4 @@ export const fakeAssetInfo = (): AssetInfo => ({
   files: [],
   createdAt: LocalDate.fromDate(faker.date.past()),
   receivedAt: LocalDate.fromDate(faker.date.past()),
-  lastProcessedAt: faker.date.past(),
 });

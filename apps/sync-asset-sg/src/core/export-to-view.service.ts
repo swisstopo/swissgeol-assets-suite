@@ -12,7 +12,6 @@ type PublishedAssetSelection = Prisma.AssetGetPayload<{
     titlePublic: true;
     isExtract: true;
     createDate: true;
-    lastProcessedDate: true;
     receiptDate: true;
     assetContacts: true;
     assetFiles: {
@@ -137,7 +136,6 @@ export class ExportToViewService {
         titlePublic: true,
         isExtract: true,
         createDate: true,
-        lastProcessedDate: true,
         receiptDate: true,
         assetContacts: true,
         assetFiles: {

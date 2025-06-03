@@ -13,8 +13,6 @@ export const AssetEditDetailFromPostgres = pipe(
     titleOriginal: D.nullable(D.string),
     createDate: DateIdFromDate,
     receiptDate: DateIdFromDate,
-    lastProcessedDate: DT.date,
-    processor: D.nullable(D.string),
     isPublic: D.boolean,
     assetKindItemCode: D.string,
     assetFormatItemCode: D.string,

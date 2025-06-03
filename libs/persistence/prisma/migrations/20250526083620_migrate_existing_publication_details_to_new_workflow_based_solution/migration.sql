@@ -121,7 +121,7 @@ $$
       AND asset_id IN (SELECT asset_id
                        FROM asset a
                               LEFT JOIN public_use p ON a.public_use_id = p.public_use_id
-                       WHERE p.is_available = true);
+                       WHERE p.is_available);
 
     /*
     Finally, for all assets that are NOT published, set the assignee to the person that last edited the asset

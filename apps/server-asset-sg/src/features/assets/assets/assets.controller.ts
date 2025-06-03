@@ -34,7 +34,7 @@ export class AssetsController {
   async create(@ParseBody(AssetDataSchema) data: AssetData, @CurrentUser() user: User): Promise<Asset> {
     authorize(AssetPolicy, user).canCreate();
     validateData(user, data);
-    return await this.assetRepo.create({ ...data, processor: user });
+    return await this.assetRepo.create({ ...data });
   }
 
   @Put('/:id')
@@ -51,7 +51,7 @@ export class AssetsController {
     authorize(AssetPolicy, user).canUpdate(record);
     validateData(user, data, record);
 
-    const asset = await this.assetRepo.update(record.id, { ...data, processor: user });
+    const asset = await this.assetRepo.update(record.id, { ...data });
     if (asset === null) {
       throw new HttpException('not found', 404);
     }

@@ -71,8 +71,6 @@ export const BaseAssetEditDetail = {
   titleOriginal: C.nullable(C.string),
   createDate: DateId,
   receiptDate: DateId,
-  lastProcessedDate: CT.DateFromISOString,
-  processor: C.nullable(C.string),
   isPublic: C.boolean,
   assetKindItemCode: C.string,
   assetFormatItemCode: C.string,
