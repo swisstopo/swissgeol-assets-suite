@@ -34,13 +34,13 @@ export class AssetEditorService {
 
   public createAsset(patchAsset: PatchAsset): Observable<AssetEditDetail> {
     return this.httpClient
-      .post(`/api/asset-edit`, PatchAsset.encode(patchAsset))
+      .post(`/api/asset-edit`, patchAsset)
       .pipe(map((res) => (AssetEditDetail.decode(res) as E.Right<AssetEditDetail>).right));
   }
 
   public updateAssetDetail(assetId: number, patchAsset: PatchAsset): Observable<AssetEditDetail> {
     return this.httpClient
-      .put(`/api/asset-edit/${assetId}`, PatchAsset.encode(patchAsset))
+      .put(`/api/asset-edit/${assetId}`, patchAsset)
       .pipe(map((res) => (AssetEditDetail.decode(res) as E.Right<AssetEditDetail>).right));
   }
 

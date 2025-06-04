@@ -1,10 +1,10 @@
 import { decodeError, isNotNull } from '@asset-sg/core';
-import { AssetEditDetail, DateIdFromDate, PatchAsset } from '@asset-sg/shared';
+import { AssetEditDetail } from '@asset-sg/shared';
+import {  dateFromDateId, DateId, DateIdFromDate, PatchAsset } from '@asset-sg/shared';
 import { User } from '@asset-sg/shared/v2';
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import * as E from 'fp-ts/Either';
-import * as O from 'fp-ts/Option';
 
 import { PrismaService } from '@/core/prisma.service';
 import { Repo, RepoListOptions } from '@/core/repo';
@@ -133,8 +133,8 @@ export class AssetEditRepo implements Repo<AssetEditDetail, number, AssetEditDat
         data: {
           titlePublic: data.patch.titlePublic,
           titleOriginal: data.patch.titleOriginal,
-          createDate: DateIdFromDate.encode(data.patch.createDate),
-          receiptDate: DateIdFromDate.encode(data.patch.receiptDate),
+          createDate: DateIdFromDate.encode(data.patch.createDate as DateId), // todo: remove reliance on DateId
+          receiptDate: DateIdFromDate.encode(data.patch.receiptDate as DateId), // todo: remove reliance on DateId
           assetKindItemCode: data.patch.assetKindItemCode,
           assetFormatItemCode: data.patch.assetFormatItemCode,
           isNatRel: data.patch.isNatRel,
@@ -172,17 +172,16 @@ export class AssetEditRepo implements Repo<AssetEditDetail, number, AssetEditDat
           ids: {
             deleteMany: {
               idId: {
-                notIn: data.patch.ids.map((it) => O.toNullable(it.idId)).filter(isNotNull),
+                notIn: data.patch.ids.map((it) => it.idId).filter(isNotNull),
               },
             },
             upsert: [
               ...data.patch.ids
-                .map((it) => ({ ...it, idId: O.toNullable(it.idId) }))
                 .filter((it): it is PatchAsset['ids'][0] & { idId: number } => it.idId !== null)
                 .map((it) => ({ where: { idId: it.idId }, create: it, update: it })),
 
               ...data.patch.ids
-                .filter((it) => O.isNone(it.idId))
+                .filter((it) => it.idId === null)
                 .map((it) => ({
                   where: { idId: -1 },
                   create: { id: it.id, description: it.description },

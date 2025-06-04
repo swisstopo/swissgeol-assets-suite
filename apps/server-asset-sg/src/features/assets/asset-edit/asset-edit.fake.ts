@@ -58,7 +58,7 @@ export const fakeAssetPatch = (): PatchAsset => ({
   assetFiles: [],
   assetFormatItemCode: fakeAssetFormatItemCode(),
   assetKindItemCode: fakeAssetKindItemCode(),
-  assetMainId: O.none,
+  assetMainId: null,
   createDate: dateIdFromDate(faker.date.past()),
   ids: [],
   isNatRel: false,
