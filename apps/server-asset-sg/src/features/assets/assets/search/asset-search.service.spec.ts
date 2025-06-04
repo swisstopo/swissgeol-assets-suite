@@ -29,12 +29,7 @@ import { ASSET_ELASTIC_INDEX, AssetSearchService } from './asset-search.service'
 
 import { openElasticsearchClient } from '@/core/elasticsearch';
 import { PrismaService } from '@/core/prisma.service';
-import {
-  fakeAssetPatch,
-  fakeAssetUsage,
-  fakeContact,
-  fakeUserData,
-} from '@/features/assets/asset-edit/asset-edit.fake';
+import { fakeAssetPatch, fakeContact, fakeUserData } from '@/features/assets/asset-edit/asset-edit.fake';
 import { AssetEditData, AssetEditRepo } from '@/features/assets/asset-edit/asset-edit.repo';
 import { FileRepo } from '@/features/assets/files/file.repo';
 import { StudyRepo } from '@/features/studies/study.repo';
@@ -365,24 +360,24 @@ describe(AssetSearchService, () => {
       const asset = await createItem({
         patch: {
           ...fakeAssetPatch(),
-          publicUse: { ...fakeAssetUsage(), isAvailable: true },
-          internalUse: { ...fakeAssetUsage(), isAvailable: true },
+          publicUse: { startAvailabilityDate: null, statusAssetUseItemCode: 'tobechecked', isAvailable: true },
+          internalUse: { startAvailabilityDate: null, statusAssetUseItemCode: 'tobechecked', isAvailable: true },
         },
         user,
       });
       await createItem({
         patch: {
           ...fakeAssetPatch(),
-          publicUse: { ...fakeAssetUsage(), isAvailable: false },
-          internalUse: { ...fakeAssetUsage(), isAvailable: true },
+          publicUse: { startAvailabilityDate: null, statusAssetUseItemCode: 'tobechecked', isAvailable: false },
+          internalUse: { startAvailabilityDate: null, statusAssetUseItemCode: 'tobechecked', isAvailable: true },
         },
         user,
       });
       await createItem({
         patch: {
           ...fakeAssetPatch(),
-          publicUse: { ...fakeAssetUsage(), isAvailable: false },
-          internalUse: { ...fakeAssetUsage(), isAvailable: false },
+          publicUse: { startAvailabilityDate: null, statusAssetUseItemCode: 'tobechecked', isAvailable: false },
+          internalUse: { startAvailabilityDate: null, statusAssetUseItemCode: 'tobechecked', isAvailable: false },
         },
         user,
       });

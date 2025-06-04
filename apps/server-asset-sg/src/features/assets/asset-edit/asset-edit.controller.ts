@@ -2,6 +2,7 @@ import { unknownToError } from '@asset-sg/core';
 import { AssetByTitle, AssetEditDetail, PatchAsset } from '@asset-sg/shared';
 import { AssetEditPolicy, Role, User } from '@asset-sg/shared/v2';
 import {
+  Body,
   Controller,
   Delete,
   Get,
@@ -14,11 +15,9 @@ import {
   Put,
   Query,
 } from '@nestjs/common';
-import * as O from 'fp-ts/Option';
 import { authorize } from '@/core/authorize';
 import { Authorize } from '@/core/decorators/authorize.decorator';
 import { CurrentUser } from '@/core/decorators/current-user.decorator';
-import { ParseBody } from '@/core/decorators/parse.decorator';
 import { AssetEditRepo } from '@/features/assets/asset-edit/asset-edit.repo';
 import { AssetEditService } from '@/features/assets/asset-edit/asset-edit.service';
 import { AssetSearchService } from '@/features/assets/assets/search/asset-search.service';
@@ -42,7 +41,8 @@ export class AssetEditController {
   }
 
   @Post('/')
-  async create(@ParseBody(PatchAsset) patch: PatchAsset, @CurrentUser() user: User) {
+  async create(@Body() patch: PatchAsset, @CurrentUser() user: User) {
+    // todo: add DTO and @ParseBody()
     authorize(AssetEditPolicy, user).canCreate();
     validatePatch(user, patch);
 
@@ -54,11 +54,8 @@ export class AssetEditController {
   }
 
   @Put('/:id')
-  async update(
-    @Param('id', ParseIntPipe) id: number,
-    @ParseBody(PatchAsset) patch: PatchAsset,
-    @CurrentUser() user: User,
-  ) {
+  async update(@Param('id', ParseIntPipe) id: number, @Body() patch: PatchAsset, @CurrentUser() user: User) {
+    // todo: add DTO and @ParseBody()
     const record = await this.assetEditRepo.find(id);
     if (record == null) {
       throw new HttpException('not found', HttpStatus.NOT_FOUND);
@@ -142,7 +139,7 @@ const validatePatch = (user: User, patch: PatchAsset, record?: AssetEditDetail) 
   // Specialization of the policy where we disallow the status work item code to be changed to `published`
   // if the current user is not a publisher for the asset's current or future workgroup.
   if (
-    O.toNullable(patch.newStatusWorkItemCode) === 'published' &&
+    patch.newStatusWorkItemCode === 'published' &&
     ((record != null && !policy.hasRole(Role.Publisher, record.workgroupId)) ||
       !policy.hasRole(Role.Publisher, patch.workgroupId))
   ) {

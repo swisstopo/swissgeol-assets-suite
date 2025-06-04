@@ -1,10 +1,9 @@
 import { decodeError, isNotNull } from '@asset-sg/core';
-import { AssetEditDetail, AssetUsage, dateFromDateId, DateIdFromDate, PatchAsset } from '@asset-sg/shared';
+import { AssetEditDetail, AssetUsageNew, dateFromDateId, DateId, DateIdFromDate, PatchAsset } from '@asset-sg/shared';
 import { User } from '@asset-sg/shared/v2';
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import * as E from 'fp-ts/Either';
-import * as O from 'fp-ts/Option';
 
 import { PrismaService } from '@/core/prisma.service';
 import { Repo, RepoListOptions } from '@/core/repo';
@@ -58,8 +57,8 @@ export class AssetEditRepo implements Repo<AssetEditDetail, number, AssetEditDat
         data: {
           titlePublic: data.patch.titlePublic,
           titleOriginal: data.patch.titleOriginal,
-          createDate: DateIdFromDate.encode(data.patch.createDate),
-          receiptDate: DateIdFromDate.encode(data.patch.receiptDate),
+          createDate: DateIdFromDate.encode(data.patch.createDate as DateId), // todo: remove reliance on DateId
+          receiptDate: DateIdFromDate.encode(data.patch.receiptDate as DateId),
           assetKindItem: { connect: { assetKindItemCode: data.patch.assetKindItemCode } },
           assetFormatItem: { connect: { assetFormatItemCode: data.patch.assetFormatItemCode } },
           isExtract: false,
@@ -141,12 +140,12 @@ export class AssetEditRepo implements Repo<AssetEditDetail, number, AssetEditDat
         data: {
           titlePublic: data.patch.titlePublic,
           titleOriginal: data.patch.titleOriginal,
-          createDate: DateIdFromDate.encode(data.patch.createDate),
-          receiptDate: DateIdFromDate.encode(data.patch.receiptDate),
+          createDate: DateIdFromDate.encode(data.patch.createDate as DateId), // todo: remove reliance on DateId
+          receiptDate: DateIdFromDate.encode(data.patch.receiptDate as DateId), // todo: remove reliance on DateId
           assetKindItemCode: data.patch.assetKindItemCode,
           assetFormatItemCode: data.patch.assetFormatItemCode,
           isNatRel: data.patch.isNatRel,
-          assetMainId: O.toNullable(data.patch.assetMainId),
+          assetMainId: data.patch.assetMainId,
           lastProcessedDate: new Date(),
           processor: data.user.email,
           manCatLabelRefs: {
@@ -181,17 +180,16 @@ export class AssetEditRepo implements Repo<AssetEditDetail, number, AssetEditDat
           ids: {
             deleteMany: {
               idId: {
-                notIn: data.patch.ids.map((it) => O.toNullable(it.idId)).filter(isNotNull),
+                notIn: data.patch.ids.map((it) => it.idId).filter(isNotNull),
               },
             },
             upsert: [
               ...data.patch.ids
-                .map((it) => ({ ...it, idId: O.toNullable(it.idId) }))
                 .filter((it): it is PatchAsset['ids'][0] & { idId: number } => it.idId !== null)
                 .map((it) => ({ where: { idId: it.idId }, create: it, update: it })),
 
               ...data.patch.ids
-                .filter((it) => O.isNone(it.idId))
+                .filter((it) => it.idId === null)
                 .map((it) => ({
                   where: { idId: -1 },
                   create: { id: it.id, description: it.description },
@@ -207,10 +205,10 @@ export class AssetEditRepo implements Repo<AssetEditDetail, number, AssetEditDat
             },
           },
           statusWorks: {
-            create: O.isSome(data.patch.newStatusWorkItemCode)
+            create: data.patch.newStatusWorkItemCode
               ? {
                   statusWorkDate: new Date(),
-                  statusWorkItemCode: data.patch.newStatusWorkItemCode.value,
+                  statusWorkItemCode: data.patch.newStatusWorkItemCode,
                 }
               : [],
           },
@@ -412,10 +410,10 @@ type PrismaAssetUsageInput = Prisma.InternalUseUncheckedCreateWithoutAssetInput;
  * Create the {@link PrismaAssetUsageInput} for the given {@link AssetUsage}.
  * @param usage The usage to create or update.
  */
-const makeUsageInput = (usage: AssetUsage): PrismaAssetUsageInput => {
-  const startAvailabilityDate = O.isNone(usage.startAvailabilityDate)
+const makeUsageInput = (usage: AssetUsageNew): PrismaAssetUsageInput => {
+  const startAvailabilityDate = !usage.startAvailabilityDate
     ? null
-    : dateFromDateId(usage.startAvailabilityDate.value);
+    : dateFromDateId(usage.startAvailabilityDate as DateId); // todo: remove reliance on DateId
   return {
     isAvailable: usage.isAvailable,
     statusAssetUseItemCode: usage.statusAssetUseItemCode,

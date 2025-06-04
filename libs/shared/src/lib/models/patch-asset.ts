@@ -1,51 +1,57 @@
-import { CT } from '@asset-sg/core';
-import * as C from 'io-ts/Codec';
+export interface AssetUsageNew {
+  isAvailable: boolean;
+  statusAssetUseItemCode: 'tobechecked' | 'underclarification' | 'approved';
+  startAvailabilityDate: number | null; // todo: Datebrand/DateId
+}
 
-import { AssetFileType, LegalDocItemCode } from './asset-detail';
-import { AssetContactEdit, AssetLanguageEdit } from './asset-edit';
-import { AssetUsage } from './asset-usage';
-import { DateId } from './DateStruct';
+export interface AssetLanguageEditNew {
+  languageItemCode: string;
+}
 
-export const PatchAsset = C.struct({
-  titlePublic: C.string,
-  titleOriginal: C.nullable(C.string),
-  createDate: DateId,
-  receiptDate: DateId,
-  publicUse: AssetUsage,
-  internalUse: AssetUsage,
-  assetKindItemCode: C.string,
-  assetFormatItemCode: C.string,
-  isNatRel: C.boolean,
-  manCatLabelRefs: C.array(C.string),
-  typeNatRels: C.array(C.string),
-  assetLanguages: C.array(AssetLanguageEdit),
-  assetContacts: C.array(AssetContactEdit),
-  assetFiles: C.array(
-    C.struct({
-      id: C.number,
-      name: C.string,
-      size: C.number,
-      type: AssetFileType,
-      legalDocItemCode: C.nullable(LegalDocItemCode),
-    }),
-  ),
-  ids: C.array(
-    C.struct({
-      idId: CT.optionFromNullable(C.number),
-      id: C.string,
-      description: C.string,
-    }),
-  ),
-  studies: C.array(
-    C.struct({
-      studyId: C.string,
-      geomText: C.string,
-    }),
-  ),
-  assetMainId: CT.optionFromNullable(C.number),
-  siblingAssetIds: C.array(C.number),
-  newStudies: C.array(C.string),
-  newStatusWorkItemCode: CT.optionFromNullable(C.string),
-  workgroupId: C.number,
-});
-export type PatchAsset = C.TypeOf<typeof PatchAsset>;
+export interface AssetContactEditNew {
+  role: 'author' | 'supplier' | 'initiator'; // todo: Use ContactAssignemtnRole
+  contactId: number;
+}
+
+/**
+ * THis should be moved to v2/asset; however, AssetUsage does not yet match since that one uses LocalDate, where as
+ * here we just use number (was Datebrand/DateId).
+ *
+ * This serves as a drop in replacement right now, however.
+ */
+export interface PatchAsset {
+  titlePublic: string;
+  titleOriginal: string | null;
+  createDate: number; // todo: Datebrand/DateId
+  receiptDate: number;
+  publicUse: AssetUsageNew;
+  internalUse: AssetUsageNew;
+  assetKindItemCode: string;
+  assetFormatItemCode: string;
+  isNatRel: boolean;
+  manCatLabelRefs: string[];
+  typeNatRels: string[];
+  assetLanguages: AssetLanguageEditNew[];
+  assetContacts: AssetContactEditNew[];
+  assetFiles: {
+    id: number;
+    name: string;
+    size: number;
+    type: 'Normal' | 'Legal'; // todo: we have a type for this?
+    legalDocItemCode: 'federalData' | 'permissionForm' | 'contract' | 'other' | null; // todo: we have a type for this?
+  }[]; // todo: extract type for assetFiles
+  ids: {
+    idId: number | null;
+    id: string;
+    description: string;
+  }[]; // todo: extract type for assetFiles
+  studies: {
+    studyId: string;
+    geomText: string;
+  }[]; // todo: extract type
+  assetMainId: number | null;
+  siblingAssetIds: number[];
+  newStudies: string[];
+  newStatusWorkItemCode: string | null;
+  workgroupId: number;
+}

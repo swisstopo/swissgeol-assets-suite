@@ -238,10 +238,10 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
       manCatLabelRefs: general.manCatLabelRefs.value,
       isNatRel: general.isNatRel.value,
       typeNatRels: general.typeNatRels.value,
-      ids: general.ids.value.map((id) => ({ ...id, idId: O.fromNullable(id.idId) })),
+      ids: general.ids.value,
       assetFiles: filesToKeep,
       assetContacts: contacts.assetContacts.value.map((contact) => ({ contactId: contact.id, role: contact.role })),
-      assetMainId: O.fromNullable(references.mainAsset.value?.assetId),
+      assetMainId: references.mainAsset.value?.assetId ?? null,
       siblingAssetIds: references.siblingAssets.value.map((sibling) => sibling.assetId),
       studies: geometries.studies.value
         .filter((study) => !study.studyId.includes('_new'))
@@ -252,17 +252,27 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
       newStudies: geometries.studies.value
         .filter((study) => study.studyId.includes('_new'))
         .map((newStudy) => GeomFromGeomText.encode(newStudy.geom)),
-      internalUse: asset?.internalUse ?? {
-        isAvailable: true,
-        startAvailabilityDate: O.fromNullable(dateIdFromDate(new Date())),
-        statusAssetUseItemCode: 'approved',
-      },
-      publicUse: asset?.publicUse ?? {
-        isAvailable: true,
-        startAvailabilityDate: O.fromNullable(dateIdFromDate(new Date())),
-        statusAssetUseItemCode: 'approved',
-      },
-      newStatusWorkItemCode: O.fromNullable(asset?.statusWorks[0].statusWorkItemCode),
+      internalUse: asset?.internalUse
+        ? {
+            ...asset.internalUse,
+            startAvailabilityDate: new Date().getTime(), // todo: remove dateId in outer object so this ternary can be removed - anyhow obsolete, because this is removed on dev
+          }
+        : {
+            isAvailable: true,
+            startAvailabilityDate: new Date().getTime(), // todo: remove dateId
+            statusAssetUseItemCode: 'approved',
+          },
+      publicUse: asset?.publicUse
+        ? {
+            ...asset.publicUse,
+            startAvailabilityDate: new Date().getTime(), // todo: remove dateId in outer object so this ternary can be removed  - anyhow obsolete, because this is removed on dev
+          }
+        : {
+            isAvailable: true,
+            startAvailabilityDate: new Date().getTime(), // todo: remove dateId
+            statusAssetUseItemCode: 'approved',
+          },
+      newStatusWorkItemCode: asset?.statusWorks[0].statusWorkItemCode ?? null,
     };
     this.isLoading = true;
     this.subscriptions.add(
