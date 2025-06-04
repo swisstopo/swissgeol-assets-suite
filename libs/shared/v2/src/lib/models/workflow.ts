@@ -2,7 +2,7 @@ import {
   WorkflowSelection as WorkflowSelectionFromPrisma,
   WorkflowStatus as WorkflowStatusFromPrisma,
 } from '@prisma/client';
-import { GenericWorkflow, WorkflowStatus, WorkflowChange } from '@swisstopo/swissgeol-ui-core';
+import { GenericWorkflow, WorkflowChange, WorkflowStatus } from '@swisstopo/swissgeol-ui-core';
 import { AssetId } from './asset';
 import { UserId } from './user';
 import { WorkgroupId } from './workgroup';
@@ -22,6 +22,7 @@ export interface WorkflowChangeData {
   comment: string | null;
   status: UnpublishedWorkflowStatus;
   assigneeId: UserId | null;
+  hasRequestedChanges?: boolean;
 }
 
 export const UnpublishedWorkflowStatus = [

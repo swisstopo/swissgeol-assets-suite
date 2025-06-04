@@ -20,6 +20,7 @@ export class WorkflowService {
     return this.workflowRepo.change(workflow.id, {
       creatorId,
       comment: change.comment,
+      hasRequestedChanges: change.hasRequestedChanges ?? false,
       from: { status: workflow.status, assigneeId: (workflow.assignee?.id ?? null) as string | null },
       to: { status: change.status, assigneeId: change.assigneeId },
     });

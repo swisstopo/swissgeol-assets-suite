@@ -52,6 +52,9 @@ export class WorkflowChangeDataSchema extends Schema implements WorkflowChangeDa
 
   @IsIn(UnpublishedWorkflowStatus)
   status!: UnpublishedWorkflowStatus;
+
+  @IsBoolean()
+  hasRequestedChanges!: boolean;
 }
 
 export class WorkflowSelectionSchema extends Schema implements WorkflowSelection {
