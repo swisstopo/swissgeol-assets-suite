@@ -12,9 +12,9 @@ import {
   SimpleChanges,
   ViewChild,
 } from '@angular/core';
-import { arrayEqual, isNotNull } from '@asset-sg/core';
-import { isEmptySearchQuery } from '@asset-sg/shared';
-import { filterNullish } from '@asset-sg/shared/v2';
+import { fromAppShared } from '@asset-sg/client-shared';
+import { isNotNull } from '@asset-sg/core';
+import { filterNullish, isDeepEqual, isEmptySearchQuery } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
 import { StyleFunction } from 'ol/style/Style';
 import { distinctUntilChanged, filter, first, map, skip, Subscription, switchMap, take, withLatestFrom } from 'rxjs';
@@ -23,9 +23,8 @@ import * as searchActions from '../../state/asset-search/asset-search.actions';
 import { setMapPosition } from '../../state/asset-search/asset-search.actions';
 import {
   selectSearchResults,
-  selectCurrentAsset,
   selectMapPosition,
-  selectStudies,
+  selectGeometries,
   selectSearchQuery,
 } from '../../state/asset-search/asset-search.selector';
 import { AppStateWithMapControl } from '../../state/map-control/map-control.reducer';
@@ -186,20 +185,21 @@ export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
     );
 
     this.subscription.add(
-      this.store.select(selectCurrentAsset).subscribe((asset) => {
-        if (asset == null) {
+      this.store.select(fromAppShared.selectCurrentAssetAndGeometries).subscribe((current) => {
+        if (current == null) {
           this.controller.clearActiveAsset();
         } else {
-          setTimeout(() => this.controller.setActiveAsset(asset));
+          const { asset, geometries } = current;
+          setTimeout(() => this.controller.setActiveAsset({ ...asset, geometries }));
         }
       }),
     );
 
     this.subscription.add(
       this.store
-        .select(selectStudies)
+        .select(selectGeometries)
         .pipe(filter(isNotNull))
-        .subscribe((studies) => this.controller.setStudies(studies)),
+        .subscribe((geometries) => this.controller.setGeometries(geometries)),
     );
   }
 
@@ -220,7 +220,7 @@ export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
         .pipe(
           filterNullish(),
           withLatestFrom(this.store.select(selectSearchQuery).pipe(map((query) => query.polygon))),
-          filter(([polygon, storePolygon]) => !arrayEqual(polygon, storePolygon)),
+          filter(([polygon, storePolygon]) => !isDeepEqual(polygon, storePolygon)),
         )
         .subscribe(([polygon, _]) =>
           this.store.dispatch(

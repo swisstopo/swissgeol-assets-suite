@@ -5,12 +5,21 @@ import { MatCheckboxChange } from '@angular/material/checkbox';
 import { Sort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import { fromAppShared } from '@asset-sg/client-shared';
-import { AssetEditDetail, AssetFileType, LegalDocItemCode } from '@asset-sg/shared';
+import { isNotNull } from '@asset-sg/core';
+import { Asset, LegalDocCode, LocalizedItem } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
-import { BehaviorSubject, combineLatestWith, forkJoin, map, Observable, startWith, Subscription, tap } from 'rxjs';
-import { TranslatedValueItem } from '../../../models/translated-value-item.interface';
-import { mapValueItemsToTranslatedItem } from '../../../utils/map-value-items-to-translated-item.utils';
-import { AssetForm, FormAssetFile } from '../../asset-editor-page/asset-editor-page.component';
+import {
+  BehaviorSubject,
+  combineLatestWith,
+  filter,
+  forkJoin,
+  map,
+  Observable,
+  startWith,
+  Subscription,
+  tap,
+} from 'rxjs';
+import { AssetForm, AssetFormFile, ExistingAssetFile } from '../../asset-editor-page/asset-editor-page.component';
 
 @Component({
   selector: 'asset-sg-editor-files',
@@ -20,122 +29,140 @@ import { AssetForm, FormAssetFile } from '../../asset-editor-page/asset-editor-p
 })
 export class AssetEditorFilesComponent implements OnInit, OnDestroy {
   @Input() form!: AssetForm['controls']['files'];
-  @Input() asset: AssetEditDetail | null = null;
+  @Input() asset: Asset | null = null;
 
-  public activeFileDownload: Set<number> = new Set();
+  public activeFileDownloads: Set<number> = new Set();
 
   protected readonly searchTerm$ = new BehaviorSubject<string>('');
-  protected readonly fileType$ = new BehaviorSubject<AssetFileType>('Normal');
+  protected readonly isLegal$ = new BehaviorSubject(false);
 
-  public legalFiles: FormControl<FormAssetFile>[] = [];
-  public normalFiles: FormControl<FormAssetFile>[] = [];
+  private selectedFiles = new Set<AssetFormFile>();
 
-  protected dataSource: MatTableDataSource<FormControl<FormAssetFile>> = new MatTableDataSource();
-  private readonly COLUMNS = ['select', 'name', 'lastModifiedAt', 'legalDocItemCode', 'ocrStatus'];
-  public displayedColumns: string[] = this.COLUMNS.filter((col) => col !== 'legalDocItemCode');
+  protected readonly dataSource = new MatTableDataSource<FormControl<AssetFormFile>>();
+  private readonly COLUMNS = ['select', 'name', 'lastModifiedAt', 'legalDocCode', 'ocrStatus'];
+  public displayedColumns: string[] = this.COLUMNS.filter((col) => col !== 'legalDocCode');
 
   private readonly store = inject(Store);
 
-  public legalDocItems: TranslatedValueItem[] = [];
-  public readonly legalDocItems$: Observable<TranslatedValueItem[]> = this.store
-    .select(fromAppShared.selectLegalDocItems)
-    .pipe(map(mapValueItemsToTranslatedItem));
+  public readonly legalDocItems$: Observable<Array<LocalizedItem<LegalDocCode>>> = this.store
+    .select(fromAppShared.selectReferenceLegalDocCodes)
+    .pipe(
+      filter(isNotNull),
+      map((it) => [...it.values()]),
+    );
 
   private readonly httpClient = inject(HttpClient);
   private readonly subscriptions: Subscription = new Subscription();
 
   public ngOnInit() {
     this.subscriptions.add(
-      this.form.controls.assetFiles.valueChanges
-        .pipe(startWith(this.form.controls.assetFiles.controls))
-        .subscribe(() => {
-          this.setDataSource(this.form.controls.assetFiles.controls);
-        }),
-    );
-    this.subscriptions.add(
       this.searchTerm$
         .pipe(
-          combineLatestWith(this.fileType$),
-          tap(([searchTerm, fileType]) => {
-            const data = fileType === 'Normal' ? this.normalFiles : this.legalFiles;
-            this.displayedColumns =
-              fileType === 'Normal' ? [...this.COLUMNS.filter((col) => col !== 'legalDocItemCode')] : this.COLUMNS;
-            this.dataSource.data = data.filter((file) => {
-              return file.value.name.toLowerCase().includes(searchTerm.toLowerCase());
+          map((it) => it.toLowerCase()),
+          combineLatestWith(this.isLegal$, this.form.valueChanges.pipe(startWith(this.form.value))),
+          tap(([searchTerm, isLegal]) => {
+            this.displayedColumns = isLegal ? this.COLUMNS : this.COLUMNS.filter((col) => col !== 'legalDocCode');
+            this.dataSource.data = this.form.controls.filter((control) => {
+              const file = control.value;
+              const isLegalFile = file.legalDocCode != null;
+              if (isLegal !== isLegalFile) {
+                return false;
+              }
+              const name = 'id' in file ? file.name : file.file.name;
+              return name.toLowerCase().includes(searchTerm);
             });
           }),
         )
         .subscribe(),
     );
-    this.subscriptions.add(this.legalDocItems$.subscribe((items) => (this.legalDocItems = items)));
   }
 
   public ngOnDestroy() {
     this.subscriptions.unsubscribe();
   }
 
-  public setDataSource(controls: FormControl<FormAssetFile>[]) {
-    this.legalFiles = controls?.filter((control) => control.value.type === 'Legal') ?? [];
-    this.normalFiles = controls?.filter((control) => control.value.type === 'Normal') ?? [];
-    this.dataSource.data = this.fileType$.value === 'Legal' ? this.legalFiles : this.normalFiles;
-  }
-
-  get isDisabled(): boolean {
-    return !this.dataSource.data.some((file) => file.value.selected);
+  get hasSelectedFiles(): boolean {
+    return this.selectedFiles.size !== 0;
   }
 
   public setSearchTerm(term: string) {
     this.searchTerm$.next(term);
   }
 
-  public switchFileType(type: AssetFileType) {
-    this.fileType$.next(type);
+  public setFileType({ isLegal }: { isLegal: boolean }) {
+    if (isLegal === this.isLegal$.value) {
+      return;
+    }
+    this.selectedFiles.clear();
+    this.isLegal$.next(isLegal);
   }
 
-  public updateLegalDocItemCode(control: FormControl<FormAssetFile>, event: LegalDocItemCode[]) {
-    control.value.legalDocItemCode = event[0];
+  public updateLegalDocItemCode(control: FormControl<AssetFormFile>, [code]: LegalDocCode[]) {
+    const file = { ...control.value, legalDocCode: code };
+    control.setValue(file);
+    if (this.selectedFiles.delete(control.value)) {
+      this.selectedFiles.add(file);
+    }
     this.form.markAsDirty();
   }
 
   public toggleAll(event: MatCheckboxChange) {
-    this.form.controls.assetFiles.value.forEach((file) => {
-      file.selected = file.type === this.fileType$.value ? event.checked : file.selected;
-    });
+    if (event.checked) {
+      this.selectedFiles = new Set(this.form.value.filter((file) => this.isVisible(file)));
+    } else {
+      this.selectedFiles.clear();
+    }
   }
 
-  public selectFile(control: FormControl<FormAssetFile>, event: MatCheckboxChange) {
-    control.value.selected = event.checked;
+  public selectFile(control: FormControl<AssetFormFile>, event: MatCheckboxChange) {
+    if (event.checked) {
+      this.selectedFiles.add(control.value);
+    } else {
+      this.selectedFiles.delete(control.value);
+    }
   }
 
-  public selectFilesForDeletion() {
-    this.form.controls.assetFiles.setValue(
-      this.form.controls.assetFiles.value.map((file) => {
-        if (file.type !== this.fileType$.value) {
+  public isSelected(file: AssetFormFile): boolean {
+    return this.selectedFiles.has(file);
+  }
+
+  public get areAllFilesSelected(): boolean {
+    return this.selectedFiles.size === this.form.value.length;
+  }
+
+  public markSelectedFilesForDeletion() {
+    this.transformSelectedFiles((file) => ({ ...file, shouldBeDeleted: true }));
+  }
+
+  private transformSelectedFiles(transform: (file: AssetFormFile) => AssetFormFile): void {
+    this.form.setValue(
+      this.form.value.map((file) => {
+        if (!this.selectedFiles.delete(file)) {
           return file;
         }
-        return {
-          ...file,
-          willBeDeleted: file.selected ? true : file.willBeDeleted,
-        };
+        const updatedFile = transform(file);
+        this.selectedFiles.add(updatedFile);
+        return updatedFile;
       }),
     );
     this.form.markAsDirty();
+  }
+
+  private isVisible(file: AssetFormFile): boolean {
+    return (file.legalDocCode !== null) === this.isLegal$.value;
   }
 
   public downloadSelectedFiles() {
     if (!this.asset) {
       return;
     }
-    const filesToDownload: SimpleFile[] = this.dataSource.data
-      .filter((file) => file.value.selected && file.value.id !== 0)
-      .map((file) => ({
-        name: file.value.name,
-        id: file.value.id,
-      }));
+    const filesToDownload: ExistingAssetFile[] = this.dataSource.data
+      .map((control) => control.value)
+      .filter((file): file is ExistingAssetFile => 'id' in file && this.selectedFiles.has(file));
 
-    const assetId = this.asset.assetId;
-    const downloadRequests: Observable<FileBlob>[] = filesToDownload.map((file) => {
-      this.activeFileDownload.add(file.id);
+    const { id: assetId } = this.asset;
+    const downloadRequests: Array<Observable<FileBlob>> = filesToDownload.map((file) => {
+      this.activeFileDownloads.add(file.id);
       return this.httpClient.get(`/api/assets/${assetId}/files/${file.id}`, { responseType: 'blob' }).pipe(
         map((blob) => {
           return {
@@ -146,10 +173,10 @@ export class AssetEditorFilesComponent implements OnInit, OnDestroy {
       );
     });
 
-    forkJoin(downloadRequests).subscribe((fileBlobs: FileBlob[]) => {
+    forkJoin(downloadRequests).subscribe((fileBlobs) => {
       fileBlobs.forEach(async (fileBlob: FileBlob) => {
         await triggerDownload(fileBlob);
-        this.activeFileDownload.delete(fileBlob.file.id);
+        this.activeFileDownloads.delete(fileBlob.file.id);
       });
     });
   }
@@ -163,14 +190,9 @@ export class AssetEditorFilesComponent implements OnInit, OnDestroy {
   }
 }
 
-interface SimpleFile {
-  name: string;
-  id: number;
-}
-
 interface FileBlob {
   blob: Blob;
-  file: SimpleFile;
+  file: ExistingAssetFile;
 }
 
 const triggerDownload = async ({ blob, file }: FileBlob) => {

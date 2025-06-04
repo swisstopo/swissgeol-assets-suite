@@ -1,7 +1,5 @@
-import { AssetFile } from '@asset-sg/shared';
-import { AssetId, User } from '@asset-sg/shared/v2';
+import { AssetFile, AssetId, OcrStatus } from '@asset-sg/shared/v2';
 import { Injectable, Logger } from '@nestjs/common';
-import { PrismaService } from '@/core/prisma.service';
 import { FileOcrService } from '@/features/assets/files/file-ocr.service';
 import { FileS3Service, SaveFileS3Options } from '@/features/assets/files/file-s3.service';
 import { CreateFileData, FileIdentifier, FileRepo } from '@/features/assets/files/file.repo';
@@ -14,7 +12,6 @@ export class FileService {
     private readonly fileRepo: FileRepo,
     private readonly fileOcrService: FileOcrService,
     private readonly fileS3Service: FileS3Service,
-    private readonly prisma: PrismaService,
   ) {}
 
   async create(data: UploadFileData): Promise<AssetFile> {
@@ -25,7 +22,7 @@ export class FileService {
     // Store file in DB.
     const record = await this.fileRepo.create({
       ...createData,
-      ocrStatus: isOcrCompatible ? 'waiting' : 'willNotBeProcessed',
+      ocrStatus: isOcrCompatible ? OcrStatus.Waiting : OcrStatus.WillNotBeProcessed,
     });
 
     // Upload file to S3.
@@ -39,18 +36,30 @@ export class FileService {
     return record;
   }
 
-  async delete(id: FileIdentifier, user: User): Promise<boolean> {
+  async delete(id: FileIdentifier): Promise<boolean> {
     const file = await this.fileRepo.find(id);
     if (file === null) {
+      // The file does not exist (anymore?), so it has not been deleted.
       return false;
     }
-
     const isDbOk = await this.fileRepo.delete(id);
-
     if (!isDbOk) {
-      return false;
+      // The connection between the asset and the file has been deleted,
+      // but the file is still linked to other assets.
+      // We still want to communicate that the file was successfully deleted,
+      // as by the viewpoint of the API, the deletion has been successful.
+      return true;
     }
+
+    // Remove the file from S3, as no asset refers to it anymore.
     return await this.fileS3Service.delete(file.name);
+  }
+
+  async deleteOrphans(): Promise<void> {
+    const orphans = await this.fileRepo.findOrphans();
+    for (const orphan of orphans) {
+      await this.fileRepo.deleteUnused(orphan.id);
+    }
   }
 
   private async saveFileOrDeleteRecord(

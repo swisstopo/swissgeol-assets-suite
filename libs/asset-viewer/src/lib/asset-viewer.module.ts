@@ -36,9 +36,8 @@ import {
   DrawerComponent,
   DrawerPanelComponent,
   FileNamePipe,
+  ReferencePipe,
   SmartTranslatePipe,
-  ValueItemDescriptionPipe,
-  ValueItemNamePipe,
   ZoomControlsComponent,
 } from '@asset-sg/client-shared';
 import { FavoritesModule } from '@asset-sg/favorites';
@@ -93,11 +92,8 @@ import { mapControlReducer } from './state/map-control/map-control.reducer';
     ReactiveFormsModule,
 
     SvgIconComponent,
-    ValueItemNamePipe,
-    ValueItemDescriptionPipe,
     DatePipe,
     ZoomControlsComponent,
-    ValueItemNamePipe,
 
     ForModule,
     LetModule,
@@ -135,6 +131,7 @@ import { mapControlReducer } from './state/map-control/map-control.reducer';
     ChipComponent,
     MapLegendComponent,
     FileNamePipe,
+    ReferencePipe,
   ],
   providers: [
     TranslatePipe,

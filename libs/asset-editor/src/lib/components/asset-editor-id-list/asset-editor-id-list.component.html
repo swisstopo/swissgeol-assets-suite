@@ -1,8 +1,8 @@
-@for (id of ids; track $index) {
+@for (id of identifiers; track $index) {
   <div class="alternative-id">
     <asset-sg-text-input
-      [value]="id.id"
-      (valueChange)="updateAlternativeId($event, 'id', $index)"
+      [value]="id.value"
+      (valueChange)="updateAlternativeId($event, 'value', $index)"
       [title]="'edit.tabs.general.alternativeId' | translate"
       isRequired
     ></asset-sg-text-input>

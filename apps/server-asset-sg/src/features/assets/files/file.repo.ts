@@ -1,11 +1,9 @@
-import { AssetFile, AssetFileType, LegalDocItemCode } from '@asset-sg/shared';
-import { AssetId, User } from '@asset-sg/shared/v2';
+import { AssetFile, AssetFileId, AssetId, LegalDocCode, OcrStatus, User } from '@asset-sg/shared/v2';
 import { Injectable } from '@nestjs/common';
-import { OcrState } from '@prisma/client';
-import * as E from 'fp-ts/Either';
-import * as D from 'io-ts/Decoder';
 import { PrismaService } from '@/core/prisma.service';
 import { CreateRepo, DeleteRepo, FindRepo } from '@/core/repo';
+import { assetFileSelection, mapAssetFileFromPrisma } from '@/features/assets/files/prisma-file';
+import { handlePrismaMutationError } from '@/utils/prisma';
 
 @Injectable()
 export class FileRepo
@@ -16,27 +14,19 @@ export class FileRepo
   async find({ id, assetId }: FileIdentifier): Promise<AssetFile | null> {
     const entry = await this.prisma.file.findFirst({
       where: { id, AssetFile: { some: { assetId } } },
-      select: {
-        id: true,
-        name: true,
-        nameAlias: true,
-        size: true,
-        type: true,
-        legalDocItemCode: true,
-        pageCount: true,
-        lastModifiedAt: true,
-        ocrStatus: true,
-      },
+      select: assetFileSelection,
     });
     if (entry == null) {
       return null;
     }
-    return {
-      ...entry,
-      size: Number(entry.size),
-      legalDocItemCode: (D.nullable(LegalDocItemCode).decode(entry.legalDocItemCode) as E.Right<LegalDocItemCode>)
-        .right,
-    };
+    return mapAssetFileFromPrisma(entry);
+  }
+
+  async findOrphans(): Promise<AssetFile[]> {
+    const entries = await this.prisma.file.findMany({
+      where: { AssetFile: { none: {} } },
+    });
+    return entries.map(mapAssetFileFromPrisma);
   }
 
   async create(data: CreateFileData): Promise<AssetFile> {
@@ -49,18 +39,12 @@ export class FileRepo
         nameAlias,
         size: data.size,
         ocrStatus: data.ocrStatus,
-        type: data.type,
-        legalDocItemCode: data.legalDocItemCode,
+        type: data.legalDocCode === null ? 'Normal' : 'Legal',
+        legalDocItemCode: data.legalDocCode,
         lastModifiedAt,
-      },
-    });
-    await this.prisma.asset.update({
-      select: { assetId: true },
-      where: { assetId: data.assetId },
-      data: {
-        assetFiles: {
+        AssetFile: {
           create: {
-            fileId: id,
+            assetId: data.assetId,
           },
         },
       },
@@ -68,10 +52,9 @@ export class FileRepo
     return {
       id,
       name: fileName,
-      nameAlias,
+      alias: nameAlias,
       size: data.size,
-      type: data.type,
-      legalDocItemCode: data.legalDocItemCode,
+      legalDocCode: data.legalDocCode,
       pageCount: null, // this is filled (if at all) by postprocessing via OCR
       lastModifiedAt,
       ocrStatus: data.ocrStatus,
@@ -108,12 +91,20 @@ export class FileRepo
       if (!isFileUnused) {
         return false;
       }
+      return await this.deleteUnused(file.id);
+    });
+  }
+
+  async deleteUnused(id: AssetFileId): Promise<boolean> {
+    try {
       await this.prisma.file.delete({
-        where: { id: file.id },
+        where: { id },
         select: { id: true },
       });
       return true;
-    });
+    } catch (e) {
+      return handlePrismaMutationError(e) ?? false;
+    }
   }
 }
 
@@ -125,9 +116,8 @@ export interface FileIdentifier {
 export interface CreateFileData {
   name: string;
   size: number;
-  type: AssetFileType;
-  legalDocItemCode: LegalDocItemCode | null;
-  ocrStatus: OcrState;
+  legalDocCode: LegalDocCode | null;
+  ocrStatus: OcrStatus;
   assetId: AssetId;
   user: User;
 }

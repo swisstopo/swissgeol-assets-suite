@@ -1,6 +1,6 @@
 import { DecimalPipe } from '@angular/common';
 import { Pipe, PipeTransform } from '@angular/core';
-import { AssetFile } from '@asset-sg/shared';
+import { AssetFile } from '@asset-sg/shared/v2';
 import { TranslatePipe } from '@ngx-translate/core';
 
 @Pipe({

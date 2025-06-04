@@ -1,12 +1,11 @@
+import { coerceBooleanProperty } from '@angular/cdk/coercion';
 import { HttpClient } from '@angular/common/http';
 import { Component, inject, Input, OnDestroy, OnInit } from '@angular/core';
 import { AlertType, AppState, FileNamePipe, fromAppShared, showAlert } from '@asset-sg/client-shared';
-import { AssetFile, AssetFileType } from '@asset-sg/shared';
-import { AssetId } from '@asset-sg/shared/v2';
+import { AssetId, AssetFile } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
 import { TranslateService } from '@ngx-translate/core';
 import { finalize, Subscription } from 'rxjs';
-import { AssetDetailFileVM } from '../../state/asset-search/asset-search.selector';
 
 @Component({
   selector: 'ul[asset-sg-asset-viewer-files]',
@@ -19,10 +18,10 @@ export class AssetViewerFilesComponent implements OnInit, OnDestroy {
   assetId!: AssetId;
 
   @Input({ required: true })
-  files!: AssetDetailFileVM[];
+  files!: AssetFile[];
 
-  @Input({ required: true })
-  type!: AssetFileType;
+  @Input({ transform: coerceBooleanProperty })
+  isLegal = false;
 
   private readonly fileNamePipe = inject(FileNamePipe);
 
@@ -51,11 +50,7 @@ export class AssetViewerFilesComponent implements OnInit, OnDestroy {
   }
 
   get isNormal(): boolean {
-    return this.type === 'Normal';
-  }
-
-  get isLegal(): boolean {
-    return this.type === 'Legal';
+    return !this.isLegal;
   }
 
   public isActiveFileDownload(file: Omit<AssetFile, 'fileSize'>, downloadType: DownloadType): boolean {

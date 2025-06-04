@@ -1,8 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
-import { appSharedStateActions } from '@asset-sg/client-shared';
-import { AssetSearchQuery, isEmptySearchQuery } from '@asset-sg/shared';
-import { AssetId, makeEmptyAssetSearchResults } from '@asset-sg/shared/v2';
+import { appSharedStateActions, fromAppShared } from '@asset-sg/client-shared';
+import { AssetId, AssetSearchQuery, isEmptySearchQuery, makeEmptyAssetSearchResults } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
 import {
   distinctUntilChanged,
@@ -31,7 +30,6 @@ import {
 } from '../state/asset-search/asset-search.actions';
 import { AppStateWithAssetSearch } from '../state/asset-search/asset-search.reducer';
 import {
-  selectCurrentAsset,
   selectFiltersState,
   selectIsResultsOpen,
   selectMapPosition,
@@ -39,10 +37,10 @@ import {
   selectScrollOffsetForResults,
   selectSearchQuery,
   selectSearchResults,
-  selectStudies,
+  selectGeometries,
 } from '../state/asset-search/asset-search.selector';
-import { AllStudyService } from './all-study.service';
 import { AssetSearchService } from './asset-search.service';
+import { GeometryService } from './geometry.service';
 import { isEmptyViewerParams, ViewerParams, ViewerParamsService } from './viewer-params.service';
 
 @Injectable({ providedIn: 'root' })
@@ -50,7 +48,7 @@ export class ViewerControllerService {
   private readonly store = inject(Store<AppStateWithAssetSearch>);
   private readonly viewerParamsService = inject(ViewerParamsService);
   private readonly assetSearchService = inject(AssetSearchService);
-  private readonly allStudyService = inject(AllStudyService);
+  private readonly geometryService = inject(GeometryService);
   private readonly router = inject(Router);
 
   private viewerReadySubject = new ReplaySubject<void>(1);
@@ -104,9 +102,9 @@ export class ViewerControllerService {
     }
     loads.push(this.updateStoreByParams(params));
 
-    const studies = await firstValueFrom(this.store.select(selectStudies));
-    if (studies.length === 0) {
-      loads.push(this.loadStudies());
+    const geometries = await firstValueFrom(this.store.select(selectGeometries));
+    if (geometries.length === 0) {
+      loads.push(this.loadGeometries());
     }
     loads.push(this.loadResults(params.query, { force: isPanelOpen(params.ui.resultsState) }));
     loads.push(this.loadStats(params.query));
@@ -119,10 +117,10 @@ export class ViewerControllerService {
     this.viewerReadySubject.next();
   }
 
-  private async loadStudies(): Promise<void> {
-    this.store.dispatch(actions.setStudies({ isLoading: true }));
-    const studies = await firstValueFrom(this.allStudyService.getAllStudies());
-    this.store.dispatch(actions.setStudies({ studies, isLoading: false }));
+  private async loadGeometries(): Promise<void> {
+    this.store.dispatch(actions.setGeometries({ isLoading: true }));
+    const geometries = await firstValueFrom(this.geometryService.fetchAll());
+    this.store.dispatch(actions.setGeometries({ geometries, isLoading: false }));
   }
 
   private async loadResults(query: AssetSearchQuery, options: { force?: boolean } = {}): Promise<void> {
@@ -134,7 +132,7 @@ export class ViewerControllerService {
     const results = await firstValueFrom(this.assetSearchService.search(query));
     this.store.dispatch(actions.setResults({ results, isLoading: false }));
     if (results.data.length === 1) {
-      await this.loadAsset(results.data[0].assetId);
+      await this.loadAsset(results.data[0].id);
     } else {
       this.store.dispatch(appSharedStateActions.setCurrentAsset({ asset: null, isLoading: false }));
     }
@@ -152,8 +150,11 @@ export class ViewerControllerService {
       return;
     }
     this.store.dispatch(appSharedStateActions.setCurrentAsset({ isLoading: true }));
-    const asset = await firstValueFrom(this.assetSearchService.fetchAssetEditDetail(id));
-    this.store.dispatch(appSharedStateActions.setCurrentAsset({ asset, isLoading: false }));
+    const [asset, geometries] = await Promise.all([
+      firstValueFrom(this.assetSearchService.fetchAsset(id)),
+      firstValueFrom(this.assetSearchService.fetchGeometries(id)),
+    ]);
+    this.store.dispatch(appSharedStateActions.setCurrentAsset({ asset: { asset, geometries }, isLoading: false }));
   }
 
   private async updateByQuery(query: AssetSearchQuery): Promise<void> {
@@ -181,7 +182,7 @@ export class ViewerControllerService {
     // Events that add a new history entry.
     const foregroundEvents: Array<Observable<unknown>> = [
       this.store.select(selectSearchQuery),
-      this.store.select(selectCurrentAsset),
+      this.store.select(fromAppShared.selectCurrentAsset),
       this.store.select(selectFiltersState),
       this.store.select(selectResultsState),
     ];

@@ -1,4 +1,4 @@
-import { StudyGeometryType } from '@asset-sg/shared/v2';
+import { GeometryType } from '@asset-sg/shared/v2';
 import { Fill, Stroke, Style } from 'ol/style';
 import { StyleFunction } from 'ol/style/Style';
 import { CustomFeatureProperties } from '../custom-feature-properties.enum';
@@ -53,14 +53,14 @@ export const styleFunctionByGeometry: StyleFunction = (feature) => {
   }
   switch (geometry.getType()) {
     case 'Point': {
-      const geomType = feature.get(CustomFeatureProperties.GeometryType) as StudyGeometryType;
+      const geomType = feature.get(CustomFeatureProperties.GeometryType) as GeometryType;
 
       switch (geomType) {
-        case 'Point':
+        case GeometryType.Point:
           return overviewStylesGeometry.point.pointInstance;
-        case 'Line':
+        case GeometryType.LineString:
           return overviewStylesGeometry.point.lineInstance;
-        case 'Polygon':
+        case GeometryType.Polygon:
           return overviewStylesGeometry.point.polygonInstance;
         default:
           return new Style();

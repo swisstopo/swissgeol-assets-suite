@@ -1,6 +1,6 @@
 @use "../../../styles/variables";
 
-form {
+:host {
   padding: 40px 0;
   display: flex;
   flex-direction: column;

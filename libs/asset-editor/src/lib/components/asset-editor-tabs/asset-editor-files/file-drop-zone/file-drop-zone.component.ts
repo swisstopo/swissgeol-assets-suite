@@ -1,6 +1,7 @@
+import { coerceBooleanProperty } from '@angular/cdk/coercion';
 import { Component, Input } from '@angular/core';
 import { FormControl } from '@angular/forms';
-import { AssetFileType } from '@asset-sg/shared';
+import { CreateAssetFileData, LegalDocCode } from '@asset-sg/shared/v2';
 import { AssetForm } from '../../../asset-editor-page/asset-editor-page.component';
 
 @Component({
@@ -11,7 +12,7 @@ import { AssetForm } from '../../../asset-editor-page/asset-editor-page.componen
 })
 export class FileDropZoneComponent {
   @Input() public form!: AssetForm['controls']['files'];
-  @Input() public fileType: AssetFileType = 'Normal';
+  @Input({ transform: coerceBooleanProperty }) public isLegal = false;
   public isDragging = false;
   public isFileTooLarge = false;
 
@@ -48,24 +49,18 @@ export class FileDropZoneComponent {
         return;
       }
       this.isFileTooLarge = false;
-      this.form.controls.assetFiles.push(
-        new FormControl(
+      this.form.controls.push(
+        new FormControl<CreateAssetFileData & { shouldBeDeleted: boolean }>(
           {
-            id: 0,
-            name: element.name,
-            size: element.size,
-            legalDocItemCode: this.fileType === 'Legal' ? 'federalData' : null,
-            type: this.fileType,
-            selected: false,
-            willBeDeleted: false,
             file: element,
-            lastModifiedAt: new Date(),
-            ocrStatus: null,
+            legalDocCode: this.isLegal ? LegalDocCode.FederalData : null,
+            shouldBeDeleted: false,
           },
           { nonNullable: true },
         ),
       );
       this.form.markAsDirty();
+      this.form.updateValueAndValidity();
     }
   }
 }

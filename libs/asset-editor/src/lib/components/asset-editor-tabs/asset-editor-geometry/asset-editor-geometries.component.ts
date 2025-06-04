@@ -11,6 +11,7 @@ import {
   ViewChildren,
   ViewContainerRef,
 } from '@angular/core';
+import { FormControl, FormGroup } from '@angular/forms';
 import { MatSelectChange } from '@angular/material/select';
 import {
   createFeaturesFromStudies,
@@ -92,7 +93,6 @@ import {
   takeUntil,
   withLatestFrom,
 } from 'rxjs';
-import { AssetForm } from '../../asset-editor-page/asset-editor-page.component';
 
 type Mode = 'edit-geometry' | 'choose-new-geometry' | 'create-new-geometry';
 type NewGeometryType = 'Point' | 'Polygon' | 'Linestring';
@@ -136,7 +136,7 @@ interface StudyToDisplay extends Study {
   providers: [RxState],
 })
 export class AssetEditorGeometriesComponent implements OnInit {
-  @Input() public form!: AssetForm['controls']['geometries'];
+  @Input() public form!: GeometryForm;
   public studies: StudyToDisplay[] = [];
   public selectedStudy?: StudyToDisplay;
 
@@ -1510,3 +1510,7 @@ const scrollIntoViewIfNeeded = (element: Element) => {
 
 let nextId = 0;
 const makeId = () => nextId++;
+
+export const makeGeometryForm = () => new FormGroup({ studies: new FormControl<Studies>([], { nonNullable: true }) });
+
+export type GeometryForm = ReturnType<typeof makeGeometryForm>;

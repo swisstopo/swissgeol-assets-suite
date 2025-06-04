@@ -2,6 +2,7 @@ import { Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { AbstractControl, FormArray, FormControl, FormGroup, ValidationErrors, Validators } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, Router, RouterStateSnapshot } from '@angular/router';
+import { AssetSearchService } from '@asset-sg/asset-viewer';
 import {
   AppSharedState,
   ConfirmDialogComponent,
@@ -10,30 +11,45 @@ import {
   fromAppShared,
   ROUTER_SEGMENTS,
   RoutingService,
-  wktToGeoJSON,
 } from '@asset-sg/client-shared';
+import { Geom, GeomFromGeomText, Lang, LV95, Studies, Study } from '@asset-sg/shared';
 import {
-  AssetEditDetail,
+  Asset,
+  AssetContact,
+  AssetData,
   AssetFile,
-  dateFromDateId,
-  dateIdFromDate,
-  GeomFromGeomText,
-  hasHistoricalData,
-  Lang,
+  AssetIdentifier,
+  AssetIdentifierData,
+  CreateAssetFileData,
+  CreateGeometryData,
+  DeleteGeometryData,
+  GeometryData,
+  GeometryDetail,
+  GeometryId,
+  GeometryMutationType,
+  GeometryType,
+  isDeepEqual,
+  LanguageCode,
   LinkedAsset,
-  PatchAsset,
-  Studies,
-} from '@asset-sg/shared';
-import { AssetContact, Workflow } from '@asset-sg/shared/v2';
-import { untilDestroyed } from '@ngneat/until-destroy';
+  LocalDate,
+  LocalizedItemCode,
+  mapGeometryTypeToStudyType,
+  UpdateAssetFileData,
+  UpdateGeometryData,
+  Workflow,
+} from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
-import * as O from 'fp-ts/lib/Option';
+import * as E from 'fp-ts/Either';
 import { map, Observable, Subscription, switchMap, take, tap } from 'rxjs';
 import { EditorMode } from '../../models';
 import { AssetEditorService } from '../../services/asset-editor.service';
 import * as actions from '../../state/asset-editor.actions';
 import { selectWorkflow } from '../../state/asset-editor.selector';
 import { Tab } from '../asset-editor-navigation/asset-editor-navigation.component';
+import {
+  GeometryForm,
+  makeGeometryForm,
+} from '../asset-editor-tabs/asset-editor-geometry/asset-editor-geometries.component';
 
 @Component({
   selector: 'asset-sg-editor-page',
@@ -47,27 +63,44 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
   /**
    * The current asset. This is `null` while the asset is being loaded, or when a new asset is being created.
    */
-  public asset: AssetEditDetail | null = null;
+  public asset: Asset | null = null;
+
+  /**
+   * The current asset's geometries. This remains empty when an asset is being created.
+   */
+  public geometries: GeometryDetail[] = [];
 
   /**
    * The asset's workflow. This is `null` while the workflow is being loaded, or when a new asset is being created.
    */
   public workflow: Workflow | null = null;
+
   public form!: AssetForm;
+
+  /**
+   * The form that controls the asset's geometries.
+   * This is mapped to the `geometries` field in the {@link form}.
+   *
+   * Note that this only exists so we do not need to refactor the `asset-editor-geometries` component.
+   * When that component is being replaced, this value should be removed.
+   */
+  public geometryForm!: GeometryForm;
+
   public activeTab: Tab = Tab.General;
   protected availableTabs: Tab[] = [];
-  protected isLoading = false;
-  protected readonly Tab = Tab;
-  protected readonly EditorMode = EditorMode;
   private currentLang: Lang = 'de';
+  protected isLoading = false;
+
   private readonly store = inject(Store<AppSharedState>);
   private readonly route = inject(ActivatedRoute);
   private readonly routingService = inject(RoutingService);
   private readonly assetEditorService = inject(AssetEditorService);
+  private readonly assetSearchService = inject(AssetSearchService);
   private readonly dialogService = inject(MatDialog);
   private readonly router = inject(Router);
   private readonly currentLang$ = inject(CURRENT_LANG);
   private readonly routerSegments$ = inject(ROUTER_SEGMENTS);
+
   private readonly subscriptions: Subscription = new Subscription();
 
   public ngOnInit() {
@@ -83,16 +116,20 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
         )
         .subscribe(),
     );
-    this.form = buildForm();
+    this.form = makeForm();
+    this.connectGeometryForm();
+
     this.loadAssetFromRouteParams();
 
     this.subscriptions.add(
       this.store
-        .select(fromAppShared.selectCurrentAsset)
+        .select(fromAppShared.selectCurrentAssetAndGeometries)
         .pipe(
-          tap((asset) => {
-            if (this.mode === EditorMode.Edit && asset !== null) {
+          tap((current) => {
+            if (this.mode === EditorMode.Edit && current !== null) {
+              const { asset, geometries } = current;
               this.asset = asset;
+              this.geometries = geometries;
             }
             this.initializeTabs();
             this.initializeForm();
@@ -107,16 +144,115 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
     );
   }
 
+  private connectGeometryForm(): void {
+    this.geometryForm = makeGeometryForm();
+
+    let lastKnownGeometries: GeometryData[] = [];
+    this.form.controls.geometries.valueChanges.subscribe((geometries) => {
+      if (lastKnownGeometries === geometries) {
+        return;
+      }
+      lastKnownGeometries = geometries;
+
+      const studyMapping: Map<string, Study> = new Map();
+      for (const geometry of this.geometries) {
+        studyMapping.set(geometry.id, {
+          studyId: geometry.id,
+          geom:
+            geometry.type === GeometryType.Point
+              ? { _tag: 'Point', coord: geometry.coordinates[0] as LV95 }
+              : {
+                  _tag: geometry.type as 'LineString' | 'Polygon',
+                  coords: geometry.coordinates as LV95[],
+                },
+        });
+      }
+      let id = 0;
+      for (const geometry of geometries) {
+        let studyId: string;
+        switch (geometry.mutation) {
+          case GeometryMutationType.Create:
+            studyId = `study_${mapGeometryTypeToStudyType(geometry.type)}_new_${id++}`;
+            break;
+          case GeometryMutationType.Update:
+            studyId = geometry.id;
+            break;
+          case GeometryMutationType.Delete:
+            // Deletion is represented as absence.
+            studyMapping.delete(geometry.id);
+            continue;
+        }
+        const geom = GeomFromGeomText.decode(geometry.text);
+        studyMapping.set(studyId, {
+          studyId,
+          geom: (geom as E.Right<Geom>).right,
+        });
+      }
+
+      lastKnownStudies = [...studyMapping.values()];
+      this.geometryForm.controls.studies.setValue(lastKnownStudies);
+    });
+
+    let lastKnownStudies: Studies = [];
+    this.geometryForm.controls.studies.valueChanges.subscribe((studies) => {
+      if (lastKnownStudies === studies) {
+        return;
+      }
+      lastKnownStudies = studies;
+
+      const knownIds = new Set<GeometryId>();
+      const newGeometries: GeometryData[] = [];
+      for (const study of studies) {
+        if (study.studyId.includes('_new_')) {
+          newGeometries.push({
+            mutation: GeometryMutationType.Create,
+            type: study.geom._tag as GeometryType,
+            text: GeomFromGeomText.encode(study.geom),
+          } satisfies CreateGeometryData);
+          continue;
+        }
+        const id = study.studyId as GeometryId;
+        knownIds.add(id);
+
+        const studyCoordinates = study.geom._tag === 'Point' ? [study.geom.coord] : study.geom.coords;
+        const geometryCoordinates = this.geometries.find((it) => it.id === id)?.coordinates;
+        if (isDeepEqual(studyCoordinates, geometryCoordinates)) {
+          // If the saved and updated coordinates are the same,
+          // then we don't need to send an update to the server.
+          continue;
+        }
+        newGeometries.push({
+          mutation: GeometryMutationType.Update,
+          id,
+          text: GeomFromGeomText.encode(study.geom),
+        } satisfies UpdateGeometryData);
+      }
+
+      const deletedGeometries = this.geometries
+        .filter((geometry) => !knownIds.has(geometry.id))
+        .map(
+          (geometry): DeleteGeometryData => ({
+            mutation: GeometryMutationType.Delete,
+            id: geometry.id,
+          }),
+        );
+
+      lastKnownGeometries = [...newGeometries, ...deletedGeometries];
+      this.form.controls.geometries.setValue(lastKnownGeometries);
+      this.form.controls.geometries.markAsDirty();
+    });
+  }
+
   public ngOnDestroy() {
     this.store.dispatch(actions.reset());
     this.subscriptions.unsubscribe();
   }
 
-  get hasReferences() {
+  get hasReferences(): boolean {
     return (
-      this.form.controls.references.controls.siblingAssets.value.length > 0 ||
-      this.form.controls.references.controls.subordinateAssets.value.length > 0 ||
-      !!this.form.controls.references.controls.mainAsset.value
+      this.form.controls.references.controls.parent.value !== null ||
+      this.form.controls.references.controls.siblings.value.length > 0 ||
+      this.form.controls.references.controls.children.value.length > 0
     );
   }
 
@@ -126,155 +262,156 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
 
   public initializeForm() {
     this.form.reset();
-    const {
-      general: { controls: general },
-      contacts: { controls: contacts },
-    } = this.form.controls;
-    general.titlePublic.setValue(this.asset?.titlePublic ?? '');
-    general.titleOriginal.setValue(this.asset?.titleOriginal ?? '');
-    general.workgroupId.setValue(this.asset?.workgroupId ?? null);
-    general.creationDate.setValue(this.asset ? dateFromDateId(this.asset.createDate) : null);
-    general.receiptDate.setValue(this.asset ? dateFromDateId(this.asset.receiptDate) : null);
-    general.assetLanguages.setValue(this.asset?.assetLanguages ?? []);
-    general.assetFormatItemCode.setValue(this.asset?.assetFormatItemCode ?? null);
-    general.assetKindItemCode.setValue(this.asset?.assetKindItemCode ?? null);
-    general.manCatLabelRefs.setValue(this.asset?.manCatLabelRefs ?? []);
-    general.isNatRel.setValue(this.asset?.isNatRel ?? false);
-    general.typeNatRels.setValue(this.asset?.typeNatRels ?? []);
-    general.ids.setValue(this.asset?.ids ?? []);
+    const { asset } = this;
+    const { files, contacts } = this.form.controls;
+    if (asset !== null) {
+      files.clear();
+      for (const file of asset.files) {
+        files.push(
+          new FormControl(
+            {
+              ...file,
+              shouldBeDeleted: false,
+            } satisfies AssetFormFile,
+            { nonNullable: true },
+          ),
+        );
+      }
 
-    const { controls: files } = this.form.controls.files;
-    files.assetFiles.clear();
-    this.asset?.assetFiles.forEach((file) => {
-      files.assetFiles.push(
-        new FormControl<FormAssetFile>(
-          {
-            ...file,
-            selected: false,
-            willBeDeleted: false,
-          },
-          { nonNullable: true },
-        ),
-      );
-    });
+      contacts.clear();
+      for (const contact of asset.contacts) {
+        contacts.push(new FormControl(contact, { nonNullable: true }));
+      }
 
-    this.form.controls.references.controls.mainAsset.setValue(
-      this.asset?.assetMain ? O.toNullable(this.asset.assetMain) : null,
-    );
-    const siblings = this.asset == null ? [] : [...this.asset.siblingYAssets, ...this.asset.siblingXAssets];
-    this.form.controls.references.controls.siblingAssets.setValue(siblings);
-    this.form.controls.references.controls.subordinateAssets.setValue(this.asset?.subordinateAssets ?? []);
+      this.form.controls.general.setValue({
+        title: asset.title,
+        originalTitle: asset.originalTitle,
+        languageCodes: asset.languageCodes,
+        formatCode: asset.formatCode,
+        kindCode: asset.kindCode,
+        topicCodes: asset.topicCodes,
+        isOfNationalInterest: asset.isOfNationalInterest,
+        nationalInterestTypeCodes: asset.nationalInterestTypeCodes,
+        identifiers: asset.identifiers,
+        workgroupId: asset.workgroupId,
+        createdAt: asset.createdAt.toDate(),
+        receivedAt: asset.receivedAt.toDate(),
+      });
 
-    this.form.controls.geometries.controls.studies.setValue(
-      this.asset?.studies.map((study) => ({
-        studyId: study.studyId,
-        geom: wktToGeoJSON(study.geomText),
-      })) ?? [],
-    );
+      this.form.controls.references.setValue({
+        parent: asset.parent,
+        siblings: asset.siblings,
+        children: asset.children,
+      });
 
-    contacts.assetContacts.clear();
-    this.asset?.assetContacts.forEach((contact) => {
-      return contacts.assetContacts.push(
-        new FormControl<AssetContact>({ id: contact.contactId, role: contact.role }, { nonNullable: true }),
-      );
-    });
+      this.form.controls.geometries.setValue([]);
+    }
   }
 
-  public openConfirmDialogForAssetDeletion(assetId: number) {
+  public openConfirmDialogForAssetDeletion(assetId: number): void {
     const dialogRef = this.dialogService.open<ConfirmDialogComponent, ConfirmDialogData>(ConfirmDialogComponent, {
       data: {
         text: 'confirmDelete',
         confirm: 'confirm',
       },
     });
-    dialogRef
-      .afterClosed()
-      .pipe(untilDestroyed(this))
-      .subscribe((hasConfirmed) => {
-        if (hasConfirmed) {
-          this.store.dispatch(actions.deleteAsset({ assetId }));
-        }
-      });
+    dialogRef.afterClosed().subscribe((hasConfirmed) => {
+      if (hasConfirmed) {
+        this.store.dispatch(actions.deleteAsset({ assetId }));
+      }
+    });
   }
 
-  public save() {
+  public save(): void {
     const asset = this.asset;
     if (!this.asset && this.mode === EditorMode.Edit) {
       return;
     }
-    const {
-      general: { controls: general },
-      geometries: { controls: geometries },
-      contacts: { controls: contacts },
-      references: { controls: references },
-      files: { controls: files },
-    } = this.form.controls;
 
-    const filesToDelete = files.assetFiles.controls
-      .filter((file) => file.value.willBeDeleted)
-      .map((file) => file.value.id);
-    const newFiles = files.assetFiles.controls
-      .filter((file) => file.value.file)
-      .map((formAssetFile) => ({
-        file: formAssetFile.value.file!,
-        type: formAssetFile.value.type,
-        legalDocItemCode: formAssetFile.value.legalDocItemCode,
-      }));
-    const filesToKeep = files.assetFiles.controls
-      .filter((file) => !filesToDelete.includes(file.value.id) && !file.value.file)
-      .map((file) => file.value);
+    const { general, geometries, contacts, references, files } = this.form.getRawValue();
 
-    const patchAsset: PatchAsset = {
-      titlePublic: general.titlePublic.value,
-      titleOriginal: general.titleOriginal.value,
-      createDate: dateIdFromDate(general.creationDate.value ?? new Date()),
-      receiptDate: dateIdFromDate(general.receiptDate.value ?? new Date()),
-      assetLanguages: general.assetLanguages.value,
-      workgroupId: general.workgroupId.value!,
-      assetFormatItemCode: general.assetFormatItemCode.value!,
-      assetKindItemCode: general.assetKindItemCode.value!,
-      manCatLabelRefs: general.manCatLabelRefs.value,
-      isNatRel: general.isNatRel.value,
-      typeNatRels: general.typeNatRels.value,
-      ids: general.ids.value.map((id) => ({ ...id, idId: O.fromNullable(id.idId) })),
-      assetFiles: filesToKeep,
-      assetContacts: contacts.assetContacts.value.map((contact) => ({ contactId: contact.id, role: contact.role })),
-      assetMainId: O.fromNullable(references.mainAsset.value?.assetId),
-      siblingAssetIds: references.siblingAssets.value.map((sibling) => sibling.assetId),
-      studies: geometries.studies.value
-        .filter((study) => !study.studyId.includes('_new'))
-        .map((study) => ({
-          ...study,
-          geomText: GeomFromGeomText.encode(study.geom),
-        })),
-      newStudies: geometries.studies.value
-        .filter((study) => study.studyId.includes('_new'))
-        .map((newStudy) => GeomFromGeomText.encode(newStudy.geom)),
+    const filesToCreate: CreateAssetFileData[] = [];
+    const filesToUpdate: UpdateAssetFileData[] = [];
+    for (const entry of files) {
+      if ('id' in entry) {
+        if (!entry.shouldBeDeleted) {
+          filesToUpdate.push({
+            id: entry.id,
+            legalDocCode: entry.legalDocCode,
+          });
+        }
+      } else if (!entry.shouldBeDeleted) {
+        filesToCreate.push({
+          file: entry.file,
+          legalDocCode: entry.legalDocCode,
+        });
+      }
+    }
+
+    const data: AssetData = {
+      title: general.title,
+      originalTitle: general.originalTitle,
+      isOfNationalInterest: general.isOfNationalInterest,
       isPublic: false, // todo @TIL-EBP: this should be changed dynamically
+      formatCode: general.formatCode,
+      kindCode: general.kindCode,
+      languageCodes: general.languageCodes,
+      nationalInterestTypeCodes: general.nationalInterestTypeCodes,
+      topicCodes: general.topicCodes,
+      identifiers: general.identifiers,
+      contacts,
+      parent: references.parent?.id ?? null,
+      siblings: references.siblings.map((it) => it.id),
+      workgroupId: general.workgroupId,
+      createdAt: LocalDate.fromDate(general.createdAt ?? new Date()),
+      receivedAt: LocalDate.fromDate(general.receivedAt ?? new Date()),
     };
+
     this.isLoading = true;
 
+    // The request to create or update the asset.
+    const formSubmission$ =
+      asset !== null && this.mode === EditorMode.Edit
+        ? this.assetEditorService.updateAsset(asset.id, {
+            ...data,
+            files: filesToUpdate,
+            geometries,
+          })
+        : this.assetEditorService.createAsset({ ...data, geometries: geometries as CreateGeometryData[] });
+
     this.subscriptions.add(
-      (asset !== null && this.mode === EditorMode.Edit
-        ? this.assetEditorService.deleteFiles(asset.assetId, filesToDelete).pipe(
-            switchMap(() => this.assetEditorService.uploadFiles(asset.assetId, newFiles)),
-            switchMap(() => this.assetEditorService.updateAssetDetail(asset.assetId, patchAsset)),
-          )
-        : this.assetEditorService.createAsset(patchAsset).pipe(
-            switchMap((newAsset) =>
-              this.assetEditorService.uploadFiles(newAsset.assetId, newFiles).pipe(map(() => newAsset)),
+      formSubmission$
+        .pipe(
+          // After the form has been saved, upload the new files.
+          switchMap((newAsset) =>
+            this.assetEditorService
+              .uploadFilesForAsset(newAsset.id, filesToCreate)
+              .pipe(map((newFiles) => ({ ...newAsset, files: [...newAsset.files, ...newFiles] }))),
+          ),
+
+          // Fetch the updated geometries.
+          // Note that we could update the geometries manually,
+          // though this is a lot simpler and less error-prone,
+          // at the cost of performance.
+          switchMap((asset) =>
+            this.assetSearchService.fetchGeometries(asset.id).pipe(
+              map((geometries) => ({
+                asset,
+                geometries,
+              })),
             ),
-            switchMap((newAsset) => this.assetEditorService.fetchAsset(newAsset.assetId)),
-            tap((asset) => {
-              this.asset = asset;
-              this.mode = EditorMode.Edit;
-              this.router.navigate([this.currentLang, 'asset-admin', asset.assetId], { replaceUrl: true }).then();
-            }),
-          )
-      ).subscribe((asset) => {
-        this.isLoading = false;
-        this.store.dispatch(actions.updateAssetEditDetailResult({ asset }));
-      }),
+          ),
+        )
+        .subscribe(({ asset, geometries }) => {
+          this.isLoading = false;
+          if (this.mode === EditorMode.Create) {
+            // When the asset has just been created, then we want to navigate to its edit page.
+            // Note that this won't reload this component - it's simply a "cosmetic" change.
+            this.router.navigate([this.currentLang, 'asset-admin', asset.id], { replaceUrl: true }).then();
+          }
+          this.mode = EditorMode.Edit;
+          this.store.dispatch(actions.updateAsset({ asset, geometries }));
+        }),
     );
   }
 
@@ -282,7 +419,7 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
     if (
       this.form === undefined ||
       !this.form.dirty ||
-      targetRoute.url.startsWith(`/${this.currentLang}/asset-admin/${this.asset?.assetId ?? 'new'}`)
+      targetRoute.url.startsWith(`/${this.currentLang}/asset-admin/${this.asset?.id ?? 'new'}`)
     ) {
       return true;
     }
@@ -296,9 +433,10 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
   }
 
   private initializeTabs() {
-    this.availableTabs = Object.values(Tab).filter((tab) => {
-      return tab !== Tab.LegacyData || !!(this.asset && hasHistoricalData(this.asset));
-    });
+    this.availableTabs = Object.values(Tab);
+    if (this.asset?.legacyData == null) {
+      this.availableTabs.splice(this.availableTabs.indexOf(Tab.LegacyData), 1);
+    }
   }
 
   private loadAssetFromRouteParams() {
@@ -319,64 +457,60 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
       }),
     );
   }
+
+  protected readonly Tab = Tab;
+  protected readonly EditorMode = EditorMode;
 }
 
-export type FormAssetFile = Omit<AssetFile, 'nameAlias' | 'pageCount' | 'lastModifiedAt'> & {
-  selected: boolean;
-  file?: File;
-  willBeDeleted: boolean;
+export type ExistingAssetFile = Pick<AssetFile, 'id' | 'name' | 'legalDocCode'> & {
+  shouldBeDeleted: boolean;
 };
 
-const buildForm = () => {
-  return new FormGroup({
+export type AssetFormFile =
+  | ExistingAssetFile
+  | (CreateAssetFileData & {
+      shouldBeDeleted: boolean;
+    });
+
+const makeForm = () =>
+  new FormGroup({
     general: new FormGroup({
-      workgroupId: new FormControl<number | null>(null, { validators: [Validators.required] }),
-      titlePublic: new FormControl<string>('', { validators: [Validators.required], nonNullable: true }),
-      titleOriginal: new FormControl(''),
-      creationDate: new FormControl<Date | null>(null, { validators: [Validators.required] }),
-      receiptDate: new FormControl<Date | null>(null, { validators: [Validators.required] }),
-      assetLanguages: new FormControl<Array<{ languageItemCode: string }>>([], { nonNullable: true }),
-      assetFormatItemCode: new FormControl<string>('', { validators: [Validators.required] }),
-      assetKindItemCode: new FormControl<string>('', { validators: [Validators.required] }),
-      manCatLabelRefs: new FormControl<string[]>([], { validators: [Validators.required], nonNullable: true }),
-      isNatRel: new FormControl<boolean>(false, { nonNullable: true }),
-      typeNatRels: new FormControl<string[]>([], { nonNullable: true }),
-      ids: new FormControl<AlternativeId[]>([], {
-        validators: [allAlternativeIdsComplete],
+      workgroupId: new FormControl(null as unknown as number, { validators: [Validators.required], nonNullable: true }),
+      title: new FormControl<string>('', { validators: [Validators.required], nonNullable: true }),
+      originalTitle: new FormControl(''),
+      createdAt: new FormControl<Date | null>(null, { validators: [Validators.required] }),
+      receivedAt: new FormControl<Date | null>(null, { validators: [Validators.required] }),
+      languageCodes: new FormControl<LanguageCode[]>([], { nonNullable: true }),
+      formatCode: new FormControl<LocalizedItemCode>('', { validators: [Validators.required], nonNullable: true }),
+      kindCode: new FormControl<LocalizedItemCode>('', { validators: [Validators.required], nonNullable: true }),
+      topicCodes: new FormControl<LocalizedItemCode[]>([], { validators: [Validators.required], nonNullable: true }),
+      isOfNationalInterest: new FormControl<boolean>(false, { nonNullable: true }),
+      nationalInterestTypeCodes: new FormControl<LocalizedItemCode[]>([], { nonNullable: true }),
+      identifiers: new FormControl<Array<AssetIdentifier | AssetIdentifierData>>([], {
+        validators: [validateIdentifiers],
         nonNullable: true,
       }),
     }),
-    files: new FormGroup({
-      assetFiles: new FormArray<FormControl<FormAssetFile>>([]),
-    }),
-    contacts: new FormGroup({ assetContacts: new FormArray<FormControl<AssetContact>>([]) }),
+    files: new FormArray<FormControl<AssetFormFile>>([]),
+    contacts: new FormArray<FormControl<AssetContact>>([]),
     references: new FormGroup({
-      mainAsset: new FormControl<LinkedAsset | null>(null),
-      siblingAssets: new FormControl<LinkedAsset[]>([], { nonNullable: true }),
-      subordinateAssets: new FormControl<LinkedAsset[]>([], { nonNullable: true }),
+      parent: new FormControl<LinkedAsset | null>(null),
+      siblings: new FormControl<LinkedAsset[]>([], { nonNullable: true }),
+      children: new FormControl<LinkedAsset[]>([], { nonNullable: true }),
     }),
-    geometries: new FormGroup({ studies: new FormControl<Studies>([], { nonNullable: true }) }),
-    status: new FormGroup({}),
+    geometries: new FormControl<GeometryData[]>([], { nonNullable: true }),
   });
-};
 
-export type AssetForm = ReturnType<typeof buildForm>;
+export type AssetForm = ReturnType<typeof makeForm>;
 
-export type AlternativeId = {
-  idId: number | null;
-  id: string;
-  description: string;
-};
-
-export function allAlternativeIdsComplete(control: AbstractControl): ValidationErrors | null {
-  const value = control.value as AlternativeId[];
-
+export function validateIdentifiers(control: AbstractControl): ValidationErrors | null {
+  const value = control.value as Array<AssetIdentifier | AssetIdentifierData>;
   if (!Array.isArray(value)) {
     return { invalidFormat: true };
   }
-
   const hasInvalid = value.some(
-    (item) => !item || typeof item !== 'object' || !item.id?.trim() || !item.description?.trim(),
+    (item) =>
+      !item || typeof item !== 'object' || item.value.trim().length === 0 || item.description.trim().length === 0,
   );
 
   return hasInvalid ? { incompleteAlternativeIds: true } : null;

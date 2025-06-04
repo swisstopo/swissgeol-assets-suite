@@ -1,7 +1,8 @@
+import { ContactKindCode } from '@asset-sg/shared/v2';
 import { faker } from '@faker-js/faker';
 
-export const fakeContactKindItemCode = (): string =>
-  faker.helpers.arrayElement(contactKindItems.map((item) => item.contactKindItemCode));
+export const fakeContactKindItemCode = (): ContactKindCode =>
+  faker.helpers.arrayElement(contactKindItems.map((item) => item.contactKindItemCode)) as ContactKindCode;
 
 export const contactKindItems = [
   {

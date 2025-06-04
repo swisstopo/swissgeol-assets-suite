@@ -1,5 +1,6 @@
 import { IsInt, Max, Min } from 'class-validator';
 
+// TODO attempt to replace this with `LocalDate` from ui-core
 export class LocalDate {
   static now(): LocalDate {
     return new LocalDate(new Date());
@@ -72,7 +73,7 @@ export class LocalDate {
   }
 
   toString(): string {
-    return `${this.year}-${this.month}-${this.day}`;
+    return `${this.year}-${pad(this.month)}-${pad(this.day)}`;
   }
 
   toJSON(): string {
@@ -83,3 +84,5 @@ export class LocalDate {
     return new Date(this.year, this.month - 1, this.day);
   }
 }
+
+const pad = (value: number): string => value.toString().padStart(2, '0');

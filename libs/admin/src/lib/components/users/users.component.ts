@@ -58,6 +58,10 @@ export class UsersComponent extends AbstractAdminTableComponent<User> implements
     this.store.dispatch(actions.updateUser({ user: { ...user, isAdmin: event.checked } }));
   }
 
+  public stopEvent(event: Event): void {
+    event.stopPropagation();
+  }
+
   public formatWorkgroupsTooltip(roles: User['roles']): string {
     let tooltip = '';
     for (const workgroupId of roles.keys()) {

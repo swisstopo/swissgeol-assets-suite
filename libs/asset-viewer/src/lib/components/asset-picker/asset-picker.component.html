@@ -17,11 +17,11 @@
           <li *rxFor="let asset of assets">
             <a
               asset-sg-reset
-              (click)="selectAndClose(asset.assetId)"
-              (mouseover)="assetMouseOver.emit(asset.assetId)"
+              (click)="selectAndClose(asset.id)"
+              (mouseover)="assetMouseOver.emit(asset.id)"
               (mouseout)="assetMouseOver.emit(null)"
-              [innerHTML]="asset.titlePublic"
-            ></a>
+              >{{ asset.title }}</a
+            >
           </li>
         </ul>
       </div>
