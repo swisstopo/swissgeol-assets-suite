@@ -1,5 +1,4 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import * as O from 'fp-ts/Option';
 
 import { AssetEditData } from './asset-edit.repo';
 import { PrismaService } from '@/core/prisma.service';
@@ -30,7 +29,7 @@ export class AssetEditService {
     }
 
     // Validate parent asset.
-    const assetMainId = O.toUndefined(data.patch.assetMainId);
+    const assetMainId = data.patch.assetMainId;
     if (assetMainId) {
       // Ensure that the parent is not the asset itself.
       if (assetMainId === id) {

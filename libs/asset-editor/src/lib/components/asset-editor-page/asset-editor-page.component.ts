@@ -238,10 +238,10 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
       manCatLabelRefs: general.manCatLabelRefs.value,
       isNatRel: general.isNatRel.value,
       typeNatRels: general.typeNatRels.value,
-      ids: general.ids.value.map((id) => ({ ...id, idId: O.fromNullable(id.idId) })),
+      ids: general.ids.value,
       assetFiles: filesToKeep,
       assetContacts: contacts.assetContacts.value.map((contact) => ({ contactId: contact.id, role: contact.role })),
-      assetMainId: O.fromNullable(references.mainAsset.value?.assetId),
+      assetMainId: references.mainAsset.value?.assetId ?? null,
       siblingAssetIds: references.siblingAssets.value.map((sibling) => sibling.assetId),
       studies: geometries.studies.value
         .filter((study) => !study.studyId.includes('_new'))
