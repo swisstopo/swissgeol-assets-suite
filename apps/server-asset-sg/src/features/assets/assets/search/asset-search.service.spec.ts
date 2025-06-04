@@ -29,12 +29,7 @@ import { ASSET_ELASTIC_INDEX, AssetSearchService } from './asset-search.service'
 
 import { openElasticsearchClient } from '@/core/elasticsearch';
 import { PrismaService } from '@/core/prisma.service';
-import {
-  fakeAssetPatch,
-  fakeAssetUsage,
-  fakeContact,
-  fakeUserData,
-} from '@/features/assets/asset-edit/asset-edit.fake';
+import { fakeAssetPatch, fakeContact, fakeUserData } from '@/features/assets/asset-edit/asset-edit.fake';
 import { AssetEditData, AssetEditRepo } from '@/features/assets/asset-edit/asset-edit.repo';
 import { FileRepo } from '@/features/assets/files/file.repo';
 import { StudyRepo } from '@/features/studies/study.repo';
@@ -86,8 +81,7 @@ describe(AssetSearchService, () => {
       assetContacts: asset.assetContacts,
       assetFormatItemCode: asset.assetFormatItemCode,
       assetKindItemCode: asset.assetKindItemCode,
-      internalUse: { isAvailable: asset.internalUse.isAvailable },
-      publicUse: { isAvailable: asset.publicUse.isAvailable },
+      isPublic: asset.isPublic,
       manCatLabelRefs: asset.manCatLabelRefs,
       studies: asset.studies,
     };
@@ -100,7 +94,7 @@ describe(AssetSearchService, () => {
     expect(hit.sgsId).toEqual(asset.sgsId);
     expect(hit.createDate).toEqual(asset.createDate);
     expect(hit.assetKindItemCode).toEqual(asset.assetKindItemCode);
-    expect(hit.usageCode).toEqual(makeUsageCode(asset.publicUse.isAvailable, asset.internalUse.isAvailable));
+    expect(hit.usageCode).toEqual(makeUsageCode(asset.isPublic));
     expect(hit.authorIds).toEqual([]);
     expect(hit.contactNames).toEqual([]);
     expect(hit.manCatLabelItemCodes).toEqual([]);
@@ -365,24 +359,14 @@ describe(AssetSearchService, () => {
       const asset = await createItem({
         patch: {
           ...fakeAssetPatch(),
-          publicUse: { ...fakeAssetUsage(), isAvailable: true },
-          internalUse: { ...fakeAssetUsage(), isAvailable: true },
+          isPublic: true,
         },
         user,
       });
       await createItem({
         patch: {
           ...fakeAssetPatch(),
-          publicUse: { ...fakeAssetUsage(), isAvailable: false },
-          internalUse: { ...fakeAssetUsage(), isAvailable: true },
-        },
-        user,
-      });
-      await createItem({
-        patch: {
-          ...fakeAssetPatch(),
-          publicUse: { ...fakeAssetUsage(), isAvailable: false },
-          internalUse: { ...fakeAssetUsage(), isAvailable: false },
+          isPublic: false,
         },
         user,
       });
@@ -444,7 +428,7 @@ describe(AssetSearchService, () => {
       );
       expect(stats.usageCodes).toEqual([
         {
-          value: makeUsageCode(asset.publicUse.isAvailable, asset.internalUse.isAvailable),
+          value: makeUsageCode(asset.isPublic),
           count: 1,
         },
       ]);
@@ -604,9 +588,7 @@ describe(AssetSearchService, () => {
         expect(actualAsset.contacts).toEqual([]);
         expect(actualAsset.studies).toEqual([]);
         expect(actualAsset.manCatLabelItemCodes).toEqual([]);
-        expect(actualAsset.usageCode).toEqual(
-          makeUsageCode(expectedAsset.publicUse.isAvailable, expectedAsset.internalUse.isAvailable),
-        );
+        expect(actualAsset.usageCode).toEqual(makeUsageCode(expectedAsset.isPublic));
       }
     };
 
@@ -636,9 +618,7 @@ describe(AssetSearchService, () => {
       expectedLanguageItemCodes.sort(compareBuckets);
       expect(aggs.buckets.languageItemCodes).toEqual(expectedLanguageItemCodes);
 
-      const expectedUsageCodes = makeBucket(expectedAssets, (asset) =>
-        makeUsageCode(asset.publicUse.isAvailable, asset.internalUse.isAvailable),
-      );
+      const expectedUsageCodes = makeBucket(expectedAssets, (asset) => makeUsageCode(asset.isPublic));
 
       aggs.buckets.usageCodes.sort(compareBuckets);
       expectedUsageCodes.sort(compareBuckets);

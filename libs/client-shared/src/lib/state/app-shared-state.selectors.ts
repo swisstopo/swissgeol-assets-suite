@@ -1,4 +1,4 @@
-import { Contact, emptyValueItem, ReferenceData, valueItemRecordToArray } from '@asset-sg/shared';
+import { Contact, ReferenceData, valueItemRecordToArray } from '@asset-sg/shared';
 import * as RD from '@devexperts/remote-data-ts';
 import { getRouterSelectors } from '@ngrx/router-store';
 import { createSelector } from '@ngrx/store';
@@ -51,10 +51,8 @@ const _makeReferenceDataVM = (referenceData: ReferenceData) => ({
   assetKindItemArray: valueItemRecordToArray(referenceData.assetKindItems),
   languageItemArray: valueItemRecordToArray(referenceData.languageItems),
   manCatLabelItemsArray: valueItemRecordToArray(referenceData.manCatLabelItems),
-  statusAssetUseItemsArray: valueItemRecordToArray(referenceData.statusAssetUseItems),
   natRelItemsArray: valueItemRecordToArray(referenceData.natRelItems),
   contactKindItemsArray: valueItemRecordToArray(referenceData.contactKindItems),
-  statusWorkItemsArray: valueItemRecordToArray(referenceData.statusWorkItems),
   contactsArray: pipe(
     referenceData.contacts,
     R.toArray,
@@ -71,23 +69,15 @@ export const emptyReferenceDataVM: ReferenceDataVM = {
   legalDocItems: {},
   manCatLabelItems: {},
   natRelItems: {},
-  statusAssetUseItems: {
-    tobechecked: emptyValueItem,
-    underclarification: emptyValueItem,
-    approved: emptyValueItem,
-  },
-  statusWorkItems: {},
   contactKindItems: {},
   contacts: {},
   assetFormItemArray: [],
   assetKindItemArray: [],
   languageItemArray: [],
   manCatLabelItemsArray: [],
-  statusAssetUseItemsArray: [],
   natRelItemsArray: [],
   contactKindItemsArray: [],
   contactsArray: [],
-  statusWorkItemsArray: [],
 };
 
 export const selectRDReferenceDataVM = createSelector(
@@ -99,10 +89,8 @@ export const selectRDReferenceDataVM = createSelector(
       assetKindItemArray: valueItemRecordToArray(referenceData.assetKindItems),
       languageItemArray: valueItemRecordToArray(referenceData.languageItems),
       manCatLabelItemsArray: valueItemRecordToArray(referenceData.manCatLabelItems),
-      statusAssetUseItemsArray: valueItemRecordToArray(referenceData.statusAssetUseItems),
       natRelItemsArray: valueItemRecordToArray(referenceData.natRelItems),
       contactKindItemsArray: valueItemRecordToArray(referenceData.contactKindItems),
-      statusWorkItemsArray: valueItemRecordToArray(referenceData.statusWorkItems),
       contactsArray: pipe(
         referenceData.contacts,
         R.toArray,

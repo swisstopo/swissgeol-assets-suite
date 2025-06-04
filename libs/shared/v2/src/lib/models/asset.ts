@@ -21,7 +21,6 @@ export interface AssetInfo extends Model<AssetId> {
 
   createdAt: LocalDate;
   receivedAt: LocalDate;
-  lastProcessedAt: Date;
 }
 
 export interface AssetLinks {
@@ -41,13 +40,11 @@ export interface AssetLinksData {
 export interface AssetDetails {
   sgsId: number | null;
   municipality: string | null;
-  processor: string | null;
   isNatRel: boolean;
   infoGeol: InfoGeol;
-  usage: AssetUsages;
-  statuses: WorkStatus[];
   studies: AssetStudy[];
   workgroupId: number;
+  isPublic: boolean;
 }
 
 export interface AssetUsages {
@@ -57,12 +54,11 @@ export interface AssetUsages {
 
 export type Asset = AssetInfo & AssetDetails;
 
-type NonDataKeys = 'processor' | 'identifiers' | 'studies' | 'statuses' | 'links' | 'lastProcessedAt' | 'files';
+type NonDataKeys = 'identifiers' | 'studies' | 'statuses' | 'links' | 'files';
 
 export interface AssetData extends Omit<Data<Asset>, NonDataKeys> {
   links: AssetLinksData;
   identifiers: (AssetIdentifier | AssetIdentifierData)[];
-  statuses: (WorkStatus | WorkStatusData)[];
   studies: (AssetStudy | StudyData)[];
 }
 
@@ -122,12 +118,6 @@ export interface FileReference {
   id: number;
   name: string;
   size: number;
-}
-
-export enum UsageCode {
-  Public = 'public',
-  Internal = 'internal',
-  UseOnRequest = 'useOnRequest',
 }
 
 export interface AssetStudy extends Model<AssetStudyId> {

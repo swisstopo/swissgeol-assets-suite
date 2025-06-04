@@ -27,8 +27,7 @@ export interface AssetSearchResultItem {
   assetContacts: AssetSearchResultItemContact[];
   assetFormatItemCode: string;
   manCatLabelRefs: string[];
-  internalUse: AssetSearchResultItemUse;
-  publicUse: AssetSearchResultItemUse;
+  isPublic: boolean;
 }
 
 export interface AssetSearchResult {
@@ -98,12 +97,8 @@ export class AssetSearchResultItemDTO implements AssetSearchResultItem {
   manCatLabelRefs!: string[];
 
   @Expose()
-  @Type(() => AssetSearchResultItemUseDTO)
-  internalUse!: AssetSearchResultItemUseDTO;
-
-  @Expose()
-  @Type(() => AssetSearchResultItemUseDTO)
-  publicUse!: AssetSearchResultItemUse;
+  @IsBoolean()
+  isPublic!: boolean;
 }
 
 export class AssetSearchResultDTO implements AssetSearchResult {

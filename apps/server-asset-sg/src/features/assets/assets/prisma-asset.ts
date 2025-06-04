@@ -3,12 +3,10 @@ import {
   AssetInfo,
   AssetStudy,
   AssetStudyId,
-  AssetUsage,
   ContactAssignmentRole,
   LinkedAsset,
   LocalDate,
   StudyType,
-  UsageStatusCode,
 } from '@asset-sg/shared/v2';
 import { Prisma } from '@prisma/client';
 import { satisfy } from '@/utils/define';
@@ -16,17 +14,10 @@ import { satisfy } from '@/utils/define';
 type SelectedAssetInfo = Prisma.AssetGetPayload<{ select: typeof assetInfoSelection }>;
 type SelectedAsset = Prisma.AssetGetPayload<{ select: typeof assetSelection }>;
 type SelectedLinkedAsset = Prisma.AssetGetPayload<{ select: typeof linkedAssetSelection }>;
-type SelectedUsage = Prisma.InternalUseGetPayload<{ select: typeof usageSelection }>;
 
 const linkedAssetSelection = satisfy<Prisma.AssetSelect>()({
   assetId: true,
   titlePublic: true,
-});
-
-const usageSelection = satisfy<Prisma.PublicUseSelect & Prisma.InternalUseSelect>()({
-  isAvailable: true,
-  statusAssetUseItemCode: true,
-  startAvailabilityDate: true,
 });
 
 export const assetInfoSelection = satisfy<Prisma.AssetSelect>()({
@@ -96,7 +87,6 @@ export const assetInfoSelection = satisfy<Prisma.AssetSelect>()({
   },
   createDate: true,
   receiptDate: true,
-  lastProcessedDate: true,
   workgroupId: true,
 });
 
@@ -104,17 +94,11 @@ export const assetSelection = satisfy<Prisma.AssetSelect>()({
   ...assetInfoSelection,
   sgsId: true,
   municipality: true,
-  processor: true,
   isNatRel: true,
   geolDataInfo: true,
   geolContactDataInfo: true,
   geolAuxDataInfo: true,
-  publicUse: {
-    select: usageSelection,
-  },
-  internalUse: {
-    select: usageSelection,
-  },
+  isPublic: true,
   statusWorks: {
     select: {
       statusWorkId: true,
@@ -163,29 +147,19 @@ export const parseAssetInfoFromPrisma = (data: SelectedAssetInfo): AssetInfo => 
   })),
   createdAt: LocalDate.fromDate(data.createDate),
   receivedAt: LocalDate.fromDate(data.receiptDate),
-  lastProcessedAt: data.lastProcessedDate,
 });
 
 export const parseAssetFromPrisma = (data: SelectedAsset): Asset => ({
   ...parseAssetInfoFromPrisma(data),
   sgsId: data.sgsId,
   municipality: data.municipality,
-  processor: data.processor,
   isNatRel: data.isNatRel,
   infoGeol: {
     main: data.geolDataInfo,
     contact: data.geolContactDataInfo,
     auxiliary: data.geolAuxDataInfo,
   },
-  usage: {
-    public: parseUsage(data.publicUse),
-    internal: parseUsage(data.internalUse),
-  },
-  statuses: data.statusWorks.map((it) => ({
-    id: it.statusWorkId,
-    itemCode: it.statusWorkItemCode,
-    createdAt: it.statusWorkDate,
-  })),
+  isPublic: data.isPublic,
   studies: data.allStudies.map((it) => {
     const { type, id } = parseStudyId(it.studyId);
     return {
@@ -200,12 +174,6 @@ export const parseAssetFromPrisma = (data: SelectedAsset): Asset => ({
 const parseLinkedAsset = (data: SelectedLinkedAsset): LinkedAsset => ({
   id: data.assetId,
   title: data.titlePublic,
-});
-
-const parseUsage = (data: SelectedUsage): AssetUsage => ({
-  isAvailable: data.isAvailable,
-  statusCode: data.statusAssetUseItemCode as UsageStatusCode,
-  availableAt: data.startAvailabilityDate == null ? null : LocalDate.fromDate(data.startAvailabilityDate),
 });
 
 const parseStudyId = (studyId: string): { type: StudyType; id: AssetStudyId } => {

@@ -56,18 +56,14 @@ export class StudyRepo implements ReadRepo<Study, StudyId> {
   }
 
   private async query(condition: Prisma.Sql): Promise<Study[]> {
-    type RawStudy = Omit<Study, 'center'> & { centerX: number; centerY: number };
+    type RawStudy = Omit<Study, 'center' | 'isPublic'> & { centerX: number; centerY: number; isPublic: boolean };
     const studies: RawStudy[] = await this.prisma.$queryRaw`
-      SELECT s.study_id                AS "id",
-             s.asset_id                AS "assetId",
-             s.geometry_type           AS "geometryType",
+      SELECT s.study_id       AS "id",
+             s.asset_id       AS "assetId",
+             s.geometry_type  AS "geometryType",
              ST_X(s.centroid) AS "centerX",
              ST_Y(s.centroid) AS "centerY",
-             CASE
-               WHEN s.is_public THEN 0
-               WHEN NOT s.is_public AND s.is_internal THEN 1
-               WHEN NOT s.is_public AND NOT s.is_internal THEN 2
-               END                     AS "accessType"
+             s.is_public      AS "isPublic"
       FROM public.all_study s
         ${condition}
     `;
@@ -76,21 +72,13 @@ export class StudyRepo implements ReadRepo<Study, StudyId> {
         ...study,
         // todo #553: fix reversed coordinates in frontend
         center: { y: study.centerX, x: study.centerY },
-        accessType: this.parseAccessType(study.accessType),
+        accessType: this.parseAccessType(study.isPublic),
       };
     });
   }
 
-  private parseAccessType(accessType: number): StudyAccessType {
-    switch (accessType) {
-      case 0:
-        return StudyAccessType.Public;
-      case 1:
-        return StudyAccessType.Internal;
-      case 2:
-      default:
-        return StudyAccessType.Restricted;
-    }
+  private parseAccessType(isPublic: boolean): StudyAccessType {
+    return isPublic ? StudyAccessType.Public : StudyAccessType.Internal;
   }
 }
 

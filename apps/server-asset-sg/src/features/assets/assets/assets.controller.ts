@@ -1,13 +1,4 @@
-import {
-  Asset,
-  AssetData,
-  AssetId,
-  UsageStatusCode,
-  User,
-  Role,
-  AssetPolicy,
-  AssetDataSchema,
-} from '@asset-sg/shared/v2';
+import { Asset, AssetData, AssetDataSchema, AssetId, AssetPolicy, Role, User } from '@asset-sg/shared/v2';
 import {
   Controller,
   Delete,
@@ -43,7 +34,7 @@ export class AssetsController {
   async create(@ParseBody(AssetDataSchema) data: AssetData, @CurrentUser() user: User): Promise<Asset> {
     authorize(AssetPolicy, user).canCreate();
     validateData(user, data);
-    return await this.assetRepo.create({ ...data, processor: user });
+    return await this.assetRepo.create({ ...data });
   }
 
   @Put('/:id')
@@ -60,7 +51,7 @@ export class AssetsController {
     authorize(AssetPolicy, user).canUpdate(record);
     validateData(user, data, record);
 
-    const asset = await this.assetRepo.update(record.id, { ...data, processor: user });
+    const asset = await this.assetRepo.update(record.id, { ...data });
     if (asset === null) {
       throw new HttpException('not found', 404);
     }
@@ -89,17 +80,5 @@ const validateData = (user: User, data: AssetData, record?: Asset) => {
       "Can't move asset to a workgroup for which the user is not an editor",
       HttpStatus.FORBIDDEN,
     );
-  }
-
-  // Specialization of the policy where we disallow the internal status to be changed to anything else than
-  // `tobechecked` if the current user is not a master-editor for the asset's current or future workgroup.
-  const hasInternalUseChanged = record == null || record.usage.internal.statusCode !== data.usage.internal.statusCode;
-  if (
-    hasInternalUseChanged &&
-    data.usage.internal.statusCode !== UsageStatusCode.ToBeChecked &&
-    ((record != null && !policy.hasRole(Role.Reviewer, record.workgroupId)) ||
-      !policy.hasRole(Role.Reviewer, data.workgroupId))
-  ) {
-    throw new HttpException("Changing the asset's status is not allowed", HttpStatus.FORBIDDEN);
   }
 };

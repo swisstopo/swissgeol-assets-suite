@@ -55,14 +55,14 @@ export class SyncExternService {
 
     const assetsToCopy = sourceAssets.filter((asset) => !destinationAssetIds.has(asset.assetId));
 
-    log(`Found ${assetsToCopy.length} assets to copy`);
+    log(`Found ${assetsToCopy.length} assets to copy`, 'batch');
 
     for (let i = 0; i < assetsToCopy.length; i += this.batchSize) {
       const batch = assetsToCopy.slice(i, i + this.batchSize);
       await this.destinationPrisma.asset.createMany({
         data: batch,
       });
-      log(`Copied ${batch.length} assets`);
+      log(`Copied ${batch.length} assets`, 'batch');
     }
 
     log('Data export to extern completed');

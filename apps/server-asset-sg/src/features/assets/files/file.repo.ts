@@ -62,8 +62,6 @@ export class FileRepo
             fileId: id,
           },
         },
-        lastProcessedDate: new Date(),
-        processor: data.user.email,
       },
     });
     return {

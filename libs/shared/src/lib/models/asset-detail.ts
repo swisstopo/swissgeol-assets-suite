@@ -43,7 +43,6 @@ export const BaseAssetDetail = {
   titlePublic: C.string,
   titleOriginal: C.string,
   createDate: DateId,
-  lastProcessedDate: DateId,
   usageCode: UsageCode,
   assetKindItemCode: C.string,
   assetFormatItemCode: C.string,

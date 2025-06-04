@@ -6,16 +6,7 @@ const body = JSON.stringify({
   titleOriginal: 'CypressTestAsset',
   createDate: 20240902,
   receiptDate: 20240912,
-  publicUse: {
-    isAvailable: false,
-    statusAssetUseItemCode: 'tobechecked',
-    startAvailabilityDate: null,
-  },
-  internalUse: {
-    isAvailable: true,
-    statusAssetUseItemCode: 'tobechecked',
-    startAvailabilityDate: null,
-  },
+  isPublic: false,
   assetKindItemCode: 'basemap',
   assetFormatItemCode: 'unknown',
   isNatRel: true,

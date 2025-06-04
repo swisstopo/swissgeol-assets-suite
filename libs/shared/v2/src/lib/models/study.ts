@@ -5,7 +5,6 @@ export type StudyGeometryType = 'Point' | 'Line' | 'Polygon';
 export enum StudyAccessType {
   Public,
   Internal,
-  Restricted,
 }
 
 export interface Study {

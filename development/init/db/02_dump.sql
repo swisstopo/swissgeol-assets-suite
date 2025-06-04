@@ -128,36 +128,3 @@ mineralRessources	No-GeolCode-specified	Mineralressources	Mineralische Rohstoffe
 prospection	No-GeolCode-specified	Prospection	Prospektion (z.B. Rohstoffe)	Prospection (p. ex. matières premières)	Prospezione (ad es. materie prime)	Prospecting (e.g. raw materials)	Assets on the topic of prospecting, e.g. of mineral raw materials	Assets zum Thema Prospektion, wie z.B. von mineralischen Rohstoffen	Assets sur le thème de la prospection, p. ex. matières premières minérales	Elementi sul tema della prospezione, ad esempio di materie prime minerali	Assets on the topic of prospecting, e.g. of mineral raw materials
 exploration	No-GeolCode-specified	Exploration	Exploration	Exploration	Esplorazione	Exploration	Assets on the topic of exploration, e.g. of minerals and raw materials	Assets zum Thema Exploration, wie z.B. von mineralischen Rohstoffen	Assets sur le thème de l'exploration, p. ex. ressources minérales	Elementi sul tema dell'esplorazione, ad es. di materie prime minerali	Assets on the topic of exploration, e.g. of minerals and raw materials
 \.
-
-
---
--- Data for Name: status_asset_use_item; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public.status_asset_use_item (status_asset_use_item_code, geol_code, name, name_de, name_fr, name_it, name_en, description, description_de, description_fr, description_it, description_en) FROM stdin;
-tobechecked	No-GeolCode-specified	to be checked	Zu prüfen	À vérifier	Da testare	To be checked	Terms of use of the asset need to be checked	Nutzungsbedingungen des Assets müssen geprüft werden	Les conditions d'utilisation de l'asset doivent être vérifiées	Le condizioni di utilizzo dell'elemento devono essere valutate.	Terms of use of the asset need to be checked
-underclarification	No-GeolCode-specified	under clarification	In Prüfung	En cours de vérification	In esame	Currently being checked	Terms of use of the asset are currently being checked	Nutzungsbedingungen des Assets werden zurzeit geprüft	Les conditions d'utilisation de l'asset sont en cours de vérification	Le condizioni di utilizzo dell'elemento sono attualmente in fase di valutazione	Terms of use of the asset are currently being checked
-approved	No-GeolCode-specified	approved	Finalisiert	Finalisé	Finalizzato	Finalised	Terms of use of the asset are available and confirmed	Nutzungsbedingungen des Assets liegen vor und sind bestätigt	Les conditions d'utilisation de l'asset sont disponibles et confirmées	Le condizioni di utilizzo dell'elemento sono disponibili e confermate	Terms of use of the asset are available and confirmed
-\.
-
-
---
--- Data for Name: status_work_item; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public.status_work_item (status_work_item_code, geol_code, name, name_de, name_fr, name_it, name_en, description, description_de, description_fr, description_it, description_en) FROM stdin;
-initiateAsset	No-GeolCode-specified	Initially edited	Ersterfassung Asset	Saisie initiale	Acquisizione iniziale dell'elemento	Initial capture asset	Asset is derived from initial capture in the system	Ersterfassung des Assets im System	Première saisie de l'asset dans le système	L'elemento é inserito per la prima volta nel sistema	Asset is derived from initial capture in the system
-edited	No-GeolCode-specified	Edited	Bearbeitet	Traité dans le système	Modificato	Processed	Asset is processed in the system	Asset ist im System bearbeitet	L'asset a été traité dans le système	L'elemento é elaborato dal sistema	Asset is processed in the system
-importedOld	No-GeolCode-specified	Old data imported	Importierte Altdaten	Import d'anciennes données	Importazione di dati legacy	Imported legacy data	Asset originates from imported legacy data (InfoGeol)	Asset stammt von importieren Altdaten (InfoGeol) ab	L'asset provient de données anciennes importées (InfoGeol)	L'elemento proviene da dati legacy importati (InfoGeol)	Asset originates from imported legacy data (InfoGeol)
-docClassified	No-GeolCode-specified	Document classified	Dokument klassifiziert	Document classé	Documento classificato	Document classified	Asset is assigned to a thematic class	Asset ist einer thematischen Klasse zugewiesen	L'asset a été attribué à une classe thématique	L'elemento è assegnato a una classe tematica	Asset is assigned to a thematic class
-objectsExtracted	No-GeolCode-specified	Objects extracted	Objekte extrahiert	Objets extraits	Oggetti estratti	Objects extracted	Objects extracted from asset	Aus Asset wurden Objekte extrahiert	Des objets ont été extraits de l'asset	Degli oggetti sono stati estratti dall'elemento	Objects extracted from asset
-OCRprocessed	No-GeolCode-specified	OCR processed	OCR prozessiert	Traité par OCR	Elaborazione OCR	OCR processed	OCR has been performed for asset	Für Asset wurde OCR ausgeführt	L'asset a été traité par OCR	L'OCR è stato eseguito per gli elementi	OCR has been performed for asset
-importedDigi	No-GeolCode-specified	Imported digitisation	Importierte Digitalisierung	Numérisation importée	Digitalizzazione importata	Imported digitised	Asset is derived from imported digital data (digi.swissgeol.ch)	Asset stammt von importierten digitalen Daten ab (digi.swissgeol.ch)	L'asset provient de données numériques importées (digi.swissgeol.ch)	L'elemento deriva da dati digitali importati (digi.swissgeol.ch)	Asset is derived from imported digital data (digi.swissgeol.ch)
-published	No-GeolCode-specified	published	Publiziert	Publié	Pubblicato	Published	Asset is published	Asset ist publiziert	L'asset est publié	L'elemento è pubblicato	Asset is published
-\.
-
-
---
--- PostgreSQL database dump complete
---
-

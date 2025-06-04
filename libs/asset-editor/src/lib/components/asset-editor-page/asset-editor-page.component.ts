@@ -252,17 +252,7 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
       newStudies: geometries.studies.value
         .filter((study) => study.studyId.includes('_new'))
         .map((newStudy) => GeomFromGeomText.encode(newStudy.geom)),
-      internalUse: asset?.internalUse ?? {
-        isAvailable: true,
-        startAvailabilityDate: O.fromNullable(dateIdFromDate(new Date())),
-        statusAssetUseItemCode: 'approved',
-      },
-      publicUse: asset?.publicUse ?? {
-        isAvailable: true,
-        startAvailabilityDate: O.fromNullable(dateIdFromDate(new Date())),
-        statusAssetUseItemCode: 'approved',
-      },
-      newStatusWorkItemCode: O.fromNullable(asset?.statusWorks[0].statusWorkItemCode),
+      isPublic: false, // todo @TIL-EBP: this should be changed dynamically
     };
     this.isLoading = true;
     this.subscriptions.add(

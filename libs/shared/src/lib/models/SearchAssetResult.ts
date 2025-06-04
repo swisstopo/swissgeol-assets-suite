@@ -1,7 +1,7 @@
 import { ADTType, makeADT, ofType } from '@morphic-ts/adt';
 import * as C from 'io-ts/Codec';
 import * as D from 'io-ts/Decoder';
-import { Equals, assert } from 'tsafe';
+import { assert, Equals } from 'tsafe';
 
 import { DateId } from './DateStruct';
 import { StudyDTOs } from './study-dto';

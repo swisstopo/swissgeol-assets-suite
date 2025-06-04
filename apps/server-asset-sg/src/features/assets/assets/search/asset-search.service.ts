@@ -637,16 +637,7 @@ export class AssetSearchService {
         assetKindItemCode: true,
         assetFormatItemCode: true,
         assetLanguages: true,
-        internalUse: {
-          select: {
-            isAvailable: true,
-          },
-        },
-        publicUse: {
-          select: {
-            isAvailable: true,
-          },
-        },
+        isPublic: true,
         allStudies: {
           select: {
             studyId: true,
@@ -689,7 +680,7 @@ export class AssetSearchService {
           })),
           studies: entity.allStudies,
           manCatLabelItemCodes: entity.manCatLabelRefs.map((ref) => ref.manCatLabelItemCode),
-          usageCode: makeUsageCode(entity.publicUse.isAvailable, entity.internalUse.isAvailable),
+          usageCode: makeUsageCode(entity.isPublic),
         };
       }),
     };

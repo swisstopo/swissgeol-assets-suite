@@ -47,16 +47,6 @@ export class FileService {
 
     const isDbOk = await this.fileRepo.delete(id);
 
-    // Update the processor fields on the file's asset.
-    //
-    // Note that we do this regardless of `isDbOk`, as in some cases,
-    // that value is `false` due to the file still being in use in other assets.
-    this.prisma.asset.update({
-      where: { assetId: id.assetId },
-      data: { lastProcessedDate: new Date(), processor: user.email },
-      select: { assetId: true },
-    });
-
     if (!isDbOk) {
       return false;
     }
