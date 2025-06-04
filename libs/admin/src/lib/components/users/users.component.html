@@ -74,6 +74,7 @@
           <mat-checkbox
             [checked]="user.isAdmin"
             (change)="updateIsAdminStatus(user, $event)"
+            (click)="stopEvent($event)"
             [disabled]="user.id === currentUser?.id"
             color="primary"
           ></mat-checkbox>

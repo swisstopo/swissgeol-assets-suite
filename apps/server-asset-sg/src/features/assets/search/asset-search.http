@@ -1,0 +1,24 @@
+### Search assets
+POST {{host}}/api/assets/search?limit=10000
+Content-Type: application/json
+Authorization: Impersonate {{user}}
+
+{
+  "text": "n1"
+}
+
+### Show assets search stats
+POST {{host}}/api/assets/search/stats
+Content-Type: application/json
+Authorization: Impersonate {{user}}
+
+{
+}
+
+### Show assets search stats
+GET {{host}}/api/assets/40628
+Content-Type: application/json
+Authorization: Impersonate {{user}}
+
+{
+}

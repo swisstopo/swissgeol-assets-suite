@@ -1,130 +1,188 @@
+import { AssetFile, UpdateAssetFileData } from './asset-file';
+import { AssetIdentifier, AssetIdentifierData } from './asset-identifier';
 import { LocalDate } from './base/local-date';
-import { Data, Model } from './base/model';
-import { StudyType } from './study';
-
-// `usageCode` will need to be determined in the frontend - it is no longer included here.
-// See `makeUsageCode`.
-
-export interface AssetInfo extends Model<AssetId> {
-  title: string;
-  originalTitle: string | null;
-
-  kindCode: string;
-  formatCode: string;
-  identifiers: AssetIdentifier[];
-  languageCodes: string[];
-  contactAssignments: ContactAssignment[];
-  manCatLabelCodes: string[];
-  natRelCodes: string[];
-  links: AssetLinks;
-  files: FileReference[];
-
-  createdAt: LocalDate;
-  receivedAt: LocalDate;
-}
-
-export interface AssetLinks {
-  parent: LinkedAsset | null;
-  children: LinkedAsset[];
-  siblings: LinkedAsset[];
-}
-
-export interface AssetLinksData {
-  parent: AssetId | null;
-  siblings: AssetId[];
-}
-
-// Detailed data about an asset.
-// These are the parts of `Asset` that were previously only part of `AssetEdit`.
-// They are only visible on the asset edit page.
-export interface AssetDetails {
-  sgsId: number | null;
-  municipality: string | null;
-  isNatRel: boolean;
-  infoGeol: InfoGeol;
-  studies: AssetStudy[];
-  workgroupId: number;
-  isPublic: boolean;
-}
-
-export interface AssetUsages {
-  public: AssetUsage;
-  internal: AssetUsage;
-}
-
-export type Asset = AssetInfo & AssetDetails;
-
-type NonDataKeys = 'identifiers' | 'studies' | 'statuses' | 'links' | 'files';
-
-export interface AssetData extends Omit<Data<Asset>, NonDataKeys> {
-  links: AssetLinksData;
-  identifiers: (AssetIdentifier | AssetIdentifierData)[];
-  studies: (AssetStudy | StudyData)[];
-}
-
-export interface InfoGeol {
-  main: string | null;
-  contact: string | null;
-  auxiliary: string | null;
-}
-
-export interface AssetIdentifier extends Model<AssetIdentifierId> {
-  name: string;
-  description: string;
-}
-
-export type AssetIdentifierId = number;
-export type AssetIdentifierData = Data<AssetIdentifier>;
+import { Model } from './base/model';
+import { AssetContact } from './contact';
+import { CreateGeometryData, GeometryData } from './geometry';
+import { LocalizedItemCode } from './localized-item';
+import { LanguageCode } from './reference-data';
+import { UserId } from './user';
+import { WorkgroupId } from './workgroup';
 
 export type AssetId = number;
 
-export interface AssetUsage {
-  isAvailable: boolean;
-  statusCode: UsageStatusCode;
-  availableAt: LocalDate | null;
-}
-
-export enum UsageStatusCode {
-  ToBeChecked = 'tobechecked',
-  UnderClarification = 'underclarification',
-  Approved = 'approved',
-}
-
-export interface ContactAssignment {
-  contactId: number;
-  role: ContactAssignmentRole;
-}
-
-export enum ContactAssignmentRole {
-  Author = 'author',
-  Initiator = 'initiator',
-  Supplier = 'supplier',
-}
-
-export interface LinkedAsset {
-  id: AssetId;
+export interface Asset extends Model<AssetId> {
+  /**
+   * DB: `title_public`
+   */
   title: string;
+
+  /**
+   * DB: `title_original`
+   */
+  originalTitle: string | null;
+
+  /**
+   * DB: `is_nat_rel`
+   */
+  isOfNationalInterest: boolean;
+
+  /**
+   * DB: `is_public`
+   */
+  isPublic: boolean;
+
+  /**
+   * Legacy data.
+   *
+   * Is empty when the asset has no such data.
+   * Note that new assets do not get legacy data,
+   * and always have this set to `null`.
+   */
+  legacyData: AssetLegacyData | null;
+
+  /**
+   * DB: `asset_format_item_code`
+   */
+  formatCode: LocalizedItemCode;
+
+  /**
+   * DB: `asset_kind_item_code`
+   */
+  kindCode: LocalizedItemCode;
+
+  /**
+   * DB: `asset_language` table
+   */
+  languageCodes: LanguageCode[];
+
+  /**
+   * DB: `type_nat_rel` table
+   */
+  nationalInterestTypeCodes: LocalizedItemCode[];
+
+  /**
+   * DB: `man_cat_label_ref` table
+   */
+  topicCodes: LocalizedItemCode[];
+
+  /**
+   * DB: `id` table
+   */
+  identifiers: AssetIdentifier[];
+
+  /**
+   * DB: `asset_file` table
+   */
+  files: AssetFile[];
+
+  /**
+   * DB: `asset_contact` table
+   */
+  contacts: AssetContact[];
+
+  /**
+   * DB: `asset_main_id`
+   */
+  parent: LinkedAsset | null;
+
+  /**
+   * DB: `asset_main_id`
+   */
+  children: LinkedAsset[];
+
+  /**
+   * DB: `asset_x_asset_y` table
+   */
+  siblings: LinkedAsset[];
+
+  /**
+   * DB: `workgroup_id`
+   */
+  workgroupId: WorkgroupId;
+
+  /**
+   * DB: `creator_id`
+   */
+  creatorId: UserId | null;
+
+  /**
+   * DB: `create_date`
+   */
+  createdAt: LocalDate;
+
+  /**
+   * DB: `receipt_date`
+   */
+  receivedAt: LocalDate;
 }
 
-export interface WorkStatus extends Model<number> {
-  itemCode: WorkStatusCode;
-  createdAt: Date;
+export interface AssetLegacyData {
+  /**
+   * DB: `sgs_id`
+   */
+  sgsId: number | null;
+
+  /**
+   * DB: `geol_data_info`
+   */
+  data: string | null;
+
+  /**
+   * DB: `geol_contact_data_info`
+   */
+  contactData: string | null;
+
+  /**
+   * DB: `geol_aux_data_info`
+   */
+  auxiliaryData: string | null;
+
+  /**
+   * DB: `municipality`
+   */
+  municipality: string | null;
 }
 
-export type WorkStatusCode = string;
-export type WorkStatusData = Data<WorkStatus>;
+export type LinkedAsset = Pick<Asset, 'id' | 'title'>;
 
-export interface FileReference {
-  id: number;
-  name: string;
-  size: number;
+// TODO The following fields exist in the DB, but are not mapped into the asset model:
+//      - url (always `null`)
+//      - locationAnalog
+//      - textBody (always `null`)
+//      - remark (always `null`)
+//      - author_biblio_id (always `null`)
+//      - source_project (always `null`)
+//      - description (always `null`)
+//      - isExtract
+
+// TODO We could consider extracting `AssetLegacyData` into its own table,
+//      as all its fields will be `null` for all new assets.
+
+// TODO There are only 2 assets with an entry in `type_nat_rel` and `is_nat_rel = FALSE`.
+//      I would assume that whenever a `type_nat_rel` exists, `is_nat_rel` should be true.
+//      This would enable use to remove the `is_nat_rel` field.
+
+type OmittedDataKeys = 'id' | 'legacyData' | 'children' | 'creatorId' | 'files';
+
+export type AssetData = {
+  [K in keyof Omit<Asset, OmittedDataKeys>]: AssetDataValueMapping<Asset[K]>;
+};
+
+type AssetDataValueMapping<V> =
+  V extends Array<infer E>
+    ? Array<AssetDataValueMapping<E>>
+    : V extends LinkedAsset
+      ? AssetId
+      : V extends AssetIdentifier
+        ? AssetIdentifier | AssetIdentifierData
+        : V;
+
+export interface CreateAssetData extends AssetData {
+  geometries: CreateGeometryData[];
 }
 
-export interface AssetStudy extends Model<AssetStudyId> {
-  geom: string;
-  type: StudyType;
+export interface UpdateAssetData extends AssetData {
+  geometries: GeometryData[];
+  files: UpdateAssetFileData[];
 }
-
-export type StudyData = Data<AssetStudy>;
-
-export type AssetStudyId = number;

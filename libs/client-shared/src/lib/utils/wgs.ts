@@ -1,7 +1,14 @@
 import { LV95, LV95X, LV95Y } from '@asset-sg/shared';
+import { Coordinate } from '@asset-sg/shared/v2';
 import { toLonLat as _toLonLat } from 'ol/proj';
 
 import { WGS, WGSLat, WGSLng, isoWGSLat, isoWGSLng } from '../models';
+
+export const coordinateToWGS = (coordinate: Coordinate): WGS => {
+  const y = (coordinate.y - 2000000) as LV95Y;
+  const x = (coordinate.x - 1000000) as LV95X;
+  return { lng: lv95ToWGSLng(y, x), lat: lv95ToWGSLat(y, x) };
+};
 
 export const lv95ToWGS = (lv95: LV95): WGS => {
   const y = (lv95.y - 2000000) as LV95Y;

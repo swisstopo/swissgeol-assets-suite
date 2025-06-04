@@ -14,4 +14,5 @@ Given('Test data is imported', () => {
     expect(result.code).to.eq(0); // Asserts that the command ran successfully
   });
   cy.visit('/de');
+  cy.wait(1_000);
 });

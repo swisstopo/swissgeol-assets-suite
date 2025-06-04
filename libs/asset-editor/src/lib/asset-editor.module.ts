@@ -44,7 +44,6 @@ import {
   DrawerPanelComponent,
   FileNamePipe,
   fromAppShared,
-  MatDateIdModule,
   PageHeaderComponent,
   SelectComponent,
   SelectOptionComponent,
@@ -54,8 +53,6 @@ import {
   TextAreaComponent,
   TextInputComponent,
   UsernameComponent,
-  ValueItemDescriptionPipe,
-  ValueItemNamePipe,
   ViewChildMarker,
 } from '@asset-sg/client-shared';
 import { isNotNull } from '@asset-sg/core';
@@ -71,7 +68,6 @@ import { PushModule } from '@rx-angular/template/push';
 import { SwissgeolCoreModule } from '@swisstopo/swissgeol-ui-core-angular';
 import { de } from 'date-fns/locale/de';
 import { combineLatest, filter, map } from 'rxjs';
-import { AssetEditorIdFormComponent } from './components/asset-editor-id-form/asset-editor-id-form.component';
 import { AssetEditorIdListComponent } from './components/asset-editor-id-list/asset-editor-id-list.component';
 import { AssetEditorLaunchComponent } from './components/asset-editor-launch/asset-editor-launch.component';
 import { AssetEditorNavigationComponent } from './components/asset-editor-navigation/asset-editor-navigation.component';
@@ -102,7 +98,6 @@ export const canLeaveEdit: CanDeactivateFn<AssetEditorPageComponent> = (componen
     LinkContactDialogComponent,
     DialogWrapperComponent,
     ManageContactDialogComponent,
-    AssetEditorIdFormComponent,
     AssetEditorIdListComponent,
     AssetEditorLaunchComponent,
     AssetEditorSyncComponent,
@@ -187,8 +182,6 @@ export const canLeaveEdit: CanDeactivateFn<AssetEditorPageComponent> = (componen
     DialogModule,
     A11yModule,
 
-    ValueItemNamePipe,
-    ValueItemDescriptionPipe,
     DatePipe,
     DateTimePipe,
     FileNamePipe,
@@ -203,7 +196,6 @@ export const canLeaveEdit: CanDeactivateFn<AssetEditorPageComponent> = (componen
     MatAutocompleteModule,
     MatCheckboxModule,
     MatInputModule,
-    MatDateIdModule,
     MatDatepickerModule,
     MatFormFieldModule,
     MatMenuModule,
