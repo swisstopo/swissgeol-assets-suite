@@ -1,13 +1,6 @@
-import { unknownToError } from '@asset-sg/core';
 import { AppConfig, AppMode, User } from '@asset-sg/shared/v2';
-import { Controller, Get, HttpException } from '@nestjs/common';
-import { sequenceS } from 'fp-ts/Apply';
-import * as A from 'fp-ts/Array';
-import * as E from 'fp-ts/Either';
+import { Controller, Get } from '@nestjs/common';
 
-import { flow, Lazy, pipe } from 'fp-ts/function';
-import * as RR from 'fp-ts/ReadonlyRecord';
-import * as TE from 'fp-ts/TaskEither';
 import { Authorize } from '@/core/decorators/authorize.decorator';
 import { CurrentUser } from '@/core/decorators/current-user.decorator';
 import { PrismaService } from '@/core/prisma.service';
@@ -39,39 +32,56 @@ export class AppController {
   @Get('/reference-data')
   @Authorize.User()
   async getReferenceData(@CurrentUser() user: User) {
-    const e = await getReferenceData(user, this.prismaService)();
-    if (E.isLeft(e)) {
-      console.error(e.left);
-      throw new HttpException(e.left.message, 500);
-    }
-    return e.right;
+    return await getReferenceData(user, this.prismaService);
   }
 }
 
-const getReferenceData = (user: User, prismaService: PrismaService) => {
-  const qt = <A, K extends keyof A>(f: Lazy<Promise<A[]>>, key: K, newKey: string) =>
-    pipe(
-      TE.tryCatch(f, unknownToError),
-      TE.map(
-        flow(
-          A.map(({ [key]: _key, ...rest }) => [_key as string, { [newKey]: _key, ...rest }] as const),
-          RR.fromEntries,
-        ),
-      ),
-    );
+const getReferenceData = async (user: User, prismaService: PrismaService) => {
+  const createReferenceDataMapping = async <A, K extends keyof A>(
+    prismaResult: () => Promise<A[]>,
+    key: K,
+    newKey: string,
+  ) => {
+    const result = await prismaResult();
+    const mapped = result.map(({ [key]: _key, ...rest }) => [_key as string, { [newKey]: _key, ...rest }] as const);
 
-  const queries = {
-    // These records are all static (i.e. never change) and are shared across all assets.
-    assetFormatItems: qt(() => prismaService.assetFormatItem.findMany(), 'assetFormatItemCode', 'code'),
-    assetKindItems: qt(() => prismaService.assetKindItem.findMany(), 'assetKindItemCode', 'code'),
-    contactKindItems: qt(() => prismaService.contactKindItem.findMany(), 'contactKindItemCode', 'code'),
-    languageItems: qt(() => prismaService.languageItem.findMany(), 'languageItemCode', 'code'),
-    legalDocItems: qt(() => prismaService.legalDocItem.findMany(), 'legalDocItemCode', 'code'),
-    manCatLabelItems: qt(() => prismaService.manCatLabelItem.findMany(), 'manCatLabelItemCode', 'code'),
-    natRelItems: qt(() => prismaService.natRelItem.findMany(), 'natRelItemCode', 'code'),
+    return Object.fromEntries(mapped);
+  };
 
-    // Include only the contacts which are assigned to at least one asset to which the user has access.
-    contacts: qt(
+  const entries = await Promise.all([
+    createReferenceDataMapping(() => prismaService.assetFormatItem.findMany(), 'assetFormatItemCode', 'code').then(
+      (data) => ['assetFormatItems', data],
+    ),
+    createReferenceDataMapping(() => prismaService.assetKindItem.findMany(), 'assetKindItemCode', 'code').then(
+      (data) => ['assetKindItems', data],
+    ),
+    createReferenceDataMapping(() => prismaService.contactKindItem.findMany(), 'contactKindItemCode', 'code').then(
+      (data) => ['contactKindItems', data],
+    ),
+    createReferenceDataMapping(() => prismaService.languageItem.findMany(), 'languageItemCode', 'code').then((data) => [
+      'languageItems',
+      data,
+    ]),
+    createReferenceDataMapping(() => prismaService.legalDocItem.findMany(), 'legalDocItemCode', 'code').then((data) => [
+      'legalDocItems',
+      data,
+    ]),
+    createReferenceDataMapping(() => prismaService.manCatLabelItem.findMany(), 'manCatLabelItemCode', 'code').then(
+      (data) => ['manCatLabelItems', data],
+    ),
+    createReferenceDataMapping(() => prismaService.natRelItem.findMany(), 'natRelItemCode', 'code').then((data) => [
+      'natRelItems',
+      data,
+    ]),
+    createReferenceDataMapping(
+      () => prismaService.statusAssetUseItem.findMany(),
+      'statusAssetUseItemCode',
+      'code',
+    ).then((data) => ['statusAssetUseItems', data]),
+    createReferenceDataMapping(() => prismaService.statusWorkItem.findMany(), 'statusWorkItemCode', 'code').then(
+      (data) => ['statusWorkItems', data],
+    ),
+    createReferenceDataMapping(
       () =>
         user.isAdmin
           ? prismaService.contact.findMany()
@@ -84,8 +94,8 @@ const getReferenceData = (user: User, prismaService: PrismaService) => {
             }),
       'contactId',
       'id',
-    ),
-  };
+    ).then((data) => ['contacts', data]),
+  ]);
 
-  return pipe(queries, sequenceS(TE.ApplicativeSeq));
+  return Object.fromEntries(entries);
 };
