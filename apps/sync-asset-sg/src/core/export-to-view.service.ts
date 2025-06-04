@@ -68,10 +68,10 @@ export class ExportToViewService {
     const publicAssets = await this.findPublicAssetIds();
     publicAssets.forEach(({ assetId, ...rest }) => this.publicAssetConfigs.set(assetId, rest));
 
-    log(`Found ${this.publicAssetConfigs.size} public assets.`, 'main');
+    log(`Found ${this.publicAssetConfigs.size} public assets.`);
 
     const batches = this.batchList(publicAssets);
-    log(`Created ${batches.length} batches with batch size ${BATCH_SIZE}.`, 'main');
+    log(`Created ${batches.length} batches with batch size ${BATCH_SIZE}.`);
 
     await this.exportItems();
 
@@ -80,7 +80,7 @@ export class ExportToViewService {
 
     // batch the list of public asset ids
     for (const [index, batch] of batches.entries()) {
-      log(`Export batch #${index + 1}`, 'main');
+      log(`Export batch #${index + 1}`);
       const time = Date.now();
       const assetIds = batch.map((item) => item.assetId);
       await this.exportAssets(assetIds);
@@ -90,12 +90,12 @@ export class ExportToViewService {
       await this.export('typeNatRel', 'assetId', assetIds, true);
 
       const timeTaken = Date.now() - time;
-      log(`Exported batch #${index + 1} of ${assetIds.length} assets in ${timeTaken} ms.`);
+      log(`Exported batch #${index + 1} of ${assetIds.length} assets in ${timeTaken} ms.`, 'batch');
     }
 
     // only export siblings after all assets have been exported so no foreign key constraint is violated
     for (const [index, batch] of batches.entries()) {
-      log(`Export siblings batch #${index + 1}`, 'main');
+      log(`Export siblings batch #${index + 1}`);
       const assetIds = batch.map((item) => item.assetId);
       await this.exportSiblings(assetIds, [...this.publicAssetConfigs.keys()]);
     }
@@ -108,7 +108,7 @@ export class ExportToViewService {
         WHERE "asset_file"."file_id" = "file"."id"
       );
     `;
-    log(`Removed ${cleaned} files not used in any relation.`);
+    log(`Removed ${cleaned} files not used in any relation.`, 'batch');
 
     // Cleanup relations that are not used in any reference
     cleaned = await this.destinationPrisma.$executeRaw`
@@ -118,7 +118,7 @@ export class ExportToViewService {
             WHERE "asset_contact"."contact_id" = "contact"."contact_id"
           );
         `;
-    log(`Removed ${cleaned} contacts not used in any relation.`);
+    log(`Removed ${cleaned} contacts not used in any relation.`, 'batch');
   }
 
   /**
@@ -157,13 +157,13 @@ export class ExportToViewService {
     const filteredAssets = this.preparePublishedData(assets);
 
     let result = await this.destinationPrisma.asset.createMany({ data: filteredAssets.assets });
-    log(`Created ${result.count} assets.`);
+    log(`Created ${result.count} assets.`, 'batch');
 
     result = await this.destinationPrisma.assetContact.createMany({ data: filteredAssets.assetContacts });
-    log(`Created ${result.count} assetContacts.`);
+    log(`Created ${result.count} assetContacts.`, 'batch');
 
     result = await this.destinationPrisma.assetFile.createMany({ data: filteredAssets.assetFiles });
-    log(`Created ${result.count} assetFiles.`);
+    log(`Created ${result.count} assetFiles.`, 'batch');
 
     const geometriesToPublish = assetIds.filter((f) => this.publicAssetConfigs.get(f).publishData.geometries);
     await this.exportGeometries(geometriesToPublish, 'study_area');
@@ -191,7 +191,7 @@ export class ExportToViewService {
     );
 
     if (geometries.length === 0) {
-      log(`No geometries found in ${table}. Continuing.`);
+      log(`No geometries found in ${table}. Continuing.`, 'batch');
       return;
     }
 
@@ -205,7 +205,7 @@ export class ExportToViewService {
       insertQuery,
       ...geometries.flatMap((f) => Object.values(f)),
     );
-    log(`Created ${result} geometries in ${table}.`);
+    log(`Created ${result} geometries in ${table}.`, 'batch');
   }
 
   /**
@@ -236,7 +236,7 @@ export class ExportToViewService {
     const items = await this.sourcePrisma[table].findMany();
     const result = await this.destinationPrisma[table].createMany({ data: items, skipDuplicates: true });
 
-    log(`Created ${result.count} ${table}.`, 'main');
+    log(`Created ${result.count} ${table}.`);
   }
 
   /**
@@ -262,6 +262,7 @@ export class ExportToViewService {
     });
     log(
       `Got ${ids.length} assetX references, filtered ${assetIdsWithReferencesForPublication.length} assetX for publication, found ${itemsX.length} assetX in databasse.`,
+      'batch',
     );
 
     const publicSiblings = itemsX
@@ -273,7 +274,7 @@ export class ExportToViewService {
       .map((item) => item);
     const result = await this.destinationPrisma.assetXAssetY.createMany({ data: publicSiblings });
 
-    log(`Created ${result.count} siblings.`);
+    log(`Created ${result.count} siblings.`, 'batch');
   }
 
   /**

@@ -24,7 +24,7 @@ export class SyncExternService {
    * should be copied.
    */
   public async syncProdAndExtern() {
-    log('Starting data export to extern', 'main');
+    log('Starting data export to extern');
 
     const sourceAssets = await this.sourcePrisma.asset.findMany({
       where: {
@@ -36,7 +36,7 @@ export class SyncExternService {
       },
     });
 
-    log(`Found ${sourceAssets.length} assets in source database`, 'main');
+    log(`Found ${sourceAssets.length} assets in source database`);
 
     const destinationAssets = await this.destinationPrisma.asset.findMany({
       where: {
@@ -48,23 +48,23 @@ export class SyncExternService {
       },
     });
 
-    log(`Found ${destinationAssets.length} assets in destination database`, 'main');
+    log(`Found ${destinationAssets.length} assets in destination database`);
 
     const sourceAssetIds = new Set(sourceAssets.map((asset) => asset.assetId));
     const destinationAssetIds = new Set(destinationAssets.map((asset) => asset.assetId));
 
     const assetsToCopy = sourceAssets.filter((asset) => !destinationAssetIds.has(asset.assetId));
 
-    log(`Found ${assetsToCopy.length} assets to copy`, 'main');
+    log(`Found ${assetsToCopy.length} assets to copy`, 'batch');
 
     for (let i = 0; i < assetsToCopy.length; i += this.batchSize) {
       const batch = assetsToCopy.slice(i, i + this.batchSize);
       await this.destinationPrisma.asset.createMany({
         data: batch,
       });
-      log(`Copied ${batch.length} assets`);
+      log(`Copied ${batch.length} assets`, 'batch');
     }
 
-    log('Data export to extern completed', 'main');
+    log('Data export to extern completed');
   }
 }
