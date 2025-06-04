@@ -11,6 +11,7 @@ import {
   UserSchema,
   Workflow,
   WorkflowChangeData,
+  WorkflowSchema,
   WorkgroupId,
 } from '@asset-sg/shared/v2';
 import * as RD from '@devexperts/remote-data-ts';
@@ -123,10 +124,14 @@ export class AssetEditorService {
   }
 
   public publishAsset(assetId: AssetId): Observable<Workflow> {
-    return this.httpClient.post<Workflow>(`/api/assets/${assetId}/workflow/publish`, null);
+    return this.httpClient
+      .post<Workflow>(`/api/assets/${assetId}/workflow/publish`, null)
+      .pipe(map((data) => plainToInstance(WorkflowSchema, data)));
   }
 
   public createWorkflowChange(assetId: AssetId, data: WorkflowChangeData): Observable<Workflow> {
-    return this.httpClient.post<Workflow>(`/api/assets/${assetId}/workflow/change`, data);
+    return this.httpClient
+      .post<Workflow>(`/api/assets/${assetId}/workflow/change`, data)
+      .pipe(map((data) => plainToInstance(WorkflowSchema, data)));
   }
 }
