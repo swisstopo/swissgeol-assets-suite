@@ -50,6 +50,7 @@ interface AssetInfo {
 }
 
 const BATCH_SIZE = 500;
+const BATCH_SIZE_GEOMETRIES = 10_000;
 
 export class ExportToViewService {
   private readonly allowedWorkgroupIds: number[];
@@ -70,7 +71,7 @@ export class ExportToViewService {
 
     log(`Found ${this.publicAssetConfigs.size} public assets.`);
 
-    const batches = this.batchList(publicAssets);
+    const batches = this.batchList(publicAssets, BATCH_SIZE);
     log(`Created ${batches.length} batches with batch size ${BATCH_SIZE}.`);
 
     await this.exportItems();
@@ -166,9 +167,13 @@ export class ExportToViewService {
     log(`Created ${result.count} assetFiles.`, 'batch');
 
     const geometriesToPublish = assetIds.filter((f) => this.publicAssetConfigs.get(f).publishData.geometries);
-    await this.exportGeometries(geometriesToPublish, 'study_area');
-    await this.exportGeometries(geometriesToPublish, 'study_location');
-    await this.exportGeometries(geometriesToPublish, 'study_trace');
+    for (const [idx, batch] of this.batchList(geometriesToPublish, BATCH_SIZE_GEOMETRIES).entries()) {
+      log(`Creating batch #${idx + 1} of geometries`, 'batch');
+      await this.exportGeometries(batch, 'study_area');
+      await this.exportGeometries(batch, 'study_location');
+      await this.exportGeometries(batch, 'study_trace');
+      log(`Finished batch #${idx + 1} of geometries`, 'batch');
+    }
   }
 
   /**
@@ -307,10 +312,10 @@ export class ExportToViewService {
   /**
    * Batch list.
    */
-  private batchList<T>(list: T[]): T[][] {
+  private batchList<T>(list: T[], batchSize: number): T[][] {
     const batches = [];
-    for (let i = 0; i < list.length; i += BATCH_SIZE) {
-      batches.push(list.slice(i, i + BATCH_SIZE));
+    for (let i = 0; i < list.length; i += batchSize) {
+      batches.push(list.slice(i, i + batchSize));
     }
     return batches;
   }
