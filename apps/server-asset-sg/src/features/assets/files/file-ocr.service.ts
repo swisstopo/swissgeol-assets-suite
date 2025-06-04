@@ -1,6 +1,5 @@
 import { exit } from 'process';
-import { AssetFile } from '@asset-sg/shared';
-import { sleep } from '@asset-sg/shared/v2';
+import { AssetFile, sleep } from '@asset-sg/shared/v2';
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { OcrState, Prisma } from '@prisma/client';
 import { PrismaService } from '@/core/prisma.service';
@@ -201,7 +200,7 @@ const hasKey = <K extends string>(value: unknown, key: K): value is { [k in K]: 
 const parseJSON = (input: string): unknown | null => {
   try {
     return JSON.parse(input);
-  } catch (_e) {
+  } catch {
     return null;
   }
 };

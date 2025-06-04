@@ -1,25 +1,18 @@
-import { fromAppShared, TranslatedValue, Translation } from '@asset-sg/client-shared';
+import { fromAppShared, Translation } from '@asset-sg/client-shared';
 import {
-  AssetContactRole,
-  AssetEditDetail,
   AssetSearchQuery,
   AssetSearchStats,
+  AssetSearchUsageCode,
   Contact,
-  DateIdBrand,
-  DateRange,
-  GeometryCode,
+  GeometryType,
+  LocalDateRange,
   makeEmptyAssetSearchStats,
-  ReferenceData,
-  UsageCode,
-  usageCodes,
+  ReferenceDataMapping,
+  SimpleWorkgroup,
   ValueCount,
-  ValueItem,
-} from '@asset-sg/shared';
-import { SimpleWorkgroup, WorkgroupId } from '@asset-sg/shared/v2';
-import * as RD from '@devexperts/remote-data-ts';
+  WorkgroupId,
+} from '@asset-sg/shared/v2';
 import { createSelector } from '@ngrx/store';
-import { pipe } from 'fp-ts/function';
-import * as O from 'fp-ts/Option';
 
 import { isPanelOpen } from './asset-search.actions';
 import { AppStateWithAssetSearch } from './asset-search.reducer';
@@ -44,87 +37,30 @@ export const selectSearchQuery = createSelector(assetSearchFeature, (state) => s
 
 export const selectSearchResults = createSelector(assetSearchFeature, (state) => state.results);
 
+export const selectSearchResultItems = createSelector(assetSearchFeature, (state) => state.results.data);
+
 export const selectSearchStats = createSelector(
   assetSearchFeature,
   (state) => state?.stats ?? makeEmptyAssetSearchStats(),
 );
 
-export const selectCurrentAsset = createSelector(fromAppShared.selectCurrentAsset, (currentAsset) => currentAsset);
-
-export const selectHasCurrentAsset = createSelector(
-  fromAppShared.selectCurrentAsset,
-  fromAppShared.selectIsLoadingAsset,
-  (currentAsset, isLoadingAsset) => currentAsset !== null || isLoadingAsset,
-);
-
-export const selectStudies = createSelector(assetSearchFeature, (state) => state.studies);
-
-export const selectCurrentAssetDetailVM = createSelector(
-  fromAppShared.selectRDReferenceData,
-  selectCurrentAsset,
-  (referenceData, currentAssetDetail) => {
-    if (RD.isSuccess(referenceData) && !!currentAssetDetail) {
-      return makeAssetDetailVMNew(referenceData.value, currentAssetDetail);
-    }
-    return null as AssetDetailVM | null;
-  },
-);
-
-export const selectAssetEditDetailVM = createSelector(
-  fromAppShared.selectRDReferenceData,
-  selectSearchResults,
-  (referenceData, assets): AssetEditDetailVM[] => {
-    if (!RD.isSuccess(referenceData) || !assets) {
-      return [];
-    }
-    return assets.data.map((asset) => {
-      const manCatLabelItems: ValueItem[] = asset.manCatLabelRefs.map(
-        (manCatLabelItemCode) => referenceData.value.manCatLabelItems[manCatLabelItemCode],
-      );
-      const assetFormatItem: ValueItem = referenceData.value.assetFormatItems[asset.assetFormatItemCode];
-      const assetKindItem: ValueItem = referenceData.value.assetKindItems[asset.assetKindItemCode];
-      const contacts = asset.assetContacts.reduce(
-        (contacts, contact) => {
-          contacts[contact.role] ??= [];
-          contacts[contact.role].push({
-            ...referenceData.value.contacts[contact.contactId],
-            role: contact.role,
-          });
-          return contacts;
-        },
-        {} as AssetEditDetailVM['contacts'],
-      );
-      return {
-        assetId: asset.assetId,
-        titlePublic: asset.titlePublic,
-        createDate: asset.createDate as number & DateIdBrand,
-        assetKindItem,
-        assetFormatItem,
-        contacts,
-        manCatLabelItems,
-      };
-    });
-  },
-);
+export const selectGeometries = createSelector(assetSearchFeature, (state) => state.geometries);
 
 export const selectAvailableAuthors = createSelector(
-  fromAppShared.selectRDReferenceData,
+  fromAppShared.selectReferenceContacts,
   selectSearchStats,
-  (referenceData, stats): AvailableAuthor[] | null => {
-    if (RD.isSuccess(referenceData)) {
-      return stats.authorIds.map((authorId) => {
-        return {
-          contactId: authorId.value,
-          count: authorId.count,
-          name: referenceData.value.contacts[authorId.value].name,
-        };
-      });
+  (contacts, stats): Array<ValueCount<Contact>> | null => {
+    if (contacts === null) {
+      return null;
     }
-    return null;
+    return stats.authorIds.map((authorId) => ({
+      value: contacts.get(authorId.value)!,
+      count: authorId.count,
+    }));
   },
 );
 
-export const selectCreateDate = createSelector(selectSearchStats, (stats): DateRange | null => stats.createDate);
+export const selectCreatedAt = createSelector(selectSearchStats, (stats): LocalDateRange | null => stats.createdAt);
 
 const makeFilters = <T>(
   configs: Array<FilterConfig<T>>,
@@ -156,18 +92,18 @@ const makeFilter = <T>(
 
 export const selectFilters = <T extends string>(
   queryKey: keyof AssetSearchQuery & keyof AssetSearchStats,
-  getFilters: (referenceData: ReferenceData) => Array<FilterConfig<T>>,
+  getFilters: (referenceData: ReferenceDataMapping) => Array<FilterConfig<T>>,
 ) =>
   createSelector(
-    fromAppShared.selectRDReferenceData,
+    fromAppShared.selectReferenceData,
     selectSearchQuery,
     selectSearchStats,
     (referenceData, query, stats): Array<Filter<T>> => {
-      if (!RD.isSuccess(referenceData)) {
+      if (referenceData === null) {
         return [];
       }
       return makeFilters(
-        getFilters(referenceData.value),
+        getFilters(referenceData),
 
         // Note that reading these attributes by key is insecure,
         // since both the query and the stats have attributes that don't match the types required here.
@@ -223,23 +159,23 @@ export const selectWorkgroupFilters = createSelector(
   },
 );
 
-export const selectUsageCodeFilters = selectFilters<UsageCode>('usageCodes', () =>
-  usageCodes.map((code) => ({
+export const selectUsageCodeFilters = selectFilters<AssetSearchUsageCode>('usageCodes', () =>
+  Object.values(AssetSearchUsageCode).map((code) => ({
     name: { key: `search.usageCode.${code}` },
     value: code,
   })),
 );
 
-export const selectAssetKindFilters = selectFilters<string>('assetKindItemCodes', (data) =>
-  Object.values(data.assetKindItems).map((item) => ({
-    name: makeTranslatedValueFromItemName(item),
+export const selectAssetKindFilters = selectFilters<string>('kindCodes', (data) =>
+  Object.values(data.assetKinds).map((item) => ({
+    name: item.name,
     value: item.code,
   })),
 );
 
-export const selectLanguageFilters = selectFilters<string>('languageItemCodes', (data) => [
-  ...Object.values(data.languageItems).map((item) => ({
-    name: makeTranslatedValueFromItemName(item),
+export const selectLanguageFilters = selectFilters<string>('languageCodes', (data) => [
+  ...Object.values(data.languages).map((item) => ({
+    name: item.name,
     value: item.code,
   })),
   {
@@ -248,8 +184,8 @@ export const selectLanguageFilters = selectFilters<string>('languageItemCodes', 
   },
 ]);
 
-export const selectGeometryFilters = selectFilters<GeometryCode | 'None'>('geometryCodes', () => [
-  ...Object.values(GeometryCode).map((code) => ({
+export const selectGeometryFilters = selectFilters<GeometryType | 'None'>('geometryTypes', () => [
+  ...Object.values(GeometryType).map((code) => ({
     name: { key: `search.geometryCode.${code}` },
     value: code,
   })),
@@ -259,9 +195,9 @@ export const selectGeometryFilters = selectFilters<GeometryCode | 'None'>('geome
   },
 ]);
 
-export const selectManCatLabelFilters = selectFilters<string>('manCatLabelItemCodes', (data) =>
-  Object.values(data.manCatLabelItems).map((item) => ({
-    name: makeTranslatedValueFromItemName(item),
+export const selectAssetTopicFilters = selectFilters<string>('topicCodes', (data) =>
+  Object.values(data.assetTopics).map((item) => ({
+    name: item.name,
     value: item.code,
   })),
 );
@@ -271,7 +207,7 @@ export const selectActiveFilters = createSelector(
   selectAssetKindFilters,
   selectLanguageFilters,
   selectGeometryFilters,
-  selectManCatLabelFilters,
+  selectAssetTopicFilters,
   selectWorkgroupFilters,
   (...filterGroups) => {
     return filterGroups.flatMap((filters) => filters.filter((filter) => filter.isActive));
@@ -286,10 +222,6 @@ export interface AvailableAuthor {
   contactId: number;
   count: number;
   name: string;
-}
-
-export interface FullContact extends Contact {
-  role?: AssetContactRole;
 }
 
 export interface Filter<T = string> {
@@ -315,87 +247,3 @@ export interface Filter<T = string> {
 }
 
 type FilterConfig<T> = Pick<Filter<T>, 'name' | 'value'>;
-
-export const makeTranslatedValueFromItemName = (item: ValueItem): TranslatedValue => ({
-  de: item.nameDe,
-  fr: item.nameFr,
-  it: item.nameIt,
-  en: item.nameEn,
-});
-
-export interface AssetEditDetailVM {
-  assetId: number;
-  titlePublic: string;
-  createDate: number & DateIdBrand;
-  assetKindItem: ValueItem;
-  assetFormatItem: ValueItem;
-  contacts: Record<AssetContactRole, FullContact[]>;
-  manCatLabelItems: ValueItem[];
-}
-
-export type AssetDetailVM = ReturnType<typeof makeAssetDetailVMNew>;
-export type AssetDetailFileVM = AssetDetailVM['assetFiles'][0];
-
-const makeAssetDetailVMNew = (referenceData: ReferenceData, assetDetail: AssetEditDetail) => {
-  const {
-    assetFormatItemCode,
-    assetKindItemCode,
-    assetContacts,
-    assetLanguages,
-    manCatLabelRefs,
-    typeNatRels,
-    assetMain,
-    subordinateAssets,
-    siblingXAssets,
-    siblingYAssets,
-    assetFiles,
-    ...rest
-  } = assetDetail;
-  return {
-    ...rest,
-    assetKindItem: referenceData.assetKindItems[assetKindItemCode],
-    assetFormatItem: referenceData.assetFormatItems[assetFormatItemCode],
-    assetContacts: assetContacts
-      .map((contact) => {
-        return { role: contact.role, contact: referenceData.contacts[contact.contactId] };
-      })
-      .map((contact) => makeAssetDetailContactVM(referenceData, contact)),
-    languages: assetLanguages.map(({ languageItemCode: code }) => referenceData.languageItems[code]),
-    manCatLabels: manCatLabelRefs.map((manCatLabelItemCode) => referenceData.manCatLabelItems[manCatLabelItemCode]),
-    typeNatRels: typeNatRels.map((natRelItemCode) => referenceData.natRelItems[natRelItemCode]),
-    referenceAssets: [
-      ...pipe(
-        assetMain,
-        O.map((a) => [a]),
-        O.getOrElseW(() => []),
-      ),
-      ...subordinateAssets,
-      ...siblingXAssets,
-      ...siblingYAssets,
-    ],
-    assetFiles: assetFiles.map((it) => ({
-      ...it,
-      legalDocItem: it.legalDocItemCode == null ? null : referenceData.legalDocItems[it.legalDocItemCode],
-    })),
-  };
-};
-
-const makeAssetDetailContactVM = (
-  referenceData: ReferenceData,
-  assetContact: {
-    role: AssetContactRole;
-    contact: Contact;
-  },
-) => {
-  const {
-    role,
-    contact: { contactKindItemCode, ...contactRest },
-    ...assetContactRest
-  } = assetContact;
-  return {
-    ...assetContactRest,
-    role,
-    ...contactRest,
-    contactKindItem: referenceData.contactKindItems[contactKindItemCode],
-  };
-};

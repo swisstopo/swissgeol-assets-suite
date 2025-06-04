@@ -1,15 +1,15 @@
-import { deepEqual } from '@asset-sg/core';
-import { AssetEditDetail } from '@asset-sg/shared';
 import {
   WorkflowSelection as WorkflowSelectionFromPrisma,
   WorkflowStatus as WorkflowStatusFromPrisma,
 } from '@prisma/client';
 import { GenericWorkflow, WorkflowChange, WorkflowStatus } from '@swisstopo/swissgeol-ui-core';
-import { AssetId } from './asset';
+import { isDeepEqual } from '../utils/is-deep-equal';
+import { Asset, AssetId } from './asset';
+import { AssetContactRole } from './contact';
 import { UserId } from './user';
 import { WorkgroupId } from './workgroup';
 
-export { WorkflowStatus, WorkflowChange };
+export { WorkflowChange, WorkflowStatus };
 
 export interface Workflow extends GenericWorkflow {
   id: AssetId;
@@ -67,9 +67,9 @@ export const getWorkflowStatusIndex = (status: WorkflowStatus): number => {
   }
 };
 
-type AssetField = keyof AssetEditDetail;
+type AssetField = keyof Asset;
 
-type AssetGetter = (record: AssetEditDetail) => unknown;
+type AssetGetter = (record: Asset) => unknown;
 
 /**
  * Defines the fields that belong to each specific selection category.
@@ -77,30 +77,32 @@ type AssetGetter = (record: AssetEditDetail) => unknown;
 const selectionCategoryMapping = {
   [WorkflowSelectionCategory.General]: [
     'workgroupId',
-    'titlePublic',
-    'titleOriginal',
-    'createDate',
-    'receiptDate',
-    'assetKindItemCode',
-    'assetFormatItemCode',
-    'assetLanguages',
-    'isNatRel',
-    'typeNatRels',
-    'manCatLabelRefs',
-    'ids',
+    'title',
+    'originalTitle',
+    'createdAt',
+    'receivedAt',
+    'kindCode',
+    'formatCode',
+    'languageCodes',
+    'isOfNationalInterest',
+    'nationalInterestTypeCodes',
+    'topicCodes',
+    'identifiers',
   ],
-  [WorkflowSelectionCategory.NormalFiles]: [(asset) => asset.assetFiles.filter((it) => it.type === 'Normal')],
-  [WorkflowSelectionCategory.LegalFiles]: [(asset) => asset.assetFiles.filter((it) => it.type === 'Legal')],
-  [WorkflowSelectionCategory.Authors]: [(asset) => asset.assetContacts.filter((it) => it.role === 'author')],
-  [WorkflowSelectionCategory.Initiators]: [(asset) => asset.assetContacts.filter((it) => it.role === 'initiator')],
-  [WorkflowSelectionCategory.Suppliers]: [(asset) => asset.assetContacts.filter((it) => it.role === 'supplier')],
-  [WorkflowSelectionCategory.References]: [
-    'assetMain',
-    (asset) => [...asset.siblingXAssets.map((it) => it.assetId), ...asset.siblingYAssets.map((it) => it.assetId)],
+  [WorkflowSelectionCategory.NormalFiles]: [(asset) => asset.files.filter((it) => it.legalDocCode === null)],
+  [WorkflowSelectionCategory.LegalFiles]: [(asset) => asset.files.filter((it) => it.legalDocCode !== null)],
+  [WorkflowSelectionCategory.Authors]: [(asset) => asset.contacts.filter((it) => it.role === AssetContactRole.Author)],
+  [WorkflowSelectionCategory.Initiators]: [
+    (asset) => asset.contacts.filter((it) => it.role === AssetContactRole.Initiator),
   ],
-  [WorkflowSelectionCategory.Geometries]: ['studies'],
-  [WorkflowSelectionCategory.Legacy]: ['sgsId', 'geolDataInfo', 'geolContactDataInfo', 'geolAuxDataInfo'],
-} satisfies Record<WorkflowSelectionCategory, Array<AssetField | AssetGetter>>;
+  [WorkflowSelectionCategory.Suppliers]: [
+    (asset) => asset.contacts.filter((it) => it.role === AssetContactRole.Supplier),
+  ],
+  [WorkflowSelectionCategory.References]: ['parent', (asset) => asset.siblings.map((it) => it.id)],
+} satisfies Record<
+  Exclude<WorkflowSelectionCategory, WorkflowSelectionCategory.Geometries | WorkflowSelectionCategory.Legacy>,
+  Array<AssetField | AssetGetter>
+>;
 
 /**
  * Compares all fields of a category for two assets, determining whether that category has changes made to it.
@@ -110,14 +112,22 @@ const selectionCategoryMapping = {
  * @param category The category of fields to compare.
  */
 export const hasWorkflowSelectionChanged = (
-  original: AssetEditDetail,
-  update: AssetEditDetail,
+  original: Asset,
+  update: Asset,
   category: WorkflowSelectionCategory,
 ): boolean => {
+  if (category === WorkflowSelectionCategory.Legacy) {
+    // Legacy data can't be changed.
+    return false;
+  }
+  if (category === WorkflowSelectionCategory.Geometries) {
+    // Geometry changes have to be tracked outside of this function.
+    throw new Error("Changes to a workflow's geometries have to be tracked separately.");
+  }
   const mapping = selectionCategoryMapping[category];
   for (const entry of mapping) {
     const get = makeAssetGetter(entry);
-    if (!deepEqual(get(original), get(update))) {
+    if (!isDeepEqual(get(original), get(update))) {
       return true;
     }
   }

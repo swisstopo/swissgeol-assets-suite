@@ -3,30 +3,30 @@
     <div class="content column" content>
       <asset-sg-text-input
         disabled
-        [value]="asset?.sgsId?.toString() ?? ''"
+        [value]="legacyData?.sgsId?.toString() ?? ''"
         [title]="'edit.tabs.legacyData.sgsId' | translate"
       ></asset-sg-text-input>
       <asset-sg-text-area
         [rows]="5"
         disabled
-        [value]="asset?.geolDataInfo?.toString() ?? ''"
+        [value]="legacyData?.data?.toString() ?? ''"
         [title]="'edit.tabs.legacyData.data' | translate"
       ></asset-sg-text-area>
       <asset-sg-text-area
         [rows]="5"
         disabled
-        [value]="asset?.geolContactDataInfo?.toString() ?? ''"
+        [value]="legacyData?.contactData?.toString() ?? ''"
         [title]="'edit.tabs.legacyData.contactData' | translate"
       ></asset-sg-text-area>
       <asset-sg-text-area
         [rows]="5"
         disabled
-        [value]="asset?.geolAuxDataInfo?.toString() ?? ''"
+        [value]="legacyData?.auxiliaryData?.toString() ?? ''"
         [title]="'edit.tabs.legacyData.auxData' | translate"
       ></asset-sg-text-area>
       <asset-sg-text-input
         disabled
-        [value]="asset?.municipality?.toString() ?? ''"
+        [value]="legacyData?.municipality?.toString() ?? ''"
         [title]="'edit.tabs.legacyData.municipality' | translate"
       ></asset-sg-text-input>
     </div>

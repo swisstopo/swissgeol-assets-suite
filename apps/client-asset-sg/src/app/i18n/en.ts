@@ -107,7 +107,7 @@ export const enAppTranslations: AppTranslations = {
     geometry: 'Geometry',
     geometryCode: {
       Point: 'Point',
-      LineString: 'Line',
+      Line: 'Line',
       Polygon: 'Polygon',
       None: 'None',
     },
@@ -267,7 +267,6 @@ export const enAppTranslations: AppTranslations = {
         instructionsPolygonOrLIne: 'Draw at least {{ count }} points',
         instructionsMorePolygonOrLIne: 'Draw at least {{ count }} more points',
         createGeometry: 'Create geometry',
-        disabledSave: 'Saving in the geometries tab is currently not possible. Please switch to another tab.',
       },
       administration: {
         tabName: 'Administration',

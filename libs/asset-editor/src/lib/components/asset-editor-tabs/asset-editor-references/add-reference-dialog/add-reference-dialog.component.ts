@@ -2,13 +2,12 @@ import { HttpClient } from '@angular/common/http';
 import { Component, inject, OnInit } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { AssetEditDetail, LinkedAsset } from '@asset-sg/shared';
-import { AssetId, AssetSearchResultDTO, AssetSearchResultItem } from '@asset-sg/shared/v2';
+import { Asset, AssetId, AssetSearchResultItem, AssetSearchResultSchema } from '@asset-sg/shared/v2';
 import { plainToInstance } from 'class-transformer';
 import { combineLatest, debounceTime, map, Observable, of, startWith, Subject, switchMap } from 'rxjs';
 import { NewReferenceDialogData } from '../../../../models/new-reference-dialog-data.interface';
 import { AssetForm } from '../../../asset-editor-page/asset-editor-page.component';
-import { LinkedAssetType } from '../asset-editor-references.component';
+import { LinkType } from '../asset-editor-references.component';
 
 @Component({
   selector: 'asset-sg-add-reference-dialog',
@@ -17,12 +16,12 @@ import { LinkedAssetType } from '../asset-editor-references.component';
   standalone: false,
 })
 export class AddReferenceDialogComponent implements OnInit {
-  public asset: AssetEditDetail | null = null;
+  public asset: Asset | null = null;
   public form!: AssetForm['controls']['references'];
 
   public newReferenceForm = new FormGroup({
     linkedAsset: new FormControl<LinkedAsset | null>(null, { validators: Validators.required }),
-    type: new FormControl<LinkedAssetType>(LinkedAssetType.Sibling, { validators: Validators.required }),
+    type: new FormControl<LinkType>(LinkType.Sibling, { validators: Validators.required }),
   });
   private assetsToIgnore$!: Observable<AssetId[]>;
   private assetsToChooseFrom$!: Observable<AssetSearchResultItem[]>;
@@ -43,16 +42,16 @@ export class AddReferenceDialogComponent implements OnInit {
       map((references) => {
         const ids = [] as AssetId[];
         if (this.asset !== null) {
-          ids.push(this.asset.assetId);
+          ids.push(this.asset.id);
         }
-        if (references.mainAsset != null) {
-          ids.push(references.mainAsset.assetId);
+        if (references.parent != null) {
+          ids.push(references.parent.id);
         }
-        if (references.siblingAssets != null) {
-          ids.push(...references.siblingAssets.map((it) => it.assetId));
+        if (references.siblings != null) {
+          ids.push(...references.siblings.map((it) => it.id));
         }
-        if (references.subordinateAssets != null) {
-          ids.push(...references.subordinateAssets.map((it) => it.assetId));
+        if (references.children != null) {
+          ids.push(...references.children.map((it) => it.id));
         }
         return ids;
       }),
@@ -60,7 +59,7 @@ export class AddReferenceDialogComponent implements OnInit {
     this.assetsToChooseFrom$ = this.searchTerm$.pipe(
       debounceTime(300),
       switchMap((term): Observable<AssetSearchResultItem[]> => {
-        if (term.length < 3 || (this.linkedAsset != null && this.linkedAsset.titlePublic === term)) {
+        if (term.length < 3 || (this.linkedAsset != null && this.linkedAsset.title === term)) {
           return of([]);
         }
         return this.httpClient
@@ -70,7 +69,7 @@ export class AddReferenceDialogComponent implements OnInit {
           })
           .pipe(
             map((res) => {
-              const data = plainToInstance(AssetSearchResultDTO, res);
+              const data = plainToInstance(AssetSearchResultSchema, res);
               return data.data;
             }),
           );
@@ -79,10 +78,10 @@ export class AddReferenceDialogComponent implements OnInit {
     this.optionsToDisplay$ = combineLatest([this.assetsToIgnore$, this.assetsToChooseFrom$]).pipe(
       map(([assetIdsToIgnore, queriedAssets]) =>
         queriedAssets
-          .filter((asset) => !assetIdsToIgnore.includes(asset.assetId))
+          .filter((asset) => !assetIdsToIgnore.includes(asset.id))
           .map((asset) => ({
-            titlePublic: asset.titlePublic,
-            assetId: asset.assetId,
+            id: asset.id,
+            title: asset.title,
           })),
       ),
     );
@@ -113,13 +112,15 @@ export class AddReferenceDialogComponent implements OnInit {
     if (!linkedAsset || !type) {
       return;
     }
-    if (type === LinkedAssetType.Main) {
-      this.form.controls.mainAsset.setValue(linkedAsset);
+    if (type === LinkType.Main) {
+      this.form.controls.parent.setValue(linkedAsset);
     } else {
-      this.form.controls.siblingAssets.setValue([...this.form.controls.siblingAssets.value, linkedAsset]);
+      this.form.controls.siblings.setValue([...this.form.controls.siblings.value, linkedAsset]);
     }
     this.dialogRef.close(true);
   }
 
-  protected readonly LinkedAssetType = LinkedAssetType;
+  protected readonly LinkedAssetType = LinkType;
 }
+
+type LinkedAsset = Pick<Asset, 'id' | 'title'>;

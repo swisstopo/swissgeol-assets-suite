@@ -1,40 +1,38 @@
-<form [formGroup]="form">
-  <asset-sg-detail-section [title]="'edit.tabs.contacts.tabName' | translate">
-    <button (click)="openLinkDialog()" actions asset-sg-primary translate>
-      edit.tabs.contacts.addContact
-      <svg-icon key="add"></svg-icon>
-    </button>
-    <div content>
-      @if (dataSource.data.length > 0) {
-        <table [dataSource]="dataSource" mat-table class="mat-elevation-z1 table">
-          <ng-container matColumnDef="name">
-            <th *matHeaderCellDef mat-header-cell translate>edit.tabs.contacts.name</th>
-            <td *matCellDef="let contact" mat-cell>{{ contact.name }}</td>
-          </ng-container>
-          <ng-container matColumnDef="roles">
-            <th *matHeaderCellDef mat-header-cell translate>edit.tabs.contacts.role</th>
-            <td *matCellDef="let element" mat-cell>
-              <mat-chip-set>
-                @for (role of element.roles; track $index) {
-                  <asset-sg-chip type="tertiary">{{ "contactRoles." + role | translate }}</asset-sg-chip>
-                }
-              </mat-chip-set>
-            </td>
-          </ng-container>
-          <ng-container matColumnDef="delete" class="mat-column-delete">
-            <th *matHeaderCellDef mat-header-cell></th>
-            <td *matCellDef="let element" mat-cell>
-              <button asset-sg-secondary isIcon (click)="removeContact($event, element)">
-                <svg-icon key="delete"></svg-icon>
-              </button>
-            </td>
-          </ng-container>
-          <tr mat-header-row *matHeaderRowDef="displayedColumns" class="table__header"></tr>
-          <tr mat-row *matRowDef="let row; columns: displayedColumns" (click)="openDetailDialog(row)"></tr>
-        </table>
-      } @else {
-        <span translate>edit.tabs.contacts.noContacts</span>
-      }
-    </div>
-  </asset-sg-detail-section>
-</form>
+<asset-sg-detail-section [title]="'edit.tabs.contacts.tabName' | translate">
+  <button (click)="openLinkDialog()" actions asset-sg-primary translate>
+    edit.tabs.contacts.addContact
+    <svg-icon key="add"></svg-icon>
+  </button>
+  <div content>
+    @if (dataSource.data.length > 0) {
+      <table [dataSource]="dataSource" mat-table class="mat-elevation-z1 table">
+        <ng-container matColumnDef="name">
+          <th *matHeaderCellDef mat-header-cell translate>edit.tabs.contacts.name</th>
+          <td *matCellDef="let contact" mat-cell>{{ contact.name }}</td>
+        </ng-container>
+        <ng-container matColumnDef="roles">
+          <th *matHeaderCellDef mat-header-cell translate>edit.tabs.contacts.role</th>
+          <td *matCellDef="let element" mat-cell>
+            <mat-chip-set>
+              @for (role of element.roles; track $index) {
+                <asset-sg-chip type="tertiary">{{ "contactRoles." + role | translate }}</asset-sg-chip>
+              }
+            </mat-chip-set>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="delete" class="mat-column-delete">
+          <th *matHeaderCellDef mat-header-cell></th>
+          <td *matCellDef="let element" mat-cell>
+            <button asset-sg-secondary isIcon (click)="removeContact($event, element)">
+              <svg-icon key="delete"></svg-icon>
+            </button>
+          </td>
+        </ng-container>
+        <tr mat-header-row *matHeaderRowDef="displayedColumns" class="table__header"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns" (click)="openDetailDialog(row)"></tr>
+      </table>
+    } @else {
+      <span translate>edit.tabs.contacts.noContacts</span>
+    }
+  </div>
+</asset-sg-detail-section>

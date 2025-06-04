@@ -68,8 +68,8 @@ export class AppSharedStateEffects {
   loadValueLists$ = createEffect(() =>
     this.actions$.pipe(
       ofType(appSharedStateActions.loadReferenceData),
-      switchMap(() => this.appSharedStateService.loadReferenceData()),
-      map(appSharedStateActions.loadReferenceDataResult),
+      switchMap(() => this.appSharedStateService.fetchReferenceData()),
+      map((referenceData) => appSharedStateActions.setReferenceData({ referenceData })),
     ),
   );
 
@@ -77,7 +77,7 @@ export class AppSharedStateEffects {
     this.actions$.pipe(
       ofType(appSharedStateActions.loadUserProfile),
       switchMap(() => this.authService.getUserProfile()),
-      map(appSharedStateActions.loadUserProfileResult),
+      map(appSharedStateActions.setUserProfile),
     ),
   );
 
@@ -85,7 +85,7 @@ export class AppSharedStateEffects {
     this.actions$.pipe(
       ofType(appSharedStateActions.loadWorkgroups),
       switchMap(() => this.appSharedStateService.loadWorkgroups()),
-      map((workgroups) => appSharedStateActions.loadWorkgroupsResult({ workgroups })),
+      map((workgroups) => appSharedStateActions.setWorkgroups({ workgroups })),
     ),
   );
 }

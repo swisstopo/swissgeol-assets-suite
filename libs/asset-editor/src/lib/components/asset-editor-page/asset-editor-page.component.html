@@ -2,7 +2,7 @@
   <mat-progress-bar mode="indeterminate" class="loading-bar" />
 }
 <asset-sg-page-header (backNavigation)="navigateToStart()">
-  <h2>{{ asset?.titlePublic }}</h2>
+  <h2>{{ asset?.title }}</h2>
   <mat-chip-set>
     @if (mode === EditorMode.Create) {
       <asset-sg-chip type="primary">{{ "workflowStatus.Draft" | translate }}</asset-sg-chip>
@@ -12,8 +12,8 @@
   </mat-chip-set>
   <div class="spacer"></div>
 
-  @if (asset) {
-    <button asset-sg-secondary (click)="openConfirmDialogForAssetDeletion(asset.assetId)" translate>
+  @if (asset !== null) {
+    <button asset-sg-secondary (click)="openConfirmDialogForAssetDeletion(asset.id)" translate>
       delete
       <svg-icon key="delete"></svg-icon>
     </button>
@@ -48,11 +48,11 @@
           <asset-sg-editor-references
             [form]="form.controls.references"
             [asset]="asset"
-            [workgroupId]="form.controls.general.controls.workgroupId.value ?? asset?.workgroupId ?? null"
+            [workgroupId]="form.controls.general.controls.workgroupId.value"
           ></asset-sg-editor-references>
         }
         @case (Tab.Geometries) {
-          <asset-sg-edit-geometries [form]="form.controls.geometries"></asset-sg-edit-geometries>
+          <asset-sg-edit-geometries [form]="geometryForm"></asset-sg-edit-geometries>
         }
         @case (Tab.Contacts) {
           <asset-sg-editor-contacts [form]="form.controls.contacts" [asset]="asset ?? null"></asset-sg-editor-contacts>
@@ -61,11 +61,10 @@
     </div>
 
     <asset-sg-editor-save
-      [isSaveDisabled]="form.invalid || !form.dirty || activeTab === Tab.Geometries"
+      [isSaveDisabled]="form.invalid || !form.dirty"
       [hasUnsavedChanges]="form.dirty"
       (discard)="initializeForm()"
       (save)="save()"
-      [tooltip]="activeTab === Tab.Geometries ? ('edit.tabs.geometries.disabledSave' | translate) : undefined"
     ></asset-sg-editor-save>
   </div>
 </div>

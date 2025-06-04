@@ -18,7 +18,7 @@ When(/^The user edits asset information$/, () => {
   cy.wait(1000);
 });
 When(/^The user clicks save$/, () => {
-  cy.intercept('http://localhost:4200/api/asset-edit/**').as('edit');
+  cy.intercept('http://localhost:4200/api/assets/**').as('edit');
   cy.get('button:contains("Speichern")').click();
   cy.wait(1000);
 });

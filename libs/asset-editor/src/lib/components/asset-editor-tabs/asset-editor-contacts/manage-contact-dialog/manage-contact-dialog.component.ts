@@ -1,13 +1,19 @@
 import { Component, EventEmitter, inject, Input, OnDestroy, OnInit, Output } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { appSharedStateActions, fromAppShared } from '@asset-sg/client-shared';
-import { AssetContactRole } from '@asset-sg/shared';
-import { AssetContact, AssetContactRoles, ContactData } from '@asset-sg/shared/v2';
+import { isNotNull } from '@asset-sg/core';
+import {
+  AssetContact,
+  AssetContactRole,
+  AssetContactRoles,
+  Contact,
+  ContactData,
+  ContactKindCode,
+  LocalizedItem,
+} from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
-import { map, Observable, Subscription, tap } from 'rxjs';
-import { TranslatedValueItem } from '../../../../models/translated-value-item.interface';
+import { filter, map, Observable, Subscription, tap } from 'rxjs';
 import { AssetEditorService } from '../../../../services/asset-editor.service';
-import { mapValueItemsToTranslatedItem } from '../../../../utils/map-value-items-to-translated-item.utils';
 import { ContactWithRoles } from '../asset-editor-contacts.component';
 
 @Component({
@@ -35,15 +41,18 @@ export class ManageContactDialogComponent implements OnInit, OnDestroy {
     telephone: new FormControl(''),
     email: new FormControl(''),
     website: new FormControl(''),
-    contactKindItemCode: new FormControl('', { nonNullable: true }),
+    kindCode: new FormControl<ContactKindCode>('' as ContactKindCode, { nonNullable: true }),
   });
   protected existingContactId: number | null = null;
   private readonly subscriptions: Subscription = new Subscription();
   private readonly assetEditorService: AssetEditorService = inject(AssetEditorService);
   private readonly store = inject(Store);
-  protected readonly contactKindItems$: Observable<TranslatedValueItem[]> = this.store
-    .select(fromAppShared.selectContactKindItems)
-    .pipe(map(mapValueItemsToTranslatedItem));
+  protected readonly contactKindItems$: Observable<Array<LocalizedItem<ContactKindCode>>> = this.store
+    .select(fromAppShared.selectReferenceContactKinds)
+    .pipe(
+      filter(isNotNull),
+      map((it) => [...it.values()]),
+    );
 
   public ngOnInit(): void {
     if (this.data) {
@@ -77,17 +86,14 @@ export class ManageContactDialogComponent implements OnInit, OnDestroy {
     this.closeDialog.emit();
   }
 
-  private createOrSaveContact(data: ContactData) {
-    if (this.existingContactId) {
-      return this.assetEditorService.updateContact(this.existingContactId, data).pipe(
-        tap((data) => {
-          this.store.dispatch(appSharedStateActions.editContactResult(data));
-        }),
-      );
-    }
-    return this.assetEditorService.createContact(data).pipe(
-      tap((data) => {
-        this.store.dispatch(appSharedStateActions.createContactResult(data));
+  private createOrSaveContact(data: ContactData): Observable<Contact> {
+    return (
+      this.existingContactId
+        ? this.assetEditorService.updateContact(this.existingContactId, data)
+        : this.assetEditorService.createContact(data)
+    ).pipe(
+      tap((contact) => {
+        this.store.dispatch(appSharedStateActions.storeContact({ contact }));
       }),
     );
   }

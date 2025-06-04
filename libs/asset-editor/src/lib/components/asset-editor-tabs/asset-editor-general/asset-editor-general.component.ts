@@ -1,11 +1,9 @@
 import { Component, inject, Input, OnChanges, OnDestroy, OnInit, SimpleChanges } from '@angular/core';
 import { fromAppShared } from '@asset-sg/client-shared';
-import { AssetEditDetail } from '@asset-sg/shared';
-import { Role, SimpleWorkgroup } from '@asset-sg/shared/v2';
+import { isNotNull } from '@asset-sg/core';
+import { Asset, LanguageCode, LocalizedItem, Role, SimpleWorkgroup } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
-import { combineLatestWith, map, Observable, startWith, Subscription } from 'rxjs';
-import { TranslatedValueItem } from '../../../models/translated-value-item.interface';
-import { mapValueItemsToTranslatedItem } from '../../../utils/map-value-items-to-translated-item.utils';
+import { combineLatestWith, filter, map, Observable, startWith, Subscription } from 'rxjs';
 import { AssetForm } from '../../asset-editor-page/asset-editor-page.component';
 
 @Component({
@@ -16,55 +14,81 @@ import { AssetForm } from '../../asset-editor-page/asset-editor-page.component';
 })
 export class AssetEditorGeneralComponent implements OnInit, OnChanges, OnDestroy {
   @Input() form!: AssetForm['controls']['general'];
-  @Input() asset: AssetEditDetail | null = null;
+  @Input() asset: Asset | null = null;
   @Input() hasReferences = false;
 
   public workgroups: SimpleWorkgroup[] = [];
-  public selectedLanguages: string[] = [];
-  public selectedManCatLabels: TranslatedValueItem[] = [];
-  public selectedNatRelItems: TranslatedValueItem[] = [];
+  public selectedLanguageCodes: LanguageCode[] = [];
+  public selectedTopics: LocalizedItem[] = [];
+  public selectedNationalInterestTypes: LocalizedItem[] = [];
+
   private readonly store = inject(Store);
-  public readonly natRelItems$: Observable<TranslatedValueItem[]> = this.store
-    .select(fromAppShared.selectNatRelItems)
-    .pipe(map(mapValueItemsToTranslatedItem));
-  public readonly manCatLabelItems$: Observable<TranslatedValueItem[]> = this.store
-    .select(fromAppShared.selectManCatLabelItems)
-    .pipe(map(mapValueItemsToTranslatedItem));
-  public readonly assetFormatItems$: Observable<TranslatedValueItem[]> = this.store
-    .select(fromAppShared.selectAssetFormatItems)
-    .pipe(map(mapValueItemsToTranslatedItem));
-  public readonly assetKindItems$: Observable<TranslatedValueItem[]> = this.store
-    .select(fromAppShared.selectAssetKindItems)
-    .pipe(map(mapValueItemsToTranslatedItem));
-  public readonly languageItems$: Observable<TranslatedValueItem[]> = this.store
-    .select(fromAppShared.selectLanguageItems)
-    .pipe(map(mapValueItemsToTranslatedItem));
+
+  public readonly nationalInterestTypes$: Observable<LocalizedItem[]> = this.store
+    .select(fromAppShared.selectReferenceNationalInterestTypes)
+    .pipe(
+      filter(isNotNull),
+      map((it) => [...it.values()]),
+    );
+
+  public readonly assetTopics$: Observable<LocalizedItem[]> = this.store
+    .select(fromAppShared.selectReferenceAssetTopics)
+    .pipe(
+      filter(isNotNull),
+      map((it) => [...it.values()]),
+    );
+
+  public readonly assetFormats$: Observable<LocalizedItem[]> = this.store
+    .select(fromAppShared.selectReferenceAssetFormats)
+    .pipe(
+      filter(isNotNull),
+      map((it) => [...it.values()]),
+    );
+
+  public readonly assetKinds$: Observable<LocalizedItem[]> = this.store
+    .select(fromAppShared.selectReferenceAssetKinds)
+    .pipe(
+      filter(isNotNull),
+      map((it) => [...it.values()]),
+    );
+
+  public readonly languages$: Observable<LocalizedItem<LanguageCode>[]> = this.store
+    .select(fromAppShared.selectReferenceLanguages)
+    .pipe(
+      filter(isNotNull),
+      map((it) => [...it.values()]),
+    );
+
   public readonly availableWorkgroups$ = this.store
     .select(fromAppShared.selectWorkgroups)
     .pipe(map((workgroups) => workgroups.filter((it) => it.role != Role.Reader)));
+
   private readonly subscription: Subscription = new Subscription();
 
   public ngOnInit() {
     this.subscription.add(this.availableWorkgroups$.subscribe((workgroups) => (this.workgroups = workgroups)));
     this.subscription.add(
-      this.form.controls.manCatLabelRefs.valueChanges
-        .pipe(startWith(this.form.controls.manCatLabelRefs.value), combineLatestWith(this.manCatLabelItems$))
-        .subscribe(([selectedValues, manCatLabelItems]) => {
-          this.selectedManCatLabels = manCatLabelItems.filter((item) => selectedValues?.includes(item.code));
+      this.form.controls.topicCodes.valueChanges
+        .pipe(startWith(this.form.controls.topicCodes.value), combineLatestWith(this.assetTopics$))
+        .subscribe(([selectedTopics, topics]) => {
+          this.selectedTopics = topics.filter((item) => selectedTopics.includes(item.code));
         }),
     );
     this.subscription.add(
-      this.form.controls.typeNatRels.valueChanges
-        .pipe(startWith(this.form.controls.typeNatRels.value), combineLatestWith(this.natRelItems$))
-        .subscribe(([selectedValues, natRelItems]) => {
-          this.selectedNatRelItems = natRelItems.filter((item) => selectedValues?.includes(item.code));
+      this.form.controls.nationalInterestTypeCodes.valueChanges
+        .pipe(
+          startWith(this.form.controls.nationalInterestTypeCodes.value),
+          combineLatestWith(this.nationalInterestTypes$),
+        )
+        .subscribe(([selectCodes, nationalInterestTypes]) => {
+          this.selectedNationalInterestTypes = nationalInterestTypes.filter((item) => selectCodes?.includes(item.code));
         }),
     );
     this.subscription.add(
-      this.form.controls.assetLanguages.valueChanges
-        .pipe(startWith(this.form.controls.assetLanguages.value))
-        .subscribe((langs) => {
-          this.selectedLanguages = langs?.map((lang) => lang.languageItemCode) ?? [];
+      this.form.controls.languageCodes.valueChanges
+        .pipe(startWith(this.form.controls.languageCodes.value))
+        .subscribe((codes) => {
+          this.selectedLanguageCodes = codes;
         }),
     );
   }
@@ -84,27 +108,23 @@ export class AssetEditorGeneralComponent implements OnInit, OnChanges, OnDestroy
     this.subscription.unsubscribe();
   }
 
-  public setLangFromLangs(langs: string[]) {
-    const languages = langs.map((l) => ({
-      languageItemCode: l,
-    }));
-    this.form.controls.assetLanguages.setValue(languages);
+  public setLanguageCodes(codes: LanguageCode[]) {
+    this.form.controls.languageCodes.setValue(codes);
     this.form.markAsDirty();
   }
 
-  public removeItemFromForm(item: TranslatedValueItem, controlName: 'manCatLabelRefs' | 'typeNatRels') {
-    const currentValues = this.form.controls[controlName].value ?? [];
-    const newValues = currentValues.filter((value: string) => value !== item.code);
+  public removeItemFromForm(item: LocalizedItem, controlName: 'topicCodes' | 'nationalInterestTypeCodes') {
+    const currentCodes = this.form.controls[controlName].value ?? [];
+    const newValues = currentCodes.filter((value: string) => value !== item.code);
     this.form.controls[controlName].setValue(newValues);
     this.form.markAsDirty();
   }
 
   public addNewAlternativeId() {
-    this.form.controls.ids.setValue([
-      ...this.form.controls.ids.value,
+    this.form.controls.identifiers.setValue([
+      ...this.form.controls.identifiers.value,
       {
-        idId: null,
-        id: '',
+        value: '',
         description: '',
       },
     ]);

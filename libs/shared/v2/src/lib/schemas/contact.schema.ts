@@ -1,5 +1,5 @@
-import { IsOptional, IsString } from 'class-validator';
-import { ContactData } from '../models/contact';
+import { IsEnum, IsOptional, IsString } from 'class-validator';
+import { Contact, ContactData, ContactId, ContactKindCode } from '../models/contact';
 import { Schema } from './base/schema';
 
 export class ContactDataSchema extends Schema implements ContactData {
@@ -38,6 +38,11 @@ export class ContactDataSchema extends Schema implements ContactData {
   @IsOptional()
   website!: string | null;
 
+  @IsEnum(ContactKindCode)
+  kindCode!: ContactKindCode;
+}
+
+export class ContactSchema extends ContactDataSchema implements Contact {
   @IsString()
-  contactKindItemCode!: string;
+  id!: ContactId;
 }

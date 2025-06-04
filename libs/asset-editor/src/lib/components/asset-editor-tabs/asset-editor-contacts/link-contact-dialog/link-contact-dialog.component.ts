@@ -1,8 +1,7 @@
 import { Component, EventEmitter, inject, OnInit, Output } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { fromAppShared } from '@asset-sg/client-shared';
-import { AssetContactRole } from '@asset-sg/shared';
-import { AssetContact, AssetContactRoles, Contact, ContactId } from '@asset-sg/shared/v2';
+import { AssetContact, AssetContactRole, AssetContactRoles, Contact, ContactId } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
 import { combineLatestWith, debounceTime, Subject, Subscription, tap } from 'rxjs';
 import { ContactWithRoles } from '../asset-editor-contacts.component';
@@ -39,7 +38,7 @@ export class LinkContactDialogComponent implements OnInit {
       this.searchTerm$
         .pipe(
           debounceTime(300),
-          combineLatestWith(this.store.select(fromAppShared.selectContactItems)),
+          combineLatestWith(this.store.select(fromAppShared.selectReferenceContacts)),
           tap(([searchTerm, contacts]) => {
             if (contacts) {
               const filteredContacts: SelectableContact[] = Object.values(contacts)

@@ -1,8 +1,7 @@
 import { Component, inject, Input, OnDestroy, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { MatTableDataSource } from '@angular/material/table';
-import { AssetEditDetail, LinkedAsset } from '@asset-sg/shared';
-import { WorkgroupId } from '@asset-sg/shared/v2';
+import { Asset, LinkedAsset, WorkgroupId } from '@asset-sg/shared/v2';
 import { startWith, Subscription } from 'rxjs';
 import { NewReferenceDialogData } from '../../../models/new-reference-dialog-data.interface';
 import { AssetForm } from '../../asset-editor-page/asset-editor-page.component';
@@ -17,7 +16,7 @@ import { AddReferenceDialogComponent } from './add-reference-dialog/add-referenc
 export class AssetEditorReferencesComponent implements OnInit, OnDestroy {
   @Input() form!: AssetForm['controls']['references'];
 
-  @Input() asset: AssetEditDetail | null = null;
+  @Input() asset: Asset | null = null;
 
   @Input() workgroupId!: WorkgroupId | null;
 
@@ -30,25 +29,25 @@ export class AssetEditorReferencesComponent implements OnInit, OnDestroy {
     this.subscriptions.add(
       this.form.valueChanges.pipe(startWith(this.form.value)).subscribe((references) => {
         const data: FormLinkedAsset[] = [];
-        if (references.mainAsset) {
+        if (references.parent) {
           data.push({
-            ...references.mainAsset,
-            type: LinkedAssetType.Main,
+            ...references.parent,
+            type: LinkType.Main,
           });
         }
-        if (references.siblingAssets) {
+        if (references.siblings) {
           data.push(
-            ...references.siblingAssets.map((asset) => ({
+            ...references.siblings.map((asset) => ({
               ...asset,
-              type: LinkedAssetType.Sibling,
+              type: LinkType.Sibling,
             })),
           );
         }
-        if (references.subordinateAssets) {
+        if (references.children) {
           data.push(
-            ...references.subordinateAssets.map((asset) => ({
+            ...references.children.map((asset) => ({
               ...asset,
-              type: LinkedAssetType.Subordinate,
+              type: LinkType.Subordinate,
             })),
           );
         }
@@ -62,13 +61,12 @@ export class AssetEditorReferencesComponent implements OnInit, OnDestroy {
   }
 
   public removeReference(reference: FormLinkedAsset) {
-    if (reference.type === LinkedAssetType.Main) {
-      this.form.controls.mainAsset.setValue(null);
+    if (reference.type === LinkType.Main) {
+      this.form.controls.parent.setValue(null);
     }
-    if (reference.type === LinkedAssetType.Sibling) {
-      const remainingReferences =
-        this.form.controls.siblingAssets.value?.filter((asset) => asset.assetId !== reference.assetId) ?? [];
-      this.form.controls.siblingAssets.setValue(remainingReferences);
+    if (reference.type === LinkType.Sibling) {
+      const remainingReferences = this.form.controls.siblings.value?.filter((asset) => asset.id !== reference.id) ?? [];
+      this.form.controls.siblings.setValue(remainingReferences);
     }
     this.form.markAsDirty();
   }
@@ -96,15 +94,15 @@ export class AssetEditorReferencesComponent implements OnInit, OnDestroy {
     );
   }
 
-  protected readonly LinkedAssetType = LinkedAssetType;
+  protected readonly LinkedAssetType = LinkType;
 }
 
-export enum LinkedAssetType {
+export enum LinkType {
   Main = 'parent',
   Sibling = 'sibling',
   Subordinate = 'subordinate',
 }
 
 interface FormLinkedAsset extends LinkedAsset {
-  type: LinkedAssetType;
+  type: LinkType;
 }

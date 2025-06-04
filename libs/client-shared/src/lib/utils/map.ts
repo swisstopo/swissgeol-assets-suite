@@ -1,10 +1,11 @@
 import { isNotNil } from '@asset-sg/core';
 import { Geom, LV95, Studies, Study } from '@asset-sg/shared';
+import { Coordinate } from '@asset-sg/shared/v2';
 import * as A from 'fp-ts/Array';
 import { pipe } from 'fp-ts/function';
 import * as NEA from 'fp-ts/NonEmptyArray';
 import * as O from 'fp-ts/Option';
-import { Coordinate } from 'ol/coordinate';
+import { Coordinate as OlCoordinate } from 'ol/coordinate';
 import * as Extent from 'ol/extent';
 import Feature from 'ol/Feature';
 import { LineString, Point, Polygon, SimpleGeometry } from 'ol/geom';
@@ -18,7 +19,7 @@ import proj4 from 'proj4';
 import { isoWGSLat, isoWGSLng } from '../models';
 import { WindowService } from '../services';
 
-import { lv95ToWGS } from './wgs';
+import { coordinateToWGS, lv95ToWGS } from './wgs';
 
 proj4.defs(
   'EPSG:2056',
@@ -72,10 +73,15 @@ export const decorateFeature = (
   return feature;
 };
 
-export const olCoordsFromLV95Array = (coords: LV95[]): Coordinate[] => coords.map(olCoordsFromLV95);
+export const olCoordsFromLV95Array = (coords: LV95[]): OlCoordinate[] => coords.map(olCoordsFromLV95);
 
-export const olCoordsFromLV95 = (lv95Coords: LV95): Coordinate => {
+export const olCoordsFromLV95 = (lv95Coords: LV95): OlCoordinate => {
   const wgsCoords = lv95ToWGS(lv95Coords);
+  return fromLonLat([isoWGSLng.unwrap(wgsCoords.lng), isoWGSLat.unwrap(wgsCoords.lat)]);
+};
+
+export const olCoordsFromCoordinate = (coordinate: Coordinate): OlCoordinate => {
+  const wgsCoords = coordinateToWGS(coordinate);
   return fromLonLat([isoWGSLng.unwrap(wgsCoords.lng), isoWGSLat.unwrap(wgsCoords.lat)]);
 };
 
@@ -152,7 +158,7 @@ export const zoomToStudies = (
   }
 };
 
-const findExtentFromPoints = (coords: NEA.NonEmptyArray<Coordinate>): Extent.Extent =>
+const findExtentFromPoints = (coords: NEA.NonEmptyArray<OlCoordinate>): Extent.Extent =>
   pipe(
     coords,
     A.reduce(

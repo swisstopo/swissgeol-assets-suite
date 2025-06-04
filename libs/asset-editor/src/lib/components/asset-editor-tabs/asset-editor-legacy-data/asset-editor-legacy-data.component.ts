@@ -1,5 +1,5 @@
 import { Component, Input } from '@angular/core';
-import { AssetEditDetail } from '@asset-sg/shared';
+import { Asset, AssetLegacyData } from '@asset-sg/shared/v2';
 
 @Component({
   selector: 'asset-sg-editor-legacy-data',
@@ -8,5 +8,9 @@ import { AssetEditDetail } from '@asset-sg/shared';
   standalone: false,
 })
 export class AssetEditorLegacyDataComponent {
-  @Input() asset: AssetEditDetail | null = null;
+  @Input() asset: Asset | null = null;
+
+  get legacyData(): AssetLegacyData | null {
+    return this.asset?.legacyData ?? null;
+  }
 }

@@ -1,4 +1,5 @@
-import { Workflow, WorkflowStatus } from '../models/workflow';
+import { WorkflowStatus } from '@swisstopo/swissgeol-ui-core';
+import { Workflow } from '../models/workflow';
 import { Role } from '../models/workgroup';
 import { Policy } from './base/policy';
 
