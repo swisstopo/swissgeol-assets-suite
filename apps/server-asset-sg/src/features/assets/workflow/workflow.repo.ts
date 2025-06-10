@@ -32,7 +32,7 @@ export class WorkflowRepo implements FindRepo<Workflow, AssetId> {
       data: {
         status: to.status ?? undefined,
         assignee: to.assigneeId === null ? { disconnect: true } : { connect: { id: to.assigneeId } },
-        hasRequestedChanges: hasRequestedChanges ?? false,
+        hasRequestedChanges: hasRequestedChanges,
         changes: {
           create: {
             comment,

@@ -10,6 +10,7 @@ import {
 } from '@asset-sg/shared/v2';
 import { TranslateService } from '@ngx-translate/core';
 import { type SgcWorkflowSelectionEntry, WorkflowChange } from '@swisstopo/swissgeol-ui-core';
+import { SgcWorkflowChangeEvent } from '@swisstopo/swissgeol-ui-core/dist/types/components/sgc-workflow/sgc-workflow';
 import { SgcWorkflowSelectionChangeEvent } from '@swisstopo/swissgeol-ui-core/dist/types/components/sgc-workflow/sgc-workflow-selection/sgc-workflow-selection';
 import { AssetEditorService } from '../../../services/asset-editor.service';
 import { WorkflowApiService } from '../../../services/workflow-api.service';
@@ -35,7 +36,7 @@ export class AssetEditorStatusComponent implements OnChanges {
 
   ngOnChanges(changes: SimpleChanges) {
     if ('workflow' in changes && this.workflow !== null) {
-      this.assetEditorService.getUsersForCurrentWorkgroup(this.workflow.workgroupId).subscribe((users) => {
+      this.assetEditorService.getUsersForWorkgroup(this.workflow.workgroupId).subscribe((users) => {
         this.availableAssignees = users;
       });
     }
@@ -71,21 +72,27 @@ export class AssetEditorStatusComponent implements OnChanges {
     });
   }
 
-  handleWorkflowChange(event: any): void {
-    const workflowChange: WorkflowChange = event.detail;
+  handleWorkflowChange(event: SgcWorkflowChangeEvent): void {
+    if (!this.workflow) {
+      return;
+    }
+    const workflowChange: WorkflowChange = event.detail.changes;
     const data: WorkflowChangeData = {
       status: workflowChange.toStatus as UnpublishedWorkflowStatus,
       comment: workflowChange.comment,
-      assigneeId: (workflowChange.toAssignee?.id as string) ?? this.workflow?.assignee?.id,
-      hasRequestedChanges: true,
+      assigneeId: workflowChange.toAssignee?.id as string,
+      hasRequestedChanges: workflowChange.hasRequestedChanges,
     };
-    this.assetEditorService.createWorkflowChange(this.workflow!.id, data).subscribe((workflow) => {
+    this.assetEditorService.createWorkflowChange(this.workflow.id, data).subscribe((workflow) => {
       this.workflow = workflow;
     });
   }
 
   handleWorkflowPublish(): void {
-    this.assetEditorService.publishAsset(this.workflow!.id).subscribe((workflow) => {
+    if (!this.workflow) {
+      return;
+    }
+    this.assetEditorService.publishAsset(this.workflow.id).subscribe((workflow) => {
       this.workflow = workflow;
     });
   }

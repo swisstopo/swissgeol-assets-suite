@@ -8,7 +8,7 @@ import {
   Contact,
   ContactData,
   ContactId,
-  UserSchema,
+  SimpleUserSchema,
   Workflow,
   WorkflowChangeData,
   WorkflowSchema,
@@ -104,21 +104,9 @@ export class AssetEditorService {
     return this.httpClient.post<Contact>(`/api/contacts`, patchContact);
   }
 
-  public getUsersForCurrentWorkgroup(workgroupId: WorkgroupId): Observable<SimpleUser[]> {
-    return this.httpClient.get<object[]>('/api/users').pipe(
-      map((it) => plainToInstance(UserSchema, it)),
-      map((it) => it.filter((user) => user.roles.has(workgroupId))),
-      map((it) =>
-        it.map(
-          (user) =>
-            ({
-              id: user.id,
-              firstName: user.firstName,
-              lastName: user.lastName,
-              role: user.roles.get(workgroupId)!,
-            }) as SimpleUser,
-        ),
-      ),
+  public getUsersForWorkgroup(workgroupId: WorkgroupId): Observable<SimpleUser[]> {
+    return this.httpClient.get<object[]>(`/api/workgroups/${workgroupId}/users`).pipe(
+      map((it) => plainToInstance(SimpleUserSchema, it)),
       map((it) => it.sort((a, b) => a.firstName.localeCompare(b.firstName))),
     );
   }
