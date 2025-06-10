@@ -15,7 +15,7 @@
         </mat-select-trigger>
       }
       @for (value of values; track value) {
-        <mat-option [value]="value">
+        <mat-option [value]="value" class="option">
           {{ (bindLabel ? $any(value[bindLabel]) : value) | smartTranslate }}
         </mat-option>
       }
