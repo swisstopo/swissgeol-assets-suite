@@ -136,7 +136,7 @@ export class ViewerControllerService {
     if (results.data.length === 1) {
       await this.loadAsset(results.data[0].assetId);
     } else {
-      this.store.dispatch(appSharedStateActions.setCurrentAsset({ asset: undefined, isLoading: false }));
+      this.store.dispatch(appSharedStateActions.setCurrentAsset({ asset: null, isLoading: false }));
     }
   }
 
