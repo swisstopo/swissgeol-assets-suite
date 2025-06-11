@@ -24,7 +24,7 @@ import {
   PatchAsset,
   Studies,
 } from '@asset-sg/shared';
-import { AssetContact, Workflow } from '@asset-sg/shared/v2';
+import { AssetContact, AssetData, LocalDate, Workflow } from '@asset-sg/shared/v2';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { Store } from '@ngrx/store';
 import * as O from 'fp-ts/lib/Option';
@@ -227,6 +227,28 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
     const filesToKeep = files.assetFiles.controls
       .filter((file) => !filesToDelete.includes(file.value.id) && !file.value.file)
       .map((file) => file.value);
+
+    const data: AssetData = {
+      title: general.titlePublic.value,
+      originalTitle: general.titleOriginal.value,
+      createdAt: LocalDate.fromDate(general.creationDate.value ?? new Date()),
+      receivedAt: LocalDate.fromDate(general.receiptDate.value ?? new Date()),
+      languageCodes: general.assetLanguages.value.map((it) => it.languageItemCode),
+      workgroupId: general.workgroupId.value!,
+      formatCode: general.assetFormatItemCode.value!,
+      kindCode: general.assetKindItemCode.value!,
+      topics: general.manCatLabelRefs.value,
+      isOfNationalInterest: general.isNatRel.value,
+      nationalInterestTypes: general.typeNatRels.value,
+      identifiers: general.ids.value.map((it) => ({
+        id: it.idId ?? undefined,
+        value: it.id,
+        description: it.description,
+      })),
+      files: filesToKeep.map((it) => ({
+        id: it.id,
+      })),
+    };
 
     const patchAsset: PatchAsset = {
       titlePublic: general.titlePublic.value,

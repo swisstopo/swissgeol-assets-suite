@@ -49,6 +49,7 @@ export interface TranslationKey {
   key: string;
 }
 
+// TODO This type now exists as `LocalizedString` in `@asset-sg/shared/v2`.
 export interface TranslatedValue {
   de: string;
   fr: string;
