@@ -1,11 +1,15 @@
 export * from './lib/models/base/model';
+export * from './lib/models/base/localized-string';
 export * from './lib/models/base/local-date';
 
 export * from './lib/models/app-config';
 export * from './lib/models/asset';
+export * from './lib/models/asset-file';
+export * from './lib/models/asset-identifier';
 export * from './lib/models/asset-search';
 export * from './lib/models/contact';
 export * from './lib/models/favorite';
+export * from './lib/models/localized-item';
 export * from './lib/models/study';
 export * from './lib/models/user';
 export * from './lib/models/workflow';
@@ -21,6 +25,8 @@ export * from './lib/policies/workgroup.policy';
 
 export * from './lib/schemas/base/schema';
 export * from './lib/schemas/asset.schema';
+export * from './lib/schemas/asset-file.schema';
+export * from './lib/schemas/asset-identifier.schema';
 export * from './lib/schemas/contact.schema';
 export * from './lib/schemas/user.schema';
 export * from './lib/schemas/workflow.schema';

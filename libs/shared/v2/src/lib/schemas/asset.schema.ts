@@ -1,173 +1,111 @@
 import { Transform, Type } from 'class-transformer';
-import {
-  IsArray,
-  IsBoolean,
-  IsDate,
-  IsEnum,
-  IsInt,
-  IsNumber,
-  IsObject,
-  IsString,
-  ValidateNested,
-} from 'class-validator';
-import {
-  AssetData,
-  AssetIdentifierData,
-  AssetLinksData,
-  AssetUsage,
-  AssetUsages,
-  ContactAssignment,
-  ContactAssignmentRole,
-  InfoGeol,
-  StudyData,
-  UsageStatusCode,
-  WorkStatusData,
-} from '../models/asset';
+import { IsArray, IsBoolean, IsInt, IsNotEmpty, IsObject, IsString, ValidateNested } from 'class-validator';
+import { Asset, AssetId, AssetLegacyData } from '../models/asset';
+import { AssetFile } from '../models/asset-file';
+import { AssetIdentifier } from '../models/asset-identifier';
 import { LocalDate } from '../models/base/local-date';
-import { StudyType } from '../models/study';
+import { AssetContact } from '../models/contact';
+import { LocalizedItemCode } from '../models/localized-item';
+import { UserId } from '../models/user';
+import { WorkgroupId } from '../models/workgroup';
 import { IsNullable, messageNullableInt, messageNullableString } from '../utils/class-validator/is-nullable.decorator';
+import { AssetContactSchema } from './asset-contact.schema';
+import { AssetFileSchema } from './asset-file.schema';
+import { AssetIdentifierSchema } from './asset-identifier.schema';
 import { Schema } from './base/schema';
 
-export class AssetUsageSchema extends Schema implements AssetUsage {
-  @IsBoolean()
-  isAvailable!: boolean;
-
-  @IsEnum(UsageStatusCode)
-  statusCode!: UsageStatusCode;
-
+export class AssetLegacyDataSchema extends Schema implements AssetLegacyData {
+  @IsInt({ message: messageNullableInt })
   @IsNullable()
-  @ValidateNested()
-  @Type(() => String)
-  @Transform(({ value }) => LocalDate.parse(value))
-  availableAt!: LocalDate | null;
-}
-
-export class AssetUsagesSchema extends Schema implements AssetUsages {
-  @IsObject()
-  @ValidateNested()
-  @Type(() => AssetUsageSchema)
-  public!: AssetUsageSchema;
-
-  @IsObject()
-  @ValidateNested()
-  @Type(() => AssetUsageSchema)
-  internal!: AssetUsageSchema;
-}
-
-export class InfoGeolSchema extends Schema implements InfoGeol {
-  @IsString({ message: messageNullableString })
-  @IsNullable()
-  main!: string | null;
+  sgsId!: number | null;
 
   @IsString({ message: messageNullableString })
   @IsNullable()
-  contact!: string | null;
+  data!: string | null;
 
   @IsString({ message: messageNullableString })
   @IsNullable()
-  auxiliary!: string | null;
+  contactData!: string | null;
+
+  @IsString({ message: messageNullableString })
+  @IsNullable()
+  auxiliaryData!: string | null;
+
+  @IsString({ message: messageNullableString })
+  @IsNullable()
+  municipality!: string | null;
 }
 
-export class ContactAssignmentSchema extends Schema implements ContactAssignment {
+export class AssetSchema extends Schema implements Asset {
   @IsInt()
-  contactId!: number;
-
-  @IsEnum(ContactAssignmentRole)
-  role!: ContactAssignmentRole;
-}
-
-export class StudyDataSchema extends Schema implements StudyData {
-  @IsInt({ message: messageNullableInt })
-  @IsNullable()
-  id?: number | undefined;
+  id!: number;
 
   @IsString()
-  geom!: string;
-
-  @IsEnum(StudyType)
-  type!: StudyType;
-}
-
-export class WorkStatusSchema extends Schema implements WorkStatusData {
-  @IsInt({ message: messageNullableInt })
-  @IsNullable()
-  id?: number | undefined;
-
-  @IsDate()
-  @Type(() => Date)
-  createdAt!: Date;
-
-  @IsString()
-  itemCode!: string;
-}
-
-export class AssetIdentifierSchema extends Schema implements AssetIdentifierData {
-  @IsInt({ message: messageNullableInt })
-  @IsNullable()
-  id?: number | undefined;
-
-  @IsString()
-  name!: string;
-
-  @IsString()
-  description!: string;
-}
-
-export class AssetLinksDataSchema extends Schema implements AssetLinksData {
-  @IsInt({ message: messageNullableInt })
-  @IsNullable()
-  parent!: number | null;
-
-  @IsInt({ each: true })
-  siblings!: number[];
-}
-
-export class AssetDataSchema extends Schema implements AssetData {
-  @IsObject()
-  @ValidateNested()
-  @Type(() => AssetLinksDataSchema)
-  links!: AssetLinksDataSchema;
-
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => AssetIdentifierSchema)
-  identifiers!: AssetIdentifierSchema[];
-
-  @IsBoolean()
-  @IsNullable()
-  isPublic!: boolean;
-
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => StudyDataSchema)
-  studies!: StudyDataSchema[];
-
-  @IsString()
+  @IsNotEmpty()
   title!: string;
 
   @IsString({ message: messageNullableString })
   @IsNullable()
   originalTitle!: string | null;
 
-  @IsString()
-  kindCode!: string;
+  @IsBoolean()
+  isOfNationalInterest!: boolean;
+
+  @IsBoolean()
+  isPublic!: boolean;
+
+  @IsBoolean()
+  isExtract!: boolean;
+
+  @IsObject()
+  @ValidateNested()
+  @Type(() => AssetLegacyDataSchema)
+  legacyData!: AssetLegacyData | null;
 
   @IsString()
-  formatCode!: string;
-
-  @IsString({ each: true })
-  languageCodes!: string[];
+  kindCode!: LocalizedItemCode;
 
   @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => ContactAssignmentSchema)
-  contactAssignments!: ContactAssignmentSchema[];
-
   @IsString({ each: true })
-  manCatLabelCodes!: string[];
+  languageCodes!: LocalizedItemCode[];
 
+  @IsArray()
   @IsString({ each: true })
-  natRelCodes!: string[];
+  nationalInterestTypes!: LocalizedItemCode[];
+
+  @IsArray()
+  @IsString({ each: true })
+  topics!: LocalizedItemCode[];
+
+  @IsObject()
+  @ValidateNested()
+  @Type(() => AssetIdentifierSchema)
+  identifiers!: AssetIdentifier[];
+
+  @IsObject()
+  @ValidateNested()
+  @Type(() => AssetFileSchema)
+  files!: AssetFile[];
+
+  @IsObject()
+  @ValidateNested()
+  @Type(() => AssetContactSchema)
+  contacts!: AssetContact[];
+
+  @IsInt({ message: messageNullableInt })
+  @IsNullable()
+  parentId!: AssetId | null;
+
+  @IsArray()
+  @IsInt({ message: messageNullableInt, each: true })
+  siblingIds!: AssetId[];
+
+  @IsInt()
+  workgroupId!: WorkgroupId;
+
+  @IsString({ message: messageNullableString })
+  @IsNullable()
+  creatorId!: UserId | null;
 
   @ValidateNested()
   @Type(() => String)
@@ -178,28 +116,4 @@ export class AssetDataSchema extends Schema implements AssetData {
   @Type(() => String)
   @Transform(({ value }) => LocalDate.tryParse(value))
   receivedAt!: LocalDate;
-
-  @IsInt({ message: messageNullableInt })
-  @IsNullable()
-  sgsId!: number | null;
-
-  @IsString({ message: messageNullableString })
-  @IsNullable()
-  municipality!: string | null;
-
-  @IsBoolean()
-  isNatRel!: boolean;
-
-  @IsObject()
-  @ValidateNested()
-  @Type(() => InfoGeolSchema)
-  infoGeol!: InfoGeolSchema;
-
-  @IsObject()
-  @ValidateNested()
-  @Type(() => AssetUsagesSchema)
-  usage!: AssetUsagesSchema;
-
-  @IsNumber()
-  workgroupId!: number;
 }

@@ -1,14 +1,4 @@
-import {
-  Asset,
-  AssetData,
-  AssetId,
-  AssetStudy,
-  AssetStudyId,
-  isNotPersisted,
-  isPersisted,
-  StudyData,
-  StudyType,
-} from '@asset-sg/shared/v2';
+import { Asset, AssetData, AssetId, isNotPersisted, isPersisted, StudyType } from '@asset-sg/shared/v2';
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '@/core/prisma.service';
