@@ -21,7 +21,7 @@
       }
 
       @for (option of customOptionsToRender; track option.value) {
-        <mat-option [value]="option.value" [disabled]="option.isDisabled">
+        <mat-option [value]="option.value" [disabled]="option.isDisabled" class="option">
           <ng-container *ngTemplateOutlet="option.template" />
         </mat-option>
       }
