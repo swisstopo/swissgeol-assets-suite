@@ -21,6 +21,7 @@ export const deAppTranslations = {
   close: 'Schliessen',
   datePlaceholder: 'JJJJ-MM-TT',
   deletedUserName: 'gelöschter Benutzer',
+  downloadFailed: 'Datei konnte nicht heruntergeladen werden.',
   workgroup: {
     title: 'Arbeitsgruppe',
     errors: {

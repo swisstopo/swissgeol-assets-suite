@@ -23,6 +23,7 @@ export const frAppTranslations: AppTranslations = {
   close: 'Fermer',
   datePlaceholder: 'AAAA-MM-JJ',
   deletedUserName: 'FR gelöschter Benutzer',
+  downloadFailed: 'FR Datei konnte nicht heruntergeladen werden.',
   workgroup: {
     title: 'groupe de travail',
     errors: {

@@ -23,6 +23,7 @@ export const itAppTranslations: AppTranslations = {
   close: 'IT Schliessen',
   datePlaceholder: 'AAAA-MM-GG',
   deletedUserName: 'IT gelöschter Benutzer',
+  downloadFailed: 'IT Datei konnte nicht heruntergeladen werden.',
   workgroup: {
     title: 'IT Arbeitsgruppe',
     errors: {

@@ -107,17 +107,7 @@ export class HttpInterceptor implements AngularHttpInterceptor, OnDestroy {
         break;
       default: {
         if (error.status < 500) {
-          this.store.dispatch(
-            showAlert({
-              alert: {
-                id: `request-error-${error.status}-${error.url}`,
-                text: error.error.message ?? error.message,
-                type: AlertType.Error,
-                isPersistent: true,
-              },
-            }),
-          );
-          break;
+          throw error;
         }
 
         // In some requests, the error is returned as Blob,
@@ -126,6 +116,7 @@ export class HttpInterceptor implements AngularHttpInterceptor, OnDestroy {
           error.error instanceof Blob
             ? JSON.parse(await error.error.text()).message
             : (error.error.message ?? error.message);
+
         this.store.dispatch(
           showAlert({
             alert: {
