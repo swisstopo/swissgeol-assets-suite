@@ -1,4 +1,4 @@
-import { Role, SimpleUser, User, UserData, UserId, WorkgroupId } from '@asset-sg/shared/v2';
+import { mapRoleFromPrisma, Role, SimpleUser, User, UserData, UserId, WorkgroupId } from '@asset-sg/shared/v2';
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 
@@ -133,7 +133,7 @@ type SelectedUser = Prisma.AssetUserGetPayload<{ select: typeof userSelection }>
 const parse = (data: SelectedUser): User => {
   const roles = new Map<WorkgroupId, Role>();
   for (const workgroup of data.workgroups) {
-    roles.set(workgroup.workgroupId, workgroup.role);
+    roles.set(workgroup.workgroupId, mapRoleFromPrisma(workgroup.role));
   }
   return {
     id: data.id,

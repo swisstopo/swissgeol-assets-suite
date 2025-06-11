@@ -1,5 +1,5 @@
-import { Role, WorkflowStatus } from '@prisma/client';
-import { Workflow } from '../models/workflow';
+import { Workflow, WorkflowStatus } from '../models/workflow';
+import { Role } from '../models/workgroup';
 import { Policy } from './base/policy';
 
 export class WorkflowPolicy extends Policy<Workflow> {

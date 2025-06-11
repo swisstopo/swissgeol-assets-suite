@@ -1,6 +1,8 @@
-import { Role as PrismaRole } from '@prisma/client';
+import { getRoleIndex, Role, SimpleUser } from '@swisstopo/swissgeol-ui-core';
 import { Data, Model } from './base/model';
 import { UserId } from './user';
+
+export { SimpleUser, Role, getRoleIndex };
 
 export interface Workgroup extends Model<WorkgroupId> {
   name: string;
@@ -24,20 +26,4 @@ export type SimpleWorkgroup = Pick<Workgroup, 'id' | 'name'> & {
    * Note that admins are registered as {@link Role.Publisher} for every workgroup.
    */
   role: Role;
-};
-
-export type Role = PrismaRole;
-export const Role = PrismaRole;
-
-export const getRoleIndex = (role: Role): number => {
-  switch (role) {
-    case 'Reader':
-      return 0;
-    case 'Editor':
-      return 1;
-    case 'Reviewer':
-      return 2;
-    case 'Publisher':
-      return 3;
-  }
 };

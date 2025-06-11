@@ -1,5 +1,4 @@
-import { Role } from '@prisma/client';
-import { Role as SgcRole, SimpleUser } from '@swisstopo/swissgeol-ui-core';
+import { Role, SimpleUser } from '@swisstopo/swissgeol-ui-core';
 import { IsBoolean, IsEnum, IsString } from 'class-validator';
 import { User, UserData, UserId } from '../models/user';
 import { WorkgroupId } from '../models/workgroup';
@@ -42,6 +41,6 @@ export class SimpleUserSchema implements SimpleUser {
   @IsString()
   lastName!: string;
 
-  @IsEnum(SgcRole)
-  role!: SgcRole;
+  @IsEnum(Role)
+  role!: Role;
 }
