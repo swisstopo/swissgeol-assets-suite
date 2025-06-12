@@ -21,6 +21,7 @@ import { ParseBody } from '@/core/decorators/parse.decorator';
 import { AssetEditRepo } from '@/features/assets/asset-edit/asset-edit.repo';
 import { AssetEditService } from '@/features/assets/asset-edit/asset-edit.service';
 import { AssetSearchService } from '@/features/assets/assets/search/asset-search.service';
+import { WorkflowService } from '@/features/assets/workflow/workflow.service';
 
 @Controller('/asset-edit')
 export class AssetEditController {
@@ -28,6 +29,7 @@ export class AssetEditController {
     private readonly assetEditRepo: AssetEditRepo,
     private readonly assetEditService: AssetEditService,
     private readonly assetSearchService: AssetSearchService,
+    private readonly workflowService: WorkflowService,
   ) {}
 
   @Get('/:id')
@@ -71,7 +73,11 @@ export class AssetEditController {
     if (asset === null) {
       throw new HttpException('not found', 404);
     }
-    await this.assetSearchService.register(asset);
+    await Promise.all([
+      this.assetSearchService.register(asset),
+      this.workflowService.updateSelectionByChanges(record, asset),
+    ]);
+
     return AssetEditDetail.encode(asset);
   }
 
