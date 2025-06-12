@@ -23,6 +23,7 @@ export const enAppTranslations: AppTranslations = {
   close: 'Close',
   datePlaceholder: 'YYYY-MM-DD',
   deletedUserName: 'deleted User',
+  downloadFailed: 'File could not be downloaded.',
   workgroup: {
     title: 'Workgroup',
     errors: {

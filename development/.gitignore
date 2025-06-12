@@ -5,4 +5,4 @@ volumes
 .env.local
 
 # DB dump for local development
-init/dump.sql
+init/dump_old.sql

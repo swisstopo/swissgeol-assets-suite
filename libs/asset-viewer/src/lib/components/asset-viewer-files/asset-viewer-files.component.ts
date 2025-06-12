@@ -1,9 +1,10 @@
 import { HttpClient } from '@angular/common/http';
 import { Component, inject, Input, OnDestroy, OnInit } from '@angular/core';
-import { AppState, FileNamePipe, fromAppShared } from '@asset-sg/client-shared';
+import { AlertType, AppState, FileNamePipe, fromAppShared, showAlert } from '@asset-sg/client-shared';
 import { AssetFile, AssetFileType } from '@asset-sg/shared';
 import { AssetId } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
+import { TranslateService } from '@ngx-translate/core';
 import { Subscription } from 'rxjs';
 import { AssetDetailFileVM } from '../../state/asset-search/asset-search.selector';
 
@@ -28,6 +29,8 @@ export class AssetViewerFilesComponent implements OnInit, OnDestroy {
   private readonly store = inject(Store<AppState>);
 
   private readonly httpClient = inject(HttpClient);
+
+  private readonly translateService = inject(TranslateService);
 
   public locale!: string;
 
@@ -84,6 +87,19 @@ export class AssetViewerFilesComponent implements OnInit, OnDestroy {
         setTimeout(() => {
           window.URL.revokeObjectURL(url);
         });
+      },
+      error: (error) => {
+        console.error('Download error', error);
+        this.store.dispatch(
+          showAlert({
+            alert: {
+              id: `download-error-${error.status}-${error.url}`,
+              text: this.translateService.get('downloadFailed'),
+              type: AlertType.Error,
+              isPersistent: true,
+            },
+          }),
+        );
       },
       complete: () => {
         this.activeFileDownloads.delete(key);
