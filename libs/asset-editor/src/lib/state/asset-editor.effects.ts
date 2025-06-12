@@ -39,7 +39,7 @@ export class AssetEditorEffects {
 
   loadWorkflow$ = createEffect(() =>
     this.actions$.pipe(
-      ofType(actions.loadAsset),
+      ofType(actions.loadWorkflow, actions.loadAsset),
       switchMap(({ assetId }) => this.workflowApiService.fetchWorkflow(assetId)),
       map((workflow) => setWorkflow({ workflow })),
     ),
@@ -116,6 +116,13 @@ export class AssetEditorEffects {
           },
         }),
       ),
+    ),
+  );
+
+  fetchWorkflowAfterAssetChanged$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(actions.updateAssetEditDetailResult),
+      map(({ asset }) => actions.loadWorkflow({ assetId: asset.assetId })),
     ),
   );
 }

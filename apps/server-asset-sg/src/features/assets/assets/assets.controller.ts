@@ -55,6 +55,7 @@ export class AssetsController {
     if (asset === null) {
       throw new HttpException('not found', 404);
     }
+
     return asset;
   }
 

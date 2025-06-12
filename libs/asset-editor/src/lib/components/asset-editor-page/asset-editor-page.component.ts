@@ -253,33 +253,28 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
       isPublic: false, // todo @TIL-EBP: this should be changed dynamically
     };
     this.isLoading = true;
+
     this.subscriptions.add(
-      asset !== null && this.mode === EditorMode.Edit
-        ? this.assetEditorService
-            .deleteFiles(asset.assetId, filesToDelete)
-            .pipe(
-              switchMap(() => this.assetEditorService.uploadFiles(asset.assetId, newFiles)),
-              switchMap(() => this.assetEditorService.updateAssetDetail(asset.assetId, patchAsset)),
-            )
-            .subscribe((asset) => {
-              this.isLoading = false;
-              this.store.dispatch(actions.updateAssetEditDetailResult({ asset }));
-            })
-        : this.assetEditorService
-            .createAsset(patchAsset)
-            .pipe(
-              switchMap((newAsset) =>
-                this.assetEditorService.uploadFiles(newAsset.assetId, newFiles).pipe(map(() => newAsset)),
-              ),
-              switchMap((newAsset) => this.assetEditorService.fetchAsset(newAsset.assetId)),
-            )
-            .subscribe((asset) => {
-              this.isLoading = false;
+      (asset !== null && this.mode === EditorMode.Edit
+        ? this.assetEditorService.deleteFiles(asset.assetId, filesToDelete).pipe(
+            switchMap(() => this.assetEditorService.uploadFiles(asset.assetId, newFiles)),
+            switchMap(() => this.assetEditorService.updateAssetDetail(asset.assetId, patchAsset)),
+          )
+        : this.assetEditorService.createAsset(patchAsset).pipe(
+            switchMap((newAsset) =>
+              this.assetEditorService.uploadFiles(newAsset.assetId, newFiles).pipe(map(() => newAsset)),
+            ),
+            switchMap((newAsset) => this.assetEditorService.fetchAsset(newAsset.assetId)),
+            tap((asset) => {
               this.asset = asset;
               this.mode = EditorMode.Edit;
-              this.store.dispatch(actions.updateAssetEditDetailResult({ asset }));
               this.router.navigate([this.currentLang, 'asset-admin', asset.assetId], { replaceUrl: true }).then();
             }),
+          )
+      ).subscribe((asset) => {
+        this.isLoading = false;
+        this.store.dispatch(actions.updateAssetEditDetailResult({ asset }));
+      }),
     );
   }
 
