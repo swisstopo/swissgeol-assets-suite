@@ -265,6 +265,7 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
             )
             .subscribe((asset) => {
               this.isLoading = false;
+              this.form.markAsPristine();
               this.store.dispatch(actions.updateAssetEditDetailResult({ asset }));
             })
         : this.assetEditorService
@@ -278,8 +279,10 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
             .subscribe((asset) => {
               this.isLoading = false;
               this.form.markAsPristine();
+              this.asset = asset;
+              this.mode = EditorMode.Edit;
               this.store.dispatch(actions.updateAssetEditDetailResult({ asset }));
-              this.router.navigate([this.currentLang, 'asset-admin', asset.assetId]);
+              this.router.navigate([this.currentLang, 'asset-admin', asset.assetId], { replaceUrl: true }).then();
             }),
     );
   }
