@@ -1,5 +1,15 @@
 import { Transform, Type } from 'class-transformer';
-import { IsArray, IsBoolean, IsEnum, IsIn, IsNumber, IsObject, IsString, ValidateNested } from 'class-validator';
+import {
+  IsArray,
+  IsBoolean,
+  IsEnum,
+  IsIn,
+  IsNumber,
+  IsObject,
+  IsOptional,
+  IsString,
+  ValidateNested,
+} from 'class-validator';
 import { AssetId } from '../models/asset';
 import { LocalDate } from '../models/base/local-date';
 import { SimpleUser, UserId } from '../models/user';
@@ -52,6 +62,10 @@ export class WorkflowChangeDataSchema extends Schema implements WorkflowChangeDa
 
   @IsIn(UnpublishedWorkflowStatus)
   status!: UnpublishedWorkflowStatus;
+
+  @IsOptional()
+  @IsBoolean()
+  hasRequestedChanges?: boolean;
 }
 
 export class WorkflowSelectionSchema extends Schema implements WorkflowSelection {

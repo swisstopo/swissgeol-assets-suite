@@ -1,8 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { User, Workgroup, WorkgroupId } from '@asset-sg/shared/v2';
+import { Role, User, Workgroup, WorkgroupId } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
-import { Role } from '@prisma/client';
 import * as actions from '../../state/admin.actions';
 import { AppStateWithAdmin } from '../../state/admin.reducer';
 

@@ -1,8 +1,7 @@
-import { Role } from '@prisma/client';
 import { Type } from 'class-transformer';
 import { IsDate, IsEnum, IsNumber, IsString, ValidateNested } from 'class-validator';
 import { UserId } from '../models/user';
-import { UserOnWorkgroup, Workgroup, WorkgroupData, WorkgroupId } from '../models/workgroup';
+import { Role, UserOnWorkgroup, Workgroup, WorkgroupData, WorkgroupId } from '../models/workgroup';
 import { IsNullable } from '../utils/class-validator/is-nullable.decorator';
 import { Schema, TransformMap } from './base/schema';
 

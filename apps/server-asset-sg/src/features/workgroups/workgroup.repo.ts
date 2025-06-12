@@ -1,4 +1,12 @@
-import { User, UserId, UserOnWorkgroup, Workgroup, WorkgroupData, WorkgroupId } from '@asset-sg/shared/v2';
+import {
+  mapRoleFromPrisma,
+  User,
+  UserId,
+  UserOnWorkgroup,
+  Workgroup,
+  WorkgroupData,
+  WorkgroupId,
+} from '@asset-sg/shared/v2';
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '@/core/prisma.service';
@@ -138,7 +146,7 @@ const parse = (data: SelectedWorkgroup): Workgroup => {
   for (const user of data.users) {
     users.set(user.user.id, {
       email: user.user.email,
-      role: user.role,
+      role: mapRoleFromPrisma(user.role),
       firstName: user.user.firstName,
       lastName: user.user.lastName,
     });

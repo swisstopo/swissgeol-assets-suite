@@ -1,6 +1,6 @@
 import {
-  AssetId,
   convert,
+  SimpleUserSchema,
   SimpleWorkgroup,
   User,
   Workgroup,
@@ -23,6 +23,7 @@ import {
   Put,
   Query,
 } from '@nestjs/common';
+import { SimpleUser } from '@swisstopo/swissgeol-ui-core';
 import { Expose, Transform as TransformValue } from 'class-transformer';
 import { IsBoolean } from 'class-validator';
 import { authorize } from '@/core/authorize';
@@ -30,6 +31,7 @@ import { Authorize } from '@/core/decorators/authorize.decorator';
 import { CurrentUser } from '@/core/decorators/current-user.decorator';
 import { ParseBody } from '@/core/decorators/parse.decorator';
 import { RepoListOptions } from '@/core/repo';
+import { UserRepo } from '@/features/users/user.repo';
 import { WorkgroupRepo } from '@/features/workgroups/workgroup.repo';
 
 class ListQuery {
@@ -41,7 +43,10 @@ class ListQuery {
 
 @Controller('/workgroups')
 export class WorkgroupsController {
-  constructor(private readonly workgroupRepo: WorkgroupRepo) {}
+  constructor(
+    private readonly workgroupRepo: WorkgroupRepo,
+    private readonly userRepo: UserRepo,
+  ) {}
 
   @Get('/')
   @Authorize.User()
@@ -56,13 +61,24 @@ export class WorkgroupsController {
   }
 
   @Get('/:id')
-  async show(@Param('id', ParseIntPipe) id: AssetId, @CurrentUser() user: User): Promise<Workgroup> {
+  async show(@Param('id', ParseIntPipe) id: WorkgroupId, @CurrentUser() user: User): Promise<Workgroup> {
     const record = await this.workgroupRepo.find(id);
     if (record === null) {
       throw new HttpException('not found', 404);
     }
     authorize(WorkgroupPolicy, user).canShow(record);
     return convert(WorkgroupSchema, record);
+  }
+
+  @Get('/:id/users')
+  async listUsers(@Param('id', ParseIntPipe) id: WorkgroupId, @CurrentUser() user: User): Promise<SimpleUser[]> {
+    const record = await this.workgroupRepo.find(id);
+    if (record === null) {
+      throw new HttpException('not found', 404);
+    }
+    authorize(WorkgroupPolicy, user).canShow(record);
+    const users = await this.userRepo.findByWorkgroupId(id);
+    return convert(SimpleUserSchema, users);
   }
 
   @Post('/')

@@ -44,6 +44,17 @@ export const enAppTranslations: AppTranslations = {
     Published: 'Published',
     notPublished: 'Not Published',
   },
+  workflowSelection: {
+    general: 'General',
+    normalFiles: 'Normal Files',
+    legalFiles: 'Legal Consents',
+    initiators: 'Clients',
+    suppliers: 'Suppliers',
+    authors: 'Authors',
+    references: 'References',
+    geometries: 'Geometries',
+    legacy: 'Legacy Data',
+  },
   menuBar: {
     filters: 'Filters',
     admin: 'Administration',
@@ -265,6 +276,13 @@ export const enAppTranslations: AppTranslations = {
         tabValidationErrors: {
           tab: 'Tab',
           hasValidationErrors: 'has validation errors',
+        },
+      },
+      status: {
+        tabName: 'Status',
+        selectionCategories: {
+          files: 'Files',
+          contacts: 'Contacts',
         },
       },
       legacyData: {
