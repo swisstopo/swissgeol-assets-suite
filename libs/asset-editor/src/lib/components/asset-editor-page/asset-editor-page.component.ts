@@ -5,6 +5,7 @@ import { ActivatedRoute, Router, RouterStateSnapshot } from '@angular/router';
 import {
   AppSharedState,
   ConfirmDialogComponent,
+  ConfirmDialogData,
   CURRENT_LANG,
   fromAppShared,
   ROUTER_SEGMENTS,
@@ -184,9 +185,10 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
   }
 
   public openConfirmDialogForAssetDeletion(assetId: number) {
-    const dialogRef = this.dialogService.open<ConfirmDialogComponent>(ConfirmDialogComponent, {
+    const dialogRef = this.dialogService.open<ConfirmDialogComponent, ConfirmDialogData>(ConfirmDialogComponent, {
       data: {
         text: 'confirmDelete',
+        confirm: 'confirm',
       },
     });
     dialogRef
@@ -292,9 +294,10 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
     ) {
       return true;
     }
-    const dialogRef = this.dialogService.open<ConfirmDialogComponent>(ConfirmDialogComponent, {
+    const dialogRef = this.dialogService.open<ConfirmDialogComponent, ConfirmDialogData>(ConfirmDialogComponent, {
       data: {
         text: 'edit.questionDiscardChanges',
+        confirm: 'save',
       },
     });
     return dialogRef.afterClosed();

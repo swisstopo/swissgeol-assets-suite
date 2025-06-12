@@ -40,6 +40,12 @@
   }
 }
 
+::ng-deep .mat-mdc-option.option > .mdc-list-item__primary-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 :host([small]) ::ng-deep {
   .mdc-text-field--filled {
     border-radius: 4px;
