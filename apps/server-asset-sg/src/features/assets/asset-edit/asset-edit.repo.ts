@@ -106,6 +106,11 @@ export class AssetEditRepo implements Repo<AssetEditDetail, number, AssetEditDat
         },
       });
 
+      await this.prismaService.assetXAssetY.createMany({
+        data: data.patch.siblingAssetIds.map((assetYId) => ({ assetXId: asset.assetId, assetYId })),
+        skipDuplicates: true,
+      });
+
       await createStudies(this.prismaService, asset.assetId, data.patch.newStudies)();
 
       return (await this.find(asset.assetId)) as AssetEditDetail;
