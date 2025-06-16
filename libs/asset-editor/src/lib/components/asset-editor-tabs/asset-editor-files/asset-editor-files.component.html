@@ -6,7 +6,7 @@
     <ng-container slot="content">
       <div class="content">
         <asset-sg-file-drop-zone [form]="form" [fileType]="fileType$.value"></asset-sg-file-drop-zone>
-        @if (dataSource.data.length > 0) {
+        @if (dataSource.data.length > 0 || searchTerm$.value) {
           <div>
             <div class="actions">
               <button asset-sg-secondary (click)="selectFilesForDeletion()" [disabled]="isDisabled">
