@@ -3,8 +3,20 @@ import { inject, Injectable } from '@angular/core';
 import { ApiError, httpErrorResponseError } from '@asset-sg/client-shared';
 import { OE, ORD, unknownError } from '@asset-sg/core';
 import { AssetEditDetail, PatchAsset } from '@asset-sg/shared';
-import { Contact, ContactData, ContactId } from '@asset-sg/shared/v2';
+import {
+  AssetId,
+  Contact,
+  ContactData,
+  ContactId,
+  SimpleUserSchema,
+  Workflow,
+  WorkflowChangeData,
+  WorkflowSchema,
+  WorkgroupId,
+} from '@asset-sg/shared/v2';
 import * as RD from '@devexperts/remote-data-ts';
+import { SimpleUser } from '@swisstopo/swissgeol-ui-core';
+import { plainToInstance } from 'class-transformer';
 import * as E from 'fp-ts/Either';
 import { concat, forkJoin, map, Observable, of, startWith, toArray } from 'rxjs';
 
@@ -90,5 +102,24 @@ export class AssetEditorService {
 
   public createContact(patchContact: ContactData): Observable<Contact> {
     return this.httpClient.post<Contact>(`/api/contacts`, patchContact);
+  }
+
+  public getUsersForWorkgroup(workgroupId: WorkgroupId): Observable<SimpleUser[]> {
+    return this.httpClient.get<object[]>(`/api/workgroups/${workgroupId}/users`).pipe(
+      map((it) => plainToInstance(SimpleUserSchema, it)),
+      map((it) => it.sort((a, b) => a.firstName.localeCompare(b.firstName))),
+    );
+  }
+
+  public publishAsset(assetId: AssetId): Observable<Workflow> {
+    return this.httpClient
+      .post<Workflow>(`/api/assets/${assetId}/workflow/publish`, null)
+      .pipe(map((data) => plainToInstance(WorkflowSchema, data)));
+  }
+
+  public createWorkflowChange(assetId: AssetId, data: WorkflowChangeData): Observable<Workflow> {
+    return this.httpClient
+      .post<Workflow>(`/api/assets/${assetId}/workflow/change`, data)
+      .pipe(map((data) => plainToInstance(WorkflowSchema, data)));
   }
 }

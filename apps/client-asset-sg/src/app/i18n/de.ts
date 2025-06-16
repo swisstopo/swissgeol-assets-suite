@@ -42,6 +42,17 @@ export const deAppTranslations = {
     Published: 'Veröffentlicht',
     notPublished: 'Nicht Veröffentlicht',
   },
+  workflowSelection: {
+    general: 'General',
+    normalFiles: 'Normale Dateien',
+    legalFiles: 'Rechtliche Einwilligungen',
+    initiators: 'Auftraggeber',
+    suppliers: 'Einlieferer',
+    authors: 'Authoren',
+    references: 'Referenzen',
+    geometries: 'Geometrien',
+    legacy: 'Altdaten',
+  },
   menuBar: {
     filters: 'Filter',
     admin: 'Verwaltung',
@@ -267,6 +278,13 @@ export const deAppTranslations = {
         tabValidationErrors: {
           tab: 'Tab',
           hasValidationErrors: 'enthält Validierungsfehler',
+        },
+      },
+      status: {
+        tabName: 'Status',
+        selectionCategories: {
+          files: 'Dateien',
+          contacts: 'Kontakte',
         },
       },
       legacyData: {

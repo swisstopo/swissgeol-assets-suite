@@ -26,12 +26,13 @@ export class WorkflowRepo implements FindRepo<Workflow, AssetId> {
     return entry == null ? null : parseWorkflowFromPrisma(entry);
   }
 
-  async change(id: AssetId, { creatorId, comment, from, to }: ChangeOptions): Promise<Workflow> {
+  async change(id: AssetId, { creatorId, comment, from, to, hasRequestedChanges }: ChangeOptions): Promise<Workflow> {
     const entry = await this.prisma.workflow.update({
       where: { id },
       data: {
         status: to.status ?? undefined,
         assignee: to.assigneeId === null ? { disconnect: true } : { connect: { id: to.assigneeId } },
+        hasRequestedChanges: hasRequestedChanges,
         changes: {
           create: {
             comment,
@@ -52,6 +53,7 @@ export class WorkflowRepo implements FindRepo<Workflow, AssetId> {
 interface ChangeOptions {
   creatorId: UserId;
   comment: string | null;
+  hasRequestedChanges?: boolean;
   from: { status: WorkflowStatus; assigneeId: UserId | null };
   to: { status: WorkflowStatus; assigneeId: UserId | null };
 }

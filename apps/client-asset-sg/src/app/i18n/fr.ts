@@ -44,6 +44,17 @@ export const frAppTranslations: AppTranslations = {
     Published: 'FR Veröffentlicht',
     notPublished: 'FR Nicht Veröffentlicht',
   },
+  workflowSelection: {
+    general: 'FR General',
+    normalFiles: 'FR Normale Dateien',
+    legalFiles: 'FR Rechtliche Einwilligungen',
+    initiators: 'FR Auftraggeber',
+    suppliers: 'FR Einlieferer',
+    authors: 'FR Authoren',
+    references: 'FR Referenzen',
+    geometries: 'FR Geometrien',
+    legacy: 'FR Altdaten',
+  },
   menuBar: {
     filters: 'Filtres',
     admin: 'Administration',
@@ -269,6 +280,14 @@ export const frAppTranslations: AppTranslations = {
           hasValidationErrors: 'Contient des erreurs de validation',
         },
       },
+      status: {
+        tabName: 'FR Status',
+        selectionCategories: {
+          files: 'FR Dateien',
+          contacts: 'FR Kontakte',
+        },
+      },
+
       legacyData: {
         tabName: 'Administration',
         infoGeol: 'InfoGeol',

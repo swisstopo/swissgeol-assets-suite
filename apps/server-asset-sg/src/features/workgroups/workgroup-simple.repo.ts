@@ -1,4 +1,4 @@
-import { Role, SimpleWorkgroup, User, UserId, WorkgroupId } from '@asset-sg/shared/v2';
+import { mapRoleFromPrisma, Role, SimpleWorkgroup, User, UserId, WorkgroupId } from '@asset-sg/shared/v2';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '@/core/prisma.service';
 import { ReadRepo, RepoListOptions } from '@/core/repo';
@@ -61,7 +61,7 @@ const parse = (data: SelectedWorkgroup, isAdmin: boolean, isAnonymousMode = fals
   }
 
   if (data.users.length !== 0) {
-    simpleWorkgroup.role = data.users[0].role;
+    simpleWorkgroup.role = mapRoleFromPrisma(data.users[0].role);
     return simpleWorkgroup;
   }
 
