@@ -1,14 +1,14 @@
-import { Study, StudyAccessType, StudyId, WorkgroupId } from '@asset-sg/shared/v2';
+import { Geometry, GeometryAccessType, GeometryId, WorkgroupId } from '@asset-sg/shared/v2';
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '@/core/prisma.service';
 import { ReadRepo, RepoListOptions } from '@/core/repo';
 
 @Injectable()
-export class StudyRepo implements ReadRepo<Study, StudyId> {
+export class GeometryRepo implements ReadRepo<Geometry, GeometryId> {
   constructor(private readonly prisma: PrismaService) {}
 
-  async find(id: StudyId): Promise<Study | null> {
+  async find(id: GeometryId): Promise<Geometry | null> {
     const result = await this.query(Prisma.sql`
       WHERE
         study_id = ${id}
@@ -17,7 +17,7 @@ export class StudyRepo implements ReadRepo<Study, StudyId> {
     return result.length === 1 ? result[0] : null;
   }
 
-  list({ limit, offset, ids, workgroupIds }: ListOptions = {}): Promise<Study[]> {
+  list({ limit, offset, ids, workgroupIds }: ListOptions = {}): Promise<Geometry[]> {
     if (workgroupIds != null && workgroupIds.length === 0) {
       return Promise.resolve([]);
     }
@@ -55,8 +55,8 @@ export class StudyRepo implements ReadRepo<Study, StudyId> {
     return this.query(Prisma.join(parts, ' '));
   }
 
-  private async query(condition: Prisma.Sql): Promise<Study[]> {
-    type RawStudy = Omit<Study, 'center' | 'isPublic'> & { centerX: number; centerY: number; isPublic: boolean };
+  private async query(condition: Prisma.Sql): Promise<Geometry[]> {
+    type RawStudy = Omit<Geometry, 'center' | 'isPublic'> & { centerX: number; centerY: number; isPublic: boolean };
     const studies: RawStudy[] = await this.prisma.$queryRaw`
       SELECT s.study_id       AS "id",
              s.asset_id       AS "assetId",
@@ -77,11 +77,11 @@ export class StudyRepo implements ReadRepo<Study, StudyId> {
     });
   }
 
-  private parseAccessType(isPublic: boolean): StudyAccessType {
-    return isPublic ? StudyAccessType.Public : StudyAccessType.Internal;
+  private parseAccessType(isPublic: boolean): GeometryAccessType {
+    return isPublic ? GeometryAccessType.Public : GeometryAccessType.Internal;
   }
 }
 
-interface ListOptions extends RepoListOptions<StudyId> {
+interface ListOptions extends RepoListOptions<GeometryId> {
   workgroupIds?: WorkgroupId[] | null;
 }

@@ -1,4 +1,4 @@
-### List studies
-GET {{host}}/api/studies
+### List Geometries
+GET {{host}}/api/geometries
 Authorization: Impersonate {{user}}
 Accept: text/csv

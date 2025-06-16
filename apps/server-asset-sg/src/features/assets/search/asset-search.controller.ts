@@ -13,7 +13,7 @@ import {
 import { Authorize } from '@/core/decorators/authorize.decorator';
 import { CurrentUser } from '@/core/decorators/current-user.decorator';
 import { ParseBody } from '@/core/decorators/parse.decorator';
-import { AssetSearchService } from '@/features/assets/assets/search/asset-search.service';
+import { AssetSearchService } from '@/features/assets/search/asset-search.service';
 
 @Controller('/assets/search')
 @UseInterceptors(ClassSerializerInterceptor)

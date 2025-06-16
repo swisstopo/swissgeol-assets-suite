@@ -1,4 +1,5 @@
 import { Data, Model } from './base/model';
+import { LocalizedItemCode } from './localized-item';
 
 export interface Contact extends Model<ContactId> {
   name: string;
@@ -10,7 +11,7 @@ export interface Contact extends Model<ContactId> {
   telephone: string | null;
   email: string | null;
   website: string | null;
-  contactKindItemCode: string;
+  contactKindItemCode: LocalizedItemCode;
 }
 
 export type ContactId = number;

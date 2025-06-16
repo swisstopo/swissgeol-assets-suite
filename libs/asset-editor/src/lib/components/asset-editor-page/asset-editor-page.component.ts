@@ -235,9 +235,9 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
       workgroupId: general.workgroupId.value!,
       formatCode: general.assetFormatItemCode.value!,
       kindCode: general.assetKindItemCode.value!,
-      topics: general.manCatLabelRefs.value,
+      topicCodes: general.manCatLabelRefs.value,
       isOfNationalInterest: general.isNatRel.value,
-      nationalInterestTypes: general.typeNatRels.value,
+      nationalInterestTypeCodes: general.typeNatRels.value,
       identifiers: general.ids.value.map((it) => ({
         id: it.idId ?? undefined,
         value: it.id,

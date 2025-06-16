@@ -4,7 +4,7 @@ export * from './asset-edit';
 export * from './asset-search-params';
 export * from './asset-usage';
 export * from './DateStruct';
-export * from './elastic-search-asset';
+export * from './elasticsearch-asset';
 export * from './date-range';
 export * from './date-range.dto';
 export * from './lang';

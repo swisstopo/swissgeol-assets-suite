@@ -1,8 +1,9 @@
-import { AssetFile } from './asset-file';
+import { AssetFile, AssetFileId } from './asset-file';
 import { AssetIdentifier, AssetIdentifierData } from './asset-identifier';
 import { LocalDate } from './base/local-date';
 import { Model } from './base/model';
 import { AssetContact } from './contact';
+import { Geometry, GeometryData, GeometryUpdate } from './geometry';
 import { LocalizedItemCode } from './localized-item';
 import { UserId } from './user';
 import { WorkgroupId } from './workgroup';
@@ -62,12 +63,12 @@ export interface Asset extends Model<AssetId> {
   /**
    * DB: `type_nat_rel` table
    */
-  nationalInterestTypes: LocalizedItemCode[];
+  nationalInterestTypeCodes: LocalizedItemCode[];
 
   /**
    * DB: `man_cat_label_ref` table
    */
-  topics: LocalizedItemCode[];
+  topicCodes: LocalizedItemCode[];
 
   /**
    * DB: `id` table
@@ -87,12 +88,17 @@ export interface Asset extends Model<AssetId> {
   /**
    * DB: `asset_main_id`
    */
-  parentId: AssetId | null;
+  parentId: LinkedAsset | null;
+
+  /**
+   * DB: `asset_main_id`
+   */
+  childrenIds: LinkedAsset[];
 
   /**
    * DB: `asset_x_asset_y` table
    */
-  siblingIds: AssetId[];
+  siblingIds: LinkedAsset[];
 
   /**
    * DB: `workgroup_id`
@@ -103,6 +109,11 @@ export interface Asset extends Model<AssetId> {
    * DB: `creator_id`
    */
   creatorId: UserId | null;
+
+  /**
+   * DB: `all_study` view
+   */
+  geometries: Geometry[];
 
   /**
    * DB: `create_date`
@@ -142,6 +153,8 @@ export interface AssetLegacyData {
   municipality: string | null;
 }
 
+export type LinkedAsset = Pick<Asset, 'id' | 'title'>;
+
 // TODO The following fields exist in the DB, but are not mapped into the asset model:
 //      - url (always `null`)
 //      - locationAnalog
@@ -160,6 +173,23 @@ export interface AssetLegacyData {
 //      I would assume that whenever a `type_nat_rel` exists, `is_nat_rel` should be true.
 //      This would enable use to remove the `is_nat_rel` field.
 
-export interface AssetData extends Omit<Asset, 'id' | 'identifiers'> {
-  identifiers: Array<AssetIdentifier | AssetIdentifierData>;
-}
+type OmittedDataKeys = 'id' | 'childrenIds' | 'creatorId';
+
+type AssetDataMapping = {
+  [K in keyof Omit<Asset, OmittedDataKeys>]: AssetDataValueMapping<Asset[K]>;
+};
+
+type AssetDataValueMapping<V> =
+  V extends Array<infer E>
+    ? Array<AssetDataValueMapping<E>>
+    : V extends LinkedAsset
+      ? AssetId
+      : V extends AssetIdentifier
+        ? AssetIdentifier | AssetIdentifierData
+        : V extends AssetFile
+          ? AssetFileId
+          : V extends Geometry
+            ? GeometryUpdate | GeometryData
+            : V;
+
+export type AssetData = AssetDataMapping;

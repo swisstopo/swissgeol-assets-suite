@@ -11,7 +11,7 @@ import { PrismaService } from '@/core/prisma.service';
 import { AssetsModule } from '@/features/assets/assets.module';
 import { ContactRepo } from '@/features/contacts/contact.repo';
 import { ContactsController } from '@/features/contacts/contacts.controller';
-import { StudiesController } from '@/features/studies/studies.controller';
+import { GeometriesController } from '@/features/geometries/geometries.controller';
 import { StudyRepo } from '@/features/studies/study.repo';
 import { UsersController } from '@/features/users/users.controller';
 import { UsersModule } from '@/features/users/users.module';
@@ -19,7 +19,7 @@ import { WorkgroupRepo } from '@/features/workgroups/workgroup.repo';
 import { WorkgroupsController } from '@/features/workgroups/workgroups.controller';
 
 @Module({
-  controllers: [AppController, ContactsController, StudiesController, UsersController, WorkgroupsController],
+  controllers: [AppController, ContactsController, GeometriesController, UsersController, WorkgroupsController],
   imports: [HttpModule, ScheduleModule.forRoot(), CacheModule.register(), AssetsModule, UsersModule],
   providers: [
     ContactRepo,

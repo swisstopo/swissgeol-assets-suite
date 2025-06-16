@@ -20,7 +20,7 @@ import { Authorize } from '@/core/decorators/authorize.decorator';
 import { CurrentUser } from '@/core/decorators/current-user.decorator';
 import { AssetEditRepo } from '@/features/assets/asset-edit/asset-edit.repo';
 import { AssetEditService } from '@/features/assets/asset-edit/asset-edit.service';
-import { AssetSearchService } from '@/features/assets/assets/search/asset-search.service';
+import { AssetSearchService } from '@/features/assets/search/asset-search.service';
 
 @Controller('/asset-edit')
 export class AssetEditController {

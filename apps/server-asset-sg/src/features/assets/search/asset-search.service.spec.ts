@@ -3,7 +3,7 @@ import {
   AssetSearchStats,
   dateFromDateId,
   dateIdFromDate,
-  ElasticSearchAsset,
+  ElasticsearchAsset,
   makeUsageCode,
   PatchAsset,
   SearchAsset,
@@ -87,7 +87,7 @@ describe(AssetSearchService, () => {
     };
   };
 
-  const assertHit = (hit: ElasticSearchAsset, asset: AssetEditDetail): void => {
+  const assertHit = (hit: ElasticsearchAsset, asset: AssetEditDetail): void => {
     expect(hit.assetId).toEqual(asset.assetId);
     expect(hit.titlePublic).toEqual(asset.titlePublic);
     expect(hit.titleOriginal).toEqual(asset.titleOriginal);
@@ -120,7 +120,7 @@ describe(AssetSearchService, () => {
       });
       expect(response.hits.hits.length).toEqual(1);
 
-      const hit = response.hits.hits[0]._source as ElasticSearchAsset;
+      const hit = response.hits.hits[0]._source as ElasticsearchAsset;
       assertHit(hit, asset);
     });
   });
@@ -499,7 +499,7 @@ describe(AssetSearchService, () => {
 
     const compareBuckets = (a: Bucket, b: Bucket): number => a.key.toString().localeCompare(b.key.toString());
 
-    const testSearchOnProperty = (property: keyof PatchAsset & keyof ElasticSearchAsset) => async () => {
+    const testSearchOnProperty = (property: keyof PatchAsset & keyof ElasticsearchAsset) => async () => {
       // Given
       const uniqueString = faker.string.uuid();
       const asset1 = await assetRepo.create({
@@ -663,13 +663,13 @@ describe(AssetSearchService, () => {
       });
       expect(response.hits.hits.length).toEqual(3);
 
-      const hit1 = response.hits.hits[0]._source as ElasticSearchAsset;
+      const hit1 = response.hits.hits[0]._source as ElasticsearchAsset;
       assertHit(hit1, asset1);
 
-      const hit2 = response.hits.hits[1]._source as ElasticSearchAsset;
+      const hit2 = response.hits.hits[1]._source as ElasticsearchAsset;
       assertHit(hit2, asset2);
 
-      const hit3 = response.hits.hits[2]._source as ElasticSearchAsset;
+      const hit3 = response.hits.hits[2]._source as ElasticsearchAsset;
       assertHit(hit3, asset3);
     });
 

@@ -2,8 +2,8 @@ import fs from 'fs/promises';
 import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
 import { SchedulerRegistry } from '@nestjs/schedule';
 import { CronJob } from 'cron';
-import { AssetRepo } from '@/features/assets/assets/asset.repo';
-import { AssetSearchService } from '@/features/assets/assets/search/asset-search.service';
+import { AssetRepo } from '@/features/assets/asset.repo';
+import { AssetSearchService } from '@/features/assets/search/asset-search.service';
 
 @Injectable()
 export class AssetSyncService implements OnApplicationBootstrap {

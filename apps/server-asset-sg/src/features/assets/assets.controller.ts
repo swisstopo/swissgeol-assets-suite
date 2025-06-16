@@ -1,4 +1,4 @@
-import { Asset, AssetData, AssetDataSchema, AssetId, AssetPolicy, Role, User } from '@asset-sg/shared/v2';
+import { Asset, AssetData, AssetDataSchema, AssetId, AssetPolicy, User } from '@asset-sg/shared/v2';
 import {
   Controller,
   Delete,
@@ -14,15 +14,15 @@ import {
 import { authorize } from '@/core/authorize';
 import { CurrentUser } from '@/core/decorators/current-user.decorator';
 import { ParseBody } from '@/core/decorators/parse.decorator';
-import { AssetRepo } from '@/features/assets/assets/asset.repo';
+import { AssetService } from '@/features/assets/asset.service.ts';
 
 @Controller('/assets')
 export class AssetsController {
-  constructor(private readonly assetRepo: AssetRepo) {}
+  constructor(private readonly assetService: AssetService) {}
 
   @Get('/:id')
   async show(@Param('id', ParseIntPipe) id: AssetId, @CurrentUser() user: User): Promise<Asset> {
-    const record = await this.assetRepo.find(id);
+    const record = await this.assetService.find(id);
     if (record === null) {
       throw new HttpException('not found', 404);
     }
@@ -34,7 +34,7 @@ export class AssetsController {
   async create(@ParseBody(AssetDataSchema) data: AssetData, @CurrentUser() user: User): Promise<Asset> {
     authorize(AssetPolicy, user).canCreate();
     validateData(user, data);
-    return await this.assetRepo.create({ ...data });
+    return await this.assetService.create(data);
   }
 
   @Put('/:id')
@@ -43,7 +43,7 @@ export class AssetsController {
     @ParseBody(AssetDataSchema) data: AssetData,
     @CurrentUser() user: User,
   ): Promise<Asset> {
-    const record = await this.assetRepo.find(id);
+    const record = await this.assetService.find(id);
     if (record == null) {
       throw new HttpException('not found', HttpStatus.NOT_FOUND);
     }
@@ -51,7 +51,7 @@ export class AssetsController {
     authorize(AssetPolicy, user).canUpdate(record);
     validateData(user, data, record);
 
-    const asset = await this.assetRepo.update(record.id, { ...data });
+    const asset = await this.assetService.update(record.id, { ...data });
     if (asset === null) {
       throw new HttpException('not found', 404);
     }
@@ -61,24 +61,11 @@ export class AssetsController {
   @Delete('/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async delete(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: User): Promise<void> {
-    const record = await this.assetRepo.find(id);
+    const record = await this.assetService.find(id);
     if (record == null) {
       throw new HttpException('not found', HttpStatus.NOT_FOUND);
     }
     authorize(AssetPolicy, user).canDelete(record);
-    await this.assetRepo.delete(record.id);
+    await this.assetService.delete(record.id);
   }
 }
-
-const validateData = (user: User, data: AssetData, record?: Asset) => {
-  const policy = new AssetPolicy(user);
-
-  // Specialization of the policy where we disallow assets to be moved to another workgroup
-  // if the current user is not an editor for that workgroup.
-  if (!policy.hasRole(Role.Editor, data.workgroupId)) {
-    throw new HttpException(
-      "Can't move asset to a workgroup for which the user is not an editor",
-      HttpStatus.FORBIDDEN,
-    );
-  }
-};

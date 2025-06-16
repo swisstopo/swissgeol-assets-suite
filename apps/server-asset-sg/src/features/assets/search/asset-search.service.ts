@@ -7,12 +7,12 @@ import {
   dateFromDateId,
   DateId,
   dateIdFromDate,
-  ElasticSearchAsset,
+  ElasticsearchAsset,
   GeometryCode,
   makeUsageCode,
   SearchAssetAggregations,
   SearchAssetResult,
-  SerializedAssetEditDetail,
+  AssetJSON,
   UsageCode,
   ValueCount,
 } from '@asset-sg/shared';
@@ -34,15 +34,15 @@ import indexMapping from '../../../../../../../development/init/elasticsearch/ma
 
 import { PrismaService } from '@/core/prisma.service';
 import { AssetEditRepo } from '@/features/assets/asset-edit/asset-edit.repo';
-import { mapLv95ToElastic } from '@/features/assets/assets/search/asset-search.utils';
-import { AssetSearchWriter, AssetSearchWriterOptions } from '@/features/assets/assets/search/asset-search.writer';
+import { mapLv95ToElastic } from '@/features/assets/search/asset-search.utils';
+import { AssetSearchWriter, AssetSearchWriterOptions } from '@/features/assets/search/asset-search.writer';
 import { StudyRepo } from '@/features/studies/study.repo';
 
 const INDEX = 'swissgeol_asset_asset';
 export { INDEX as ASSET_ELASTIC_INDEX };
 
 interface SearchOptions {
-  scope: Array<keyof ElasticSearchAsset>;
+  scope: Array<keyof ElasticsearchAsset>;
   assetIds?: AssetId[];
 }
 
@@ -373,7 +373,7 @@ export class AssetSearchService {
     query: AssetSearchQuery,
     user: User,
     page: PageOptions = {},
-  ): Promise<[Map<AssetId, SerializedAssetEditDetail>, number]> {
+  ): Promise<[Map<AssetId, AssetJSON>, number]> {
     const elasticQuery = mapQueryToElasticDsl(query, user);
 
     const state: SearchState = {
@@ -795,7 +795,7 @@ const mapQueryToElasticDslParts = (
  * @param query The set of allowed values.
  */
 const makeArrayFilter = <T extends string | number>(
-  field: keyof ElasticSearchAsset,
+  field: keyof ElasticsearchAsset,
   query: T[],
 ): QueryDslQueryContainer => {
   if (query.length === 0) {
@@ -851,7 +851,7 @@ interface SearchState {
    * The assets that match the search.
    * This is a mapping from the assets' id to their serialized JSON string.
    */
-  matchedAssets: Map<AssetId, SerializedAssetEditDetail>;
+  matchedAssets: Map<AssetId, AssetJSON>;
 
   /**
    * The id of the last asset that has been matched.

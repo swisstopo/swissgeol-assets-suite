@@ -1,10 +1,20 @@
-import { AssetEditDetail, ElasticPoint, ElasticSearchAsset, GeometryCode, makeUsageCode } from '@asset-sg/shared';
-import { AssetId, ContactId, StudyId, UserId } from '@asset-sg/shared/v2';
+import {
+  Asset,
+  AssetContactRole,
+  AssetId,
+  AssetSchema,
+  ContactId,
+  convert,
+  ElasticsearchAsset,
+  GeometryId,
+  GeometryType,
+  UserId,
+} from '@asset-sg/shared/v2';
 import { Client as ElasticsearchClient } from '@elastic/elasticsearch';
 import { BulkOperationContainer } from '@elastic/elasticsearch/lib/api/types';
 import { PrismaClient } from '@prisma/client';
-import { mapLv95ToElastic } from '@/features/assets/assets/search/asset-search.utils';
-import { StudyRepo } from '@/features/studies/study.repo';
+import { mapLv95ToElastic } from '@/features/assets/search/asset-search.utils';
+import { GeometryRepo } from '@/features/geometries/geometry.repo';
 import { ProcessQueue } from '@/utils/process-queue';
 
 const QUEUE_SIZE = 10;
@@ -21,15 +31,15 @@ export class AssetSearchWriter {
   constructor(
     private readonly elastic: ElasticsearchClient,
     private readonly prisma: PrismaClient,
-    private readonly studyRepo: StudyRepo,
+    private readonly geometryRepo: GeometryRepo,
     private readonly options: AssetSearchWriterOptions,
   ) {
     this.eager = options.isEager ? this.fetchEager() : Promise.resolve(null);
   }
 
-  async write(oneOrMore: AssetEditDetail | AssetEditDetail[]): Promise<void> {
+  async write(oneOrMore: Asset | Asset[]): Promise<void> {
     const assets = Array.isArray(oneOrMore) ? oneOrMore : [oneOrMore];
-    const operations: Array<BulkOperationContainer | ElasticSearchAsset> = Array(assets.length * 2);
+    const operations: Array<BulkOperationContainer | ElasticsearchAsset> = Array(assets.length * 2);
 
     const processQueue = new ProcessQueue(QUEUE_SIZE);
     for (let j = 0; j < assets.length; j++) {
@@ -38,7 +48,7 @@ export class AssetSearchWriter {
       processQueue
         .add(async () => {
           const elasticAsset = await this.mapAssetToElastic(asset);
-          operations[i * 2] = { index: { _index: this.options.index, _id: `${elasticAsset.assetId}` } };
+          operations[i * 2] = { index: { _index: this.options.index, _id: `${elasticAsset.id}` } };
           operations[i * 2 + 1] = elasticAsset;
         })
         .then();
@@ -52,36 +62,34 @@ export class AssetSearchWriter {
     });
   }
 
-  private async mapAssetToElastic(asset: AssetEditDetail): Promise<ElasticSearchAsset> {
+  private async mapAssetToElastic(asset: Asset): Promise<ElasticsearchAsset> {
     const contactNamesPromise = this.fetchContactNamesForAsset(asset);
     const favoredByUsersPromise = this.fetchFavoredByUserIdsForAsset(asset);
-    const geometryCodesPromise = this.fetchGeometryCodesForAsset(asset);
-    const studyLocationsPromise = this.fetchStudyLocationsForAsset(asset);
+    const geometryTypesPromise = this.fetchGeometryTypesForAsset(asset);
+    const locationsPromise = this.fetchLocationsForAsset(asset);
 
-    const languageItemCodes =
-      asset.assetLanguages.length === 0 ? ['None'] : asset.assetLanguages.map((it) => it.languageItemCode);
+    const languageCodes = asset.languageCodes.length === 0 ? ['None'] : asset.languageCodes;
 
     return {
-      assetId: asset.assetId,
-      titlePublic: asset.titlePublic,
-      titleOriginal: asset.titleOriginal,
-      sgsId: asset.sgsId,
-      createDate: asset.createDate,
-      assetKindItemCode: asset.assetKindItemCode,
-      languageItemCodes,
-      usageCode: makeUsageCode(asset.isPublic),
-      authorIds: asset.assetContacts.filter((it) => it.role === 'author').map((it) => it.contactId),
+      id: asset.id,
+      title: asset.title,
+      originalTitle: asset.originalTitle,
+      sgsId: asset.legacyData?.sgsId ?? null,
+      createdAt: asset.createdAt.toDate(),
+      kindCode: asset.kindCode,
+      languageCodes,
+      authorIds: asset.contacts.filter((it) => it.role === AssetContactRole.Author).map((it) => it.id),
       contactNames: await contactNamesPromise,
-      manCatLabelItemCodes: asset.manCatLabelRefs,
-      geometryCodes: await geometryCodesPromise,
-      studyLocations: await studyLocationsPromise,
+      topicCodes: asset.topicCodes,
+      geometryTypes: await geometryTypesPromise,
+      locations: await locationsPromise,
       workgroupId: asset.workgroupId,
       favoredByUserIds: await favoredByUsersPromise,
-      data: JSON.stringify(AssetEditDetail.encode(asset)),
+      data: JSON.stringify(convert(AssetSchema, asset)),
     };
   }
 
-  private async fetchContactNamesForAsset(asset: AssetEditDetail): Promise<string[]> {
+  private async fetchContactNamesForAsset(asset: Asset): Promise<string[]> {
     const eager = await this.eager;
     if (eager !== null) {
       const names: string[] = [];
@@ -104,7 +112,7 @@ export class AssetSearchWriter {
     return contacts.map((it) => it.name);
   }
 
-  private async fetchFavoredByUserIdsForAsset(asset: AssetEditDetail): Promise<string[]> {
+  private async fetchFavoredByUserIdsForAsset(asset: Asset): Promise<string[]> {
     const eager = await this.eager;
     if (eager !== null) {
       return eager.assetIdToFavoredByUserId.get(asset.assetId) ?? [];
@@ -124,7 +132,7 @@ export class AssetSearchWriter {
     return favoredByUsers.map(({ id }) => id);
   }
 
-  private async fetchGeometryCodesForAsset(asset: AssetEditDetail): Promise<GeometryCode[] | ['None']> {
+  private async fetchGeometryTypesForAsset(asset: Asset): Promise<GeometryType[] | ['None']> {
     const geometryCodes: GeometryCode[] = [];
     for (const study of asset.studies) {
       const geometryCode = (() => {
@@ -145,10 +153,10 @@ export class AssetSearchWriter {
     return geometryCodes.length > 0 ? [...new Set(geometryCodes)] : ['None'];
   }
 
-  private async fetchStudyLocationsForAsset(asset: AssetEditDetail): Promise<ElasticPoint[]> {
+  private async fetchLocationsForAsset(asset: Asset): Promise<ElasticPoint[]> {
     const studyLocations: ElasticPoint[] = [];
     for (const study of asset.studies) {
-      const fullStudy = await this.studyRepo.find(study.studyId as StudyId);
+      const fullStudy = await this.geometryRepo.find(study.studyId as GeometryId);
       if (fullStudy != null) {
         studyLocations.push(mapLv95ToElastic(fullStudy.center));
       }

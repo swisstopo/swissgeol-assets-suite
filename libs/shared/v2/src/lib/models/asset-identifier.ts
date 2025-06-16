@@ -5,7 +5,7 @@ export interface AssetIdentifier {
   /**
    * DB: `id_id`
    */
-  id: IdentifierId;
+  id: AssetIdentifierId;
 
   /**
    * DB: `id`
@@ -18,6 +18,6 @@ export interface AssetIdentifier {
   description: string;
 }
 
-export type IdentifierId = number;
+export type AssetIdentifierId = number;
 
 export type AssetIdentifierData = Omit<AssetIdentifier, 'id'>;

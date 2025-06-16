@@ -1,4 +1,4 @@
-import { AssetId, AssetInfo, FavoritePolicy, User } from '@asset-sg/shared/v2';
+import { AssetId, FavoritePolicy, User } from '@asset-sg/shared/v2';
 import {
   Controller,
   Delete,
@@ -15,30 +15,23 @@ import { authorize } from '@/core/authorize';
 import { Authorize } from '@/core/decorators/authorize.decorator';
 import { CurrentUser } from '@/core/decorators/current-user.decorator';
 import { AssetEditRepo } from '@/features/assets/asset-edit/asset-edit.repo';
-import { AssetInfoRepo } from '@/features/assets/assets/asset-info.repo';
-import { AssetSearchService } from '@/features/assets/assets/search/asset-search.service';
+import { AssetRepo } from '@/features/assets/asset.repo';
 import { FavoriteRepo } from '@/features/assets/favorites/favorite.repo';
+import { AssetSearchService } from '@/features/assets/search/asset-search.service';
 
 @Controller('/assets/favorites')
 export class FavoritesController {
   constructor(
     private readonly favoriteRepo: FavoriteRepo,
-    private readonly assetInfoRepo: AssetInfoRepo,
+    private readonly assetRepo: AssetRepo,
     private readonly assetEditRepo: AssetEditRepo,
     private readonly assetSearchService: AssetSearchService,
   ) {}
 
-  @Get('/')
-  @Authorize.User()
-  async list(@CurrentUser() user: User): Promise<AssetInfo[]> {
-    return await this.assetInfoRepo.listFavorites(user.id);
-  }
-
   @Get('/ids')
   @Authorize.User()
-  async listIds(@CurrentUser() user: User): Promise<AssetId[]> {
-    const assets = await this.assetInfoRepo.listFavorites(user.id);
-    return assets.map(({ id }) => id);
+  listIds(@CurrentUser() user: User): Promise<AssetId[]> {
+    return this.assetRepo.listFavorites(user.id);
   }
 
   @Post('/:assetId')
