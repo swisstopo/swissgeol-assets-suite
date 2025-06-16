@@ -171,7 +171,7 @@ export class MapController {
     const features: Feature[] = [];
     const studies: Study[] = [];
     for (const asset of assets) {
-      this.assetsById.set(asset.assetId, asset);
+      this.assetsById.set(asset.id, asset);
       for (const assetStudy of asset.studies) {
         const study: Study = { studyId: assetStudy.studyId, geom: wktToGeoJSON(assetStudy.geomText) };
         const feature = makeStudyFeature(study);
@@ -484,7 +484,7 @@ export class MapController {
   private resetActiveAssetStyle(): void {
     // If we have no active asset, or if the active asset is also contained in the currently visible assets,
     // then we either can't or don't need to show the asset's study points.
-    if (this.activeAsset == null || this.assetsById.has(this.activeAsset.assetId)) {
+    if (this.activeAsset == null || this.assetsById.has(this.activeAsset.id)) {
       return;
     }
     for (const study of this.activeAsset.studies) {

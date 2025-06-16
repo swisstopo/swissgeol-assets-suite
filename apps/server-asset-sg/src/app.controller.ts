@@ -74,14 +74,6 @@ const getReferenceData = async (user: User, prismaService: PrismaService) => {
       data,
     ]),
     createReferenceDataMapping(
-      () => prismaService.statusAssetUseItem.findMany(),
-      'statusAssetUseItemCode',
-      'code',
-    ).then((data) => ['statusAssetUseItems', data]),
-    createReferenceDataMapping(() => prismaService.statusWorkItem.findMany(), 'statusWorkItemCode', 'code').then(
-      (data) => ['statusWorkItems', data],
-    ),
-    createReferenceDataMapping(
       () =>
         user.isAdmin
           ? prismaService.contact.findMany()

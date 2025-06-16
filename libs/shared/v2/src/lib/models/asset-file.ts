@@ -1,5 +1,3 @@
-import { LocalizedItemCode } from './localized-item';
-
 /**
  * DB: `asset_file`
  */
@@ -17,7 +15,7 @@ export interface AssetFile {
   /**
    * DB: `file_name_alias`
    */
-  alias: string;
+  alias: string | null;
 
   /**
    * DB: `type`
@@ -32,12 +30,12 @@ export interface AssetFile {
   /**
    * DB: `page_count`
    */
-  pageCount: number;
+  pageCount: number | null;
 
   /**
    * DB: `legal_doc_item_code`
    */
-  legalDocCode: LocalizedItemCode | null;
+  legalDocCode: LegalDocCode | null;
 
   /**
    * DB: `page_count`
@@ -54,6 +52,13 @@ export type AssetFileId = number;
 
 export interface AssetFileData {
   type: AssetFileType;
-  legalDocItemCode: LocalizedItemCode | null;
+  legalDocCode: LegalDocCode | null;
   file: File;
+}
+
+export enum LegalDocCode {
+  FederalData = 'federalData',
+  PermissionForm = 'permissionForm',
+  Contract = 'contract',
+  Other = 'other',
 }

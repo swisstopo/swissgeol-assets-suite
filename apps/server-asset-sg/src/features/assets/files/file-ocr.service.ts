@@ -201,7 +201,7 @@ const hasKey = <K extends string>(value: unknown, key: K): value is { [k in K]: 
 const parseJSON = (input: string): unknown | null => {
   try {
     return JSON.parse(input);
-  } catch (_e) {
+  } catch {
     return null;
   }
 };

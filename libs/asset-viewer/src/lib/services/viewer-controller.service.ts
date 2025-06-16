@@ -134,7 +134,7 @@ export class ViewerControllerService {
     const results = await firstValueFrom(this.assetSearchService.search(query));
     this.store.dispatch(actions.setResults({ results, isLoading: false }));
     if (results.data.length === 1) {
-      await this.loadAsset(results.data[0].assetId);
+      await this.loadAsset(results.data[0].id);
     } else {
       this.store.dispatch(appSharedStateActions.setCurrentAsset({ asset: null, isLoading: false }));
     }

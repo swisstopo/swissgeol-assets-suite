@@ -81,7 +81,7 @@ export const selectAssetEditDetailVM = createSelector(
       const manCatLabelItems: ValueItem[] = asset.manCatLabelRefs.map(
         (manCatLabelItemCode) => referenceData.value.manCatLabelItems[manCatLabelItemCode],
       );
-      const assetFormatItem: ValueItem = referenceData.value.assetFormatItems[asset.assetFormatItemCode];
+      const assetFormatItem: ValueItem = referenceData.value.assetFormatItems[asset.formatCode];
       const assetKindItem: ValueItem = referenceData.value.assetKindItems[asset.assetKindItemCode];
       const contacts = asset.assetContacts.reduce(
         (contacts, contact) => {
@@ -95,7 +95,7 @@ export const selectAssetEditDetailVM = createSelector(
         {} as AssetEditDetailVM['contacts'],
       );
       return {
-        assetId: asset.assetId,
+        assetId: asset.id,
         titlePublic: asset.titlePublic,
         createDate: asset.createDate as number & DateIdBrand,
         assetKindItem,

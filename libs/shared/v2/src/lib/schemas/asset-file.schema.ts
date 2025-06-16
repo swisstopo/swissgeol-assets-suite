@@ -1,7 +1,7 @@
 import { Type } from 'class-transformer';
 import { IsDate, IsEnum, IsInt, IsString } from 'class-validator';
-import { AssetFile, AssetFileId, AssetFileType } from '../models/asset-file';
-import { LocalizedItemCode } from '../models/localized-item';
+import { AssetFile, AssetFileId, AssetFileType, LegalDocCode } from '../models/asset-file';
+import { IsNullable } from '../utils/class-validator/is-nullable.decorator';
 import { Schema } from './base/schema';
 
 export class AssetFileSchema extends Schema implements AssetFile {
@@ -23,8 +23,9 @@ export class AssetFileSchema extends Schema implements AssetFile {
   @IsInt()
   pageCount!: number;
 
-  @IsString()
-  legalDocCode!: LocalizedItemCode;
+  @IsNullable()
+  @IsEnum(LegalDocCode)
+  legalDocCode!: LegalDocCode;
 
   @IsDate()
   @Type(() => Date)
