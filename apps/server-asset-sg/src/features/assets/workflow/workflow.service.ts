@@ -1,4 +1,14 @@
-import { AssetId, UserId, Workflow, WorkflowChangeData, WorkflowSelection, WorkflowStatus } from '@asset-sg/shared/v2';
+import { AssetEditDetail } from '@asset-sg/shared';
+import {
+  AssetId,
+  hasWorkflowSelectionChanged,
+  UserId,
+  Workflow,
+  WorkflowChangeData,
+  WorkflowSelection,
+  WorkflowSelectionCategory,
+  WorkflowStatus,
+} from '@asset-sg/shared/v2';
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { WorkflowRepo } from '@/features/assets/workflow/workflow.repo';
 
@@ -53,6 +63,26 @@ export class WorkflowService {
       from: { status: workflow.status, assigneeId: (workflow.assignee?.id ?? null) as string | null },
       to: { status: WorkflowStatus.Published, assigneeId: (workflow.assignee?.id ?? null) as string | null },
     });
+  }
+
+  async updateSelectionByChanges(original: AssetEditDetail, update: AssetEditDetail): Promise<void> {
+    if (original.assetId !== update.assetId) {
+      throw new Error("Can't compare changes of two separate assets.");
+    }
+
+    const changes: Partial<WorkflowSelection> = {};
+    for (const category of Object.values(WorkflowSelectionCategory)) {
+      if (hasWorkflowSelectionChanged(original, update, category)) {
+        changes[category] = false;
+      }
+    }
+
+    if (Object.keys(changes).length !== 0) {
+      await Promise.all([
+        this.workflowRepo.approvals.update(original.assetId, changes),
+        this.workflowRepo.reviews.update(original.assetId, changes),
+      ]);
+    }
   }
 }
 
