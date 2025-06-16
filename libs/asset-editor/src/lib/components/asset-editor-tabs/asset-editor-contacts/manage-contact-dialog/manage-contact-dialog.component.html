@@ -1,5 +1,5 @@
 <div class="header">
-  <h2 translate>{{ existingContactId ? "edit.tabs.contacts.editContact" : "edit.tabs.contacts.createNewContact" }}</h2>
+  <h2 translate>{{ existingContactId ? "edit.tabs.contacts.contact" : "edit.tabs.contacts.createNewContact" }}</h2>
 </div>
 <hr />
 <div mat-dialog-content>
@@ -85,6 +85,6 @@
 <div class="actions" mat-dialog-actions>
   <button (click)="cancel()" asset-sg-secondary translate>cancel</button>
   <button (click)="createOrUpdateContact()" [disabled]="manageContactForm.invalid" asset-sg-primary translate>
-    {{ existingContactId ? "edit.tabs.contacts.editContact" : "edit.tabs.contacts.createNewContact" }}
+    {{ existingContactId ? "edit.tabs.contacts.finishEditing" : "edit.tabs.contacts.createNewContact" }}
   </button>
 </div>

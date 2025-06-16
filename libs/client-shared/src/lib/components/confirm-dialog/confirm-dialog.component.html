@@ -4,6 +4,6 @@
   </div>
   <div mat-dialog-actions class="actions">
     <button asset-sg-secondary (click)="close(false)" translate>cancel</button>
-    <button asset-sg-primary (click)="close(true)" translate>confirm</button>
+    <button asset-sg-primary (click)="close(true)">{{ data.confirm | translate }}</button>
   </div>
 </div>

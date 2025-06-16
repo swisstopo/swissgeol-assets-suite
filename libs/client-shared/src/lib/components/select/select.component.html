@@ -15,13 +15,13 @@
         </mat-select-trigger>
       }
       @for (value of values; track value) {
-        <mat-option [value]="value">
+        <mat-option [value]="value" class="option">
           {{ (bindLabel ? $any(value[bindLabel]) : value) | smartTranslate }}
         </mat-option>
       }
 
       @for (option of customOptionsToRender; track option.value) {
-        <mat-option [value]="option.value" [disabled]="option.isDisabled">
+        <mat-option [value]="option.value" [disabled]="option.isDisabled" class="option">
           <ng-container *ngTemplateOutlet="option.template" />
         </mat-option>
       }

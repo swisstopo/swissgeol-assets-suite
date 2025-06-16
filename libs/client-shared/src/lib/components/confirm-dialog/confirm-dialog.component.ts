@@ -28,10 +28,16 @@ export class ConfirmDialogComponent {
     @Inject(MAT_DIALOG_DATA)
     public data: {
       text: string;
+      confirm: string;
     },
   ) {}
 
   public close(confirmed: boolean) {
     this.dialogRef.close(confirmed);
   }
+}
+
+export interface ConfirmDialogData {
+  text: string;
+  confirm: string;
 }
