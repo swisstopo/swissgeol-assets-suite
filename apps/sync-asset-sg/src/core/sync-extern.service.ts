@@ -1,14 +1,32 @@
-import { Prisma, PrismaClient } from '@prisma/client';
+import {
+  Asset,
+  AssetContact,
+  AssetLanguage,
+  AssetSynchronization,
+  Contact,
+  File,
+  Id,
+  ManCatLabelRef,
+  Prisma,
+  PrismaClient,
+  TypeNatRel,
+} from '@prisma/client';
 import { SyncConfig } from './config';
 import { log } from './log';
 
+const BATCH_SIZE = 10_000;
+
 export class SyncExternService {
   private readonly config: SyncConfig;
-  private syncAssignee: string | null = null;
-  private geometries: Geometries = { areas: [], locations: [], traces: [] };
-
+  private readonly existingContactIds: Map<string, number> = new Map();
+  private readonly relationSqls: RelationSqls = { ids: [], assetLanguages: [], manCatLabelRefs: [], typeNatRels: [] };
+  private readonly existingFileIds: Map<string, number> = new Map();
+  private readonly assetsToSync: AssetToSync[] = [];
+  private readonly newAssetToOriginalAsset: Map<number, { originalAssetId: number; originalSgsId: number }> = new Map();
+  private readonly geometries: Geometries = { areas: [], locations: [], traces: [] };
   private readonly sourcePrisma: PrismaClient;
   private readonly destinationPrisma: PrismaClient;
+  private syncAssignee: string | null = null;
 
   constructor(sourcePrisma: PrismaClient, destinationPrisma: PrismaClient, config: SyncConfig) {
     this.config = config;
@@ -16,17 +34,99 @@ export class SyncExternService {
     this.destinationPrisma = destinationPrisma;
   }
 
-  /**
-   * TBD
-   */
   public async syncExternalToInternal() {
     log('Starting data export from external');
+    // todo: create better DS to avoid multiple maps and reduces
+    await this.init();
+
+    for (const asset of this.assetsToSync) {
+      /**
+       * Todo:
+       * - Note that authors are NOT synchronzied; favorites are NOT synchronized; workflows are NOT synchronized, siblingyY are not synchronized
+       */
+      const contactsCreate = await this.createContactsPayload(asset.assetContacts);
+      const filesCreate = await this.createFilesPayload(asset.assetFiles);
+
+      const newAsset = await this.destinationPrisma.asset.create({
+        data: {
+          ...asset.asset,
+          assetMainId: null, // this will be set afterwards
+          isPublic: false,
+          assetFiles: filesCreate,
+          assetContacts: contactsCreate,
+        },
+      });
+      this.newAssetToOriginalAsset.set(newAsset.assetId, {
+        originalAssetId: asset.originalAssetId,
+        originalSgsId: asset.originalSgsId,
+      });
+      this.relationSqls.ids.push(...asset.ids.map((i) => Prisma.sql`(${newAsset.assetId}, ${i.id}, ${i.description})`));
+      this.relationSqls.assetLanguages.push(
+        ...asset.assetLanguages.map((a) => Prisma.sql`(${newAsset.assetId}, ${a.languageItemCode})`),
+      );
+      this.relationSqls.manCatLabelRefs.push(
+        ...asset.manCatLabelRefs.map((m) => Prisma.sql`(${newAsset.assetId}, ${m.manCatLabelItemCode})`),
+      );
+      this.relationSqls.typeNatRels.push(
+        ...asset.typeNatRels.map((t) => Prisma.sql`(${newAsset.assetId}, ${t.natRelItemCode})`),
+      );
+    }
+    log(`Synced ${this.newAssetToOriginalAsset.size} assets`);
+
+    await this.createWorkflows();
+    const assetSynchronizations = await this.createAssetSynchronizationRecords();
+    await this.createRelationTables();
+    await this.createGeometriesForAssets();
+    await this.createSiblings(assetSynchronizations);
+    log('Data export to extern completed');
+  }
+
+  /**
+   * Creates a lookup key for storing contact ids for easy retrieval so we don't have to fetch potentially existing
+   * contacts for each entry we want to create.
+   */
+  private createUniqueContactKey(contact: Omit<Contact, 'contactId'>): string {
+    return `${contact.name}||${contact.locality}||${contact.street}||${contact.country}||${contact.street}||${contact.plz}||${contact.email}||${contact.houseNumber}||${contact.website}||${contact.telephone}`;
+  }
+
+  private async createSiblings(assetSynchronizations: AssetSynchronization[]) {
+    log('Syncing siblings');
+    const existingSiblings = await this.sourcePrisma.assetXAssetY.findMany({
+      where: { assetXId: { in: this.assetsToSync.map((a) => a.originalAssetId) } },
+    });
+    for (const asset of this.assetsToSync) {
+      const newAssetId = assetSynchronizations.find((n) => n.originalAssetId === asset.originalAssetId);
+      const assetMainLink = assetSynchronizations.find((n) => n.originalAssetId === asset.asset.assetMainId);
+      const originalAssetXSiblings = existingSiblings
+        .filter((n) => n.assetXId === asset.originalAssetId)
+        .map((n) => n.assetYId);
+      const newAssetSiblings = assetSynchronizations
+        .filter((n) => originalAssetXSiblings.includes(n.originalAssetId))
+        .map((n) => n.assetId);
+
+      await this.destinationPrisma.asset.update({
+        where: { assetId: newAssetId.assetId },
+        data: {
+          assetMainId: assetMainLink?.assetId,
+          siblingXAssets: { create: newAssetSiblings.map((n) => ({ assetYId: n })) },
+        },
+      });
+    }
+  }
+
+  private async init() {
     this.syncAssignee = (
       await this.destinationPrisma.assetUser.findFirst({
         select: { id: true },
         where: { email: this.config.syncAssignee },
       })
     )?.id;
+
+    (await this.destinationPrisma.contact.findMany()).forEach((c) =>
+      this.existingContactIds.set(this.createUniqueContactKey(c), c.contactId),
+    );
+
+    (await this.destinationPrisma.file.findMany()).forEach((f) => this.existingFileIds.set(f.name, f.id));
 
     const alreadySyncedIds = (
       await this.destinationPrisma.assetSynchronization.findMany({
@@ -35,7 +135,7 @@ export class SyncExternService {
     ).map((res) => res.originalAssetId);
     log(`Found ${alreadySyncedIds.length} already synced IDs which will be skipped`);
 
-    const assetsToSync = (
+    const assetsToSync: AssetToSync[] = (
       await this.sourcePrisma.asset.findMany({
         where: {
           assetId: {
@@ -69,118 +169,30 @@ export class SyncExternService {
         assetLanguages,
         typeNatRels,
         ids,
-        assetContacts,
-        assetFiles,
+        assetContacts: assetContacts,
+        assetFiles: assetFiles.flatMap((a) => a.file),
         originalAssetId: assetId,
         originalSgsId: sgsId,
       };
     });
-    this.geometries = await this.getGeometries(assetsToSync.map((a) => a.originalAssetId));
+    this.assetsToSync.push(...assetsToSync);
+    log(`Found ${this.assetsToSync.length} assets in source database which need to be synced`);
 
-    log(`Found ${assetsToSync.length} assets in source database which need to be synced`);
-
-    for (const asset of assetsToSync) {
-      /**
-       * Todo:
-       * - Note that authors are NOT synchronzied; favorites are NOT synchronized; workflows are NOT synchronized
-       * - siblings and relations :(
-       */
-      const contactsCreate = await this.createContactsPayload(asset.assetContacts);
-      const filesCreate = await this.createFilesPayload(asset.assetFiles);
-
-      const newAsset = await this.destinationPrisma.asset.create({
-        data: {
-          ...asset.asset,
-          assetMainId: null, // this will be set afterwards
-          assetFiles: filesCreate,
-          assetContacts: contactsCreate,
-          ids: {
-            createMany: { data: asset.ids },
-          },
-          assetLanguages: {
-            createMany: { data: asset.assetLanguages },
-          },
-          manCatLabelRefs: {
-            createMany: { data: asset.manCatLabelRefs },
-          },
-          typeNatRels: {
-            createMany: { data: asset.typeNatRels },
-          },
-          workflow: {
-            create: {
-              status: 'Draft',
-              review: { create: {} },
-              approval: { create: {} },
-              changes: {
-                create: {
-                  comment: `Synchronized from EXTERN with original ID ${asset.originalAssetId}`,
-                  fromStatus: 'Published',
-                  toStatus: 'Draft',
-                  toAssigneeId: this.syncAssignee,
-                },
-              },
-            },
-          },
-          synchronization: {
-            create: {
-              originalAssetId: asset.originalAssetId,
-              originalSgsId: asset.originalSgsId,
-            },
-          },
-        },
-      });
-
-      await this.createGeometriesForAsset(asset.originalAssetId, newAsset.assetId);
-    }
-    // create references after all assets have been copied to get the most
-    const assetSynchronisations = await this.destinationPrisma.assetSynchronization.findMany();
-    const existingSiblings = await this.sourcePrisma.assetXAssetY.findMany({
-      where: { assetXId: { in: assetsToSync.map((a) => a.originalAssetId) } },
-    });
-    for (const asset of assetsToSync) {
-      const newAssetId = assetSynchronisations.find((n) => n.originalAssetId === asset.originalAssetId);
-      const assetMainLink = assetSynchronisations.find((n) => n.originalAssetId === asset.asset.assetMainId);
-      const originalAssetXSiblings = existingSiblings
-        .filter((n) => n.assetXId === asset.originalAssetId)
-        .map((n) => n.assetYId);
-      const newAssetSiblings = assetSynchronisations
-        .filter((n) => originalAssetXSiblings.includes(n.originalAssetId))
-        .map((n) => n.assetId);
-
-      await this.destinationPrisma.asset.update({
-        where: { assetId: newAssetId.assetId },
-        data: {
-          assetMainId: assetMainLink?.assetId,
-          siblingXAssets: { create: newAssetSiblings.map((n) => ({ assetYId: n })) },
-        },
-      });
-    }
-    log('Data export to extern completed');
+    this.geometries.traces.push(...(await this.fetchExistingGeometriesForAssets('trace')));
+    this.geometries.areas.push(...(await this.fetchExistingGeometriesForAssets('area')));
+    this.geometries.locations.push(...(await this.fetchExistingGeometriesForAssets('location')));
+    log(`Fetched original geometries for assets to sync`);
   }
 
   /**
-   * Creates an input for asset contacts by either connecting to existing contacts (matched by XXX) or by creating a new
-   * contact.
-   *
-   * TODO: deep equality more fields
-   * @param assetContacts
-   * @private
+   * Creates an input for asset contacts by either connecting to existing contacts or by creating a new contact.
    */
   private async createContactsPayload(
-    assetContacts: Prisma.AssetContactGetPayload<{ include: { contact: true } }>[], // prettier-ignore
+    assetContacts: (AssetContact&{contact: Contact})[], // prettier-ignore
   ): Promise<Prisma.AssetContactUncheckedCreateNestedManyWithoutAssetInput> {
-    const createKey = ({ name, locality }: { name: string; locality: string }) => `${name}||${locality}`;
-
-    const existing = await this.destinationPrisma.contact.findMany({
-      where: {
-        OR: assetContacts.map(({ contact: { name, locality } }) => ({ name, locality })),
-      },
-    });
-    const existingBeyKey = new Map(existing.map((c) => [createKey(c), c.contactId]));
-
     return {
       create: assetContacts.map(({ role, contact: { contactId: _, ...contact } }) => {
-        const match = existingBeyKey.get(createKey(contact));
+        const match = this.existingContactIds.get(this.createUniqueContactKey(contact));
         return {
           role,
           contact: match ? { connect: { contactId: match } } : { create: contact },
@@ -192,19 +204,12 @@ export class SyncExternService {
   /**
    * Creates an input for asset files by either connecting to existing files (matched by name) or by creating a new file
    * entry.
-   * @param assetFiles
-   * @private
    */
   private async createFilesPayload(
-    assetFiles: Prisma.AssetFileGetPayload<{ include: { file: true } }>[],
+    assetFiles: File[],
   ): Promise<Prisma.AssetFileUncheckedCreateNestedManyWithoutAssetInput> {
-    const existingFiles = await this.destinationPrisma.file.findMany({
-      where: { name: { in: assetFiles.map(({ file }) => file.name) } },
-    });
-    const existingByName = new Map(existingFiles.map((f) => [f.name, f.id]));
-
-    const create = assetFiles.map(({ file: { id: _, ...file } }) => {
-      const match = existingByName.get(file.name);
+    const create = assetFiles.map(({ id: _, ...file }) => {
+      const match = this.existingFileIds.get(file.name);
 
       return match
         ? { file: { connect: { id: match } } }
@@ -216,75 +221,167 @@ export class SyncExternService {
     return { create };
   }
 
-  private async getGeometries(assetIds: number[]): Promise<Geometries> {
-    if (assetIds.length === 0) {
-      return { areas: [], locations: [], traces: [] };
-    }
-
-    const areas: GeometryTransfer[] = await this.sourcePrisma.$queryRaw`
-    SELECT
-        study_area_id       AS "id",
+  private async fetchExistingGeometriesForAssets(
+    tableType: 'area' | 'location' | 'trace',
+  ): Promise<GeometryTransfer[]> {
+    const assetIds = this.assetsToSync.map((a) => a.originalAssetId);
+    const query = `SELECT
+        study_${tableType}_id       AS "id",
         asset_id            AS "assetId",
         ST_ASBINARY(geom)   AS "geom",
         is_revised          AS "isRevised"
-    FROM study_area
-    WHERE asset_id IN (${Prisma.join(assetIds)})
-    `;
-    const locations: GeometryTransfer[] = await this.sourcePrisma.$queryRaw`
-    SELECT
-        study_location_id   AS "id",
-        asset_id            AS "assetId",
-        ST_ASBINARY(geom)   AS "geom",
-        is_revised          AS "isRevised"
-    FROM study_location
-    WHERE asset_id IN (${Prisma.join(assetIds)})
-    `;
-    const traces: GeometryTransfer[] = await this.sourcePrisma.$queryRaw`
-    SELECT
-        study_trace_id      AS "id",
-        asset_id            AS "assetId",
-        ST_ASBINARY(geom)   AS "geom",
-        is_revised          AS "isRevised"
-    FROM study_trace
-    WHERE asset_id IN (${Prisma.join(assetIds)})
+    FROM study_${tableType}
+    WHERE asset_id IN (${assetIds.join(',')})
     `;
 
-    // todo: SET/Map
-    return {
-      areas,
-      locations,
-      traces,
-    };
+    return this.sourcePrisma.$queryRawUnsafe(query);
   }
 
-  private async createGeometriesForAsset(originalAssetId: number, assetId: number) {
-    const buildRows = <T extends { geom: Uint8Array | string; isRevised: boolean }>(list: T[]) =>
-      list.map(({ geom, isRevised }) => Prisma.sql`(${assetId}, ST_GeomFromWKB(${geom}), ${isRevised})`);
+  private async createGeometriesForAssets() {
+    log('Begin geometry insert');
+    const buildRows = <T extends { geom: Uint8Array | string; isRevised: boolean }>(list: T[], newAssetId: number) =>
+      list.map(({ geom, isRevised }) => Prisma.sql`(${newAssetId}, ST_GeomFromWKB(${geom}), ${isRevised})`);
 
-    const areas = buildRows(this.geometries.areas.filter((a) => a.assetId === originalAssetId));
-    const locations = buildRows(this.geometries.locations.filter((l) => l.assetId === originalAssetId));
-    const traces = buildRows(this.geometries.traces.filter((t) => t.assetId === originalAssetId));
+    const areasSql: Prisma.Sql[] = [];
+    const locationsSql: Prisma.Sql[] = [];
+    const tracesSql: Prisma.Sql[] = [];
+    // todo: maybe use set, so not looping all the time
+    this.newAssetToOriginalAsset.forEach((value, key) => {
+      areasSql.push(
+        ...buildRows(
+          this.geometries.areas.filter((a) => a.assetId === value.originalAssetId),
+          key,
+        ),
+      );
+      locationsSql.push(
+        ...buildRows(
+          this.geometries.locations.filter((a) => a.assetId === value.originalAssetId),
+          key,
+        ),
+      );
+      tracesSql.push(
+        ...buildRows(
+          this.geometries.traces.filter((a) => a.assetId === value.originalAssetId),
+          key,
+        ),
+      );
+    });
 
-    if (areas.length) {
+    for (const [idx, batch] of this.batchList(areasSql, BATCH_SIZE).entries()) {
+      log(`Creating batch #${idx + 1} of areas`, 'batch');
       await this.destinationPrisma.$executeRaw`
-        INSERT INTO study_area (asset_id, geom, is_revised)
-        VALUES ${Prisma.join(areas)}
-      `;
+          INSERT INTO study_area (asset_id, geom, is_revised)
+          VALUES ${Prisma.join(batch)}
+        `;
+      log(`Finished batch #${idx + 1} of areas`, 'batch');
     }
 
-    if (locations.length) {
+    for (const [idx, batch] of this.batchList(locationsSql, BATCH_SIZE).entries()) {
+      log(`Creating batch #${idx + 1} of locations`, 'batch');
       await this.destinationPrisma.$executeRaw`
-        INSERT INTO study_location (asset_id, geom, is_revised)
-        VALUES ${Prisma.join(locations)}
-      `;
+          INSERT INTO study_location (asset_id, geom, is_revised)
+          VALUES ${Prisma.join(batch)}
+        `;
+      log(`Finished batch #${idx + 1} of locations`, 'batch');
     }
 
-    if (traces.length) {
+    for (const [idx, batch] of this.batchList(tracesSql, BATCH_SIZE).entries()) {
+      log(`Creating batch #${idx + 1} of traces`, 'batch');
       await this.destinationPrisma.$executeRaw`
-        INSERT INTO study_trace (asset_id, geom, is_revised)
-        VALUES ${Prisma.join(traces)}
-      `;
+          INSERT INTO study_trace (asset_id, geom, is_revised)
+          VALUES ${Prisma.join(batch)}
+        `;
+      log(`Finished batch #${idx + 1} of traces`, 'batch');
     }
+  }
+
+  private batchList<T>(list: T[], batchSize: number): T[][] {
+    const batches = [];
+    for (let i = 0; i < list.length; i += batchSize) {
+      batches.push(list.slice(i, i + batchSize));
+    }
+    return batches;
+  }
+
+  private async createRelationTables() {
+    log('Create batched relation entries');
+    for (const [idx, batch] of this.batchList(this.relationSqls.ids, BATCH_SIZE).entries()) {
+      log(`Creating batch #${idx + 1} of ids`, 'batch');
+      await this.destinationPrisma.$executeRaw`
+              INSERT INTO id (asset_id, id, description)
+              VALUES ${Prisma.join(batch)}
+            `;
+      log(`Finished batch #${idx + 1} of ids`, 'batch');
+    }
+
+    for (const [idx, batch] of this.batchList(this.relationSqls.assetLanguages, BATCH_SIZE).entries()) {
+      log(`Creating batch #${idx + 1} of asset languages`, 'batch');
+      await this.destinationPrisma.$executeRaw`
+                  INSERT INTO asset_language (asset_id, language_item_code)
+                  VALUES ${Prisma.join(batch)}
+                `;
+      log(`Finished batch #${idx + 1} of asset languages`, 'batch');
+    }
+
+    for (const [idx, batch] of this.batchList(this.relationSqls.manCatLabelRefs, BATCH_SIZE).entries()) {
+      log(`Creating batch #${idx + 1} of mancatlabelrefs`, 'batch');
+      await this.destinationPrisma.$executeRaw`
+                  INSERT INTO man_cat_label_ref (asset_id, man_cat_label_item_code)
+                  VALUES ${Prisma.join(batch)}
+                `;
+      log(`Finished batch #${idx + 1} of mancatlabelrefs`, 'batch');
+    }
+
+    for (const [idx, batch] of this.batchList(this.relationSqls.typeNatRels, BATCH_SIZE).entries()) {
+      log(`Creating batch #${idx + 1} of typeNatRels`, 'batch');
+      await this.destinationPrisma.$executeRaw`
+                  INSERT INTO type_nat_rel (asset_id, nat_rel_item_code)
+                  VALUES ${Prisma.join(batch)}
+                `;
+      log(`Finished batch #${idx + 1} of typeNatRels`, 'batch');
+    }
+  }
+
+  private async createWorkflows() {
+    log(`Create workflows`);
+    const workflowSelection = await this.destinationPrisma.workflowSelection.createManyAndReturn({
+      data: Array.from({ length: this.newAssetToOriginalAsset.size * 2 }, () => ({})),
+      select: { id: true },
+    });
+
+    // for each new asset id, assign this an ID (since workflow.id === asset.assetId), and fetch two ids from the selections
+    const keys = Array.from(this.newAssetToOriginalAsset.keys());
+    const workflows = await this.destinationPrisma.workflow.createManyAndReturn({
+      select: { id: true },
+      data: keys.map((n) => ({
+        id: n,
+        status: 'Draft',
+        assigneeId: this.syncAssignee,
+        reviewId: workflowSelection.shift().id,
+        approvalId: workflowSelection.shift().id,
+      })),
+    });
+
+    await this.destinationPrisma.workflowChange.createMany({
+      data: workflows.map(({ id }) => ({
+        workflowId: id,
+        comment: `Synchronized from EXTERN with original ID ${this.newAssetToOriginalAsset.get(id).originalAssetId}`,
+        fromStatus: 'Published',
+        toStatus: 'Draft',
+        toAssigneeId: this.syncAssignee,
+      })),
+    });
+  }
+
+  private async createAssetSynchronizationRecords(): Promise<Prisma.AssetSynchronizationGetPayload<object>[]> {
+    log('Create synchronization records');
+    return this.destinationPrisma.assetSynchronization.createManyAndReturn({
+      data: Array.from(this.newAssetToOriginalAsset.entries()).map((a) => ({
+        assetId: a[0],
+        originalAssetId: a[1].originalAssetId,
+        originalSgsId: a[1].originalSgsId,
+      })),
+    });
   }
 }
 
@@ -299,4 +396,23 @@ interface Geometries {
   areas: GeometryTransfer[];
   locations: GeometryTransfer[];
   traces: GeometryTransfer[];
+}
+
+interface RelationSqls {
+  ids: Prisma.Sql[];
+  assetLanguages: Prisma.Sql[];
+  manCatLabelRefs: Prisma.Sql[];
+  typeNatRels: Prisma.Sql[];
+}
+
+interface AssetToSync {
+  asset: Omit<Asset, 'assetId' | 'sgsId'>;
+  originalAssetId: Asset['assetId'];
+  originalSgsId: Asset['sgsId'];
+  assetFiles: File[];
+  assetContacts: (AssetContact & { contact: Contact })[];
+  manCatLabelRefs: Pick<ManCatLabelRef, 'manCatLabelItemCode'>[];
+  typeNatRels: Pick<TypeNatRel, 'natRelItemCode'>[];
+  ids: Pick<Id, 'id' | 'description'>[];
+  assetLanguages: Pick<AssetLanguage, 'languageItemCode'>[];
 }
