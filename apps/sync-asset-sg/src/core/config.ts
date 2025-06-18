@@ -2,6 +2,7 @@ export type Mode = 'view' | 'extern';
 
 export interface SyncConfig {
   mode: Mode;
+  syncAssignee: string | undefined;
   source: {
     connectionString: string;
     allowedWorkgroupIds: number[];
@@ -23,6 +24,7 @@ function getEnvOrThrow(key: string): string {
 export function getConfig(): SyncConfig {
   return {
     mode: getEnvOrThrow('MODE') as Mode,
+    syncAssignee: process.env['SYNC_ASSIGNEE'],
     source: {
       connectionString: getEnvOrThrow('SOURCE_CONNECTION_STRING'),
       allowedWorkgroupIds: process.env['SOURCE_WORKGROUP_IDS']?.split(',').map(Number) ?? [],

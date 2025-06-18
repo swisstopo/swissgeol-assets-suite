@@ -63,7 +63,20 @@ model Asset {
 
   workflow Workflow?
 
+  synchronization AssetSynchronization?
+
   @@map("asset")
+}
+
+model AssetSynchronization {
+  id         Int            @id @default(autoincrement()) @map("id")
+  asset Asset @relation(fields: [assetId], references: [assetId], onDelete: Cascade)
+  assetId Int @unique  @map("asset_id")
+  originalAssetId Int @unique  @map("original_asset_id")
+  originalSgsId Int? @unique  @map("original_sgs_id")
+  syncDate DateTime @default(now()) @map("sync_date")
+
+  @@map("asset_synchronization")
 }
 
 model Id {
