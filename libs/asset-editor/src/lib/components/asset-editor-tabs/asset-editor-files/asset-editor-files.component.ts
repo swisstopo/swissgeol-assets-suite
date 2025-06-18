@@ -5,7 +5,7 @@ import { MatCheckboxChange } from '@angular/material/checkbox';
 import { Sort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import { fromAppShared } from '@asset-sg/client-shared';
-import { AssetEditDetail, AssetFileType, LegalDocItemCode } from '@asset-sg/shared';
+import { Asset, AssetFileType, LegalDocItemCode } from '@asset-sg/shared';
 import { Store } from '@ngrx/store';
 import { BehaviorSubject, combineLatestWith, forkJoin, map, Observable, startWith, Subscription, tap } from 'rxjs';
 import { TranslatedValueItem } from '../../../models/translated-value-item.interface';
@@ -20,7 +20,7 @@ import { AssetForm, FormAssetFile } from '../../asset-editor-page/asset-editor-p
 })
 export class AssetEditorFilesComponent implements OnInit, OnDestroy {
   @Input() form!: AssetForm['controls']['files'];
-  @Input() asset: AssetEditDetail | null = null;
+  @Input() asset: Asset | null = null;
 
   public activeFileDownload: Set<number> = new Set();
 

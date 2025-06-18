@@ -152,7 +152,7 @@ export class ViewerControllerService {
       return;
     }
     this.store.dispatch(appSharedStateActions.setCurrentAsset({ isLoading: true }));
-    const asset = await firstValueFrom(this.assetSearchService.fetchAssetEditDetail(id));
+    const asset = await firstValueFrom(this.assetSearchService.fetchAsset(id));
     this.store.dispatch(appSharedStateActions.setCurrentAsset({ asset, isLoading: false }));
   }
 

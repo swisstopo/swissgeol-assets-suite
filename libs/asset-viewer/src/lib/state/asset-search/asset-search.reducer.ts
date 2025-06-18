@@ -168,7 +168,7 @@ export const assetSearchReducer = createReducer(
               const { centroid, geometryType } = extractCentroidFromStudy(study);
               return {
                 assetId: study.assetId,
-                studyId: study.studyId,
+                geometryId: study.studyId,
                 geometryType: geometryType,
                 centroid,
                 accessType: mapAssetAccessToAccessType(asset),

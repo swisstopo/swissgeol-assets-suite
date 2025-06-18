@@ -134,7 +134,7 @@ export class ExportToViewService {
       },
       select: {
         assetId: true,
-        titlePublic: true,
+        title: true,
         isExtract: true,
         createDate: true,
         receiptDate: true,

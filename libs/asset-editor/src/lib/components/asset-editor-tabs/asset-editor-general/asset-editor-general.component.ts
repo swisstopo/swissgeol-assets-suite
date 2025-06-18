@@ -1,6 +1,6 @@
 import { Component, inject, Input, OnDestroy, OnInit } from '@angular/core';
 import { fromAppShared } from '@asset-sg/client-shared';
-import { AssetEditDetail } from '@asset-sg/shared';
+import { Asset } from '@asset-sg/shared';
 import { Role, SimpleWorkgroup } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
 import { combineLatestWith, map, Observable, startWith, Subscription } from 'rxjs';
@@ -16,7 +16,7 @@ import { AssetForm } from '../../asset-editor-page/asset-editor-page.component';
 })
 export class AssetEditorGeneralComponent implements OnInit, OnDestroy {
   @Input() form!: AssetForm['controls']['general'];
-  @Input() asset: AssetEditDetail | null = null;
+  @Input() asset: Asset | null = null;
   @Input() hasReferences = false;
 
   public workgroups: SimpleWorkgroup[] = [];

@@ -9,7 +9,7 @@
         [title]="'edit.tabs.general.publicTitle' | translate"
         (valueChange)="inputChange($event)"
         [autoCompleteValues]="optionsToDisplay$ | push"
-        bindLabel="titlePublic"
+        bindLabel="title"
         (selectionChange)="setSelectedAsset($event)"
         [disabled]="!hasWorkgroupId"
         [errorMessage]="hasWorkgroupId ? '' : ('edit.tabs.references.workgroupWarning' | translate)"

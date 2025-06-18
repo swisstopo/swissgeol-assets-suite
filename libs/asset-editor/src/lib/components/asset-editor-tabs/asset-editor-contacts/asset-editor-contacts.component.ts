@@ -3,7 +3,7 @@ import { FormControl } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { MatTableDataSource } from '@angular/material/table';
 import { fromAppShared } from '@asset-sg/client-shared';
-import { AssetEditDetail } from '@asset-sg/shared';
+import { Asset } from '@asset-sg/shared';
 import { AssetContact, AssetContactRole, Contact } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
 import { combineLatestWith, startWith, Subscription, tap } from 'rxjs';
@@ -28,7 +28,7 @@ type TableColumns = keyof ContactItem | 'delete';
 })
 export class AssetEditorContactsComponent implements OnInit, OnDestroy {
   @Input() public form!: AssetForm['controls']['contacts'];
-  @Input() public asset: AssetEditDetail | null = null;
+  @Input() public asset: Asset | null = null;
   protected readonly dataSource: MatTableDataSource<ContactItem> = new MatTableDataSource();
   protected readonly displayedColumns: TableColumns[] = ['name', 'roles', 'delete'];
   private readonly subscriptions: Subscription = new Subscription();

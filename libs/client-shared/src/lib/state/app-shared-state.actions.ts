@@ -1,5 +1,5 @@
-import { AssetEditDetail, Lang, ReferenceData } from '@asset-sg/shared';
-import { AssetId, Contact, SimpleWorkgroup, User } from '@asset-sg/shared/v2';
+import { Lang, ReferenceData } from '@asset-sg/shared';
+import { Asset, AssetId, Contact, SimpleWorkgroup, User } from '@asset-sg/shared/v2';
 import * as RD from '@devexperts/remote-data-ts';
 import { createAction, props } from '@ngrx/store';
 
@@ -41,21 +41,19 @@ export const setLang = createAction('[App Shared State] Set Lang', props<{ lang:
 export const setCurrentAsset = createAction(
   '[Asset Search] Set Current Asset',
   props<{
-    asset?: AssetEditDetail | null;
+    asset?: Asset | null;
     isLoading?: boolean;
   }>(),
 );
 
-export const updateAsset = createAction(
-  '[App Shared State] Update Asset In Search',
-  props<{
-    asset: AssetEditDetail;
-  }>(),
-);
+/**
+ * Updates all instances of an asset with a new value.
+ * If the asset is not referenced anywhere, the state does not change.
+ */
+export const updateAsset = createAction('[App Shared State] Update Asset In State', props<{ asset: Asset }>());
 
-export const removeAsset = createAction(
-  '[App Shared State] Remove Asset From Search',
-  props<{
-    assetId: AssetId;
-  }>(),
-);
+/**
+ * Removes all instances of an asset.
+ * If the asset is not referenced anywhere, the state does not change.
+ */
+export const removeAsset = createAction('[App Shared State] Remove Asset From State', props<{ assetId: AssetId }>());

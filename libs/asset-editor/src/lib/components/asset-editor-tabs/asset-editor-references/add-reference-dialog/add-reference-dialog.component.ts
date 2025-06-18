@@ -2,8 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Component, inject, OnInit } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { AssetEditDetail, LinkedAsset } from '@asset-sg/shared';
-import { AssetId, AssetSearchResultDTO, AssetSearchResultItem } from '@asset-sg/shared/v2';
+import { Asset, AssetId, AssetSearchResultItem, AssetSearchResultSchema } from '@asset-sg/shared/v2';
 import { plainToInstance } from 'class-transformer';
 import { combineLatest, debounceTime, map, Observable, of, startWith, Subject, switchMap } from 'rxjs';
 import { NewReferenceDialogData } from '../../../../models/new-reference-dialog-data.interface';
@@ -17,7 +16,7 @@ import { LinkedAssetType } from '../asset-editor-references.component';
   standalone: false,
 })
 export class AddReferenceDialogComponent implements OnInit {
-  public asset: AssetEditDetail | null = null;
+  public asset: Asset | null = null;
   public form!: AssetForm['controls']['references'];
 
   public newReferenceForm = new FormGroup({
@@ -60,7 +59,7 @@ export class AddReferenceDialogComponent implements OnInit {
     this.assetsToChooseFrom$ = this.searchTerm$.pipe(
       debounceTime(300),
       switchMap((term): Observable<AssetSearchResultItem[]> => {
-        if (term.length < 3 || (this.linkedAsset != null && this.linkedAsset.titlePublic === term)) {
+        if (term.length < 3 || (this.linkedAsset != null && this.linkedAsset.title === term)) {
           return of([]);
         }
         return this.httpClient
@@ -70,7 +69,7 @@ export class AddReferenceDialogComponent implements OnInit {
           })
           .pipe(
             map((res) => {
-              const data = plainToInstance(AssetSearchResultDTO, res);
+              const data = plainToInstance(AssetSearchResultSchema, res);
               return data.data;
             }),
           );
@@ -79,10 +78,10 @@ export class AddReferenceDialogComponent implements OnInit {
     this.optionsToDisplay$ = combineLatest([this.assetsToIgnore$, this.assetsToChooseFrom$]).pipe(
       map(([assetIdsToIgnore, queriedAssets]) =>
         queriedAssets
-          .filter((asset) => !assetIdsToIgnore.includes(asset.assetId))
+          .filter((asset) => !assetIdsToIgnore.includes(asset.id))
           .map((asset) => ({
-            titlePublic: asset.titlePublic,
-            assetId: asset.assetId,
+            id: asset.id,
+            title: asset.title,
           })),
       ),
     );
@@ -123,3 +122,5 @@ export class AddReferenceDialogComponent implements OnInit {
 
   protected readonly LinkedAssetType = LinkedAssetType;
 }
+
+type LinkedAsset = Pick<Asset, 'id' | 'title'>;

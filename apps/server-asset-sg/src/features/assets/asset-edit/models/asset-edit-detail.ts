@@ -6,7 +6,7 @@ import * as D from 'io-ts/Decoder';
 import { AssetFilesFromPostgres } from './AssetDetailFromPostgres';
 import { PostgresAllStudies } from '@/features/assets/asset-edit/utils/postgres-studies';
 
-export const AssetEditDetailFromPostgres = pipe(
+export const AssetFromPostgres = pipe(
   D.struct({
     assetId: D.number,
     titlePublic: D.string,
@@ -65,4 +65,4 @@ export const AssetEditDetailFromPostgres = pipe(
   }),
 );
 
-export type AssetEditDetailFromPostgres = D.TypeOf<typeof AssetEditDetailFromPostgres>;
+export type AssetFromPostgres = D.TypeOf<typeof AssetFromPostgres>;

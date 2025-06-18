@@ -1,19 +1,23 @@
 import {
   Asset,
-  AssetData,
   AssetId,
+  CreateGeometryData,
+  DeleteGeometryData,
+  extractGeometryTypeFromId,
   GeometryData,
   GeometryId,
+  GeometryMutationType,
   GeometryType,
-  GeometryUpdate,
   mapGeometryTypeToStudyType,
+  UpdateAssetData,
+  UpdateGeometryData,
   UserId,
 } from '@asset-sg/shared/v2';
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '@/core/prisma.service';
 import { Repo, RepoListOptions } from '@/core/repo';
-import { CreateAssetData } from '@/features/assets/asset.model';
+import { CreateAssetDataWithCreator } from '@/features/assets/asset.model';
 import { FileRepo } from '@/features/assets/files/file.repo';
 import {
   assetSelection,
@@ -24,7 +28,7 @@ import {
 import { handlePrismaMutationError } from '@/utils/prisma';
 
 @Injectable()
-export class AssetRepo implements Repo<Asset, AssetId, CreateAssetData, AssetData> {
+export class AssetRepo implements Repo<Asset, AssetId, CreateAssetDataWithCreator, UpdateAssetData> {
   constructor(
     private readonly prisma: PrismaService,
     private readonly fileRepo: FileRepo,
@@ -66,28 +70,27 @@ export class AssetRepo implements Repo<Asset, AssetId, CreateAssetData, AssetDat
     return entries.map((it) => it.assetId);
   }
 
-  async create(data: CreateAssetData): Promise<Asset> {
+  async create(data: CreateAssetDataWithCreator): Promise<Asset> {
     const id = await this.prisma.$transaction(async () => {
       const { assetId } = await this.prisma.asset.create({
         data: mapAssetDataToPrismaCreate(data),
         select: { assetId: true },
       });
-      await this.manageGeometries(assetId, data.geometries);
+      await this.applyGeometryMutations(assetId, data.geometries);
       return assetId;
     });
     return (await this.find(id)) as Asset;
   }
 
-  async update(id: AssetId, data: AssetData): Promise<Asset | null> {
+  async update(id: AssetId, data: UpdateAssetData): Promise<Asset | null> {
     try {
       return await this.prisma.$transaction(async () => {
-        await this.manageGeometries(id, data.geometries);
+        await this.applyGeometryMutations(id, data.geometries);
         const entry = await this.prisma.asset.update({
           where: { assetId: id },
           data: mapAssetDataToPrismaUpdate(id, data),
           select: assetSelection,
         });
-        // TODO cleanup orphaned files. Should probably be done outside of this repo.
         return parseAssetFromPrisma(entry);
       });
     } catch (e) {
@@ -125,28 +128,38 @@ export class AssetRepo implements Repo<Asset, AssetId, CreateAssetData, AssetDat
     }
   }
 
-  private async manageGeometries(assetId: AssetId, data: Array<GeometryUpdate | GeometryData>): Promise<void> {
-    const geometriesToCreate = new Map<GeometryType, GeometryData[]>();
-    const geometriesToUpdate = new Map<GeometryType, GeometryUpdate[]>();
+  private async applyGeometryMutations(assetId: AssetId, data: GeometryData[]): Promise<void> {
+    const geometriesToCreate = new Map<GeometryType, CreateGeometryData[]>();
+    const geometriesToUpdate = new Map<GeometryType, UpdateGeometryData[]>();
+    const geometriesToDelete = new Map<GeometryType, DeleteGeometryData[]>();
 
-    const enter = <T extends GeometryUpdate | GeometryData>(mapping: Map<GeometryType, T[]>, entry: T): void => {
-      const entries = mapping.get(entry.type);
+    const enter = <T extends GeometryData>(mapping: Map<GeometryType, T[]>, entry: T, type: GeometryType): void => {
+      const entries = mapping.get(type);
       if (entries === undefined) {
-        mapping.set(entry.type, [entry]);
+        mapping.set(type, [entry]);
       } else {
         entries.push(entry);
       }
     };
 
     for (const entry of data) {
-      if ('id' in entry) {
-        enter(geometriesToUpdate, entry);
-      } else {
-        enter(geometriesToCreate, entry);
+      switch (entry.mutation) {
+        case GeometryMutationType.Create:
+          enter(geometriesToCreate, entry, entry.type);
+          break;
+        case GeometryMutationType.Update:
+          enter(geometriesToUpdate, entry, extractGeometryTypeFromId(entry.id));
+          break;
+        case GeometryMutationType.Delete:
+          enter(geometriesToDelete, entry, extractGeometryTypeFromId(entry.id));
+          break;
       }
     }
+
+    for (const [type, deletion] of geometriesToDelete) {
+      await this.deleteGeometries(assetId, { type, ids: deletion.map((it) => it.id) });
+    }
     for (const [type, updates] of geometriesToUpdate) {
-      await this.deleteGeometries(assetId, { type, excludedIds: updates.map((it) => it.id) });
       await this.updateGeometries(assetId, { type, updates });
     }
     for (const [type, geometries] of geometriesToCreate) {
@@ -154,25 +167,9 @@ export class AssetRepo implements Repo<Asset, AssetId, CreateAssetData, AssetDat
     }
   }
 
-  private async deleteGeometries(
-    assetId: AssetId,
-    options: { type: GeometryType; excludedIds: GeometryId[] },
-  ): Promise<void> {
-    const studyType = mapGeometryTypeToStudyType(options.type);
-    const condition =
-      options.excludedIds.length === 0
-        ? ''
-        : Prisma.sql`AND study_${Prisma.raw(studyType)}_id NOT IN (${Prisma.join(options.excludedIds, ',')})`;
-    await this.prisma.$queryRaw`
-        DELETE
-        FROM public.study_${studyType}
-        WHERE assetId = ${assetId} ${condition}
-    `;
-  }
-
   private async createGeometries(
     assetId: AssetId,
-    { type, geometries }: { type: GeometryType; geometries: GeometryData[] },
+    { type, geometries }: { type: GeometryType; geometries: CreateGeometryData[] },
   ): Promise<void> {
     if (geometries.length === 0) {
       return;
@@ -180,7 +177,7 @@ export class AssetRepo implements Repo<Asset, AssetId, CreateAssetData, AssetDat
     const studyType = mapGeometryTypeToStudyType(type);
     const values = geometries.map(
       (geometry) => Prisma.sql`
-      (${assetId}, st_geomfromtext('${geometry.geometry}', 2056))
+      (${assetId}, st_geomfromtext('${geometry.text}', 2056))
     `,
     );
     await this.prisma.$queryRaw`
@@ -193,7 +190,7 @@ export class AssetRepo implements Repo<Asset, AssetId, CreateAssetData, AssetDat
 
   private async updateGeometries(
     assetId: AssetId,
-    { type, updates }: { type: GeometryType; updates: GeometryUpdate[] },
+    { type, updates }: { type: GeometryType; updates: UpdateGeometryData[] },
   ): Promise<void> {
     if (updates.length === 0) {
       return;
@@ -202,7 +199,7 @@ export class AssetRepo implements Repo<Asset, AssetId, CreateAssetData, AssetDat
     const cases = updates.map(
       (update) => Prisma.sql`
       WHEN study_${Prisma.raw(studyType)}_id = ${update.id}
-      THEN ${update.geometry}
+      THEN ${update.text}
     `,
     );
     await this.prisma.$queryRaw`
@@ -213,6 +210,22 @@ export class AssetRepo implements Repo<Asset, AssetId, CreateAssetData, AssetDat
                     ${Prisma.join(cases, '\n')}
                     ELSE geom
         WHERE assetId = ${assetId}
+    `;
+  }
+
+  private async deleteGeometries(assetId: AssetId, options: { type: GeometryType; ids: GeometryId[] }): Promise<void> {
+    if (options.ids.length === 0) {
+      return;
+    }
+    const studyType = mapGeometryTypeToStudyType(options.type);
+    const condition =
+      options.ids.length === 0
+        ? ''
+        : Prisma.sql`AND study_${Prisma.raw(studyType)}_id IN (${Prisma.join(options.ids, ',')})`;
+    await this.prisma.$queryRaw`
+        DELETE
+        FROM public.study_${studyType}
+        WHERE assetId = ${assetId} ${condition}
     `;
   }
 }

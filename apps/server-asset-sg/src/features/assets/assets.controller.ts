@@ -1,4 +1,13 @@
-import { Asset, AssetData, AssetDataSchema, AssetId, AssetPolicy, User } from '@asset-sg/shared/v2';
+import {
+  Asset,
+  UpdateAssetData,
+  AssetId,
+  AssetPolicy,
+  User,
+  CreateAssetData,
+  CreateAssetDataSchema,
+  UpdateAssetDataSchema,
+} from '@asset-sg/shared/v2';
 import {
   Controller,
   Delete,
@@ -31,7 +40,7 @@ export class AssetsController {
   }
 
   @Post('/')
-  async create(@ParseBody(AssetDataSchema) data: AssetData, @CurrentUser() user: User): Promise<Asset> {
+  async create(@ParseBody(CreateAssetDataSchema) data: CreateAssetData, @CurrentUser() user: User): Promise<Asset> {
     authorize(AssetPolicy, user).canCreate();
     return await this.assetService.create(data, user);
   }
@@ -39,7 +48,7 @@ export class AssetsController {
   @Put('/:id')
   async update(
     @Param('id', ParseIntPipe) id: number,
-    @ParseBody(AssetDataSchema) data: AssetData,
+    @ParseBody(UpdateAssetDataSchema) data: UpdateAssetData,
     @CurrentUser() user: User,
   ): Promise<Asset> {
     const record = await this.assetService.find(id);

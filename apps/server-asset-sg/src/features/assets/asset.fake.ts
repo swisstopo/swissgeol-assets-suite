@@ -1,5 +1,5 @@
 import { Contact } from '@asset-sg/shared';
-import { Asset, AssetData, LocalDate, Role, User, UserData, WorkgroupId } from '@asset-sg/shared/v2';
+import { Asset, UpdateAssetData, LocalDate, Role, User, UserData, WorkgroupId } from '@asset-sg/shared/v2';
 import { fakerDE_CH as faker } from '@faker-js/faker';
 
 // eslint-disable-next-line @nx/enforce-module-boundaries
@@ -49,20 +49,20 @@ export const fakeContact = (): Omit<Contact, 'id'> => ({
   website: faker.internet.domainName(),
 });
 
-export const fakeAssetData = (): AssetData => ({
+export const fakeAssetData = (): UpdateAssetData => ({
   title: faker.commerce.productName(),
   originalTitle: faker.music.songName(),
   contacts: [],
   files: [],
   formatCode: fakeAssetFormatItemCode(),
   kindCode: fakeAssetKindItemCode(),
-  parentId: null,
+  parent: null,
   identifiers: [],
   isOfNationalInterest: false,
   languageCodes: [],
   topicCodes: [],
   geometries: [],
-  siblingIds: [],
+  siblings: [],
   nationalInterestTypeCodes: [],
   workgroupId: 1,
   isPublic: faker.datatype.boolean(),
@@ -79,13 +79,13 @@ export const fakeAsset = (): Asset => ({
   files: [],
   formatCode: fakeAssetFormatItemCode(),
   kindCode: fakeAssetKindItemCode(),
-  parentId: null,
-  childrenIds: [],
+  parent: null,
+  children: [],
   identifiers: [],
   isOfNationalInterest: false,
   languageCodes: [],
   topicCodes: [],
-  siblingIds: [],
+  siblings: [],
   workgroupId: 1,
   nationalInterestTypeCodes: [],
   isPublic: faker.datatype.boolean(),

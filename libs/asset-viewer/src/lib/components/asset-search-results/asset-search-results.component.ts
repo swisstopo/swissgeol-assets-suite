@@ -7,8 +7,8 @@ import * as actions from '../../state/asset-search/asset-search.actions';
 import { PanelState, setScrollOffsetForResults } from '../../state/asset-search/asset-search.actions';
 import { AppStateWithAssetSearch } from '../../state/asset-search/asset-search.reducer';
 import {
-  AssetEditDetailVM,
-  selectAssetEditDetailVM,
+  AssetVM,
+  selectAssetVM,
   selectCurrentAsset,
   selectIsResultsOpen,
   selectScrollOffsetForResults,
@@ -37,16 +37,16 @@ export class AssetSearchResultsComponent implements OnInit, OnDestroy {
     'createDate',
   ];
 
-  public allResults$ = new BehaviorSubject<AssetEditDetailVM[]>([]);
+  public allResults$ = new BehaviorSubject<AssetVM[]>([]);
 
-  public resultsToDisplay: AssetEditDetailVM[] = [];
+  public resultsToDisplay: AssetVM[] = [];
   private size = 0;
   private readonly pageSize = 50;
 
   private readonly store = inject(Store<AppStateWithAssetSearch>);
   private readonly viewerControllerService = inject(ViewerControllerService);
   public readonly isResultsOpen$ = this.store.select(selectIsResultsOpen);
-  public readonly assets$ = this.store.select(selectAssetEditDetailVM);
+  public readonly assets$ = this.store.select(selectAssetVM);
   public readonly total$ = this.store.select(selectSearchStats).pipe(map((stats) => stats.total));
   public readonly currentAssetDetail$ = this.store.select(selectCurrentAsset);
   public readonly scrollOffset$ = this.store.select(selectScrollOffsetForResults);
@@ -170,7 +170,7 @@ export class AssetSearchResultsComponent implements OnInit, OnDestroy {
     );
   }
 
-  public get allResults(): AssetEditDetailVM[] {
+  public get allResults(): AssetVM[] {
     return this.allResults$.value;
   }
 }

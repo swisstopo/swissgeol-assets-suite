@@ -1,7 +1,7 @@
 import { Component, inject, Input, OnDestroy, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { MatTableDataSource } from '@angular/material/table';
-import { AssetEditDetail, LinkedAsset } from '@asset-sg/shared';
+import { Asset, LinkedAsset } from '@asset-sg/shared';
 import { WorkgroupId } from '@asset-sg/shared/v2';
 import { startWith, Subscription } from 'rxjs';
 import { NewReferenceDialogData } from '../../../models/new-reference-dialog-data.interface';
@@ -17,7 +17,7 @@ import { AddReferenceDialogComponent } from './add-reference-dialog/add-referenc
 export class AssetEditorReferencesComponent implements OnInit, OnDestroy {
   @Input() form!: AssetForm['controls']['references'];
 
-  @Input() asset: AssetEditDetail | null = null;
+  @Input() asset: Asset | null = null;
 
   @Input() workgroupId!: WorkgroupId | null;
 

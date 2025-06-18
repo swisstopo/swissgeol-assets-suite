@@ -1,4 +1,4 @@
-import { AssetId, User, AssetFile, AssetFileType, AssetFileId, LegalDocCode } from '@asset-sg/shared/v2';
+import { AssetId, User, AssetFile, AssetFileId, LegalDocCode } from '@asset-sg/shared/v2';
 import { Injectable } from '@nestjs/common';
 import { OcrState } from '@prisma/client';
 import { PrismaService } from '@/core/prisma.service';
@@ -40,7 +40,7 @@ export class FileRepo
         nameAlias,
         size: data.size,
         ocrStatus: data.ocrStatus,
-        type: data.type,
+        type: data.legalDocCode === null ? 'Normal' : 'Legal',
         legalDocItemCode: data.legalDocCode,
         lastModifiedAt,
         AssetFile: {
@@ -55,7 +55,6 @@ export class FileRepo
       name: fileName,
       alias: nameAlias,
       size: data.size,
-      type: data.type,
       legalDocCode: data.legalDocCode,
       pageCount: null, // this is filled (if at all) by postprocessing via OCR
       lastModifiedAt,
@@ -117,7 +116,6 @@ export interface FileIdentifier {
 export interface CreateFileData {
   name: string;
   size: number;
-  type: AssetFileType;
   legalDocCode: LegalDocCode | null;
   ocrStatus: OcrState;
   assetId: AssetId;

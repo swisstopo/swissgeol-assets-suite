@@ -13,12 +13,28 @@ export interface Coordinate {
   y: number;
 }
 
-export interface GeometryData {
-  type: GeometryType;
-  geometry: string;
+export enum GeometryMutationType {
+  Create = 'Create',
+  Update = 'Update',
+  Delete = 'Delete',
 }
 
-export interface GeometryUpdate extends GeometryData {
+export type GeometryData = CreateGeometryData | UpdateGeometryData | DeleteGeometryData;
+
+export interface CreateGeometryData {
+  mutation: GeometryMutationType.Create;
+  type: GeometryType;
+  text: string;
+}
+
+export interface UpdateGeometryData {
+  mutation: GeometryMutationType.Update;
+  id: GeometryId;
+  text: string;
+}
+
+export interface DeleteGeometryData {
+  mutation: GeometryMutationType.Delete;
   id: GeometryId;
 }
 
@@ -49,6 +65,20 @@ export const mapGeometryTypeToStudyType = (type: GeometryType): StudyType => {
       return StudyType.Trace;
     case GeometryType.Polygon:
       return StudyType.Area;
+  }
+};
+
+export const extractGeometryTypeFromId = (id: GeometryId): GeometryType => {
+  const [_prefix, studyType, _suffix] = id.split('_', 3);
+  switch (studyType) {
+    case StudyType.Area:
+      return GeometryType.Point;
+    case StudyType.Location:
+      return GeometryType.Line;
+    case StudyType.Trace:
+      return GeometryType.Polygon;
+    default:
+      throw new Error(`Invalid geometry id: ${id}`);
   }
 };
 

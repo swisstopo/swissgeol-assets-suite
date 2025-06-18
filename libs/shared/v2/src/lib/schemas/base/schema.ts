@@ -75,7 +75,7 @@ export class Schema {
 export function convert<T extends object, S extends T>(schema: Class<S>, value: T): S;
 
 /**
- * Converts an array of object into an array of {@link Schema} instances.
+ * Converts an array of objects into an array of {@link Schema} instances.
  *
  * @param schema The schema class.
  * @param value The values to convert.

@@ -1,5 +1,5 @@
 import { Pipe, PipeTransform } from '@angular/core';
-import { AssetFile } from '@asset-sg/shared';
+import { AssetFile } from '@asset-sg/shared/v2';
 
 @Pipe({
   name: 'fileName',
@@ -7,6 +7,6 @@ import { AssetFile } from '@asset-sg/shared';
 })
 export class FileNamePipe implements PipeTransform {
   transform(value: AssetFile): string {
-    return value.nameAlias ?? value.name;
+    return value.alias ?? value.name;
   }
 }

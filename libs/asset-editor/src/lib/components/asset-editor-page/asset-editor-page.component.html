@@ -2,7 +2,7 @@
   <mat-progress-bar mode="indeterminate" class="loading-bar" />
 }
 <asset-sg-page-header (backNavigation)="navigateToStart()">
-  <h2>{{ asset?.titlePublic }}</h2>
+  <h2>{{ asset?.title }}</h2>
   <mat-chip-set>
     @if (mode === EditorMode.Create) {
       <asset-sg-chip type="primary">{{ "workflowStatus.Draft" | translate }}</asset-sg-chip>
@@ -12,8 +12,8 @@
   </mat-chip-set>
   <div class="spacer"></div>
 
-  @if (asset) {
-    <button asset-sg-secondary (click)="openConfirmDialogForAssetDeletion(asset.assetId)" translate>
+  @if (asset !== null) {
+    <button asset-sg-secondary (click)="openConfirmDialogForAssetDeletion(asset.id)" translate>
       delete
       <svg-icon key="delete"></svg-icon>
     </button>

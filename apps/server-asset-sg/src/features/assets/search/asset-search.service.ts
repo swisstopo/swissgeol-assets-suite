@@ -157,7 +157,7 @@ export class AssetSearchService {
    * @param limit The maximum amount of assets to load. Defaults to `100`.
    * @param offset The amount of assets being skipped before loading the assets.
    * @param decode Whether to decode the assets. If this is set to `false`, the assets should be decoded via
-   *   `AssetEditDetail` before accessing them. This option primarily exists so that the assets are not decoded and
+   *   `Asset` before accessing them. This option primarily exists so that the assets are not decoded and
    *   directly re-encoded when returning them via API.
    */
   async search(

@@ -1,10 +1,10 @@
-import { AssetFile, AssetFileId } from './asset-file';
+import { AssetFile, UpdateAssetFileData } from './asset-file';
 import { AssetIdentifier, AssetIdentifierData } from './asset-identifier';
 import { LocalDate } from './base/local-date';
 import { Model } from './base/model';
 import { AssetContact } from './contact';
-import { GeometryData, GeometryUpdate } from './geometry';
-import { LocalizedItemCode } from './localized-item';
+import { CreateGeometryData, GeometryData } from './geometry';
+import { LocalizedItem, LocalizedItemCode } from './localized-item';
 import { UserId } from './user';
 import { WorkgroupId } from './workgroup';
 
@@ -83,17 +83,17 @@ export interface Asset extends Model<AssetId> {
   /**
    * DB: `asset_main_id`
    */
-  parentId: LinkedAsset | null;
+  parent: LinkedAsset | null;
 
   /**
    * DB: `asset_main_id`
    */
-  childrenIds: LinkedAsset[];
+  children: LinkedAsset[];
 
   /**
    * DB: `asset_x_asset_y` table
    */
-  siblingIds: LinkedAsset[];
+  siblings: LinkedAsset[];
 
   /**
    * DB: `workgroup_id`
@@ -145,6 +145,13 @@ export interface AssetLegacyData {
 
 export type LinkedAsset = Pick<Asset, 'id' | 'title'>;
 
+export type AssetVM = {
+  [K in keyof Asset]: AssetVMValue<Asset[K]>;
+};
+
+type AssetVMValue<V> =
+  V extends Array<infer E> ? Array<AssetVMValue<E>> : V extends LocalizedItemCode ? LocalizedItem : V;
+
 // TODO The following fields exist in the DB, but are not mapped into the asset model:
 //      - url (always `null`)
 //      - locationAnalog
@@ -166,9 +173,9 @@ export type LinkedAsset = Pick<Asset, 'id' | 'title'>;
 
 // TODO The asset model does now never contain geometries. Is this okay?
 
-type OmittedDataKeys = 'id' | 'childrenIds' | 'creatorId';
+type OmittedDataKeys = 'id' | 'legacyData' | 'children' | 'creatorId' | 'files';
 
-type AssetDataMapping = {
+export type AssetData = {
   [K in keyof Omit<Asset, OmittedDataKeys>]: AssetDataValueMapping<Asset[K]>;
 };
 
@@ -179,10 +186,13 @@ type AssetDataValueMapping<V> =
       ? AssetId
       : V extends AssetIdentifier
         ? AssetIdentifier | AssetIdentifierData
-        : V extends AssetFile
-          ? AssetFileId
-          : V;
+        : V;
 
-export interface AssetData extends AssetDataMapping {
-  geometries: Array<GeometryUpdate | GeometryData>;
+export interface CreateAssetData extends AssetData {
+  geometries: CreateGeometryData[];
+}
+
+export interface UpdateAssetData extends AssetData {
+  geometries: GeometryData[];
+  files: UpdateAssetFileData[];
 }

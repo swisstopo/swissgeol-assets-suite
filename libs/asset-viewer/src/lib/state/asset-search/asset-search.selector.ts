@@ -1,7 +1,7 @@
 import { fromAppShared, TranslatedValue, Translation } from '@asset-sg/client-shared';
 import {
   AssetContactRole,
-  AssetEditDetail,
+  Asset,
   AssetSearchQuery,
   AssetSearchStats,
   Contact,
@@ -15,7 +15,7 @@ import {
   ValueCount,
   ValueItem,
 } from '@asset-sg/shared';
-import { SimpleWorkgroup, WorkgroupId } from '@asset-sg/shared/v2';
+import { AssetVM, SimpleWorkgroup, WorkgroupId } from '@asset-sg/shared/v2';
 import * as RD from '@devexperts/remote-data-ts';
 import { createSelector } from '@ngrx/store';
 import { pipe } from 'fp-ts/function';
@@ -70,10 +70,10 @@ export const selectCurrentAssetDetailVM = createSelector(
   },
 );
 
-export const selectAssetEditDetailVM = createSelector(
+export const selectAssetVM = createSelector(
   fromAppShared.selectRDReferenceData,
   selectSearchResults,
-  (referenceData, assets): AssetEditDetailVM[] => {
+  (referenceData, assets): AssetVM[] => {
     if (!RD.isSuccess(referenceData) || !assets) {
       return [];
     }
@@ -92,11 +92,13 @@ export const selectAssetEditDetailVM = createSelector(
           });
           return contacts;
         },
-        {} as AssetEditDetailVM['contacts'],
+        {} as AssetVM['contacts'],
       );
       return {
+        ...asset,
+
         assetId: asset.id,
-        titlePublic: asset.titlePublic,
+        title: asset.titlePublic,
         createDate: asset.createDate as number & DateIdBrand,
         assetKindItem,
         assetFormatItem,
@@ -323,20 +325,10 @@ export const makeTranslatedValueFromItemName = (item: ValueItem): TranslatedValu
   en: item.nameEn,
 });
 
-export interface AssetEditDetailVM {
-  assetId: number;
-  titlePublic: string;
-  createDate: number & DateIdBrand;
-  assetKindItem: ValueItem;
-  assetFormatItem: ValueItem;
-  contacts: Record<AssetContactRole, FullContact[]>;
-  manCatLabelItems: ValueItem[];
-}
-
 export type AssetDetailVM = ReturnType<typeof makeAssetDetailVMNew>;
 export type AssetDetailFileVM = AssetDetailVM['assetFiles'][0];
 
-const makeAssetDetailVMNew = (referenceData: ReferenceData, assetDetail: AssetEditDetail) => {
+const makeAssetDetailVMNew = (referenceData: ReferenceData, assetDetail: Asset) => {
   const {
     assetFormatItemCode,
     assetKindItemCode,

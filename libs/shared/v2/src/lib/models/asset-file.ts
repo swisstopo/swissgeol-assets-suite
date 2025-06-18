@@ -18,11 +18,6 @@ export interface AssetFile {
   alias: string | null;
 
   /**
-   * DB: `type`
-   */
-  type: AssetFileType;
-
-  /**
    * DB: `size`
    */
   size: number;
@@ -43,17 +38,16 @@ export interface AssetFile {
   lastModifiedAt: Date;
 }
 
-export enum AssetFileType {
-  Normal = 'Normal',
-  Legal = 'Legal',
-}
-
 export type AssetFileId = number;
 
-export interface AssetFileData {
-  type: AssetFileType;
-  legalDocCode: LegalDocCode | null;
+export interface CreateAssetFileData {
   file: File;
+  legalDocCode: LegalDocCode | null;
+}
+
+export interface UpdateAssetFileData {
+  id: AssetFileId;
+  legalDocCode: LegalDocCode | null;
 }
 
 export enum LegalDocCode {

@@ -1,4 +1,13 @@
-import { Asset, AssetData, AssetId, AssetPolicy, Role, User } from '@asset-sg/shared/v2';
+import {
+  Asset,
+  UpdateAssetData,
+  AssetId,
+  AssetPolicy,
+  Role,
+  User,
+  CreateAssetData,
+  AssetData,
+} from '@asset-sg/shared/v2';
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaService } from '@/core/prisma.service';
 import { AssetRepo } from '@/features/assets/asset.repo';
@@ -16,12 +25,12 @@ export class AssetService {
     return this.assetRepo.find(id);
   }
 
-  async create(data: AssetData, user: User): Promise<Asset> {
+  async create(data: CreateAssetData, user: User): Promise<Asset> {
     await this.validateData(user, data);
     return this.assetRepo.create({ ...data, creatorId: user.id });
   }
 
-  async update(asset: Asset, data: AssetData, user: User): Promise<Asset | null> {
+  async update(asset: Asset, data: UpdateAssetData, user: User): Promise<Asset | null> {
     await this.validateData(user, data, asset);
     const updatedAsset = this.assetRepo.update(asset.id, data);
     // Remove any files that are no longer referenced by any asset.
@@ -54,7 +63,7 @@ export class AssetService {
     }
 
     // Validate siblings.
-    for (const assetYId of data.siblingIds) {
+    for (const assetYId of data.siblings) {
       // Ensure that the sibling is not the asset itself.
       if (assetYId === record.id) {
         throw new HttpException('Cannot assign asset as its own sibling', HttpStatus.UNPROCESSABLE_ENTITY);
@@ -74,15 +83,15 @@ export class AssetService {
     }
 
     // Validate parent asset.
-    if (data.parentId !== null) {
+    if (data.parent !== null) {
       // Ensure that the parent is not the asset itself.
-      if (data.parentId === record.id) {
+      if (data.parent === record.id) {
         throw new HttpException('Cannot assign asset as its own parent', HttpStatus.UNPROCESSABLE_ENTITY);
       }
 
       // Ensure that the parent is in the same workgroup.
       const assetMain = await this.prismaService.asset.findUnique({
-        where: { assetId: data.parentId },
+        where: { assetId: data.parent },
         select: { workgroupId: true },
       });
       if (assetMain?.workgroupId !== data.workgroupId) {

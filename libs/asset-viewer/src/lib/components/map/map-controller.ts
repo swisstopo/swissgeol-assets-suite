@@ -43,7 +43,7 @@ export class MapController {
 
   private readonly map: OlMap;
   /**
-   * The id of all visible assets, mapped to their {@link AssetEditDetail} object.
+   * The id of all visible assets, mapped to their {@link Asset} object.
    * @private
    */
   private readonly assetsById = new Map<number, AssetSearchResultItem>();
@@ -136,14 +136,14 @@ export class MapController {
     for (let i = 0; i < studies.length; i++) {
       const study = studies[i];
       const geometry = new Point(olCoordsFromLV95(study.centroid));
-      this.assetIdsByStudyId.set(study.studyId, study.assetId);
+      this.assetIdsByStudyId.set(study.geometryId, study.assetId);
 
       const heatmapFeature = new Feature<Point>(geometry);
-      heatmapFeature.setId(study.studyId);
+      heatmapFeature.setId(study.geometryId);
       heatmapFeatures[i] = heatmapFeature;
 
       const studyFeature = new Feature<Point>(geometry);
-      studyFeature.setId(study.studyId);
+      studyFeature.setId(study.geometryId);
       studyFeature.setProperties({ [CustomFeatureProperties.SwisstopoType]: 'StudyPoint' });
       studyFeature.setProperties({ [CustomFeatureProperties.GeometryType]: study.geometryType });
       studyFeature.setProperties({ [CustomFeatureProperties.AccessType]: study.accessType });

@@ -1,5 +1,5 @@
-import { AssetData, UserId } from '@asset-sg/shared/v2';
+import { CreateAssetData, UserId } from '@asset-sg/shared/v2';
 
-export interface CreateAssetData extends AssetData {
+export interface CreateAssetDataWithCreator extends CreateAssetData {
   creatorId: UserId;
 }

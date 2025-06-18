@@ -1,4 +1,4 @@
-import { AssetEditPolicy, AssetFileSchema, AssetFileType, LegalDocCode, User } from '@asset-sg/shared/v2';
+import { AssetEditPolicy, AssetFileSchema, LegalDocCode, User } from '@asset-sg/shared/v2';
 import {
   Controller,
   Delete,
@@ -82,30 +82,11 @@ export class FilesController {
     authorize(AssetEditPolicy, user).canUpdate(asset);
 
     const body = req.body as {
-      type?: string;
-
-      // TODO Rename to legalDocCode
-      legalDocItemCode?: string;
+      legalDocCode?: string;
     };
-    const type = parseEnumFromRequest(AssetFileType, body.type ?? '', 'Invalid type');
-    const legalDocCode = parseEnumFromRequest(LegalDocCode, body.legalDocItemCode, 'Invalid legalDocItemCode');
-
-    switch (type) {
-      case 'Legal': {
-        if (legalDocCode === null) {
-          throw new HttpException('missing legalDocItemCode for legal file', HttpStatus.BAD_REQUEST);
-        }
-        break;
-      }
-      case 'Normal':
-        if (legalDocCode !== null) {
-          throw new HttpException('legalDocItemCode is not supported for normal files', HttpStatus.BAD_REQUEST);
-        }
-        break;
-    }
+    const legalDocCode = parseEnumFromRequest(LegalDocCode, body.legalDocCode, 'Invalid legalDocCode');
     const record = await this.fileService.create({
       name: file.originalname,
-      type: type,
       size: file.size,
       legalDocCode,
       assetId: asset.id,

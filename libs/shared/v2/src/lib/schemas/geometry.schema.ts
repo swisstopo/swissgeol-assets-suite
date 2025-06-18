@@ -1,14 +1,16 @@
-import { Transform, Type } from 'class-transformer';
-import { IsNumber, IsEnum, IsObject, IsString, Matches, ValidateNested } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsNumber, IsEnum, IsObject, IsString, Matches, ValidateNested, Equals } from 'class-validator';
 import { AssetId } from '../models/asset';
 import {
   Coordinate,
+  CreateGeometryData,
+  DeleteGeometryData,
   Geometry,
   GeometryAccessType,
-  GeometryData,
   GeometryId,
+  GeometryMutationType,
   GeometryType,
-  GeometryUpdate,
+  UpdateGeometryData,
 } from '../models/geometry';
 import { Schema } from './base/schema';
 
@@ -20,15 +22,40 @@ export class CoordinateSchema extends Schema implements Coordinate {
   y!: number;
 }
 
-export class GeometryDataSchema extends Schema implements GeometryData {
+class GeometryDataSchema extends Schema {
+  mutation!: GeometryMutationType;
+}
+
+export class CreateGeometryDataSchema extends GeometryDataSchema implements CreateGeometryData {
+  @Equals(GeometryMutationType.Create)
+  override mutation!: GeometryMutationType.Create;
+
   @IsEnum(GeometryType)
   type!: GeometryType;
 
   @IsString()
-  geometry!: string;
+  text!: string;
 }
 
-export class GeometryUpdateSchema extends GeometryDataSchema implements GeometryUpdate {
+export class UpdateGeometryDataSchema extends GeometryDataSchema implements UpdateGeometryData {
+  @Equals(GeometryMutationType.Update)
+  override mutation!: GeometryMutationType.Update;
+
+  @IsString()
+  @Matches(/^study_(?:area|location|trace)_\d+$/)
+  id!: GeometryId;
+
+  @IsEnum(GeometryType)
+  type!: GeometryType;
+
+  @IsString()
+  text!: string;
+}
+
+export class DeleteGeometryDataSchema extends GeometryDataSchema implements DeleteGeometryData {
+  @Equals(GeometryMutationType.Delete)
+  override mutation!: GeometryMutationType.Delete;
+
   @IsString()
   @Matches(/^study_(?:area|location|trace)_\d+$/)
   id!: GeometryId;
@@ -52,15 +79,16 @@ export class GeometrySchema extends Schema implements Geometry {
   assetId!: AssetId;
 }
 
-export function TransformGeometryData(options: { each?: boolean } = {}) {
-  const transformSingle = (value: object) => {
-    if ('id' in value) {
-      return Object.assign(new GeometryUpdateSchema(), value);
-    } else {
-      return Object.assign(new GeometryDataSchema(), value);
-    }
-  };
-  return options.each
-    ? Transform(({ value }) => (value as object[]).map(transformSingle))
-    : Transform(({ value }) => transformSingle(value));
+export function GeometryDataType(): PropertyDecorator {
+  return Type(() => GeometryDataSchema, {
+    discriminator: {
+      property: 'mutation',
+      subTypes: [
+        { name: GeometryMutationType.Create, value: CreateGeometryDataSchema },
+        { name: GeometryMutationType.Update, value: UpdateGeometryDataSchema },
+        { name: GeometryMutationType.Delete, value: DeleteGeometryDataSchema },
+      ],
+    },
+    keepDiscriminatorProperty: true,
+  });
 }

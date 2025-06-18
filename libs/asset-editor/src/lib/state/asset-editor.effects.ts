@@ -45,24 +45,16 @@ export class AssetEditorEffects {
     ),
   );
 
-  createAsset$ = createEffect(() =>
+  updateAsset$ = createEffect(() =>
     this.actions$.pipe(
-      ofType(actions.createNewAsset),
-      switchMap(({ patchAsset }) => this.assetEditorService.createAsset(patchAsset)),
-      map((data) => actions.updateAssetEditDetailResult({ asset: data })),
-    ),
-  );
-
-  updateAssetEditDetail$ = createEffect(() =>
-    this.actions$.pipe(
-      ofType(actions.updateAssetEditDetail),
+      ofType(actions.updateAsset),
       switchMap(({ assetId, patchAsset, newFiles, filesToDelete }) =>
         this.assetEditorService.deleteFiles(assetId, filesToDelete).pipe(
-          switchMap(() => this.assetEditorService.uploadFiles(assetId, newFiles)),
-          switchMap(() => this.assetEditorService.updateAssetDetail(assetId, patchAsset)),
+          switchMap(() => this.assetEditorService.uploadFilesForAsset(assetId, newFiles)),
+          switchMap(() => this.assetEditorService.updateAsset(assetId, patchAsset)),
         ),
       ),
-      map((asset) => actions.updateAssetEditDetailResult({ asset })),
+      map((asset) => actions.updateAssetResult({ asset })),
     ),
   );
 
@@ -102,7 +94,7 @@ export class AssetEditorEffects {
 
   updateSearchAfterAssetChanged$ = createEffect(() =>
     this.actions$.pipe(
-      ofType(actions.updateAssetEditDetailResult),
+      ofType(actions.updateAssetResult),
       map(({ asset }) =>
         appSharedStateActions.updateAsset({
           asset: {

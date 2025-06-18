@@ -10,24 +10,26 @@ import {
   fromAppShared,
   ROUTER_SEGMENTS,
   RoutingService,
-  wktToGeoJSON,
 } from '@asset-sg/client-shared';
+import { Lang } from '@asset-sg/shared';
 import {
-  AssetEditDetail,
+  Asset,
+  AssetContact,
+  AssetData,
   AssetFile,
-  dateFromDateId,
-  dateIdFromDate,
-  GeomFromGeomText,
-  hasHistoricalData,
-  Lang,
+  AssetIdentifier,
+  AssetIdentifierData,
+  CreateAssetFileData,
+  CreateGeometryData,
+  GeometryData,
   LinkedAsset,
-  PatchAsset,
-  Studies,
-} from '@asset-sg/shared';
-import { AssetContact, AssetData, LocalDate, Workflow } from '@asset-sg/shared/v2';
+  LocalDate,
+  LocalizedItemCode,
+  UpdateAssetFileData,
+  Workflow,
+} from '@asset-sg/shared/v2';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { Store } from '@ngrx/store';
-import * as O from 'fp-ts/lib/Option';
 import { filter, map, Observable, Subscription, switchMap, take, tap } from 'rxjs';
 import { EditorMode } from '../../models';
 import { AssetEditorService } from '../../services/asset-editor.service';
@@ -47,7 +49,7 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
   /**
    * The current asset. This is `null` while the asset is being loaded, or when a new asset is being created.
    */
-  public asset: AssetEditDetail | null = null;
+  public asset: Asset | null = null;
 
   /**
    * The asset's workflow. This is `null` while the workflow is being loaded, or when a new asset is being created.
@@ -116,11 +118,11 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
     this.subscriptions.unsubscribe();
   }
 
-  get hasReferences() {
+  get hasReferences(): boolean {
     return (
-      this.form.controls.references.controls.siblingAssets.value.length > 0 ||
-      this.form.controls.references.controls.subordinateAssets.value.length > 0 ||
-      !!this.form.controls.references.controls.mainAsset.value
+      this.form.controls.references.controls.parent.value !== null ||
+      this.form.controls.references.controls.siblings.value.length > 0 ||
+      this.form.controls.references.controls.children.value.length > 0
     );
   }
 
@@ -130,61 +132,29 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
 
   public initializeForm() {
     this.form.reset();
-    const {
-      general: { controls: general },
-      contacts: { controls: contacts },
-    } = this.form.controls;
-    general.titlePublic.setValue(this.asset?.titlePublic ?? '');
-    general.titleOriginal.setValue(this.asset?.titleOriginal ?? '');
-    general.workgroupId.setValue(this.asset?.workgroupId ?? null);
-    general.creationDate.setValue(this.asset ? dateFromDateId(this.asset.createDate) : null);
-    general.receiptDate.setValue(this.asset ? dateFromDateId(this.asset.receiptDate) : null);
-    general.assetLanguages.setValue(this.asset?.assetLanguages ?? []);
-    general.assetFormatItemCode.setValue(this.asset?.assetFormatItemCode ?? null);
-    general.assetKindItemCode.setValue(this.asset?.assetKindItemCode ?? null);
-    general.manCatLabelRefs.setValue(this.asset?.manCatLabelRefs ?? []);
-    general.isNatRel.setValue(this.asset?.isNatRel ?? false);
-    general.typeNatRels.setValue(this.asset?.typeNatRels ?? []);
-    general.ids.setValue(this.asset?.ids ?? []);
-
-    const { controls: files } = this.form.controls.files;
-    files.assetFiles.clear();
-    this.asset?.assetFiles.forEach((file) => {
-      files.assetFiles.push(
-        new FormControl<FormAssetFile>(
-          {
-            ...file,
-            selected: false,
-            willBeDeleted: false,
-          },
-          { nonNullable: true },
+    const { asset } = this;
+    if (asset !== null) {
+      this.form.setValue({
+        general: {
+          ...asset,
+          createdAt: asset.createdAt.toDate(),
+          receivedAt: asset.receivedAt.toDate(),
+        },
+        files: asset.files.map(
+          (file) =>
+            ({
+              ...file,
+              shouldBeDeleted: false,
+            }) satisfies ExistingAssetFile,
         ),
-      );
-    });
-
-    this.form.controls.references.controls.mainAsset.setValue(
-      this.asset?.assetMain ? O.toNullable(this.asset.assetMain) : null,
-    );
-    const siblings = this.asset == null ? [] : [...this.asset.siblingYAssets, ...this.asset.siblingXAssets];
-    this.form.controls.references.controls.siblingAssets.setValue(siblings);
-    this.form.controls.references.controls.subordinateAssets.setValue(this.asset?.subordinateAssets ?? []);
-
-    this.form.controls.geometries.controls.studies.setValue(
-      this.asset?.studies.map((study) => ({
-        studyId: study.studyId,
-        geom: wktToGeoJSON(study.geomText),
-      })) ?? [],
-    );
-
-    contacts.assetContacts.clear();
-    this.asset?.assetContacts.forEach((contact) => {
-      return contacts.assetContacts.push(
-        new FormControl<AssetContact>({ id: contact.contactId, role: contact.role }, { nonNullable: true }),
-      );
-    });
+        references: asset,
+        geometries: [],
+        contacts: asset.contacts,
+      });
+    }
   }
 
-  public openConfirmDialogForAssetDeletion(assetId: number) {
+  public openConfirmDialogForAssetDeletion(assetId: number): void {
     const dialogRef = this.dialogService.open<ConfirmDialogComponent, ConfirmDialogData>(ConfirmDialogComponent, {
       data: {
         text: 'confirmDelete',
@@ -201,112 +171,79 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
       });
   }
 
-  public save() {
+  public save(): void {
     const asset = this.asset;
     if (!this.asset && this.mode === EditorMode.Edit) {
       return;
     }
-    const {
-      general: { controls: general },
-      geometries: { controls: geometries },
-      contacts: { controls: contacts },
-      references: { controls: references },
-      files: { controls: files },
-    } = this.form.controls;
 
-    const filesToDelete = files.assetFiles.controls
-      .filter((file) => file.value.willBeDeleted)
-      .map((file) => file.value.id);
-    const newFiles = files.assetFiles.controls
-      .filter((file) => file.value.file)
-      .map((formAssetFile) => ({
-        file: formAssetFile.value.file!,
-        type: formAssetFile.value.type,
-        legalDocItemCode: formAssetFile.value.legalDocItemCode,
-      }));
-    const filesToKeep = files.assetFiles.controls
-      .filter((file) => !filesToDelete.includes(file.value.id) && !file.value.file)
-      .map((file) => file.value);
+    const { general, geometries, contacts, references, files } = this.form.getRawValue();
+
+    const filesToCreate: CreateAssetFileData[] = [];
+    const filesToUpdate: UpdateAssetFileData[] = [];
+    for (const entry of files) {
+      if ('shouldBeDeleted' in entry) {
+        if (!entry.shouldBeDeleted) {
+          filesToUpdate.push({
+            id: entry.id,
+            legalDocCode: entry.legalDocCode,
+          });
+        }
+      } else {
+        filesToCreate.push(entry);
+      }
+    }
 
     const data: AssetData = {
-      title: general.titlePublic.value,
-      originalTitle: general.titleOriginal.value,
-      createdAt: LocalDate.fromDate(general.creationDate.value ?? new Date()),
-      receivedAt: LocalDate.fromDate(general.receiptDate.value ?? new Date()),
-      languageCodes: general.assetLanguages.value.map((it) => it.languageItemCode),
-      workgroupId: general.workgroupId.value!,
-      formatCode: general.assetFormatItemCode.value!,
-      kindCode: general.assetKindItemCode.value!,
-      topicCodes: general.manCatLabelRefs.value,
-      isOfNationalInterest: general.isNatRel.value,
-      nationalInterestTypeCodes: general.typeNatRels.value,
-      identifiers: general.ids.value.map((it) => ({
-        id: it.idId ?? undefined,
-        value: it.id,
-        description: it.description,
-      })),
-      files: filesToKeep.map((it) => ({
-        id: it.id,
-      })),
+      title: general.title,
+      originalTitle: general.originalTitle,
+      isOfNationalInterest: general.isOfNationalInterest,
+      isPublic: false, // todo @TIL-EBP: this should be changed dynamically
+      formatCode: general.formatCode,
+      kindCode: general.kindCode,
+      languageCodes: general.languageCodes,
+      nationalInterestTypeCodes: general.nationalInterestTypeCodes,
+      topicCodes: general.topicCodes,
+      identifiers: general.identifiers,
+      contacts,
+      parent: references.parent?.id ?? null,
+      siblings: references.siblings.map((it) => it.id),
+      workgroupId: general.workgroupId,
+      createdAt: LocalDate.fromDate(general.createdAt ?? new Date()),
+      receivedAt: LocalDate.fromDate(general.receivedAt ?? new Date()),
     };
 
-    const patchAsset: PatchAsset = {
-      titlePublic: general.titlePublic.value,
-      titleOriginal: general.titleOriginal.value,
-      createDate: dateIdFromDate(general.creationDate.value ?? new Date()),
-      receiptDate: dateIdFromDate(general.receiptDate.value ?? new Date()),
-      assetLanguages: general.assetLanguages.value,
-      workgroupId: general.workgroupId.value!,
-      assetFormatItemCode: general.assetFormatItemCode.value!,
-      assetKindItemCode: general.assetKindItemCode.value!,
-      manCatLabelRefs: general.manCatLabelRefs.value,
-      isNatRel: general.isNatRel.value,
-      typeNatRels: general.typeNatRels.value,
-      ids: general.ids.value,
-      assetFiles: filesToKeep,
-      assetContacts: contacts.assetContacts.value.map((contact) => ({ contactId: contact.id, role: contact.role })),
-      assetMainId: references.mainAsset.value?.assetId ?? null,
-      siblingAssetIds: references.siblingAssets.value.map((sibling) => sibling.assetId),
-      studies: geometries.studies.value
-        .filter((study) => !study.studyId.includes('_new'))
-        .map((study) => ({
-          ...study,
-          geomText: GeomFromGeomText.encode(study.geom),
-        })),
-      newStudies: geometries.studies.value
-        .filter((study) => study.studyId.includes('_new'))
-        .map((newStudy) => GeomFromGeomText.encode(newStudy.geom)),
-      isPublic: false, // todo @TIL-EBP: this should be changed dynamically
-    };
     this.isLoading = true;
     this.subscriptions.add(
-      this.mode === EditorMode.Edit
+      asset === null
         ? this.assetEditorService
-            .deleteFiles(asset!.assetId, filesToDelete)
-            .pipe(
-              switchMap(() => this.assetEditorService.uploadFiles(asset!.assetId, newFiles)),
-              switchMap(() => this.assetEditorService.updateAssetDetail(asset!.assetId, patchAsset)),
-            )
-            .subscribe((asset) => {
-              this.isLoading = false;
-              this.form.markAsPristine();
-              this.store.dispatch(actions.updateAssetEditDetailResult({ asset }));
-            })
-        : this.assetEditorService
-            .createAsset(patchAsset)
+            .createAsset({ ...data, geometries: geometries as CreateGeometryData[] })
             .pipe(
               switchMap((newAsset) =>
-                this.assetEditorService.uploadFiles(newAsset.assetId, newFiles).pipe(map(() => newAsset)),
+                this.assetEditorService
+                  .uploadFilesForAsset(newAsset.id, filesToCreate)
+                  .pipe(map((files) => ({ ...newAsset, files }))),
               ),
-              switchMap((newAsset) => this.assetEditorService.fetchAsset(newAsset.assetId)),
             )
             .subscribe((asset) => {
               this.isLoading = false;
               this.form.markAsPristine();
               this.asset = asset;
               this.mode = EditorMode.Edit;
-              this.store.dispatch(actions.updateAssetEditDetailResult({ asset }));
-              this.router.navigate([this.currentLang, 'asset-admin', asset.assetId], { replaceUrl: true }).then();
+              this.store.dispatch(actions.updateAssetResult({ asset }));
+              this.router.navigate([this.currentLang, 'asset-admin', asset.id], { replaceUrl: true }).then();
+            })
+        : this.assetEditorService
+            .uploadFilesForAsset(asset.id, filesToCreate)
+            .pipe(
+              switchMap(() =>
+                this.assetEditorService.updateAsset(asset.id, { ...data, files: filesToUpdate, geometries }),
+              ),
+            )
+            .subscribe((asset) => {
+              this.isLoading = false;
+              this.form.markAsPristine();
+              this.store.dispatch(actions.updateAssetResult({ asset }));
             }),
     );
   }
@@ -315,7 +252,7 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
     if (
       this.form === undefined ||
       !this.form.dirty ||
-      targetRoute.url.startsWith(`/${this.currentLang}/asset-admin/${this.asset?.assetId ?? 'new'}`)
+      targetRoute.url.startsWith(`/${this.currentLang}/asset-admin/${this.asset?.id ?? 'new'}`)
     ) {
       return true;
     }
@@ -329,9 +266,10 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
   }
 
   private initializeTabs() {
-    this.availableTabs = Object.values(Tab).filter((tab) => {
-      return tab !== Tab.LegacyData || !!(this.asset && hasHistoricalData(this.asset));
-    });
+    this.availableTabs = Object.values(Tab);
+    if (this.asset?.legacyData == null) {
+      this.availableTabs.splice(this.availableTabs.indexOf(Tab.LegacyData), 1);
+    }
   }
 
   private loadAssetFromRouteParams() {
@@ -354,62 +292,51 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
   }
 }
 
-export type FormAssetFile = Omit<AssetFile, 'nameAlias' | 'pageCount' | 'lastModifiedAt'> & {
-  selected: boolean;
-  file?: File;
-  willBeDeleted: boolean;
+export type ExistingAssetFile = Pick<AssetFile, 'id' | 'name' | 'legalDocCode'> & {
+  shouldBeDeleted: boolean;
 };
 
-const buildForm = () => {
-  return new FormGroup({
+export type AssetFormFile = ExistingAssetFile | CreateAssetFileData;
+
+const buildForm = () =>
+  new FormGroup({
     general: new FormGroup({
-      workgroupId: new FormControl<number | null>(null, { validators: [Validators.required] }),
-      titlePublic: new FormControl<string>('', { validators: [Validators.required], nonNullable: true }),
-      titleOriginal: new FormControl(''),
-      creationDate: new FormControl<Date | null>(null, { validators: [Validators.required] }),
-      receiptDate: new FormControl<Date | null>(null, { validators: [Validators.required] }),
-      assetLanguages: new FormControl<Array<{ languageItemCode: string }>>([], { nonNullable: true }),
-      assetFormatItemCode: new FormControl<string>('', { validators: [Validators.required] }),
-      assetKindItemCode: new FormControl<string>('', { validators: [Validators.required] }),
-      manCatLabelRefs: new FormControl<string[]>([], { validators: [Validators.required], nonNullable: true }),
-      isNatRel: new FormControl<boolean>(false, { nonNullable: true }),
-      typeNatRels: new FormControl<string[]>([], { nonNullable: true }),
-      ids: new FormControl<AlternativeId[]>([], {
-        validators: [allAlternativeIdsComplete],
+      workgroupId: new FormControl(null as unknown as number, { validators: [Validators.required], nonNullable: true }),
+      title: new FormControl<string>('', { validators: [Validators.required], nonNullable: true }),
+      originalTitle: new FormControl(''),
+      createdAt: new FormControl<Date | null>(null, { validators: [Validators.required] }),
+      receivedAt: new FormControl<Date | null>(null, { validators: [Validators.required] }),
+      languageCodes: new FormControl<LocalizedItemCode[]>([], { nonNullable: true }),
+      formatCode: new FormControl<LocalizedItemCode>('', { validators: [Validators.required], nonNullable: true }),
+      kindCode: new FormControl<LocalizedItemCode>('', { validators: [Validators.required], nonNullable: true }),
+      topicCodes: new FormControl<LocalizedItemCode[]>([], { validators: [Validators.required], nonNullable: true }),
+      isOfNationalInterest: new FormControl<boolean>(false, { nonNullable: true }),
+      nationalInterestTypeCodes: new FormControl<LocalizedItemCode[]>([], { nonNullable: true }),
+      identifiers: new FormControl<Array<AssetIdentifier | AssetIdentifierData>>([], {
+        validators: [validateIdentifiers],
         nonNullable: true,
       }),
     }),
-    files: new FormGroup({
-      assetFiles: new FormArray<FormControl<FormAssetFile>>([]),
-    }),
-    contacts: new FormGroup({ assetContacts: new FormArray<FormControl<AssetContact>>([]) }),
+    files: new FormArray<FormControl<AssetFormFile>>([]),
+    contacts: new FormArray<FormControl<AssetContact>>([]),
     references: new FormGroup({
-      mainAsset: new FormControl<LinkedAsset | null>(null),
-      siblingAssets: new FormControl<LinkedAsset[]>([], { nonNullable: true }),
-      subordinateAssets: new FormControl<LinkedAsset[]>([], { nonNullable: true }),
+      parent: new FormControl<LinkedAsset | null>(null),
+      siblings: new FormControl<LinkedAsset[]>([], { nonNullable: true }),
+      children: new FormControl<LinkedAsset[]>([], { nonNullable: true }),
     }),
-    geometries: new FormGroup({ studies: new FormControl<Studies>([], { nonNullable: true }) }),
-    status: new FormGroup({}),
+    geometries: new FormControl<GeometryData[]>([], { nonNullable: true }),
   });
-};
 
 export type AssetForm = ReturnType<typeof buildForm>;
 
-export type AlternativeId = {
-  idId: number | null;
-  id: string;
-  description: string;
-};
-
-export function allAlternativeIdsComplete(control: AbstractControl): ValidationErrors | null {
-  const value = control.value as AlternativeId[];
-
+export function validateIdentifiers(control: AbstractControl): ValidationErrors | null {
+  const value = control.value as Array<AssetIdentifier | AssetIdentifierData>;
   if (!Array.isArray(value)) {
     return { invalidFormat: true };
   }
-
   const hasInvalid = value.some(
-    (item) => !item || typeof item !== 'object' || !item.id?.trim() || !item.description?.trim(),
+    (item) =>
+      !item || typeof item !== 'object' || item.value.trim().length === 0 || item.description.trim().length === 0,
   );
 
   return hasInvalid ? { incompleteAlternativeIds: true } : null;

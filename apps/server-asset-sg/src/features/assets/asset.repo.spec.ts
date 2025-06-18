@@ -129,9 +129,9 @@ describe(AssetRepo, () => {
       expect(record.languageCodes).toEqual(data.languageCodes);
       expect(record.topicCodes).toEqual(data.topicCodes);
       expect(record.nationalInterestTypeCodes).toEqual(data.nationalInterestTypeCodes);
-      expect(record.parentId).toBeNull();
-      expect(record.childrenIds).toEqual([]);
-      expect(record.siblingIds).toEqual([]);
+      expect(record.parent).toBeNull();
+      expect(record.children).toEqual([]);
+      expect(record.siblings).toEqual([]);
       expect(record.files).toEqual([]);
       expect(record.workgroupId).toEqual(data.workgroupId);
     });
@@ -174,9 +174,9 @@ describe(AssetRepo, () => {
       expect(updated.languageCodes).toEqual(data.languageCodes);
       expect(updated.topicCodes).toEqual(data.topicCodes);
       expect(updated.nationalInterestTypeCodes).toEqual(data.nationalInterestTypeCodes);
-      expect(updated.parentId).toBeNull();
-      expect(updated.childrenIds).toEqual([]);
-      expect(updated.siblingIds).toEqual([]);
+      expect(updated.parent).toBeNull();
+      expect(updated.children).toEqual([]);
+      expect(updated.siblings).toEqual([]);
       expect(updated.files).toEqual([]);
       expect(updated.workgroupId).toEqual(data.workgroupId);
     });

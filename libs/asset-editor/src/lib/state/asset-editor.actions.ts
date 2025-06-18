@@ -1,24 +1,9 @@
-import { AssetEditDetail, PatchAsset } from '@asset-sg/shared';
-import { Workflow } from '@asset-sg/shared/v2';
+import { Asset, Workflow } from '@asset-sg/shared/v2';
 import { createAction, props } from '@ngrx/store';
 
-import { AssetEditorNewFile } from '../models/asset-editor-new-file';
+export const loadAsset = createAction('[Asset Editor] Load Asset', props<{ assetId: number }>());
 
-export const loadAsset = createAction('[Asset Editor] Load asset', props<{ assetId: number }>());
-
-export const createNewAsset = createAction('[Asset Editor] Create new asset', props<{ patchAsset: PatchAsset }>());
-
-export const updateAssetEditDetail = createAction(
-  '[Asset Editor] Update asset',
-  props<{ assetId: number; patchAsset: PatchAsset; filesToDelete: number[]; newFiles: AssetEditorNewFile[] }>(),
-);
-
-export const updateAssetEditDetailResult = createAction(
-  '[Asset Editor] Update Asset Edit Detail Result',
-  props<{
-    asset: AssetEditDetail;
-  }>(),
-);
+export const updateAssetResult = createAction('[Asset Editor] Update Asset Result', props<{ asset: Asset }>());
 
 export const deleteAsset = createAction('[Asset Editor] Delete asset', props<{ assetId: number }>());
 

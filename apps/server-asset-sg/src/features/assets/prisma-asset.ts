@@ -8,10 +8,11 @@ import {
   isPersisted,
   LinkedAsset,
   LocalDate,
+  UpdateAssetData,
 } from '@asset-sg/shared/v2';
 import { Prisma } from '@prisma/client';
 
-import { CreateAssetData } from '@/features/assets/asset.model';
+import { CreateAssetDataWithCreator } from '@/features/assets/asset.model';
 import { assetFileSelection, mapAssetFileFromPrisma } from '@/features/assets/files/prisma-file';
 
 export type SelectedAsset = Prisma.AssetGetPayload<{ select: typeof assetSelection }>;
@@ -126,9 +127,9 @@ export const parseAssetFromPrisma = (data: SelectedAsset): Asset => ({
     id: it.contactId,
     role: it.role as AssetContactRole,
   })),
-  parentId: data.assetMain === null ? null : parseLinkedAsset(data.assetMain),
-  childrenIds: data.subordinateAssets.map(parseLinkedAsset),
-  siblingIds: [
+  parent: data.assetMain === null ? null : parseLinkedAsset(data.assetMain),
+  children: data.subordinateAssets.map(parseLinkedAsset),
+  siblings: [
     ...data.siblingXAssets.map((it) => parseLinkedAsset(it.assetY)),
     ...data.siblingYAssets.map((it) => parseLinkedAsset(it.assetX)),
   ],
@@ -160,10 +161,6 @@ const mapDataToPrisma = (data: AssetData) =>
     titleOriginal: data.originalTitle,
     isNatRel: data.isOfNationalInterest,
     isPublic: data.isPublic,
-
-    // Legacy Data
-    ...mapLegacyDataToPrisma(data.legacyData),
-
     assetFormatItem: {
       connect: {
         assetFormatItemCode: data.formatCode,
@@ -184,18 +181,7 @@ const mapDataToPrisma = (data: AssetData) =>
     receiptDate: data.receivedAt.toDate(),
   }) satisfies Partial<Prisma.AssetCreateInput & Prisma.AssetUpdateInput>;
 
-const mapLegacyDataToPrisma = (data: AssetLegacyData | null) =>
-  (data === null
-    ? {}
-    : {
-        sgsId: data.sgsId,
-        geolDataInfo: data.data,
-        geolContactDataInfo: data.contactData,
-        geolAuxDataInfo: data.auxiliaryData,
-        municipality: data.municipality,
-      }) satisfies Partial<Prisma.AssetCreateInput & Prisma.AssetUpdateInput>;
-
-export const mapAssetDataToPrismaCreate = (data: CreateAssetData): Prisma.AssetCreateInput => ({
+export const mapAssetDataToPrismaCreate = (data: CreateAssetDataWithCreator): Prisma.AssetCreateInput => ({
   ...mapDataToPrisma(data),
   isExtract: false,
   assetLanguages: {
@@ -231,14 +217,6 @@ export const mapAssetDataToPrismaCreate = (data: CreateAssetData): Prisma.AssetC
       skipDuplicates: true,
     },
   },
-  assetFiles: {
-    createMany: {
-      data: data.files.map((it) => ({
-        fileId: it,
-      })),
-      skipDuplicates: true,
-    },
-  },
   assetContacts: {
     createMany: {
       data: data.contacts.map((it) => ({
@@ -249,11 +227,11 @@ export const mapAssetDataToPrismaCreate = (data: CreateAssetData): Prisma.AssetC
     },
   },
   assetMain:
-    data.parentId == null
+    data.parent == null
       ? undefined
       : {
           connect: {
-            assetId: data.parentId,
+            assetId: data.parent,
           },
         },
 
@@ -266,7 +244,7 @@ export const mapAssetDataToPrismaCreate = (data: CreateAssetData): Prisma.AssetC
   // This means we can simply put all siblings into `siblingXAssets`.
   siblingXAssets: {
     createMany: {
-      data: data.siblingIds.map((siblingId) => ({
+      data: data.siblings.map((siblingId) => ({
         assetYId: siblingId,
       })),
       skipDuplicates: true,
@@ -280,7 +258,7 @@ export const mapAssetDataToPrismaCreate = (data: CreateAssetData): Prisma.AssetC
   },
 });
 
-export const mapAssetDataToPrismaUpdate = (id: AssetId, data: AssetData): Prisma.AssetUpdateInput => ({
+export const mapAssetDataToPrismaUpdate = (id: AssetId, data: UpdateAssetData): Prisma.AssetUpdateInput => ({
   ...mapDataToPrisma(data),
   assetLanguages: {
     deleteMany: {
@@ -344,13 +322,23 @@ export const mapAssetDataToPrismaUpdate = (id: AssetId, data: AssetData): Prisma
     deleteMany: {
       assetId: id,
       fileId: {
-        notIn: data.files,
+        notIn: data.files.map((it) => it.id),
       },
     },
     connectOrCreate: data.files.map((it) => ({
-      where: { assetId_fileId: { assetId: it, fileId: it } },
+      where: { assetId_fileId: { assetId: id, fileId: it.id } },
       create: {
-        fileId: it,
+        fileId: it.id,
+      },
+    })),
+    update: data.files.map((it) => ({
+      where: { assetId_fileId: { assetId: id, fileId: it.id } },
+      data: {
+        file: {
+          update: {
+            legalDocItemCode: it.legalDocCode,
+          },
+        },
       },
     })),
   },
@@ -385,10 +373,10 @@ export const mapAssetDataToPrismaUpdate = (id: AssetId, data: AssetData): Prisma
   },
 
   assetMain:
-    data.parentId == null
+    data.parent == null
       ? { disconnect: true }
       : {
-          connect: { assetId: data.parentId },
+          connect: { assetId: data.parent },
         },
 
   // In the mapping of this repo,
@@ -398,10 +386,10 @@ export const mapAssetDataToPrismaUpdate = (id: AssetId, data: AssetData): Prisma
   siblingXAssets: {
     deleteMany: {
       assetXId: id,
-      assetYId: { notIn: data.siblingIds },
+      assetYId: { notIn: data.siblings },
     },
     createMany: {
-      data: data.siblingIds
+      data: data.siblings
         .filter((siblingId) => siblingId < id)
         .map((siblingId) => ({
           assetYId: siblingId,
@@ -412,10 +400,10 @@ export const mapAssetDataToPrismaUpdate = (id: AssetId, data: AssetData): Prisma
   siblingYAssets: {
     deleteMany: {
       assetYId: id,
-      assetXId: { notIn: data.siblingIds },
+      assetXId: { notIn: data.siblings },
     },
     createMany: {
-      data: data.siblingIds
+      data: data.siblings
         .filter((siblingId) => siblingId > id)
         .map((siblingId) => ({
           assetXId: siblingId,
