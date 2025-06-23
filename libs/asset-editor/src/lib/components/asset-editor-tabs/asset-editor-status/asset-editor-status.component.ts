@@ -40,8 +40,8 @@ export class AssetEditorStatusComponent implements OnChanges {
     this.workflow === null ? false : it.canUpdate(this.workflow),
   );
 
-  canPublish$ = can$(WorkflowPolicy, this.workflow$, (it) =>
-    this.workflow === null ? false : it.canPublish(this.workflow),
+  canChangeStatus = can$(WorkflowPolicy, this.workflow$, (it) =>
+    this.workflow === null ? false : it.canChangeStatus(this.workflow),
   );
 
   private readonly workflowApiService = inject(WorkflowApiService);

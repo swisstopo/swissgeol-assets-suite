@@ -18,8 +18,10 @@ export class WorkflowPolicy extends Policy<Workflow> {
     return this.hasRole(requiredRole, workflow.workgroupId);
   }
 
-  canPublish(workflow: Workflow): boolean {
-    return this.hasRole(Role.Publisher, workflow.workgroupId);
+  canChangeStatus(workflow: Workflow): boolean {
+    return workflow.status === WorkflowStatus.Published
+      ? this.hasRole(Role.Publisher, workflow.workgroupId)
+      : this.hasRole(Role.Reviewer, workflow.workgroupId);
   }
 }
 
@@ -28,8 +30,8 @@ const getRoleForStatus = (status: WorkflowStatus): Role => {
     case WorkflowStatus.Draft:
       return Role.Editor;
     case WorkflowStatus.InReview:
-    case WorkflowStatus.Reviewed:
       return Role.Reviewer;
+    case WorkflowStatus.Reviewed:
     case WorkflowStatus.Published:
       return Role.Publisher;
   }
