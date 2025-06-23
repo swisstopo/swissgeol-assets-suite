@@ -152,7 +152,6 @@ export const assetSearchReducer = createReducer(
       studies: state.studies?.filter((study) => study.assetId !== assetId) ?? null,
     }),
   ),
-
   on(appSharedStateActions.updateAsset, (state, { asset }): AssetSearchState => {
     return {
       ...state,

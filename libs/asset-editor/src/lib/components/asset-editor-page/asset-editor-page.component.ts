@@ -28,7 +28,7 @@ import { AssetContact, Workflow } from '@asset-sg/shared/v2';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { Store } from '@ngrx/store';
 import * as O from 'fp-ts/lib/Option';
-import { filter, map, Observable, Subscription, switchMap, take, tap } from 'rxjs';
+import { map, Observable, Subscription, switchMap, take, tap } from 'rxjs';
 import { EditorMode } from '../../models';
 import { AssetEditorService } from '../../services/asset-editor.service';
 import * as actions from '../../state/asset-editor.actions';
@@ -86,24 +86,20 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
     this.form = buildForm();
     this.loadAssetFromRouteParams();
 
-    if (this.mode === EditorMode.Edit) {
-      this.subscriptions.add(
-        this.store
-          .select(fromAppShared.selectCurrentAsset)
-          .pipe(
-            filter((asset) => !!asset),
-            tap((asset) => {
+    this.subscriptions.add(
+      this.store
+        .select(fromAppShared.selectCurrentAsset)
+        .pipe(
+          tap((asset) => {
+            if (this.mode === EditorMode.Edit && asset !== null) {
               this.asset = asset;
-              this.initializeTabs();
-              this.initializeForm();
-            }),
-          )
-          .subscribe(),
-      );
-    } else {
-      this.initializeTabs();
-      this.initializeForm();
-    }
+            }
+            this.initializeTabs();
+            this.initializeForm();
+          }),
+        )
+        .subscribe(),
+    );
     this.subscriptions.add(
       this.store.select(selectWorkflow).subscribe((workflow) => {
         this.workflow = workflow;
@@ -258,16 +254,15 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
     };
     this.isLoading = true;
     this.subscriptions.add(
-      this.mode === EditorMode.Edit
+      asset !== null && this.mode === EditorMode.Edit
         ? this.assetEditorService
-            .deleteFiles(asset!.assetId, filesToDelete)
+            .deleteFiles(asset.assetId, filesToDelete)
             .pipe(
-              switchMap(() => this.assetEditorService.uploadFiles(asset!.assetId, newFiles)),
-              switchMap(() => this.assetEditorService.updateAssetDetail(asset!.assetId, patchAsset)),
+              switchMap(() => this.assetEditorService.uploadFiles(asset.assetId, newFiles)),
+              switchMap(() => this.assetEditorService.updateAssetDetail(asset.assetId, patchAsset)),
             )
             .subscribe((asset) => {
               this.isLoading = false;
-              this.form.markAsPristine();
               this.store.dispatch(actions.updateAssetEditDetailResult({ asset }));
             })
         : this.assetEditorService
@@ -280,7 +275,6 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
             )
             .subscribe((asset) => {
               this.isLoading = false;
-              this.form.markAsPristine();
               this.asset = asset;
               this.mode = EditorMode.Edit;
               this.store.dispatch(actions.updateAssetEditDetailResult({ asset }));

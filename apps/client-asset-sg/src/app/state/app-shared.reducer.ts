@@ -21,6 +21,13 @@ const initialState: AppSharedState = {
 export const appSharedStateReducer = createReducer(
   initialState,
   on(
+    assetSearchActions.resetSearch,
+    (state): AppSharedState => ({
+      ...state,
+      currentAsset: null,
+    }),
+  ),
+  on(
     appSharedStateActions.setCurrentAsset,
     (state, { asset, isLoading }): AppSharedState => ({
       ...state,
@@ -29,10 +36,10 @@ export const appSharedStateReducer = createReducer(
     }),
   ),
   on(
-    assetSearchActions.resetSearch,
-    (state): AppSharedState => ({
+    appSharedStateActions.updateAsset,
+    (state, { asset, shouldBeCurrentAsset }): AppSharedState => ({
       ...state,
-      currentAsset: null,
+      currentAsset: shouldBeCurrentAsset || state.currentAsset?.assetId === asset.assetId ? asset : state.currentAsset,
     }),
   ),
   on(
@@ -40,14 +47,6 @@ export const appSharedStateReducer = createReducer(
     (state, { assetId }): AppSharedState => ({
       ...state,
       currentAsset: state.currentAsset?.assetId === assetId ? null : state.currentAsset,
-    }),
-  ),
-
-  on(
-    appSharedStateActions.updateAsset,
-    (state, { asset }): AppSharedState => ({
-      ...state,
-      currentAsset: state.currentAsset?.assetId === asset.assetId ? asset : state.currentAsset,
     }),
   ),
   on(
@@ -77,7 +76,7 @@ export const appSharedStateReducer = createReducer(
   on(appSharedStateActions.setLang, (state, { lang }): AppSharedState => ({ ...state, lang })),
   on(
     appSharedStateActions.createContactResult,
-    (state, { type, ...contact }): AppSharedState => ({
+    (state, { type: _, ...contact }): AppSharedState => ({
       ...state,
       rdReferenceData: pipe(
         state.rdReferenceData,
@@ -90,7 +89,7 @@ export const appSharedStateReducer = createReducer(
   ),
   on(
     appSharedStateActions.editContactResult,
-    (state, { type, ...contact }): AppSharedState => ({
+    (state, { type: _, ...contact }): AppSharedState => ({
       ...state,
       rdReferenceData: pipe(
         state.rdReferenceData,
