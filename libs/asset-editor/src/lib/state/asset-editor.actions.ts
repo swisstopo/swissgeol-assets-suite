@@ -29,6 +29,8 @@ export const handleSuccessfulDeletion = createAction(
   }>(),
 );
 
+export const loadWorkflow = createAction('[Asset Editor] Load Workflow', props<{ assetId: number }>());
+
 export const setWorkflow = createAction('[Asset Editor] Set Workflow', props<{ workflow: Workflow }>());
 
 export const reset = createAction('[Asset Editor] Reset');
