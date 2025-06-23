@@ -39,7 +39,7 @@ export class AssetSearchDetailComponent {
   private readonly viewerControllerService = inject(ViewerControllerService);
 
   public navigateToAssetEdit(lang: string | null, assetId: number) {
-    this.router.navigate([lang, 'asset-admin', assetId]);
+    this.router.navigate([lang, 'asset-admin', assetId]).then();
   }
 
   public clearSelectedAsset() {

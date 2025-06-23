@@ -5,7 +5,7 @@ import { AssetFile, AssetFileType } from '@asset-sg/shared';
 import { AssetId } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
 import { TranslateService } from '@ngx-translate/core';
-import { Subscription } from 'rxjs';
+import { finalize, Subscription } from 'rxjs';
 import { AssetDetailFileVM } from '../../state/asset-search/asset-search.selector';
 
 @Component({
@@ -65,46 +65,46 @@ export class AssetViewerFilesComponent implements OnInit, OnDestroy {
   public downloadFile(file: Omit<AssetFile, 'fileSize'>, downloadType: DownloadType): void {
     const key = `${this.assetId}/${file.id}/${downloadType}` as const;
     this.activeFileDownloads.add(key);
-    this.httpClient.get(`/api/assets/${this.assetId}/files/${file.id}`, { responseType: 'blob' }).subscribe({
-      next: async (blob) => {
-        const isPdf = file.name.endsWith('.pdf');
-        if (isPdf) {
-          blob = await blob.arrayBuffer().then((buffer) => new Blob([buffer], { type: 'application/pdf' }));
-        }
-        const url = URL.createObjectURL(blob);
-        const anchor = document.createElement('a');
+    this.httpClient
+      .get(`/api/assets/${this.assetId}/files/${file.id}`, { responseType: 'blob' })
+      .pipe(finalize(() => this.activeFileDownloads.delete(key)))
+      .subscribe({
+        next: async (blob) => {
+          const isPdf = file.name.endsWith('.pdf');
+          if (isPdf) {
+            blob = await blob.arrayBuffer().then((buffer) => new Blob([buffer], { type: 'application/pdf' }));
+          }
+          const url = URL.createObjectURL(blob);
+          const anchor = document.createElement('a');
 
-        anchor.setAttribute('style', 'display: none');
-        anchor.href = url;
-        if (!isPdf || downloadType === 'save-file') {
-          anchor.download = this.fileNamePipe.transform(file);
-        } else {
-          anchor.target = '_blank';
-        }
-        document.body.appendChild(anchor);
-        anchor.click();
-        anchor.remove();
-        setTimeout(() => {
-          window.URL.revokeObjectURL(url);
-        });
-      },
-      error: (error) => {
-        console.error('Download error', error);
-        this.store.dispatch(
-          showAlert({
-            alert: {
-              id: `download-error-${error.status}-${error.url}`,
-              text: this.translateService.get('downloadFailed'),
-              type: AlertType.Error,
-              isPersistent: true,
-            },
-          }),
-        );
-      },
-      complete: () => {
-        this.activeFileDownloads.delete(key);
-      },
-    });
+          anchor.setAttribute('style', 'display: none');
+          anchor.href = url;
+          if (!isPdf || downloadType === 'save-file') {
+            anchor.download = this.fileNamePipe.transform(file);
+          } else {
+            anchor.target = '_blank';
+          }
+          document.body.appendChild(anchor);
+          anchor.click();
+          anchor.remove();
+          setTimeout(() => {
+            window.URL.revokeObjectURL(url);
+          });
+        },
+        error: (error) => {
+          console.error('Download error', error);
+          this.store.dispatch(
+            showAlert({
+              alert: {
+                id: `download-error-${error.status}-${error.url}`,
+                text: this.translateService.get('downloadFailed'),
+                type: AlertType.Error,
+                isPersistent: true,
+              },
+            }),
+          );
+        },
+      });
   }
 }
 
