@@ -1,4 +1,4 @@
-import fs from 'fs/promises';
+import fs, { rm } from 'fs/promises';
 import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
 import { SchedulerRegistry } from '@nestjs/schedule';
 import { CronJob } from 'cron';
@@ -15,11 +15,8 @@ export class AssetSyncService implements OnApplicationBootstrap {
     private readonly assetRepo: AssetRepo,
   ) {}
 
-  async onApplicationBootstrap() {
-    const syncFileExists = await this.isSyncRunning();
-    if (syncFileExists) {
-      fs.rm(assetSyncFile).then();
-    }
+  public async onApplicationBootstrap() {
+    await this.clearSyncFileIfExists();
 
     if (process.env.ANONYMOUS_MODE === 'true') {
       this.logger.log('Anonymous Mode is activated. Search Index will be automatically synced.');
@@ -32,7 +29,15 @@ export class AssetSyncService implements OnApplicationBootstrap {
     }
   }
 
-  async show(): Promise<AssetSyncState | null> {
+  public async clearSyncFileIfExists() {
+    const syncFileExists = await this.isSyncRunning();
+    if (syncFileExists) {
+      this.logger.log('Removing leftover sync file');
+      await rm(assetSyncFile);
+    }
+  }
+
+  public async show(): Promise<AssetSyncState | null> {
     try {
       const data = await fs.readFile(assetSyncFile, { encoding: 'utf-8' });
       const state = JSON.parse(data);
@@ -45,14 +50,14 @@ export class AssetSyncService implements OnApplicationBootstrap {
     }
   }
 
-  async isSyncRunning() {
+  public async isSyncRunning() {
     return await fs
       .access(assetSyncFile)
       .then(() => true)
       .catch(() => false);
   }
 
-  async start(): Promise<void> {
+  public async start(): Promise<void> {
     if (await this.isSyncRunning()) {
       this.logger.debug('Sync already running.');
       return;
@@ -67,7 +72,7 @@ export class AssetSyncService implements OnApplicationBootstrap {
     await writeProgress(0);
     setTimeout(async () => {
       await this.assetSearchService.syncWithDatabase(writeProgress);
-      await fs.rm(assetSyncFile);
+      await rm(assetSyncFile);
     });
   }
 
