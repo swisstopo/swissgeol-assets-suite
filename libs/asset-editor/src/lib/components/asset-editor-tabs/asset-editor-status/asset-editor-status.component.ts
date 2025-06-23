@@ -12,6 +12,7 @@ import { TranslateService } from '@ngx-translate/core';
 import { type SgcWorkflowSelectionEntry, WorkflowChange } from '@swisstopo/swissgeol-ui-core';
 import { SgcWorkflowChangeEvent } from '@swisstopo/swissgeol-ui-core/dist/types/components/sgc-workflow/sgc-workflow';
 import { SgcWorkflowSelectionChangeEvent } from '@swisstopo/swissgeol-ui-core/dist/types/components/sgc-workflow/sgc-workflow-selection/sgc-workflow-selection';
+import { BehaviorSubject } from 'rxjs';
 import { AssetEditorService } from '../../../services/asset-editor.service';
 import { WorkflowApiService } from '../../../services/workflow-api.service';
 
@@ -22,11 +23,26 @@ import { WorkflowApiService } from '../../../services/workflow-api.service';
   standalone: false,
 })
 export class AssetEditorStatusComponent implements OnChanges {
+  private readonly workflow$ = new BehaviorSubject<Workflow | null>(null);
+
   @Input({ required: true })
-  workflow!: Workflow | null;
+  set workflow(value: Workflow | null) {
+    this.workflow$.next(value);
+  }
+
+  get workflow(): Workflow | null {
+    return this.workflow$.value;
+  }
+
   availableAssignees: SimpleUser[] = [];
 
-  canUpdate$ = can$(WorkflowPolicy, (it) => (this.workflow === null ? false : it.canUpdate(this.workflow)));
+  canUpdate$ = can$(WorkflowPolicy, this.workflow$, (it) =>
+    this.workflow === null ? false : it.canUpdate(this.workflow),
+  );
+
+  canPublish$ = can$(WorkflowPolicy, this.workflow$, (it) =>
+    this.workflow === null ? false : it.canPublish(this.workflow),
+  );
 
   private readonly workflowApiService = inject(WorkflowApiService);
   private readonly assetEditorService = inject(AssetEditorService);

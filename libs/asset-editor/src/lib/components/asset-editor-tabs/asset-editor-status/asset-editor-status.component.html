@@ -8,6 +8,7 @@
     [review]="workflow.review"
     [approval]="workflow.approval"
     [isReadOnly]="(canUpdate$ | async) === false"
+    [canPublish]="canPublish$ | async"
     (sgcWorkflowReviewChange)="handleReviewChange($event)"
     (sgcWorkflowApprovalChange)="handleApprovalChange($event)"
     (sgcWorkflowChange)="handleWorkflowChange($event)"

@@ -17,6 +17,10 @@ export class WorkflowPolicy extends Policy<Workflow> {
     const requiredRole = getRoleForStatus(workflow.status);
     return this.hasRole(requiredRole, workflow.workgroupId);
   }
+
+  canPublish(workflow: Workflow): boolean {
+    return this.hasRole(Role.Publisher, workflow.workgroupId);
+  }
 }
 
 const getRoleForStatus = (status: WorkflowStatus): Role => {
@@ -24,8 +28,8 @@ const getRoleForStatus = (status: WorkflowStatus): Role => {
     case WorkflowStatus.Draft:
       return Role.Editor;
     case WorkflowStatus.InReview:
-      return Role.Reviewer;
     case WorkflowStatus.Reviewed:
+      return Role.Reviewer;
     case WorkflowStatus.Published:
       return Role.Publisher;
   }
