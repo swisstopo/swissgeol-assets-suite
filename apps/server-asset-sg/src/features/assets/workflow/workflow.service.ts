@@ -1,10 +1,23 @@
-import { AssetId, UserId, Workflow, WorkflowChangeData, WorkflowSelection, WorkflowStatus } from '@asset-sg/shared/v2';
+import {
+  AssetId,
+  getRoleForStatus,
+  getRoleIndex,
+  UserId,
+  Workflow,
+  WorkflowChangeData,
+  WorkflowSelection,
+  WorkflowStatus,
+} from '@asset-sg/shared/v2';
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { WorkflowRepo } from '@/features/assets/workflow/workflow.repo';
+import { UserRepo } from '@/features/users/user.repo';
 
 @Injectable()
 export class WorkflowService {
-  constructor(private readonly workflowRepo: WorkflowRepo) {}
+  constructor(
+    private readonly workflowRepo: WorkflowRepo,
+    private readonly userRepo: UserRepo,
+  ) {}
 
   async find(assetId: AssetId): Promise<Workflow> {
     return handleMissing(await this.workflowRepo.find(assetId));
@@ -17,6 +30,26 @@ export class WorkflowService {
         HttpStatus.UNPROCESSABLE_ENTITY,
       );
     }
+    if (change.assigneeId) {
+      const newAssignee = await this.userRepo.find(change.assigneeId);
+      if (!newAssignee) {
+        throw new HttpException(`Assignee with ID ${change.assigneeId} not found.`, HttpStatus.UNPROCESSABLE_ENTITY);
+      }
+      const assigneeRole = newAssignee.roles.get(workflow.workgroupId);
+      if (!assigneeRole) {
+        throw new HttpException(
+          `Assignee with ID ${change.assigneeId} does not have a role in workgroup ${workflow.workgroupId}.`,
+          HttpStatus.UNPROCESSABLE_ENTITY,
+        );
+      }
+      if (getRoleIndex(assigneeRole) < getRoleIndex(getRoleForStatus(change.status))) {
+        throw new HttpException(
+          "The selected assignee's role is not sufficient for the new status.",
+          HttpStatus.UNPROCESSABLE_ENTITY,
+        );
+      }
+    }
+
     return this.workflowRepo.change(workflow.id, {
       creatorId,
       comment: change.comment,

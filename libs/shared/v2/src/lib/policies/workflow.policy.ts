@@ -25,7 +25,7 @@ export class WorkflowPolicy extends Policy<Workflow> {
   }
 }
 
-const getRoleForStatus = (status: WorkflowStatus): Role => {
+export const getRoleForStatus = (status: WorkflowStatus): Role => {
   switch (status) {
     case WorkflowStatus.Draft:
       return Role.Editor;
