@@ -1,6 +1,7 @@
 import { Component, inject, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { can$ } from '@asset-sg/client-shared';
 import {
+  Role,
   SimpleUser,
   UnpublishedWorkflowStatus,
   Workflow,
@@ -53,7 +54,7 @@ export class AssetEditorStatusComponent implements OnChanges {
   ngOnChanges(changes: SimpleChanges) {
     if ('workflow' in changes && this.workflow !== null) {
       this.assetEditorService.getUsersForWorkgroup(this.workflow.workgroupId).subscribe((users) => {
-        this.availableAssignees = users;
+        this.availableAssignees = users.filter((user) => user.role !== Role.Reader);
       });
     }
   }
