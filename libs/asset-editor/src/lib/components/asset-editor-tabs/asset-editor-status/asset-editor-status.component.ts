@@ -66,9 +66,12 @@ export class AssetEditorStatusComponent implements OnChanges {
 
     const patch = event.detail.changes as Partial<WorkflowSelection>;
     this.workflowApiService.updateReview(workflow.id, patch).subscribe(() => {
-      workflow.review = {
-        ...workflow.review,
-        ...patch,
+      this.workflow = {
+        ...workflow,
+        review: {
+          ...workflow.review,
+          ...patch,
+        },
       };
     });
   }
@@ -81,9 +84,12 @@ export class AssetEditorStatusComponent implements OnChanges {
 
     const patch = event.detail.changes as Partial<WorkflowSelection>;
     this.workflowApiService.updateApproval(workflow.id, patch).subscribe(() => {
-      workflow.approval = {
-        ...workflow.approval,
-        ...patch,
+      this.workflow = {
+        ...workflow,
+        approval: {
+          ...workflow.approval,
+          ...patch,
+        },
       };
     });
   }
