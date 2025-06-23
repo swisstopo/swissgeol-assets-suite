@@ -105,6 +105,7 @@ export class AssetEditorEffects {
       ofType(actions.updateAssetEditDetailResult),
       map(({ asset }) =>
         appSharedStateActions.updateAsset({
+          shouldBeCurrentAsset: true,
           asset: {
             ...asset,
             studies: asset.studies.map((it) => ({

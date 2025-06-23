@@ -1,4 +1,4 @@
-import { Component, inject, Input, OnDestroy, OnInit } from '@angular/core';
+import { Component, inject, Input, OnChanges, OnDestroy, OnInit, SimpleChanges } from '@angular/core';
 import { fromAppShared } from '@asset-sg/client-shared';
 import { AssetEditDetail } from '@asset-sg/shared';
 import { Role, SimpleWorkgroup } from '@asset-sg/shared/v2';
@@ -14,7 +14,7 @@ import { AssetForm } from '../../asset-editor-page/asset-editor-page.component';
   templateUrl: './asset-editor-general.component.html',
   standalone: false,
 })
-export class AssetEditorGeneralComponent implements OnInit, OnDestroy {
+export class AssetEditorGeneralComponent implements OnInit, OnChanges, OnDestroy {
   @Input() form!: AssetForm['controls']['general'];
   @Input() asset: AssetEditDetail | null = null;
   @Input() hasReferences = false;
@@ -67,6 +67,17 @@ export class AssetEditorGeneralComponent implements OnInit, OnDestroy {
           this.selectedLanguages = langs?.map((lang) => lang.languageItemCode) ?? [];
         }),
     );
+  }
+
+  public ngOnChanges(changes: SimpleChanges) {
+    if ('hasReferences' in changes) {
+      const { workgroupId: workgroupIdControl } = this.form.controls;
+      if (this.hasReferences) {
+        workgroupIdControl.disable();
+      } else {
+        workgroupIdControl.enable();
+      }
+    }
   }
 
   public ngOnDestroy() {

@@ -6,7 +6,6 @@
         [values]="availableWorkgroups$ | push"
         [bindLabel]="'name'"
         [bindKey]="'id'"
-        [disabled]="hasReferences"
         errorMessage="{{ hasReferences ? ('edit.tabs.general.referencesWarning' | translate) : '' }}"
         isRequired
         formControlName="workgroupId"

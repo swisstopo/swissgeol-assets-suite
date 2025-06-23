@@ -50,6 +50,7 @@ export const updateAsset = createAction(
   '[App Shared State] Update Asset In Search',
   props<{
     asset: AssetEditDetail;
+    shouldBeCurrentAsset?: boolean;
   }>(),
 );
 
