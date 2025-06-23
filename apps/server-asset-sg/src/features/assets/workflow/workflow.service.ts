@@ -45,7 +45,7 @@ export class WorkflowService {
           HttpStatus.UNPROCESSABLE_ENTITY,
         );
       }
-      if (getRoleIndex(assigneeRole) < getRoleIndex(getRoleForStatus(change.status))) {
+      if (getRoleIndex(assigneeRole) < getRoleIndex(getRoleForStatus(workflow.status))) {
         throw new HttpException(
           "The selected assignee's role is not sufficient for the new status.",
           HttpStatus.UNPROCESSABLE_ENTITY,
