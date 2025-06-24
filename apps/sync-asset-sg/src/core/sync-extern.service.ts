@@ -134,11 +134,11 @@ export class SyncExternService {
 
   private async init() {
     this.syncAssignee = (
-      await this.destinationPrisma.assetUser.findFirst({
+      await this.destinationPrisma.assetUser.findFirstOrThrow({
         select: { id: true },
         where: { email: this.config.syncAssignee },
       })
-    )?.id;
+    ).id;
 
     (await this.destinationPrisma.contact.findMany()).forEach((c) =>
       this.existingContactIds.set(this.createUniqueContactKey(c), c.contactId),

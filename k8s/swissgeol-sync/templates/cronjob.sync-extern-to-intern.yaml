@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: {{ .Release.Name }}
+  name: {{ .Release.Name }}--sync-extern-to-intern
   namespace: {{ .Release.Namespace }}
   annotations:
     keel.sh/policy: force
@@ -18,26 +18,28 @@ spec:
       template:
         spec:
           containers:
-            - name: {{ .Release.Name }}--sync-view
+            - name: {{ .Release.Name }}--sync-extern-to-intern
               image: {{ .Values.image }}
               imagePullPolicy: Always
 
               env:
+                - name: SYNC_ASSIGNEE
+                  value: "{{ .Values.syncExternToIntern.defaultAssignee }}"
                 - name: SOURCE_CONNECTION_STRING
                   valueFrom:
                     secretKeyRef:
                       name: {{ .Release.Name }}-secrets
-                      key: syncViewSourceConnectionString
+                      key: syncExternToInternSourceConnectionString
                 - name: SOURCE_WORKGROUP_IDS
-                  value: "{{ .Values.syncView.sourceAllowedWorkgroupIds }}"
+                  value: "{{ .Values.syncExternToIntern.sourceAllowedWorkgroupIds }}"
                 - name: DESTINATION_CONNECTION_STRING
                   valueFrom:
                     secretKeyRef:
                       name: {{ .Release.Name }}-secrets
-                      key: syncViewDestinationConnectionString
+                      key: syncExternToInternDestinationConnectionString
                 - name: DESTINATION_WORKGROUP_IDS
-                  value: "{{ .Values.syncView.destinationAllowedWorkgroupIds }}"
+                  value: "{{ .Values.syncExternToIntern.destinationAllowedWorkgroupIds }}"
                 - name: MODE
-                  value: {{ .Values.syncView.mode }}
+                  value: {{ .Values.syncExternToIntern.mode }}
           restartPolicy: Never
       backoffLimit: 4
