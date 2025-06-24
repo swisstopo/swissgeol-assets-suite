@@ -72,15 +72,25 @@ export class SyncExternService {
         assetMainId: null, // this will be set afterwards
         isPublic: false,
         assetFiles: filesCreate,
-        assetContacts: contactsCreate,
+        assetContacts: contactsCreate.createData,
       },
     });
 
     // since contacts and files _might_ be created, we just override the entries in the map regardless of whether they existed or not
     newAsset.assetContacts
       .map((a) => a.contact)
-      .forEach((c) => this.existingContactIds.set(this.createUniqueContactKey(c), c.contactId));
+      .forEach((c) => {
+        this.existingContactIds.set(this.createUniqueContactKey(c), c.contactId);
+      });
     newAsset.assetFiles.map((a) => a.file).forEach((f) => this.existingFileIds.set(f.name, f.id));
+
+    await this.destinationPrisma.assetContact.createMany({
+      data: [...contactsCreate.assignAfterwards.entries()].map(([uniqueKey, { role }]) => ({
+        role,
+        assetId: newAsset.assetId,
+        contactId: this.existingContactIds.get(uniqueKey),
+      })),
+    });
 
     this.newAssetToOriginalAsset.set(newAsset.assetId, {
       originalAssetId: asset.originalAssetId,
@@ -204,19 +214,44 @@ export class SyncExternService {
 
   /**
    * Creates an input for asset contacts by either connecting to existing contacts or by creating a new contact.
+   * Since there is an edge case where an asset has a relation to the same contact that is newly created, we also need
+   * to keep a list of these references as they need to be added after the creation; otherwise, this contact is
+   * duplicated.
    */
   private async createContactsPayload(
     assetContacts: (AssetContact&{contact: Contact})[], // prettier-ignore
-  ): Promise<Prisma.AssetContactUncheckedCreateNestedManyWithoutAssetInput> {
-    return {
-      create: assetContacts.map(({ role, contact: { contactId: _, ...contact } }) => {
-        const match = this.existingContactIds.get(this.createUniqueContactKey(contact));
-        return {
-          role,
-          contact: match ? { connect: { contactId: match } } : { create: contact },
-        };
-      }),
+  ): Promise<{
+    assignAfterwards: Map<string, { role: string }>;
+    createData: Prisma.AssetContactUncheckedCreateNestedManyWithoutAssetInput;
+  }> {
+    const newlyAddedContactKeys: Set<string> = new Set();
+    const assignAfterwards: Map<string, { role: string }> = new Map();
+    const createData = {
+      create: assetContacts
+        .map(({ role, contact: { contactId: _, ...contact } }) => {
+          const uniqueContactKey = this.createUniqueContactKey(contact);
+          const match = this.existingContactIds.get(uniqueContactKey);
+          if (!match) {
+            if (newlyAddedContactKeys.has(uniqueContactKey)) {
+              assignAfterwards.set(uniqueContactKey, { role });
+              return;
+            } else {
+              newlyAddedContactKeys.add(uniqueContactKey);
+              return {
+                role,
+                contact: { create: contact },
+              };
+            }
+          }
+          return {
+            role,
+            contact: { connect: { contactId: match } },
+          };
+        })
+        .filter((s) => s),
     };
+
+    return { assignAfterwards, createData };
   }
 
   /**
