@@ -11,6 +11,7 @@ import { AssetSearchController } from '@/features/assets/assets/search/asset-sea
 import { AssetSearchService } from '@/features/assets/assets/search/asset-search.service';
 import { AssetSyncController } from '@/features/assets/assets/sync/asset-sync.controller';
 import { AssetSyncService } from '@/features/assets/assets/sync/asset-sync.service';
+import { SyncOnStartHook } from '@/features/assets/assets/sync/hooks/sync-on-start.hook';
 import { FavoriteRepo } from '@/features/assets/favorites/favorite.repo';
 import { FavoritesController } from '@/features/assets/favorites/favorites.controller';
 import { FileOcrService } from '@/features/assets/files/file-ocr.service';
@@ -35,6 +36,7 @@ import { UsersModule } from '@/features/users/users.module';
     WorkflowController,
   ],
   providers: [
+    SyncOnStartHook,
     provideElasticsearch,
     AssetRepo,
     AssetEditRepo,
