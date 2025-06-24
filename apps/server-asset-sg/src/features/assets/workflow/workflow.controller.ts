@@ -53,7 +53,11 @@ export class WorkflowController {
     @CurrentUser() user: User,
   ): Promise<Workflow> {
     const record = await this.workflowService.find(assetId);
-    authorize(WorkflowPolicy, user).canChangeStatus(record);
+    // Changing the assignee without changing the status is allowed in all cases
+    if (data.status === record.status && data.assigneeId !== record.assignee?.id) {
+      return this.workflowService.addChange(record, data, user.id);
+    }
+    authorize(WorkflowPolicy, user).canUpdate(record);
     return this.workflowService.addChange(record, data, user.id);
   }
 

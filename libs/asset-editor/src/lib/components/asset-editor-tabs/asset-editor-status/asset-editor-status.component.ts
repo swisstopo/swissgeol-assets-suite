@@ -114,7 +114,7 @@ export class AssetEditorStatusComponent implements OnChanges {
     const data: WorkflowChangeData = {
       status: workflowChange.toStatus as UnpublishedWorkflowStatus,
       comment: workflowChange.comment,
-      assigneeId: workflowChange.toAssignee?.id as string,
+      assigneeId: (workflowChange.toAssignee?.id as string) ?? null,
       hasRequestedChanges: workflowChange.hasRequestedChanges,
     };
     this.assetEditorService.createWorkflowChange(this.workflow.id, data).subscribe((workflow) => {
