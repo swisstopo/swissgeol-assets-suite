@@ -60,6 +60,7 @@ export class FileDropZoneComponent {
             willBeDeleted: false,
             file: element,
             lastModifiedAt: new Date(),
+            ocrStatus: null,
           },
           { nonNullable: true },
         ),

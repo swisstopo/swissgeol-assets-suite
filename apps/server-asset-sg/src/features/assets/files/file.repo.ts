@@ -25,6 +25,7 @@ export class FileRepo
         legalDocItemCode: true,
         pageCount: true,
         lastModifiedAt: true,
+        ocrStatus: true,
       },
     });
     if (entry == null) {
@@ -73,6 +74,7 @@ export class FileRepo
       legalDocItemCode: data.legalDocItemCode,
       pageCount: null, // this is filled (if at all) by postprocessing via OCR
       lastModifiedAt,
+      ocrStatus: data.ocrStatus,
     };
   }
 

@@ -177,6 +177,15 @@ export const deAppTranslations = {
         willBeUploaded: 'Wird hochgeladen werden',
         fileSizeToLarge: 'Die Dateigrösse darf 2 GB nicht überschreiten.',
         uploadedAt: 'Hochgeladen',
+        ocrStatus: 'OCR Status',
+        ocrStatusValues: {
+          willNotBeProcessed: 'nicht berücksichtigt',
+          created: 'registriert',
+          waiting: 'wartet',
+          processing: 'wird prozessiert',
+          error: 'Fehler',
+          success: 'abgeschlossen',
+        },
       },
       usage: {
         tabName: 'Nutzung',

@@ -61,6 +61,7 @@ export const AssetFile = C.struct({
   legalDocItemCode: C.nullable(LegalDocItemCode),
   pageCount: C.nullable(C.number),
   lastModifiedAt: CT.DateFromISOString,
+  ocrStatus: C.nullable(C.string),
 });
 
 export type AssetFile = C.TypeOf<typeof AssetFile>;

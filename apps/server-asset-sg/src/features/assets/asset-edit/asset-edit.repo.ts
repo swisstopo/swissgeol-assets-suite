@@ -341,6 +341,7 @@ const selectPrismaAsset = selectOnAsset({
           legalDocItemCode: true,
           pageCount: true,
           lastModifiedAt: true,
+          ocrStatus: true,
         },
       },
     },
