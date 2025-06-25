@@ -303,7 +303,7 @@ export const itAppTranslations: AppTranslations = {
     userManagementButton: 'IT Benutzer verwalten',
     unsavedChanges: 'IT Ungespeicherte Änderungen',
     discardChanges: 'Änderungen verwerfen',
-    questionDiscardChanges: 'IT Möchten Sie die Änderungen verwerfen?',
+    questionDiscardChanges: 'IT Es gibt ungespeicherte Änderungen. Möchten Sie alle Änderungen speichern?',
     adminInstructionsSyncElasticAssetsHeading: 'IT Assets mit Elasticsearch synchronisieren',
     adminInstructionsSyncElasticAssets:
       'IT Gleicht den Zustand von Elasticsearch mit der Datenbank ab.' +

@@ -29,6 +29,7 @@ export class ConfirmDialogComponent {
     public data: {
       text: string;
       confirm: string;
+      isSaveDisabled: boolean;
     },
   ) {}
 
@@ -40,4 +41,5 @@ export class ConfirmDialogComponent {
 export interface ConfirmDialogData {
   text: string;
   confirm: string;
+  isSaveDisabled?: boolean;
 }
