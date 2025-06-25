@@ -9,7 +9,7 @@
         [title]="'edit.tabs.general.publicTitle' | translate"
         (valueChange)="inputChange($event)"
         [autoCompleteValues]="optionsToDisplay$ | push"
-        bindLabel="titlePublic"
+        bindLabel="title"
         (selectionChange)="setSelectedAsset($event)"
         [disabled]="!hasWorkgroupId"
         [errorMessage]="hasWorkgroupId ? '' : ('edit.tabs.references.workgroupWarning' | translate)"
@@ -19,7 +19,7 @@
         <asset-sg-select-option [value]="LinkedAssetType.Sibling">
           {{ "edit.tabs.references.referenceType.sibling" | translate }}
         </asset-sg-select-option>
-        <asset-sg-select-option [value]="LinkedAssetType.Main" [isDisabled]="form.value.mainAsset != null">
+        <asset-sg-select-option [value]="LinkedAssetType.Main" [isDisabled]="form.value.parent != null">
           {{ "edit.tabs.references.referenceType.parent" | translate }}
         </asset-sg-select-option>
       </asset-sg-select>

@@ -6,29 +6,29 @@ When(/^A user clicks the Create Asset menu button$/, () => {
 });
 When(/^The user fills out general information$/, () => {
   cy.get('mat-select').first().click().get('mat-option').first().click();
-  cy.get('[formcontrolname="titlePublic"]', { timeout: 1000 }).type(
+  cy.get('[formcontrolname="title"]', { timeout: 1000 }).type(
     'CypressTestAsset',
   );
-  cy.get('[formcontrolname="titleOriginal"]', { timeout: 1000 }).type(
+  cy.get('[formcontrolname="originalTitle"]', { timeout: 1000 }).type(
     'CypressTestAsset',
   );
-  cy.get('[formcontrolname="creationDate"]')
+  cy.get('[formcontrolname="createdAt"]')
     .click({ force: true })
     .type('2024-06-07');
-  cy.get('[formcontrolname="receiptDate"]')
+  cy.get('[formcontrolname="receivedAt"]')
     .click({ force: true })
     .type('2025-06-07');
-  cy.get('[formcontrolname="assetKindItemCode"]')
+  cy.get('[formcontrolname="kindCode"]')
     .click()
     .get('mat-option')
     .first()
     .click();
-  cy.get('[formcontrolname="assetFormatItemCode"]')
+  cy.get('[formcontrolname="formatCode"]')
     .click()
     .get('mat-option')
     .first()
     .click();
-  cy.get('[formcontrolname="manCatLabelRefs"]')
+  cy.get('[formcontrolname="topicCodes"]')
     .click()
     .get('mat-option')
     .first()
@@ -54,7 +54,7 @@ When(/^The user fills out administration information$/, () => {
   cy.get('button:contains("Administration")').click();
 });
 When(/^The user clicks the save button$/, () => {
-  cy.intercept('http://localhost:4200/api/asset-edit').as('save');
+  cy.intercept('http://localhost:4200/api/assets').as('save');
   cy.get('button:contains("Speichern")').click();
 });
 Then(/^The user should see the Create Asset form$/, () => {

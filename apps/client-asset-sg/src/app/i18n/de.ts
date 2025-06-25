@@ -106,7 +106,7 @@ export const deAppTranslations = {
     geometry: 'Geometrie',
     geometryCode: {
       Point: 'Punkt',
-      LineString: 'Linie',
+      Line: 'Linie',
       Polygon: 'Polygon',
       None: 'Keine',
     },
@@ -268,8 +268,6 @@ export const deAppTranslations = {
         instructionsPolygonOrLIne: 'Zeichnen Sie mindestens {{ count }} Punkte',
         instructionsMorePolygonOrLIne: 'Zeichnen Sie mindestens {{ count }} weitere Punkte',
         createGeometry: 'Geometrie erstellen',
-        disabledSave:
-          'Speichern im Geometrie-Tab ist momentan nicht möglich. Bitte wechseln Sie auf einen anderen Tab.',
       },
       administration: {
         tabName: 'Administration',

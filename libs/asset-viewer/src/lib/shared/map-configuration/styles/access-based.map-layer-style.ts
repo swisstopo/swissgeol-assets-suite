@@ -1,4 +1,4 @@
-import { StudyAccessType, StudyGeometryType } from '@asset-sg/shared/v2';
+import { GeometryAccessType, GeometryType } from '@asset-sg/shared/v2';
 import { FeatureLike } from 'ol/Feature';
 import Fill from 'ol/style/Fill';
 import Stroke from 'ol/style/Stroke';
@@ -24,7 +24,7 @@ const internalAccess = {
   strokeColor: '#801519',
 };
 
-const accessTypeMapping: { [key in StudyAccessType]: keyof AccessTypeKey } = {
+const accessTypeMapping: { [key in GeometryAccessType]: keyof AccessTypeKey } = {
   0: 'public',
   1: 'internal',
 };
@@ -120,7 +120,7 @@ const getPointRepresentationForGeometry = (
   feature: FeatureLike,
   accessStyles: keyof AccessTypeKey,
 ): Style | Style[] => {
-  const geomType = feature.get(CustomFeatureProperties.GeometryType) as StudyGeometryType;
+  const geomType = feature.get(CustomFeatureProperties.GeometryType) as GeometryType;
   const styleKey = getGeometryToPointRepresentationMapping()[geomType];
   return overviewStylesAccess.point[styleKey][accessStyles];
 };
@@ -131,7 +131,7 @@ export const styleFunctionByAccess: StyleFunction = (feature) => {
     return new Style();
   }
 
-  const accessType = feature.get(CustomFeatureProperties.AccessType) as StudyAccessType;
+  const accessType = feature.get(CustomFeatureProperties.AccessType) as GeometryAccessType;
   const accessStyles: keyof AccessTypeKey = accessTypeMapping[accessType];
   switch (geometry.getType()) {
     case 'Point': {

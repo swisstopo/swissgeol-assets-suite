@@ -1,4 +1,5 @@
 import { inject, Injectable } from '@angular/core';
+import { AssetSearchService } from '@asset-sg/asset-viewer';
 import {
   Alert,
   AlertType,
@@ -11,7 +12,7 @@ import { UntilDestroy } from '@ngneat/until-destroy';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { Store } from '@ngrx/store';
 import { TranslateService } from '@ngx-translate/core';
-import { filter, map, switchMap, withLatestFrom } from 'rxjs';
+import { filter, firstValueFrom, map, switchMap, withLatestFrom } from 'rxjs';
 import { AssetEditorService } from '../services/asset-editor.service';
 import { WorkflowApiService } from '../services/workflow-api.service';
 import * as actions from './asset-editor.actions';
@@ -23,6 +24,7 @@ export class AssetEditorEffects {
   private readonly actions$ = inject(Actions);
   private readonly store = inject(Store);
   private readonly assetEditorService = inject(AssetEditorService);
+  private readonly assetSearchService = inject(AssetSearchService);
   private readonly workflowApiService = inject(WorkflowApiService);
   private readonly routingService = inject(RoutingService);
   private readonly translateService = inject(TranslateService);
@@ -31,9 +33,16 @@ export class AssetEditorEffects {
     this.actions$.pipe(
       ofType(actions.loadAsset),
       withLatestFrom(this.store.select(fromAppShared.selectCurrentAsset)),
-      filter(([{ assetId }, asset]) => asset?.assetId !== assetId),
-      switchMap(([{ assetId }]) => this.assetEditorService.fetchAsset(assetId)),
-      map((asset) => appSharedStateActions.setCurrentAsset({ asset })),
+      filter(([{ assetId }, asset]) => asset?.id !== assetId),
+      switchMap(([{ assetId }]) =>
+        Promise.all([
+          firstValueFrom(this.assetSearchService.fetchAsset(assetId)),
+          firstValueFrom(this.assetSearchService.fetchGeometries(assetId)),
+        ]),
+      ),
+      map(([asset, geometries]) =>
+        appSharedStateActions.setCurrentAsset({ asset: { asset, geometries }, isLoading: false }),
+      ),
     ),
   );
 
@@ -42,27 +51,6 @@ export class AssetEditorEffects {
       ofType(actions.loadWorkflow, actions.loadAsset),
       switchMap(({ assetId }) => this.workflowApiService.fetchWorkflow(assetId)),
       map((workflow) => setWorkflow({ workflow })),
-    ),
-  );
-
-  createAsset$ = createEffect(() =>
-    this.actions$.pipe(
-      ofType(actions.createNewAsset),
-      switchMap(({ patchAsset }) => this.assetEditorService.createAsset(patchAsset)),
-      map((data) => actions.updateAssetEditDetailResult({ asset: data })),
-    ),
-  );
-
-  updateAssetEditDetail$ = createEffect(() =>
-    this.actions$.pipe(
-      ofType(actions.updateAssetEditDetail),
-      switchMap(({ assetId, patchAsset, newFiles, filesToDelete }) =>
-        this.assetEditorService.deleteFiles(assetId, filesToDelete).pipe(
-          switchMap(() => this.assetEditorService.uploadFiles(assetId, newFiles)),
-          switchMap(() => this.assetEditorService.updateAssetDetail(assetId, patchAsset)),
-        ),
-      ),
-      map((asset) => actions.updateAssetEditDetailResult({ asset })),
     ),
   );
 
@@ -102,18 +90,12 @@ export class AssetEditorEffects {
 
   updateSearchAfterAssetChanged$ = createEffect(() =>
     this.actions$.pipe(
-      ofType(actions.updateAssetEditDetailResult),
-      map(({ asset }) =>
+      ofType(actions.updateAsset),
+      map(({ asset, geometries }) =>
         appSharedStateActions.updateAsset({
           shouldBeCurrentAsset: true,
-          asset: {
-            ...asset,
-            studies: asset.studies.map((it) => ({
-              assetId: asset.assetId,
-              studyId: it.studyId,
-              geomText: it.geomText,
-            })),
-          },
+          asset,
+          geometries,
         }),
       ),
     ),
@@ -121,8 +103,8 @@ export class AssetEditorEffects {
 
   fetchWorkflowAfterAssetChanged$ = createEffect(() =>
     this.actions$.pipe(
-      ofType(actions.updateAssetEditDetailResult),
-      map(({ asset }) => actions.loadWorkflow({ assetId: asset.assetId })),
+      ofType(actions.updateAsset),
+      map(({ asset }) => actions.loadWorkflow({ assetId: asset.id })),
     ),
   );
 }

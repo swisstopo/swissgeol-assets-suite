@@ -1,4 +1,4 @@
-import { Contact, ContactData, ContactId } from '@asset-sg/shared/v2';
+import { Contact, ContactData, ContactId, ContactKindCode } from '@asset-sg/shared/v2';
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 
@@ -92,7 +92,7 @@ const parse = (data: SelectedContact): Contact => ({
   telephone: data.telephone,
   email: data.email,
   website: data.website,
-  contactKindItemCode: data.contactKindItemCode ?? null,
+  kindCode: (data.contactKindItemCode as ContactKindCode) ?? null,
 });
 
 const mapDataToPrisma = (data: ContactData): Prisma.ContactUncheckedCreateInput => ({
@@ -105,5 +105,5 @@ const mapDataToPrisma = (data: ContactData): Prisma.ContactUncheckedCreateInput 
   telephone: data.telephone,
   email: data.email,
   website: data.website,
-  contactKindItemCode: data.contactKindItemCode,
+  contactKindItemCode: data.kindCode,
 });

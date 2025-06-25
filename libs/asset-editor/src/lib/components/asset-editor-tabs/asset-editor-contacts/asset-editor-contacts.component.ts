@@ -3,8 +3,8 @@ import { FormControl } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { MatTableDataSource } from '@angular/material/table';
 import { fromAppShared } from '@asset-sg/client-shared';
-import { AssetEditDetail } from '@asset-sg/shared';
-import { AssetContact, AssetContactRole, Contact } from '@asset-sg/shared/v2';
+import { isNotUndefined } from '@asset-sg/core';
+import { Asset, AssetContact, AssetContactRole, Contact, ContactId } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
 import { combineLatestWith, startWith, Subscription, tap } from 'rxjs';
 import { AssetForm } from '../../asset-editor-page/asset-editor-page.component';
@@ -13,7 +13,7 @@ import { DialogWrapperComponent } from './dialog-wrapper/dialog-wrapper.componen
 export type ContactWithRoles = Contact & { roles: AssetContactRole[] };
 
 interface ContactItem {
-  roles: ('author' | 'supplier' | 'initiator')[];
+  roles: AssetContactRole[];
   name: string;
   id: number;
 }
@@ -28,14 +28,18 @@ type TableColumns = keyof ContactItem | 'delete';
 })
 export class AssetEditorContactsComponent implements OnInit, OnDestroy {
   @Input() public form!: AssetForm['controls']['contacts'];
-  @Input() public asset: AssetEditDetail | null = null;
+  @Input() public asset: Asset | null = null;
+
   protected readonly dataSource: MatTableDataSource<ContactItem> = new MatTableDataSource();
   protected readonly displayedColumns: TableColumns[] = ['name', 'roles', 'delete'];
+
+  private existingContacts = new Map<ContactId, Contact>();
   private readonly subscriptions: Subscription = new Subscription();
-  private existingContacts: Record<string, Contact> = {};
-  private readonly store = inject(Store);
+
   private readonly dialogService: MatDialog = inject(MatDialog);
-  private readonly existingContacts$ = this.store.select(fromAppShared.selectContactItems);
+  private readonly store = inject(Store);
+
+  private readonly existingContacts$ = this.store.select(fromAppShared.selectReferenceContacts);
 
   public ngOnInit() {
     this.subscriptions.add(
@@ -50,24 +54,20 @@ export class AssetEditorContactsComponent implements OnInit, OnDestroy {
         .subscribe(),
     );
     this.subscriptions.add(
-      this.form.controls.assetContacts.valueChanges
+      this.form.valueChanges
         .pipe(
-          startWith(this.form.controls.assetContacts.value),
+          startWith(this.form.value),
           combineLatestWith(this.existingContacts$),
           tap(([assetContacts, contacts]) => {
             if (contacts) {
               // first we combine the asset contacts with the existing contacts and then group roles per contact
               this.dataSource.data = Object.values(
                 assetContacts
-                  .filter((contactMatch) => contacts[contactMatch.id])
-                  .map((contactMatch) => {
-                    const contact = contacts[contactMatch.id];
-                    return {
-                      role: contactMatch.role,
-                      name: contact.name,
-                      id: contact.id,
-                    };
+                  .map((contact) => {
+                    const reference = contacts.get(contact.id);
+                    return reference && { ...contact, name: reference.name };
                   })
+                  .filter(isNotUndefined)
                   .reduce(
                     (acc, { id, name, role }) => {
                       if (!acc[id]) {
@@ -107,14 +107,18 @@ export class AssetEditorContactsComponent implements OnInit, OnDestroy {
   }
 
   protected openDetailDialog(contact: ContactItem) {
-    const roles = this.dataSource.data.find((contactMatch) => contactMatch.id === contact.id);
-    const existingContact: ContactWithRoles = { ...this.existingContacts[contact.id], roles: roles?.roles ?? [] };
+    const reference = this.existingContacts.get(contact.id);
+    if (reference === undefined) {
+      return;
+    }
+    const item = this.dataSource.data.find((contactMatch) => contactMatch.id === contact.id);
+    const contactWithRoles: ContactWithRoles = { ...reference, roles: item?.roles ?? [] };
     const dialogRef = this.dialogService.open<DialogWrapperComponent, ContactWithRoles, AssetContact[]>(
       DialogWrapperComponent,
       {
         width: '674px',
         restoreFocus: false,
-        data: existingContact,
+        data: contactWithRoles,
       },
     );
 
@@ -127,13 +131,13 @@ export class AssetEditorContactsComponent implements OnInit, OnDestroy {
 
   protected removeContact(event: Event, element: ContactItem) {
     event.stopPropagation();
-    this.form.controls.assetContacts.controls
+    this.form.controls
       .map((control, idx) => ({ control, idx }))
       .filter(({ control }) => control.value.id === element.id)
       .map(({ idx }) => idx)
       .sort((a, b) => b - a)
       .forEach((idx) => {
-        this.form.controls.assetContacts.removeAt(idx);
+        this.form.removeAt(idx);
       });
 
     this.form.markAsDirty();
@@ -142,11 +146,9 @@ export class AssetEditorContactsComponent implements OnInit, OnDestroy {
   private handleAssetContactFormUpdate(assetContacts?: AssetContact[]) {
     if (assetContacts && assetContacts.length > 0) {
       const contactId = assetContacts[0].id;
-      this.form.controls.assetContacts.controls = this.form.controls.assetContacts.controls.filter(
-        (contact) => contact.value.id !== contactId,
-      );
+      this.form.controls = this.form.controls.filter((contact) => contact.value.id !== contactId);
       assetContacts.forEach((assetContact) => {
-        this.form.controls.assetContacts.push(new FormControl<AssetContact>(assetContact, { nonNullable: true }));
+        this.form.push(new FormControl<AssetContact>(assetContact, { nonNullable: true }));
         this.form.markAsDirty();
       });
     }
