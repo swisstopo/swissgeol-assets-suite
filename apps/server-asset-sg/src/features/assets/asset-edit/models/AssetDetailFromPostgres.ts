@@ -22,6 +22,7 @@ export const AssetFileFromPostgres = D.struct({
   legalDocItemCode: D.nullable(LegalDocItemCode),
   pageCount: D.nullable(D.number),
   lastModifiedAt: DT.date,
+  ocrStatus: D.nullable(D.string),
 });
 
 export const AssetFilesFromPostgres = pipe(

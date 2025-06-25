@@ -179,6 +179,15 @@ export const frAppTranslations: AppTranslations = {
         willBeUploaded: 'Sera téléchargé',
         fileSizeToLarge: 'La taille du fichier ne doit pas dépasser 2 Go.',
         uploadedAt: 'Téléchargé',
+        ocrStatus: 'OCR Status',
+        ocrStatusValues: {
+          willNotBeProcessed: 'FR nicht berücksichtigt',
+          created: 'FR registriert',
+          waiting: 'FR wartet',
+          processing: 'FR wird prozessiert',
+          error: 'FR Fehler',
+          success: 'FR abgeschlossen',
+        },
       },
       usage: {
         tabName: 'Utilisation',

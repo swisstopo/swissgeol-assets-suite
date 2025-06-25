@@ -31,7 +31,7 @@ export class AssetEditorFilesComponent implements OnInit, OnDestroy {
   public normalFiles: FormControl<FormAssetFile>[] = [];
 
   protected dataSource: MatTableDataSource<FormControl<FormAssetFile>> = new MatTableDataSource();
-  private readonly COLUMNS = ['select', 'name', 'lastModifiedAt', 'legalDocItemCode'];
+  private readonly COLUMNS = ['select', 'name', 'lastModifiedAt', 'legalDocItemCode', 'ocrStatus'];
   public displayedColumns: string[] = this.COLUMNS.filter((col) => col !== 'legalDocItemCode');
 
   private readonly store = inject(Store);
