@@ -1,12 +1,12 @@
 import { Component, inject, Input, OnChanges, OnDestroy, OnInit, SimpleChanges } from '@angular/core';
-import { fromAppShared } from '@asset-sg/client-shared';
+import { fromAppShared, TranslationKey } from '@asset-sg/client-shared';
 import { AssetEditDetail } from '@asset-sg/shared';
 import { Role, SimpleWorkgroup } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
 import { combineLatestWith, map, Observable, startWith, Subscription } from 'rxjs';
 import { TranslatedValueItem } from '../../../models/translated-value-item.interface';
 import { mapValueItemsToTranslatedItem } from '../../../utils/map-value-items-to-translated-item.utils';
-import { AssetForm } from '../../asset-editor-page/asset-editor-page.component';
+import { AssetForm, RestrictionType } from '../../asset-editor-page/asset-editor-page.component';
 
 @Component({
   selector: 'asset-sg-editor-general',
@@ -24,6 +24,13 @@ export class AssetEditorGeneralComponent implements OnInit, OnChanges, OnDestroy
   public selectedManCatLabels: TranslatedValueItem[] = [];
   public selectedNatRelItems: TranslatedValueItem[] = [];
   private readonly store = inject(Store);
+  public readonly restrictionItems: { label: TranslationKey; key: RestrictionType }[] = [
+    {
+      label: { key: 'edit.tabs.general.access.items.public' },
+      key: 'public',
+    },
+    { label: { key: 'edit.tabs.general.access.items.internal' }, key: 'internal' },
+  ];
   public readonly natRelItems$: Observable<TranslatedValueItem[]> = this.store
     .select(fromAppShared.selectNatRelItems)
     .pipe(map(mapValueItemsToTranslatedItem));

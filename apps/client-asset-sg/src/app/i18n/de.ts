@@ -154,6 +154,13 @@ export const deAppTranslations = {
         alternativeIdDescription: 'Beschreibung Alternativ-ID',
         addNewAlternativeId: 'Neue Alternativ-ID hinzufügen',
         referencesWarning: 'Um die Arbeitsgruppe zu ändern, müssen Sie erst alle Verweise entfernen.',
+        access: {
+          name: 'Beschränkung',
+          items: {
+            public: 'Öffentlich',
+            internal: 'Intern',
+          },
+        },
       },
       files: {
         tabName: 'Dateien',

@@ -156,6 +156,13 @@ export const frAppTranslations: AppTranslations = {
         alternativeIdDescription: "Description d'ID alternative",
         addNewAlternativeId: 'Ajouter une nouvelle ID alternative',
         referencesWarning: 'Pour changer le groupe de travail, vous devez d’abord supprimer toutes les références.',
+        access: {
+          name: 'Rèstriction d’accès',
+          items: {
+            public: 'Public',
+            internal: 'Interne',
+          },
+        },
       },
       files: {
         tabName: 'Fichiers',

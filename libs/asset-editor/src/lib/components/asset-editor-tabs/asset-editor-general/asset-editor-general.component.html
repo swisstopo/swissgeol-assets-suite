@@ -69,6 +69,19 @@
       ></asset-sg-select>
     </div>
   </asset-sg-detail-section>
+  <asset-sg-detail-section [title]="'edit.tabs.general.access.name' | translate">
+    <div class="content column" content>
+      <div>
+        <asset-sg-select
+          [title]="'edit.tabs.general.access.name' | translate"
+          [values]="restrictionItems"
+          [bindLabel]="'label'"
+          [bindKey]="'key'"
+          formControlName="isPublic"
+        ></asset-sg-select>
+      </div>
+    </div>
+  </asset-sg-detail-section>
   <asset-sg-detail-section [title]="'edit.tabs.usage.nationalInterest' | translate">
     <div class="content column" content>
       <mat-checkbox formControlName="isNatRel" color="primary"
