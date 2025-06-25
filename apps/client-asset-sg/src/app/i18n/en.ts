@@ -309,7 +309,7 @@ export const enAppTranslations: AppTranslations = {
     closeManageAsset: 'Close manage asset',
     unsavedChanges: 'Unsaved Changes',
     discardChanges: 'Discard changes',
-    questionDiscardChanges: 'Do you want to discard your changes?',
+    questionDiscardChanges: 'There are unsaved changes. Do you want to save all changes?',
     userManagementHeading: 'Users',
     userManagementButton: 'Manage users',
     adminInstructionsSyncElasticAssetsHeading: 'Synchronize assets with Elasticsearch',

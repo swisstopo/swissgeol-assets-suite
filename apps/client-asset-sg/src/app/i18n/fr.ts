@@ -312,7 +312,8 @@ export const frAppTranslations: AppTranslations = {
     closeManageAsset: 'Fermer la gestion des asset',
     unsavedChanges: 'Modifications non enregistrées',
     discardChanges: 'Annuler les modifications',
-    questionDiscardChanges: 'Souhaitez-vous annuler les modifications ?',
+    questionDiscardChanges:
+      'Il y a des modifications non enregistrées. Souhaitez-vous enregistrer toutes les modifications ?',
     userManagementHeading: 'Utilisateurs',
     userManagementButton: 'Gérer les utilisateurs',
     adminInstructionsSyncElasticAssetsHeading: 'Synchroniser les assets avec Elasticsearch',

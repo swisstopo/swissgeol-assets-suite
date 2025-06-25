@@ -28,7 +28,7 @@ import { AssetContact, Workflow } from '@asset-sg/shared/v2';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { Store } from '@ngrx/store';
 import * as O from 'fp-ts/lib/Option';
-import { map, Observable, Subscription, switchMap, take, tap } from 'rxjs';
+import { map, Observable, of, Subscription, switchMap, take, tap } from 'rxjs';
 import { EditorMode } from '../../models';
 import { AssetEditorService } from '../../services/asset-editor.service';
 import * as actions from '../../state/asset-editor.actions';
@@ -290,9 +290,19 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
       data: {
         text: 'edit.questionDiscardChanges',
         confirm: 'save',
+        isSaveDisabled: this.form.invalid,
       },
+      maxWidth: '420px',
     });
-    return dialogRef.afterClosed();
+    return dialogRef.afterClosed().pipe(
+      switchMap((hasConfirmed) => {
+        if (hasConfirmed) {
+          this.save();
+          return of(true);
+        }
+        return of(false);
+      }),
+    );
   }
 
   private initializeTabs() {
