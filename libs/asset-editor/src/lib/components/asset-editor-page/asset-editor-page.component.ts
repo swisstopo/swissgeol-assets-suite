@@ -277,7 +277,7 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
               this.isLoading = false;
               this.asset = asset;
               this.mode = EditorMode.Edit;
-              this.store.dispatch(actions.updateAssetEditDetailResult({ asset }));
+              this.store.dispatch(actions.loadAsset({ assetId: asset.assetId }));
               this.router.navigate([this.currentLang, 'asset-admin', asset.assetId], { replaceUrl: true }).then();
             }),
     );
