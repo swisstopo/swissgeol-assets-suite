@@ -290,9 +290,17 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
       data: {
         text: 'edit.questionDiscardChanges',
         confirm: 'save',
+        isSaveDisabled: this.form.invalid,
       },
+      maxWidth: '420px',
     });
-    return dialogRef.afterClosed();
+    return dialogRef.afterClosed().pipe(
+      tap((hasConfirmed) => {
+        if (hasConfirmed) {
+          this.save();
+        }
+      }),
+    );
   }
 
   private initializeTabs() {

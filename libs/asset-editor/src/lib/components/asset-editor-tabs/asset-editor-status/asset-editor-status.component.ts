@@ -1,6 +1,7 @@
 import { Component, inject, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { can$ } from '@asset-sg/client-shared';
 import {
+  Role,
   SimpleUser,
   UnpublishedWorkflowStatus,
   Workflow,
@@ -8,6 +9,7 @@ import {
   WorkflowPolicy,
   WorkflowSelection,
 } from '@asset-sg/shared/v2';
+import { Store } from '@ngrx/store';
 import { TranslateService } from '@ngx-translate/core';
 import { type SgcWorkflowSelectionEntry, WorkflowChange } from '@swisstopo/swissgeol-ui-core';
 import { SgcWorkflowChangeEvent } from '@swisstopo/swissgeol-ui-core/dist/types/components/sgc-workflow/sgc-workflow';
@@ -15,6 +17,7 @@ import { SgcWorkflowSelectionChangeEvent } from '@swisstopo/swissgeol-ui-core/di
 import { BehaviorSubject } from 'rxjs';
 import { AssetEditorService } from '../../../services/asset-editor.service';
 import { WorkflowApiService } from '../../../services/workflow-api.service';
+import { setWorkflow } from '../../../state/asset-editor.actions';
 
 @Component({
   selector: 'asset-sg-editor-status',
@@ -24,6 +27,7 @@ import { WorkflowApiService } from '../../../services/workflow-api.service';
 })
 export class AssetEditorStatusComponent implements OnChanges {
   private readonly workflow$ = new BehaviorSubject<Workflow | null>(null);
+  private readonly store = inject(Store);
 
   @Input({ required: true })
   set workflow(value: Workflow | null) {
@@ -40,8 +44,8 @@ export class AssetEditorStatusComponent implements OnChanges {
     this.workflow === null ? false : it.canUpdate(this.workflow),
   );
 
-  canChangeStatus = can$(WorkflowPolicy, this.workflow$, (it) =>
-    this.workflow === null ? false : it.canChangeStatus(this.workflow),
+  canChangeStatus$ = can$(WorkflowPolicy, this.workflow$, (it) =>
+    this.workflow === null ? false : it.canSeeStatusChangeButton(this.workflow),
   );
 
   private readonly workflowApiService = inject(WorkflowApiService);
@@ -53,7 +57,7 @@ export class AssetEditorStatusComponent implements OnChanges {
   ngOnChanges(changes: SimpleChanges) {
     if ('workflow' in changes && this.workflow !== null) {
       this.assetEditorService.getUsersForWorkgroup(this.workflow.workgroupId).subscribe((users) => {
-        this.availableAssignees = users;
+        this.availableAssignees = users.filter((user) => user.role !== Role.Reader);
       });
     }
   }
@@ -66,13 +70,17 @@ export class AssetEditorStatusComponent implements OnChanges {
 
     const patch = event.detail.changes as Partial<WorkflowSelection>;
     this.workflowApiService.updateReview(workflow.id, patch).subscribe(() => {
-      this.workflow = {
-        ...workflow,
-        review: {
-          ...workflow.review,
-          ...patch,
-        },
-      };
+      this.store.dispatch(
+        setWorkflow({
+          workflow: {
+            ...workflow,
+            review: {
+              ...workflow.approval,
+              ...patch,
+            },
+          },
+        }),
+      );
     });
   }
 
@@ -84,13 +92,17 @@ export class AssetEditorStatusComponent implements OnChanges {
 
     const patch = event.detail.changes as Partial<WorkflowSelection>;
     this.workflowApiService.updateApproval(workflow.id, patch).subscribe(() => {
-      this.workflow = {
-        ...workflow,
-        approval: {
-          ...workflow.approval,
-          ...patch,
-        },
-      };
+      this.store.dispatch(
+        setWorkflow({
+          workflow: {
+            ...workflow,
+            approval: {
+              ...workflow.approval,
+              ...patch,
+            },
+          },
+        }),
+      );
     });
   }
 
@@ -102,10 +114,15 @@ export class AssetEditorStatusComponent implements OnChanges {
     const data: WorkflowChangeData = {
       status: workflowChange.toStatus as UnpublishedWorkflowStatus,
       comment: workflowChange.comment,
-      assigneeId: workflowChange.toAssignee?.id as string,
+      assigneeId: (workflowChange.toAssignee?.id as string) ?? null,
       hasRequestedChanges: workflowChange.hasRequestedChanges,
     };
     this.assetEditorService.createWorkflowChange(this.workflow.id, data).subscribe((workflow) => {
+      this.store.dispatch(
+        setWorkflow({
+          workflow,
+        }),
+      );
       this.workflow = workflow;
     });
   }
@@ -115,7 +132,11 @@ export class AssetEditorStatusComponent implements OnChanges {
       return;
     }
     this.assetEditorService.publishAsset(this.workflow.id).subscribe((workflow) => {
-      this.workflow = workflow;
+      this.store.dispatch(
+        setWorkflow({
+          workflow,
+        }),
+      );
     });
   }
 }

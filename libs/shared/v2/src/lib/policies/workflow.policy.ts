@@ -18,14 +18,41 @@ export class WorkflowPolicy extends Policy<Workflow> {
     return this.hasRole(requiredRole, workflow.workgroupId);
   }
 
-  canChangeStatus(workflow: Workflow): boolean {
+  // Editors can change the assignee if the workflow is in draft or in review.
+  canChangeAssignee(workflow: Workflow): boolean {
+    switch (workflow.status) {
+      case WorkflowStatus.Draft:
+      case WorkflowStatus.InReview:
+        return this.hasRole(Role.Editor, workflow.workgroupId);
+      case WorkflowStatus.Reviewed:
+        return this.hasRole(Role.Reviewer, workflow.workgroupId);
+      case WorkflowStatus.Published:
+        return this.hasRole(Role.Publisher, workflow.workgroupId);
+    }
+  }
+
+  // Frontend only. The StatusChangeButton is visible in Draft Status for Reviewers and Publishers, but not for Editors.
+  canSeeStatusChangeButton(workflow: Workflow): boolean {
     return workflow.status === WorkflowStatus.Published
       ? this.hasRole(Role.Publisher, workflow.workgroupId)
       : this.hasRole(Role.Reviewer, workflow.workgroupId);
   }
+
+  // This allows Reviewers to make changes to reviewed workflows
+  canChangeStatus(workflow: Workflow): boolean {
+    switch (workflow.status) {
+      case WorkflowStatus.Draft:
+        return this.hasRole(Role.Editor, workflow.workgroupId);
+      case WorkflowStatus.InReview:
+      case WorkflowStatus.Reviewed:
+        return this.hasRole(Role.Reviewer, workflow.workgroupId);
+      case WorkflowStatus.Published:
+        return this.hasRole(Role.Publisher, workflow.workgroupId);
+    }
+  }
 }
 
-const getRoleForStatus = (status: WorkflowStatus): Role => {
+export const getRoleForStatus = (status: WorkflowStatus): Role => {
   switch (status) {
     case WorkflowStatus.Draft:
       return Role.Editor;

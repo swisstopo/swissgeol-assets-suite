@@ -311,7 +311,7 @@ export const deAppTranslations = {
     closeManageAsset: 'Asset verwalten schliessen',
     unsavedChanges: 'Ungespeicherte Änderungen',
     discardChanges: 'Änderungen verwerfen',
-    questionDiscardChanges: 'Möchten Sie die Änderungen verwerfen?',
+    questionDiscardChanges: 'Es gibt ungespeicherte Änderungen. Möchten Sie alle Änderungen speichern?',
     userManagementHeading: 'Benutzer',
     userManagementButton: 'Benutzer verwalten',
     adminInstructionsSyncElasticAssetsHeading: 'Assets mit Elasticsearch synchronisieren',
