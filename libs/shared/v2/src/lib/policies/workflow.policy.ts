@@ -17,6 +17,12 @@ export class WorkflowPolicy extends Policy<Workflow> {
     const requiredRole = getRoleForStatus(workflow.status);
     return this.hasRole(requiredRole, workflow.workgroupId);
   }
+
+  canChangeStatus(workflow: Workflow): boolean {
+    return workflow.status === WorkflowStatus.Published
+      ? this.hasRole(Role.Publisher, workflow.workgroupId)
+      : this.hasRole(Role.Reviewer, workflow.workgroupId);
+  }
 }
 
 const getRoleForStatus = (status: WorkflowStatus): Role => {

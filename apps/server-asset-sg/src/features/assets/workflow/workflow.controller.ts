@@ -53,7 +53,7 @@ export class WorkflowController {
     @CurrentUser() user: User,
   ): Promise<Workflow> {
     const record = await this.workflowService.find(assetId);
-    authorize(WorkflowPolicy, user).canUpdate(record);
+    authorize(WorkflowPolicy, user).canChangeStatus(record);
     return this.workflowService.addChange(record, data, user.id);
   }
 
