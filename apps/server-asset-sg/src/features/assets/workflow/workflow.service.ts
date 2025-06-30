@@ -5,11 +5,10 @@ import {
   UserId,
   Workflow,
   WorkflowChangeData,
+  WorkflowPolicy,
   WorkflowSelection,
   WorkflowSelectionCategory,
   WorkflowStatus,
-  getRoleForStatus,
-  getRoleIndex,
 } from '@asset-sg/shared/v2';
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { WorkflowRepo } from '@/features/assets/workflow/workflow.repo';
@@ -38,14 +37,8 @@ export class WorkflowService {
       if (!newAssignee) {
         throw new HttpException(`Assignee with ID ${change.assigneeId} not found.`, HttpStatus.UNPROCESSABLE_ENTITY);
       }
-      const assigneeRole = newAssignee.roles.get(workflow.workgroupId);
-      if (!assigneeRole) {
-        throw new HttpException(
-          `Assignee with ID ${change.assigneeId} does not have a role in workgroup ${workflow.workgroupId}.`,
-          HttpStatus.UNPROCESSABLE_ENTITY,
-        );
-      }
-      if (getRoleIndex(assigneeRole) < getRoleIndex(getRoleForStatus(change.status))) {
+      const policy = new WorkflowPolicy(newAssignee);
+      if (!policy.canUpdate({ ...workflow, status: change.status })) {
         throw new HttpException(
           "The selected assignee's role is not sufficient for the new status.",
           HttpStatus.UNPROCESSABLE_ENTITY,
