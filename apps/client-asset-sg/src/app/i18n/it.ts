@@ -36,6 +36,7 @@ export const itAppTranslations: AppTranslations = {
   workflow: {
     status: 'IT Status',
     assignee: 'IT Zugewiesene Person',
+    requestedChanges: 'IT Änderungen angefordert',
   },
   workflowStatus: {
     Draft: 'IT Draft',
@@ -135,6 +136,11 @@ export const itAppTranslations: AppTranslations = {
     supplier: 'IT Einlieferer',
   },
   edit: {
+    visibility: {
+      public: 'IT frei',
+      locked: 'IT gesperrt',
+      lockedUntil: 'IT gesperrt bis {{date}}',
+    },
     tabs: {
       general: {
         tabName: 'IT Allgemein',

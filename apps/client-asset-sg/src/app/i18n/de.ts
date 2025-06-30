@@ -34,6 +34,7 @@ export const deAppTranslations = {
   workflow: {
     status: 'Status',
     assignee: 'Zugewiesene Person',
+    requestedChanges: 'Änderungen angefordert',
   },
   workflowStatus: {
     Draft: 'Draft',
@@ -134,6 +135,11 @@ export const deAppTranslations = {
     supplier: 'Einlieferer',
   },
   edit: {
+    visibility: {
+      public: 'frei',
+      locked: 'gesperrt',
+      lockedUntil: 'gesperrt bis {{date}}',
+    },
     tabs: {
       general: {
         tabName: 'Allgemein',

@@ -36,6 +36,7 @@ export const enAppTranslations: AppTranslations = {
   workflow: {
     status: 'Status',
     assignee: 'Assignee',
+    requestedChanges: 'Changes requested',
   },
   workflowStatus: {
     Draft: 'Draft',
@@ -135,6 +136,11 @@ export const enAppTranslations: AppTranslations = {
     supplier: 'Supplier',
   },
   edit: {
+    visibility: {
+      public: 'public',
+      locked: 'locked',
+      lockedUntil: 'locked until {{date}}',
+    },
     tabs: {
       general: {
         tabName: 'General',

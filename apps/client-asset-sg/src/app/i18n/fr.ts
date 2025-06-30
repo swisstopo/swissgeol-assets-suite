@@ -36,6 +36,7 @@ export const frAppTranslations: AppTranslations = {
   workflow: {
     status: 'FR Status',
     assignee: 'FR Zugewiesene Person',
+    requestedChanges: 'FR Änderungen angefordert',
   },
   workflowStatus: {
     Draft: 'FR Draft',
@@ -136,6 +137,11 @@ export const frAppTranslations: AppTranslations = {
     supplier: 'Fournisseur',
   },
   edit: {
+    visibility: {
+      public: 'FR frei',
+      locked: 'FR gesperrt',
+      lockedUntil: 'FR gesperrt bis {{date}}',
+    },
     tabs: {
       general: {
         tabName: 'Général',
