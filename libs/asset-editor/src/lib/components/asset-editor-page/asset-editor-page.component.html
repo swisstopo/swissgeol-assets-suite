@@ -4,10 +4,64 @@
 <asset-sg-page-header (backNavigation)="navigateToStart()">
   <h2>{{ asset?.title }}</h2>
   <mat-chip-set>
+    <!--
+    Basic setup: [WorkflowStatus] [ChangesRequested] [Assignee]
+    The following chip rules exist:
+    - Current Status
+      - Draft = Primary Color
+      - Review = Brownish Color
+      - Reviewed = Green Color
+      - Published = Green Color
+    - Assignee is shown _only_ if Status !== Published and !== Reviewed
+    - If Status === Published, both "Reviewed" and "Published" chip are shown
+    - If Status === Reviewed, we show the "Beschränkung", i.e. frei, gesperrt, gesperrt bis
+    - If Changes Requested, we show a red chip after the Status
+    -->
     @if (mode === EditorMode.Create) {
       <asset-sg-chip type="primary">{{ "workflowStatus.Draft" | translate }}</asset-sg-chip>
     } @else if (workflow !== null) {
-      <asset-sg-chip type="primary" translate>{{ "workflowStatus." + workflow.status | translate }}</asset-sg-chip>
+      <!-- Main workflow status -->
+      @switch (workflow.status) {
+        @case (WorkflowStatus.Published) {
+          <asset-sg-chip type="success">{{ "workflowStatus.Reviewed" | translate }}</asset-sg-chip>
+          <asset-sg-chip type="success">{{ "workflowStatus.Published" | translate }}</asset-sg-chip>
+        }
+        @case (WorkflowStatus.Reviewed) {
+          <asset-sg-chip type="success">{{ "workflowStatus.Reviewed" | translate }}</asset-sg-chip>
+        }
+        @case (WorkflowStatus.InReview) {
+          <asset-sg-chip type="warn">{{ "workflowStatus.InReview" | translate }}</asset-sg-chip>
+        }
+        @case (WorkflowStatus.Draft) {
+          <asset-sg-chip type="primary">{{ "workflowStatus.Draft" | translate }}</asset-sg-chip>
+        }
+        @default {
+          <asset-sg-chip type="primary">{{ "workflowStatus." + workflow.status | translate }}</asset-sg-chip>
+        }
+      }
+
+      <!-- Changes requested -->
+      @if (workflow.hasRequestedChanges) {
+        <asset-sg-chip type="alert">{{ "workflow.requestedChanges" | translate }}</asset-sg-chip>
+      }
+
+      <!-- Visibility restriction -->
+      @if (workflow.status === WorkflowStatus.Reviewed) {
+        <asset-sg-chip type="light">
+          <!-- todo assets-631: add edit.visibility.lockedUntil with formatted date -->
+          {{ (asset?.isPublic ? "edit.visibility.public" : "edit.visibility.locked") | translate }}
+        </asset-sg-chip>
+      }
+
+      <!-- Assignee -->
+      @if (
+        workflow.status !== WorkflowStatus.Published &&
+          workflow.status !== WorkflowStatus.Reviewed &&
+          workflow.assignee;
+        as assignee
+      ) {
+        <asset-sg-chip type="light">{{ assignee.firstName }} {{ assignee.lastName }}</asset-sg-chip>
+      }
     }
   </mat-chip-set>
   <div class="spacer"></div>

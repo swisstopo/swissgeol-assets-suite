@@ -37,6 +37,7 @@ import {
   UpdateAssetFileData,
   UpdateGeometryData,
   Workflow,
+  WorkflowStatus,
 } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
 import * as E from 'fp-ts/Either';
@@ -88,6 +89,7 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
 
   public activeTab: Tab = Tab.General;
   protected availableTabs: Tab[] = [];
+  protected readonly WorkflowStatus = WorkflowStatus;
   private currentLang: Lang = 'de';
   protected isLoading = false;
 
