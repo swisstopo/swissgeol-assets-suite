@@ -11,8 +11,3 @@ export const fromFilteredSome = <T>(source: Observable<O.Option<T>>): Observable
 
 export const map: <A, B>(f: (a: A) => B) => (fa: ObservableOption<A>) => ObservableOption<B> = (f) => (fa) =>
   fa.pipe(rxMap(O.map(f)));
-
-export const chain =
-  <A, B>(f: (a: A) => O.Option<B>) =>
-  (fa: ObservableOption<A>): ObservableOption<B> =>
-    fa.pipe(rxMap(O.chain(f)));

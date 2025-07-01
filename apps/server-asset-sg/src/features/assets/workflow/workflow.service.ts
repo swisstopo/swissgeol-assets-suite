@@ -1,6 +1,7 @@
-import { AssetEditDetail } from '@asset-sg/shared';
 import {
+  Asset,
   AssetId,
+  GeometryData,
   hasWorkflowSelectionChanged,
   UserId,
   Workflow,
@@ -84,22 +85,27 @@ export class WorkflowService {
     });
   }
 
-  async updateSelectionByChanges(original: AssetEditDetail, update: AssetEditDetail): Promise<void> {
-    if (original.assetId !== update.assetId) {
+  async updateSelectionByChanges(original: Asset, update: Asset, geometryData: GeometryData[]): Promise<void> {
+    if (original.id !== update.id) {
       throw new Error("Can't compare changes of two separate assets.");
     }
 
     const changes: Partial<WorkflowSelection> = {};
     for (const category of Object.values(WorkflowSelectionCategory)) {
-      if (hasWorkflowSelectionChanged(original, update, category)) {
-        changes[category] = false;
+      if (category == WorkflowSelectionCategory.Geometries) {
+        if (geometryData.length === 0) {
+          continue;
+        }
+      } else if (!hasWorkflowSelectionChanged(original, update, category)) {
+        continue;
       }
+      changes[category] = false;
     }
 
     if (Object.keys(changes).length !== 0) {
       await Promise.all([
-        this.workflowRepo.approvals.update(original.assetId, changes),
-        this.workflowRepo.reviews.update(original.assetId, changes),
+        this.workflowRepo.approvals.update(original.id, changes),
+        this.workflowRepo.reviews.update(original.id, changes),
       ]);
     }
   }

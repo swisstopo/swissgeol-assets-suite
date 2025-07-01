@@ -277,8 +277,6 @@ export const frAppTranslations: AppTranslations = {
         instructionsPolygonOrLIne: 'Dessinez au moins {{ count }} points',
         instructionsMorePolygonOrLIne: 'Dessinez au moins {{ count }} autres points',
         createGeometry: 'Créer la géométrie',
-        disabledSave:
-          'FR Speichern im Geometrie-Tab ist momentan nicht möglich. Bitte wechseln Sie auf einen anderen Tab.',
       },
       administration: {
         tabName: 'Administration',

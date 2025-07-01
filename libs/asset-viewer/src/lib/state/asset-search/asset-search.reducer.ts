@@ -1,23 +1,22 @@
 import { appSharedStateActions, AppState } from '@asset-sg/client-shared';
 import {
   AssetSearchQuery,
+  AssetSearchResult,
   AssetSearchStats,
-  GeomFromGeomText,
-  LineString,
-  LV95,
+  Coordinate,
+  Geometry,
+  GeometryAccessType,
+  GeometryDetail,
+  GeometryType,
+  makeEmptyAssetSearchResults,
   makeEmptyAssetSearchStats,
-  Point,
-  StudyPolygon,
-} from '@asset-sg/shared';
-import { AssetSearchResult, makeEmptyAssetSearchResults } from '@asset-sg/shared/v2';
+  run,
+} from '@asset-sg/shared/v2';
 import { createReducer, on } from '@ngrx/store';
-import * as E from 'fp-ts/Either';
 
 import { getCenter } from 'ol/extent';
-import { LineString as OlLineString, Polygon } from 'ol/geom';
+import { LineString, Polygon } from 'ol/geom';
 import { DEFAULT_MAP_POSITION, MapPosition } from '../../components/map/map-controller';
-import { AllStudyDTO } from '../../models';
-import { mapAssetAccessToAccessType } from '../../utils/access-type';
 import * as actions from './asset-search.actions';
 import { PanelState } from './asset-search.actions';
 
@@ -25,10 +24,10 @@ export interface AssetSearchState {
   query: AssetSearchQuery;
   results: AssetSearchResult;
   stats: AssetSearchStats;
-  studies: AllStudyDTO[];
+  geometries: Geometry[];
   ui: AssetSearchUiState;
 
-  isLoadingStudies: boolean;
+  isLoadingGeometries: boolean;
   isLoadingResults: boolean;
   isLoadingStats: boolean;
 }
@@ -46,7 +45,7 @@ export interface AppStateWithAssetSearch extends AppState {
 
 const initialState: AssetSearchState = {
   query: {},
-  studies: [],
+  geometries: [],
   results: makeEmptyAssetSearchResults(),
   stats: makeEmptyAssetSearchStats(),
   ui: {
@@ -56,7 +55,7 @@ const initialState: AssetSearchState = {
     map: DEFAULT_MAP_POSITION,
   },
 
-  isLoadingStudies: false,
+  isLoadingGeometries: false,
   isLoadingResults: false,
   isLoadingStats: false,
 };
@@ -81,11 +80,11 @@ export const assetSearchReducer = createReducer(
     }),
   ),
   on(
-    actions.setStudies,
-    (state, { studies, isLoading }): AssetSearchState => ({
+    actions.setGeometries,
+    (state, { geometries, isLoading }): AssetSearchState => ({
       ...state,
-      studies: studies ?? state.studies,
-      isLoadingStudies: isLoading ?? state.isLoadingStudies,
+      geometries: geometries ?? state.geometries,
+      isLoadingGeometries: isLoading ?? state.isLoadingGeometries,
     }),
   ),
   on(
@@ -147,52 +146,47 @@ export const assetSearchReducer = createReducer(
       ...state,
       results: {
         ...state.results,
-        data: state.results.data.filter((it) => it.assetId !== assetId),
+        data: state.results.data.filter((it) => it.id !== assetId),
       },
-      studies: state.studies?.filter((study) => study.assetId !== assetId) ?? null,
+      geometries: state.geometries?.filter((geometry) => geometry.assetId !== assetId) ?? null,
     }),
   ),
-  on(appSharedStateActions.updateAsset, (state, { asset }): AssetSearchState => {
+  on(appSharedStateActions.updateAsset, (state, { asset, geometries }): AssetSearchState => {
     return {
       ...state,
-      results: {
-        ...state.results,
-        data: state.results.data,
-      },
-      studies:
-        state.studies
-          ?.filter((study) => study.assetId !== asset.assetId)
+      geometries: run(() => {
+        if (geometries === undefined) {
+          return state.geometries;
+        }
+        return state.geometries
+          .filter((geometry) => geometry.assetId !== asset.id)
           .concat(
-            asset.studies.map((study): AllStudyDTO => {
-              const { centroid, geometryType } = extractCentroidFromStudy(study);
+            geometries.map((geometry): Geometry => {
               return {
-                assetId: study.assetId,
-                studyId: study.studyId,
-                geometryType: geometryType,
-                centroid,
-                accessType: mapAssetAccessToAccessType(asset),
+                id: geometry.id,
+                type: geometry.type,
+                accessType: asset.isPublic ? GeometryAccessType.Public : GeometryAccessType.Internal,
+                center: extractCenterFromGeometryDetail(geometry),
+                assetId: asset.id,
               };
             }),
-          ) ?? null,
+          );
+      }),
     };
   }),
 );
 
-function extractCentroidFromStudy(study: { assetId: number; studyId: string; geomText: string }): {
-  centroid: LV95;
-  geometryType: 'Point' | 'Polygon' | 'Line';
-} {
-  const { right: geom } = GeomFromGeomText.decode(study.geomText) as E.Right<Point | StudyPolygon | LineString>;
-  switch (geom._tag) {
-    case 'Point':
-      return { centroid: geom.coord, geometryType: 'Point' };
-    case 'Polygon': {
-      const [x, y] = getCenter(new Polygon([geom.coords.map((it) => [it.x, it.y])]).getExtent());
-      return { centroid: { x, y } as LV95, geometryType: 'Polygon' };
+const extractCenterFromGeometryDetail = ({ type, coordinates }: GeometryDetail): Coordinate => {
+  switch (type) {
+    case GeometryType.Point:
+      return coordinates[0];
+    case GeometryType.LineString: {
+      const [x, y] = getCenter(new LineString(coordinates.map((it) => [it.x, it.y])).getExtent());
+      return { x, y };
     }
-    case 'LineString': {
-      const [x, y] = getCenter(new OlLineString(geom.coords.map((it) => [it.x, it.y])).getExtent());
-      return { centroid: { x, y } as LV95, geometryType: 'Line' };
+    case GeometryType.Polygon: {
+      const [x, y] = getCenter(new Polygon([coordinates.map((it) => [it.x, it.y])]).getExtent());
+      return { x, y };
     }
   }
-}
+};

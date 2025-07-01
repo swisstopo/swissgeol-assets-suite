@@ -1,4 +1,4 @@
-import { Transform, Type } from 'class-transformer';
+import { Type } from 'class-transformer';
 import {
   IsArray,
   IsBoolean,
@@ -23,7 +23,7 @@ import {
 } from '../models/workflow';
 import { WorkgroupId } from '../models/workgroup';
 import { IsNullable, messageNullableString } from '../utils/class-validator/is-nullable.decorator';
-import { Schema } from './base/schema';
+import { Schema, TransformLocalDate } from './base/schema';
 
 export class WorkflowChangeSchema extends Schema implements WorkflowChange {
   @IsString({ message: messageNullableString })
@@ -45,9 +45,7 @@ export class WorkflowChangeSchema extends Schema implements WorkflowChange {
   @IsEnum(WorkflowStatus)
   toStatus!: WorkflowStatus;
 
-  @ValidateNested()
-  @Type(() => String)
-  @Transform(({ value }) => LocalDate.tryParse(value))
+  @TransformLocalDate()
   createdAt!: LocalDate;
 }
 
@@ -131,8 +129,6 @@ export class WorkflowSchema extends Schema implements Workflow {
   @IsNumber()
   workgroupId!: WorkgroupId;
 
-  @ValidateNested()
-  @Type(() => String)
-  @Transform(({ value }) => LocalDate.tryParse(value))
+  @TransformLocalDate()
   createdAt!: LocalDate;
 }

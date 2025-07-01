@@ -14,6 +14,7 @@ import {
   AppPortalService,
   AppSharedState,
   AuthService,
+  fromAppShared,
   LifecycleHooks,
   LifecycleHooksDirective,
 } from '@asset-sg/client-shared';
@@ -22,7 +23,6 @@ import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { Store } from '@ngrx/store';
 import * as A from 'fp-ts/Array';
 import { Eq as eqNumber } from 'fp-ts/number';
-import * as O from 'fp-ts/Option';
 import {
   asyncScheduler,
   filter,
@@ -43,8 +43,6 @@ import * as actions from '../../state/asset-search/asset-search.actions';
 import { PanelState } from '../../state/asset-search/asset-search.actions';
 import { AppStateWithAssetSearch, AssetSearchState } from '../../state/asset-search/asset-search.reducer';
 import {
-  selectCurrentAsset,
-  selectHasCurrentAsset,
   selectIsFiltersOpen,
   selectSearchQuery,
   selectSearchResults,
@@ -77,7 +75,7 @@ export class AssetViewerPageComponent implements OnInit, OnDestroy {
     }),
     map(
       ({ search, shared }) =>
-        search.isLoadingStudies ||
+        search.isLoadingGeometries ||
         search.isLoadingResults ||
         search.isLoadingStats ||
         // Loading for the current asset is only shown on the map in case an asset is already being displayed.
@@ -86,12 +84,9 @@ export class AssetViewerPageComponent implements OnInit, OnDestroy {
     ),
   );
 
-  public currentAssetId$ = this.store.select(selectCurrentAsset).pipe(
-    map((currentAsset) => currentAsset?.assetId),
-    map(O.fromNullable),
-  );
+  public currentAssetId$ = this.store.select(fromAppShared.selectCurrentAsset).pipe(map((asset) => asset?.id ?? null));
 
-  public hasCurrentAsset$ = this.store.select(selectHasCurrentAsset);
+  public hasCurrentAsset$ = this.store.select(fromAppShared.selectHasCurrentAsset);
 
   public isFiltersOpen$ = this.store.select(selectIsFiltersOpen);
 
@@ -139,7 +134,7 @@ export class AssetViewerPageComponent implements OnInit, OnDestroy {
         }
       });
 
-    const [singleStudyClicked$, multipleStudiesClicked$] = partition(
+    const [singleGeometryClicked$, multipleGeometriesClicked$] = partition(
       this.assetClicked$.pipe(
         map(A.uniq(eqNumber)),
         filter((as) => as.length > 0),
@@ -148,12 +143,12 @@ export class AssetViewerPageComponent implements OnInit, OnDestroy {
       (ss) => ss.length === 1,
     );
 
-    this.assetsForPicker$ = multipleStudiesClicked$.pipe(
+    this.assetsForPicker$ = multipleGeometriesClicked$.pipe(
       withLatestFrom(this.store.select(selectSearchResults)),
-      map(([assetIds, searchAssets]) => searchAssets.data.filter((a) => assetIds.includes(a.assetId))),
+      map(([assetIds, searchAssets]) => searchAssets.data.filter((a) => assetIds.includes(a.id))),
     );
 
-    singleStudyClicked$.pipe(untilDestroyed(this)).subscribe((assetIds) => {
+    singleGeometryClicked$.pipe(untilDestroyed(this)).subscribe((assetIds) => {
       this.viewerControllerService.selectAsset(assetIds[0]);
     });
 

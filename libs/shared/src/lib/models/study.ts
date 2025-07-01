@@ -8,25 +8,22 @@ import { Eq as eqString } from 'fp-ts/string';
 import * as C from 'io-ts/Codec';
 import * as D from 'io-ts/Decoder';
 
-import { LV95, LV95FromSpaceSeparatedString, eqLV95, eqLV95Array, toPosition } from './lv95';
+import { LV95, LV95FromSpaceSeparatedString, eqLV95, eqLV95Array } from './lv95';
 
 export interface Point {
   _tag: 'Point';
   coord: LV95;
 }
-export const pointToPosition = (p: Point) => toPosition(p.coord);
 
 export interface LineString {
   _tag: 'LineString';
   coords: LV95[];
 }
-export const linestringToPositions = (p: LineString) => p.coords.map(toPosition);
 
 export interface StudyPolygon {
   _tag: 'Polygon';
   coords: LV95[];
 }
-export const polygonToPositions = (p: StudyPolygon) => p.coords.map(toPosition);
 
 export const Geom = makeADT('_tag')({
   Point: ofType<Point>(),
@@ -55,13 +52,6 @@ export const eqGeom: Eq<Geom> = {
 
 export const GeomWithCoords = Geom.exclude(['Point']);
 export type GeomWithCoords = ADTType<typeof GeomWithCoords>;
-
-export const getStudyWithPolygon = (s: Study): O.Option<Study & { geom: StudyPolygon }> =>
-  pipe(
-    s.geom,
-    O.fromPredicate(Geom.is.Polygon),
-    O.map((g) => ({ ...s, geom: g })),
-  );
 
 export const getStudyWithGeomWithCoords = (s: Study): O.Option<Study & { geom: GeomWithCoords }> =>
   pipe(
@@ -149,6 +139,3 @@ export const eqStudyByStudyId = contramap((s: Study) => s.studyId)(eqString);
 export const Studies = D.array(Study);
 export type Studies = D.TypeOf<typeof Studies>;
 export const eqStudies: Eq<Studies> = A.getEq(eqStudy);
-
-export const getCoordsFromStudy = (study: Study): LV95[] =>
-  study.geom._tag === 'Point' ? [study.geom.coord] : study.geom.coords;

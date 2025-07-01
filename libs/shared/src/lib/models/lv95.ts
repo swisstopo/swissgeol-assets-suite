@@ -46,7 +46,6 @@ export const eqLV95 = TEq.struct({
 
 export const toPosition = (lv95: LV95) => [lv95.x, lv95.y];
 
-export const LV95Array = C.array(LV95);
 export const eqLV95Array = TEq.array(eqLV95);
 
 const makeLV95FromSeparatedString = (codecName: string, separator: string) => {
@@ -66,8 +65,6 @@ const makeLV95FromSeparatedString = (codecName: string, separator: string) => {
 };
 
 export const LV95FromSpaceSeparatedString = makeLV95FromSeparatedString('LV95FromSpaceSeparatedString', ' ');
-
-export const LV95FromCommaSeparatedString = makeLV95FromSeparatedString('LV95FromCommaSeparatedString', ',');
 
 export const roundToMillimeter = (n: number) => Math.round(n * 1000) / 1000;
 

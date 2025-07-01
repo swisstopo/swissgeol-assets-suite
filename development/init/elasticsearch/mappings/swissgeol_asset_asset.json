@@ -1,9 +1,9 @@
 {
   "properties": {
-    "assetId": {
+    "id": {
       "type": "integer"
     },
-    "assetKindItemCode": {
+    "kindCode": {
       "type": "keyword"
     },
     "authorIds": {
@@ -18,25 +18,23 @@
         }
       }
     },
-    "createDate": {
-      "type": "long"
+    "createdAt": {
+      "type": "date",
+      "format": "yyyy-MM-dd"
     },
-    "createDateId": {
-      "type": "integer"
-    },
-    "languageItemCodes": {
+    "languageCodes": {
       "type": "keyword"
     },
-    "manCatLabelItemCodes": {
+    "topicCodes": {
       "type": "keyword"
     },
-    "geometryCodes": {
+    "geometryTypes": {
       "type": "keyword"
     },
     "sgsId": {
       "type": "keyword"
     },
-    "titleOriginal": {
+    "originalTitle": {
       "type": "text",
       "fields": {
         "keyword": {
@@ -45,7 +43,7 @@
         }
       }
     },
-    "titlePublic": {
+    "title": {
       "type": "text",
       "fields": {
         "keyword": {
@@ -57,7 +55,7 @@
     "usageCode": {
       "type": "keyword"
     },
-    "studyLocations": {
+    "locations": {
       "type": "geo_point"
     },
     "favoredByUserIds": {

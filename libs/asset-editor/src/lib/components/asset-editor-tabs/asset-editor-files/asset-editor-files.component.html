@@ -1,101 +1,105 @@
-<form [formGroup]="form">
-  <asset-sg-tabs>
-    <asset-sg-tab (click)="switchFileType('Normal')" translate>edit.tabs.files.Normal.many</asset-sg-tab>
-    <asset-sg-tab (click)="switchFileType('Legal')" translate>edit.tabs.files.Legal.many</asset-sg-tab>
+<asset-sg-tabs>
+  <asset-sg-tab (click)="setFileType({ isLegal: false })" translate>edit.tabs.files.Normal.many</asset-sg-tab>
+  <asset-sg-tab (click)="setFileType({ isLegal: true })" translate>edit.tabs.files.Legal.many</asset-sg-tab>
 
-    <ng-container slot="content">
-      <div class="content">
-        <asset-sg-file-drop-zone [form]="form" [fileType]="fileType$.value"></asset-sg-file-drop-zone>
-        @if (dataSource.data.length > 0 || searchTerm$.value) {
-          <div>
-            <div class="actions">
-              <button asset-sg-secondary (click)="selectFilesForDeletion()" [disabled]="isDisabled">
-                <svg-icon key="delete"></svg-icon>
-                <span translate>delete</span>
-              </button>
-              <button asset-sg-secondary [disabled]="isDisabled" (click)="downloadSelectedFiles()">
-                <svg-icon key="export"></svg-icon>
-                <span translate>edit.tabs.files.export</span>
-              </button>
-              <span></span>
-              <asset-sg-text-input
-                (valueChange)="setSearchTerm($event)"
-                icon="search"
-                small
-                [placeholder]="'search.textSearchFieldPlaceholder' | translate"
-              ></asset-sg-text-input>
-            </div>
-            <table
-              mat-table
-              [dataSource]="dataSource"
-              class="mat-elevation-z8 table"
-              matSort
-              (matSortChange)="sortChange($event)"
-            >
-              <ng-container matColumnDef="select">
-                <th mat-header-cell *matHeaderCellDef>
-                  <span translate
-                    ><mat-checkbox [checked]="false" (change)="toggleAll($event)" color="primary"></mat-checkbox
-                  ></span>
-                </th>
-                <td mat-cell *matCellDef="let control">
-                  @if (!activeFileDownload.has(control.value.id)) {
-                    <mat-checkbox
-                      [checked]="control.value.selected"
-                      (change)="selectFile(control, $event)"
-                      color="primary"
-                    ></mat-checkbox>
-                  } @else {
-                    <mat-progress-spinner mode="indeterminate" [diameter]="20" />
-                  }
-                </td>
-              </ng-container>
-              <ng-container matColumnDef="name">
-                <th mat-header-cell mat-sort-header="name" *matHeaderCellDef class="large">
-                  <span translate>admin.name</span>
-                </th>
-                <td mat-cell *matCellDef="let control" class="large">
-                  <span [class.will-be-deleted]="control.value.willBeDeleted">{{ control.value.name }}</span>
-                </td>
-              </ng-container>
-              <ng-container matColumnDef="lastModifiedAt">
-                <th mat-header-cell *matHeaderCellDef class="large">
-                  <span translate>edit.tabs.files.uploadedAt</span>
-                </th>
-                <td mat-cell *matCellDef="let control" class="large">
-                  {{ control.value.lastModifiedAt | date: "dd.MM.yyyy HH:mm" }}
-                </td>
-              </ng-container>
-              <ng-container matColumnDef="legalDocItemCode">
-                <th mat-header-cell *matHeaderCellDef translate>edit.tabs.general.type</th>
-                <td mat-cell *matCellDef="let control">
-                  <asset-sg-select
-                    [initialKeys]="control.value.legalDocItemCode"
-                    [values]="legalDocItems$ | push"
-                    [bindLabel]="'value'"
-                    [bindKey]="'code'"
-                    (selectionChanged)="updateLegalDocItemCode(control, $event)"
-                    small
-                  >
-                  </asset-sg-select>
-                </td>
-              </ng-container>
-              <ng-container matColumnDef="ocrStatus">
-                <th mat-header-cell *matHeaderCellDef class="large">
-                  <span translate>edit.tabs.files.ocrStatus</span>
-                </th>
-                <td mat-cell *matCellDef="let control" class="large">
-                  @if (control.value.ocrStatus) {
-                    {{ "edit.tabs.files.ocrStatusValues." + control.value.ocrStatus | translate }}
-                  }
-                </td>
-              </ng-container>
-              <tr mat-header-row *matHeaderRowDef="displayedColumns" class="table__header"></tr>
-              <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
-            </table>
+  <ng-container slot="content">
+    <div class="content">
+      <asset-sg-file-drop-zone [form]="form" [isLegal]="isLegal$ | async"></asset-sg-file-drop-zone>
+      @if (dataSource.data.length > 0 || searchTerm$.value) {
+        <div>
+          <div class="actions">
+            <button asset-sg-secondary [disabled]="!hasSelectedFiles" (click)="markSelectedFilesForDeletion()">
+              <svg-icon key="delete" />
+              <span translate>delete</span>
+            </button>
+            <button asset-sg-secondary [disabled]="!hasSelectedFiles" (click)="downloadSelectedFiles()">
+              <svg-icon key="export" />
+              <span translate>edit.tabs.files.export</span>
+            </button>
+            <span></span>
+            <asset-sg-text-input
+              (valueChange)="setSearchTerm($event)"
+              icon="search"
+              small
+              [placeholder]="'search.textSearchFieldPlaceholder' | translate"
+            />
           </div>
-        }
-      </div>
-    </ng-container>
-  </asset-sg-tabs>
-</form>
+          <table
+            mat-table
+            [dataSource]="dataSource"
+            class="mat-elevation-z8 table"
+            matSort
+            (matSortChange)="sortChange($event)"
+          >
+            <ng-container matColumnDef="select">
+              <th mat-header-cell *matHeaderCellDef>
+                <span translate>
+                  <mat-checkbox [checked]="areAllFilesSelected" (change)="toggleAll($event)" color="primary" />
+                </span>
+              </th>
+              <td mat-cell *matCellDef="let control">
+                @if (!activeFileDownloads.has(control.value.id)) {
+                  <mat-checkbox
+                    [checked]="isSelected(control.value)"
+                    (change)="selectFile(control, $event)"
+                    color="primary"
+                  />
+                } @else {
+                  <mat-progress-spinner mode="indeterminate" [diameter]="20" />
+                }
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="name">
+              <th mat-header-cell mat-sort-header="name" *matHeaderCellDef class="large">
+                <span translate>admin.name</span>
+              </th>
+              <td mat-cell *matCellDef="let control" class="large">
+                <span [class.will-be-deleted]="control.value.shouldBeDeleted">{{
+                  control.value.file?.name ?? control.value.name
+                }}</span>
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="lastModifiedAt">
+              <th mat-header-cell *matHeaderCellDef class="large">
+                <span translate>edit.tabs.files.uploadedAt</span>
+              </th>
+              <td mat-cell *matCellDef="let control" class="large">
+                @if (control.value.lastModifiedAt) {
+                  {{ control.value.lastModifiedAt | date: "dd.MM.yyyy HH:mm" }}
+                } @else {
+                  -
+                }
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="legalDocCode">
+              <th mat-header-cell *matHeaderCellDef translate>edit.tabs.general.type</th>
+              <td mat-cell *matCellDef="let control">
+                <asset-sg-select
+                  [initialKeys]="control.value.legalDocCode"
+                  [values]="legalDocItems$ | push"
+                  bindLabel="name"
+                  bindKey="code"
+                  (selectionChanged)="updateLegalDocItemCode(control, $event)"
+                  small
+                >
+                </asset-sg-select>
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="ocrStatus">
+              <th mat-header-cell *matHeaderCellDef class="large">
+                <span translate>edit.tabs.files.ocrStatus</span>
+              </th>
+              <td mat-cell *matCellDef="let control" class="large">
+                @if (control.value.ocrStatus) {
+                  {{ "edit.tabs.files.ocrStatusValues." + control.value.ocrStatus | translate }}
+                }
+              </td>
+            </ng-container>
+            <tr mat-header-row *matHeaderRowDef="displayedColumns" class="table__header"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+          </table>
+        </div>
+      }
+    </div>
+  </ng-container>
+</asset-sg-tabs>

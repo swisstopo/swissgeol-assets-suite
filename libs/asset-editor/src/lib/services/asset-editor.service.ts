@@ -1,99 +1,65 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { ApiError, httpErrorResponseError } from '@asset-sg/client-shared';
-import { OE, ORD, unknownError } from '@asset-sg/core';
-import { AssetEditDetail, PatchAsset } from '@asset-sg/shared';
 import {
+  Asset,
+  AssetFile,
+  AssetFileSchema,
   AssetId,
+  AssetSchema,
   Contact,
   ContactData,
   ContactId,
+  CreateAssetData,
+  CreateAssetDataSchema,
+  CreateAssetFileData,
   SimpleUserSchema,
+  UpdateAssetData,
+  UpdateAssetDataSchema,
   Workflow,
   WorkflowChangeData,
   WorkflowSchema,
   WorkgroupId,
 } from '@asset-sg/shared/v2';
-import * as RD from '@devexperts/remote-data-ts';
 import { SimpleUser } from '@swisstopo/swissgeol-ui-core';
 import { plainToInstance } from 'class-transformer';
-import * as E from 'fp-ts/Either';
-import { concat, forkJoin, map, Observable, of, startWith, toArray } from 'rxjs';
-
-import { AssetEditorNewFile } from '../models/asset-editor-new-file';
+import { forkJoin, map, Observable, of } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class AssetEditorService {
   private readonly httpClient = inject(HttpClient);
 
-  public fetchAsset(assetId: number): Observable<AssetEditDetail> {
+  public createAsset(data: CreateAssetData): Observable<Asset> {
     return this.httpClient
-      .get(`/api/asset-edit/${assetId}`)
-      .pipe(map((res) => (AssetEditDetail.decode(res) as E.Right<AssetEditDetail>).right));
+      .post(`/api/assets`, plainToInstance(CreateAssetDataSchema, data))
+      .pipe(map((res) => plainToInstance(AssetSchema, res)));
   }
 
-  public createAsset(patchAsset: PatchAsset): Observable<AssetEditDetail> {
+  public updateAsset(id: AssetId, data: UpdateAssetData): Observable<Asset> {
     return this.httpClient
-      .post(`/api/asset-edit`, PatchAsset.encode(patchAsset))
-      .pipe(map((res) => (AssetEditDetail.decode(res) as E.Right<AssetEditDetail>).right));
+      .put(`/api/assets/${id}`, plainToInstance(UpdateAssetDataSchema, data))
+      .pipe(map((res) => plainToInstance(AssetSchema, res)));
   }
 
-  public updateAssetDetail(assetId: number, patchAsset: PatchAsset): Observable<AssetEditDetail> {
-    return this.httpClient
-      .put(`/api/asset-edit/${assetId}`, PatchAsset.encode(patchAsset))
-      .pipe(map((res) => (AssetEditDetail.decode(res) as E.Right<AssetEditDetail>).right));
+  public deleteAsset(assetId: AssetId): Observable<void> {
+    return this.httpClient.delete<void>(`/api/assets/${assetId}`);
   }
 
-  public deleteAsset(assetId: number): Observable<void> {
-    return this.httpClient.delete<void>(`/api/asset-edit/${assetId}`);
-  }
-
-  public deleteFiles(assetId: number, fileIds: number[]): ORD.ObservableRemoteData<ApiError, unknown> {
-    return fileIds.length
-      ? forkJoin(
-          fileIds.map((fileId) => {
-            return this.httpClient
-              .delete(`/api/assets/${assetId}/files/${fileId}`)
-              .pipe(map(E.right), OE.catchErrorW(httpErrorResponseError), map(RD.fromEither), startWith(RD.pending));
-          }),
-        ).pipe(
-          map((rds) => {
-            const error = rds.find(RD.isFailure);
-            if (error) return error;
-            if (!rds.every(RD.isSuccess))
-              return RD.failure(unknownError(new Error('uploadFiles stream completed without success or failure')));
-            return RD.success(undefined);
-          }),
-        )
-      : of(RD.success(undefined));
-  }
-
-  public uploadFiles(assetId: number, files: AssetEditorNewFile[]): ORD.ObservableRemoteData<ApiError, unknown> {
-    return files.length
-      ? concat(
-          ...files.map((file) => {
-            const formData = new FormData();
-            formData.append('file', file.file);
-            formData.append('type', file.type);
-            if (file.legalDocItemCode != null) {
-              formData.append('legalDocItemCode', file.legalDocItemCode);
-            }
-            return this.httpClient
-              .post(`/api/assets/${assetId}/files`, formData)
-              .pipe(map(E.right), OE.catchErrorW(httpErrorResponseError));
-          }),
-        ).pipe(
-          toArray(),
-          map((rds) => {
-            const error = rds.find(E.isLeft);
-            if (error) return RD.failure(error.left);
-            return !rds.every(E.isRight)
-              ? RD.failure(unknownError(new Error('uploadFiles stream completed without success or failure')))
-              : RD.success(undefined);
-          }),
-          startWith(RD.pending),
-        )
-      : of(RD.success(undefined));
+  public uploadFilesForAsset(id: AssetId, files: CreateAssetFileData[]): Observable<AssetFile[]> {
+    if (files.length === 0) {
+      return of([]);
+    }
+    return forkJoin(
+      files.map((file) => {
+        const formData = new FormData();
+        formData.append('file', file.file);
+        if (file.legalDocCode != null) {
+          formData.append('legalDocCode', file.legalDocCode);
+        }
+        return this.httpClient
+          .post<AssetFile>(`/api/assets/${id}/files`, formData)
+          .pipe(map((data) => plainToInstance(AssetFileSchema, data)));
+      }),
+    );
   }
 
   public updateContact(contactId: ContactId, patchContact: ContactData): Observable<Contact> {
@@ -111,9 +77,9 @@ export class AssetEditorService {
     );
   }
 
-  public publishAsset(assetId: AssetId): Observable<Workflow> {
+  public publishAsset(id: AssetId): Observable<Workflow> {
     return this.httpClient
-      .post<Workflow>(`/api/assets/${assetId}/workflow/publish`, null)
+      .post<Workflow>(`/api/assets/${id}/workflow/publish`, null)
       .pipe(map((data) => plainToInstance(WorkflowSchema, data)));
   }
 

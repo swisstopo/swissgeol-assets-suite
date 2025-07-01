@@ -1,8 +1,7 @@
 import { Component, EventEmitter, inject, OnInit, Output } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { fromAppShared } from '@asset-sg/client-shared';
-import { AssetContactRole } from '@asset-sg/shared';
-import { AssetContact, AssetContactRoles, Contact, ContactId } from '@asset-sg/shared/v2';
+import { AssetContact, AssetContactRole, Contact, ContactId } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
 import { combineLatestWith, debounceTime, Subject, Subscription, tap } from 'rxjs';
 import { ContactWithRoles } from '../asset-editor-contacts.component';
@@ -19,7 +18,7 @@ export class LinkContactDialogComponent implements OnInit {
   @Output() linkContact: EventEmitter<AssetContact[]> = new EventEmitter();
   @Output() closeDialog: EventEmitter<void> = new EventEmitter();
   @Output() createContact: EventEmitter<Partial<Pick<ContactWithRoles, 'roles' | 'name'>>> = new EventEmitter();
-  protected readonly roles = AssetContactRoles.map((role) => ({
+  protected readonly roles = Object.values(AssetContactRole).map((role) => ({
     key: role,
     translation: { key: `contactRoles.${role}` },
   }));
@@ -39,10 +38,10 @@ export class LinkContactDialogComponent implements OnInit {
       this.searchTerm$
         .pipe(
           debounceTime(300),
-          combineLatestWith(this.store.select(fromAppShared.selectContactItems)),
+          combineLatestWith(this.store.select(fromAppShared.selectReferenceContacts)),
           tap(([searchTerm, contacts]) => {
             if (contacts) {
-              const filteredContacts: SelectableContact[] = Object.values(contacts)
+              const filteredContacts: SelectableContact[] = [...contacts.values()]
                 .filter((contact) => contact.name.toLowerCase().includes(searchTerm.toLowerCase()))
                 .map((contact) => ({
                   id: contact.id,
@@ -65,12 +64,13 @@ export class LinkContactDialogComponent implements OnInit {
   }
 
   protected handleContactLink() {
-    const assetContacts = this.linkContactForm.controls.roles.value.map((role) => {
-      return {
-        id: this.linkContactForm.controls.linkedContact.value,
-        role,
-      } as AssetContact;
-    });
+    const assetContacts = this.linkContactForm.controls.roles.value.map(
+      (role) =>
+        ({
+          id: this.linkContactForm.controls.linkedContact.value as number,
+          role,
+        }) satisfies AssetContact,
+    );
     this.linkContact.emit(assetContacts);
   }
 

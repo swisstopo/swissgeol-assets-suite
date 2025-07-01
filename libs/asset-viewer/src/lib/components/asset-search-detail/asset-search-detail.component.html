@@ -1,4 +1,4 @@
-@if (asset$ | async; as assetDetail) {
+@if (asset$ | async; as asset) {
   <div class="header">
     <span translate="search.detailedInformation"></span>
     <button
@@ -13,128 +13,154 @@
   <div class="asset-detail-scroll-container">
     <div class="asset-detail">
       <div class="flex flex-row justify-between mb-4">
-        <div class="text-dark-red font-bold mt-2.5">{{ assetDetail.titlePublic }}</div>
+        <div class="text-dark-red font-bold mt-2.5">{{ asset.title }}</div>
         @if (canUpdate$ | async) {
           <button
             asset-sg-tertiary
             isIcon
             *rxLet="currentLang$; let currentLang"
-            (click)="navigateToAssetEdit(currentLang, assetDetail.assetId)"
+            (click)="navigateToEdit(currentLang, asset.id)"
           >
             <svg-icon key="edit" data-testid="edit-asset-button"></svg-icon>
           </button>
         }
       </div>
       <div class="asset-status">
-        <ng-container *ngIf="assetDetail.isPublic; else internalUse">
+        @if (asset.isPublic) {
           <svg-icon
             [attr.aria-hidden]="false"
             key="success-filled"
             [attr.alt]="'search.usageCode.public' | translate"
           />
-        </ng-container>
-        <ng-template #internalUse>
+        } @else {
           <svg-icon
             [attr.aria-hidden]="false"
             key="warning-filled"
             [attr.alt]="'search.usageCode.internal' | translate"
           />
-        </ng-template>
+        }
       </div>
-      <table class="asset-details" *rxLet="filesByType$; let files">
-        <tr *ngIf="files.Normal.length > 0">
-          <th translate="search.file"></th>
-          <td>
-            <ul asset-sg-asset-viewer-files [assetId]="assetDetail.assetId" [files]="files.Normal" type="Normal"></ul>
-          </td>
-        </tr>
+      <table class="asset-details">
+        @if (normalFiles$ | async; as normalFiles) {
+          <tr *ngIf="normalFiles.length > 0">
+            <th translate="search.file"></th>
+            <td>
+              <ul asset-sg-asset-viewer-files [assetId]="asset.id" [files]="normalFiles"></ul>
+            </td>
+          </tr>
+        }
         <tr>
           <th translate="search.originalTitle"></th>
-          <td>{{ assetDetail.titleOriginal }}</td>
+          <td>{{ asset.title }}</td>
         </tr>
         <tr>
           <th translate="search.kind"></th>
-          <td>{{ assetDetail.assetKindItem | valueItemName }}</td>
+          <td>{{ asset.kindCode | reference: "assetKinds" }}</td>
         </tr>
         <tr>
           <th translate="search.createdDate"></th>
-          <td>{{ assetDetail.createDate | assetSgDate }}</td>
+          <td>{{ asset.createdAt | assetSgDate }}</td>
         </tr>
         <tr>
           <th translate="search.alternativeId"></th>
           <td>
-            <ng-container *ngIf="assetDetail.ids.length === 0">&ndash;</ng-container>
-            <span class="line" *rxFor="let id of assetDetail.ids">{{ id.id + " [" + id.description + "]" }}</span>
+            @if (asset.identifiers.length === 0) {
+              &ndash;
+            }
+            @for (identifier of asset.identifiers; track identifier.id) {
+              <span class="line">
+                {{ identifier.value + " [" + identifier.description + "]" }}
+              </span>
+            }
           </td>
         </tr>
         <tr>
           <th translate="search.contacts"></th>
           <td>
-            <ng-container *ngIf="assetDetail.assetContacts.length === 0">&ndash;</ng-container>
-            <ul [class.single-entry]="assetDetail.assetContacts.length === 1">
-              <li *rxFor="let contact of assetDetail.assetContacts">
-                {{ "contactRoles." + contact.role | translate }}: <br />
-                {{ contact.name }} <br />
-                {{ contact.locality }} <br />
-                {{ contact.contactKindItem | valueItemName }}
-              </li>
+            <ng-container *ngIf="asset.contacts.length === 0">&ndash;</ng-container>
+            <ul [class.single-entry]="asset.contacts.length === 1">
+              @for (contact of contacts$ | async; track contact.id + " " + contact.role) {
+                <li>
+                  {{ "contactRoles." + contact.role | translate }}: <br />
+                  {{ contact.name }} <br />
+                  {{ contact.locality }} <br />
+                  {{ contact.kindCode | reference: "contactKinds" }}
+                </li>
+              }
             </ul>
           </td>
         </tr>
-        <tr *ngIf="files.Legal.length > 0">
-          <th translate="search.legalFile"></th>
-          <td>
-            <ul asset-sg-asset-viewer-files [assetId]="assetDetail.assetId" [files]="files.Legal" type="Legal"></ul>
-          </td>
-        </tr>
+
+        @if (legalFiles$ | async; as legalFiles) {
+          <tr *ngIf="legalFiles.length > 0">
+            <th translate="search.legalFile"></th>
+            <td>
+              <ul asset-sg-asset-viewer-files [assetId]="asset.id" [files]="legalFiles" isLegal></ul>
+            </td>
+          </tr>
+        }
         <tr>
           <th translate="search.subject"></th>
           <td>
-            <ng-container *ngIf="assetDetail.manCatLabels.length === 0">&ndash;</ng-container>
-            <ng-container *rxFor="let manCatLabel of assetDetail.manCatLabels; let last = last">
-              {{ (manCatLabel | valueItemName) + (last ? "" : ", ") }}
-            </ng-container>
+            @if (asset.topicCodes.length === 0) {
+              &ndash;
+            }
+            @for (topicCode of asset.topicCodes; track topicCode; let isLast = $last) {
+              {{ (topicCode | reference: "assetTopics") + (isLast ? "" : ", ") }}
+            }
           </td>
         </tr>
         <tr>
           <th translate="search.language"></th>
           <td>
+            @if (asset.languageCodes.length === 0) {
+              &ndash;
+            }
             <ul class="languages">
-              <li *ngFor="let language of assetDetail.languages">{{ language | valueItemName }}</li>
+              @for (languageCode of asset.languageCodes; track languageCode) {
+                <li>
+                  {{ languageCode | reference: "languages" }}
+                </li>
+              }
             </ul>
           </td>
         </tr>
         <tr>
           <th translate="search.format"></th>
-          <td>{{ assetDetail.assetFormatItem | valueItemName }}</td>
+          <td>{{ asset.formatCode | reference: "assetFormats" }}</td>
         </tr>
         <tr>
           <th translate="search.nationalInterest"></th>
           <td>
-            <ng-container *ngIf="assetDetail.typeNatRels.length === 0">&ndash;</ng-container>
-            <span class="line" *rxFor="let typeNatRel of assetDetail.typeNatRels">{{
-              typeNatRel | valueItemName
-            }}</span>
+            @if (asset.nationalInterestTypeCodes.length === 0) {
+              &ndash;
+            }
+            @for (nationalInterestTypeCode of asset.nationalInterestTypeCodes; track nationalInterestTypeCode) {
+              <span class="line">
+                {{ nationalInterestTypeCode | reference: "nationalInterestTypes" }}
+              </span>
+            }
           </td>
         </tr>
-        <tr>
-          <th translate="search.reference"></th>
-          <td>
-            <ng-container *ngIf="assetDetail.referenceAssets.length === 0">&ndash;</ng-container>
-            <ul [class.single-entry]="assetDetail.referenceAssets.length === 1">
-              <li *rxFor="let referenceAsset of assetDetail.referenceAssets">
-                <a
-                  asset-sg-reset
-                  class="line"
-                  (click)="searchForReferenceAsset(referenceAsset.assetId)"
-                  queryParamsHandling="merge"
-                >
-                  {{ referenceAsset.titlePublic }}
-                </a>
-              </li>
-            </ul>
-          </td>
-        </tr>
+        @if (linkedAssets$ | async; as linkedAssets) {
+          <tr>
+            <th translate="search.reference"></th>
+            <td>
+              @if (linkedAssets.length === 0) {
+                &ndash;
+              }
+              <ul [class.single-entry]="linkedAssets.length === 1">
+                @for (linkedAsset of linkedAssets; track linkedAsset.id) {
+                  <li>
+                    <a asset-sg-reset class="line" (click)="selectAsset(linkedAsset.id)" queryParamsHandling="merge">
+                      {{ linkedAsset.title }}
+                    </a>
+                  </li>
+                }
+              </ul>
+            </td>
+          </tr>
+        }
       </table>
     </div>
   </div>
