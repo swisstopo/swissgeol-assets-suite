@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core';
-import { AuthService, AuthState, CURRENT_LANG } from '@asset-sg/client-shared';
-import { TranslateService } from '@ngx-translate/core';
+import { AuthService, AuthState, LanguageService } from '@asset-sg/client-shared';
+import { Language } from '@swissgeol/ui-core';
 
 @Component({
   selector: 'app-splash-screen',
@@ -10,15 +10,17 @@ import { TranslateService } from '@ngx-translate/core';
 })
 export class SplashScreenComponent {
   readonly authService = inject(AuthService);
-  readonly currentLang$ = inject(CURRENT_LANG);
-  private readonly translateService = inject(TranslateService);
+
+  private readonly languageService = inject(LanguageService);
+
+  public readonly languageInfos$ = this.languageService.languageInfos$;
 
   get host(): string {
     return window.location.host;
   }
 
-  selectLanguage(language: string): void {
-    this.translateService.use(language);
+  selectLanguage(language: Language): void {
+    this.languageService.setLanguage(language);
   }
 
   protected readonly AuthState = AuthState;

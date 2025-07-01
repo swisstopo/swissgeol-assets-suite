@@ -1,8 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
-import { Lang } from '@asset-sg/shared';
 import { filter } from 'rxjs';
-import { CURRENT_LANG } from '../utils';
+import { LanguageService } from './language.service';
 
 @Injectable({ providedIn: 'root' })
 export class RoutingService {
@@ -10,8 +9,7 @@ export class RoutingService {
   private previousUrl: string | null = null;
   private currentUrl: string;
 
-  private currentLang: Lang = 'de';
-  private readonly currentLang$ = inject(CURRENT_LANG);
+  private readonly languageService = inject(LanguageService);
 
   constructor() {
     this.currentUrl = this.router.url;
@@ -19,14 +17,10 @@ export class RoutingService {
       this.previousUrl = this.currentUrl;
       this.currentUrl = event.url;
     });
-
-    this.currentLang$.subscribe((lang) => {
-      this.currentLang = lang;
-    });
   }
 
   public rootPath(): string {
-    return `/${this.currentLang}`;
+    return `/${this.languageService.language}`;
   }
 
   public async navigateToRoot(): Promise<void> {

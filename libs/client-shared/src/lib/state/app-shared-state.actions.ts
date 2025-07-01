@@ -1,4 +1,3 @@
-import { Lang } from '@asset-sg/shared';
 import {
   Asset,
   AssetId,
@@ -8,10 +7,7 @@ import {
   SimpleWorkgroup,
   User,
 } from '@asset-sg/shared/v2';
-import * as RD from '@devexperts/remote-data-ts';
 import { createAction, props } from '@ngrx/store';
-
-import { ApiError } from '../utils';
 
 export const loadReferenceData = createAction('[App Shared State] Load Reference Data');
 export const setReferenceData = createAction(
@@ -21,7 +17,7 @@ export const setReferenceData = createAction(
 
 export const storeContact = createAction('[App Shared State] Store Contact', props<{ contact: Contact }>());
 
-export const loadUserProfile = createAction('[App Shared State] Load User Profile');
+export const loadUser = createAction('[App Shared State] Load User');
 
 export const setAnonymousMode = createAction('[App Shared State] Set Viewer Mode');
 
@@ -30,10 +26,7 @@ export const setTrackingConsent = createAction(
   props<{ hasConsented: boolean }>(),
 );
 
-export const setUserProfile = createAction(
-  '[App Shared State] Set User Profile',
-  props<RD.RemoteData<ApiError, User>>(),
-);
+export const setUser = createAction('[App Shared State] Set User', props<User>());
 
 export const loadWorkgroups = createAction('[App Shared State] Load Workgroups');
 export const setWorkgroups = createAction(
@@ -42,8 +35,6 @@ export const setWorkgroups = createAction(
 );
 
 export const logout = createAction('[App Shared State] Logout');
-
-export const setLang = createAction('[App Shared State] Set Lang', props<{ lang: Lang }>());
 
 export const setCurrentAsset = createAction(
   '[Asset Search] Set Current Asset',

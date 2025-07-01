@@ -5,7 +5,6 @@ import { ActivatedRoute, ParamMap } from '@angular/router';
 import { Filter, fromAppShared, TranslationKey } from '@asset-sg/client-shared';
 import { isNotNull } from '@asset-sg/core';
 import { Role, SimpleWorkgroup, User, Workgroup, WorkgroupId } from '@asset-sg/shared/v2';
-import * as RD from '@devexperts/remote-data-ts';
 import { Store } from '@ngrx/store';
 import { combineLatestWith, filter, map, Observable } from 'rxjs';
 import * as actions from '../../state/admin.actions';
@@ -43,8 +42,7 @@ export class UserEditComponent extends AbstractAdminTableComponent<WorkgroupOfUs
   private readonly workgroups$ = this.store.select(selectWorkgroups);
   private readonly user$ = this.store.select(selectSelectedUser);
 
-  public readonly isCurrentUser$: Observable<boolean> = this.store.select(fromAppShared.selectRDUserProfile).pipe(
-    map((currentUser) => (RD.isSuccess(currentUser) ? currentUser.value : null)),
+  public readonly isCurrentUser$: Observable<boolean> = this.store.select(fromAppShared.selectUser).pipe(
     filter(isNotNull),
     combineLatestWith(this.user$.pipe(filter(isNotNull))),
     map(([currentUser, user]) => currentUser.id === user.id),

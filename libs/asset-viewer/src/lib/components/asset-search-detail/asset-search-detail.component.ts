@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { appSharedStateActions, can$, CURRENT_LANG, fromAppShared } from '@asset-sg/client-shared';
+import { appSharedStateActions, can$, fromAppShared, LanguageService } from '@asset-sg/client-shared';
 import { isNotNull } from '@asset-sg/core';
 import { AssetContactRole, AssetEditPolicy, AssetFile, AssetId, Contact, LinkedAsset } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
@@ -16,7 +16,8 @@ import { AppStateWithAssetSearch } from '../../state/asset-search/asset-search.r
 })
 export class AssetSearchDetailComponent {
   private readonly store = inject(Store<AppStateWithAssetSearch>);
-  public readonly currentLang$ = inject(CURRENT_LANG);
+  private readonly languageService = inject(LanguageService);
+  public readonly language$ = this.languageService.language$;
   public readonly asset$ = this.store.select(fromAppShared.selectCurrentAsset);
 
   public readonly contacts$: Observable<Array<Contact & { role: AssetContactRole }>> = this.asset$.pipe(

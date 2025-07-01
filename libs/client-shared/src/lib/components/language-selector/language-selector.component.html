@@ -1,25 +1,25 @@
-@if (currentLang$ | async; as lang) {
+@if (language$ | async; as lang) {
   <button mat-button type="button" class="language" [matMenuTriggerFor]="languageMenu">
-    {{ lang.lang }}
+    {{ lang }}
 
     <svg-icon key="arrow-down" class="open" />
     <svg-icon key="arrow-up" class="close" />
   </button>
 }
 <mat-menu #languageMenu="matMenu" backdropClass="languages" xPosition="before">
-  @for (language of languages$ | async; track language.lang) {
+  @for (info of languagesInfos$ | async; track info.language) {
     <a
       asset-sg-reset
-      [routerLink]="language.params"
-      [queryParams]="language.queryParams"
+      [routerLink]="info.path"
+      queryParamsHandling="preserve"
       [preserveFragment]="true"
-      [class.is-active]="language.isActive"
+      [class.is-active]="info.isActive"
     >
       <span class="icon">
         <svg-icon key="checkmark" />
       </span>
       <span class="name">
-        {{ language.lang }}
+        {{ info.language }}
       </span>
     </a>
   }

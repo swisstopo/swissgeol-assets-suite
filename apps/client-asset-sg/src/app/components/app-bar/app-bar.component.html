@@ -13,11 +13,11 @@
   </button>
 
   <mat-menu #profileMenu="matMenu" backdropClass="profile">
-    <ng-container *rxLet="user$; let user">
+    @if (user$ | async; as user) {
       <div>{{ user.firstName }} {{ user.lastName }}</div>
       <div>
         <button asset-sg-secondary translate (click)="logout()">logout</button>
       </div>
-    </ng-container>
+    }
   </mat-menu>
 </ng-container>

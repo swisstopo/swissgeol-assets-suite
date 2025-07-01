@@ -7,12 +7,12 @@ import {
   AppSharedState,
   ConfirmDialogComponent,
   ConfirmDialogData,
-  CURRENT_LANG,
   fromAppShared,
+  LanguageService,
   ROUTER_SEGMENTS,
   RoutingService,
 } from '@asset-sg/client-shared';
-import { Geom, GeomFromGeomText, Lang, LV95, Studies, Study } from '@asset-sg/shared';
+import { Geom, GeomFromGeomText, LV95, Studies, Study } from '@asset-sg/shared';
 import {
   Asset,
   AssetContact,
@@ -90,23 +90,22 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
   public activeTab: Tab = Tab.General;
   protected availableTabs: Tab[] = [];
   protected readonly WorkflowStatus = WorkflowStatus;
-  private currentLang: Lang = 'de';
   protected isLoading = false;
 
   private readonly store = inject(Store<AppSharedState>);
   private readonly route = inject(ActivatedRoute);
   private readonly routingService = inject(RoutingService);
+  private readonly languageService = inject(LanguageService);
   private readonly assetEditorService = inject(AssetEditorService);
   private readonly assetSearchService = inject(AssetSearchService);
   private readonly dialogService = inject(MatDialog);
   private readonly router = inject(Router);
-  private readonly currentLang$ = inject(CURRENT_LANG);
+
   private readonly routerSegments$ = inject(ROUTER_SEGMENTS);
 
   private readonly subscriptions: Subscription = new Subscription();
 
   public ngOnInit() {
-    this.subscriptions.add(this.currentLang$.subscribe((lang) => (this.currentLang = lang)));
     this.subscriptions.add(
       this.routerSegments$
         .pipe(
@@ -409,7 +408,7 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
           if (this.mode === EditorMode.Create) {
             // When the asset has just been created, then we want to navigate to its edit page.
             // Note that this won't reload this component - it's simply a "cosmetic" change.
-            this.router.navigate([this.currentLang, 'asset-admin', asset.id], { replaceUrl: true }).then();
+            this.router.navigate([this.languageService.language, 'asset-admin', asset.id], { replaceUrl: true }).then();
           }
           this.mode = EditorMode.Edit;
           this.store.dispatch(actions.updateAsset({ asset, geometries }));
@@ -421,7 +420,7 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
     if (
       this.form === undefined ||
       !this.form.dirty ||
-      targetRoute.url.startsWith(`/${this.currentLang}/asset-admin/${this.asset?.id ?? 'new'}`)
+      targetRoute.url.startsWith(`/${this.languageService.language}/asset-admin/${this.asset?.id ?? 'new'}`)
     ) {
       return true;
     }

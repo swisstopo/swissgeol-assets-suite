@@ -3,12 +3,10 @@
   <asset-sg-drawer>
     <asset-sg-drawer-panel widthPercentageOfViewPanel="0.3" [display]="true">
       <div class="flex flex-column pl-2 pt-4 drawer-panel">
-        <ng-container *rxLet="currentLang$; let currentLang">
-          <h3 translate>edit.userManagementHeading</h3>
-          <a asset-sg-primary [routerLink]="'/' + currentLang + '/admin/users'" class="self-start" translate>
-            edit.userManagementButton
-          </a>
-        </ng-container>
+        <h3 translate>edit.userManagementHeading</h3>
+        <a asset-sg-primary [routerLink]="'/admin/users' | localizePath" class="self-start" translate>
+          edit.userManagementButton
+        </a>
 
         <asset-sg-editor-sync />
       </div>

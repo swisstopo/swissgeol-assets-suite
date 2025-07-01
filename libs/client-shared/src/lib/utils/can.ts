@@ -1,10 +1,9 @@
 import { inject } from '@angular/core';
 import { Policy } from '@asset-sg/shared/v2';
-import * as RD from '@devexperts/remote-data-ts';
 import { Store } from '@ngrx/store';
 import { map, Observable, of, shareReplay, switchMap } from 'rxjs';
 import { Class } from 'type-fest';
-import { selectRDUserProfile } from '../state/app-shared-state.selectors';
+import { selectUser } from '../state/app-shared-state.selectors';
 
 export function can$<T, P extends Policy<T>>(policy: Class<P>, check: (policy: P) => boolean): Observable<boolean>;
 export function can$<T, P extends Policy<T>, TR extends T>(
@@ -17,9 +16,7 @@ export function can$<T, P extends Policy<T>>(
   checkOrRecord: unknown,
   checkOrNone?: (policy: P, record: T) => boolean,
 ): Observable<boolean> {
-  const user$ = inject(Store)
-    .select(selectRDUserProfile)
-    .pipe(map((currentUser) => (RD.isSuccess(currentUser) ? currentUser.value : null)));
+  const user$ = inject(Store).select(selectUser);
   if (checkOrNone === undefined) {
     const check = checkOrRecord as (policy: P) => boolean;
     return user$.pipe(

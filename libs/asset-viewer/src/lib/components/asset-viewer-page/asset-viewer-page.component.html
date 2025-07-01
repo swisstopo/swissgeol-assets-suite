@@ -15,7 +15,7 @@
       #searchInput
       class="search-input"
       [placeholder]="'search.textSearchFieldPlaceholder' | translate"
-      (keydown)="_searchTextKeyDown$.next($event)"
+      (keydown)="searchTextKeyDown$.next($event)"
     />
   </div>
 </ng-template>

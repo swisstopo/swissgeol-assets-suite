@@ -33,7 +33,7 @@ export class AppBarComponent implements OnInit {
 
   public readonly isAnonymous$ = this.store.select(fromAppShared.selectIsAnonymousMode);
 
-  public readonly user$ = this.authService.getUserProfile$();
+  public readonly user$ = this.store.select(fromAppShared.selectUser);
 
   private readonly _ngOnInit$ = new Subject<void>();
 

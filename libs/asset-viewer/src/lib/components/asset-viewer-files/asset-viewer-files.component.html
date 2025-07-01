@@ -2,7 +2,9 @@
   @if (assetFile.legalDocCode != null) {
     <span class="legal-doc-item-code"> {{ assetFile.legalDocCode | reference: "legalDocs" }}: </span>
   }
-  <span class="name"> {{ assetFile | fileName }} ({{ assetFile | fileMetadata: locale }}) </span>
+  @if (locale$ | async; as locale) {
+    <span class="name"> {{ assetFile | fileName }} ({{ assetFile | fileMetadata: locale }}) </span>
+  }
   <button
     asset-sg-icon-button
     *ngIf="!isActiveFileDownload(assetFile, 'open-in-tab'); else downloadSpinner"

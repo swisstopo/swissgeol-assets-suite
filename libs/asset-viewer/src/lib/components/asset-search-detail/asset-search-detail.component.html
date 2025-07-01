@@ -18,8 +18,8 @@
           <button
             asset-sg-tertiary
             isIcon
-            *rxLet="currentLang$; let currentLang"
-            (click)="navigateToEdit(currentLang, asset.id)"
+            *rxLet="language$; let language"
+            (click)="navigateToEdit(language, asset.id)"
           >
             <svg-icon key="edit" data-testid="edit-asset-button"></svg-icon>
           </button>

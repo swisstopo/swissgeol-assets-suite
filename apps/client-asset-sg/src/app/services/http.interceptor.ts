@@ -15,10 +15,11 @@ import { catchError, EMPTY, from, Observable, Subscription, switchMap } from 'rx
 
 @Injectable()
 export class HttpInterceptor implements AngularHttpInterceptor, OnDestroy {
-  private _oauthService = inject(OAuthService);
-  private readonly store = inject(Store);
+  private readonly oauthService = inject(OAuthService);
   private readonly authService = inject(AuthService);
   private readonly translateService = inject(TranslateService);
+
+  private readonly store = inject(Store);
   private readonly router = inject(Router);
 
   private readonly subscription = new Subscription();
@@ -38,19 +39,18 @@ export class HttpInterceptor implements AngularHttpInterceptor, OnDestroy {
 
   intercept(req: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
     const token = sessionStorage.getItem('access_token');
-
     if (
-      (this._oauthService.issuer && req.url.includes(this._oauthService.issuer)) ||
-      (this._oauthService.tokenEndpoint && req.url.includes(this._oauthService.tokenEndpoint)) ||
+      (this.oauthService.issuer && req.url.includes(this.oauthService.issuer)) ||
+      (this.oauthService.tokenEndpoint && req.url.includes(this.oauthService.tokenEndpoint)) ||
       req.url === 'api/config' ||
       this.isAnonymousMode
     ) {
       return next.handle(req);
-    } else if (token && !this._oauthService.hasValidAccessToken()) {
-      this._oauthService.logOut({
-        client_id: this._oauthService.clientId,
+    } else if (token && !this.oauthService.hasValidAccessToken()) {
+      this.oauthService.logOut({
+        client_id: this.oauthService.clientId,
         redirect_uri: window.location.origin,
-        response_type: this._oauthService.responseType,
+        response_type: this.oauthService.responseType,
       });
       return EMPTY;
     } else if (!token) {

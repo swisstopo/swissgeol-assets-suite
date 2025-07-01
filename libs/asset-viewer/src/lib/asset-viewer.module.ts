@@ -24,7 +24,7 @@ import {
 } from '@angular/material/table';
 import { MatTooltip } from '@angular/material/tooltip';
 import { MatDateFnsModule } from '@angular/material-date-fns-adapter';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Routes } from '@angular/router';
 import {
   AnchorComponent,
   AnimateNumberComponent,
@@ -64,6 +64,13 @@ import { ViewerParamsService } from './services/viewer-params.service';
 import { assetSearchReducer } from './state/asset-search/asset-search.reducer';
 import { mapControlReducer } from './state/map-control/map-control.reducer';
 
+const routes: Routes = [
+  {
+    path: '',
+    component: AssetViewerPageComponent,
+  },
+];
+
 @NgModule({
   declarations: [
     AssetViewerPageComponent,
@@ -80,12 +87,7 @@ import { mapControlReducer } from './state/map-control/map-control.reducer';
   imports: [
     CommonModule,
     FavoritesModule,
-    RouterModule.forChild([
-      {
-        path: '',
-        component: AssetViewerPageComponent,
-      },
-    ]),
+    RouterModule.forChild(routes),
     TranslateModule.forChild(),
     StoreModule.forFeature('assetSearch', assetSearchReducer),
     StoreModule.forFeature('mapControl', mapControlReducer),

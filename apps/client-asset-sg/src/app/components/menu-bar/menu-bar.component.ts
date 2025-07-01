@@ -4,7 +4,6 @@ import { can$, fromAppShared, ROUTER_SEGMENTS } from '@asset-sg/client-shared';
 import { AssetEditPolicy } from '@asset-sg/shared/v2';
 import { UntilDestroy } from '@ngneat/until-destroy';
 import { Store } from '@ngrx/store';
-import { TranslateService } from '@ngx-translate/core';
 import { firstValueFrom, map, Observable, startWith } from 'rxjs';
 
 // eslint-disable-next-line @nx/enforce-module-boundaries
@@ -38,7 +37,6 @@ export class MenuBarComponent {
   private readonly store = inject(Store<AppState>);
 
   private readonly routerSegments$ = inject(ROUTER_SEGMENTS);
-  readonly translateService = inject(TranslateService);
 
   readonly activeFilterCount$ = this.store
     .select(selectActiveFilters)
@@ -80,8 +78,8 @@ export class MenuBarComponent {
   }
 
   goToViewer({ favoritesOnly }: { favoritesOnly: boolean }): void {
-    const basePath = `/${this.translateService.currentLang}`;
-    const favoritesPath = `${basePath}/favorites`;
+    const basePath = '/';
+    const favoritesPath = '/favorites';
 
     const [sourcePath, targetPath] = favoritesOnly ? [basePath, favoritesPath] : [favoritesPath, basePath];
 

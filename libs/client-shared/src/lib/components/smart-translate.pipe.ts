@@ -1,8 +1,6 @@
-import { inject, OnDestroy, Pipe, PipeTransform } from '@angular/core';
-import { Lang } from '@asset-sg/shared';
+import { inject, Pipe, PipeTransform } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
-import { Subscription } from 'rxjs';
-import { CURRENT_LANG } from '../utils';
+import { LanguageService } from '../services';
 
 /**
  * A pipe that applies a different kind of translation depending on the value passed to it.
@@ -14,23 +12,9 @@ import { CURRENT_LANG } from '../utils';
   name: 'smartTranslate',
   pure: false,
 })
-export class SmartTranslatePipe implements PipeTransform, OnDestroy {
+export class SmartTranslatePipe implements PipeTransform {
   private readonly translateService = inject(TranslateService);
-  private readonly currentLang$ = inject(CURRENT_LANG);
-  private currentLang: Lang = 'de';
-  private readonly subscription = new Subscription();
-
-  constructor() {
-    this.subscription.add(
-      this.currentLang$.subscribe((currentLang) => {
-        this.currentLang = currentLang;
-      }),
-    );
-  }
-
-  ngOnDestroy(): void {
-    this.subscription.unsubscribe();
-  }
+  private readonly languageService = inject(LanguageService);
 
   transform(value: Translation): string {
     if (typeof value === 'string') {
@@ -39,7 +23,7 @@ export class SmartTranslatePipe implements PipeTransform, OnDestroy {
     if (isTranslationKey(value)) {
       return this.translateService.instant(value.key);
     }
-    return value[this.currentLang];
+    return value[this.languageService.language];
   }
 }
 

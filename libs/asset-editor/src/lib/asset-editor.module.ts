@@ -29,8 +29,9 @@ import {
   MatTable,
 } from '@angular/material/table';
 import { MatTooltip } from '@angular/material/tooltip';
-import { CanActivateFn, CanDeactivateFn, RouterModule } from '@angular/router';
+import { CanActivateFn, RouterModule, Routes } from '@angular/router';
 import {
+  isAdminGuard,
   AdminOnlyDirective,
   AnchorComponent,
   ButtonComponent,
@@ -44,6 +45,7 @@ import {
   DrawerPanelComponent,
   FileNamePipe,
   fromAppShared,
+  LocalizePathPipe,
   PageHeaderComponent,
   SelectComponent,
   SelectOptionComponent,
@@ -87,11 +89,52 @@ import { AddReferenceDialogComponent } from './components/asset-editor-tabs/asse
 import { AssetEditorReferencesComponent } from './components/asset-editor-tabs/asset-editor-references/asset-editor-references.component';
 import { AssetEditorStatusComponent } from './components/asset-editor-tabs/asset-editor-status/asset-editor-status.component';
 import { Lv95xWithoutPrefixPipe, Lv95yWithoutPrefixPipe } from './components/lv95-without-prefix';
+import { canLeaveEditGuard } from './guards/can-leave-edit.guard';
 import { AssetEditorEffects } from './state/asset-editor.effects';
 import { assetEditorReducer } from './state/asset-editor.reducer';
 
-export const canLeaveEdit: CanDeactivateFn<AssetEditorPageComponent> = (component, _ars, _crss, target) =>
-  component.canDeactivate(target);
+const routes: Routes = [
+  {
+    path: '',
+    pathMatch: 'full',
+    component: AssetEditorLaunchComponent,
+
+    // Only users that can create assets are permitted to see the asset admin page.
+    canActivate: [isAdminGuard],
+  },
+  {
+    path: ':assetId',
+    children: [
+      {
+        path: '',
+        pathMatch: 'full',
+        redirectTo: 'general',
+      },
+      {
+        path: ':tab',
+        component: AssetEditorPageComponent,
+        canDeactivate: [canLeaveEditGuard],
+      },
+    ],
+
+    // Only users that can create new assets are permitted to access the new asset page.
+    // Only users that can edit the selected asset are permitted to access the edit asset page.
+    canActivate: [
+      (() => {
+        const store = inject(Store);
+        return combineLatest([
+          store.select(fromAppShared.selectCurrentAsset),
+          store.select(fromAppShared.selectUser).pipe(filter(isNotNull)),
+        ]).pipe(
+          map(([assetEditDetail, user]) => {
+            const policy = new AssetEditPolicy(user);
+            return assetEditDetail == null ? policy.canCreate() : policy.canUpdate(assetEditDetail);
+          }),
+        );
+      }) satisfies CanActivateFn,
+    ],
+  },
+];
 
 @NgModule({
   declarations: [
@@ -119,56 +162,7 @@ export const canLeaveEdit: CanDeactivateFn<AssetEditorPageComponent> = (componen
   imports: [
     CommonModule,
     StoreModule.forFeature('editor', assetEditorReducer),
-    RouterModule.forChild([
-      {
-        path: '',
-        pathMatch: 'full',
-        component: AssetEditorLaunchComponent,
-
-        // Only users that can create assets are permitted to see the asset admin page.
-        canActivate: [
-          (() => {
-            const store = inject(Store);
-            return store.select(fromAppShared.selectUser).pipe(
-              filter(isNotNull),
-              map((user) => user.isAdmin),
-            );
-          }) as CanActivateFn,
-        ],
-      },
-      {
-        path: ':assetId',
-        children: [
-          {
-            path: '',
-            pathMatch: 'full',
-            redirectTo: 'general',
-          },
-          {
-            path: ':tab',
-            component: AssetEditorPageComponent,
-            canDeactivate: [canLeaveEdit],
-          },
-        ],
-
-        // Only users that can create new assets are permitted to access the new asset page.
-        // Only users that can edit the selected asset are permitted to access the edit asset page.
-        canActivate: [
-          (() => {
-            const store = inject(Store);
-            return combineLatest([
-              store.select(fromAppShared.selectCurrentAsset),
-              store.select(fromAppShared.selectUser).pipe(filter(isNotNull)),
-            ]).pipe(
-              map(([assetEditDetail, user]) => {
-                const policy = new AssetEditPolicy(user);
-                return assetEditDetail == null ? policy.canCreate() : policy.canUpdate(assetEditDetail);
-              }),
-            );
-          }) as CanActivateFn,
-        ],
-      },
-    ]),
+    RouterModule.forChild(routes),
     TranslateModule.forChild(),
     EffectsModule.forFeature([AssetEditorEffects]),
     FormsModule,
@@ -235,6 +229,7 @@ export const canLeaveEdit: CanDeactivateFn<AssetEditorPageComponent> = (componen
     MatDialogActions,
     SwissgeolCoreModule,
     SelectOptionComponent,
+    LocalizePathPipe,
   ],
   providers: [
     { provide: MAT_DATE_LOCALE, useValue: de },

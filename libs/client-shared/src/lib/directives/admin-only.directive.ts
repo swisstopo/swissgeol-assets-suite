@@ -1,7 +1,6 @@
 import { ChangeDetectorRef, Directive, inject, OnDestroy, OnInit, TemplateRef, ViewContainerRef } from '@angular/core';
-import * as RD from '@devexperts/remote-data-ts';
 import { Store } from '@ngrx/store';
-import { map, Subscription } from 'rxjs';
+import { Subscription } from 'rxjs';
 import { AppState, fromAppShared } from '../state';
 
 @Directive({
@@ -22,17 +21,14 @@ export class AdminOnlyDirective implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.subscription.add(
-      this.store
-        .select(fromAppShared.selectRDUserProfile)
-        .pipe(map(RD.toNullable))
-        .subscribe((user) => {
-          if (user != null && user.isAdmin) {
-            this.viewContainer.createEmbeddedView(this.templateRef);
-          } else {
-            this.viewContainer.clear();
-          }
-          this.ref.markForCheck();
-        }),
+      this.store.select(fromAppShared.selectUser).subscribe((user) => {
+        if (user != null && user.isAdmin) {
+          this.viewContainer.createEmbeddedView(this.templateRef);
+        } else {
+          this.viewContainer.clear();
+        }
+        this.ref.markForCheck();
+      }),
     );
   }
 
