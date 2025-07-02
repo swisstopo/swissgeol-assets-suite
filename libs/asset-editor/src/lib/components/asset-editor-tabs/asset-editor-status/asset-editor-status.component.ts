@@ -29,6 +29,8 @@ export class AssetEditorStatusComponent implements OnChanges {
   private readonly workflow$ = new BehaviorSubject<Workflow | null>(null);
   private readonly store = inject(Store);
 
+  @Input() isRestricted = false;
+
   @Input({ required: true })
   set workflow(value: Workflow | null) {
     this.workflow$.next(value);
