@@ -1,5 +1,5 @@
 import { Role as PrismaRole } from '@prisma/client';
-import { SimpleUser } from '@swisstopo/swissgeol-ui-core';
+import { SimpleUser } from '@swissgeol/ui-core';
 import { Data, Model } from './base/model';
 import { getRoleIndex, Role, WorkgroupId } from './workgroup';
 

@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { AssetId, Workflow, WorkflowSchema } from '@asset-sg/shared/v2';
 import { WorkflowSelection } from '@prisma/client';
-import { Id } from '@swisstopo/swissgeol-ui-core';
+import { Id } from '@swissgeol/ui-core';
 import { plainToInstance } from 'class-transformer';
 import { map, Observable } from 'rxjs';
 

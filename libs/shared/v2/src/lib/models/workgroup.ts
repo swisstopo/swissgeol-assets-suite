@@ -1,4 +1,4 @@
-import { getRoleIndex, Role, SimpleUser } from '@swisstopo/swissgeol-ui-core';
+import { getRoleIndex, Role, SimpleUser } from '@swissgeol/ui-core';
 import { Data, Model } from './base/model';
 import { UserId } from './user';
 

@@ -1,4 +1,4 @@
-import { Role, SimpleUser } from '@swisstopo/swissgeol-ui-core';
+import { Role, SimpleUser } from '@swissgeol/ui-core';
 import { IsBoolean, IsEnum, IsString } from 'class-validator';
 import { User, UserData, UserId } from '../models/user';
 import { WorkgroupId } from '../models/workgroup';

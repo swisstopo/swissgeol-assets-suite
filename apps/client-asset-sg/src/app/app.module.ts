@@ -41,8 +41,8 @@ import { ForModule } from '@rx-angular/template/for';
 import { LetModule } from '@rx-angular/template/let';
 import { PushModule } from '@rx-angular/template/push';
 
-import { Language, SwissgeolCoreI18n } from '@swisstopo/swissgeol-ui-core';
-import { SwissgeolCoreModule } from '@swisstopo/swissgeol-ui-core-angular';
+import { Language, SwissgeolCoreI18n } from '@swissgeol/ui-core';
+import { SwissgeolCoreModule } from '@swissgeol/ui-core-angular';
 import { environment } from '../environments/environment';
 import { adminGuard } from './app-guards';
 import { AppComponent } from './app.component';

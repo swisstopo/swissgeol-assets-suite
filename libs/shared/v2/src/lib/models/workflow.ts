@@ -2,7 +2,7 @@ import {
   WorkflowSelection as WorkflowSelectionFromPrisma,
   WorkflowStatus as WorkflowStatusFromPrisma,
 } from '@prisma/client';
-import { GenericWorkflow, WorkflowChange, WorkflowStatus } from '@swisstopo/swissgeol-ui-core';
+import { GenericWorkflow, WorkflowChange, WorkflowStatus } from '@swissgeol/ui-core';
 import { isDeepEqual } from '../utils/is-deep-equal';
 import { Asset, AssetId } from './asset';
 import { AssetContactRole } from './contact';

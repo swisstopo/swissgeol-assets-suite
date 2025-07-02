@@ -11,9 +11,9 @@ import {
 } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
 import { TranslateService } from '@ngx-translate/core';
-import { type SgcWorkflowSelectionEntry, WorkflowChange } from '@swisstopo/swissgeol-ui-core';
-import { SgcWorkflowChangeEvent } from '@swisstopo/swissgeol-ui-core/dist/types/components/sgc-workflow/sgc-workflow';
-import { SgcWorkflowSelectionChangeEvent } from '@swisstopo/swissgeol-ui-core/dist/types/components/sgc-workflow/sgc-workflow-selection/sgc-workflow-selection';
+import { type SgcWorkflowSelectionEntry, WorkflowChange } from '@swissgeol/ui-core';
+import { SgcWorkflowChangeEvent } from '@swissgeol/ui-core/dist/types/components/sgc-workflow/sgc-workflow';
+import { SgcWorkflowSelectionChangeEvent } from '@swissgeol/ui-core/dist/types/components/sgc-workflow/sgc-workflow-selection/sgc-workflow-selection';
 import { BehaviorSubject } from 'rxjs';
 import { AssetEditorService } from '../../../services/asset-editor.service';
 import { WorkflowApiService } from '../../../services/workflow-api.service';
