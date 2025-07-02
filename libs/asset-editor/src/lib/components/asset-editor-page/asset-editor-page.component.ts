@@ -10,7 +10,6 @@ import {
   fromAppShared,
   LanguageService,
   ROUTER_SEGMENTS,
-  RoutingService,
 } from '@asset-sg/client-shared';
 import { Geom, GeomFromGeomText, LV95, Studies, Study } from '@asset-sg/shared';
 import {
@@ -94,12 +93,12 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
 
   private readonly store = inject(Store<AppSharedState>);
   private readonly route = inject(ActivatedRoute);
-  private readonly routingService = inject(RoutingService);
+  private readonly router = inject(Router);
+  private readonly dialogService = inject(MatDialog);
+
   private readonly languageService = inject(LanguageService);
   private readonly assetEditorService = inject(AssetEditorService);
   private readonly assetSearchService = inject(AssetSearchService);
-  private readonly dialogService = inject(MatDialog);
-  private readonly router = inject(Router);
 
   private readonly routerSegments$ = inject(ROUTER_SEGMENTS);
 
@@ -258,7 +257,7 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
   }
 
   public navigateToStart() {
-    this.routingService.navigateToRoot().then();
+    this.router.navigate(['/']).then();
   }
 
   public initializeForm() {

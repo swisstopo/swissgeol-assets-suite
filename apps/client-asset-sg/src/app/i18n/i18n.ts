@@ -1,5 +1,5 @@
 import { TranslateLoader } from '@ngx-translate/core';
-import { Language } from '@swisstopo/swissgeol-ui-core';
+import { Language } from '@swissgeol/ui-core';
 import { Observable, of } from 'rxjs';
 
 import { deTranslationMapping } from './de';
