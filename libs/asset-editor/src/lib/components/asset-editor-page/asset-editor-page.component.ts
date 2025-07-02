@@ -298,6 +298,8 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
         workgroupId: asset.workgroupId,
         createdAt: asset.createdAt.toDate(),
         receivedAt: asset.receivedAt.toDate(),
+        isPublic: asset.isPublic ? 'public' : 'restricted',
+        restrictionDate: null,
       });
 
       this.form.controls.references.setValue({
@@ -354,7 +356,7 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
       title: general.title,
       originalTitle: general.originalTitle,
       isOfNationalInterest: general.isOfNationalInterest,
-      isPublic: false, // todo @TIL-EBP: this should be changed dynamically
+      isPublic: general.isPublic === 'public',
       formatCode: general.formatCode,
       kindCode: general.kindCode,
       languageCodes: general.languageCodes,
@@ -494,6 +496,8 @@ const makeForm = () =>
       formatCode: new FormControl<LocalizedItemCode>('', { validators: [Validators.required], nonNullable: true }),
       kindCode: new FormControl<LocalizedItemCode>('', { validators: [Validators.required], nonNullable: true }),
       topicCodes: new FormControl<LocalizedItemCode[]>([], { validators: [Validators.required], nonNullable: true }),
+      isPublic: new FormControl<RestrictionType>('restricted', { nonNullable: true }),
+      restrictionDate: new FormControl<Date | null>(null),
       isOfNationalInterest: new FormControl<boolean>(false, { nonNullable: true }),
       nationalInterestTypeCodes: new FormControl<LocalizedItemCode[]>([], { nonNullable: true }),
       identifiers: new FormControl<Array<AssetIdentifier | AssetIdentifierData>>([], {
@@ -512,6 +516,7 @@ const makeForm = () =>
   });
 
 export type AssetForm = ReturnType<typeof makeForm>;
+export type RestrictionType = 'public' | 'restricted' | 'temporarilyRestricted';
 
 export function validateIdentifiers(control: AbstractControl): ValidationErrors | null {
   const value = control.value as Array<AssetIdentifier | AssetIdentifierData>;
