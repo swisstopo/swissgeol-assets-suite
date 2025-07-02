@@ -3,8 +3,9 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { isArray } from 'class-validator';
+import { Translation } from '../../models/translation.model';
 import { SelectComponent } from '../select';
-import { SmartTranslatePipe, Translation } from '../smart-translate.pipe';
+import { SmartTranslatePipe } from '../smart-translate.pipe';
 
 export interface Filter<T> {
   key: keyof T;

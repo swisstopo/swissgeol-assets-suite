@@ -1,7 +1,7 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { AlertType, appSharedStateActions, AuthService, CURRENT_LANG, showAlert } from '@asset-sg/client-shared';
+import { AlertType, LanguageService, showAlert } from '@asset-sg/client-shared';
 import { User, Workgroup, WorkgroupData } from '@asset-sg/shared/v2';
 import { UntilDestroy } from '@ngneat/until-destroy';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
@@ -15,14 +15,14 @@ import * as actions from './admin.actions';
 @UntilDestroy()
 @Injectable()
 export class AdminEffects {
-  private readonly actions$ = inject(Actions);
   private readonly adminService = inject(AdminService);
-  private readonly authService = inject(AuthService);
+  private readonly languageService = inject(LanguageService);
+  private readonly translate = inject(TranslateService);
+
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly store = inject(Store);
-  private readonly currentLang$ = inject(CURRENT_LANG);
-  private readonly translate = inject(TranslateService);
+  private readonly actions$ = inject(Actions);
 
   public findUser$ = createEffect(() =>
     this.actions$.pipe(
@@ -55,9 +55,9 @@ export class AdminEffects {
       switchMap(({ workgroup }) =>
         this.adminService.createWorkgroup(workgroup).pipe(this.catchWorkgroupError(workgroup)),
       ),
-      withLatestFrom(this.currentLang$),
-      map(([workgroup, currentLang]) => {
-        void this.router.navigate([`/${currentLang}/admin/workgroups/${workgroup.id}`], { relativeTo: this.route });
+      withLatestFrom(this.languageService.language$),
+      map(([workgroup, language]) => {
+        void this.router.navigate([`/${language}/admin/workgroups/${workgroup.id}`], { relativeTo: this.route });
         return actions.addWorkgroup({ workgroup });
       }),
     ),
@@ -98,10 +98,6 @@ export class AdminEffects {
         this.adminService.getWorkgroups().pipe(map((workgroups: Workgroup[]) => actions.setWorkgroups({ workgroups }))),
       ),
     ),
-  );
-
-  public loadUser$ = createEffect(() =>
-    this.actions$.pipe(ofType(actions.setUser, actions.setWorkgroup), map(appSharedStateActions.loadUserProfile)),
   );
 
   private readonly catchWorkgroupError = (data: WorkgroupData): OperatorFunction<Workgroup, Workgroup> =>

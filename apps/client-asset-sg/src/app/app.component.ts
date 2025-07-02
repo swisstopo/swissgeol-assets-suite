@@ -1,6 +1,5 @@
 import { HttpClient } from '@angular/common/http';
 import { Component, HostBinding, inject } from '@angular/core';
-import { Router } from '@angular/router';
 import {
   AppPortalService,
   appSharedStateActions,
@@ -34,7 +33,6 @@ export class AppComponent {
   public readonly authService = inject(AuthService);
   private readonly store = inject(Store<AppState>);
   private readonly configService = inject(ConfigService);
-  private readonly router = inject(Router);
 
   private readonly routerSegments$ = inject(ROUTER_SEGMENTS);
   private readonly hasConsentedToTracking$ = this.store.select(fromAppShared.selectHasConsentedToTracking);

@@ -1,5 +1,5 @@
 <mat-progress-bar *rxIf="isLoading$" mode="indeterminate" class="loading-bar" />
-<asset-sg-page-header *rxLet="currentLang$; let currentLang" (backNavigation)="navigateBack(currentLang)">
+<asset-sg-page-header (backNavigation)="navigateBack()">
   @if (isWorkgroupDetailPage && workgroup) {
     <h2>{{ workgroup.name }}</h2>
     <asset-sg-chip type="secondary"><span translate>workgroup.title</span></asset-sg-chip>

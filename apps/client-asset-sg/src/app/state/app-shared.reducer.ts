@@ -1,14 +1,12 @@
 import { AppSharedState, appSharedStateActions } from '@asset-sg/client-shared';
-import * as RD from '@devexperts/remote-data-ts';
 import { createReducer, on } from '@ngrx/store';
 // eslint-disable-next-line @nx/enforce-module-boundaries
 import { assetSearchActions } from '../../../../../libs/asset-viewer/src';
 
 const initialState: AppSharedState = {
-  rdUserProfile: RD.initial,
+  user: null,
   referenceData: null,
   workgroups: [],
-  lang: 'de',
   isAnonymousMode: false,
   hasConsentedToTracking: false,
   currentAsset: null,
@@ -53,7 +51,7 @@ export const appSharedStateReducer = createReducer(
           : state.currentAsset,
     }),
   ),
-  on(appSharedStateActions.setUserProfile, (state, rdUserProfile): AppSharedState => ({ ...state, rdUserProfile })),
+  on(appSharedStateActions.setUser, (state, user): AppSharedState => ({ ...state, user })),
   on(
     appSharedStateActions.setAnonymousMode,
     (state): AppSharedState => ({
@@ -74,7 +72,6 @@ export const appSharedStateReducer = createReducer(
   ),
   on(appSharedStateActions.setWorkgroups, (state, { workgroups }): AppSharedState => ({ ...state, workgroups })),
   on(appSharedStateActions.logout, (): AppSharedState => initialState),
-  on(appSharedStateActions.setLang, (state, { lang }): AppSharedState => ({ ...state, lang })),
   on(
     appSharedStateActions.storeContact,
     (state, { contact }): AppSharedState => ({

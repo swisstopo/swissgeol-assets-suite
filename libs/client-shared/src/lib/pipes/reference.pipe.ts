@@ -1,5 +1,4 @@
 import { ChangeDetectorRef, inject, OnDestroy, Pipe, PipeTransform } from '@angular/core';
-import { Lang } from '@asset-sg/shared';
 import {
   Contact,
   ContactId,
@@ -11,14 +10,14 @@ import {
   ReferenceDataMapping,
 } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
-import { TranslateService } from '@ngx-translate/core';
 import { Subscription } from 'rxjs';
+import { LanguageService } from '../services';
 import { selectReferenceData } from '../state/app-shared-state.selectors';
 
 @Pipe({ name: 'reference', pure: false, standalone: true })
 export class ReferencePipe implements PipeTransform, OnDestroy {
   private readonly store = inject(Store);
-  private readonly translateService = inject(TranslateService);
+  private readonly languageService = inject(LanguageService);
   private readonly cdRef = inject(ChangeDetectorRef);
 
   private readonly referenceData$ = this.store.select(selectReferenceData);
@@ -28,7 +27,7 @@ export class ReferencePipe implements PipeTransform, OnDestroy {
 
   constructor() {
     this.subscription.add(
-      this.translateService.onLangChange.subscribe(() => {
+      this.languageService.language$.subscribe(() => {
         this.cdRef.markForCheck();
       }),
     );
@@ -65,7 +64,7 @@ export class ReferencePipe implements PipeTransform, OnDestroy {
     if (item === undefined) {
       return '';
     }
-    const text = item.name[this.translateService.currentLang as Lang];
+    const text = item.name[this.languageService.language];
     return text ?? item.name.default;
   }
 }

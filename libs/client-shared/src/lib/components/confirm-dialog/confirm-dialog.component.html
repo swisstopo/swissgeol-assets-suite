@@ -4,7 +4,7 @@
   </div>
   <div mat-dialog-actions class="actions">
     <button asset-sg-secondary (click)="close(false)" translate>cancel</button>
-    <button asset-sg-primary (click)="close(true)" [disabled]="data.isSaveDisabled ?? false">
+    <button asset-sg-primary (click)="close(true)" [disabled]="data.isSaveDisabled">
       {{ data.confirm | translate }}
     </button>
   </div>

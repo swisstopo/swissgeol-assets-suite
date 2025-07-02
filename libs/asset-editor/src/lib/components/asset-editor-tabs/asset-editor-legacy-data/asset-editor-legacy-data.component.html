@@ -1,33 +1,33 @@
 <div class="wrapper">
-  <asset-sg-detail-section [title]="'edit.tabs.asset?.legacyData.infoGeol' | translate">
+  <asset-sg-detail-section [title]="'edit.tabs.legacyData.infoGeol' | translate">
     <div class="content column" content>
       <asset-sg-text-input
         disabled
         [value]="asset?.legacyData?.sgsId?.toString() ?? ''"
-        [title]="'edit.tabs.asset?.legacyData.sgsId' | translate"
+        [title]="'edit.tabs.legacyData.sgsId' | translate"
       ></asset-sg-text-input>
       <asset-sg-text-area
         [rows]="5"
         disabled
         [value]="asset?.legacyData?.data?.toString() ?? ''"
-        [title]="'edit.tabs.asset?.legacyData.data' | translate"
+        [title]="'edit.tabs.legacyData.data' | translate"
       ></asset-sg-text-area>
       <asset-sg-text-area
         [rows]="5"
         disabled
         [value]="asset?.legacyData?.contactData?.toString() ?? ''"
-        [title]="'edit.tabs.asset?.legacyData.contactData' | translate"
+        [title]="'edit.tabs.legacyData.contactData' | translate"
       ></asset-sg-text-area>
       <asset-sg-text-area
         [rows]="5"
         disabled
         [value]="asset?.legacyData?.auxiliaryData?.toString() ?? ''"
-        [title]="'edit.tabs.asset?.legacyData.auxData' | translate"
+        [title]="'edit.tabs.legacyData.auxData' | translate"
       ></asset-sg-text-area>
       <asset-sg-text-input
         disabled
         [value]="asset?.legacyData?.municipality?.toString() ?? ''"
-        [title]="'edit.tabs.asset?.legacyData.municipality' | translate"
+        [title]="'edit.tabs.legacyData.municipality' | translate"
       ></asset-sg-text-input>
     </div>
   </asset-sg-detail-section>

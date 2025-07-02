@@ -1,5 +1,4 @@
 import { ReferenceDataMapping } from '@asset-sg/shared/v2';
-import * as RD from '@devexperts/remote-data-ts';
 import { getRouterSelectors } from '@ngrx/router-store';
 import { createSelector } from '@ngrx/store';
 
@@ -13,9 +12,7 @@ export const selectIsAnonymousMode = createSelector(appSharedFeature, (state) =>
 
 export const selectHasConsentedToTracking = createSelector(appSharedFeature, (state) => state.hasConsentedToTracking);
 
-export const selectRDUserProfile = createSelector(appSharedFeature, (state) => state.rdUserProfile);
-
-export const selectUser = createSelector(selectRDUserProfile, RD.toNullable);
+export const selectUser = createSelector(appSharedFeature, (state) => state.user);
 
 export const selectCurrentAsset = createSelector(appSharedFeature, (state) => state.currentAsset?.asset ?? null);
 export const selectCurrentAssetAndGeometries = createSelector(appSharedFeature, (state) => state.currentAsset);
@@ -49,8 +46,6 @@ export const selectReferenceContacts = createReferenceDataSelector((rd) => rd.co
 export const selectReferenceContactKinds = createReferenceDataSelector((rd) => rd.contactKinds);
 
 export const selectReferenceLegalDocCodes = createReferenceDataSelector((rd) => rd.legalDocs);
-
-export const selectLocale = createSelector(appSharedFeature, (state) => (state.lang === 'en' ? 'en-GB' : 'de-CH'));
 
 export const {
   selectCurrentRoute, // select the current route

@@ -1,11 +1,11 @@
 import { coerceBooleanProperty } from '@angular/cdk/coercion';
 import { HttpClient } from '@angular/common/http';
-import { Component, inject, Input, OnDestroy, OnInit } from '@angular/core';
-import { AlertType, AppState, FileNamePipe, fromAppShared, showAlert } from '@asset-sg/client-shared';
+import { Component, inject, Input } from '@angular/core';
+import { AlertType, AppState, FileNamePipe, LanguageService, showAlert } from '@asset-sg/client-shared';
 import { AssetId, AssetFile } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
 import { TranslateService } from '@ngx-translate/core';
-import { finalize, Subscription } from 'rxjs';
+import { finalize } from 'rxjs';
 
 @Component({
   selector: 'ul[asset-sg-asset-viewer-files]',
@@ -13,7 +13,7 @@ import { finalize, Subscription } from 'rxjs';
   styleUrls: ['./asset-viewer-files.component.scss'],
   standalone: false,
 })
-export class AssetViewerFilesComponent implements OnInit, OnDestroy {
+export class AssetViewerFilesComponent {
   @Input({ required: true })
   assetId!: AssetId;
 
@@ -30,28 +30,11 @@ export class AssetViewerFilesComponent implements OnInit, OnDestroy {
   private readonly httpClient = inject(HttpClient);
 
   private readonly translateService = inject(TranslateService);
+  private readonly languageService = inject(LanguageService);
 
-  public locale!: string;
+  public readonly locale$ = this.languageService.locale$;
 
   public readonly activeFileDownloads = new Set<`${AssetId}/${number}/${DownloadType}`>();
-
-  private readonly subscriptions = new Subscription();
-
-  ngOnInit(): void {
-    this.subscriptions.add(
-      this.store.select(fromAppShared.selectLocale).subscribe((locale) => {
-        this.locale = locale;
-      }),
-    );
-  }
-
-  ngOnDestroy(): void {
-    this.subscriptions.unsubscribe();
-  }
-
-  get isNormal(): boolean {
-    return !this.isLegal;
-  }
 
   public isActiveFileDownload(file: Omit<AssetFile, 'fileSize'>, downloadType: DownloadType): boolean {
     return this.activeFileDownloads.has(`${this.assetId}/${file.id}/${downloadType}`);

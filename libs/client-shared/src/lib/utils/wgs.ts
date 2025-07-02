@@ -2,7 +2,7 @@ import { LV95, LV95X, LV95Y } from '@asset-sg/shared';
 import { Coordinate } from '@asset-sg/shared/v2';
 import { toLonLat as _toLonLat } from 'ol/proj';
 
-import { WGS, WGSLat, WGSLng, isoWGSLat, isoWGSLng } from '../models';
+import { WGS, WGSLat, WGSLng, isoWGSLat, isoWGSLng } from '../models/wgs.model';
 
 export const coordinateToWGS = (coordinate: Coordinate): WGS => {
   const y = (coordinate.y - 2000000) as LV95Y;

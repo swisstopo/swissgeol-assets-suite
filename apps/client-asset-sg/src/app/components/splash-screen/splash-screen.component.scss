@@ -69,6 +69,10 @@ ul.languages {
     text-decoration: none;
   }
 
+  li {
+    text-transform: uppercase;
+  }
+
   li.is-active > button {
     text-decoration: underline;
     color: mat.m2-get-color-from-palette($asset-sg-primary, 600);

@@ -60,11 +60,11 @@ export class AssetViewerPageComponent implements OnInit, OnDestroy {
   @ViewChild('templateAppBarPortalContent') templateAppBarPortalContent!: TemplateRef<unknown>;
   @ViewChild('searchInput') searchInput!: ElementRef<HTMLInputElement>;
 
-  private readonly _lc = inject(LifecycleHooks);
-  private readonly _appPortalService = inject(AppPortalService);
-  private readonly _viewContainerRef = inject(ViewContainerRef);
+  private readonly lc = inject(LifecycleHooks);
+  private readonly appPortalService = inject(AppPortalService);
+  private readonly viewContainerRef = inject(ViewContainerRef);
   private readonly store = inject(Store<AppStateWithAssetSearch>);
-  private readonly _cd = inject(ChangeDetectorRef);
+  private readonly cd = inject(ChangeDetectorRef);
 
   private readonly authService = inject(AuthService);
   private readonly viewerControllerService = inject(ViewerControllerService);
@@ -90,8 +90,8 @@ export class AssetViewerPageComponent implements OnInit, OnDestroy {
 
   public isFiltersOpen$ = this.store.select(selectIsFiltersOpen);
 
-  public _searchTextKeyDown$ = new Subject<KeyboardEvent>();
-  private readonly searchTextChanged$ = this._searchTextKeyDown$.pipe(
+  public searchTextKeyDown$ = new Subject<KeyboardEvent>();
+  private readonly searchTextChanged$ = this.searchTextKeyDown$.pipe(
     filter((event) => event.key === 'Enter'),
     map((event) => (event.target as HTMLInputElement).value),
   );
@@ -101,17 +101,17 @@ export class AssetViewerPageComponent implements OnInit, OnDestroy {
   public highlightedAssetId: number | null = null;
 
   constructor() {
-    const setupPortals$ = this._lc.afterViewInit$.pipe(
+    const setupPortals$ = this.lc.afterViewInit$.pipe(
       observeOn(asyncScheduler),
       switchMap(
         () =>
           new Promise<void>((resolve) => {
-            this._appPortalService.setAppBarPortalContent(
-              new TemplatePortal(this.templateAppBarPortalContent, this._viewContainerRef),
+            this.appPortalService.setAppBarPortalContent(
+              new TemplatePortal(this.templateAppBarPortalContent, this.viewContainerRef),
             );
-            this._appPortalService.setDrawerPortalContent(null);
+            this.appPortalService.setDrawerPortalContent(null);
             setTimeout(() => {
-              this._cd.detectChanges();
+              this.cd.detectChanges();
               resolve();
             });
           }),
@@ -163,11 +163,11 @@ export class AssetViewerPageComponent implements OnInit, OnDestroy {
     this.authService.isInitialized$.pipe(filter(identity), take(1)).subscribe(() => {
       this.viewerControllerService.initialize();
     });
-    this._appPortalService.setAppBarPortalContent(null);
+    this.appPortalService.setAppBarPortalContent(null);
   }
 
   ngOnDestroy() {
-    this._appPortalService.setAppBarPortalContent(null);
+    this.appPortalService.setAppBarPortalContent(null);
     this.viewerControllerService.reset();
   }
 }

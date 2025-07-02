@@ -26,7 +26,7 @@
       <li
         asset-sg-menu-bar-item
         icon="add"
-        [link]="[translateService.currentLang, 'asset-admin', 'new']"
+        [link]="['asset-admin', 'new'] | localizePath"
         [isActive]="activeItem === 'create-asset'"
       >
         menuBar.createAsset
@@ -39,7 +39,7 @@
       *adminOnly
       asset-sg-menu-bar-item
       icon="options"
-      [link]="[translateService.currentLang, 'asset-admin']"
+      [link]="'asset-admin' | localizePath"
       [isActive]="activeItem === 'options'"
     >
       menuBar.settings
