@@ -27,10 +27,13 @@ export class AssetEditorGeneralComponent implements OnInit, OnChanges, OnDestroy
   public readonly restrictionItems: { label: TranslationKey; key: RestrictionType }[] = [
     {
       label: { key: 'edit.tabs.general.access.items.public' },
-      key: 'public',
+      key: RestrictionType.Public,
     },
-    { label: { key: 'edit.tabs.general.access.items.restricted' }, key: 'restricted' },
-    { label: { key: 'edit.tabs.general.access.items.temporarilyRestricted' }, key: 'temporarilyRestricted' },
+    { label: { key: 'edit.tabs.general.access.items.restricted' }, key: RestrictionType.Restricted },
+    {
+      label: { key: 'edit.tabs.general.access.items.temporarilyRestricted' },
+      key: RestrictionType.TemporarilyRestricted,
+    },
   ];
 
   public readonly nationalInterestTypes$: Observable<LocalizedItem[]> = this.store
@@ -139,4 +142,6 @@ export class AssetEditorGeneralComponent implements OnInit, OnChanges, OnDestroy
     ]);
     this.form.markAsDirty();
   }
+
+  protected readonly RestrictionType = RestrictionType;
 }

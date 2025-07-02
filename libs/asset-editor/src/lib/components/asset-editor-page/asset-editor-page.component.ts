@@ -285,11 +285,11 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
         contacts.push(new FormControl(contact, { nonNullable: true }));
       }
 
-      let restrictionType: RestrictionType = 'restricted';
+      let restrictionType: RestrictionType = RestrictionType.Restricted;
       if (asset.isPublic) {
-        restrictionType = 'public';
+        restrictionType = RestrictionType.Public;
       } else if (asset.restrictionDate) {
-        restrictionType = 'temporarilyRestricted';
+        restrictionType = RestrictionType.TemporarilyRestricted;
       }
 
       this.form.controls.general.setValue({
@@ -305,7 +305,7 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
         workgroupId: asset.workgroupId,
         createdAt: asset.createdAt.toDate(),
         receivedAt: asset.receivedAt.toDate(),
-        isPublic: restrictionType,
+        restrictionType: restrictionType,
         restrictionDate: asset.restrictionDate?.toDate() ?? null,
       });
 
@@ -362,7 +362,7 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
     let restrictionDate: LocalDate | null = general.restrictionDate
       ? LocalDate.fromDate(general.restrictionDate)
       : null;
-    if (general.isPublic === 'public') {
+    if (general.restrictionType === RestrictionType.Public) {
       restrictionDate = null;
     }
 
@@ -370,7 +370,7 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
       title: general.title,
       originalTitle: general.originalTitle,
       isOfNationalInterest: general.isOfNationalInterest,
-      isPublic: general.isPublic === 'public',
+      isPublic: general.restrictionType === RestrictionType.Public,
       restrictionDate,
       formatCode: general.formatCode,
       kindCode: general.kindCode,
@@ -511,7 +511,7 @@ const makeForm = () =>
       formatCode: new FormControl<LocalizedItemCode>('', { validators: [Validators.required], nonNullable: true }),
       kindCode: new FormControl<LocalizedItemCode>('', { validators: [Validators.required], nonNullable: true }),
       topicCodes: new FormControl<LocalizedItemCode[]>([], { validators: [Validators.required], nonNullable: true }),
-      isPublic: new FormControl<RestrictionType>('restricted', { nonNullable: true }),
+      restrictionType: new FormControl<RestrictionType>(RestrictionType.Restricted, { nonNullable: true }),
       restrictionDate: new FormControl<Date | null>(null),
       isOfNationalInterest: new FormControl<boolean>(false, { nonNullable: true }),
       nationalInterestTypeCodes: new FormControl<LocalizedItemCode[]>([], { nonNullable: true }),
@@ -531,7 +531,12 @@ const makeForm = () =>
   });
 
 export type AssetForm = ReturnType<typeof makeForm>;
-export type RestrictionType = 'public' | 'restricted' | 'temporarilyRestricted';
+
+export enum RestrictionType {
+  Public = 'public',
+  Restricted = 'restricted',
+  TemporarilyRestricted = 'temporarilyRestricted',
+}
 
 export function validateIdentifiers(control: AbstractControl): ValidationErrors | null {
   const value = control.value as Array<AssetIdentifier | AssetIdentifierData>;
