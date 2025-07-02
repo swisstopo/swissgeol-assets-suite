@@ -1,12 +1,13 @@
 export * from './lib/components';
-export * from './lib/i18n';
 export * from './lib/icons';
 export * from './lib/lifecycle-hooks';
-export * from './lib/models';
 export * from './lib/pipes';
 export * from './lib/services';
 export * from './lib/state';
 export * from './lib/utils';
+
+export * from './lib/models/translation.model';
+export * from './lib/models/wgs.model';
 
 export * from './lib/guards/prefix-path-with-language.guard';
 export * from './lib/guards/redirect-to-root.guard';

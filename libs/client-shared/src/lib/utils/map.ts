@@ -16,7 +16,7 @@ import { register } from 'ol/proj/proj4';
 import { Style } from 'ol/style';
 
 import proj4 from 'proj4';
-import { isoWGSLat, isoWGSLng } from '../models';
+import { isoWGSLat, isoWGSLng } from '../models/wgs.model';
 import { WindowService } from '../services';
 
 import { coordinateToWGS, lv95ToWGS } from './wgs';

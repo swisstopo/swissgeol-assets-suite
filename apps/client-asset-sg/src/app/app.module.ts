@@ -30,7 +30,6 @@ import {
   LocalizePathPipe,
   ROUTER_SEGMENTS,
   routerSegmentsFactory,
-  TranslateTsLoader,
 } from '@asset-sg/client-shared';
 import { storeLogger } from '@asset-sg/core';
 import { provideSvgIcons, SvgIconComponent } from '@ngneat/svg-icon';
@@ -49,7 +48,7 @@ import { AppBarComponent, MenuBarComponent, NotFoundComponent } from './componen
 import { GoogleAnalyticsComponent } from './components/google-analytics/google-analytics.component';
 import { MenuBarItemComponent } from './components/menu-bar-item/menu-bar-item.component';
 import { SplashScreenComponent } from './components/splash-screen/splash-screen.component';
-import { appTranslations } from './i18n';
+import { AppTranslateLoader } from './i18n';
 import { HttpInterceptor } from './services/http.interceptor';
 import { AppSharedStateEffects } from './state';
 import { appSharedStateReducer } from './state/app-shared.reducer';
@@ -112,7 +111,7 @@ const routes: Routes = [
     AuthModule,
     BrowserAnimationsModule,
     TranslateModule.forRoot({
-      loader: { provide: TranslateLoader, useFactory: () => new TranslateTsLoader(appTranslations) },
+      loader: { provide: TranslateLoader, useFactory: () => new AppTranslateLoader() },
     }),
     StoreRouterConnectingModule.forRoot({ serializer: FullRouterStateSerializer, stateKey: 'router' }),
     StoreModule.forRoot(

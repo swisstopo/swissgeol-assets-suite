@@ -1,5 +1,6 @@
 import { inject, Pipe, PipeTransform } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
+import { isTranslationKey, Translation } from '../models/translation.model';
 import { LanguageService } from '../services';
 
 /**
@@ -26,19 +27,3 @@ export class SmartTranslatePipe implements PipeTransform {
     return value[this.languageService.language];
   }
 }
-
-export type Translation = TranslationKey | TranslatedValue | string;
-
-export interface TranslationKey {
-  key: string;
-}
-
-export interface TranslatedValue {
-  de: string;
-  fr: string;
-  it: string;
-  en: string;
-}
-
-const isTranslationKey = (value: unknown): value is TranslationKey =>
-  typeof value == 'object' && value != null && 'key' in value && typeof value.key === 'string';

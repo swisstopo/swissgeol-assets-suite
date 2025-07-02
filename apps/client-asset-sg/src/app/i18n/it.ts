@@ -1,6 +1,6 @@
-import { AppTranslations } from './i18n';
+import { AppTranslationMapping } from './i18n';
 
-export const itAppTranslations: AppTranslations = {
+export const itTranslationMapping: AppTranslationMapping = {
   logoSwissGeol: 'Logo Swissgeol Assets',
   welcomeTo: 'Benvenuti su',
   accessForbidden: 'Non avete accesso a questa applicazione.',
