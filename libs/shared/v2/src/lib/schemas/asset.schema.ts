@@ -23,7 +23,7 @@ import { AssetContactSchema } from './asset-contact.schema';
 import { AssetFileSchema, UpdateAssetFileDataSchema } from './asset-file.schema';
 import { AssetIdentifierSchema, TransformAssetIdentifier } from './asset-identifier.schema';
 import { Schema, TransformLocalDate } from './base/schema';
-import { GeometrySchema, GeometryDataType, CreateGeometryDataSchema } from './geometry.schema';
+import { CreateGeometryDataSchema, GeometryDataType, GeometrySchema } from './geometry.schema';
 
 export class AssetLegacyDataSchema extends Schema implements AssetLegacyData {
   @IsInt({ message: messageNullableInt })
@@ -73,6 +73,10 @@ export class AssetSchema extends Schema implements Asset {
 
   @IsBoolean()
   isPublic!: boolean;
+
+  @TransformLocalDate()
+  @IsNullable()
+  restrictionDate!: LocalDate | null;
 
   @IsObject()
   @ValidateNested()
@@ -161,6 +165,10 @@ class AssetDataSchema extends Schema implements AssetData {
 
   @IsBoolean()
   isPublic!: boolean;
+
+  @TransformLocalDate()
+  @IsNullable()
+  restrictionDate!: LocalDate | null;
 
   @IsString()
   formatCode!: LocalizedItemCode;

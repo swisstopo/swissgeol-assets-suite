@@ -39,6 +39,7 @@ export const assetSelection = {
   titleOriginal: true,
   isNatRel: true,
   isPublic: true,
+  restrictionDate: true,
 
   ...legacyDataSelection,
 
@@ -112,6 +113,7 @@ export const parseAssetFromPrisma = (data: SelectedAsset): Asset => ({
   originalTitle: data.titleOriginal,
   isOfNationalInterest: data.isNatRel,
   isPublic: data.isPublic,
+  restrictionDate: data.restrictionDate ? LocalDate.fromDate(data.restrictionDate) : null,
   legacyData: parseLegacyDataFromPrisma(data),
   formatCode: data.assetFormatItemCode,
   kindCode: data.assetKindItemCode,
@@ -162,6 +164,7 @@ const mapDataToPrisma = (data: AssetData) =>
     titleOriginal: data.originalTitle,
     isNatRel: data.isOfNationalInterest,
     isPublic: data.isPublic,
+    restrictionDate: data.restrictionDate ? data.restrictionDate.toDate() : null,
     assetFormatItem: {
       connect: {
         assetFormatItemCode: data.formatCode,

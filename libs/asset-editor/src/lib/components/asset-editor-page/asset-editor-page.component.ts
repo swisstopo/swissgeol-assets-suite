@@ -285,6 +285,13 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
         contacts.push(new FormControl(contact, { nonNullable: true }));
       }
 
+      let restrictionType: RestrictionType = 'restricted';
+      if (asset.isPublic) {
+        restrictionType = 'public';
+      } else if (asset.restrictionDate) {
+        restrictionType = 'temporarilyRestricted';
+      }
+
       this.form.controls.general.setValue({
         title: asset.title,
         originalTitle: asset.originalTitle,
@@ -298,8 +305,8 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
         workgroupId: asset.workgroupId,
         createdAt: asset.createdAt.toDate(),
         receivedAt: asset.receivedAt.toDate(),
-        isPublic: asset.isPublic ? 'public' : 'restricted',
-        restrictionDate: null,
+        isPublic: restrictionType,
+        restrictionDate: asset.restrictionDate?.toDate() ?? null,
       });
 
       this.form.controls.references.setValue({
@@ -352,11 +359,19 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
       }
     }
 
+    let restrictionDate: LocalDate | null = general.restrictionDate
+      ? LocalDate.fromDate(general.restrictionDate)
+      : null;
+    if (general.isPublic === 'public') {
+      restrictionDate = null;
+    }
+
     const data: AssetData = {
       title: general.title,
       originalTitle: general.originalTitle,
       isOfNationalInterest: general.isOfNationalInterest,
       isPublic: general.isPublic === 'public',
+      restrictionDate,
       formatCode: general.formatCode,
       kindCode: general.kindCode,
       languageCodes: general.languageCodes,
