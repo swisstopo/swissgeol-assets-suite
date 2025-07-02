@@ -318,6 +318,7 @@ export const frAppTranslations: AppTranslations = {
     discardChanges: 'Annuler les modifications',
     questionDiscardChanges:
       'Il y a des modifications non enregistrées. Souhaitez-vous enregistrer toutes les modifications ?',
+    questionAbortChanges: "Votre saisie est incomplète. L'asset ne peut pas être enregistré dans cet état.",
     userManagementHeading: 'Utilisateurs',
     userManagementButton: 'Gérer les utilisateurs',
     adminInstructionsSyncElasticAssetsHeading: 'Synchroniser les assets avec Elasticsearch',

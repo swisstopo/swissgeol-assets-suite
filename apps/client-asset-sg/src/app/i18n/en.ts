@@ -315,6 +315,7 @@ export const enAppTranslations: AppTranslations = {
     unsavedChanges: 'Unsaved Changes',
     discardChanges: 'Discard changes',
     questionDiscardChanges: 'There are unsaved changes. Do you want to save all changes?',
+    questionAbortChanges: 'Your edits are currently incomplete. The asset cannot be saved in this state.',
     userManagementHeading: 'Users',
     userManagementButton: 'Manage users',
     adminInstructionsSyncElasticAssetsHeading: 'Synchronize assets with Elasticsearch',
