@@ -161,6 +161,14 @@ export const itTranslationMapping: AppTranslationMapping = {
         alternativeIdDescription: 'IT Beschreibung Alternativ-ID',
         addNewAlternativeId: 'IT Neue Alternativ-ID hinzufügen',
         referencesWarning: 'IT Um die Arbeitsgruppe zu ändern, müssen Sie erst alle Verweise entfernen.',
+        access: {
+          name: 'IT Beschränkung',
+          items: {
+            public: 'IT Frei',
+            restricted: 'IT Gesperrt',
+            temporarilyRestricted: 'IT Gesperrt bis',
+          },
+        },
       },
       files: {
         tabName: 'IT Dateien',

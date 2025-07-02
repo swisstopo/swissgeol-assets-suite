@@ -40,6 +40,7 @@ model Asset {
   creatorId           String?         @map("creator_id") @db.Uuid
   creator             AssetUser?      @relation(name: "creator", fields: [creatorId], references: [id], onDelete: SetNull)
   isPublic            Boolean         @default(false) @map("is_public")
+  restrictionDate     DateTime?       @map("restriction_date")
 
   assetContacts   AssetContact[]
   assetFiles      AssetFile[]
@@ -69,12 +70,12 @@ model Asset {
 }
 
 model AssetSynchronization {
-  id         Int            @id @default(autoincrement()) @map("id")
-  asset Asset @relation(fields: [assetId], references: [assetId], onDelete: Cascade)
-  assetId Int @unique  @map("asset_id")
-  originalAssetId Int @unique  @map("original_asset_id")
-  originalSgsId Int? @unique  @map("original_sgs_id")
-  syncDate DateTime @default(now()) @map("sync_date")
+  id              Int      @id @default(autoincrement()) @map("id")
+  asset           Asset    @relation(fields: [assetId], references: [assetId], onDelete: Cascade)
+  assetId         Int      @unique @map("asset_id")
+  originalAssetId Int      @unique @map("original_asset_id")
+  originalSgsId   Int?     @unique @map("original_sgs_id")
+  syncDate        DateTime @default(now()) @map("sync_date")
 
   @@map("asset_synchronization")
 }

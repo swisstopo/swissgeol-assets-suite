@@ -1,14 +1,14 @@
 import {
   Asset,
-  UpdateAssetData,
+  AssetData,
+  Contact,
+  CreateAssetData,
   LocalDate,
   Role,
+  UpdateAssetData,
   User,
   UserData,
   WorkgroupId,
-  Contact,
-  AssetData,
-  CreateAssetData,
 } from '@asset-sg/shared/v2';
 import { fakerDE_CH as faker } from '@faker-js/faker';
 
@@ -76,6 +76,7 @@ const fakeAssetData = (): AssetData => ({
   isPublic: faker.datatype.boolean(),
   createdAt: LocalDate.fromDate(faker.date.past()),
   receivedAt: LocalDate.fromDate(faker.date.past()),
+  restrictionDate: null,
 });
 
 export const fakeCreateAssetData = (): CreateAssetData => ({
@@ -111,4 +112,5 @@ export const fakeAsset = (): Asset => ({
   createdAt: LocalDate.fromDate(faker.date.past()),
   receivedAt: LocalDate.fromDate(faker.date.past()),
   creatorId: null,
+  restrictionDate: null,
 });
