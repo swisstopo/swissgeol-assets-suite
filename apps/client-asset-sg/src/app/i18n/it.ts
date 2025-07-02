@@ -317,6 +317,8 @@ export const itAppTranslations: AppTranslations = {
     unsavedChanges: 'IT Ungespeicherte Änderungen',
     discardChanges: 'Änderungen verwerfen',
     questionDiscardChanges: 'IT Es gibt ungespeicherte Änderungen. Möchten Sie alle Änderungen speichern?',
+    questionAbortChanges:
+      'IT Ihre Eingaben sind unvollständig. Das Asset kann in diesem Zustand nicht gespeichert werden.',
     adminInstructionsSyncElasticAssetsHeading: 'IT Assets mit Elasticsearch synchronisieren',
     adminInstructionsSyncElasticAssets:
       'IT Gleicht den Zustand von Elasticsearch mit der Datenbank ab.' +

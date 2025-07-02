@@ -316,6 +316,8 @@ export const deAppTranslations = {
     unsavedChanges: 'Ungespeicherte Änderungen',
     discardChanges: 'Änderungen verwerfen',
     questionDiscardChanges: 'Es gibt ungespeicherte Änderungen. Möchten Sie alle Änderungen speichern?',
+    questionAbortChanges:
+      'Ihre Eingaben sind unvollständig. Das Asset kann in diesem Zustand nicht gespeichert werden.',
     userManagementHeading: 'Benutzer',
     userManagementButton: 'Benutzer verwalten',
     adminInstructionsSyncElasticAssetsHeading: 'Assets mit Elasticsearch synchronisieren',

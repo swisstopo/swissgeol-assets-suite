@@ -427,7 +427,7 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
     }
     const dialogRef = this.dialogService.open<ConfirmDialogComponent, ConfirmDialogData>(ConfirmDialogComponent, {
       data: {
-        text: 'edit.questionDiscardChanges',
+        text: this.form.invalid ? 'edit.questionAbortChanges' : 'edit.questionDiscardChanges',
         confirm: 'save',
         isSaveDisabled: this.form.invalid,
       },

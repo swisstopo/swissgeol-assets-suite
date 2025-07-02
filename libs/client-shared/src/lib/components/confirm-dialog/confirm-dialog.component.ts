@@ -26,11 +26,7 @@ export class ConfirmDialogComponent {
   constructor(
     private readonly dialogRef: MatDialogRef<ConfirmDialogComponent>,
     @Inject(MAT_DIALOG_DATA)
-    public data: {
-      text: string;
-      confirm: string;
-      isSaveDisabled: boolean;
-    },
+    public data: ConfirmDialogData,
   ) {}
 
   public close(confirmed: boolean) {
