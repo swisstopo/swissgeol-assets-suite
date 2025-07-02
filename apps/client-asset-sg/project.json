@@ -21,12 +21,12 @@
           "apps/client-asset-sg/src/assets",
           {
             "glob": "**/*",
-            "input": "node_modules/@swisstopo/swissgeol-ui-core/dist/swissgeol-ui-core/assets/fonts",
+            "input": "node_modules/@swissgeol/ui-core/dist/swissgeol-ui-core/assets/fonts",
             "output": "/assets/fonts"
           }
         ],
         "styles": [
-          "node_modules/@swisstopo/swissgeol-ui-core/dist/swissgeol-ui-core/swissgeol-ui-core.css",
+          "node_modules/@swissgeol/ui-core/dist/swissgeol-ui-core/swissgeol-ui-core.css",
           "apps/client-asset-sg/src/styles.scss"
         ],
         "scripts": [],

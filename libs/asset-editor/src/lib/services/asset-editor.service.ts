@@ -20,7 +20,7 @@ import {
   WorkflowSchema,
   WorkgroupId,
 } from '@asset-sg/shared/v2';
-import { SimpleUser } from '@swisstopo/swissgeol-ui-core';
+import { SimpleUser } from '@swissgeol/ui-core';
 import { plainToInstance } from 'class-transformer';
 import { forkJoin, map, Observable, of } from 'rxjs';
 

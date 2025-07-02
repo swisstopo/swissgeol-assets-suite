@@ -1,4 +1,4 @@
-import { LocalDate } from '@swisstopo/swissgeol-ui-core';
+import { LocalDate } from '@swissgeol/ui-core';
 import { AssetId } from '../asset';
 import { AssetContactRole, ContactId } from '../contact';
 import { GeometryDetail, GeometryId } from '../geometry';

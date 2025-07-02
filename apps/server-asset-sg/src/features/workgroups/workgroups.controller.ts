@@ -23,7 +23,7 @@ import {
   Put,
   Query,
 } from '@nestjs/common';
-import { SimpleUser } from '@swisstopo/swissgeol-ui-core';
+import { SimpleUser } from '@swissgeol/ui-core';
 import { Expose, Transform as TransformValue } from 'class-transformer';
 import { IsBoolean } from 'class-validator';
 import { authorize } from '@/core/authorize';

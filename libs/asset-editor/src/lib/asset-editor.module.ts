@@ -65,7 +65,7 @@ import { ForModule } from '@rx-angular/template/for';
 import { IfModule } from '@rx-angular/template/if';
 import { LetModule } from '@rx-angular/template/let';
 import { PushModule } from '@rx-angular/template/push';
-import { SwissgeolCoreModule } from '@swisstopo/swissgeol-ui-core-angular';
+import { SwissgeolCoreModule } from '@swissgeol/ui-core-angular';
 import { de } from 'date-fns/locale/de';
 import { combineLatest, filter, map } from 'rxjs';
 import { AssetEditorIdListComponent } from './components/asset-editor-id-list/asset-editor-id-list.component';
