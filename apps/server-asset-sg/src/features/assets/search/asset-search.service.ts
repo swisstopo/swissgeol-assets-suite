@@ -221,7 +221,7 @@ export class AssetSearchService {
       geometryTypes: {
         buckets: AggregationBucket<GeometryType | 'None'>[];
       };
-      manCatLabelItemCodes: {
+      topicCodes: {
         buckets: AggregationBucket[];
       };
       usageCodes: {
@@ -290,7 +290,7 @@ export class AssetSearchService {
       languageCodes: makeAggregation('terms', 'languageCodes'),
       geometryTypes: makeAggregation('terms', 'geometryTypes'),
       kindCodes: makeAggregation('terms', 'kindCodes', 'kindCode'),
-      topicCodes: makeAggregation('terms', 'topicCodes', 'topicCode'),
+      topicCodes: makeAggregation('terms', 'topicCodes'),
       usageCodes: makeAggregation('terms', 'usageCodes', 'usageCode'),
       workgroupIds: makeAggregation('terms', 'workgroupIds', 'workgroupId'),
       minCreatedAt: makeAggregation('min', 'minCreatedAt', 'createdAt'),
@@ -309,7 +309,7 @@ export class AssetSearchService {
       authorIds: aggs.authorIds?.a?.buckets?.map(mapBucket) ?? [],
       languageCodes: aggs.languageCodes?.a?.buckets?.map(mapBucket) ?? [],
       geometryTypes: aggs.geometryTypes?.a?.buckets?.map(mapBucket) ?? [],
-      topicCodes: aggs.manCatLabelItemCodes?.a?.buckets?.map(mapBucket) ?? [],
+      topicCodes: aggs.topicCodes?.a?.buckets?.map(mapBucket) ?? [],
       usageCodes: aggs.usageCodes?.a?.buckets?.map(mapBucket) ?? [],
       workgroupIds: aggs.workgroupIds?.a?.buckets?.map(mapBucket) ?? [],
       createdAt: {
@@ -474,7 +474,7 @@ const mapQueryToElasticDslParts = (
         should: [
           {
             query_string: {
-              query: normalizeFieldQuery(escapeElasticQuery(query.text)),
+              query: normalizeFieldQuery(query.text), // todo assets-639: check how to deal with escape
               fields: scope,
             },
           },
@@ -482,6 +482,7 @@ const mapQueryToElasticDslParts = (
       },
     });
   }
+
   if (query.authorId != null) {
     filters.push({
       term: {
