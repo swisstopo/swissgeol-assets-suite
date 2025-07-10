@@ -167,14 +167,14 @@ export const selectUsageCodeFilters = selectFilters<AssetSearchUsageCode>('usage
 );
 
 export const selectAssetKindFilters = selectFilters<string>('kindCodes', (data) =>
-  Object.values(data.assetKinds).map((item) => ({
+  Object.values(Array.from(data.assetKinds.values())).map((item) => ({
     name: item.name,
     value: item.code,
   })),
 );
 
 export const selectLanguageFilters = selectFilters<string>('languageCodes', (data) => [
-  ...Object.values(data.languages).map((item) => ({
+  ...Object.values(Array.from(data.languages.values())).map((item) => ({
     name: item.name,
     value: item.code,
   })),
@@ -196,7 +196,7 @@ export const selectGeometryFilters = selectFilters<GeometryType | 'None'>('geome
 ]);
 
 export const selectAssetTopicFilters = selectFilters<string>('topicCodes', (data) =>
-  Object.values(data.assetTopics).map((item) => ({
+  Object.values(Array.from(data.assetTopics.values())).map((item) => ({
     name: item.name,
     value: item.code,
   })),
