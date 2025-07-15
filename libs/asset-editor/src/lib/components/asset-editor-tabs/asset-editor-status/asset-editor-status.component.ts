@@ -7,6 +7,7 @@ import {
   Workflow,
   WorkflowChangeData,
   WorkflowPolicy,
+  WorkflowPublishData,
   WorkflowSelection,
 } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
@@ -127,11 +128,14 @@ export class AssetEditorStatusComponent implements OnChanges {
     });
   }
 
-  handleWorkflowPublish(): void {
+  handleWorkflowPublish(event: SgcWorkflowChangeEvent): void {
     if (!this.workflow) {
       return;
     }
-    this.assetEditorService.publishAsset(this.workflow.id).subscribe((workflow) => {
+    const data: WorkflowPublishData = {
+      comment: event.detail.changes.comment,
+    };
+    this.assetEditorService.publishAsset(this.workflow.id, data).subscribe((workflow) => {
       this.store.dispatch(
         setWorkflow({
           workflow,

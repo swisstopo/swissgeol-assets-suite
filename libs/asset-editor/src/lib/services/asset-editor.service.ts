@@ -17,6 +17,7 @@ import {
   UpdateAssetDataSchema,
   Workflow,
   WorkflowChangeData,
+  WorkflowPublishData,
   WorkflowSchema,
   WorkgroupId,
 } from '@asset-sg/shared/v2';
@@ -77,9 +78,9 @@ export class AssetEditorService {
     );
   }
 
-  public publishAsset(id: AssetId): Observable<Workflow> {
+  public publishAsset(id: AssetId, data: WorkflowPublishData): Observable<Workflow> {
     return this.httpClient
-      .post<Workflow>(`/api/assets/${id}/workflow/publish`, null)
+      .post<Workflow>(`/api/assets/${id}/workflow/publish`, data)
       .pipe(map((data) => plainToInstance(WorkflowSchema, data)));
   }
 

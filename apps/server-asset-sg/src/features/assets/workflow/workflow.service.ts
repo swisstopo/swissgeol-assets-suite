@@ -7,6 +7,7 @@ import {
   Workflow,
   WorkflowChangeData,
   WorkflowPolicy,
+  WorkflowPublishDataSchema,
   WorkflowSelection,
   WorkflowSelectionCategory,
   WorkflowStatus,
@@ -73,13 +74,13 @@ export class WorkflowService {
     return handleMissing(await this.workflowRepo.approvals.update(workflow.id, approval));
   }
 
-  async publish(workflow: Workflow, creatorId: UserId) {
+  async publish(workflow: Workflow, creatorId: UserId, data: WorkflowPublishDataSchema) {
     if (workflow.status !== WorkflowStatus.Reviewed) {
       throw new HttpException('Cannot publish workflow in current status', HttpStatus.BAD_REQUEST);
     }
     return this.workflowRepo.change(workflow.id, {
       creatorId: creatorId,
-      comment: null,
+      comment: data.comment,
       from: { status: workflow.status, assigneeId: (workflow.assignee?.id ?? null) as string | null },
       to: { status: WorkflowStatus.Published, assigneeId: (workflow.assignee?.id ?? null) as string | null },
     });
