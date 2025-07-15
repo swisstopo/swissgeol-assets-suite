@@ -42,6 +42,9 @@ export const workflowSelection = satisfy<Prisma.WorkflowSelect>()({
     select: workflowSelectionSelection,
   },
   changes: {
+    orderBy: {
+      createdAt: 'asc',
+    },
     select: {
       fromAssignee: { select: simpleUserSelection },
       toAssignee: { select: simpleUserSelection },
