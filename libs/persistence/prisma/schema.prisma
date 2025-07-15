@@ -28,7 +28,7 @@ model Asset {
   remark              String?         @map("remark")
   assetKindItemCode   String          @map("asset_kind_item_code")
   assetKindItem       AssetKindItem   @relation(fields: [assetKindItemCode], references: [assetKindItemCode])
-  createDate          DateTime        @map("create_date")
+  createDate          DateTime        @map("create_date") // This refers to the date the actual asset was created, e.g. the study was conducted
   assetFormatItemCode String          @map("asset_format_item_code")
   assetFormatItem     AssetFormatItem @relation(fields: [assetFormatItemCode], references: [assetFormatItemCode])
   authorBiblio        String?         @map("author_biblio_id")
@@ -39,6 +39,7 @@ model Asset {
   assetMain           Asset?          @relation(name: "asset", fields: [assetMainId], references: [assetId])
   creatorId           String?         @map("creator_id") @db.Uuid
   creator             AssetUser?      @relation(name: "creator", fields: [creatorId], references: [id], onDelete: SetNull)
+  createdAt           DateTime        @default(now()) @map("created_at") // This refers to the date the asset was created in the system, as opposed to createDate
   isPublic            Boolean         @default(false) @map("is_public")
 
   assetContacts   AssetContact[]
