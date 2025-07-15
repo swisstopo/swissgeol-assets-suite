@@ -609,7 +609,7 @@ const normalizeFieldQuery = (
   query
     .replace(/title(_*)public:/gi, 'title:')
     .replace(/title(_*)original:/gi, 'originalTitle:')
-    .replace(/contact(_*)ame:/gi, 'contactNames:')
+    .replace(/contact(_*)name:/gi, 'contactNames:')
     .replace(/asset(_*)id:/gi, 'id:')
     .replace(/sgs(_*)id:/gi, 'sgsId:');
 
