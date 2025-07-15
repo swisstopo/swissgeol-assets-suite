@@ -18,6 +18,7 @@ import {
   Workflow,
   WorkflowChange,
   WorkflowChangeData,
+  WorkflowPublishData,
   WorkflowSelection,
   WorkflowStatus,
 } from '../models/workflow';
@@ -47,6 +48,12 @@ export class WorkflowChangeSchema extends Schema implements WorkflowChange {
 
   @TransformLocalDate()
   createdAt!: LocalDate;
+}
+
+export class WorkflowPublishDataSchema extends Schema implements WorkflowPublishData {
+  @IsString({ message: messageNullableString })
+  @IsNullable()
+  comment!: string | null;
 }
 
 export class WorkflowChangeDataSchema extends Schema implements WorkflowChangeData {

@@ -39,6 +39,8 @@ export interface WorkflowChangeData {
   hasRequestedChanges?: boolean;
 }
 
+export type WorkflowPublishData = Pick<WorkflowChangeData, 'comment'>;
+
 export const UnpublishedWorkflowStatus = [
   WorkflowStatus.Draft,
   WorkflowStatus.InReview,

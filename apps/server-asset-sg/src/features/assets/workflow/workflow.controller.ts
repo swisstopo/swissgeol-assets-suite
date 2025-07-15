@@ -4,6 +4,7 @@ import {
   WorkflowChangeData,
   WorkflowChangeDataSchema,
   WorkflowPolicy,
+  WorkflowPublishDataSchema,
   WorkflowSelection,
 } from '@asset-sg/shared/v2';
 import { Controller, Get, Param, ParseIntPipe, Patch, Post } from '@nestjs/common';
@@ -62,9 +63,13 @@ export class WorkflowController {
   }
 
   @Post('/publish')
-  async publish(@Param('assetId', ParseIntPipe) assetId: number, @CurrentUser() user: User): Promise<Workflow> {
+  async publish(
+    @ParseBody(WorkflowPublishDataSchema) data: WorkflowPublishDataSchema,
+    @Param('assetId', ParseIntPipe) assetId: number,
+    @CurrentUser() user: User,
+  ): Promise<Workflow> {
     const record = await this.workflowService.find(assetId);
     authorize(WorkflowPolicy, user).canUpdate(record);
-    return this.workflowService.publish(record, user.id);
+    return this.workflowService.publish(record, user.id, data);
   }
 }
