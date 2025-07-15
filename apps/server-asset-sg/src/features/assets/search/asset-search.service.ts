@@ -603,12 +603,15 @@ const escapeElasticQuery = (query: string): string => {
   return query.replace(/(&&|\|\||!|\(|\)|\{|}|\[|]|\^|"|~|\*|\+|-|=|\?|:|\\|\/)/g, '\\$1');
 };
 
-const normalizeFieldQuery = (query: string): string =>
+const normalizeFieldQuery = (
+  query: string,
+): string => // todo assets-639: check how to deal with escape
   query
-    .replace(/title(_*)public\\:/gi, 'title:')
-    .replace(/title(_*)original\\:/gi, 'originalTitle:')
-    .replace(/contact(_*)ame\\:/gi, 'contactNames:')
-    .replace(/sgs(_*)id\\:/gi, 'sgsId:');
+    .replace(/title(_*)public:/gi, 'title:')
+    .replace(/title(_*)original:/gi, 'originalTitle:')
+    .replace(/contact(_*)name:/gi, 'contactNames:')
+    .replace(/asset(_*)id:/gi, 'id:')
+    .replace(/sgs(_*)id:/gi, 'sgsId:');
 
 /**
  * The state of a multistep asset search.
