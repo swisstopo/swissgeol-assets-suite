@@ -30,7 +30,6 @@ import {
   isDeepEqual,
   LanguageCode,
   LinkedAsset,
-  LocalDate,
   LocalizedItemCode,
   mapGeometryTypeToStudyType,
   UpdateAssetFileData,
@@ -39,8 +38,9 @@ import {
   WorkflowStatus,
 } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
+import { LocalDate } from '@swissgeol/ui-core';
 import * as E from 'fp-ts/Either';
-import { map, Observable, Subscription, switchMap, take, tap } from 'rxjs';
+import { filter, map, Observable, Subscription, switchMap, take, tap } from 'rxjs';
 import { EditorMode } from '../../models';
 import { AssetEditorService } from '../../services/asset-editor.service';
 import * as actions from '../../state/asset-editor.actions';
@@ -323,9 +323,73 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
   }
 
   public save(): void {
+    this.subscriptions.add(
+      this.setupSaveBehaviour().subscribe(({ asset, geometries }) => {
+        this.isLoading = false;
+        if (this.mode === EditorMode.Create) {
+          // When the asset has just been created, then we want to navigate to its edit page.
+          // Note that this won't reload this component - it's simply a "cosmetic" change.
+          this.router.navigate([this.languageService.language, 'asset-admin', asset.id], { replaceUrl: true }).then();
+        }
+        this.mode = EditorMode.Edit;
+        this.store.dispatch(actions.updateAsset({ asset, geometries }));
+      }),
+    );
+  }
+
+  public canDeactivate(targetRoute: RouterStateSnapshot): boolean | Observable<boolean> {
+    if (
+      this.form === undefined ||
+      !this.form.dirty ||
+      targetRoute.url.startsWith(`/${this.languageService.language}/asset-admin/${this.asset?.id ?? 'new'}`)
+    ) {
+      return true;
+    }
+    const dialogRef = this.dialogService.open<ConfirmDialogComponent, ConfirmDialogData>(ConfirmDialogComponent, {
+      data: {
+        text: this.form.invalid ? 'edit.questionAbortChanges' : 'edit.questionDiscardChanges',
+        confirm: 'save',
+        isSaveDisabled: this.form.invalid,
+      },
+      maxWidth: '420px',
+    });
+    return dialogRef.afterClosed().pipe(
+      filter((hasConfirmed) => hasConfirmed),
+      switchMap(() => {
+        return this.setupSaveBehaviour().pipe(map(() => true));
+      }),
+    );
+  }
+
+  private initializeTabs() {
+    this.availableTabs = Object.values(Tab);
+    if (this.asset?.legacyData == null) {
+      this.availableTabs.splice(this.availableTabs.indexOf(Tab.LegacyData), 1);
+    }
+  }
+
+  private loadAssetFromRouteParams() {
+    this.subscriptions.add(
+      this.route.paramMap.pipe(take(1)).subscribe((params) => {
+        const assetIdFromParam = params.get('assetId');
+        if (!assetIdFromParam) {
+          return;
+        }
+        const assetId = parseInt(assetIdFromParam);
+        if (isNaN(assetId)) {
+          this.mode = EditorMode.Create;
+          return;
+        }
+
+        this.mode = EditorMode.Edit;
+        this.store.dispatch(actions.loadAsset({ assetId }));
+      }),
+    );
+  }
+  private setupSaveBehaviour(): Observable<{ asset: Asset; geometries: GeometryDetail[] }> {
     const asset = this.asset;
     if (!this.asset && this.mode === EditorMode.Edit) {
-      return;
+      throw new Error('missing asset');
     }
 
     const { general, geometries, contacts, references, files } = this.form.getRawValue();
@@ -379,90 +443,26 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
           })
         : this.assetEditorService.createAsset({ ...data, geometries: geometries as CreateGeometryData[] });
 
-    this.subscriptions.add(
-      formSubmission$
-        .pipe(
-          // After the form has been saved, upload the new files.
-          switchMap((newAsset) =>
-            this.assetEditorService
-              .uploadFilesForAsset(newAsset.id, filesToCreate)
-              .pipe(map((newFiles) => ({ ...newAsset, files: [...newAsset.files, ...newFiles] }))),
-          ),
+    return formSubmission$.pipe(
+      // After the form has been saved, upload the new files.
+      switchMap((newAsset) =>
+        this.assetEditorService
+          .uploadFilesForAsset(newAsset.id, filesToCreate)
+          .pipe(map((newFiles) => ({ ...newAsset, files: [...newAsset.files, ...newFiles] }))),
+      ),
 
-          // Fetch the updated geometries.
-          // Note that we could update the geometries manually,
-          // though this is a lot simpler and less error-prone,
-          // at the cost of performance.
-          switchMap((asset) =>
-            this.assetSearchService.fetchGeometries(asset.id).pipe(
-              map((geometries) => ({
-                asset,
-                geometries,
-              })),
-            ),
-          ),
-        )
-        .subscribe(({ asset, geometries }) => {
-          this.isLoading = false;
-          if (this.mode === EditorMode.Create) {
-            // When the asset has just been created, then we want to navigate to its edit page.
-            // Note that this won't reload this component - it's simply a "cosmetic" change.
-            this.router.navigate([this.languageService.language, 'asset-admin', asset.id], { replaceUrl: true }).then();
-          }
-          this.mode = EditorMode.Edit;
-          this.store.dispatch(actions.updateAsset({ asset, geometries }));
-        }),
-    );
-  }
-
-  public canDeactivate(targetRoute: RouterStateSnapshot): boolean | Observable<boolean> {
-    if (
-      this.form === undefined ||
-      !this.form.dirty ||
-      targetRoute.url.startsWith(`/${this.languageService.language}/asset-admin/${this.asset?.id ?? 'new'}`)
-    ) {
-      return true;
-    }
-    const dialogRef = this.dialogService.open<ConfirmDialogComponent, ConfirmDialogData>(ConfirmDialogComponent, {
-      data: {
-        text: this.form.invalid ? 'edit.questionAbortChanges' : 'edit.questionDiscardChanges',
-        confirm: 'save',
-        isSaveDisabled: this.form.invalid,
-      },
-      maxWidth: '420px',
-    });
-    return dialogRef.afterClosed().pipe(
-      tap((hasConfirmed) => {
-        if (hasConfirmed) {
-          this.save();
-        }
-      }),
-    );
-  }
-
-  private initializeTabs() {
-    this.availableTabs = Object.values(Tab);
-    if (this.asset?.legacyData == null) {
-      this.availableTabs.splice(this.availableTabs.indexOf(Tab.LegacyData), 1);
-    }
-  }
-
-  private loadAssetFromRouteParams() {
-    this.subscriptions.add(
-      this.route.paramMap.pipe(take(1)).subscribe((params) => {
-        const assetIdFromParam = params.get('assetId');
-        if (!assetIdFromParam) {
-          return;
-        }
-        const assetId = parseInt(assetIdFromParam);
-        if (isNaN(assetId)) {
-          this.mode = EditorMode.Create;
-          return;
-        }
-
-        this.mode = EditorMode.Edit;
-        this.store.dispatch(actions.loadAsset({ assetId }));
-      }),
+      // Fetch the updated geometries.
+      // Note that we could update the geometries manually,
+      // though this is a lot simpler and less error-prone,
+      // at the cost of performance.
+      switchMap((asset) =>
+        this.assetSearchService.fetchGeometries(asset.id).pipe(
+          map((geometries) => ({
+            asset,
+            geometries,
+          })),
+        ),
+      ),
     );
   }
 
