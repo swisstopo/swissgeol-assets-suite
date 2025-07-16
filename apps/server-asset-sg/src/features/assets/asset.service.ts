@@ -52,7 +52,7 @@ export class AssetService {
     }
 
     await Promise.all([
-      this.assetSearchService.register(asset),
+      this.assetSearchService.register(updatedAsset),
       this.workflowService.updateSelectionByChanges(asset, updatedAsset, data.geometries),
     ]);
 
