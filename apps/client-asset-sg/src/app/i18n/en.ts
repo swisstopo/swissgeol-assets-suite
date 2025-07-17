@@ -161,6 +161,14 @@ export const enTranslationMapping: AppTranslationMapping = {
         alternativeIdDescription: 'Alternative ID Description',
         addNewAlternativeId: 'Add new alternative ID',
         referencesWarning: 'In order to change the workgroup, you must first remove all references.',
+        access: {
+          name: 'Restriction',
+          items: {
+            public: 'Public',
+            restricted: 'Restricted',
+            temporarilyRestricted: 'Restricted until',
+          },
+        },
       },
       files: {
         tabName: 'Files',
