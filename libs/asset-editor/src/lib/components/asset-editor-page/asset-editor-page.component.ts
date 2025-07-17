@@ -30,6 +30,7 @@ import {
   isDeepEqual,
   LanguageCode,
   LinkedAsset,
+  LocalDate,
   LocalizedItemCode,
   mapGeometryTypeToStudyType,
   UpdateAssetFileData,
@@ -38,7 +39,6 @@ import {
   WorkflowStatus,
 } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
-import { LocalDate } from '@swissgeol/ui-core';
 import * as E from 'fp-ts/Either';
 import { filter, map, Observable, Subscription, switchMap, take, tap } from 'rxjs';
 import { EditorMode } from '../../models';
