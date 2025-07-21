@@ -59,7 +59,7 @@ export class MapController {
    * The IDs of all available geometries, mapped to the id of the asset that they belong to.
    * @private
    */
-  private readonly assetIdsByGeometryIds = new Map<GeometryId, AssetId>();
+  private readonly assetIdsByGeometryIds = new Map<string, AssetId>();
 
   /**
    * The currently selected asset.
@@ -149,13 +149,29 @@ export class MapController {
       heatmapFeature.setId(geometry.id);
       heatmapFeatures[i] = heatmapFeature;
 
+      const parseGeometry = (id: string) => {
+        if (id.startsWith('t')) {
+          return GeometryType.LineString;
+        }
+        if (id.startsWith('a')) {
+          return GeometryType.Polygon;
+        }
+        if (id.startsWith('l')) {
+          return GeometryType.Point;
+        }
+        throw new Error('Unknown Geometrytype' + id);
+      };
+
       const locationFeature = new Feature<Point>(location);
       locationFeature.setId(geometry.id);
       locationFeature.setProperties({ [CustomFeatureProperties.SwisstopoType]: 'GeometryLocation' });
-      locationFeature.setProperties({ [CustomFeatureProperties.GeometryType]: geometry.type });
+      locationFeature.setProperties({
+        [CustomFeatureProperties.GeometryType]: parseGeometry(geometry.id.replace('study_', '')),
+      });
       locationFeature.setProperties({ [CustomFeatureProperties.AccessType]: geometry.accessType });
       locationFeatures[i] = locationFeature;
     }
+    console.log(locationFeatures);
 
     window.requestAnimationFrame(() => {
       this.sources.heatmap.clear();

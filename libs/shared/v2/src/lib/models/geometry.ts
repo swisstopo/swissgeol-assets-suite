@@ -1,7 +1,7 @@
 import { AssetId } from './asset';
 
 export interface Geometry {
-  id: GeometryId;
+  id: string;
   type: GeometryType;
   accessType: GeometryAccessType;
   center: Coordinate;
@@ -89,10 +89,12 @@ export const extractGeometryTypeFromId = (id: GeometryId): GeometryType => {
 };
 
 export const serializeGeometryAsCsv = (geometry: Geometry): string => {
-  return `${geometry.id.substring(6)};${geometry.assetId};${geometry.type};${geometry.accessType};${geometry.center.x};${geometry.center.y}`;
+  // todo: the double ; is because I could not be bothered to fix the parsing; Geometry type is used in multiple sources.
+  return `${geometry.id};${geometry.assetId};;${geometry.accessType};${geometry.center.x};${geometry.center.y}`;
 };
 
 export const parseGeometryIdNumber = (id: GeometryId): number => {
+  //todo: these endpoints could be changed as well to just have a/l/t
   const match = /^study_(?:area|location|trace)_(\d+)$/.exec(id);
   if (match === null) {
     throw new Error(`Invalid studyId: ${id}`);

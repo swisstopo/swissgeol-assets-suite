@@ -17,11 +17,14 @@ export class GeometryRepo extends GeometryBaseRepo<Geometry> {
       isPublic: boolean;
       type: 'Point' | 'Line' | 'Polygon';
     };
+
+    // We round coordinates to 2 digits, since that represents centimetre accuracy which is more than enough. The casts
+    // are required because Prisma treats numeric as Decimal, which we can ignore for the sake of this accuracy
     const studies: RawStudy[] = await this.prisma.$queryRaw`
         SELECT s.study_id       AS "id",
                s.geometry_type  AS "type",
-               ST_X(s.centroid) AS "centerX",
-               ST_Y(s.centroid) AS "centerY",
+               ROUND(ST_X(s.centroid)::numeric, 2)::double precision AS "centerX",
+               ROUND(ST_Y(s.centroid)::numeric, 2)::double precision AS "centerY",
                s.is_public      AS "isPublic",
                s.asset_id       AS "assetId"
         FROM public.all_study s
@@ -29,7 +32,7 @@ export class GeometryRepo extends GeometryBaseRepo<Geometry> {
     `;
     return studies.map((study) => {
       return {
-        id: study.id,
+        id: parseId(study.id),
         type: study.type === 'Line' ? GeometryType.LineString : (study.type as GeometryType),
         assetId: study.assetId,
 
@@ -40,3 +43,21 @@ export class GeometryRepo extends GeometryBaseRepo<Geometry> {
     });
   }
 }
+
+/**
+ * todo: this should be done on the db side to reduce view size there diretly
+ * @param id
+ */
+const parseId = (id: string) => {
+  if (id.startsWith('study_area_')) {
+    return id.replace('study_area_', 'a');
+  }
+  if (id.startsWith('study_location_')) {
+    return id.replace('study_location_', 'l');
+  }
+  if (id.startsWith('study_trace_')) {
+    return id.replace('study_trace_', 't');
+  }
+  console.log(id);
+  throw new Error('Unknown type');
+};
