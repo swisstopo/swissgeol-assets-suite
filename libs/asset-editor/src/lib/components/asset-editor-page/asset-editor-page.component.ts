@@ -362,7 +362,7 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
     let restrictionDate: LocalDate | null = general.restrictionDate
       ? LocalDate.fromDate(general.restrictionDate)
       : null;
-    if (general.restrictionType === RestrictionType.Public) {
+    if (general.restrictionType !== RestrictionType.TemporarilyRestricted) {
       restrictionDate = null;
     }
 

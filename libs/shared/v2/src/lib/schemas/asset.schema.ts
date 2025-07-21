@@ -19,6 +19,7 @@ import { LanguageCode } from '../models/reference-data';
 import { UserId } from '../models/user';
 import { WorkgroupId } from '../models/workgroup';
 import { IsNullable, messageNullableInt, messageNullableString } from '../utils/class-validator/is-nullable.decorator';
+import { IsRestrictionDateNullIfIsPublic } from '../utils/class-validator/is-restriction-date-null-if-is-public.decorator';
 import { AssetContactSchema } from './asset-contact.schema';
 import { AssetFileSchema, UpdateAssetFileDataSchema } from './asset-file.schema';
 import { AssetIdentifierSchema, TransformAssetIdentifier } from './asset-identifier.schema';
@@ -75,6 +76,7 @@ export class AssetSchema extends Schema implements Asset {
   isPublic!: boolean;
 
   @TransformLocalDate()
+  @IsRestrictionDateNullIfIsPublic()
   @IsNullable()
   restrictionDate!: LocalDate | null;
 
@@ -167,6 +169,7 @@ class AssetDataSchema extends Schema implements AssetData {
   isPublic!: boolean;
 
   @TransformLocalDate()
+  @IsRestrictionDateNullIfIsPublic()
   @IsNullable()
   restrictionDate!: LocalDate | null;
 
