@@ -75,6 +75,23 @@
       }
     </div>
   </asset-sg-detail-section>
+  <asset-sg-detail-section [title]="'edit.tabs.general.access.name' | translate">
+    <div class="content column" content>
+      <asset-sg-select
+        [title]="'edit.tabs.general.access.name' | translate"
+        [values]="restrictionItems"
+        [bindLabel]="'label'"
+        [bindKey]="'key'"
+        formControlName="restrictionType"
+      ></asset-sg-select>
+      @if (form.controls.restrictionType.value === RestrictionType.TemporarilyRestricted) {
+        <asset-sg-date-picker
+          [title]="'edit.tabs.general.access.items.temporarilyRestricted' | translate"
+          formControlName="restrictionDate"
+        ></asset-sg-date-picker>
+      }
+    </div>
+  </asset-sg-detail-section>
   <asset-sg-detail-section [title]="'edit.tabs.usage.nationalInterest' | translate">
     <div class="content column" content>
       <mat-checkbox formControlName="isOfNationalInterest" color="primary">

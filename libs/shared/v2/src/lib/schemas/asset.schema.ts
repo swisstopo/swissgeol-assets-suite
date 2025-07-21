@@ -19,11 +19,12 @@ import { LanguageCode } from '../models/reference-data';
 import { UserId } from '../models/user';
 import { WorkgroupId } from '../models/workgroup';
 import { IsNullable, messageNullableInt, messageNullableString } from '../utils/class-validator/is-nullable.decorator';
+import { IsRestrictionDateNullIfIsPublic } from '../utils/class-validator/is-restriction-date-null-if-is-public.decorator';
 import { AssetContactSchema } from './asset-contact.schema';
 import { AssetFileSchema, UpdateAssetFileDataSchema } from './asset-file.schema';
 import { AssetIdentifierSchema, TransformAssetIdentifier } from './asset-identifier.schema';
 import { Schema, TransformLocalDate } from './base/schema';
-import { GeometrySchema, GeometryDataType, CreateGeometryDataSchema } from './geometry.schema';
+import { CreateGeometryDataSchema, GeometryDataType, GeometrySchema } from './geometry.schema';
 
 export class AssetLegacyDataSchema extends Schema implements AssetLegacyData {
   @IsInt({ message: messageNullableInt })
@@ -73,6 +74,11 @@ export class AssetSchema extends Schema implements Asset {
 
   @IsBoolean()
   isPublic!: boolean;
+
+  @TransformLocalDate()
+  @IsRestrictionDateNullIfIsPublic()
+  @IsNullable()
+  restrictionDate!: LocalDate | null;
 
   @IsObject()
   @ValidateNested()
@@ -161,6 +167,11 @@ class AssetDataSchema extends Schema implements AssetData {
 
   @IsBoolean()
   isPublic!: boolean;
+
+  @TransformLocalDate()
+  @IsRestrictionDateNullIfIsPublic()
+  @IsNullable()
+  restrictionDate!: LocalDate | null;
 
   @IsString()
   formatCode!: LocalizedItemCode;

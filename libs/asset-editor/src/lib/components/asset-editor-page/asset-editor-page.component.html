@@ -90,7 +90,7 @@
         }
         @case (Tab.Status) {
           @if (mode === EditorMode.Edit) {
-            <asset-sg-editor-status [workflow]="workflow" />
+            <asset-sg-editor-status [workflow]="workflow" [isRestricted]="!asset?.isPublic" />
           }
         }
         @case (Tab.LegacyData) {

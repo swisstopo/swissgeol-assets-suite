@@ -1,12 +1,12 @@
 import {
-  UpdateAssetData,
   AssetId,
   AssetPolicy,
-  User,
+  AssetSchema,
   CreateAssetData,
   CreateAssetDataSchema,
+  UpdateAssetData,
   UpdateAssetDataSchema,
-  AssetSchema,
+  User,
 } from '@asset-sg/shared/v2';
 import {
   Controller,

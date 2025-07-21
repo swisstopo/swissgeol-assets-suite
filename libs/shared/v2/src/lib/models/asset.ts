@@ -33,6 +33,11 @@ export interface Asset extends Model<AssetId> {
   isPublic: boolean;
 
   /**
+   * DB: `restriction_date`
+   */
+  restrictionDate: LocalDate | null;
+
+  /**
    * Legacy data.
    *
    * Is empty when the asset has no such data.

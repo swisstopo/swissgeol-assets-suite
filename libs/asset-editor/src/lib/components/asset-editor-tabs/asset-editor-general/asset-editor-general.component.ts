@@ -1,10 +1,10 @@
 import { Component, inject, Input, OnChanges, OnDestroy, OnInit, SimpleChanges } from '@angular/core';
-import { fromAppShared } from '@asset-sg/client-shared';
+import { fromAppShared, TranslationKey } from '@asset-sg/client-shared';
 import { isNotNull } from '@asset-sg/core';
 import { Asset, LanguageCode, LocalizedItem, Role, SimpleWorkgroup } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
 import { combineLatestWith, filter, map, Observable, startWith, Subscription } from 'rxjs';
-import { AssetForm } from '../../asset-editor-page/asset-editor-page.component';
+import { AssetForm, RestrictionType } from '../../asset-editor-page/asset-editor-page.component';
 
 @Component({
   selector: 'asset-sg-editor-general',
@@ -23,6 +23,18 @@ export class AssetEditorGeneralComponent implements OnInit, OnChanges, OnDestroy
   public selectedNationalInterestTypes: LocalizedItem[] = [];
 
   private readonly store = inject(Store);
+
+  public readonly restrictionItems: { label: TranslationKey; key: RestrictionType }[] = [
+    {
+      label: { key: 'edit.tabs.general.access.items.public' },
+      key: RestrictionType.Public,
+    },
+    { label: { key: 'edit.tabs.general.access.items.restricted' }, key: RestrictionType.Restricted },
+    {
+      label: { key: 'edit.tabs.general.access.items.temporarilyRestricted' },
+      key: RestrictionType.TemporarilyRestricted,
+    },
+  ];
 
   public readonly nationalInterestTypes$: Observable<LocalizedItem[]> = this.store
     .select(fromAppShared.selectReferenceNationalInterestTypes)
@@ -130,4 +142,6 @@ export class AssetEditorGeneralComponent implements OnInit, OnChanges, OnDestroy
     ]);
     this.form.markAsDirty();
   }
+
+  protected readonly RestrictionType = RestrictionType;
 }
