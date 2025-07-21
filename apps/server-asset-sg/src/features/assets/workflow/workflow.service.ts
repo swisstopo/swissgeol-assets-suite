@@ -65,12 +65,6 @@ export class WorkflowService {
   }
 
   async updateApproval(workflow: Workflow, approval: Partial<WorkflowSelection>): Promise<WorkflowSelection> {
-    if (workflow.status !== WorkflowStatus.Reviewed) {
-      throw new HttpException(
-        "Approval can only be changed for workflows with 'Reviewed' status.",
-        HttpStatus.CONFLICT,
-      );
-    }
     return handleMissing(await this.workflowRepo.approvals.update(workflow.id, approval));
   }
 
