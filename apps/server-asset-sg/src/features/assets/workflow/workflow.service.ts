@@ -61,10 +61,26 @@ export class WorkflowService {
     if (workflow.status !== WorkflowStatus.InReview) {
       throw new HttpException("Review can only be changed for workflows with 'InReview' status.", HttpStatus.CONFLICT);
     }
-    return handleMissing(await this.workflowRepo.reviews.update(workflow.id, review));
+    const reviews = handleMissing(await this.workflowRepo.reviews.update(workflow.id, review));
+    const updatedApproval: Partial<WorkflowSelection> = Object.fromEntries(
+      Object.entries(review).map(([key, value]) => {
+        if (typeof value === 'boolean') {
+          return [key, false];
+        }
+        return [key, value];
+      }),
+    );
+    handleMissing(await this.workflowRepo.approvals.update(workflow.id, updatedApproval));
+    return reviews;
   }
 
   async updateApproval(workflow: Workflow, approval: Partial<WorkflowSelection>): Promise<WorkflowSelection> {
+    if (workflow.status !== WorkflowStatus.Reviewed) {
+      throw new HttpException(
+        "Approval can only be changed for workflows with 'Reviewed' status.",
+        HttpStatus.CONFLICT,
+      );
+    }
     return handleMissing(await this.workflowRepo.approvals.update(workflow.id, approval));
   }
 

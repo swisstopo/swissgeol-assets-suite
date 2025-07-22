@@ -15,7 +15,7 @@ import { TranslateService } from '@ngx-translate/core';
 import { type SgcWorkflowSelectionEntry, WorkflowChange } from '@swissgeol/ui-core';
 import { SgcWorkflowChangeEvent } from '@swissgeol/ui-core/dist/types/components/sgc-workflow/sgc-workflow';
 import { SgcWorkflowSelectionChangeEvent } from '@swissgeol/ui-core/dist/types/components/sgc-workflow/sgc-workflow-selection/sgc-workflow-selection';
-import { BehaviorSubject, switchMap } from 'rxjs';
+import { BehaviorSubject } from 'rxjs';
 import { AssetEditorService } from '../../../services/asset-editor.service';
 import { WorkflowApiService } from '../../../services/workflow-api.service';
 import { setWorkflow } from '../../../state/asset-editor.actions';
@@ -70,37 +70,31 @@ export class AssetEditorStatusComponent implements OnChanges {
     }
 
     const patch = event.detail.changes as Partial<WorkflowSelection>;
-    this.workflowApiService
-      .updateReview(workflow.id, patch)
-      .pipe(
-        switchMap(() =>
-          this.workflowApiService.updateApproval(
-            workflow.id,
-            Object.fromEntries(
-              Object.entries(patch).map(([key, value]) => {
-                if (typeof value === 'boolean') {
-                  return [key, false];
-                }
-                return [key, value];
-              }),
-            ),
-          ),
-        ),
-      )
-      .subscribe((approval) => {
-        this.store.dispatch(
-          setWorkflow({
-            workflow: {
-              ...workflow,
-              review: {
-                ...workflow.review,
-                ...patch,
-              },
-              approval,
+    this.workflowApiService.updateReview(workflow.id, patch).subscribe(() => {
+      const updatedApproval = Object.fromEntries(
+        Object.entries(patch).map(([key, value]) => {
+          if (typeof value === 'boolean') {
+            return [key, false];
+          }
+          return [key, value];
+        }),
+      );
+      this.store.dispatch(
+        setWorkflow({
+          workflow: {
+            ...workflow,
+            review: {
+              ...workflow.review,
+              ...patch,
             },
-          }),
-        );
-      });
+            approval: {
+              ...workflow.approval,
+              ...updatedApproval,
+            },
+          },
+        }),
+      );
+    });
   }
 
   handleApprovalChange(event: SgcWorkflowSelectionChangeEvent): void {
