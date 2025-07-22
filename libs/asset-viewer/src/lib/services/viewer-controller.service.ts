@@ -106,7 +106,12 @@ export class ViewerControllerService {
     if (geometries.length === 0) {
       loads.push(this.loadGeometries());
     }
-    loads.push(this.loadResults(params.query, { force: isPanelOpen(params.ui.resultsState) }));
+    loads.push(
+      this.loadResults(params.query, {
+        force: isPanelOpen(params.ui.resultsState),
+        skipAssetReset: params.assetId !== null,
+      }),
+    );
     loads.push(this.loadStats(params.query));
     await Promise.all(loads);
 
@@ -123,7 +128,10 @@ export class ViewerControllerService {
     this.store.dispatch(actions.setGeometries({ geometries, isLoading: false }));
   }
 
-  private async loadResults(query: AssetSearchQuery, options: { force?: boolean } = {}): Promise<void> {
+  private async loadResults(
+    query: AssetSearchQuery,
+    options: { force?: boolean; skipAssetReset?: boolean } = {},
+  ): Promise<void> {
     if (!options.force && isEmptySearchQuery(query)) {
       this.store.dispatch(actions.setResults({ results: makeEmptyAssetSearchResults(), isLoading: false }));
       return;
@@ -133,7 +141,7 @@ export class ViewerControllerService {
     this.store.dispatch(actions.setResults({ results, isLoading: false }));
     if (results.data.length === 1) {
       await this.loadAsset(results.data[0].id);
-    } else {
+    } else if (!options.skipAssetReset) {
       this.store.dispatch(appSharedStateActions.setCurrentAsset({ asset: null, isLoading: false }));
     }
   }
