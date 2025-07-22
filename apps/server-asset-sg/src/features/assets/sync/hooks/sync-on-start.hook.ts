@@ -5,7 +5,7 @@ import { AssetSyncService } from '@/features/assets/sync/asset-sync.service';
 export class SyncOnStartHook implements OnApplicationBootstrap {
   constructor(private readonly assetSyncService: AssetSyncService) {}
   public async onApplicationBootstrap() {
-    await this.assetSyncService.clearSyncFileIfExists();
-    await this.assetSyncService.start();
+    //await this.assetSyncService.clearSyncFileIfExists();
+    //await this.assetSyncService.start();
   }
 }

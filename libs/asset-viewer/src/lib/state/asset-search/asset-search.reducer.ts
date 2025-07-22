@@ -5,7 +5,6 @@ import {
   AssetSearchStats,
   Coordinate,
   Geometry,
-  GeometryAccessType,
   GeometryDetail,
   GeometryType,
   makeEmptyAssetSearchResults,
@@ -148,7 +147,7 @@ export const assetSearchReducer = createReducer(
         ...state.results,
         data: state.results.data.filter((it) => it.id !== assetId),
       },
-      geometries: state.geometries?.filter((geometry) => geometry.assetId !== assetId) ?? null,
+      //geometries: state.geometries?.filter((geometry) => geometry.assetId !== assetId) ?? null,
     }),
   ),
   on(appSharedStateActions.updateAsset, (state, { asset, geometries }): AssetSearchState => {
@@ -158,19 +157,7 @@ export const assetSearchReducer = createReducer(
         if (geometries === undefined) {
           return state.geometries;
         }
-        return state.geometries
-          .filter((geometry) => geometry.assetId !== asset.id)
-          .concat(
-            geometries.map((geometry): Geometry => {
-              return {
-                id: geometry.id,
-                type: geometry.type,
-                accessType: asset.isPublic ? GeometryAccessType.Public : GeometryAccessType.Internal,
-                center: extractCenterFromGeometryDetail(geometry),
-                assetId: asset.id,
-              };
-            }),
-          );
+        return state.geometries;
       }),
     };
   }),

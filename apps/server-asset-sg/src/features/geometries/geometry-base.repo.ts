@@ -12,7 +12,7 @@ export abstract class GeometryBaseRepo<T> implements ReadRepo<T, GeometryId> {
     return result.length === 1 ? result[0] : null;
   }
 
-  list({ limit, offset, ids, workgroupIds, assetIds }: ListGeometryOptions = {}): Promise<T[]> {
+  list({ limit, offset, ids, workgroupIds, assetIds }: ListGeometryOptions = {}, isSpecial = false): Promise<T[]> {
     if ((workgroupIds != null && workgroupIds.length === 0) || (assetIds != null && assetIds.length === 0)) {
       // If any of the array filters is empty, the result will never contain any results.
       return Promise.resolve([]);
@@ -54,7 +54,14 @@ export abstract class GeometryBaseRepo<T> implements ReadRepo<T, GeometryId> {
         OFFSET ${offset}
       `);
     }
-    return this.query(Prisma.join(parts, ' '));
+
+    // can be used by passing IDs (e.g. asset_ids) that are then unnested. this avoids the PG limit of bind params
+    // Currently: not used, because it is _very_ slow and has duplicated data.
+    if (!isSpecial) {
+      return this.query(Prisma.join(parts, ' '));
+    }
+    const overrideCondition = Prisma.sql`WHERE s.asset_id IN (SELECT asset_id FROM jsonb_array_elements_text(${JSON.stringify(assetIds)}::jsonb) AS asset_id)`;
+    return this.query(overrideCondition);
   }
 
   protected abstract query(condition: Prisma.Sql): Promise<T[]>;

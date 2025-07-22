@@ -141,6 +141,7 @@ export class MapController {
 
     const locationFeatures: Feature<Point>[] = Array(geometries.length);
     const heatmapFeatures: Feature<Point>[] = Array(geometries.length);
+    console.log('Total geometries: ' + geometries.length);
     for (let i = 0; i < geometries.length; i++) {
       const geometry = geometries[i];
       const location = new Point(olCoordsFromCoordinate(geometry.center));
@@ -347,7 +348,7 @@ export class MapController {
       }),
       heatmap: this.makeHeatmapLayer(),
       assetLocations: makeSimpleLayer<Point>({
-        minZoom: 11,
+        minZoom: 13,
         style: availableLayerStyles[defaultLayerStyle].styleFunction,
       }),
       polygon: makeSimpleLayer(),
@@ -367,7 +368,7 @@ export class MapController {
     return new Heatmap({
       source: cluster,
       weight: (feature) => (feature.get('features') == null ? 0 : 1),
-      maxZoom: 12,
+      maxZoom: 13,
       blur: 20,
       radius: 5,
       opacity: 0.7,

@@ -14,7 +14,7 @@ export class GeometryService {
 
   private getAllGeometriesFromApi(): Observable<Geometry[]> {
     return this._httpClient
-      .get('/api/geometries', { observe: 'events', responseType: 'text', reportProgress: true })
+      .get('/api/geometries/filtered', { observe: 'events', responseType: 'text', reportProgress: true })
       .pipe(
         filter((event) => event.type === HttpEventType.DownloadProgress || event.type === HttpEventType.Response),
         map((event: HttpEvent<string>) => (event as HttpDownloadProgressEvent).partialText ?? ''),

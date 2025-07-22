@@ -194,6 +194,41 @@ export class AssetSearchService {
   }
 
   /**
+   * Returns just the IDs for all the queries, without pagination or limits.
+   * To be used if we want to select data form the DB using WHERE IN or unnest()
+   * @param query
+   * @param user
+   * @param shouldDecode
+   */
+  async searchIds(
+    query: AssetSearchQuery,
+    user: User,
+    { decode: shouldDecode = true }: PageOptions & { decode?: boolean } = {},
+  ): Promise<number[]> {
+    // Apply the query to find all matching ids.
+    const [serializedAssets, total] = await this.searchAssetsByQuery(query, user);
+
+    // Load the matched assets from the database.
+    const data: AssetSearchResultItem[] = [];
+    for (const serializedAsset of serializedAssets.values()) {
+      const encodedAsset = JSON.parse(serializedAsset);
+      data.push(
+        shouldDecode
+          ? plainToInstance(AssetSearchResultItemSchema, encodedAsset, { excludeExtraneousValues: true })
+          : encodedAsset,
+      );
+    }
+
+    // Return the matched data in a paginated format.
+    this.logger.log(`Total Assets matching filters: ${data.length}`);
+    this.logger.log(`Total Assets without geometries: ${data.filter((f) => f.geometries.length === 0).length}`);
+    this.logger.log(
+      `Total assets expected in geometry selection: ${data.filter((f) => f.geometries.length > 0).length}`,
+    );
+    return data.map((a) => a.id);
+  }
+
+  /**
    * Aggregates the stats over all assets matching a specific {@link AssetSearchQuery}.
    *
    * @param query The query to match with.
