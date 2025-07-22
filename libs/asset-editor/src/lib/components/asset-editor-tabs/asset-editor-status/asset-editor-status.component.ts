@@ -73,13 +73,25 @@ export class AssetEditorStatusComponent implements OnChanges {
 
     const patch = event.detail.changes as Partial<WorkflowSelection>;
     this.workflowApiService.updateReview(workflow.id, patch).subscribe(() => {
+      const updatedApproval = Object.fromEntries(
+        Object.entries(patch).map(([key, value]) => {
+          if (typeof value === 'boolean') {
+            return [key, false];
+          }
+          return [key, value];
+        }),
+      );
       this.store.dispatch(
         setWorkflow({
           workflow: {
             ...workflow,
             review: {
-              ...workflow.approval,
+              ...workflow.review,
               ...patch,
+            },
+            approval: {
+              ...workflow.approval,
+              ...updatedApproval,
             },
           },
         }),

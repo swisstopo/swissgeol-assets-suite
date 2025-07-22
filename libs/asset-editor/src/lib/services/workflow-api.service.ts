@@ -16,11 +16,11 @@ export class WorkflowApiService {
       .pipe(map((data) => plainToInstance(WorkflowSchema, data)));
   }
 
-  public updateReview(id: Id<Workflow>, selection: Partial<WorkflowSelection>): Observable<void> {
-    return this.httpClient.patch<void>(`/api/assets/${id}/workflow/review`, selection);
+  public updateReview(id: Id<Workflow>, selection: Partial<WorkflowSelection>): Observable<WorkflowSelection> {
+    return this.httpClient.patch<WorkflowSelection>(`/api/assets/${id}/workflow/review`, selection);
   }
 
-  public updateApproval(id: Id<Workflow>, selection: Partial<WorkflowSelection>): Observable<void> {
-    return this.httpClient.patch<void>(`/api/assets/${id}/workflow/approval`, selection);
+  public updateApproval(id: Id<Workflow>, selection: Partial<WorkflowSelection>): Observable<WorkflowSelection> {
+    return this.httpClient.patch<WorkflowSelection>(`/api/assets/${id}/workflow/approval`, selection);
   }
 }
