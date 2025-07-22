@@ -25,5 +25,5 @@ export enum AssetSearchUsageCode {
 
 export type Polygon = LV95[];
 
-export const isEmptySearchQuery = (query: AssetSearchQuery): boolean =>
-  Object.values(query).every((value) => value === undefined || value == false);
+export const isEmptySearchQuery = ({ favoritesOnly: _ignore, ...query }: AssetSearchQuery): boolean =>
+  Object.values(query).every((value) => value === undefined);
