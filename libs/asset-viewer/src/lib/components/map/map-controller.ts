@@ -8,6 +8,8 @@ import {
   GeometryId,
   GeometryType,
 } from '@asset-sg/shared/v2';
+import { HeatmapLayer } from '@deck.gl/aggregation-layers';
+import { Deck } from '@deck.gl/core';
 import { buffer } from '@turf/buffer';
 import { Control } from 'ol/control';
 import { Coordinate } from 'ol/coordinate';
@@ -17,10 +19,11 @@ import Feature from 'ol/Feature';
 import { GeoJSON } from 'ol/format';
 import { Geometry as OlGeometry, LineString, Point, Polygon } from 'ol/geom';
 import { fromExtent as polygonFromExtent } from 'ol/geom/Polygon';
-import { Heatmap, Tile as TileLayer, Vector as VectorLayer } from 'ol/layer';
+import { Layer, Tile as TileLayer, Vector as VectorLayer } from 'ol/layer';
 import OlMap from 'ol/Map';
 import MapBrowserEvent from 'ol/MapBrowserEvent';
-import { Cluster, Tile, Vector as VectorSource, XYZ } from 'ol/source';
+import { toLonLat, transform } from 'ol/proj';
+import { Tile, Vector as VectorSource, XYZ } from 'ol/source';
 import Style, { StyleFunction } from 'ol/style/Style';
 import View from 'ol/View';
 import { filter, fromEventPattern, map, Observable, ReplaySubject, switchMap } from 'rxjs';
@@ -28,6 +31,28 @@ import { CustomFeatureProperties } from '../../shared/map-configuration/custom-f
 import { availableLayerStyles, defaultLayerStyle } from '../../shared/map-configuration/map-layer-styles';
 import { interactionStyles } from '../../shared/map-configuration/styles/system-styles.map-layer-style';
 import { mapAssetAccessToAccessType } from '../../utils/access-type';
+
+function getRandomLatLonNearZurich(radiusInKm = 20): [number, number] {
+  const zurichLat = 47.3769;
+  const zurichLon = 8.5417;
+
+  const radiusInDegrees = radiusInKm / 111.32; // Approx conversion for lat/lon degrees
+
+  // Generate random angle and distance
+  const angle = Math.random() * 2 * Math.PI;
+  const distance = Math.random() * radiusInDegrees;
+
+  // Offset in lat/lon
+  const deltaLat = distance * Math.cos(angle);
+  const deltaLon = (distance * Math.sin(angle)) / Math.cos((zurichLat * Math.PI) / 180);
+
+  const lat = zurichLat + deltaLat;
+  const lon = zurichLon + deltaLon;
+
+  return [lon, lat];
+}
+
+const SWITCH_HEATMAP_ZOOM = 13;
 
 export const DEFAULT_MAP_POSITION: MapPosition = {
   x: SWISS_CENTER[0],
@@ -82,8 +107,10 @@ export class MapController {
     featureProjection: 'EPSG:3857',
   });
   private readonly requestedPosition$ = new ReplaySubject<Partial<MapPosition>>(1);
+  private readonly deck: Deck;
 
   constructor(element: HTMLElement, initialPosition: MapPosition) {
+    console.log(initialPosition);
     const view = new View({
       projection: 'EPSG:3857',
       zoom: initialPosition.z,
@@ -97,19 +124,65 @@ export class MapController {
     this.layers = this.makeLayers();
     this.sources = makeSources(this.layers);
 
+    this.deck = new Deck({
+      initialViewState: { longitude: 0, latitude: 0, zoom: 1 },
+      controller: false,
+      style: { pointerEvents: 'none', zIndex: '1' },
+      layers: [],
+    });
+
+    // Sync deck view with OL view
+    const deckLayer = new Layer({
+      render: ({ size, viewState }) => {
+        const zoom = viewState.zoom - 1;
+        const [width, height] = size;
+        const [longitude, latitude] = toLonLat(viewState.center);
+        const bearing = (-viewState.rotation * 180) / Math.PI;
+        const deckViewState = { bearing, longitude, latitude, zoom };
+        this.deck.setProps({ width, height, viewState: deckViewState });
+        this.deck.redraw();
+        console.log('hello');
+        return this.deck.getCanvas()!;
+      },
+    });
+
     this.map = new OlMap({
       target: element,
       controls: [],
       layers: [
         this.layers.raster,
-        this.layers.heatmap,
         this.layers.assetLocations,
         this.layers.assetGeometries,
         this.layers.activeAsset,
         this.layers.polygon,
         this.layers.picker,
+        deckLayer,
       ],
       view: view,
+    });
+
+    const updateLayerOnZoom = (viewState: any) => {
+      const zoom = viewState.zoom - 1;
+      const hasLayer = this.map.getLayers().getArray().includes(deckLayer);
+
+      if (zoom >= SWITCH_HEATMAP_ZOOM) {
+        if (hasLayer) {
+          this.map.removeLayer(deckLayer);
+        }
+      } else {
+        if (!hasLayer) {
+          this.map.addLayer(deckLayer);
+        }
+      }
+    };
+
+    this.map.getView().on('change:resolution', () => {
+      const viewState = {
+        zoom: this.map.getView().getZoom(),
+        center: this.map.getView().getCenter(),
+        rotation: this.map.getView().getRotation(),
+      };
+      updateLayerOnZoom(viewState);
     });
 
     this.assetsClick$ = this.makeAssetsClick$();
@@ -142,13 +215,36 @@ export class MapController {
     const locationFeatures: Feature<Point>[] = Array(geometries.length);
     const heatmapFeatures: Feature<Point>[] = Array(geometries.length);
     console.log('Total geometries: ' + geometries.length);
+
+    this.deck.setProps({
+      layers: [
+        new HeatmapLayer<Geometry>({
+          id: 'HeatmapLayer',
+          data: geometries,
+          colorRange: [
+            // default ol heatmap ramp
+            [0, 0, 255], // '#00f'
+            [0, 255, 255], // '#0ff'
+            [0, 255, 0], // '#0f0'
+            [255, 255, 0], // '#ff0'
+            [255, 0, 0], // '#f00'
+          ],
+
+          aggregation: 'SUM',
+          getPosition: (d) => {
+            // todo: this should be fixed in that we don't want to transform all coordinates -> return from db already?
+            const coords = transform([d.center.y, d.center.x], 'EPSG:2056', 'EPSG:4326');
+            return [coords[0], coords[1]];
+          },
+          //getWeight: (d) => d.SPACES,
+          radiusPixels: 25,
+        }),
+      ],
+    });
     for (let i = 0; i < geometries.length; i++) {
       const geometry = geometries[i];
       const location = new Point(olCoordsFromCoordinate(geometry.center));
       this.assetIdsByGeometryIds.set(geometry.id, geometry.assetId);
-      const heatmapFeature = new Feature<Point>(location);
-      heatmapFeature.setId(geometry.id);
-      heatmapFeatures[i] = heatmapFeature;
 
       const locationFeature = new Feature<Point>(location);
       locationFeature.setId(geometry.id);
@@ -159,9 +255,6 @@ export class MapController {
     }
 
     window.requestAnimationFrame(() => {
-      this.sources.heatmap.clear();
-      this.sources.heatmap.addFeatures(heatmapFeatures);
-
       this.sources.assetLocations.clear();
       this.sources.assetLocations.addFeatures(locationFeatures);
     });
@@ -348,7 +441,7 @@ export class MapController {
       }),
       heatmap: this.makeHeatmapLayer(),
       assetLocations: makeSimpleLayer<Point>({
-        minZoom: 13,
+        minZoom: SWITCH_HEATMAP_ZOOM,
         style: availableLayerStyles[defaultLayerStyle].styleFunction,
       }),
       polygon: makeSimpleLayer(),
@@ -358,21 +451,24 @@ export class MapController {
     };
   }
 
-  private makeHeatmapLayer(): MapLayer<Point> {
-    const source = new VectorSource({ wrapX: false });
-    const cluster = new Cluster({
-      distance: 2,
-      source: source,
-    }) as unknown as VectorSource<Point>;
-
-    return new Heatmap({
-      source: cluster,
-      weight: (feature) => (feature.get('features') == null ? 0 : 1),
-      maxZoom: 13,
-      blur: 20,
-      radius: 5,
-      opacity: 0.7,
-    }) as MapLayer<Point>;
+  /**
+   * Returns the heatmaplayer that syncs deckgl to OL
+   * @private
+   */
+  private makeHeatmapLayer(): Layer {
+    return new Layer({
+      render: ({ size, viewState }) => {
+        const zoom = viewState.zoom - 1;
+        const [width, height] = size;
+        const [longitude, latitude] = toLonLat(viewState.center);
+        const bearing = (-viewState.rotation * 180) / Math.PI;
+        const deckViewState = { bearing, longitude, latitude, zoom };
+        this.deck.setProps({ width, height, viewState: deckViewState });
+        this.deck.redraw();
+        console.log('hello');
+        return this.deck.getCanvas()!;
+      },
+    });
   }
 
   private makePositionChange$(): Observable<MapPosition> {
@@ -533,9 +629,9 @@ interface MapLayers {
   raster: TileLayer<Tile>;
 
   /**
-   * A heatmap of geometries.
+   * A heatmap of geometries, using deckgl
    */
-  heatmap: MapLayer<Point>;
+  heatmap: Layer;
 
   /**
    * A layer displaying a single point for each asset geometry.
@@ -564,7 +660,7 @@ interface MapLayers {
 }
 
 type MapLayerSources = {
-  [K in keyof MapLayers]: MapLayers[K] extends { getSource(): infer S | null } ? S : never;
+  [K in keyof Omit<MapLayers, 'heatmap'>]: MapLayers[K] extends { getSource(): infer S | null } ? S : never;
 };
 
 type MapLayer<G extends OlGeometry = OlGeometry> = VectorLayer<VectorSource<G>>;
@@ -587,7 +683,6 @@ const requireSource = <S>(layer: { getSource(): S | null }): S => {
 
 const makeSources = (layers: MapLayers): MapLayerSources => ({
   raster: requireSource(layers.raster),
-  heatmap: requireSource(requireSource(layers.heatmap) as unknown as Cluster) as VectorSource<Point>,
   assetLocations: requireSource(layers.assetLocations),
   polygon: requireSource(layers.polygon),
   assetGeometries: requireSource(layers.assetGeometries),
