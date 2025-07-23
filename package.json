@@ -155,7 +155,8 @@
     "@nx/nx-darwin-x64": "~21.0.3",
     "@nx/nx-linux-x64-gnu": "~21.0.3",
     "@nx/nx-linux-x64-musl": "~21.0.3",
-    "@nx/nx-win32-x64-msvc": "~21.0.3"
+    "@nx/nx-win32-x64-msvc": "~21.0.3",
+    "@esbuild/linux-x64": "~0.25.8"
   },
   "prisma": {
     "schema": "libs/persistence/prisma/schema.prisma"
