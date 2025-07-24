@@ -1,8 +1,7 @@
 import { Component, inject, Inject, OnInit } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { User, UserId, Workgroup, WorkgroupData } from '@asset-sg/shared/v2';
+import { Role, User, UserId, Workgroup, WorkgroupData } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
-import { Role } from '@prisma/client';
 import { Observable, Subscription } from 'rxjs';
 import * as actions from '../../state/admin.actions';
 import { AppStateWithAdmin } from '../../state/admin.reducer';
@@ -24,7 +23,7 @@ export class AddUsersToWorkgroupDialogComponent implements OnInit {
   public roles = Object.values(Role);
   public shouldShowError = false;
   private selectedUserIds: UserId[] = [];
-  public selectedRole: Role = Role.Viewer;
+  public selectedRole: Role = Role.Reader;
 
   private readonly store = inject(Store<AppStateWithAdmin>);
   private readonly users$: Observable<User[]> = this.store.select(selectUsers);
@@ -32,7 +31,7 @@ export class AddUsersToWorkgroupDialogComponent implements OnInit {
 
   constructor(
     @Inject(MAT_DIALOG_DATA) public data: { workgroup: Workgroup; mode: Mode },
-    private readonly dialogRef: MatDialogRef<AddUsersToWorkgroupDialogComponent>
+    private readonly dialogRef: MatDialogRef<AddUsersToWorkgroupDialogComponent>,
   ) {
     this.workgroup = this.data.workgroup;
     this.mode = this.data.mode;
@@ -92,7 +91,7 @@ export class AddUsersToWorkgroupDialogComponent implements OnInit {
         this.usersOnWorkgroup = users;
         this.users = users.filter((user) => !this.workgroup.users.has(user.id));
         this.userValues = this.users.map((user) => user.email);
-      })
+      }),
     );
   }
 }

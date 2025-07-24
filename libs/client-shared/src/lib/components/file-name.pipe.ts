@@ -1,0 +1,12 @@
+import { Pipe, PipeTransform } from '@angular/core';
+import { AssetFile } from '@asset-sg/shared/v2';
+
+@Pipe({
+  name: 'fileName',
+  standalone: true,
+})
+export class FileNamePipe implements PipeTransform {
+  transform(value: AssetFile): string {
+    return value.alias ?? value.name;
+  }
+}

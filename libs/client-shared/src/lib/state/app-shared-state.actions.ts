@@ -1,59 +1,67 @@
-import { AssetEditDetail, Contact, Lang, ReferenceData } from '@asset-sg/shared';
-import { AssetId, SimpleWorkgroup, User } from '@asset-sg/shared/v2';
-import * as RD from '@devexperts/remote-data-ts';
+import {
+  Asset,
+  AssetId,
+  Contact,
+  GeometryDetail,
+  ReferenceDataMapping,
+  SimpleWorkgroup,
+  User,
+} from '@asset-sg/shared/v2';
 import { createAction, props } from '@ngrx/store';
 
-import { ApiError } from '../utils';
-
 export const loadReferenceData = createAction('[App Shared State] Load Reference Data');
-export const loadReferenceDataResult = createAction(
-  '[App Shared State] Load Reference Data Result',
-  props<RD.RemoteData<ApiError, ReferenceData>>()
+export const setReferenceData = createAction(
+  '[App Shared State] Set Reference Data',
+  props<{ referenceData: ReferenceDataMapping }>(),
 );
 
-export const createContactResult = createAction(
-  '[App Shared State] Create Contact Result',
-  props<RD.RemoteData<ApiError, Contact>>()
-);
-export const editContactResult = createAction(
-  '[App Shared State] Edit Contact Result',
-  props<RD.RemoteData<ApiError, Contact>>()
-);
+export const storeContact = createAction('[App Shared State] Store Contact', props<{ contact: Contact }>());
 
-export const loadUserProfile = createAction('[App Shared State] Load User Profile');
+export const loadUser = createAction('[App Shared State] Load User');
 
 export const setAnonymousMode = createAction('[App Shared State] Set Viewer Mode');
 
 export const setTrackingConsent = createAction(
   '[App Shared State] Set Tracking Consent',
-  props<{ hasConsented: boolean }>()
+  props<{ hasConsented: boolean }>(),
 );
 
-export const loadUserProfileResult = createAction(
-  '[App Shared State] Load User Profile Result',
-  props<RD.RemoteData<ApiError, User>>()
-);
+export const setUser = createAction('[App Shared State] Set User', props<User>());
 
 export const loadWorkgroups = createAction('[App Shared State] Load Workgroups');
-export const loadWorkgroupsResult = createAction(
-  '[App Shared State] Load Workgroups Result',
-  props<{ workgroups: SimpleWorkgroup[] }>()
+export const setWorkgroups = createAction(
+  '[App Shared State] Set Workgroups',
+  props<{ workgroups: SimpleWorkgroup[] }>(),
 );
 
 export const logout = createAction('[App Shared State] Logout');
 
-export const setLang = createAction('[App Shared State] Set Lang', props<{ lang: Lang }>());
-
-export const updateAssetInSearch = createAction(
-  '[App Shared State] Update Asset In Search',
+export const setCurrentAsset = createAction(
+  '[Asset Search] Set Current Asset',
   props<{
-    asset: AssetEditDetail;
-  }>()
+    asset?: null | {
+      asset: Asset;
+      geometries: GeometryDetail[];
+    };
+    isLoading?: boolean;
+  }>(),
 );
 
-export const removeAssetFromSearch = createAction(
-  '[App Shared State] Remove Asset From Search',
+/**
+ * Updates all instances of an asset with a new value.
+ * If the asset is not referenced anywhere, the state does not change.
+ */
+export const updateAsset = createAction(
+  '[App Shared State] Update Asset',
   props<{
-    assetId: AssetId;
-  }>()
+    asset: Asset;
+    geometries?: GeometryDetail[];
+    shouldBeCurrentAsset?: boolean;
+  }>(),
 );
+
+/**
+ * Removes all instances of an asset.
+ * If the asset is not referenced anywhere, the state does not change.
+ */
+export const removeAsset = createAction('[App Shared State] Remove Asset From State', props<{ assetId: AssetId }>());

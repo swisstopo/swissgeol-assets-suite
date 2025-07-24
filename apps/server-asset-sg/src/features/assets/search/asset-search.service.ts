@@ -1,57 +1,46 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import {
-  AssetByTitle,
-  AssetEditDetail,
+  Asset,
+  AssetId,
+  AssetJSON,
   AssetSearchQuery,
   AssetSearchResult,
+  AssetSearchResultItem,
+  AssetSearchResultItemSchema,
   AssetSearchStats,
-  dateFromDateId,
-  DateId,
-  dateIdFromDate,
-  ElasticPoint,
-  ElasticSearchAsset,
-  GeometryCode,
-  LV95,
-  makeUsageCode,
-  SearchAssetAggregations,
-  SearchAssetResult,
-  SerializedAssetEditDetail,
-  UsageCode,
+  AssetSearchUsageCode,
+  ContactId,
+  ElasticsearchAsset,
+  GeometryType,
+  LocalDate,
+  User,
   ValueCount,
-} from '@asset-sg/shared';
-import { AssetId, StudyId, User } from '@asset-sg/shared/v2';
+  WorkgroupId,
+} from '@asset-sg/shared/v2';
 import { Client as ElasticsearchClient } from '@elastic/elasticsearch';
 import {
   AggregationsAggregationContainer,
-  BulkOperationContainer,
-  QueryDslNumberRangeQuery,
+  QueryDslDateRangeQuery,
   QueryDslQueryContainer,
   SearchResponse,
   SearchTotalHits,
 } from '@elastic/elasticsearch/lib/api/types';
 import { Injectable, Logger } from '@nestjs/common';
-import * as E from 'fp-ts/Either';
-import proj4 from 'proj4';
+
+import { plainToInstance } from 'class-transformer';
 
 // eslint-disable-next-line @nx/enforce-module-boundaries
 import indexMapping from '../../../../../../development/init/elasticsearch/mappings/swissgeol_asset_asset.json';
 
 import { PrismaService } from '@/core/prisma.service';
-import { AssetEditRepo } from '@/features/asset-edit/asset-edit.repo';
-import { StudyRepo } from '@/features/studies/study.repo';
+import { AssetRepo } from '@/features/assets/asset.repo';
+import { mapLv95ToElastic } from '@/features/assets/search/asset-search.utils';
+import { AssetSearchWriter, AssetSearchWriterOptions } from '@/features/assets/search/asset-search.writer';
+import { GeometryDetailRepo } from '@/features/geometries/geometry-detail.repo';
+import { GeometryRepo } from '@/features/geometries/geometry.repo';
 
 const INDEX = 'swissgeol_asset_asset';
 export { INDEX as ASSET_ELASTIC_INDEX };
-
-interface SearchOptions {
-  scope: Array<keyof ElasticSearchAsset>;
-  assetIds?: AssetId[];
-}
-
-interface ElasticSearchResult {
-  scoresByAssetId: Map<AssetId, number>;
-  aggs: SearchAssetAggregations;
-}
 
 const SEARCH_BATCH_SIZE = 10_000;
 
@@ -62,12 +51,23 @@ export class AssetSearchService {
   constructor(
     private readonly elastic: ElasticsearchClient,
     private readonly prisma: PrismaService,
-    private readonly assetRepo: AssetEditRepo,
-    private readonly studyRepo: StudyRepo
+    private readonly assetRepo: AssetRepo,
+    private readonly geometryRepo: GeometryRepo,
+    private readonly geometryDetailRepo: GeometryDetailRepo,
   ) {}
 
-  register(oneOrMore: AssetEditDetail | AssetEditDetail[]): Promise<void> {
-    return this.registerWithOptions(oneOrMore, { index: INDEX, shouldRefresh: true });
+  register(asset: Asset): Promise<void> {
+    return this.getWriter().write(asset);
+  }
+
+  getWriter(options?: AssetSearchWriterOptions): AssetSearchWriter {
+    return new AssetSearchWriter(
+      this.elastic,
+      this.prisma,
+      this.geometryRepo,
+      this.geometryDetailRepo,
+      options ?? { index: INDEX, shouldRefresh: true },
+    );
   }
 
   async deleteFromIndex(assetId: number): Promise<void> {
@@ -106,20 +106,25 @@ export class AssetSearchService {
       ...indexMapping,
     });
 
+    const writer = this.getWriter({ index: SYNC_INDEX, isEager: true });
     let offset = 0;
     for (;;) {
-      this.logger.debug('Assets synced', { total, offset });
+      this.logger.debug('Syncing assets.', {
+        total,
+        offset,
+        progress: Number((offset / total).toFixed(2)),
+      });
       const records = await this.assetRepo.list({ limit: 1000, offset });
       if (records.length === 0) {
         break;
       }
-      await this.registerWithOptions(records, { index: SYNC_INDEX });
+      await writer.write(records);
       offset += records.length;
       if (onProgress != null) {
         await onProgress(Math.min(offset / total, 1));
       }
     }
-    this.logger.debug('Assets synced', { total, offset: total });
+    this.logger.debug('Done syncing assets.', { total });
 
     // Delete the existing asset index.
     await this.elastic.indices.delete({ index: INDEX, ignore_unavailable: true });
@@ -147,36 +152,6 @@ export class AssetSearchService {
     await this.elastic.indices.delete({ index: SYNC_INDEX });
   }
 
-  private async registerWithOptions(
-    oneOrMore: AssetEditDetail | AssetEditDetail[],
-    { index, shouldRefresh = false }: { index: string; shouldRefresh?: boolean }
-  ): Promise<void> {
-    const assets = Array.isArray(oneOrMore) ? oneOrMore : [oneOrMore];
-    const operations: Array<BulkOperationContainer | ElasticSearchAsset> = Array(assets.length * 2);
-    const mappings: Array<Promise<void>> = Array(assets.length);
-    for (let i = 0; i < assets.length; i++) {
-      const asset = assets[i];
-      mappings[i] = this.mapAssetToElastic(asset).then((elasticAsset) => {
-        operations[i * 2] = { index: { _index: index, _id: `${elasticAsset.assetId}` } };
-        operations[i * 2 + 1] = elasticAsset;
-      });
-    }
-    await Promise.all(mappings);
-    await this.elastic.bulk({
-      index,
-      refresh: shouldRefresh,
-      operations,
-    });
-  }
-
-  /**
-   * @deprecated Part of the old search API. Will be removed when the new API goes live.
-   */
-  async searchOld(query: string, options: SearchOptions): Promise<SearchAssetResult> {
-    const elasticResult = await this.searchElasticOld(query, options);
-    return await this.loadAssetsByElasticResult(elasticResult);
-  }
-
   /**
    * Searches for assets using a {@link AssetSearchQuery}.
    *
@@ -184,22 +159,27 @@ export class AssetSearchService {
    * @param user The user that is executing the query.
    * @param limit The maximum amount of assets to load. Defaults to `100`.
    * @param offset The amount of assets being skipped before loading the assets.
-   * @param decode Whether to decode the assets. If this is set to `false`, the assets should be decoded via `AssetEditDetail` before accessing them.
-   *               This option primarily exists so that the assets are not decoded and directly re-encoded when returning them via API.
+   * @param decode Whether to decode the assets. If this is set to `false`, the assets should be decoded via
+   *   `Asset` before accessing them. This option primarily exists so that the assets are not decoded and
+   *   directly re-encoded when returning them via API.
    */
   async search(
     query: AssetSearchQuery,
     user: User,
-    { limit = 100, offset = 0, decode = true }: PageOptions & { decode?: boolean } = {}
+    { limit = 100, offset = 0, decode: shouldDecode = true }: PageOptions & { decode?: boolean } = {},
   ): Promise<AssetSearchResult> {
     // Apply the query to find all matching ids.
     const [serializedAssets, total] = await this.searchAssetsByQuery(query, user, { limit, offset });
 
     // Load the matched assets from the database.
-    const data: AssetEditDetail[] = [];
+    const data: AssetSearchResultItem[] = [];
     for (const serializedAsset of serializedAssets.values()) {
-      const asset = JSON.parse(serializedAsset);
-      data.push(decode ? (AssetEditDetail.decode(asset) as E.Right<AssetEditDetail>).right : asset);
+      const encodedAsset = JSON.parse(serializedAsset);
+      data.push(
+        shouldDecode
+          ? plainToInstance(AssetSearchResultItemSchema, encodedAsset, { excludeExtraneousValues: true })
+          : encodedAsset,
+      );
     }
 
     // Return the matched data in a paginated format.
@@ -227,28 +207,28 @@ export class AssetSearchService {
     };
 
     interface Result {
-      minCreateDate: { value: DateId };
-      maxCreateDate: { value: DateId };
+      minCreatedAt: { value: number };
+      maxCreatedAt: { value: number };
       authorIds: {
-        buckets: AggregationBucket<number>[];
+        buckets: AggregationBucket<ContactId>[];
       };
-      assetKindItemCodes: {
+      kindCodes: {
         buckets: AggregationBucket[];
       };
-      languageItemCodes: {
+      languageCodes: {
         buckets: AggregationBucket[];
       };
-      geometryCodes: {
-        buckets: AggregationBucket<GeometryCode | 'None'>[];
+      geometryTypes: {
+        buckets: AggregationBucket<GeometryType | 'None'>[];
       };
-      manCatLabelItemCodes: {
+      topicCodes: {
         buckets: AggregationBucket[];
       };
       usageCodes: {
-        buckets: AggregationBucket<UsageCode>[];
+        buckets: AggregationBucket<AssetSearchUsageCode>[];
       };
       workgroupIds: {
-        buckets: AggregationBucket<number>[];
+        buckets: AggregationBucket<WorkgroupId>[];
       };
     }
 
@@ -260,7 +240,7 @@ export class AssetSearchService {
     const makeAggregation = (
       operator: 'terms' | 'min' | 'max',
       groupName: string,
-      fieldName?: string
+      fieldName?: string,
     ): AggregationsAggregationContainer => {
       const NUMBER_OF_BUCKETS = 10_000;
       const { filter } = mapQueryToElasticDslParts({ ...query, [groupName]: undefined }, user);
@@ -294,27 +274,27 @@ export class AssetSearchService {
     if (total === 0) {
       return {
         total: 0,
-        assetKindItemCodes: [],
+        kindCodes: [],
         authorIds: [],
-        createDate: null,
-        languageItemCodes: [],
-        geometryCodes: [],
-        manCatLabelItemCodes: [],
+        createdAt: null,
+        languageCodes: [],
+        geometryTypes: [],
+        topicCodes: [],
         usageCodes: [],
         workgroupIds: [],
       };
     }
 
     const result = await aggregateByQuery({
-      assetKindItemCodes: makeAggregation('terms', 'assetKindItemCodes', 'assetKindItemCode'),
       authorIds: makeAggregation('terms', 'authorIds'),
-      languageItemCodes: makeAggregation('terms', 'languageItemCodes'),
-      geometryCodes: makeAggregation('terms', 'geometryCodes'),
-      manCatLabelItemCodes: makeAggregation('terms', 'manCatLabelItemCodes'),
+      languageCodes: makeAggregation('terms', 'languageCodes'),
+      geometryTypes: makeAggregation('terms', 'geometryTypes'),
+      kindCodes: makeAggregation('terms', 'kindCodes', 'kindCode'),
+      topicCodes: makeAggregation('terms', 'topicCodes'),
       usageCodes: makeAggregation('terms', 'usageCodes', 'usageCode'),
       workgroupIds: makeAggregation('terms', 'workgroupIds', 'workgroupId'),
-      minCreateDate: makeAggregation('min', 'minCreateDate', 'createDate'),
-      maxCreateDate: makeAggregation('max', 'maxCreateDate', 'createDate'),
+      minCreatedAt: makeAggregation('min', 'minCreatedAt', 'createdAt'),
+      maxCreatedAt: makeAggregation('max', 'maxCreatedAt', 'createdAt'),
     });
 
     const aggs = result.aggregations as unknown as NestedAggResult<Result>;
@@ -325,60 +305,25 @@ export class AssetSearchService {
     });
     return {
       total,
-      assetKindItemCodes: aggs.assetKindItemCodes?.a?.buckets?.map(mapBucket) ?? [],
+      kindCodes: aggs.kindCodes?.a?.buckets?.map(mapBucket) ?? [],
       authorIds: aggs.authorIds?.a?.buckets?.map(mapBucket) ?? [],
-      languageItemCodes: aggs.languageItemCodes?.a?.buckets?.map(mapBucket) ?? [],
-      geometryCodes: aggs.geometryCodes?.a?.buckets?.map(mapBucket) ?? [],
-      manCatLabelItemCodes: aggs.manCatLabelItemCodes?.a?.buckets?.map(mapBucket) ?? [],
+      languageCodes: aggs.languageCodes?.a?.buckets?.map(mapBucket) ?? [],
+      geometryTypes: aggs.geometryTypes?.a?.buckets?.map(mapBucket) ?? [],
+      topicCodes: aggs.topicCodes?.a?.buckets?.map(mapBucket) ?? [],
       usageCodes: aggs.usageCodes?.a?.buckets?.map(mapBucket) ?? [],
       workgroupIds: aggs.workgroupIds?.a?.buckets?.map(mapBucket) ?? [],
-      createDate: {
-        min: dateFromDateId(aggs.minCreateDate.a.value),
-        max: dateFromDateId(aggs.maxCreateDate.a.value),
+      createdAt: {
+        min: LocalDate.fromDate(new Date(aggs.minCreatedAt.a.value)),
+        max: LocalDate.fromDate(new Date(aggs.maxCreatedAt.a.value)),
       },
     };
-  }
-
-  /**
-   * @deprecated Part of the old search API. Will be removed when the new API goes live.
-   */
-  async searchByTitle(title: string): Promise<AssetByTitle[]> {
-    interface SearchHit {
-      _score: number;
-      fields: {
-        assetId: [number];
-        titlePublic: [string];
-      };
-    }
-
-    const response = await this.elastic.search({
-      index: INDEX,
-      size: 10_000,
-      query: {
-        bool: {
-          must: {
-            query_string: {
-              query: `*${title}*`,
-              fields: ['titlePublic'],
-            },
-          },
-        },
-      },
-      fields: ['assetId', 'titlePublic'],
-      _source: false,
-    });
-    return (response.hits.hits as unknown as SearchHit[]).map((hit) => ({
-      score: hit._score,
-      assetId: hit.fields.assetId[0],
-      titlePublic: hit.fields.titlePublic[0],
-    }));
   }
 
   private async searchAssetsByQuery(
     query: AssetSearchQuery,
     user: User,
-    page: PageOptions = {}
-  ): Promise<[Map<AssetId, SerializedAssetEditDetail>, number]> {
+    page: PageOptions = {},
+  ): Promise<[Map<AssetId, AssetJSON>, number]> {
     const elasticQuery = mapQueryToElasticDsl(query, user);
 
     const state: SearchState = {
@@ -410,7 +355,7 @@ export class AssetSearchService {
   private async doOffsetForSearch(
     elasticQuery: QueryDslQueryContainer,
     page: PageOptions,
-    state: SearchState
+    state: SearchState,
   ): Promise<boolean> {
     const offset = page.offset ?? 0;
     let remainingOffset = offset;
@@ -421,7 +366,7 @@ export class AssetSearchService {
       }
       const response = await this.executeSearchQuery(elasticQuery, state, {
         limit: remainingLimit,
-        fields: ['assetId'],
+        fields: ['id'],
       });
       if (state.lastAssetId == null && state.totalCount != null && state.totalCount < offset) {
         return false;
@@ -430,7 +375,7 @@ export class AssetSearchService {
         return false;
       }
       remainingOffset -= response.hits.hits.length;
-      state.lastAssetId = response.hits.hits[response.hits.hits.length - 1].fields!['assetId'][0] as number;
+      state.lastAssetId = response.hits.hits[response.hits.hits.length - 1].fields!['id'][0] as number;
     }
     return state.totalCount == null || state.totalCount > offset;
   }
@@ -454,13 +399,13 @@ export class AssetSearchService {
       }
       const response = await this.executeSearchQuery(elasticQuery, state, {
         limit: remainingLimit,
-        fields: ['assetId', 'data'],
+        fields: ['id', 'data'],
       });
       if (response.hits.hits.length === 0) {
         return;
       }
       for (const hit of response.hits.hits) {
-        const assetId: number = hit.fields!['assetId'][0];
+        const assetId: number = hit.fields!['id'][0];
         const data = hit.fields!['data'][0];
         state.matchedAssets.set(assetId, data);
         state.lastAssetId = assetId;
@@ -487,7 +432,7 @@ export class AssetSearchService {
   private async executeSearchQuery(
     elasticQuery: QueryDslQueryContainer,
     state: SearchState,
-    options: { limit: number; fields: string[] }
+    options: { limit: number; fields: string[] },
   ): Promise<SearchResponse> {
     const response = await this.elastic.search({
       index: INDEX,
@@ -495,7 +440,7 @@ export class AssetSearchService {
       size: options.limit,
       fields: options.fields,
       sort: {
-        assetId: 'desc',
+        id: 'desc',
       },
       _source: false,
       track_total_hits: state.totalCount == null,
@@ -504,280 +449,7 @@ export class AssetSearchService {
     state.totalCount ??= (response.hits.total as SearchTotalHits).value as number;
     return response;
   }
-
-  private async searchElasticOld(query: string, { scope, assetIds }: SearchOptions): Promise<ElasticSearchResult> {
-    const filters: QueryDslQueryContainer[] = [];
-    if (assetIds != null) {
-      filters.push({ terms: { assetId: assetIds } });
-    }
-
-    const response = await this.elastic.search({
-      index: INDEX,
-      size: 10_000,
-      query: {
-        bool: {
-          should: [
-            {
-              multi_match: {
-                query,
-                fields: scope,
-                fuzziness: 'AUTO',
-              },
-            },
-            {
-              query_string: {
-                query: `*${escapeElasticQuery(query)}*`,
-                fields: scope,
-              },
-            },
-            {
-              query_string: {
-                query: query,
-                fields: scope,
-              },
-            },
-          ],
-          filter: filters,
-        },
-      },
-      aggs: {
-        authorIds: { terms: { field: 'authorIds' } },
-        minCreateDate: { min: { field: 'createDate' } },
-        maxCreateDate: { max: { field: 'createDate' } },
-        assetKindItemCodes: { terms: { field: 'assetKindItemCode' } },
-        languageItemCodes: { terms: { field: 'languageItemCodes' } },
-        usageCodes: { terms: { field: 'usageCode' } },
-        manCatLabelItemCodes: { terms: { field: 'manCatLabelItemCodes' } },
-      },
-      fields: ['assetId'],
-      _source: false,
-    });
-
-    interface ElasticSearchResult {
-      hits: {
-        hits: Array<{
-          _score: number;
-          fields: {
-            assetId: [number];
-          };
-        }>;
-      };
-      aggregations: {
-        minCreateDate: { value: DateId };
-        maxCreateDate: { value: DateId };
-        authorIds: {
-          buckets: AggregationBucket<number>[];
-        };
-        assetKindItemCodes: {
-          buckets: AggregationBucket[];
-        };
-        languageItemCodes: {
-          buckets: AggregationBucket[];
-        };
-        usageCodes: {
-          buckets: AggregationBucket<UsageCode>[];
-        };
-        manCatLabelItemCodes: {
-          buckets: AggregationBucket[];
-        };
-      };
-    }
-
-    interface AggregationBucket<K = string> {
-      key: K;
-      doc_count: number;
-    }
-
-    const { aggregations: aggs, hits } = response as unknown as ElasticSearchResult;
-    const scoresByAssetId = new Map<number, number>();
-    for (const hit of hits.hits) {
-      scoresByAssetId.set(hit.fields.assetId[0], hit._score);
-    }
-    const searchAggs: SearchAssetAggregations = {
-      ranges: {
-        createDate: {
-          min: aggs.minCreateDate.value,
-          max: aggs.maxCreateDate.value,
-        },
-      },
-      buckets: {
-        authorIds: aggs.authorIds.buckets.map((agg) => ({
-          key: agg.key,
-          count: agg.doc_count,
-        })),
-        assetKindItemCodes: aggs.assetKindItemCodes.buckets.map((agg) => ({
-          key: agg.key,
-          count: agg.doc_count,
-        })),
-        languageItemCodes: aggs.languageItemCodes.buckets.map((agg) => ({
-          key: agg.key,
-          count: agg.doc_count,
-        })),
-        usageCodes: aggs.usageCodes.buckets.map((agg) => ({
-          key: agg.key,
-          count: agg.doc_count,
-        })),
-        manCatLabelItemCodes: aggs.manCatLabelItemCodes.buckets.map((agg) => ({
-          key: agg.key,
-          count: agg.doc_count,
-        })),
-      },
-    };
-
-    return { scoresByAssetId, aggs: searchAggs };
-  }
-
-  private async loadAssetsByElasticResult({ scoresByAssetId, aggs }: ElasticSearchResult): Promise<SearchAssetResult> {
-    if (scoresByAssetId.size === 0) {
-      return { _tag: 'SearchAssetResultEmpty' };
-    }
-    const entities = await this.prisma.asset.findMany({
-      where: {
-        assetId: { in: [...scoresByAssetId.keys()] },
-      },
-      select: {
-        assetId: true,
-        titlePublic: true,
-        createDate: true,
-        assetKindItemCode: true,
-        assetFormatItemCode: true,
-        assetLanguages: true,
-        internalUse: {
-          select: {
-            isAvailable: true,
-          },
-        },
-        publicUse: {
-          select: {
-            isAvailable: true,
-          },
-        },
-        allStudies: {
-          select: {
-            studyId: true,
-            geomText: true,
-          },
-        },
-        assetContacts: {
-          select: {
-            contactId: true,
-            role: true,
-          },
-        },
-        manCatLabelRefs: {
-          select: {
-            manCatLabelItemCode: true,
-          },
-        },
-      },
-    });
-    return {
-      _tag: 'SearchAssetResultNonEmpty',
-      aggregations: aggs,
-      assets: entities.map((entity) => {
-        const { assetId } = entity;
-        const score = scoresByAssetId.get(assetId);
-        if (score == null) {
-          throw new Error(`found prisma entity that was not part of the elastic result: ${assetId}`);
-        }
-        return {
-          score,
-          assetId,
-          titlePublic: entity.titlePublic,
-          createDate: dateIdFromDate(entity.createDate),
-          assetFormatItemCode: entity.assetFormatItemCode,
-          assetKindItemCode: entity.assetKindItemCode,
-          languages: entity.assetLanguages.map((it) => ({ code: it.languageItemCode })),
-          contacts: entity.assetContacts.map((contact) => ({
-            id: contact.contactId,
-            role: contact.role,
-          })),
-          studies: entity.allStudies,
-          manCatLabelItemCodes: entity.manCatLabelRefs.map((ref) => ref.manCatLabelItemCode),
-          usageCode: makeUsageCode(entity.publicUse.isAvailable, entity.internalUse.isAvailable),
-        };
-      }),
-    };
-  }
-
-  private async mapAssetToElastic(asset: AssetEditDetail): Promise<ElasticSearchAsset> {
-    const contacts = await this.prisma.contact.findMany({
-      select: {
-        name: true,
-      },
-      where: {
-        contactId: { in: asset.assetContacts.map((it) => it.contactId) },
-      },
-    });
-    const geometryCodes: GeometryCode[] = [];
-    const studyLocations: ElasticPoint[] = [];
-    for (const study of asset.studies) {
-      const geometryCode = (() => {
-        const prefix = study.geomText.split('(', 2)[0];
-        switch (prefix) {
-          case 'POINT':
-            return GeometryCode.Point;
-          case 'POLYGON':
-            return GeometryCode.Polygon;
-          case 'LINESTRING':
-            return GeometryCode.LineString;
-          default:
-            throw new Error(`unknown geomText prefix: ${prefix} for asset ${asset.assetId}`);
-        }
-      })();
-      geometryCodes.push(geometryCode);
-
-      const fullStudy = await this.studyRepo.find(study.studyId as StudyId);
-      if (fullStudy != null) {
-        studyLocations.push(mapLv95ToElastic(fullStudy.center));
-      }
-    }
-
-    const languageItemCodes =
-      asset.assetLanguages.length === 0 ? ['None'] : asset.assetLanguages.map((it) => it.languageItemCode);
-
-    const favoredByUsers = await this.prisma.assetUser.findMany({
-      select: {
-        id: true,
-      },
-      where: {
-        favorites: {
-          some: {
-            assetId: asset.assetId,
-          },
-        },
-      },
-    });
-
-    return {
-      assetId: asset.assetId,
-      titlePublic: asset.titlePublic,
-      titleOriginal: asset.titleOriginal,
-      sgsId: asset.sgsId,
-      createDate: asset.createDate,
-      assetKindItemCode: asset.assetKindItemCode,
-      languageItemCodes,
-      usageCode: makeUsageCode(asset.publicUse.isAvailable, asset.internalUse.isAvailable),
-      authorIds: asset.assetContacts.filter((it) => it.role === 'author').map((it) => it.contactId),
-      contactNames: contacts.map((it) => it.name),
-      manCatLabelItemCodes: asset.manCatLabelRefs,
-      geometryCodes: geometryCodes.length > 0 ? [...new Set(geometryCodes)] : ['None'],
-      studyLocations,
-      workgroupId: asset.workgroupId,
-      favoredByUserIds: favoredByUsers.map(({ id }) => id),
-      data: JSON.stringify(AssetEditDetail.encode(asset)),
-    };
-  }
 }
-
-const lv95Projection =
-  '+proj=somerc +lat_0=46.95240555555556 +lon_0=7.439583333333333 +k_0=1 +x_0=2600000 +y_0=1200000 +ellps=bessel +towgs84=674.374,15.056,405.346,0,0,0,0 +units=m +no_defs';
-const wgs84Projection = proj4.WGS84;
-
-const mapLv95ToElastic = (lv95: LV95): ElasticPoint => {
-  const wgs = proj4(lv95Projection, wgs84Projection, [lv95.x as number, lv95.y as number]);
-  return { lat: wgs[1], lon: wgs[0] };
-};
 
 const mapQueryToElasticDsl = (query: AssetSearchQuery, user: User): QueryDslQueryContainer => {
   const { must, filter } = mapQueryToElasticDslParts(query, user);
@@ -791,9 +463,9 @@ const mapQueryToElasticDsl = (query: AssetSearchQuery, user: User): QueryDslQuer
 
 const mapQueryToElasticDslParts = (
   query: AssetSearchQuery,
-  user: User
+  user: User,
 ): { must: QueryDslQueryContainer[]; filter: QueryDslQueryContainer[] } => {
-  const scope = ['titlePublic', 'titleOriginal', 'contactNames', 'sgsId'];
+  const scope = ['title', 'originalTitle', 'contactNames', 'sgsId'];
   const queries: QueryDslQueryContainer[] = [];
   const filters: QueryDslQueryContainer[] = [];
   if (query.text != null && query.text.length > 0) {
@@ -802,7 +474,7 @@ const mapQueryToElasticDslParts = (
         should: [
           {
             query_string: {
-              query: normalizeFieldQuery(query.text),
+              query: normalizeFieldQuery(query.text), // todo assets-639: check how to deal with escape
               fields: scope,
             },
           },
@@ -810,6 +482,7 @@ const mapQueryToElasticDslParts = (
       },
     });
   }
+
   if (query.authorId != null) {
     filters.push({
       term: {
@@ -817,34 +490,36 @@ const mapQueryToElasticDslParts = (
       },
     });
   }
-  if (query.createDate != null && Object.keys(query.createDate).length > 0) {
-    const createDateFilter: QueryDslNumberRangeQuery = {};
-    if (query.createDate.min != null) {
-      createDateFilter.gte = dateIdFromDate(query.createDate.min);
+  if (query.createdAt != null && Object.keys(query.createdAt).length > 0) {
+    const createdAtFilter: QueryDslDateRangeQuery = {
+      format: 'yyyy-MM-dd',
+    };
+    if (query.createdAt.min != null) {
+      createdAtFilter.gte = query.createdAt.min.toString();
     }
-    if (query.createDate.max != null) {
-      createDateFilter.lte = dateIdFromDate(query.createDate.max);
+    if (query.createdAt.max != null) {
+      createdAtFilter.lte = query.createdAt.max.toString();
     }
     filters.push({
       range: {
-        createDate: createDateFilter,
+        createdAt: createdAtFilter,
       },
     });
   }
-  if (query.manCatLabelItemCodes != null) {
-    filters.push(makeArrayFilter('manCatLabelItemCodes', query.manCatLabelItemCodes));
+  if (query.topicCodes != null) {
+    filters.push(makeArrayFilter('topicCodes', query.topicCodes));
   }
-  if (query.assetKindItemCodes != null) {
-    filters.push(makeArrayFilter('assetKindItemCode', query.assetKindItemCodes));
+  if (query.kindCodes != null) {
+    filters.push(makeArrayFilter('kindCode', query.kindCodes));
   }
   if (query.usageCodes != null) {
     filters.push(makeArrayFilter('usageCode', query.usageCodes));
   }
-  if (query.languageItemCodes != null) {
-    filters.push(makeArrayFilter('languageItemCodes', query.languageItemCodes));
+  if (query.languageCodes != null) {
+    filters.push(makeArrayFilter('languageCodes', query.languageCodes));
   }
-  if (query.geometryCodes != null) {
-    filters.push(makeArrayFilter('geometryCodes', query.geometryCodes));
+  if (query.geometryTypes != null) {
+    filters.push(makeArrayFilter('geometryTypes', query.geometryTypes));
   }
   if (query.workgroupIds != null) {
     filters.push({
@@ -864,7 +539,7 @@ const mapQueryToElasticDslParts = (
   if (query.polygon != null) {
     queries.push({
       geo_polygon: {
-        studyLocations: {
+        locations: {
           points: query.polygon.map(mapLv95ToElastic),
         },
       },
@@ -887,8 +562,8 @@ const mapQueryToElasticDslParts = (
  * @param query The set of allowed values.
  */
 const makeArrayFilter = <T extends string | number>(
-  field: keyof ElasticSearchAsset,
-  query: T[]
+  field: keyof ElasticsearchAsset,
+  query: T[],
 ): QueryDslQueryContainer => {
   if (query.length === 0) {
     return { bool: { must_not: { exists: { field } } } };
@@ -925,14 +600,17 @@ interface PageOptions {
 }
 
 const escapeElasticQuery = (query: string): string => {
-  return query.replace(/(&&|\|\||!|\(|\)|\{|}|\[|]|\^|"|~|\*|\?|:|\\)/g, '\\$1');
+  return query.replace(/(&&|\|\||!|\(|\)|\{|}|\[|]|\^|"|~|\*|\+|-|=|\?|:|\\|\/)/g, '\\$1');
 };
 
-const normalizeFieldQuery = (query: string): string =>
+const normalizeFieldQuery = (
+  query: string,
+): string => // todo assets-639: check how to deal with escape
   query
-    .replace(/title(_*)public:/gi, 'titlePublic:')
-    .replace(/title(_*)original:/gi, 'titleOriginal:')
-    .replace(/contact(_*)ame:/gi, 'contactNames:')
+    .replace(/title(_*)public:/gi, 'title:')
+    .replace(/title(_*)original:/gi, 'originalTitle:')
+    .replace(/contact(_*)name:/gi, 'contactNames:')
+    .replace(/asset(_*)id:/gi, 'id:')
     .replace(/sgs(_*)id:/gi, 'sgsId:');
 
 /**
@@ -943,7 +621,7 @@ interface SearchState {
    * The assets that match the search.
    * This is a mapping from the assets' id to their serialized JSON string.
    */
-  matchedAssets: Map<AssetId, SerializedAssetEditDetail>;
+  matchedAssets: Map<AssetId, AssetJSON>;
 
   /**
    * The id of the last asset that has been matched.

@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Inject, Output } from '@angular/core';
+import { Component, Inject } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogActions, MatDialogContent, MatDialogRef } from '@angular/material/dialog';
 import { TranslateModule } from '@ngx-translate/core';
@@ -23,21 +23,19 @@ import { ButtonComponent } from '../button';
   styleUrls: ['./confirm-dialog.component.scss'],
 })
 export class ConfirmDialogComponent {
-  @Output() public confirmEvent = new EventEmitter<void>();
-
   constructor(
     private readonly dialogRef: MatDialogRef<ConfirmDialogComponent>,
     @Inject(MAT_DIALOG_DATA)
-    public data: {
-      text: string;
-    }
+    public data: ConfirmDialogData,
   ) {}
 
-  public close() {
-    this.dialogRef.close();
+  public close(confirmed: boolean) {
+    this.dialogRef.close(confirmed);
   }
+}
 
-  public confirm() {
-    this.confirmEvent.emit();
-  }
+export interface ConfirmDialogData {
+  text: string;
+  confirm: string;
+  isSaveDisabled?: boolean;
 }

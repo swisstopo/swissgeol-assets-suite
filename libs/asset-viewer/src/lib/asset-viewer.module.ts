@@ -24,22 +24,20 @@ import {
 } from '@angular/material/table';
 import { MatTooltip } from '@angular/material/tooltip';
 import { MatDateFnsModule } from '@angular/material-date-fns-adapter';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Routes } from '@angular/router';
 import {
   AnchorComponent,
   AnimateNumberComponent,
   ButtonComponent,
-  CanCreateDirective,
-  CanUpdateDirective,
   ChipComponent,
   DatepickerToggleIconComponent,
   DatePipe,
   DragHandleComponent,
   DrawerComponent,
   DrawerPanelComponent,
+  FileNamePipe,
+  ReferencePipe,
   SmartTranslatePipe,
-  ValueItemDescriptionPipe,
-  ValueItemNamePipe,
   ZoomControlsComponent,
 } from '@asset-sg/client-shared';
 import { FavoritesModule } from '@asset-sg/favorites';
@@ -57,7 +55,7 @@ import { AssetSearchFilterComponent } from './components/asset-search-filter/ass
 import { AssetSearchRefineComponent } from './components/asset-search-refine';
 import { AssetSearchResultsComponent } from './components/asset-search-results';
 import { AssetViewerFilesComponent } from './components/asset-viewer-files/asset-viewer-files.component';
-import { FileSizePipe } from './components/asset-viewer-files/file-size-display.pipe';
+import { FileMetadataPipe } from './components/asset-viewer-files/file-metadata.pipe';
 import { AssetViewerPageComponent } from './components/asset-viewer-page';
 import { MapComponent } from './components/map/map.component';
 import { MapControlsComponent } from './components/map-controls/map-controls.component';
@@ -65,6 +63,13 @@ import { MapLegendComponent } from './components/map-legend/map-legend.component
 import { ViewerParamsService } from './services/viewer-params.service';
 import { assetSearchReducer } from './state/asset-search/asset-search.reducer';
 import { mapControlReducer } from './state/map-control/map-control.reducer';
+
+const routes: Routes = [
+  {
+    path: '',
+    component: AssetViewerPageComponent,
+  },
+];
 
 @NgModule({
   declarations: [
@@ -77,28 +82,20 @@ import { mapControlReducer } from './state/map-control/map-control.reducer';
     AssetSearchResultsComponent,
     AssetViewerFilesComponent,
     AssetPickerComponent,
-    FileSizePipe,
+    FileMetadataPipe,
   ],
   imports: [
     CommonModule,
     FavoritesModule,
-    RouterModule.forChild([
-      {
-        path: '',
-        component: AssetViewerPageComponent,
-      },
-    ]),
+    RouterModule.forChild(routes),
     TranslateModule.forChild(),
     StoreModule.forFeature('assetSearch', assetSearchReducer),
     StoreModule.forFeature('mapControl', mapControlReducer),
     ReactiveFormsModule,
 
     SvgIconComponent,
-    ValueItemNamePipe,
-    ValueItemDescriptionPipe,
     DatePipe,
     ZoomControlsComponent,
-    ValueItemNamePipe,
 
     ForModule,
     LetModule,
@@ -132,15 +129,16 @@ import { mapControlReducer } from './state/map-control/map-control.reducer';
     SmartTranslatePipe,
     CdkMonitorFocus,
     MatTooltip,
-    CanCreateDirective,
-    CanUpdateDirective,
     MatChipSet,
     ChipComponent,
     MapLegendComponent,
+    FileNamePipe,
+    ReferencePipe,
   ],
   providers: [
     TranslatePipe,
     DecimalPipe,
+    FileNamePipe,
     ViewerParamsService,
     { provide: MAT_DATE_LOCALE, useValue: de },
     {

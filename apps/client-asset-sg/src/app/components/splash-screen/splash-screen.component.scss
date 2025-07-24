@@ -24,7 +24,9 @@
   gap: 1.5rem;
   background-color: white;
   border-radius: 2px;
-  box-shadow: rgba(0, 0, 0, 0.17) 0 1px 3px, rgba(0, 0, 0, 0.17) 0 1px 2px;
+  box-shadow:
+    rgba(0, 0, 0, 0.17) 0 1px 3px,
+    rgba(0, 0, 0, 0.17) 0 1px 2px;
 }
 
 .card > .text {
@@ -65,6 +67,10 @@ ul.languages {
   button {
     color: black;
     text-decoration: none;
+  }
+
+  li {
+    text-transform: uppercase;
   }
 
   li.is-active > button {

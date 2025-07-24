@@ -1,6 +1,6 @@
 import { olCoordsFromLV95, toLonLat, WGStoLV95 } from '@asset-sg/client-shared';
 import { isNotNull, isNull } from '@asset-sg/core';
-import { Polygon } from '@asset-sg/shared';
+import { Polygon } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
 import { Control } from 'ol/control';
 import Feature from 'ol/Feature';
@@ -78,12 +78,12 @@ export class DrawControl extends Control {
             polygon.push(coords);
           }
           return polygon;
-        })
+        }),
       )
       .subscribe((polygon) =>
         asapScheduler.schedule(() => {
           this.setPolygon(polygon);
-        })
+        }),
       );
   }
 

@@ -29,7 +29,7 @@ switch (config.mode) {
     break;
   case 'extern':
     new SyncExternService(sourcePrisma, destinationPrisma, config)
-      .syncProdAndExtern()
+      .syncExternalToInternal()
       .then(() => log('Export to extern completed'))
       .catch((error) => console.error(error));
     break;

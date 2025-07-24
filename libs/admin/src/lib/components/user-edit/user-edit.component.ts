@@ -4,10 +4,8 @@ import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, ParamMap } from '@angular/router';
 import { Filter, fromAppShared, TranslationKey } from '@asset-sg/client-shared';
 import { isNotNull } from '@asset-sg/core';
-import { SimpleWorkgroup, User, Workgroup, WorkgroupId } from '@asset-sg/shared/v2';
-import * as RD from '@devexperts/remote-data-ts';
+import { Role, SimpleWorkgroup, User, Workgroup, WorkgroupId } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
-import { Role } from '@prisma/client';
 import { combineLatestWith, filter, map, Observable } from 'rxjs';
 import * as actions from '../../state/admin.actions';
 import { AppStateWithAdmin } from '../../state/admin.reducer';
@@ -44,11 +42,10 @@ export class UserEditComponent extends AbstractAdminTableComponent<WorkgroupOfUs
   private readonly workgroups$ = this.store.select(selectWorkgroups);
   private readonly user$ = this.store.select(selectSelectedUser);
 
-  public readonly isCurrentUser$: Observable<boolean> = this.store.select(fromAppShared.selectRDUserProfile).pipe(
-    map((currentUser) => (RD.isSuccess(currentUser) ? currentUser.value : null)),
+  public readonly isCurrentUser$: Observable<boolean> = this.store.select(fromAppShared.selectUser).pipe(
     filter(isNotNull),
     combineLatestWith(this.user$.pipe(filter(isNotNull))),
-    map(([currentUser, user]) => currentUser.id === user.id)
+    map(([currentUser, user]) => currentUser.id === user.id),
   );
 
   public readonly userWorkgroups$: Observable<WorkgroupOfUser[]> = this.user$.pipe(
@@ -74,7 +71,7 @@ export class UserEditComponent extends AbstractAdminTableComponent<WorkgroupOfUs
         });
       }
       return result;
-    })
+    }),
   );
 
   public override ngOnInit() {
@@ -145,7 +142,7 @@ export class UserEditComponent extends AbstractAdminTableComponent<WorkgroupOfUs
         if (userId) {
           this.store.dispatch(actions.findUser({ userId }));
         }
-      })
+      }),
     );
   }
 
@@ -156,7 +153,7 @@ export class UserEditComponent extends AbstractAdminTableComponent<WorkgroupOfUs
         this.lang = user
           ? this.languageSelector.find((lang) => lang.key.includes(user.lang))!
           : this.languageSelector[0];
-      })
+      }),
     );
 
     this.subscriptions.add(
@@ -164,20 +161,20 @@ export class UserEditComponent extends AbstractAdminTableComponent<WorkgroupOfUs
         if (workgroups) {
           this.workgroups = workgroups;
         }
-      })
+      }),
     );
 
     this.subscriptions.add(
       this.isCurrentUser$.subscribe((isCurrentUser) => {
         this.isCurrentUser = isCurrentUser;
-      })
+      }),
     );
 
     this.subscriptions.add(
       this.userWorkgroups$.subscribe((userWorkgroups) => {
         this.data = userWorkgroups;
         this.dataSource.data = userWorkgroups;
-      })
+      }),
     );
   }
 }

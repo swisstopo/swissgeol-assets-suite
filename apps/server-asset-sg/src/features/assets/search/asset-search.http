@@ -16,7 +16,7 @@ Authorization: Impersonate {{user}}
 }
 
 ### Show assets search stats
-GET {{host}}/api/asset-edit/40628
+GET {{host}}/api/assets/40628
 Content-Type: application/json
 Authorization: Impersonate {{user}}
 

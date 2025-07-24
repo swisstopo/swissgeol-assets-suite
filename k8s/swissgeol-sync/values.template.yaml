@@ -1,4 +1,11 @@
-sourceAllowedWorkgroupIds: '1'
-destinationAllowedWorkgroupIds:
 image: 'swissgeol-assets-pipeline:latest'
-mode: 'view' # 'view' or 'extern'
+
+syncView:
+  sourceAllowedWorkgroupIds: '1'
+  destinationAllowedWorkgroupIds:
+  mode: 'view'
+syncExternToIntern:
+  mode: 'extern'
+  sourceAllowedWorkgroupIds: '1'
+  destinationAllowedWorkgroupIds:
+  defaultAssignee: 'marcel.pfiffner@swisstopo.ch'

@@ -1,10 +1,11 @@
 import { inject, Injectable } from '@angular/core';
 import { Params, Router } from '@angular/router';
+import { AppSharedState } from '@asset-sg/client-shared';
 import { isNotNull } from '@asset-sg/core';
-import { AssetSearchQuery, isEmptySearchQuery, LV95, Polygon } from '@asset-sg/shared';
-import { AssetId } from '@asset-sg/shared/v2';
+import { LV95 } from '@asset-sg/shared';
+import { AssetId, AssetSearchQuery, isEmptySearchQuery, LocalDate, Polygon } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
-import { firstValueFrom, map, Observable } from 'rxjs';
+import { firstValueFrom, map } from 'rxjs';
 import { DEFAULT_MAP_POSITION } from '../components/map/map-controller';
 
 import { isPanelOpen, PanelState } from '../state/asset-search/asset-search.actions';
@@ -20,13 +21,14 @@ export class ViewerParamsService {
   private readonly store = inject(Store<AppStateWithAssetSearch>);
 
   async readParamsFromStore(): Promise<ViewerParams> {
-    const state = await firstValueFrom(
-      this.store.pipe(map((store) => store.assetSearch)) as Observable<AssetSearchState>
+    const [searchState, sharedState] = await firstValueFrom(
+      this.store.pipe(map((store) => [store.assetSearch, store.shared] as [AssetSearchState, AppSharedState])),
     );
+
     return {
-      assetId: state.currentAsset?.assetId ?? null,
-      query: state.query,
-      ui: state.ui,
+      assetId: sharedState.currentAsset?.asset.id ?? null,
+      query: searchState.query,
+      ui: searchState.ui,
     };
   }
 
@@ -37,23 +39,23 @@ export class ViewerParamsService {
     query.text = readStringParam(params, QUERY_PARAM_MAPPING.text);
     query.polygon = readPolygonParam(params, QUERY_PARAM_MAPPING.polygon);
     query.authorId = readNumberParam(params, QUERY_PARAM_MAPPING.authorId);
-    const min = readDateParam(params, QUERY_PARAM_MAPPING.createDate.min);
-    const max = readDateParam(params, QUERY_PARAM_MAPPING.createDate.max);
-    query.createDate = min && max ? { min, max } : undefined;
-    query.manCatLabelItemCodes = readArrayParam(params, QUERY_PARAM_MAPPING.manCatLabelItemCodes);
-    query.assetKindItemCodes = readArrayParam(params, QUERY_PARAM_MAPPING.assetKindItemCodes);
+    const min = readDateParam(params, QUERY_PARAM_MAPPING.createdAt.min);
+    const max = readDateParam(params, QUERY_PARAM_MAPPING.createdAt.max);
+    query.createdAt = min && max ? { min: LocalDate.fromDate(min), max: LocalDate.fromDate(max) } : undefined;
+    query.topicCodes = readArrayParam(params, QUERY_PARAM_MAPPING.topicCodes);
+    query.kindCodes = readArrayParam(params, QUERY_PARAM_MAPPING.kindCodes);
     query.usageCodes = readArrayParam(params, QUERY_PARAM_MAPPING.usageCodes);
-    query.geometryCodes = readArrayParam(params, QUERY_PARAM_MAPPING.geometryCodes);
-    query.languageItemCodes = readArrayParam(params, QUERY_PARAM_MAPPING.languageItemCodes);
+    query.geometryTypes = readArrayParam(params, QUERY_PARAM_MAPPING.geometryTypes);
+    query.languageCodes = readArrayParam(params, QUERY_PARAM_MAPPING.languageCodes);
     query.workgroupIds = readArrayParam<number>(params, QUERY_PARAM_MAPPING.workgroupIds);
     query.favoritesOnly = this.parseFavoritesOnlyFromUrl();
     const ui: AssetSearchUiState = {
       filtersState:
-        readBooleanParam(params, UI_PARAM_MAPPING.filtersState) ?? true
+        (readBooleanParam(params, UI_PARAM_MAPPING.filtersState) ?? true)
           ? PanelState.OpenedAutomatically
           : PanelState.ClosedAutomatically,
       resultsState:
-        readBooleanParam(params, UI_PARAM_MAPPING.resultsState) ?? false
+        (readBooleanParam(params, UI_PARAM_MAPPING.resultsState) ?? false)
           ? PanelState.OpenedAutomatically
           : PanelState.ClosedAutomatically,
       scrollOffsetForResults: readNumberParam(params, UI_PARAM_MAPPING.scrollOffsetForResults) ?? 0,
@@ -74,16 +76,16 @@ export class ViewerParamsService {
     updateArrayParam(
       params,
       QUERY_PARAM_MAPPING.polygon,
-      query.polygon?.map(({ x, y }) => `${x}:${y}`)
+      query.polygon?.map(({ x, y }) => `${x}:${y}`),
     );
     updatePlainParam(params, QUERY_PARAM_MAPPING.authorId, query.authorId);
-    updateDateParam(params, QUERY_PARAM_MAPPING.createDate.min, query.createDate?.min);
-    updateDateParam(params, QUERY_PARAM_MAPPING.createDate.max, query.createDate?.max);
-    updateArrayParam(params, QUERY_PARAM_MAPPING.manCatLabelItemCodes, query.manCatLabelItemCodes);
-    updateArrayParam(params, QUERY_PARAM_MAPPING.assetKindItemCodes, query.assetKindItemCodes);
+    updateDateParam(params, QUERY_PARAM_MAPPING.createdAt.min, query.createdAt?.min?.toDate());
+    updateDateParam(params, QUERY_PARAM_MAPPING.createdAt.max, query.createdAt?.max?.toDate());
+    updateArrayParam(params, QUERY_PARAM_MAPPING.topicCodes, query.topicCodes);
+    updateArrayParam(params, QUERY_PARAM_MAPPING.kindCodes, query.kindCodes);
     updateArrayParam(params, QUERY_PARAM_MAPPING.usageCodes, query.usageCodes);
-    updateArrayParam(params, QUERY_PARAM_MAPPING.geometryCodes, query.geometryCodes);
-    updateArrayParam(params, QUERY_PARAM_MAPPING.languageItemCodes, query.languageItemCodes);
+    updateArrayParam(params, QUERY_PARAM_MAPPING.geometryTypes, query.geometryTypes);
+    updateArrayParam(params, QUERY_PARAM_MAPPING.languageCodes, query.languageCodes);
     updateArrayParam(params, QUERY_PARAM_MAPPING.workgroupIds, query.workgroupIds);
     updatePlainParam(params, QUERY_PARAM_MAPPING.assetId, assetId);
 
@@ -124,15 +126,15 @@ const QUERY_PARAM_MAPPING = {
   text: 'search[text]',
   polygon: 'search[polygon]',
   authorId: 'search[author]',
-  createDate: {
+  createdAt: {
     min: 'search[createDate][min]',
     max: 'search[createDate][max]',
   },
-  manCatLabelItemCodes: 'search[manCat]',
-  assetKindItemCodes: 'search[kind]',
+  topicCodes: 'search[manCat]',
+  kindCodes: 'search[kind]',
   usageCodes: 'search[usage]',
-  geometryCodes: 'search[geometry]',
-  languageItemCodes: 'search[lang]',
+  geometryTypes: 'search[geometry]',
+  languageCodes: 'search[lang]',
   assetId: 'assetId',
   workgroupIds: 'search[workgroup]',
   categories: 'search[categories]',
@@ -157,7 +159,7 @@ const updatePlainParam = <T extends string | number | boolean>(
   params: Params,
   name: string,
   value: T | null | undefined,
-  options: { defaultValue?: T } = {}
+  options: { defaultValue?: T } = {},
 ): void => {
   params[name] = value == null || value === '' || value === options.defaultValue ? null : value;
 };

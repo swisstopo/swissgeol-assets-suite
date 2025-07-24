@@ -1,0 +1,168 @@
+<form [formGroup]="form">
+  <asset-sg-detail-section [title]="'workgroup.title' | translate">
+    <div content>
+      <asset-sg-select
+        [title]="'workgroup.title' | translate"
+        [values]="availableWorkgroups$ | push"
+        [bindLabel]="'name'"
+        [bindKey]="'id'"
+        errorMessage="{{ hasReferences ? ('edit.tabs.general.referencesWarning' | translate) : '' }}"
+        isRequired
+        formControlName="workgroupId"
+      ></asset-sg-select>
+    </div>
+  </asset-sg-detail-section>
+  <asset-sg-detail-section [title]="'edit.tabs.general.title' | translate">
+    <div class="content" content>
+      <asset-sg-text-area
+        [title]="'edit.tabs.general.publicTitle' | translate"
+        isRequired
+        formControlName="title"
+      ></asset-sg-text-area>
+      <asset-sg-text-area
+        [title]="'edit.tabs.general.originalTitle' | translate"
+        formControlName="originalTitle"
+      ></asset-sg-text-area>
+    </div>
+  </asset-sg-detail-section>
+  <asset-sg-detail-section [title]="'edit.tabs.general.date' | translate">
+    <div class="content" content>
+      <asset-sg-date-picker
+        [title]="'edit.tabs.general.creationDate' | translate"
+        isRequired
+        formControlName="createdAt"
+      ></asset-sg-date-picker>
+      <asset-sg-date-picker
+        [title]="'edit.tabs.general.dateReceived' | translate"
+        isRequired
+        formControlName="receivedAt"
+      ></asset-sg-date-picker>
+    </div>
+  </asset-sg-detail-section>
+  <asset-sg-detail-section [title]="'edit.tabs.general.type' | translate">
+    <div class="content" content>
+      @if (assetKinds$ | async; as assetKinds) {
+        <asset-sg-select
+          [title]="'edit.tabs.general.type' | translate"
+          [values]="assetKinds"
+          bindLabel="name"
+          bindKey="code"
+          isRequired
+          formControlName="kindCode"
+        />
+      }
+      @if (languages$ | async; as languages) {
+        <asset-sg-select
+          [title]="'edit.tabs.general.language' | translate"
+          [values]="languages"
+          bindLabel="name"
+          bindKey="code"
+          multiple
+          [ngModel]="selectedLanguageCodes"
+          (ngModelChange)="setLanguageCodes($event)"
+          [ngModelOptions]="{ standalone: true }"
+        />
+      }
+      @if (assetFormats$ | async; as assetFormats) {
+        <asset-sg-select
+          [title]="'edit.tabs.general.format' | translate"
+          [values]="assetFormats"
+          bindLabel="name"
+          bindKey="code"
+          isRequired
+          formControlName="formatCode"
+        />
+      }
+    </div>
+  </asset-sg-detail-section>
+  <asset-sg-detail-section [title]="'edit.tabs.general.access.name' | translate">
+    <div class="content column" content>
+      <asset-sg-select
+        [title]="'edit.tabs.general.access.name' | translate"
+        [values]="restrictionItems"
+        [bindLabel]="'label'"
+        [bindKey]="'key'"
+        formControlName="restrictionType"
+      ></asset-sg-select>
+      @if (form.controls.restrictionType.value === RestrictionType.TemporarilyRestricted) {
+        <asset-sg-date-picker
+          [title]="'edit.tabs.general.access.items.temporarilyRestricted' | translate"
+          formControlName="restrictionDate"
+        ></asset-sg-date-picker>
+      }
+    </div>
+  </asset-sg-detail-section>
+  <asset-sg-detail-section [title]="'edit.tabs.usage.nationalInterest' | translate">
+    <div class="content column" content>
+      <mat-checkbox formControlName="isOfNationalInterest" color="primary">
+        <span translate>edit.tabs.usage.nationalInterest</span>
+      </mat-checkbox>
+      <div>
+        @if (nationalInterestTypes$ | async; as nationalInterestTypes) {
+          <asset-sg-select
+            [title]="'edit.tabs.usage.type' | translate"
+            [trigger]="
+              (selectedNationalInterestTypes.length === 1 ? 'edit.tabs.usage.type' : 'edit.tabs.usage.types')
+                | translate
+            "
+            [values]="nationalInterestTypes"
+            bindKey="code"
+            bindLabel="name"
+            multiple
+            formControlName="nationalInterestTypeCodes"
+          />
+        }
+        <mat-chip-set>
+          @for (topic of selectedNationalInterestTypes; track topic.code) {
+            <asset-sg-chip
+              type="primary"
+              icon="cancel"
+              (click)="removeItemFromForm(topic, 'nationalInterestTypeCodes')"
+            >
+              {{ topic.name | smartTranslate }}
+            </asset-sg-chip>
+          }
+        </mat-chip-set>
+      </div>
+    </div>
+  </asset-sg-detail-section>
+  <asset-sg-detail-section [title]="'edit.tabs.general.topic' | translate">
+    <div content class="content column">
+      @if (assetTopics$ | async; as assetTopics) {
+        <asset-sg-select
+          [title]="'edit.tabs.general.topic' | translate"
+          [values]="assetTopics"
+          bindKey="code"
+          bindLabel="name"
+          [trigger]="(selectedTopics.length === 1 ? 'edit.tabs.general.topic' : 'edit.tabs.general.topics') | translate"
+          isRequired
+          multiple
+          formControlName="topicCodes"
+        />
+      }
+      <mat-chip-set>
+        @for (topic of selectedTopics; track topic.code) {
+          <asset-sg-chip type="primary" icon="cancel" (click)="removeItemFromForm(topic, 'topicCodes')"
+            >{{ topic.name | smartTranslate }}
+          </asset-sg-chip>
+        }
+      </mat-chip-set>
+    </div>
+  </asset-sg-detail-section>
+  <asset-sg-detail-section [title]="'edit.tabs.general.alternativeId' | translate">
+    <div actions>
+      <button asset-sg-secondary (click)="addNewAlternativeId()" translate>
+        edit.tabs.general.addNewAlternativeId
+        <svg-icon key="add"></svg-icon>
+      </button>
+    </div>
+    <div class="content column" content>
+      <asset-sg-asset-editor-id-list [control]="form.controls.identifiers" />
+      <asset-sg-text-input
+        disabled
+        [value]="asset?.legacyData?.sgsId?.toString() ?? ''"
+        [title]="'edit.tabs.general.sgsId' | translate"
+      ></asset-sg-text-input>
+    </div>
+  </asset-sg-detail-section>
+</form>

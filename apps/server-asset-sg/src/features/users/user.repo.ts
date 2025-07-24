@@ -1,4 +1,4 @@
-import { Role, User, UserData, UserId, WorkgroupId } from '@asset-sg/shared/v2';
+import { mapRoleFromPrisma, Role, SimpleUser, User, UserData, UserId, WorkgroupId } from '@asset-sg/shared/v2';
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 
@@ -25,6 +25,18 @@ export class UserRepo implements Repo<User, UserId, UserData & { oidcId: string 
       select: userSelection,
     });
     return entry == null ? null : parse(entry);
+  }
+
+  async findByWorkgroupId(workgroupId: WorkgroupId): Promise<SimpleUser[]> {
+    const entries = await this.prisma.assetUser.findMany({
+      where: {
+        workgroups: {
+          some: { workgroupId },
+        },
+      },
+      select: simpleUserSelection,
+    });
+    return entries.map((entry) => parseSimpleUser(entry, workgroupId));
   }
 
   async list({ limit, offset, ids }: RepoListOptions<UserId> = {}): Promise<User[]> {
@@ -121,7 +133,7 @@ type SelectedUser = Prisma.AssetUserGetPayload<{ select: typeof userSelection }>
 const parse = (data: SelectedUser): User => {
   const roles = new Map<WorkgroupId, Role>();
   for (const workgroup of data.workgroups) {
-    roles.set(workgroup.workgroupId, workgroup.role);
+    roles.set(workgroup.workgroupId, mapRoleFromPrisma(workgroup.role));
   }
   return {
     id: data.id,
@@ -133,3 +145,20 @@ const parse = (data: SelectedUser): User => {
     roles,
   };
 };
+
+export const simpleUserSelection = satisfy<Prisma.AssetUserSelect>()({
+  id: true,
+  firstName: true,
+  lastName: true,
+  workgroups: true,
+});
+
+type SelectedSimpleUser = Prisma.AssetUserGetPayload<{ select: typeof simpleUserSelection }>;
+
+export const parseSimpleUser = (data: SelectedSimpleUser, workgroupId: WorkgroupId): SimpleUser =>
+  ({
+    id: data.id,
+    firstName: data.firstName,
+    lastName: data.lastName,
+    role: data.workgroups.find((workgroup) => workgroup.workgroupId === workgroupId)?.role ?? Role.Reader,
+  }) as SimpleUser;

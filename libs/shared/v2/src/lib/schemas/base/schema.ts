@@ -1,5 +1,7 @@
-import { instanceToPlain, Transform } from 'class-transformer';
+import { instanceToPlain, Transform, Type } from 'class-transformer';
+import { ValidateNested } from 'class-validator';
 import { Class } from 'type-fest';
+import { LocalDate } from '../../models/base/local-date';
 
 /**
  * A _schema_ is a class that defines how a specific interface is converted from and to JSON.
@@ -73,7 +75,7 @@ export class Schema {
 export function convert<T extends object, S extends T>(schema: Class<S>, value: T): S;
 
 /**
- * Converts an array of object into an array of {@link Schema} instances.
+ * Converts an array of objects into an array of {@link Schema} instances.
  *
  * @param schema The schema class.
  * @param value The values to convert.
@@ -101,11 +103,22 @@ export const TransformMap = (): PropertyDecorator => {
       }
       return map;
     },
-    { toClassOnly: true }
+    { toClassOnly: true },
   );
   const transformToPlain = Transform(({ value }) => [...value.entries()], { toPlainOnly: true });
   return (target, propertyKey) => {
     transformToClass(target, propertyKey);
     transformToPlain(target, propertyKey);
+  };
+};
+
+export const TransformLocalDate = (): PropertyDecorator => {
+  const decorateNested = ValidateNested();
+  const decorateType = Type(() => String);
+  const decorateTransformToClass = Transform(({ value }) => LocalDate.tryParse(value), { toClassOnly: true });
+  return (target, propertyKey) => {
+    decorateNested(target, propertyKey);
+    decorateType(target, propertyKey);
+    decorateTransformToClass(target, propertyKey);
   };
 };

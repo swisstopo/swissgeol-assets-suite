@@ -1,11 +1,26 @@
 import { coerceBooleanProperty } from '@angular/cdk/coercion';
-import { Component, EventEmitter, forwardRef, Input, OnInit, Output } from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
+import {
+  AfterViewInit,
+  Component,
+  ContentChildren,
+  EventEmitter,
+  forwardRef,
+  Input,
+  OnInit,
+  Output,
+  QueryList,
+} from '@angular/core';
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR, ReactiveFormsModule } from '@angular/forms';
-import { MatFormField, MatHint, MatOption, MatSelect } from '@angular/material/select';
+import { MatFormField, MatHint, MatSelectModule } from '@angular/material/select';
 import { SvgIconComponent } from '@ngneat/svg-icon';
 import { TranslateModule } from '@ngx-translate/core';
-import { noop } from 'rxjs';
+import { delay, noop, startWith } from 'rxjs';
+import { FormItemWrapperComponent } from '../form-item-wrapper/form-item-wrapper.component';
+import { SelectOptionComponent } from '../select-option/select-option.component';
 import { SmartTranslatePipe } from '../smart-translate.pipe';
+
+type FormValue<T> = T | T[] | T[keyof T] | T[keyof T][];
 
 @Component({
   selector: 'asset-sg-select',
@@ -22,8 +37,7 @@ import { SmartTranslatePipe } from '../smart-translate.pipe';
     },
   ],
   imports: [
-    MatSelect,
-    MatOption,
+    MatSelectModule,
     ReactiveFormsModule,
     SvgIconComponent,
     TranslateModule,
@@ -31,39 +45,81 @@ import { SmartTranslatePipe } from '../smart-translate.pipe';
     MatFormField,
     SmartTranslatePipe,
     MatHint,
+    FormItemWrapperComponent,
+    NgTemplateOutlet,
   ],
 })
-export class SelectComponent<T> implements OnInit, ControlValueAccessor {
+export class SelectComponent<T, K> implements OnInit, AfterViewInit, ControlValueAccessor {
   @Input() public values: T[] = [];
   @Input() public bindLabel: keyof T | null = null;
+  @Input() public bindKey: keyof T | null = null;
   @Input() public title = '';
+  @Input({ transform: coerceBooleanProperty }) public isRequired = false;
   @Input({ transform: coerceBooleanProperty }) public multiple = false;
-  @Input() public initialValues: T[] = [];
-  @Input() public shouldShowError = false;
+  @Input() public initialKeys: K[] = [];
   @Input() public errorMessage = '';
-  @Output() public selectionChanged = new EventEmitter<T[]>();
+  @Input() trigger = '';
+  @Input() disabled = false;
+  @Output() public selectionChanged = new EventEmitter<K[]>();
+
+  @ContentChildren(SelectOptionComponent)
+  customOptions!: QueryList<SelectOptionComponent<T>>;
+  customOptionsToRender: Array<SelectOptionComponent<T>> = [];
 
   public selectedValues?: T | T[] = this.multiple ? [] : undefined;
 
-  private onChange: (value: T | T[]) => void = noop;
+  private onChange: (value: FormValue<T>) => void = noop;
   private onTouched: () => void = noop;
 
-  public ngOnInit(): void {
-    const filteredValues = this.values.filter((value) => this.initialValues.includes(value));
+  ngOnInit(): void {
+    const filteredValues = this.values.filter((value) => {
+      return this.initialKeys.includes(this.getKey(value));
+    });
     this.selectedValues = this.multiple ? filteredValues : filteredValues[0];
+  }
+
+  ngAfterViewInit(): void {
+    this.customOptions.changes.pipe(startWith(null), delay(1)).subscribe(() => {
+      this.customOptionsToRender = this.customOptions.toArray();
+    });
+  }
+
+  getKey(value: T): K {
+    if (this.bindKey) {
+      return value[this.bindKey] as K;
+    }
+    return value as unknown as K;
   }
 
   public onFilterChange(selectedValues: T | T[]): void {
     this.selectedValues = selectedValues;
-    this.selectionChanged.emit(Array.isArray(selectedValues) ? selectedValues : [selectedValues]);
-    this.onChange(selectedValues);
+    this.selectionChanged.emit(
+      Array.isArray(selectedValues) ? selectedValues.map((it) => this.getKey(it)) : [this.getKey(selectedValues)],
+    );
+    const { bindKey } = this;
+    if (bindKey) {
+      const newValues = Array.isArray(selectedValues)
+        ? selectedValues.map((value) => value[bindKey])
+        : selectedValues[bindKey];
+      this.onChange(newValues);
+    } else {
+      this.onChange(selectedValues);
+    }
   }
 
-  public writeValue(value: T | T[]): void {
-    this.selectedValues = value;
+  // If there is a bindKey, we can assume that the value is a key of T or an array of keys of T.
+  // Otherwise, we can assume that the value is a T or an array of T.
+  public writeValue(value: FormValue<T>): void {
+    if (this.bindKey) {
+      this.selectedValues = Array.isArray(value)
+        ? this.values.filter((v) => (value as T[keyof T][]).includes(v[this.bindKey!]))
+        : this.values.find((v) => v[this.bindKey!] === value);
+    } else {
+      this.selectedValues = value as T | T[];
+    }
   }
 
-  public registerOnChange(fn: (value: T | T[]) => void): void {
+  public registerOnChange(fn: (value: FormValue<T>) => void): void {
     this.onChange = fn;
   }
 
@@ -74,4 +130,6 @@ export class SelectComponent<T> implements OnInit, ControlValueAccessor {
   public onBlur(): void {
     this.onTouched();
   }
+
+  protected readonly Array = Array;
 }

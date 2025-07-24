@@ -1,13 +1,12 @@
 import { Component, inject } from '@angular/core';
-import { CURRENT_LANG } from '@asset-sg/client-shared';
-import { AssetFileType } from '@asset-sg/shared';
-import { AssetEditPolicy } from '@asset-sg/shared/v2';
+import { Router } from '@angular/router';
+import { appSharedStateActions, can$, fromAppShared, LanguageService } from '@asset-sg/client-shared';
+import { isNotNull } from '@asset-sg/core';
+import { AssetContactRole, AssetEditPolicy, AssetFile, AssetId, Contact, LinkedAsset } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
-import { map, Observable } from 'rxjs';
+import { filter, map, Observable, shareReplay, withLatestFrom } from 'rxjs';
 import { ViewerControllerService } from '../../services/viewer-controller.service';
-import * as actions from '../../state/asset-search/asset-search.actions';
 import { AppStateWithAssetSearch } from '../../state/asset-search/asset-search.reducer';
-import { AssetDetailFileVM, selectCurrentAssetDetailVM } from '../../state/asset-search/asset-search.selector';
 
 @Component({
   selector: 'asset-sg-asset-search-detail',
@@ -17,33 +16,70 @@ import { AssetDetailFileVM, selectCurrentAssetDetailVM } from '../../state/asset
 })
 export class AssetSearchDetailComponent {
   private readonly store = inject(Store<AppStateWithAssetSearch>);
-  public readonly currentLang$ = inject(CURRENT_LANG);
-  private readonly viewerControllerService = inject(ViewerControllerService);
+  private readonly languageService = inject(LanguageService);
+  public readonly language$ = this.languageService.language$;
+  public readonly asset$ = this.store.select(fromAppShared.selectCurrentAsset);
 
-  public readonly asset$ = this.store.select(selectCurrentAssetDetailVM);
-  public readonly filesByType$: Observable<Record<AssetFileType, AssetDetailFileVM[]>> = this.asset$.pipe(
+  public readonly contacts$: Observable<Array<Contact & { role: AssetContactRole }>> = this.asset$.pipe(
+    filter(isNotNull),
+    withLatestFrom(this.store.select(fromAppShared.selectReferenceContacts).pipe(filter(isNotNull))),
+    map(([asset, contacts]) =>
+      [...asset.contacts.values()].reduce(
+        (acc, { id, role }) => {
+          const contact = contacts.get(id);
+          if (contact !== undefined) {
+            acc.push({ ...contact, role });
+          }
+          return acc;
+        },
+        [] as Array<Contact & { role: AssetContactRole }>,
+      ),
+    ),
+  );
+
+  public readonly linkedAssets$ = this.asset$.pipe(
+    filter(isNotNull),
     map((asset) => {
-      const mapping: Record<AssetFileType, AssetDetailFileVM[]> = {
-        Normal: [],
-        Legal: [],
-      };
+      const links: LinkedAsset[] = [];
+      if (asset.parent) {
+        links.push(asset.parent);
+      }
+      links.push(...asset.siblings);
+      return links;
+    }),
+  );
+
+  public readonly canUpdate$ = can$(AssetEditPolicy, this.asset$, (it, asset) => it.canUpdate(asset));
+
+  private readonly filesSplitByType$ = this.asset$.pipe(
+    map((asset) => {
+      const mapping: [AssetFile[], AssetFile[]] = [[], []];
       if (asset == null) {
         return mapping;
       }
-      for (const file of asset.assetFiles) {
-        mapping[file.type].push(file);
+      for (const file of asset.files) {
+        mapping[file.legalDocCode === null ? 0 : 1].push(file);
       }
       return mapping;
-    })
+    }),
+    shareReplay(1),
   );
 
-  public clearSelectedAsset() {
-    this.store.dispatch(actions.setCurrentAsset({ asset: null }));
+  public readonly normalFiles$ = this.filesSplitByType$.pipe(map(([files]) => files));
+  public readonly legalFiles$ = this.filesSplitByType$.pipe(map(([_, files]) => files));
+
+  private readonly router = inject(Router);
+  private readonly viewerControllerService = inject(ViewerControllerService);
+
+  public navigateToEdit(lang: string | null, assetId: AssetId) {
+    this.router.navigate([lang, 'asset-admin', assetId]).then();
   }
 
-  public searchForReferenceAsset(assetId: number) {
+  public clearSelectedAsset() {
+    this.store.dispatch(appSharedStateActions.setCurrentAsset({ asset: null }));
+  }
+
+  public selectAsset(assetId: number) {
     this.viewerControllerService.selectAsset(assetId);
   }
-
-  protected readonly AssetEditPolicy = AssetEditPolicy;
 }

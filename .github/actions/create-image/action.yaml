@@ -18,6 +18,10 @@ inputs:
   GITHUB_TOKEN:
     description: "The github token"
     required: true
+  CONTEXT:
+    description: "The build context"
+    default: "./"
+    required: false
 
 runs:
   using: "composite"
@@ -57,7 +61,7 @@ runs:
     - name: Build and push Docker image
       uses: docker/build-push-action@v5
       with:
-        context: ./
+        context: ${{ inputs.CONTEXT }}
         file: ${{ inputs.DOCKERFILE }}
         push: true
         tags: ${{ steps.meta-data.outputs.tags }}
@@ -65,3 +69,5 @@ runs:
         no-cache: true
         build-args: |
           APP_VERSION=${{ inputs.VERSION }}
+        secrets: |
+          github_token=${{ inputs.GITHUB_TOKEN }}

@@ -2,34 +2,28 @@ import { Given } from '@badeball/cypress-cucumber-preprocessor';
 import { bearerAuth } from '../../support/commands/helper.commands';
 
 const body = JSON.stringify({
-  titlePublic: 'CypressTestAsset',
-  titleOriginal: 'CypressTestAsset',
-  createDate: 20240902,
-  receiptDate: 20240912,
-  publicUse: {
-    isAvailable: false,
-    statusAssetUseItemCode: 'tobechecked',
-    startAvailabilityDate: null,
-  },
-  internalUse: {
-    isAvailable: true,
-    statusAssetUseItemCode: 'tobechecked',
-    startAvailabilityDate: null,
-  },
-  assetKindItemCode: 'basemap',
-  assetFormatItemCode: 'unknown',
-  isNatRel: true,
-  manCatLabelRefs: ['other'],
-  typeNatRels: [],
-  assetLanguages: [],
-  assetContacts: [],
-  ids: [],
-  studies: [],
-  assetMainId: null,
-  siblingAssetIds: [],
-  newStudies: ['POINT(2661254.953 1186121.169)'],
-  newStatusWorkItemCode: 'initiateAsset',
-  assetFiles: [],
+  title: 'CypressTestAsset',
+  originalTitle: 'CypressTestAsset',
+  createdAt: '2024-09-02',
+  receivedAt: '2024-09-12',
+  isPublic: false,
+  kindCode: 'basemap',
+  formatCode: 'unknown',
+  isOfNationalInterest: true,
+  topicCodes: ['other'],
+  nationalInterestTypeCodes: [],
+  languageCodes: [],
+  contacts: [],
+  identifiers: [],
+  geometries: [
+    {
+      mutation: 'Create',
+      type: 'Point',
+      text: 'POINT(2661254.953 1186121.169)',
+    },
+  ],
+  parent: null,
+  siblings: [],
   workgroupId: 1,
 });
 
@@ -51,7 +45,7 @@ Given('Test asset is created', () => {
         if (response.body.data.length === 0) {
           cy.request({
             method: 'POST',
-            url: 'http://localhost:4200/api/asset-edit',
+            url: 'http://localhost:4200/api/assets',
             auth: bearerAuth(token),
             body: body,
             headers: {
@@ -61,7 +55,7 @@ Given('Test asset is created', () => {
             expect(response.status).to.be.eq(201);
           });
         }
-      })
+      }),
   );
 });
 

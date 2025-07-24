@@ -34,21 +34,14 @@ Generate prisma-client for database-access:
 npm run prisma -- generate
 ```
 
-#### 3. Initialize MinIO
+#### 3. MinIO & OCR
 
-> Note that this step may be skipped if you do not need to interact with uploaded files,
-> and don't want to upload files yourselves.
+Files are stored in a local MinIO instance which is accessed by the backend, frontend and OCR service using an access key with a "god" policy. The `createbuckets` service is used to create the storage as well as the access keys, so you should not have to worry about that.
 
-- [Start the development services](#Starting-the-Development-Environment).
-- Open http://localhost:9001
-- Sign in using the `STORAGE_USER` and `STORAGE_PASSWORD` of your development environment.
-- Navigate to [Buckets](http://localhost:9001/buckets) and create a new bucket with the name `asset-sg`.
-- Navigate to [the new bucket's browser](http://localhost:9001/browser/asset-sg) and create an empty folder with the name `asset-sg`.
-- Navigate to [Configuration](http://localhost:9001/settings/configurations/region) and change the server region to `local`.
-- Navigate to [Access Keys](http://localhost:9001/access-keys) and create a new access key.
-- Create the file [`apps/server-asset-sg/.env.local`](apps/server-asset-sg/.env.local) and add the following variables:
-  - Set `S3_ACCESS_KEY_ID` to your generated access key.
-  - Set `S3_SECRET_ACCESS_KEY` to your generated access key's secret.
+If you need to change the user or password, be sure to
+
+- Adjust the environment variables in `development/.env` and, if need be, the directory parameters in `docker-compose.yaml`
+- Adjust the environment variables in `apps-server-sg/.env` so they match the changes to docker compose
 
 #### 4. Define Admin User
 
@@ -92,6 +85,7 @@ npm run start:client
 | MinIO (docker)           | [localhost:9001](http://localhost:9001/)         | .env `$STORAGE_USER`  | .env `$STORAGE_PASSWORD` |
 | smtp4dev (docker)        | [localhost:5000](http://localhost:5000/)         | n/a                   | n/a                      |
 | oidc-server (docker)     | [localhost:4011](http://localhost:4011/)         | n/a                   | n/a                      |
+| createbuckets (docker)   | n/a                                              | n/a                   | n/a                      |
 
 ### Importing Example Data
 
@@ -101,7 +95,7 @@ Be aware that you need to manually insert the `{DB_*}` values beforehand.
 
 ```bash
 cd development
-docker compose exec db sh -c 'pg_dump --dbname=postgresql://{DB_USERNAME}:{DB_PASSWORD}@{DB_HOST}:5432/{DB_DATABASE} --data-only --exclude-table asset_user --exclude-table workgroups_on_users --exclude-table _prisma_migrations --exclude-table asset_test --exclude-table asset_user_bak --exclude-table favorite -n public > /dump.sql'
+docker compose exec db sh -c 'pg_dump --dbname=postgresql://{DB_USERNAME}:{DB_PASSWORD}@{DB_HOST}:5432/{DB_DATABASE} --data-only --exclude-table _prisma_migrations --exclude-table asset_test --exclude-table asset_user_bak -n public > /dump.sql'
 ```
 
 > The export will output warnings related to circular foreign-key constraints.
@@ -125,7 +119,7 @@ cd development
 docker compose exec db sh -c 'psql --dbname=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:5432/${POSTGRES_DB} -c "DELETE FROM workgroup"'
 
 # Import example data:
-docker compose exec db sh -c 'psql --dbname=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:5432/${POSTGRES_DB} -v ON_ERROR_STOP=1 -f /docker-entrypoint-initdb.d/01_roles.sql -f /dump.sql'
+docker compose exec db sh -c 'psql --dbname=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:5432/${POSTGRES_DB} -v ON_ERROR_STOP=1 -f /dump.sql -f /docker-entrypoint-initdb.d/01_roles.sql'
 ```
 
 > You will need to manually sync the data to Elasticsearch via the admin panel in the web UI via the cogwheel symbol in the bottom left of the GUI (requires `is_admin` to be true for the given user).

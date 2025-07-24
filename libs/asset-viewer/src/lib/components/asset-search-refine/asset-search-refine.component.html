@@ -7,25 +7,29 @@
 <div class="content">
   <mat-chip-set>
     @if (selectedAuthor) {
-    <asset-sg-chip (click)="resetAuthorSearch()" icon="cancel">
-      <span class="ellipsis">{{ selectedAuthor.name }}</span>
-    </asset-sg-chip>
-    } @if (assetSearchQuery.polygon) {
-    <asset-sg-chip (click)="removePolygon()" icon="cancel">
-      <svg-icon key="polygon-draw"></svg-icon>
-    </asset-sg-chip>
-    } @if (minDate) {
-    <asset-sg-chip (click)="resetMinDateRangeSearch()" icon="cancel">
-      > {{ minDate | date : "dd.MM.yyyy" }}
-    </asset-sg-chip>
-    } @if (maxDate) {
-    <asset-sg-chip (click)="resetMaxDateRangeSearch()" icon="cancel">
-      < {{ maxDate | date : "dd.MM.yyyy" }}
-    </asset-sg-chip>
-    } @for (activeFilter of activeFilters; track activeFilter) {
-    <asset-sg-chip (click)="removeFilter(activeFilter)" icon="cancel">
-      <span class="ellipsis">{{ activeFilter.name | smartTranslate }} </span>
-    </asset-sg-chip>
+      <asset-sg-chip (click)="resetAuthorSearch()" icon="cancel">
+        <span class="ellipsis">{{ selectedAuthor.value.name }}</span>
+      </asset-sg-chip>
+    }
+    @if (assetSearchQuery.polygon) {
+      <asset-sg-chip (click)="removePolygon()" icon="cancel">
+        <svg-icon key="polygon-draw"></svg-icon>
+      </asset-sg-chip>
+    }
+    @if (minDate) {
+      <asset-sg-chip (click)="resetMinDateRangeSearch()" icon="cancel">
+        > {{ minDate | date: "dd.MM.yyyy" }}
+      </asset-sg-chip>
+    }
+    @if (maxDate) {
+      <asset-sg-chip (click)="resetMaxDateRangeSearch()" icon="cancel">
+        < {{ maxDate | date: "dd.MM.yyyy" }}
+      </asset-sg-chip>
+    }
+    @for (activeFilter of activeFilters; track trackFilter(activeFilter)) {
+      <asset-sg-chip (click)="removeFilter(activeFilter)" icon="cancel">
+        <span class="ellipsis">{{ activeFilter.name | smartTranslate }} </span>
+      </asset-sg-chip>
     }
   </mat-chip-set>
   <div class="filters-container">
@@ -84,14 +88,14 @@
             <mat-autocomplete #auto="matAutocomplete">
               <mat-option
                 *ngFor="let author of filteredAuthors"
-                [value]="author.name"
+                [value]="author.value.name"
                 class="author"
-                [matTooltip]="author.name"
+                [matTooltip]="author.value.name"
                 matTooltipPosition="right"
-                (onSelectionChange)="updateAuthor($event, author.contactId)"
+                (onSelectionChange)="updateAuthor($event, author.value.id)"
               >
                 <div class="author__name">
-                  {{ author.name }}
+                  {{ author.value.name }}
                 </div>
                 <div class="author__count">({{ author.count }})</div>
               </mat-option>
@@ -109,8 +113,8 @@
             type="text"
             [placeholder]="'datePlaceholder' | translate"
             [formControl]="minDateControl"
-            [min]="createDateRange?.min"
-            [max]="createDateRange?.max"
+            [min]="createdAtRange?.min"
+            [max]="createdAtRange?.max"
             [matDatepicker]="createDateFromPicker"
           />
           <mat-datepicker-toggle matPrefix [for]="createDateFromPicker" cdkMonitorSubtreeFocus>
@@ -135,14 +139,14 @@
             type="text"
             [formControl]="maxDateControl"
             [placeholder]="'datePlaceholder' | translate"
-            [min]="createDateRange?.min"
-            [max]="createDateRange?.max"
+            [min]="createdAtRange?.min"
+            [max]="createdAtRange?.max"
             [matDatepicker]="createDateToPicker"
           />
           <mat-datepicker-toggle matPrefix [for]="createDateToPicker" cdkMonitorSubtreeFocus>
             <asset-sg-datepicker-toggle-icon matDatepickerToggleIcon></asset-sg-datepicker-toggle-icon>
           </mat-datepicker-toggle>
-          <mat-datepicker #createDateToPicker [startAt]="createDateRange?.max ?? null"></mat-datepicker>
+          <mat-datepicker #createDateToPicker [startAt]="createdAtRange?.max ?? null"></mat-datepicker>
           <button
             class="input-clear-button"
             asset-sg-icon-button

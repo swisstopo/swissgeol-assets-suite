@@ -13,6 +13,20 @@ services:
       - ./volumes/minio/data:/data
     command: server --console-address ":9001" /data
 
+  createbuckets:
+    image: minio/mc
+    depends_on:
+      - storage
+    volumes:
+      - ./init/minio/:/init
+    entrypoint: >
+      /bin/sh -c "
+      /usr/bin/mc alias set storage http://storage:9000 ${STORAGE_USER} ${STORAGE_PASSWORD};
+      /usr/bin/mc mb --ignore-existing storage/asset-sg;
+      /usr/bin/mc admin accesskey create storage ${STORAGE_USER} --access-key ${STORAGE_ACCESS_KEY} --secret-key ${STORAGE_ACCESS_KEY_SECRET} --policy /init/policy.json;
+      exit 0;
+      "
+
   db:
     container_name: swissgeol-assets-postgres
     image: postgis/postgis
@@ -119,9 +133,14 @@ services:
     environment:
       TMP_PATH: /tmp/ocr/
       SKIP_PROCESSING: true
+      S3_INPUT_ENDPOINT: http://storage:9000
       S3_INPUT_BUCKET: asset-sg
-      S3_INPUT_FOLDER: /
+      S3_INPUT_FOLDER: /asset-sg/
+      S3_OUTPUT_ENDPOINT: http://storage:9000
       S3_OUTPUT_BUCKET: asset-sg
-      S3_OUTPUT_FOLDER: /
+      S3_OUTPUT_FOLDER: /asset-sg/
       CONFIDENCE_THRESHOLD: 0.7
       USE_AGGRESSIVE_STRATEGY: false
+      AWS_ACCESS_KEY_ID: ${STORAGE_ACCESS_KEY}
+      AWS_SECRET_ACCESS_KEY: ${STORAGE_ACCESS_KEY_SECRET}
+      AWS_DEFAULT_REGION: us-east-1

@@ -1,127 +1,92 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { ApiError, httpErrorResponseError } from '@asset-sg/client-shared';
-import { decodeError, OE, ORD, unknownError } from '@asset-sg/core';
-import { Contact, PatchAsset, PatchContact } from '@asset-sg/shared';
-import * as RD from '@devexperts/remote-data-ts';
-import * as E from 'fp-ts/Either';
-import { flow } from 'fp-ts/function';
-import { concat, forkJoin, map, Observable, of, startWith, toArray } from 'rxjs';
-
-import { AssetEditorNewFile } from '../components/asset-editor-form-group';
-import { AssetEditDetail } from '../models';
+import {
+  Asset,
+  AssetFile,
+  AssetFileSchema,
+  AssetId,
+  AssetSchema,
+  Contact,
+  ContactData,
+  ContactId,
+  CreateAssetData,
+  CreateAssetDataSchema,
+  CreateAssetFileData,
+  SimpleUserSchema,
+  UpdateAssetData,
+  UpdateAssetDataSchema,
+  Workflow,
+  WorkflowChangeData,
+  WorkflowPublishData,
+  WorkflowSchema,
+  WorkgroupId,
+} from '@asset-sg/shared/v2';
+import { SimpleUser } from '@swissgeol/ui-core';
+import { plainToInstance } from 'class-transformer';
+import { forkJoin, map, Observable, of } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class AssetEditorService {
   private readonly httpClient = inject(HttpClient);
 
-  public loadAssetDetailData(assetId: number): ORD.ObservableRemoteData<ApiError, AssetEditDetail> {
+  public createAsset(data: CreateAssetData): Observable<Asset> {
     return this.httpClient
-      .get(`/api/asset-edit/${assetId}`)
-      .pipe(
-        map(flow(AssetEditDetail.decode, E.mapLeft(decodeError))),
-        OE.catchErrorW(httpErrorResponseError),
-        map(RD.fromEither),
-        startWith(RD.pending)
-      );
+      .post(`/api/assets`, plainToInstance(CreateAssetDataSchema, data))
+      .pipe(map((res) => plainToInstance(AssetSchema, res)));
   }
 
-  public createAsset(patchAsset: PatchAsset): ORD.ObservableRemoteData<ApiError, AssetEditDetail> {
+  public updateAsset(id: AssetId, data: UpdateAssetData): Observable<Asset> {
     return this.httpClient
-      .post(`/api/asset-edit`, PatchAsset.encode(patchAsset))
-      .pipe(
-        map(flow(AssetEditDetail.decode, E.mapLeft(decodeError))),
-        OE.catchErrorW(httpErrorResponseError),
-        map(RD.fromEither),
-        startWith(RD.pending)
-      );
+      .put(`/api/assets/${id}`, plainToInstance(UpdateAssetDataSchema, data))
+      .pipe(map((res) => plainToInstance(AssetSchema, res)));
   }
 
-  public updateAssetDetail(
-    assetId: number,
-    patchAsset: PatchAsset
-  ): ORD.ObservableRemoteData<ApiError, AssetEditDetail> {
+  public deleteAsset(assetId: AssetId): Observable<void> {
+    return this.httpClient.delete<void>(`/api/assets/${assetId}`);
+  }
+
+  public uploadFilesForAsset(id: AssetId, files: CreateAssetFileData[]): Observable<AssetFile[]> {
+    if (files.length === 0) {
+      return of([]);
+    }
+    return forkJoin(
+      files.map((file) => {
+        const formData = new FormData();
+        formData.append('file', file.file);
+        if (file.legalDocCode != null) {
+          formData.append('legalDocCode', file.legalDocCode);
+        }
+        return this.httpClient
+          .post<AssetFile>(`/api/assets/${id}/files`, formData)
+          .pipe(map((data) => plainToInstance(AssetFileSchema, data)));
+      }),
+    );
+  }
+
+  public updateContact(contactId: ContactId, patchContact: ContactData): Observable<Contact> {
+    return this.httpClient.put<Contact>(`/api/contacts/${contactId}`, patchContact);
+  }
+
+  public createContact(patchContact: ContactData): Observable<Contact> {
+    return this.httpClient.post<Contact>(`/api/contacts`, patchContact);
+  }
+
+  public getUsersForWorkgroup(workgroupId: WorkgroupId): Observable<SimpleUser[]> {
+    return this.httpClient.get<object[]>(`/api/workgroups/${workgroupId}/users`).pipe(
+      map((it) => plainToInstance(SimpleUserSchema, it)),
+      map((it) => it.sort((a, b) => a.firstName.localeCompare(b.firstName))),
+    );
+  }
+
+  public publishAsset(id: AssetId, data: WorkflowPublishData): Observable<Workflow> {
     return this.httpClient
-      .put(`/api/asset-edit/${assetId}`, PatchAsset.encode(patchAsset))
-      .pipe(
-        map(flow(AssetEditDetail.decode, E.mapLeft(decodeError))),
-        OE.catchErrorW(httpErrorResponseError),
-        map(RD.fromEither),
-        startWith(RD.pending)
-      );
+      .post<Workflow>(`/api/assets/${id}/workflow/publish`, data)
+      .pipe(map((data) => plainToInstance(WorkflowSchema, data)));
   }
 
-  public deleteAsset(assetId: number): Observable<void> {
-    return this.httpClient.delete<void>(`/api/asset-edit/${assetId}`);
-  }
-
-  public deleteFiles(assetId: number, fileIds: number[]): ORD.ObservableRemoteData<ApiError, unknown> {
-    return fileIds.length
-      ? forkJoin(
-          fileIds.map((fileId) => {
-            return this.httpClient
-              .delete(`/api/assets/${assetId}/files/${fileId}`)
-              .pipe(map(E.right), OE.catchErrorW(httpErrorResponseError), map(RD.fromEither), startWith(RD.pending));
-          })
-        ).pipe(
-          map((rds) => {
-            const error = rds.find(RD.isFailure);
-            if (error) return error;
-            if (!rds.every(RD.isSuccess))
-              return RD.failure(unknownError(new Error('uploadFiles stream completed without success or failure')));
-            return RD.success(undefined);
-          })
-        )
-      : of(RD.success(undefined));
-  }
-
-  public uploadFiles(assetId: number, files: AssetEditorNewFile[]): ORD.ObservableRemoteData<ApiError, unknown> {
-    return files.length
-      ? concat(
-          ...files.map((file) => {
-            const formData = new FormData();
-            formData.append('file', file.file);
-            formData.append('type', file.type);
-            if (file.legalDocItemCode != null) {
-              formData.append('legalDocItemCode', file.legalDocItemCode);
-            }
-            return this.httpClient
-              .post(`/api/assets/${assetId}/files`, formData)
-              .pipe(map(E.right), OE.catchErrorW(httpErrorResponseError));
-          })
-        ).pipe(
-          toArray(),
-          map((rds) => {
-            const error = rds.find(E.isLeft);
-            if (error) return RD.failure(error.left);
-            return !rds.every(E.isRight)
-              ? RD.failure(unknownError(new Error('uploadFiles stream completed without success or failure')))
-              : RD.success(undefined);
-          }),
-          startWith(RD.pending)
-        )
-      : of(RD.success(undefined));
-  }
-
-  public updateContact(contactId: number, patchContact: PatchContact): ORD.ObservableRemoteData<ApiError, Contact> {
+  public createWorkflowChange(assetId: AssetId, data: WorkflowChangeData): Observable<Workflow> {
     return this.httpClient
-      .put(`/api/contacts/${contactId}`, PatchContact.encode(patchContact))
-      .pipe(
-        map(flow(Contact.decode, E.mapLeft(decodeError))),
-        OE.catchErrorW(httpErrorResponseError),
-        map(RD.fromEither),
-        startWith(RD.pending)
-      );
-  }
-
-  public createContact(patchContact: PatchContact): ORD.ObservableRemoteData<ApiError, Contact> {
-    return this.httpClient
-      .post(`/api/contacts`, PatchContact.encode(patchContact))
-      .pipe(
-        map(flow(Contact.decode, E.mapLeft(decodeError))),
-        OE.catchErrorW(httpErrorResponseError),
-        map(RD.fromEither),
-        startWith(RD.pending)
-      );
+      .post<Workflow>(`/api/assets/${assetId}/workflow/change`, data)
+      .pipe(map((data) => plainToInstance(WorkflowSchema, data)));
   }
 }

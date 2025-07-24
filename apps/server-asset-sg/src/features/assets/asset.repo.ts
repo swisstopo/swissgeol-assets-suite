@@ -1,27 +1,39 @@
 import {
   Asset,
-  AssetData,
   AssetId,
-  AssetStudy,
-  AssetStudyId,
-  AssetUsage,
-  StudyData,
-  StudyType,
-  User,
-  isNotPersisted,
-  isPersisted,
+  CreateGeometryData,
+  DeleteGeometryData,
+  extractGeometryTypeFromId,
+  GeometryData,
+  GeometryId,
+  GeometryMutationType,
+  GeometryType,
+  mapGeometryTypeToStudyType,
+  parseGeometryIdNumber,
+  UpdateAssetData,
+  UpdateGeometryData,
+  UserId,
 } from '@asset-sg/shared/v2';
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '@/core/prisma.service';
-import { FindRepo, MutateRepo } from '@/core/repo';
-import { assetSelection, parseAssetFromPrisma } from '@/features/assets/prisma-asset';
-import { satisfy } from '@/utils/define';
+import { Repo, RepoListOptions } from '@/core/repo';
+import { CreateAssetDataWithCreator } from '@/features/assets/asset.model';
+import { FileRepo } from '@/features/assets/files/file.repo';
+import {
+  assetSelection,
+  mapAssetDataToPrismaCreate,
+  mapAssetDataToPrismaUpdate,
+  parseAssetFromPrisma,
+} from '@/features/assets/prisma-asset';
 import { handlePrismaMutationError } from '@/utils/prisma';
 
 @Injectable()
-export class AssetRepo implements FindRepo<Asset, AssetId>, MutateRepo<Asset, AssetId, FullAssetData> {
-  constructor(private readonly prisma: PrismaService) {}
+export class AssetRepo implements Repo<Asset, AssetId, CreateAssetDataWithCreator, UpdateAssetData> {
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly fileRepo: FileRepo,
+  ) {}
 
   async count(): Promise<number> {
     return this.prisma.asset.count();
@@ -35,25 +47,49 @@ export class AssetRepo implements FindRepo<Asset, AssetId>, MutateRepo<Asset, As
     return entry == null ? null : parseAssetFromPrisma(entry);
   }
 
-  async create(data: FullAssetData): Promise<Asset> {
+  async list({ limit, offset, ids }: RepoListOptions<AssetId> = {}): Promise<Asset[]> {
+    const entries = await this.prisma.asset.findMany({
+      where: ids == null ? undefined : { assetId: { in: ids } },
+      take: limit,
+      skip: offset,
+      select: assetSelection,
+    });
+    return await Promise.all(entries.map((it) => parseAssetFromPrisma(it)));
+  }
+
+  async listFavoriteIds(userId: UserId): Promise<AssetId[]> {
+    const entries = await this.prisma.asset.findMany({
+      where: {
+        favorites: {
+          some: {
+            userId: userId,
+          },
+        },
+      },
+      select: { assetId: true },
+    });
+    return entries.map((it) => it.assetId);
+  }
+
+  async create(data: CreateAssetDataWithCreator): Promise<Asset> {
     const id = await this.prisma.$transaction(async () => {
       const { assetId } = await this.prisma.asset.create({
-        data: mapDataToPrismaCreate(data),
+        data: mapAssetDataToPrismaCreate(data),
         select: { assetId: true },
       });
-      await this.manageStudies(assetId, data.studies);
+      await this.applyGeometryMutations(assetId, data.geometries);
       return assetId;
     });
     return (await this.find(id)) as Asset;
   }
 
-  async update(id: AssetId, data: FullAssetData): Promise<Asset | null> {
+  async update(id: AssetId, data: UpdateAssetData): Promise<Asset | null> {
     try {
       return await this.prisma.$transaction(async () => {
-        await this.manageStudies(id, data.studies);
+        await this.applyGeometryMutations(id, data.geometries);
         const entry = await this.prisma.asset.update({
           where: { assetId: id },
-          data: mapDataToPrismaUpdate(id, data),
+          data: mapAssetDataToPrismaUpdate(id, data),
           select: assetSelection,
         });
         return parseAssetFromPrisma(entry);
@@ -66,50 +102,24 @@ export class AssetRepo implements FindRepo<Asset, AssetId>, MutateRepo<Asset, As
   async delete(id: number): Promise<boolean> {
     try {
       await this.prisma.$transaction(async () => {
-        // Delete the record's `manCatLabelRef` records.
-        await this.prisma.manCatLabelRef.deleteMany({
+        // Delete the record's `file` records.
+        const assetFileIds = await this.prisma.assetFile.findMany({
           where: { assetId: id },
+          select: { fileId: true },
         });
 
-        // Delete the record's `assetContact` records.
-        await this.prisma.assetContact.deleteMany({
-          where: { assetId: id },
-        });
-
-        // Delete the record's `assetLanguage` records.
-        await this.prisma.assetLanguage.deleteMany({
-          where: { assetId: id },
-        });
-
-        // Delete the record's `id` records.
-        await this.prisma.id.deleteMany({
-          where: { assetId: id },
-        });
-
-        // Delete the record's `typeNatRel` records.
-        await this.prisma.typeNatRel.deleteMany({
-          where: { assetId: id },
-        });
-
-        // Delete the record's `statusWork` records.
-        await this.prisma.statusWork.deleteMany({
-          where: { assetId: id },
-        });
+        for (const { fileId } of assetFileIds) {
+          await this.fileRepo.delete({ id: fileId, assetId: id });
+        }
 
         // Delete the record.
         await this.prisma.asset.delete({ where: { assetId: id } });
 
-        // Delete all `internalUse` records that are not in use anymore.
-        await this.prisma.internalUse.deleteMany({
+        // Delete all `WorkflowSelection` records that are not in use anymore.
+        await this.prisma.workflowSelection.deleteMany({
           where: {
-            Asset: { none: {} },
-          },
-        });
-
-        // Delete all `publicUse` records that are not in use anymore.
-        await this.prisma.publicUse.deleteMany({
-          where: {
-            Asset: { none: {} },
+            reviewWorkflow: null,
+            approvalWorkflow: null,
           },
         });
       });
@@ -119,356 +129,108 @@ export class AssetRepo implements FindRepo<Asset, AssetId>, MutateRepo<Asset, As
     }
   }
 
-  private async manageStudies(assetId: AssetId, data: (AssetStudy | StudyData)[]): Promise<void> {
-    const studiesToCreate: Partial<Record<StudyType, StudyData[]>> = {};
-    const studiesToUpdate: Partial<Record<StudyType, AssetStudy[]>> = {};
-    for (const study of data) {
-      if (isPersisted(study)) {
-        (studiesToUpdate[study.type] ??= []).push(study);
+  private async applyGeometryMutations(assetId: AssetId, data: GeometryData[]): Promise<void> {
+    const geometriesToCreate = new Map<GeometryType, CreateGeometryData[]>();
+    const geometriesToUpdate = new Map<GeometryType, UpdateGeometryData[]>();
+    const geometriesToDelete = new Map<GeometryType, DeleteGeometryData[]>();
+
+    const addEntryToMapping = <T extends GeometryData>(
+      mapping: Map<GeometryType, T[]>,
+      entry: T,
+      type: GeometryType,
+    ): void => {
+      const entries = mapping.get(type);
+      if (entries === undefined) {
+        mapping.set(type, [entry]);
       } else {
-        (studiesToCreate[study.type] ??= []).push(study);
+        entries.push(entry);
+      }
+    };
+
+    for (const entry of data) {
+      switch (entry.mutation) {
+        case GeometryMutationType.Create:
+          addEntryToMapping(geometriesToCreate, entry, entry.type);
+          break;
+        case GeometryMutationType.Update:
+          addEntryToMapping(geometriesToUpdate, entry, extractGeometryTypeFromId(entry.id));
+          break;
+        case GeometryMutationType.Delete:
+          addEntryToMapping(geometriesToDelete, entry, extractGeometryTypeFromId(entry.id));
+          break;
       }
     }
-    for (const [type, studies] of Object.entries(studiesToUpdate) as Array<[StudyType, AssetStudy[]]>) {
-      await this.deleteStudies(
-        assetId,
-        type,
-        studies.map((it) => it.id)
-      );
-      await this.updateStudies(assetId, type, studies);
+
+    for (const [type, deletion] of geometriesToDelete) {
+      await this.deleteGeometries(assetId, { type, ids: deletion.map((it) => it.id) });
     }
-    for (const [type, studies] of Object.entries(studiesToCreate) as Array<[StudyType, StudyData[]]>) {
-      await this.createStudies(assetId, type, studies);
+    for (const [type, updates] of geometriesToUpdate) {
+      await this.updateGeometries(assetId, { type, updates });
+    }
+    for (const [type, geometries] of geometriesToCreate) {
+      await this.createGeometries(assetId, { type, geometries });
     }
   }
 
-  private async deleteStudies(assetId: AssetId, type: StudyType, knownIds: AssetStudyId[]): Promise<void> {
+  private async createGeometries(
+    assetId: AssetId,
+    { type, geometries }: { type: GeometryType; geometries: CreateGeometryData[] },
+  ): Promise<void> {
+    if (geometries.length === 0) {
+      return;
+    }
+    const studyType = mapGeometryTypeToStudyType(type);
+    const values = geometries.map(
+      (geometry) => Prisma.sql`
+      (${assetId}, ST_GeomFromText(${geometry.text}, 2056))
+    `,
+    );
+    await this.prisma.$queryRaw`
+        INSERT INTO public.study_${Prisma.raw(studyType)}
+            (asset_id, geom)
+        VALUES
+            ${Prisma.join(values, ',')}
+    `;
+  }
+
+  private async updateGeometries(
+    assetId: AssetId,
+    { type, updates }: { type: GeometryType; updates: UpdateGeometryData[] },
+  ): Promise<void> {
+    if (updates.length === 0) {
+      return;
+    }
+    const studyType = mapGeometryTypeToStudyType(type);
+    const cases = updates.map(
+      (update) => Prisma.sql`
+      WHEN study_${Prisma.raw(studyType)}_id = ${parseGeometryIdNumber(update.id)}
+      THEN ST_GeomFromText (${update.text}, 2056)
+    `,
+    );
+    await this.prisma.$queryRaw`
+        UPDATE
+            public.study_${Prisma.raw(studyType)}
+        SET geom =
+                CASE
+                    ${Prisma.join(cases, '\n')}
+                    ELSE geom
+                END
+        WHERE asset_id = ${assetId}
+    `;
+  }
+
+  private async deleteGeometries(assetId: AssetId, options: { type: GeometryType; ids: GeometryId[] }): Promise<void> {
+    if (options.ids.length === 0) {
+      return;
+    }
+    const studyType = mapGeometryTypeToStudyType(options.type);
+    const ids = options.ids.map(parseGeometryIdNumber);
     const condition =
-      knownIds.length === 0 ? '' : Prisma.sql`AND study_${Prisma.raw(type)}_id NOT IN (${Prisma.join(knownIds, ',')})`;
+      ids.length === 0 ? '' : Prisma.sql`AND study_${Prisma.raw(studyType)}_id IN (${Prisma.join(ids, ',')})`;
     await this.prisma.$queryRaw`
-      DELETE
-      FROM public.study_${type}
-      WHERE assetId = ${assetId} ${condition}
-    `;
-  }
-
-  private async createStudies(assetId: AssetId, type: StudyType, data: StudyData[]): Promise<void> {
-    if (data.length === 0) {
-      return;
-    }
-    const values = data.map(
-      (it) => Prisma.sql`
-      (${assetId}, 'unkown', st_geomfromtext('${it.geom}', 2056))
-    `
-    );
-    await this.prisma.$queryRaw`
-      INSERT INTO public.study_${type}
-        (asset_id, geom_quality_item_code, geom)
-      VALUES
-        ${Prisma.join(values, ',')}
-    `;
-  }
-
-  private async updateStudies(assetId: AssetId, type: StudyType, data: AssetStudy[]): Promise<void> {
-    if (data.length === 0) {
-      return;
-    }
-    const cases = data.map(
-      (it) => Prisma.sql`
-      WHEN study_${Prisma.raw(type)}_id = ${it.id}
-      THEN ${it.geom}
-    `
-    );
-    await this.prisma.$queryRaw`
-      UPDATE
-        public.study_${type}
-      SET geom =
-            CASE
-              ${Prisma.join(cases, '\n')}
-              ELSE geom
-      WHERE assetId = ${assetId}
+        DELETE
+        FROM public.study_${Prisma.raw(studyType)}
+        WHERE asset_id = ${assetId} ${condition}
     `;
   }
 }
-
-interface FullAssetData extends AssetData {
-  processor: User;
-}
-
-const mapDataToPrisma = (data: FullAssetData) =>
-  satisfy<Partial<Prisma.AssetCreateInput & Prisma.AssetUpdateInput>>()({
-    titlePublic: data.title,
-    titleOriginal: data.originalTitle,
-    processor: data.processor.email,
-    createDate: data.createdAt.toDate(),
-    receiptDate: data.receivedAt.toDate(),
-    lastProcessedDate: new Date(),
-    isNatRel: data.isNatRel,
-    assetKindItem: {
-      connect: {
-        assetKindItemCode: data.kindCode,
-      },
-    },
-    assetFormatItem: {
-      connect: {
-        assetFormatItemCode: data.formatCode,
-      },
-    },
-    workgroup: {
-      connect: {
-        id: data.workgroupId,
-      },
-    },
-  });
-
-const mapDataToPrismaCreate = (data: FullAssetData): Prisma.AssetCreateInput => ({
-  ...mapDataToPrisma(data),
-  isExtract: false,
-  assetMain:
-    data.links.parent == null
-      ? undefined
-      : {
-          connect: {
-            assetId: data.links.parent,
-          },
-        },
-  manCatLabelRefs: {
-    createMany: {
-      data: data.manCatLabelCodes.map((code) => ({
-        manCatLabelItemCode: code,
-      })),
-      skipDuplicates: true,
-    },
-  },
-  assetContacts: {
-    createMany: {
-      data: data.contactAssignments.map((it) => ({
-        contactId: it.contactId,
-        role: it.role,
-      })),
-      skipDuplicates: true,
-    },
-  },
-  assetLanguages: {
-    createMany: {
-      data: data.languageCodes.map((code) => ({
-        languageItemCode: code,
-      })),
-      skipDuplicates: true,
-    },
-  },
-  ids: {
-    createMany: {
-      data: data.identifiers.map((it) => ({
-        id: it.name,
-        description: it.description,
-      })),
-      skipDuplicates: true,
-    },
-  },
-  typeNatRels: {
-    createMany: {
-      data: data.natRelCodes.map((code) => ({
-        natRelItemCode: code,
-      })),
-      skipDuplicates: true,
-    },
-  },
-  statusWorks: {
-    createMany: {
-      data: data.statuses.map((it) => ({
-        statusWorkId: isPersisted(it) ? it.id : undefined,
-        statusWorkDate: it.createdAt,
-        statusWorkItemCode: it.itemCode,
-      })),
-      skipDuplicates: true,
-    },
-  },
-  publicUse: {
-    create: makeUsageInput(data.usage.public),
-  },
-  internalUse: {
-    create: makeUsageInput(data.usage.internal),
-  },
-
-  // In the mapping of this repo,
-  // `siblingYAssets` contains mappings to siblings whose `id` is greater than our own,
-  // while `siblingXAssets` contains the mappings where our `id` is greater.
-  // This guarantees that we have no duplicate siblings by ensuring that `x > y` for all siblings.
-  // As ids increment, we know that any siblings present here will have an `id` lesser than
-  // the asset that we are creating here.
-  // This means we can simply put all siblings into `siblingXAssets`.
-  siblingXAssets: {
-    createMany: {
-      data: data.links.siblings.map((siblingId) => ({
-        assetYId: siblingId,
-      })),
-      skipDuplicates: true,
-    },
-  },
-});
-
-const mapDataToPrismaUpdate = (id: AssetId, data: FullAssetData): Prisma.AssetUpdateInput => ({
-  ...mapDataToPrisma(data),
-  assetMain:
-    data.links.parent == null
-      ? { disconnect: true }
-      : {
-          connect: { assetId: data.links.parent },
-        },
-  manCatLabelRefs: {
-    deleteMany: {
-      assetId: id,
-      manCatLabelItemCode: { notIn: data.manCatLabelCodes },
-    },
-    createMany: {
-      data: data.manCatLabelCodes.map((code) => ({
-        manCatLabelItemCode: code,
-      })),
-      skipDuplicates: true,
-    },
-  },
-  assetContacts: {
-    deleteMany: {
-      NOT: {
-        OR: data.contactAssignments.map((it) => ({
-          assetId: id,
-          contactId: it.contactId,
-          role: it.role,
-        })),
-      },
-    },
-    createMany: {
-      data: data.contactAssignments.map((it) => ({
-        assetId: id,
-        contactId: it.contactId,
-        role: it.role,
-      })),
-      skipDuplicates: true,
-    },
-  },
-  assetLanguages: {
-    deleteMany: {
-      assetId: id,
-      languageItemCode: { notIn: data.languageCodes },
-    },
-    createMany: {
-      data: data.languageCodes.map((code) => ({
-        languageItemCode: code,
-      })),
-      skipDuplicates: true,
-    },
-  },
-  ids: {
-    deleteMany: {
-      assetId: id,
-      idId: { notIn: data.identifiers.filter(isPersisted).map((it) => it.id) },
-    },
-    createMany: {
-      data: data.identifiers.filter(isNotPersisted).map((it) => ({
-        id: it.name,
-        description: it.description,
-      })),
-      skipDuplicates: true,
-    },
-    update: data.identifiers.filter(isPersisted).map((it) => ({
-      where: {
-        idId: it.id,
-      },
-      data: {
-        id: it.name,
-        description: it.description,
-      },
-    })),
-  },
-  typeNatRels: {
-    // Without actually storing the `typeNatRelId` in `data`,
-    // there's no way to preserve existing records.
-    // This means we always need to delete everything, and recreate afterward.
-    deleteMany: {},
-    createMany: {
-      data: data.natRelCodes.map((code) => ({
-        natRelItemCode: code,
-      })),
-      skipDuplicates: true,
-    },
-  },
-  statusWorks: {
-    deleteMany: {
-      statusWorkId: { notIn: data.statuses.filter(isPersisted).map((it) => it.id) },
-    },
-    createMany: {
-      data: data.statuses.filter(isNotPersisted).map((it) => ({
-        statusWorkDate: it.createdAt,
-        statusWorkItemCode: it.itemCode,
-      })),
-      skipDuplicates: true,
-    },
-    update: data.statuses.filter(isPersisted).map((it) => ({
-      where: {
-        statusWorkId: it.id,
-      },
-      data: {
-        id: it.id,
-        statusWorkDate: it.createdAt,
-        statusWorkItemCode: it.itemCode,
-      },
-    })),
-  },
-  publicUse: {
-    update: makeUsageInput(data.usage.public),
-  },
-  internalUse: {
-    update: makeUsageInput(data.usage.internal),
-  },
-
-  // In the mapping of this repo,
-  // `siblingYAssets` contains mappings to siblings whose `id` is greater than our own,
-  // while `siblingXAssets` contains the mappings where our `id` is greater.
-  // This guarantees that we have no duplicate siblings by ensuring that `x > y` for all siblings.
-  siblingXAssets: {
-    deleteMany: {
-      assetXId: id,
-      assetYId: { notIn: data.links.siblings },
-    },
-    createMany: {
-      data: data.links.siblings
-        .filter((siblingId) => siblingId < id)
-        .map((siblingId) => ({
-          assetYId: siblingId,
-        })),
-      skipDuplicates: true,
-    },
-  },
-  siblingYAssets: {
-    deleteMany: {
-      assetYId: id,
-      assetXId: { notIn: data.links.siblings },
-    },
-    createMany: {
-      data: data.links.siblings
-        .filter((siblingId) => siblingId > id)
-        .map((siblingId) => ({
-          assetXId: siblingId,
-        })),
-      skipDuplicates: true,
-    },
-  },
-});
-
-/**
- * The type of the input that creates or updates {@link PrismaAssetUsageInput} records.
- */
-type PrismaAssetUsageInput = Prisma.InternalUseUncheckedCreateWithoutAssetInput;
-
-/**
- * Create the {@link PrismaAssetUsageInput} for the given {@link AssetUsage}.
- * @param usage The usage to create or update.
- */
-const makeUsageInput = (usage: AssetUsage): PrismaAssetUsageInput => {
-  return {
-    isAvailable: usage.isAvailable,
-    statusAssetUseItemCode: usage.statusCode,
-    startAvailabilityDate: usage.availableAt?.toDate() ?? null,
-  };
-};

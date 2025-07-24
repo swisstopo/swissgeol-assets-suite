@@ -23,7 +23,7 @@ export class AdminService {
   public getUsers(): Observable<User[]> {
     return this.httpClient.get<object[]>('/api/users').pipe(
       map((it) => plainToInstance(UserSchema, it)),
-      map((it) => it.sort((a, b) => a.firstName.localeCompare(b.firstName)))
+      map((it) => it.sort((a, b) => a.firstName.localeCompare(b.firstName))),
     );
   }
 
@@ -34,7 +34,7 @@ export class AdminService {
   public getWorkgroups(): Observable<Workgroup[]> {
     return this.httpClient.get<object[]>('/api/workgroups').pipe(
       map((it) => plainToInstance(WorkgroupSchema, it)),
-      map((it) => it.sort((a, b) => a.name.localeCompare(b.name)))
+      map((it) => it.sort((a, b) => a.name.localeCompare(b.name))),
     );
   }
 
@@ -66,7 +66,7 @@ export class AdminService {
           isAdmin: user.isAdmin,
           firstName: user.firstName,
           lastName: user.lastName,
-        } as UserData)
+        } as UserData),
       )
       .pipe(map((it) => plainToInstance(UserSchema, it)));
   }

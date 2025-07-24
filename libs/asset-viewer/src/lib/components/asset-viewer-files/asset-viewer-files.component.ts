@@ -1,11 +1,11 @@
+import { coerceBooleanProperty } from '@angular/cdk/coercion';
 import { HttpClient } from '@angular/common/http';
-import { Component, inject, Input, OnDestroy, OnInit } from '@angular/core';
-import { AppState, fromAppShared } from '@asset-sg/client-shared';
-import { AssetFile, AssetFileType } from '@asset-sg/shared';
-import { AssetId } from '@asset-sg/shared/v2';
+import { Component, inject, Input } from '@angular/core';
+import { AlertType, AppState, FileNamePipe, LanguageService, showAlert } from '@asset-sg/client-shared';
+import { AssetId, AssetFile } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
-import { Subscription } from 'rxjs';
-import { AssetDetailFileVM } from '../../state/asset-search/asset-search.selector';
+import { TranslateService } from '@ngx-translate/core';
+import { finalize } from 'rxjs';
 
 @Component({
   selector: 'ul[asset-sg-asset-viewer-files]',
@@ -13,45 +13,28 @@ import { AssetDetailFileVM } from '../../state/asset-search/asset-search.selecto
   styleUrls: ['./asset-viewer-files.component.scss'],
   standalone: false,
 })
-export class AssetViewerFilesComponent implements OnInit, OnDestroy {
+export class AssetViewerFilesComponent {
   @Input({ required: true })
   assetId!: AssetId;
 
   @Input({ required: true })
-  files!: AssetDetailFileVM[];
+  files!: AssetFile[];
 
-  @Input({ required: true })
-  type!: AssetFileType;
+  @Input({ transform: coerceBooleanProperty })
+  isLegal = false;
+
+  private readonly fileNamePipe = inject(FileNamePipe);
 
   private readonly store = inject(Store<AppState>);
 
   private readonly httpClient = inject(HttpClient);
 
-  public locale!: string;
+  private readonly translateService = inject(TranslateService);
+  private readonly languageService = inject(LanguageService);
+
+  public readonly locale$ = this.languageService.locale$;
 
   public readonly activeFileDownloads = new Set<`${AssetId}/${number}/${DownloadType}`>();
-
-  private readonly subscriptions = new Subscription();
-
-  ngOnInit(): void {
-    this.subscriptions.add(
-      this.store.select(fromAppShared.selectLocale).subscribe((locale) => {
-        this.locale = locale;
-      })
-    );
-  }
-
-  ngOnDestroy(): void {
-    this.subscriptions.unsubscribe();
-  }
-
-  get isNormal(): boolean {
-    return this.type === 'Normal';
-  }
-
-  get isLegal(): boolean {
-    return this.type === 'Legal';
-  }
 
   public isActiveFileDownload(file: Omit<AssetFile, 'fileSize'>, downloadType: DownloadType): boolean {
     return this.activeFileDownloads.has(`${this.assetId}/${file.id}/${downloadType}`);
@@ -60,33 +43,46 @@ export class AssetViewerFilesComponent implements OnInit, OnDestroy {
   public downloadFile(file: Omit<AssetFile, 'fileSize'>, downloadType: DownloadType): void {
     const key = `${this.assetId}/${file.id}/${downloadType}` as const;
     this.activeFileDownloads.add(key);
-    this.httpClient.get(`/api/assets/${this.assetId}/files/${file.id}`, { responseType: 'blob' }).subscribe({
-      next: async (blob) => {
-        const isPdf = file.name.endsWith('.pdf');
-        if (isPdf) {
-          blob = await blob.arrayBuffer().then((buffer) => new Blob([buffer], { type: 'application/pdf' }));
-        }
-        const url = URL.createObjectURL(blob);
-        const anchor = document.createElement('a');
+    this.httpClient
+      .get(`/api/assets/${this.assetId}/files/${file.id}`, { responseType: 'blob' })
+      .pipe(finalize(() => this.activeFileDownloads.delete(key)))
+      .subscribe({
+        next: async (blob) => {
+          const isPdf = file.name.endsWith('.pdf');
+          if (isPdf) {
+            blob = await blob.arrayBuffer().then((buffer) => new Blob([buffer], { type: 'application/pdf' }));
+          }
+          const url = URL.createObjectURL(blob);
+          const anchor = document.createElement('a');
 
-        anchor.setAttribute('style', 'display: none');
-        anchor.href = url;
-        if (!isPdf || downloadType === 'save-file') {
-          anchor.download = file.name;
-        } else {
-          anchor.target = '_blank';
-        }
-        document.body.appendChild(anchor);
-        anchor.click();
-        anchor.remove();
-        setTimeout(() => {
-          window.URL.revokeObjectURL(url);
-        });
-      },
-      complete: () => {
-        this.activeFileDownloads.delete(key);
-      },
-    });
+          anchor.setAttribute('style', 'display: none');
+          anchor.href = url;
+          if (!isPdf || downloadType === 'save-file') {
+            anchor.download = this.fileNamePipe.transform(file);
+          } else {
+            anchor.target = '_blank';
+          }
+          document.body.appendChild(anchor);
+          anchor.click();
+          anchor.remove();
+          setTimeout(() => {
+            window.URL.revokeObjectURL(url);
+          });
+        },
+        error: (error) => {
+          console.error('Download error', error);
+          this.store.dispatch(
+            showAlert({
+              alert: {
+                id: `download-error-${error.status}-${error.url}`,
+                text: this.translateService.get('downloadFailed'),
+                type: AlertType.Error,
+                isPersistent: true,
+              },
+            }),
+          );
+        },
+      });
   }
 }
 

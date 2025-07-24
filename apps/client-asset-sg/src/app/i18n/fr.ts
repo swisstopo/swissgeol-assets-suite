@@ -1,6 +1,6 @@
-import { AppTranslations } from './i18n';
+import { AppTranslationMapping } from './i18n';
 
-export const frAppTranslations: AppTranslations = {
+export const frTranslationMapping: AppTranslationMapping = {
   logoSwissGeol: 'Logo Swissgeol Assets',
   welcomeTo: 'Bienvenue sur',
   accessForbidden: "Vous n'avez pas accès à cette application.",
@@ -22,6 +22,8 @@ export const frAppTranslations: AppTranslations = {
   delete: 'Supprimer',
   close: 'Fermer',
   datePlaceholder: 'AAAA-MM-JJ',
+  deletedUserName: 'FR gelöschter Benutzer',
+  downloadFailed: 'FR Datei konnte nicht heruntergeladen werden.',
   workgroup: {
     title: 'groupe de travail',
     errors: {
@@ -30,6 +32,29 @@ export const frAppTranslations: AppTranslations = {
   },
   favorites: {
     title: 'Favorites',
+  },
+  workflow: {
+    status: 'FR Status',
+    assignee: 'FR Zugewiesene Person',
+    requestedChanges: 'FR Änderungen angefordert',
+  },
+  workflowStatus: {
+    Draft: 'FR Draft',
+    InReview: 'FR Review',
+    Reviewed: 'FR Reviewed',
+    Published: 'FR Veröffentlicht',
+    notPublished: 'FR Nicht Veröffentlicht',
+  },
+  workflowSelection: {
+    general: 'FR General',
+    normalFiles: 'FR Normale Dateien',
+    legalFiles: 'FR Rechtliche Einwilligungen',
+    initiators: 'FR Auftraggeber',
+    suppliers: 'FR Einlieferer',
+    authors: 'FR Authoren',
+    references: 'FR Referenzen',
+    geometries: 'FR Geometrien',
+    legacy: 'FR Altdaten',
   },
   menuBar: {
     filters: 'Filtres',
@@ -94,6 +119,8 @@ export const frAppTranslations: AppTranslations = {
     workgroup: 'groupe de travail',
     resetSearch: 'Réinitialiser les filtres',
     file: 'Fichier',
+    filePageSingular: 'FR 1 Seite',
+    filePagePlural: 'FR {{pageCount}} Seiten',
     legalFile: 'Consentements légaux',
     openFileInNewTab: 'Ouvrir {{fileName}} dans un nouvel onglet',
     downloadFile: 'Télécharger {{fileName}}',
@@ -110,6 +137,11 @@ export const frAppTranslations: AppTranslations = {
     supplier: 'Fournisseur',
   },
   edit: {
+    visibility: {
+      public: 'FR frei',
+      locked: 'FR gesperrt',
+      lockedUntil: 'FR gesperrt bis {{date}}',
+    },
     tabs: {
       general: {
         tabName: 'Général',
@@ -130,6 +162,14 @@ export const frAppTranslations: AppTranslations = {
         alternativeIdDescription: "Description d'ID alternative",
         addNewAlternativeId: 'Ajouter une nouvelle ID alternative',
         referencesWarning: 'Pour changer le groupe de travail, vous devez d’abord supprimer toutes les références.',
+        access: {
+          name: 'Rèstriction d’accès',
+          items: {
+            public: 'Public',
+            restricted: 'Restreint',
+            temporarilyRestricted: "Restreint jusqu'à",
+          },
+        },
       },
       files: {
         tabName: 'Fichiers',
@@ -142,13 +182,26 @@ export const frAppTranslations: AppTranslations = {
           many: 'Consentements Légaux',
         },
         legalDocItemCode: 'Type',
+        export: 'FR Export',
+        clickOrDrop: 'FR Zum Durchsuchen klicken oder Datei hierher ziehen und ablegen',
+        uploadFile: 'FR Datei hochladen',
         dragFileHere: 'Glisser le fichier ici',
         or: 'ou',
         selectFile: 'Sélectionner un fichier',
         addNewFile: 'Ajouter un nouveau fichier',
         willBeDeleted: 'Sera supprimé',
         willBeUploaded: 'Sera téléchargé',
-        fileSizeToLarge: 'La taille du fichier ne doit pas dépasser 250 Mo.',
+        fileSizeToLarge: 'La taille du fichier ne doit pas dépasser 2 Go.',
+        uploadedAt: 'Téléchargé',
+        ocrStatus: 'OCR Status',
+        ocrStatusValues: {
+          willNotBeProcessed: 'FR nicht berücksichtigt',
+          created: 'FR registriert',
+          waiting: 'FR wartet',
+          processing: 'FR wird prozessiert',
+          error: 'FR Fehler',
+          success: 'FR abgeschlossen',
+        },
       },
       usage: {
         tabName: 'Utilisation',
@@ -170,13 +223,15 @@ export const frAppTranslations: AppTranslations = {
       },
       contacts: {
         tabName: 'Contact',
-        linkContact: 'Ajouter un nouveau lien de contact',
+        linkContact: 'Ajouter lien de contact',
         link: 'Créer un lien',
+        addContact: 'Nouveau contact',
         createNewContact: 'Créer un nouveau contact',
-        editContact: 'Modifier le contact',
+        editContact: 'Contact',
         unlink: 'Supprimer le lien',
         viewDetails: 'Afficher les détails du contact',
         contact: 'Contact',
+        finishEditing: 'Terminer l’édition',
         role: 'Rôle',
         newContact: 'Nouveau contact',
         contactKind: 'Type de contact',
@@ -190,13 +245,17 @@ export const frAppTranslations: AppTranslations = {
         phone: 'Téléphone',
         website: 'Site web',
         create: 'Créer',
-        noContacts: 'Aucun contact',
+        noContacts: 'Aucun contact ...',
         contactPlaceholder: 'Recherche par nom',
+        editWarnMessage: 'FR Changes to the fields below will be synced across all assets that share the same contact.',
       },
       references: {
+        workgroupWarning: "Pour ajouter des références, vous devez d'abord sélectionner un groupe de travail.",
         tabName: 'Références',
+        assetId: "ID de l'asset",
         assetTitlePublic: 'Titre public',
         assetTitlePublicPlaceholder: 'Recherche par titre public',
+        noReferencesAdded: 'Pas de références ajoutées...',
         referenceHeadings: {
           parent: 'Asset parent',
           subordinate: 'Assets parents',
@@ -235,12 +294,6 @@ export const frAppTranslations: AppTranslations = {
       },
       administration: {
         tabName: 'Administration',
-        infoGeol: 'InfoGeol',
-        sgsId: 'SGS-ID',
-        data: 'Données',
-        contactData: 'Données de contact',
-        auxData: 'Données supplémentaires',
-        municipality: 'Commune',
         workStatus: 'Statut de travail',
         lastProcessed: 'Dernière mise à jour',
         by: 'de',
@@ -250,9 +303,30 @@ export const frAppTranslations: AppTranslations = {
           hasValidationErrors: 'Contient des erreurs de validation',
         },
       },
+      status: {
+        tabName: 'FR Status',
+        selectionCategories: {
+          files: 'FR Dateien',
+          contacts: 'FR Kontakte',
+        },
+      },
+
+      legacyData: {
+        tabName: 'Administration',
+        infoGeol: 'InfoGeol',
+        sgsId: 'SGS-ID',
+        data: 'Données',
+        contactData: 'Données de contact',
+        auxData: 'Données supplémentaires',
+        municipality: 'Commune',
+      },
     },
     closeManageAsset: 'Fermer la gestion des asset',
-    questionDiscardChanges: 'Souhaitez-vous annuler les modifications ?',
+    unsavedChanges: 'Modifications non enregistrées',
+    discardChanges: 'Annuler les modifications',
+    questionDiscardChanges:
+      'Il y a des modifications non enregistrées. Souhaitez-vous enregistrer toutes les modifications ?',
+    questionAbortChanges: "Votre saisie est incomplète. L'asset ne peut pas être enregistré dans cet état.",
     userManagementHeading: 'Utilisateurs',
     userManagementButton: 'Gérer les utilisateurs',
     adminInstructionsSyncElasticAssetsHeading: 'Synchroniser les assets avec Elasticsearch',

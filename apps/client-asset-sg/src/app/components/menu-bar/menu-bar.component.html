@@ -11,26 +11,27 @@
       menuBar.filters
     </li>
     @if (userExists$ | async) {
-    <li
-      *rxLet="activeItem === 'favorites'; let isActive"
-      asset-sg-menu-bar-item
-      icon="favorite"
-      [badge]="isActive ? (activeFilterCount$ | async) : null"
-      [isActive]="isActive"
-      (click)="isActive ? toggleAssetDrawer() : goToViewer({ favoritesOnly: true })"
-    >
-      menuBar.favourites
-    </li>
+      <li
+        *rxLet="activeItem === 'favorites'; let isActive"
+        asset-sg-menu-bar-item
+        icon="favorite"
+        [badge]="isActive ? (activeFilterCount$ | async) : null"
+        [isActive]="isActive"
+        (click)="isActive ? toggleAssetDrawer() : goToViewer({ favoritesOnly: true })"
+      >
+        menuBar.favourites
+      </li>
     }
-    <li
-      *canCreate="AssetEditPolicy"
-      asset-sg-menu-bar-item
-      icon="add"
-      [link]="[translateService.currentLang, 'asset-admin', 'new']"
-      [isActive]="activeItem === 'create-asset'"
-    >
-      menuBar.createAsset
-    </li>
+    @if (canCreatesAsset$ | async) {
+      <li
+        asset-sg-menu-bar-item
+        icon="add"
+        [link]="['asset-admin', 'new'] | localizePath"
+        [isActive]="activeItem === 'create-asset'"
+      >
+        menuBar.createAsset
+      </li>
+    }
   </ul>
 
   <ul class="submenu">
@@ -38,7 +39,7 @@
       *adminOnly
       asset-sg-menu-bar-item
       icon="options"
-      [link]="[translateService.currentLang, 'asset-admin']"
+      [link]="'asset-admin' | localizePath"
       [isActive]="activeItem === 'options'"
     >
       menuBar.settings

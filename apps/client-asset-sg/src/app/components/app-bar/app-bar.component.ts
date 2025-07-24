@@ -1,7 +1,8 @@
 import { ENTER } from '@angular/cdk/keycodes';
 import { HttpClient } from '@angular/common/http';
 import { Component, ElementRef, inject, Input, OnInit, Output, ViewChild } from '@angular/core';
-import { appSharedStateActions, AuthService, fromAppShared, RoutingService } from '@asset-sg/client-shared';
+import { Router } from '@angular/router';
+import { appSharedStateActions, AuthService, fromAppShared } from '@asset-sg/client-shared';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { Store } from '@ngrx/store';
 import * as O from 'fp-ts/Option';
@@ -28,12 +29,12 @@ export class AppBarComponent implements OnInit {
   public version = '';
 
   private readonly store = inject(Store<AppState>);
+  private readonly router = inject(Router);
   private readonly authService = inject(AuthService);
-  private readonly routingService = inject(RoutingService);
 
   public readonly isAnonymous$ = this.store.select(fromAppShared.selectIsAnonymousMode);
 
-  public readonly user$ = this.authService.getUserProfile$();
+  public readonly user$ = this.store.select(fromAppShared.selectUser);
 
   private readonly _ngOnInit$ = new Subject<void>();
 
@@ -44,7 +45,7 @@ export class AppBarComponent implements OnInit {
       map((ev) => {
         const value = (ev.target as HTMLInputElement).value;
         return value ? O.some(value) : O.none;
-      })
+      }),
     );
     // TODO use new pattern here
     this._ngOnInit$
@@ -64,6 +65,6 @@ export class AppBarComponent implements OnInit {
   async logout(): Promise<void> {
     this.authService.logOut();
     this.store.dispatch(appSharedStateActions.logout());
-    await this.routingService.navigateToRoot();
+    await this.router.navigate(['/']);
   }
 }

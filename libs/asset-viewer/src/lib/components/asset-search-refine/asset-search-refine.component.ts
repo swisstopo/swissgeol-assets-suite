@@ -1,23 +1,22 @@
 import { AfterViewInit, Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { MatOptionSelectionChange } from '@angular/material/core';
-import { AssetSearchQuery, DateRange } from '@asset-sg/shared';
+import { AssetSearchQuery, Contact, ContactId, LocalDate, LocalDateRange, ValueCount } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
 import { map, startWith, Subscription } from 'rxjs';
 
 import * as actions from '../../state/asset-search/asset-search.actions';
 import { PanelState, resetSearch } from '../../state/asset-search/asset-search.actions';
 import {
-  AvailableAuthor,
   Filter,
   selectActiveFilters,
   selectAssetKindFilters,
   selectAvailableAuthors,
-  selectCreateDate,
+  selectCreatedAt,
   selectGeometryFilters,
   selectIsFiltersOpen,
   selectLanguageFilters,
-  selectManCatLabelFilters,
+  selectAssetTopicFilters,
   selectSearchQuery,
   selectUsageCodeFilters,
   selectWorkgroupFilters,
@@ -37,13 +36,13 @@ export class AssetSearchRefineComponent implements OnInit, OnDestroy, AfterViewI
   private readonly store = inject(Store);
 
   public authorAutoCompleteControl = new FormControl('');
-  public minDateControl = new FormControl();
-  public maxDateControl = new FormControl();
+  public minDateControl = new FormControl<Date | undefined>(undefined);
+  public maxDateControl = new FormControl<Date | undefined>(undefined);
 
-  public createDateRange: DateRange | null = null;
-  public availableAuthors: AvailableAuthor[] = [];
-  public filteredAuthors: AvailableAuthor[] = [];
-  public selectedAuthor?: AvailableAuthor;
+  public createdAtRange: LocalDateRange | null = null;
+  public availableAuthors: Array<ValueCount<Contact>> = [];
+  public filteredAuthors: Array<ValueCount<Contact>> = [];
+  public selectedAuthor?: ValueCount<Contact>;
   public minDate?: Date;
   public maxDate?: Date;
   public isFiltersOpen = false;
@@ -51,13 +50,13 @@ export class AssetSearchRefineComponent implements OnInit, OnDestroy, AfterViewI
   public assetSearchQuery!: AssetSearchQuery;
 
   public activeFilters: Filter<string | number>[] = [];
-  private readonly createDateRange$ = this.store.select(selectCreateDate);
+  private readonly createDateRange$ = this.store.select(selectCreatedAt);
   private readonly availableAuthors$ = this.store.select(selectAvailableAuthors);
   private readonly isFiltersOpen$ = this.store.select(selectIsFiltersOpen);
 
   readonly usageCodeFilters$ = this.store.select(selectUsageCodeFilters);
   readonly geometryCodeFilters$ = this.store.select(selectGeometryFilters);
-  readonly manCatLabelFilters$ = this.store.select(selectManCatLabelFilters);
+  readonly manCatLabelFilters$ = this.store.select(selectAssetTopicFilters);
   readonly languageFilters$ = this.store.select(selectLanguageFilters);
   readonly assetKindFilters$ = this.store.select(selectAssetKindFilters);
   readonly workgroupFilters$ = this.store.select(selectWorkgroupFilters);
@@ -77,25 +76,37 @@ export class AssetSearchRefineComponent implements OnInit, OnDestroy, AfterViewI
 
   public ngAfterViewInit() {
     this.subscriptions.add(
-      this.minDateControl.valueChanges.subscribe((value) => {
-        if (value instanceof Date || value === undefined) {
-          this.minDate = value;
-          this.updateSearch({ createDate: { min: value, max: this.maxDateControl.getRawValue() } });
+      this.minDateControl.valueChanges.subscribe((minDate) => {
+        if (minDate instanceof Date || minDate === undefined) {
+          this.minDate = minDate;
+          const maxDate = this.maxDateControl.getRawValue();
+          this.updateSearch({
+            createdAt: {
+              min: minDate == null ? undefined : LocalDate.fromDate(minDate),
+              max: maxDate == null ? undefined : LocalDate.fromDate(maxDate),
+            },
+          });
         }
-      })
+      }),
     );
     this.subscriptions.add(
-      this.maxDateControl.valueChanges.subscribe((value) => {
-        if (value instanceof Date || value === undefined) {
-          this.maxDate = value;
-          this.updateSearch({ createDate: { min: this.minDateControl.getRawValue(), max: value } });
+      this.maxDateControl.valueChanges.subscribe((maxDate) => {
+        if (maxDate instanceof Date || maxDate === undefined) {
+          this.maxDate = maxDate;
+          const minDate = this.minDateControl.getRawValue();
+          this.updateSearch({
+            createdAt: {
+              min: minDate == null ? undefined : LocalDate.fromDate(minDate),
+              max: maxDate == null ? undefined : LocalDate.fromDate(maxDate),
+            },
+          });
         }
-      })
+      }),
     );
   }
 
   public get minCreateDate(): Date | null {
-    const min = this.createDateRange?.min;
+    const min = this.createdAtRange?.min?.toDate();
     if (min == null) {
       return null;
     }
@@ -110,10 +121,10 @@ export class AssetSearchRefineComponent implements OnInit, OnDestroy, AfterViewI
     this.store.dispatch(mapControlActions.toggleDraw());
   }
 
-  public updateAuthor(event: MatOptionSelectionChange, authorId: number) {
+  public updateAuthor(event: MatOptionSelectionChange, authorId: ContactId) {
     if (event.isUserInput) {
       this.updateSearch({ authorId });
-      this.selectedAuthor = this.filteredAuthors.find((a) => a.contactId === authorId);
+      this.selectedAuthor = this.filteredAuthors.find((a) => a.value.id === authorId);
     }
   }
 
@@ -123,9 +134,9 @@ export class AssetSearchRefineComponent implements OnInit, OnDestroy, AfterViewI
     }
   }
 
-  public filterAuthors(value: string): AvailableAuthor[] {
+  public filterAuthors(value: string): Array<ValueCount<Contact>> {
     const filterValue = value.toLowerCase();
-    return this.availableAuthors.filter((author) => author.name.toLowerCase().includes(filterValue));
+    return this.availableAuthors.filter((author) => author.value.name.toLowerCase().includes(filterValue));
   }
 
   public resetAuthorSearch() {
@@ -158,7 +169,7 @@ export class AssetSearchRefineComponent implements OnInit, OnDestroy, AfterViewI
         query: {
           [filterToRemove.queryKey]: remainingFiltersWithSameKey.length > 0 ? remainingFiltersWithSameKey : undefined,
         },
-      })
+      }),
     );
   }
 
@@ -172,31 +183,35 @@ export class AssetSearchRefineComponent implements OnInit, OnDestroy, AfterViewI
     this.subscriptions.add(
       this.store.select(selectSearchQuery).subscribe((query) => {
         this.assetSearchQuery = query;
-      })
+      }),
     );
 
     this.subscriptions.add(
       this.createDateRange$.subscribe((dateRange) => {
-        this.createDateRange = dateRange;
-      })
+        this.createdAtRange = dateRange;
+      }),
     );
 
     this.subscriptions.add(
       this.availableAuthors$.subscribe((authors) => {
         this.availableAuthors = authors ?? [];
         this.filteredAuthors = authors ?? [];
-      })
+      }),
     );
 
     this.subscriptions.add(
       this.authorAutoCompleteControl.valueChanges
         .pipe(
           startWith(''),
-          map((value) => this.filterAuthors(value ?? ''))
+          map((value) => this.filterAuthors(value ?? '')),
         )
         .subscribe((filteredAuthors) => {
           this.filteredAuthors = filteredAuthors;
-        })
+        }),
     );
+  }
+
+  protected trackFilter(filter: Filter<string | number>): string {
+    return `${filter.queryKey}:${filter.value}`;
   }
 }

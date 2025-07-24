@@ -1,3 +1,3 @@
-export function log(log: string) {
-  console.log(`[${new Date().toISOString()}] ${log}`);
+export function log(log: string, level: 'main' | 'batch' = 'main') {
+  console.log(`[${new Date().toISOString()}] ${level === 'batch' ? '=> ' : ''}${log}`);
 }

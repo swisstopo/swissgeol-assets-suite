@@ -1,0 +1,20 @@
+@use "../../styles/variables";
+
+div {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0 0 12px 12px;
+  height: 24px;
+}
+
+span {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+}
+
+svg-icon {
+  color: variables.$red-08;
+}

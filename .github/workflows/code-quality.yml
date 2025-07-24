@@ -24,15 +24,14 @@ jobs:
         uses: actions/dependency-review-action@v4
         with:
           # https://github.com/advisories/GHSA-67mh-4wv8-2f99 (2025-02-11)
-          # Blocks the upgrade to Angular 19. Issue is fixed in esbuild, but not in @angular-devkit/build-angular.
+          # Blocks the upgrade to Angular 19. Issue is fixed in esbuild, but not in @nx/angular.
           # Vulnerability has been deemed largely inconsequential to our development process.
 
-          # https://github.com/advisories/GHSA-968p-4wvh-cqc8 (2025-03-18)
-          # Babel is mainly used within Angular and NX libraries and not controlled by us.
-          # We do not currently use Regular Expressions with named capturing groups anywhere.
+          # https://github.com/advisories/GHSA-x2rg-q646-7m2v (2025-05-13)
+          # We do not use module federation, so this issue should not have any impact on us.
           allow-ghsas: >-
             GHSA-67mh-4wv8-2f99,
-            GHSA-968p-4wvh-cqc8
+            GHSA-x2rg-q646-7m2v
 
   install:
     runs-on: ubuntu-latest
@@ -68,10 +67,14 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node_modules_e2e-
       - name: Install node dependencies
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npm install
       - name: Generate prisma types
         run: npm run prisma -- generate
       - name: Install e2e node dependencies
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: cd e2e && npm ci
 
   test:

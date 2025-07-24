@@ -1,6 +1,6 @@
 import { Component, inject, OnDestroy, OnInit, TemplateRef, ViewChild } from '@angular/core';
 import { Router } from '@angular/router';
-import { AppPortalService, AppState, CURRENT_LANG, LifecycleHooksDirective } from '@asset-sg/client-shared';
+import { AppPortalService, AppState, LanguageService, LifecycleHooksDirective } from '@asset-sg/client-shared';
 import { User, Workgroup, WorkgroupId } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
 import { Subscription } from 'rxjs';
@@ -20,12 +20,15 @@ export class AdminPageComponent implements OnInit, OnDestroy {
 
   public workgroup: Workgroup | null = null;
   public user: User | null = null;
+
+  private readonly appPortalService = inject(AppPortalService);
+  private readonly languageService = inject(LanguageService);
+
   private readonly store = inject(Store<AppState>);
   public readonly isLoading$ = this.store.select(selectIsLoading);
   public readonly selectedUser$ = this.store.select(selectSelectedUser);
   public readonly selectedWorkgroup$ = this.store.select(selectSelectedWorkgroup);
-  public readonly currentLang$ = inject(CURRENT_LANG);
-  private readonly appPortalService = inject(AppPortalService);
+
   private readonly router = inject(Router);
   private readonly subscriptions = new Subscription();
 
@@ -63,23 +66,23 @@ export class AdminPageComponent implements OnInit, OnDestroy {
       actions.updateWorkgroup({
         workgroupId: workgroup.id,
         workgroup: { disabledAt, name: workgroup.name, users: workgroup.users },
-      })
+      }),
     );
   }
 
-  getBackPath(lang: string): string[] {
+  getBackPath(): string[] {
     if (this.router.url.includes('/workgroups/')) {
-      return [`/${lang}/admin/workgroups`];
+      return [`/${this.languageService.language}/admin/workgroups`];
     }
-    return [`/${lang}/admin/users`];
+    return [`/${this.languageService.language}/admin/users`];
   }
 
-  navigateBack(lang: string): void {
+  navigateBack(): void {
     if (this.isDetailPage) {
-      this.router.navigate(this.getBackPath(lang));
+      this.router.navigate(this.getBackPath()).then();
       return;
     }
-    this.router.navigate([lang, 'asset-admin']);
+    this.router.navigate([this.languageService.language, 'asset-admin']).then();
   }
 
   public deleteWorkgroup(workgroupId: WorkgroupId): void {
@@ -90,13 +93,13 @@ export class AdminPageComponent implements OnInit, OnDestroy {
     this.subscriptions.add(
       this.selectedWorkgroup$.subscribe((workgroup) => {
         this.workgroup = workgroup;
-      })
+      }),
     );
 
     this.subscriptions.add(
       this.selectedUser$.subscribe((user) => {
         this.user = user;
-      })
+      }),
     );
   }
 }

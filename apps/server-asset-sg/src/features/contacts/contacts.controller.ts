@@ -20,7 +20,7 @@ export class ContactsController {
   async update(
     @Param('id', ParseIntPipe) id: number,
     @ParseBody(ContactDataSchema) data: ContactData,
-    @CurrentUser() user: User
+    @CurrentUser() user: User,
   ): Promise<Contact> {
     const record = await this.contactRepo.find(id);
     if (record == null) {

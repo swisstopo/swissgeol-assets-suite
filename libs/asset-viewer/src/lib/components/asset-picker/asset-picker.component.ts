@@ -10,11 +10,9 @@ import {
   ViewChild,
 } from '@angular/core';
 import { DragHandleOffset, getCssCustomPropertyNumberValue } from '@asset-sg/client-shared';
-import { AssetEditDetail } from '@asset-sg/shared';
+import { AssetId, AssetSearchResultItem } from '@asset-sg/shared/v2';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { Store } from '@ngrx/store';
 import { RxState } from '@rx-angular/state';
-import * as O from 'fp-ts/Option';
 import {
   distinctUntilChanged,
   filter,
@@ -31,15 +29,15 @@ import {
 import { ViewerControllerService } from '../../services/viewer-controller.service';
 
 interface AssetPickerState {
-  assets: AssetEditDetail[];
+  assets: AssetSearchResultItem[];
   show: boolean;
-  currentAssetId: O.Option<number>;
+  currentAssetId: AssetId | null;
 }
 
 const initialState: AssetPickerState = {
   assets: [],
   show: false,
-  currentAssetId: O.none,
+  currentAssetId: null,
 };
 
 @UntilDestroy()
@@ -53,24 +51,23 @@ const initialState: AssetPickerState = {
 export class AssetPickerComponent extends RxState<AssetPickerState> {
   private readonly viewerControllerService = inject(ViewerControllerService);
 
-  public show$ = this.select('show');
-  public assets$ = this.select('assets');
-  public currentAssetId$ = this.select('currentAssetId');
+  public readonly show$ = this.select('show');
+  public readonly assets$ = this.select('assets');
+  public readonly currentAssetId$ = this.select('currentAssetId');
 
-  public closePicker$ = new Subject<void>();
-  public dragHandleOffset$$ = new Subject<Observable<DragHandleOffset>>();
+  public readonly closePicker$ = new Subject<void>();
+  public readonly dragHandleOffset$$ = new Subject<Observable<DragHandleOffset>>();
 
-  private _host = inject<ElementRef<HTMLElement>>(ElementRef);
-  private _ngZone = inject(NgZone);
-  private _store = inject(Store);
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly ngZone = inject(NgZone);
 
-  @ViewChild('pickerContainer') _pickerContainer!: ElementRef<HTMLElement>;
+  @ViewChild('pickerContainer') readonly pickerContainer!: ElementRef<HTMLElement>;
 
-  @Input() set assets(assets$: Observable<AssetEditDetail[]>) {
+  @Input() set assets(assets$: Observable<AssetSearchResultItem[]>) {
     this.connect('assets', assets$);
   }
 
-  @Input() set currentAssetId(currentAssetId$: Observable<O.Option<number>>) {
+  @Input() set currentAssetId(currentAssetId$: Observable<AssetId | null>) {
     this.connect('currentAssetId', currentAssetId$);
   }
 
@@ -83,7 +80,7 @@ export class AssetPickerComponent extends RxState<AssetPickerState> {
 
     const getTransformXY = () => {
       const REGEX = /matrix\([^,]*,[^,]*,[^,]*,[^,]*,\s*(-?\d+),\s*(-?\d+)\)/;
-      const [, x, y] = REGEX.exec(window.getComputedStyle(this._pickerContainer.nativeElement).transform) || [0, 0, 0];
+      const [, x, y] = REGEX.exec(window.getComputedStyle(this.pickerContainer.nativeElement).transform) || [0, 0, 0];
       return { transformX: +x, transformY: +y };
     };
 
@@ -98,9 +95,9 @@ export class AssetPickerComponent extends RxState<AssetPickerState> {
             const { hostRect, pickerContainerRect, fontSizePx, transformX, transformY } =
               prevDragHandleOffset == null
                 ? {
-                    hostRect: this._host.nativeElement.getBoundingClientRect(),
-                    pickerContainerRect: this._pickerContainer.nativeElement.getBoundingClientRect(),
-                    fontSizePx: getCssCustomPropertyNumberValue(window, this._host.nativeElement, 'font-size') * 16,
+                    hostRect: this.host.nativeElement.getBoundingClientRect(),
+                    pickerContainerRect: this.pickerContainer.nativeElement.getBoundingClientRect(),
+                    fontSizePx: getCssCustomPropertyNumberValue(window, this.host.nativeElement, 'font-size') * 16,
                     ...getTransformXY(),
                   }
                 : acc;
@@ -113,30 +110,30 @@ export class AssetPickerComponent extends RxState<AssetPickerState> {
             pickerContainerRect: null as DOMRect | null,
             transformX: 0,
             transformY: 0,
-          }
+          },
         ),
-        untilDestroyed(this)
+        untilDestroyed(this),
       )
       .subscribe(({ dragHandleOffset, hostRect, pickerContainerRect, fontSizePx, transformX, transformY }) => {
-        this._ngZone.runOutsideAngular(() => {
+        this.ngZone.runOutsideAngular(() => {
           if (!dragHandleOffset) {
-            this._pickerContainer.nativeElement.style.removeProperty('margin-left');
-            this._pickerContainer.nativeElement.style.removeProperty('margin-right');
+            this.pickerContainer.nativeElement.style.removeProperty('margin-left');
+            this.pickerContainer.nativeElement.style.removeProperty('margin-right');
           } else {
             if (hostRect && pickerContainerRect) {
               const offsetX =
                 pickerContainerRect.left + dragHandleOffset.offsetX <= hostRect.left + fontSizePx
                   ? hostRect.left - pickerContainerRect.left + transformX + fontSizePx + 1
                   : pickerContainerRect.right + dragHandleOffset.offsetX >= hostRect.right
-                  ? hostRect.right - pickerContainerRect.right + transformX
-                  : dragHandleOffset.offsetX + transformX;
+                    ? hostRect.right - pickerContainerRect.right + transformX
+                    : dragHandleOffset.offsetX + transformX;
               const offsetY =
                 pickerContainerRect.top + dragHandleOffset.offsetY <= hostRect.top
                   ? hostRect.top - pickerContainerRect.top + transformY
                   : pickerContainerRect.bottom + dragHandleOffset.offsetY >= hostRect.bottom
-                  ? hostRect.bottom - pickerContainerRect.bottom + transformY
-                  : dragHandleOffset.offsetY + transformY;
-              this._pickerContainer.nativeElement.style.transform = `translate3d(${offsetX}px, ${offsetY}px, 0)`;
+                    ? hostRect.bottom - pickerContainerRect.bottom + transformY
+                    : dragHandleOffset.offsetY + transformY;
+              this.pickerContainer.nativeElement.style.transform = `translate3d(${offsetX}px, ${offsetY}px, 0)`;
             }
           }
         });
@@ -147,14 +144,14 @@ export class AssetPickerComponent extends RxState<AssetPickerState> {
       merge(
         this.assets$.pipe(
           filter((as) => as.length > 0),
-          map(() => true)
+          map(() => true),
         ),
         this.currentAssetId$.pipe(
-          filter(O.isSome),
-          map(() => false)
+          filter((id) => id !== null),
+          map(() => false),
         ),
-        this.closePicker$.pipe(map(() => false))
-      )
+        this.closePicker$.pipe(map(() => false)),
+      ),
     );
 
     this.closePicker$.pipe(untilDestroyed(this)).subscribe(() => this.assetMouseOver.emit(null));

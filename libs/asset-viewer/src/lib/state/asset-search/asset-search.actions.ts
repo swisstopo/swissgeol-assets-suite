@@ -1,20 +1,19 @@
-import { AssetEditDetail, AssetSearchQuery, AssetSearchResult, AssetSearchStats } from '@asset-sg/shared';
+import { AssetSearchQuery, AssetSearchResult, AssetSearchStats, Geometry } from '@asset-sg/shared/v2';
 import { createAction, props } from '@ngrx/store';
 import { MapPosition } from '../../components/map/map-controller';
-import { AllStudyDTO } from '../../models';
 
 export const setQuery = createAction(
   '[Asset Search] Set Query',
   props<{
     query: Partial<AssetSearchQuery>;
-  }>()
+  }>(),
 );
 
 export const updateSearchQuery = createAction(
   '[Asset Search] Update Query',
   props<{
     query: Partial<AssetSearchQuery>;
-  }>()
+  }>(),
 );
 
 export const setResults = createAction(
@@ -22,37 +21,29 @@ export const setResults = createAction(
   props<{
     results?: AssetSearchResult;
     isLoading?: boolean;
-  }>()
+  }>(),
 );
 export const setStats = createAction(
   '[Asset Search] Set Stats',
   props<{
     stats?: AssetSearchStats;
     isLoading?: boolean;
-  }>()
+  }>(),
 );
 
-export const setStudies = createAction(
-  '[Asset Search] Set Studies',
+export const setGeometries = createAction(
+  '[Asset Search] Set Geometries',
   props<{
-    studies?: AllStudyDTO[];
+    geometries?: Geometry[];
     isLoading?: boolean;
-  }>()
-);
-
-export const setCurrentAsset = createAction(
-  '[Asset Search] Set Current Asset',
-  props<{
-    asset?: AssetEditDetail | null;
-    isLoading?: boolean;
-  }>()
+  }>(),
 );
 
 export const setFiltersState = createAction('[Asset Search] Set Filters Open', props<{ state: PanelState }>());
 export const setResultsState = createAction('[Asset Search] Set Results Open', props<{ state: PanelState }>());
 export const setScrollOffsetForResults = createAction(
   '[Asset Search] Set Scroll Offset For Results',
-  props<{ offset: number }>()
+  props<{ offset: number }>(),
 );
 export const setMapPosition = createAction('[Asset Search] Set Map Position', props<{ position: MapPosition }>());
 

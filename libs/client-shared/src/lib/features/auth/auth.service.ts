@@ -2,51 +2,59 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { Router } from '@angular/router';
-import { ORD } from '@asset-sg/core';
 import { AppConfig, AppMode, OAuthConfig, User, UserSchema } from '@asset-sg/shared/v2';
-import * as RD from '@devexperts/remote-data-ts';
 import { Store } from '@ngrx/store';
 import { OAuthService } from 'angular-oauth2-oidc';
 import { plainToInstance } from 'class-transformer';
-import { BehaviorSubject, map, Observable, startWith } from 'rxjs';
+import { BehaviorSubject, map, Observable } from 'rxjs';
 import { DisclaimerDialogComponent } from '../../components/disclaimer-dialog/disclaimer-dialog.component';
 import { ConfigService } from '../../services';
 import { appSharedStateActions, AppState } from '../../state';
-import { ApiError } from '../../utils';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private readonly httpClient = inject(HttpClient);
+  private readonly configService = inject(ConfigService);
   private readonly oauthService = inject(OAuthService);
+
+  private readonly httpClient = inject(HttpClient);
   private readonly store = inject(Store<AppState>);
   private readonly router = inject(Router);
   private readonly dialogService = inject(MatDialog);
-  private readonly configService = inject(ConfigService);
 
-  private readonly _state$ = new BehaviorSubject(AuthState.Ongoing);
-  private readonly _isInitialized$ = new BehaviorSubject(false);
+  private readonly subjectForState = new BehaviorSubject(AuthState.Ongoing);
+  private readonly subjectForIsInitialized = new BehaviorSubject(false);
 
   async initialize(config: AppConfig): Promise<void> {
-    const isAnonymous = config.mode === AppMode.Anonymous;
-    if (isAnonymous) {
-      this.setState(AuthState.Success);
-      this.store.dispatch(appSharedStateActions.setAnonymousMode());
+    if (isAnonymous(config)) {
+      this.initializeAnonymousMode();
     } else {
-      const callbackUrl = sessionStorage.getItem(CALLBACK_PATH_KEY);
-      sessionStorage.setItem(CALLBACK_PATH_KEY, window.location.pathname + window.location.search);
-      this.configureOAuth(config.oauth);
-      await this.signIn();
-      if (callbackUrl != null) {
-        await this.router.navigateByUrl(callbackUrl);
-      }
-      if (this.oauthService.hasValidAccessToken()) {
-        sessionStorage.removeItem(CALLBACK_PATH_KEY);
-      }
-      this.store.dispatch(appSharedStateActions.loadUserProfile());
+      await this.initializeSession(config);
     }
-    this._isInitialized$.next(true);
+    this.subjectForIsInitialized.next(true);
+    this.finalize(config);
+  }
 
-    const isLoggedIn = isAnonymous || this._state$.value === AuthState.Success;
+  private initializeAnonymousMode(): void {
+    this.setState(AuthState.Success);
+    this.store.dispatch(appSharedStateActions.setAnonymousMode());
+  }
+
+  private async initializeSession(config: AppConfig): Promise<void> {
+    const callbackUrl = sessionStorage.getItem(CALLBACK_PATH_KEY);
+    sessionStorage.setItem(CALLBACK_PATH_KEY, window.location.pathname + window.location.search);
+    this.configureOAuth(config.oauth);
+    await this.signIn();
+    this.store.dispatch(appSharedStateActions.loadUser());
+    if (callbackUrl != null) {
+      await this.router.navigateByUrl(callbackUrl, { replaceUrl: true });
+    }
+    if (this.oauthService.hasValidAccessToken()) {
+      sessionStorage.removeItem(CALLBACK_PATH_KEY);
+    }
+  }
+
+  private finalize(config: AppConfig): void {
+    const isLoggedIn = isAnonymous(config) || this.subjectForState.value === AuthState.Success;
     if (isLoggedIn && !this.configService.getHideDisclaimer()) {
       this.dialogService.open(DisclaimerDialogComponent, {
         width: '960px',
@@ -58,46 +66,43 @@ export class AuthService {
 
   async signIn(): Promise<void> {
     try {
-      if (this._state$.value === AuthState.Ongoing) {
+      if (this.subjectForState.value === AuthState.Ongoing) {
         const success = await this.oauthService.loadDiscoveryDocumentAndLogin();
         if (success) {
           this.oauthService.setupAutomaticSilentRefresh();
 
           // If something else has interrupted the auth process, then we don't want to signal a success.
-          if (this._state$.value === AuthState.Ongoing) {
-            this._state$.next(AuthState.Success);
+          if (this.subjectForState.value === AuthState.Ongoing) {
+            this.subjectForState.next(AuthState.Success);
           }
         }
       } else {
-        this._state$.next(AuthState.Ongoing);
+        this.subjectForState.next(AuthState.Ongoing);
         this.oauthService.initLoginFlow();
       }
     } catch {
-      this._state$.next(AuthState.Aborted);
+      this.subjectForState.next(AuthState.Aborted);
     }
   }
 
   get state(): AuthState {
-    return this._state$.value;
+    return this.subjectForState.value;
   }
 
   get state$(): Observable<AuthState> {
-    return this._state$.asObservable();
+    return this.subjectForState.asObservable();
   }
 
   get isInitialized$(): Observable<boolean> {
-    return this._isInitialized$.asObservable();
+    return this.subjectForIsInitialized.asObservable();
   }
 
   setState(state: AuthState): void {
-    this._state$.next(state);
+    this.subjectForState.next(state);
   }
 
-  getUserProfile(): ORD.ObservableRemoteData<ApiError, User> {
-    return this.getUserProfile$().pipe(
-      map((it) => RD.success(it)),
-      startWith(RD.pending)
-    );
+  fetchUser(): Observable<User> {
+    return this.httpClient.get('/api/users/current').pipe(map((it) => plainToInstance(UserSchema, it)));
   }
 
   isLoggedIn(): boolean {
@@ -110,10 +115,6 @@ export class AuthService {
       redirect_uri: window.location.origin,
       response_type: this.oauthService.responseType,
     });
-  }
-
-  public getUserProfile$(): Observable<User> {
-    return this.httpClient.get('/api/users/current').pipe(map((it) => plainToInstance(UserSchema, it)));
   }
 
   private configureOAuth(config: OAuthConfig): void {
@@ -136,3 +137,7 @@ export enum AuthState {
   ForbiddenResource,
   Success,
 }
+
+const isAnonymous = (config: AppConfig): boolean => {
+  return config.mode === AppMode.Anonymous;
+};

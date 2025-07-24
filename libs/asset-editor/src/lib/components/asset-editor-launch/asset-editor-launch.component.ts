@@ -9,7 +9,7 @@ import {
   ViewChild,
   ViewContainerRef,
 } from '@angular/core';
-import { AppPortalService, CURRENT_LANG, LifecycleHooks, LifecycleHooksDirective } from '@asset-sg/client-shared';
+import { AppPortalService, LifecycleHooks, LifecycleHooksDirective } from '@asset-sg/client-shared';
 import { asyncScheduler, observeOn } from 'rxjs';
 
 @Component({
@@ -27,13 +27,12 @@ export class AssetEditorLaunchComponent implements OnDestroy {
   private readonly appPortalService = inject(AppPortalService);
   private readonly viewContainerRef = inject(ViewContainerRef);
   private readonly cd = inject(ChangeDetectorRef);
-  public readonly currentLang$ = inject(CURRENT_LANG);
 
   constructor() {
     this.lc.afterViewInit$.pipe(observeOn(asyncScheduler)).subscribe(() => {
       this.appPortalService.setAppBarPortalContent(null);
       this.appPortalService.setDrawerPortalContent(
-        new TemplatePortal(this._templateDrawerPortalContent, this.viewContainerRef)
+        new TemplatePortal(this._templateDrawerPortalContent, this.viewContainerRef),
       );
       this.cd.detectChanges();
     });

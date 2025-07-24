@@ -1,56 +1,58 @@
 import {
   Asset,
-  AssetInfo,
-  AssetUsage,
-  ContactAssignmentRole,
+  AssetContactRole,
+  AssetData,
+  AssetId,
+  AssetLegacyData,
+  isNotPersisted,
+  isPersisted,
+  LanguageCode,
   LinkedAsset,
-  AssetStudy,
-  AssetStudyId,
-  UsageStatusCode,
   LocalDate,
-  StudyType,
+  UpdateAssetData,
 } from '@asset-sg/shared/v2';
 import { Prisma } from '@prisma/client';
-import { satisfy } from '@/utils/define';
 
-type SelectedAssetInfo = Prisma.AssetGetPayload<{ select: typeof assetInfoSelection }>;
-type SelectedAsset = Prisma.AssetGetPayload<{ select: typeof assetSelection }>;
+import { CreateAssetDataWithCreator } from '@/features/assets/asset.model';
+import { assetFileSelection, mapAssetFileFromPrisma } from '@/features/assets/files/prisma-file';
+
+export type SelectedAsset = Prisma.AssetGetPayload<{ select: typeof assetSelection }>;
 type SelectedLinkedAsset = Prisma.AssetGetPayload<{ select: typeof linkedAssetSelection }>;
-type SelectedUsage = Prisma.InternalUseGetPayload<{ select: typeof usageSelection }>;
+type SelectedLegacyData = Prisma.AssetGetPayload<{ select: typeof legacyDataSelection }>;
 
-const linkedAssetSelection = satisfy<Prisma.AssetSelect>()({
+const linkedAssetSelection = {
   assetId: true,
   titlePublic: true,
-});
+} satisfies Prisma.AssetSelect;
 
-const usageSelection = satisfy<Prisma.PublicUseSelect & Prisma.InternalUseSelect>()({
-  isAvailable: true,
-  statusAssetUseItemCode: true,
-  startAvailabilityDate: true,
-});
+const legacyDataSelection = {
+  sgsId: true,
+  geolDataInfo: true,
+  geolContactDataInfo: true,
+  geolAuxDataInfo: true,
+  municipality: true,
+} satisfies Prisma.AssetSelect;
 
-export const assetInfoSelection = satisfy<Prisma.AssetSelect>()({
+export const assetSelection = {
   assetId: true,
   titlePublic: true,
   titleOriginal: true,
-  assetKindItemCode: true,
+  isNatRel: true,
+  isPublic: true,
+  restrictionDate: true,
+
+  ...legacyDataSelection,
+
   assetFormatItemCode: true,
-  ids: {
-    select: {
-      idId: true,
-      id: true,
-      description: true,
-    },
-  },
+  assetKindItemCode: true,
   assetLanguages: {
     select: {
       languageItemCode: true,
     },
   },
-  assetContacts: {
+  typeNatRels: {
     select: {
-      contactId: true,
-      role: true,
+      natRelItemCode: true,
     },
   },
   manCatLabelRefs: {
@@ -58,9 +60,24 @@ export const assetInfoSelection = satisfy<Prisma.AssetSelect>()({
       manCatLabelItemCode: true,
     },
   },
-  typeNatRels: {
+  ids: {
     select: {
-      natRelItemCode: true,
+      idId: true,
+      id: true,
+      description: true,
+    },
+  },
+  assetFiles: {
+    select: {
+      file: {
+        select: assetFileSelection,
+      },
+    },
+  },
+  assetContacts: {
+    select: {
+      contactId: true,
+      role: true,
     },
   },
   assetMain: {
@@ -83,146 +100,327 @@ export const assetInfoSelection = satisfy<Prisma.AssetSelect>()({
       },
     },
   },
-  assetFiles: {
-    select: {
-      file: {
-        select: {
-          id: true,
-          name: true,
-          size: true,
-        },
-      },
-    },
-  },
+
+  workgroupId: true,
+  creatorId: true,
   createDate: true,
   receiptDate: true,
-  lastProcessedDate: true,
-  workgroupId: true,
-});
+} satisfies Prisma.AssetSelect;
 
-export const assetSelection = satisfy<Prisma.AssetSelect>()({
-  ...assetInfoSelection,
-  sgsId: true,
-  municipality: true,
-  processor: true,
-  isNatRel: true,
-  geolDataInfo: true,
-  geolContactDataInfo: true,
-  geolAuxDataInfo: true,
-  publicUse: {
-    select: usageSelection,
-  },
-  internalUse: {
-    select: usageSelection,
-  },
-  statusWorks: {
-    select: {
-      statusWorkId: true,
-      statusWorkItemCode: true,
-      statusWorkDate: true,
-    },
-  },
-  allStudies: {
-    select: {
-      studyId: true,
-      geomText: true,
-    },
-  },
-});
-
-export const parseAssetInfoFromPrisma = (data: SelectedAssetInfo): AssetInfo => ({
+export const parseAssetFromPrisma = (data: SelectedAsset): Asset => ({
   id: data.assetId,
   title: data.titlePublic,
   originalTitle: data.titleOriginal,
-  kindCode: data.assetKindItemCode,
+  isOfNationalInterest: data.isNatRel,
+  isPublic: data.isPublic,
+  restrictionDate: data.restrictionDate ? LocalDate.fromDate(data.restrictionDate) : null,
+  legacyData: parseLegacyDataFromPrisma(data),
   formatCode: data.assetFormatItemCode,
+  kindCode: data.assetKindItemCode,
+  languageCodes: data.assetLanguages.map((it) => it.languageItemCode as LanguageCode),
+  nationalInterestTypeCodes: data.typeNatRels.map((it) => it.natRelItemCode),
+  topicCodes: data.manCatLabelRefs.map((it) => it.manCatLabelItemCode),
   identifiers: data.ids.map((it) => ({
     id: it.idId,
-    name: it.id,
+    value: it.id,
     description: it.description,
   })),
-  languageCodes: data.assetLanguages.map((it) => it.languageItemCode),
-  contactAssignments: data.assetContacts.map((it) => ({
-    contactId: it.contactId,
-    role: it.role as ContactAssignmentRole,
+  files: data.assetFiles.map((it) => mapAssetFileFromPrisma(it.file)),
+  contacts: data.assetContacts.map((it) => ({
+    id: it.contactId,
+    role: it.role as AssetContactRole,
   })),
-  manCatLabelCodes: data.manCatLabelRefs.map((it) => it.manCatLabelItemCode),
-  natRelCodes: data.typeNatRels.map((it) => it.natRelItemCode),
-  links: {
-    parent: data.assetMain == null ? null : parseLinkedAsset(data.assetMain),
-    children: data.subordinateAssets.map(parseLinkedAsset),
-    siblings: [
-      ...data.siblingXAssets.map((it) => parseLinkedAsset(it.assetY)),
-      ...data.siblingYAssets.map((it) => parseLinkedAsset(it.assetX)),
-    ],
-  },
-  files: data.assetFiles.map((it) => ({
-    id: it.file.id,
-    size: Number(it.file.size),
-    name: it.file.name,
-  })),
+  parent: data.assetMain === null ? null : parseLinkedAsset(data.assetMain),
+  children: data.subordinateAssets.map(parseLinkedAsset),
+  siblings: [
+    ...data.siblingXAssets.map((it) => parseLinkedAsset(it.assetY)),
+    ...data.siblingYAssets.map((it) => parseLinkedAsset(it.assetX)),
+  ],
+  workgroupId: data.workgroupId,
+  creatorId: data.creatorId,
   createdAt: LocalDate.fromDate(data.createDate),
   receivedAt: LocalDate.fromDate(data.receiptDate),
-  lastProcessedAt: data.lastProcessedDate,
 });
 
-export const parseAssetFromPrisma = (data: SelectedAsset): Asset => ({
-  ...parseAssetInfoFromPrisma(data),
-  sgsId: data.sgsId,
-  municipality: data.municipality,
-  processor: data.processor,
-  isNatRel: data.isNatRel,
-  infoGeol: {
-    main: data.geolDataInfo,
-    contact: data.geolContactDataInfo,
-    auxiliary: data.geolAuxDataInfo,
-  },
-  usage: {
-    public: parseUsage(data.publicUse),
-    internal: parseUsage(data.internalUse),
-  },
-  statuses: data.statusWorks.map((it) => ({
-    id: it.statusWorkId,
-    itemCode: it.statusWorkItemCode,
-    createdAt: it.statusWorkDate,
-  })),
-  studies: data.allStudies.map((it) => {
-    const { type, id } = parseStudyId(it.studyId);
-    return {
-      id,
-      type,
-      geom: it.geomText,
-    } as AssetStudy;
-  }),
-  workgroupId: data.workgroupId,
-});
+const parseLegacyDataFromPrisma = (data: SelectedLegacyData): AssetLegacyData | null => {
+  const legacyData: AssetLegacyData = {
+    sgsId: data.sgsId,
+    data: data.geolDataInfo,
+    contactData: data.geolContactDataInfo,
+    auxiliaryData: data.geolAuxDataInfo,
+    municipality: data.municipality,
+  };
+  return Object.values(legacyData).every((value) => value == null) ? null : legacyData;
+};
 
 const parseLinkedAsset = (data: SelectedLinkedAsset): LinkedAsset => ({
   id: data.assetId,
   title: data.titlePublic,
 });
 
-const parseUsage = (data: SelectedUsage): AssetUsage => ({
-  isAvailable: data.isAvailable,
-  statusCode: data.statusAssetUseItemCode as UsageStatusCode,
-  availableAt: data.startAvailabilityDate == null ? null : LocalDate.fromDate(data.startAvailabilityDate),
+const mapDataToPrisma = (data: AssetData) =>
+  ({
+    titlePublic: data.title,
+    titleOriginal: data.originalTitle,
+    isNatRel: data.isOfNationalInterest,
+    isPublic: data.isPublic,
+    restrictionDate: data.restrictionDate ? data.restrictionDate.toDate() : null,
+    assetFormatItem: {
+      connect: {
+        assetFormatItemCode: data.formatCode,
+      },
+    },
+    assetKindItem: {
+      connect: {
+        assetKindItemCode: data.kindCode,
+      },
+    },
+
+    workgroup: {
+      connect: {
+        id: data.workgroupId,
+      },
+    },
+    createDate: data.createdAt.toDate(),
+    receiptDate: data.receivedAt.toDate(),
+  }) satisfies Partial<Prisma.AssetCreateInput & Prisma.AssetUpdateInput>;
+
+export const mapAssetDataToPrismaCreate = (data: CreateAssetDataWithCreator): Prisma.AssetCreateInput => ({
+  ...mapDataToPrisma(data),
+  isExtract: false,
+  assetLanguages: {
+    createMany: {
+      data: data.languageCodes.map((code) => ({
+        languageItemCode: code,
+      })),
+      skipDuplicates: true,
+    },
+  },
+  typeNatRels: {
+    createMany: {
+      data: data.nationalInterestTypeCodes.map((code) => ({
+        natRelItemCode: code,
+      })),
+      skipDuplicates: true,
+    },
+  },
+  manCatLabelRefs: {
+    createMany: {
+      data: data.topicCodes.map((code) => ({
+        manCatLabelItemCode: code,
+      })),
+      skipDuplicates: true,
+    },
+  },
+  ids: {
+    createMany: {
+      data: data.identifiers.map((it) => ({
+        id: it.value,
+        description: it.description,
+      })),
+      skipDuplicates: true,
+    },
+  },
+  assetContacts: {
+    createMany: {
+      data: data.contacts.map((it) => ({
+        contactId: it.id,
+        role: it.role,
+      })),
+      skipDuplicates: true,
+    },
+  },
+  assetMain:
+    data.parent == null
+      ? undefined
+      : {
+          connect: {
+            assetId: data.parent,
+          },
+        },
+
+  // In the mapping of this repo,
+  // `siblingYAssets` contains mappings to siblings whose `id` is greater than our own,
+  // while `siblingXAssets` contains the mappings where our `id` is greater.
+  // This guarantees that we have no duplicate siblings by ensuring that `x > y` for all siblings.
+  // As ids increment, we know that any siblings present here will have an `id` lesser than
+  // the asset that we are creating here.
+  // This means we can simply put all siblings into `siblingXAssets`.
+  siblingXAssets: {
+    createMany: {
+      data: data.siblings.map((siblingId) => ({
+        assetYId: siblingId,
+      })),
+      skipDuplicates: true,
+    },
+  },
+
+  creator: {
+    connect: {
+      id: data.creatorId,
+    },
+  },
+
+  workflow: {
+    create: {
+      review: { create: {} },
+      approval: { create: {} },
+      assignee: { connect: { id: data.creatorId } },
+    },
+  },
 });
 
-const parseStudyId = (studyId: string): { type: StudyType; id: AssetStudyId } => {
-  if (!studyId.startsWith('study_')) {
-    throw new Error('expected studyId to start with `study_`');
-  }
-  const parts = studyId.substring('study_'.length).split('_', 2);
-  if (parts.length !== 2) {
-    throw new Error(`invalid studyId '${studyId}'`);
-  }
-  const type = parts[0] as StudyType;
-  const id = parseInt(parts[1]);
-  if (isNaN(id)) {
-    throw new Error(`studyId '${studyId}' has invalid number part`);
-  }
-  if (!Object.values(StudyType).includes(type)) {
-    throw new Error(`studyId '${studyId}' has invalid type part`);
-  }
-  return { type, id };
-};
+export const mapAssetDataToPrismaUpdate = (id: AssetId, data: UpdateAssetData): Prisma.AssetUpdateInput => ({
+  ...mapDataToPrisma(data),
+  assetLanguages: {
+    deleteMany: {
+      assetId: id,
+      languageItemCode: { notIn: data.languageCodes },
+    },
+    createMany: {
+      data: data.languageCodes.map((code) => ({
+        languageItemCode: code,
+      })),
+      skipDuplicates: true,
+    },
+  },
+  typeNatRels: {
+    // We can't detect which typeNatRels are already mapped as they use a separate id number which we do not use outside the database.
+    // This means we have to delete all rels everytime, and then recreate them.
+    deleteMany: {
+      assetId: id,
+    },
+    createMany: {
+      data: [...new Set(data.nationalInterestTypeCodes)].map((code) => ({
+        natRelItemCode: code,
+      })),
+    },
+  },
+  manCatLabelRefs: {
+    deleteMany: {
+      assetId: id,
+      manCatLabelItemCode: { notIn: data.topicCodes },
+    },
+    createMany: {
+      data: data.topicCodes.map((code) => ({
+        manCatLabelItemCode: code,
+      })),
+      skipDuplicates: true,
+    },
+  },
+  ids: {
+    deleteMany: {
+      assetId: id,
+      idId: { notIn: data.identifiers.filter(isPersisted).map((it) => it.id) },
+    },
+    createMany: {
+      data: data.identifiers.filter(isNotPersisted).map((it) => ({
+        id: it.value,
+        description: it.description,
+      })),
+      skipDuplicates: true,
+    },
+    update: data.identifiers.filter(isPersisted).map((it) => ({
+      where: {
+        idId: it.id,
+      },
+      data: {
+        id: it.value,
+        description: it.description,
+      },
+    })),
+  },
+  assetFiles: {
+    deleteMany: {
+      assetId: id,
+      fileId: {
+        notIn: data.files.map((it) => it.id),
+      },
+    },
+    connectOrCreate: data.files.map((it) => ({
+      where: { assetId_fileId: { assetId: id, fileId: it.id } },
+      create: {
+        fileId: it.id,
+      },
+    })),
+    update: data.files.map((it) => ({
+      where: { assetId_fileId: { assetId: id, fileId: it.id } },
+      data: {
+        file: {
+          update: {
+            legalDocItemCode: it.legalDocCode,
+          },
+        },
+      },
+    })),
+  },
+  assetContacts: {
+    deleteMany: {
+      NOT: {
+        OR: data.contacts.map((it) => ({
+          assetId: id,
+          contactId: it.id,
+
+          // Role is part of the id, so we can't simply update it.
+          role: it.role,
+        })),
+      },
+    },
+    connectOrCreate: data.contacts.map(
+      (it) =>
+        ({
+          where: {
+            assetId_contactId_role: {
+              assetId: id,
+              contactId: it.id,
+              role: it.role,
+            },
+          },
+          create: {
+            contactId: it.id,
+            role: it.role,
+          },
+        }) satisfies Prisma.AssetContactCreateOrConnectWithoutAssetInput,
+    ),
+  },
+
+  assetMain:
+    data.parent == null
+      ? { disconnect: true }
+      : {
+          connect: { assetId: data.parent },
+        },
+
+  // In the mapping of this repo,
+  // `siblingYAssets` contains mappings to siblings whose `id` is greater than our own,
+  // while `siblingXAssets` contains the mappings where our `id` is greater.
+  // This guarantees that we have no duplicate siblings by ensuring that `x > y` for all siblings.
+  siblingXAssets: {
+    deleteMany: {
+      assetXId: id,
+      assetYId: { notIn: data.siblings },
+    },
+    createMany: {
+      data: data.siblings
+        .filter((siblingId) => siblingId < id)
+        .map((siblingId) => ({
+          assetYId: siblingId,
+        })),
+      skipDuplicates: true,
+    },
+  },
+  siblingYAssets: {
+    deleteMany: {
+      assetYId: id,
+      assetXId: { notIn: data.siblings },
+    },
+    createMany: {
+      data: data.siblings
+        .filter((siblingId) => siblingId > id)
+        .map((siblingId) => ({
+          assetXId: siblingId,
+        })),
+      skipDuplicates: true,
+    },
+  },
+});

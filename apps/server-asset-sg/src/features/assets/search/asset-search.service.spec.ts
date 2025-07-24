@@ -1,18 +1,15 @@
 import {
-  AssetEditDetail,
+  Asset,
+  AssetContactRole,
   AssetSearchResult,
+  AssetSearchResultItem,
   AssetSearchStats,
-  dateFromDateId,
-  dateIdFromDate,
-  ElasticSearchAsset,
-  makeUsageCode,
+  AssetSearchUsageCode,
+  ElasticsearchAsset,
+  LanguageCode,
+  LocalDate,
   PageStats,
-  PatchAsset,
-  SearchAsset,
-  SearchAssetAggregations,
-  SearchAssetResultNonEmpty,
-  UsageCode,
-} from '@asset-sg/shared';
+} from '@asset-sg/shared/v2';
 import { faker } from '@faker-js/faker';
 
 // eslint-disable-next-line @nx/enforce-module-boundaries
@@ -26,22 +23,27 @@ import { manCatLabelItems } from '../../../../../../test/data/man-cat-label-item
 // eslint-disable-next-line @nx/enforce-module-boundaries
 import { clearPrismaAssets, setupDB } from '../../../../../../test/setup-db';
 
+import { AssetRepo } from '../asset.repo';
 import { ASSET_ELASTIC_INDEX, AssetSearchService } from './asset-search.service';
 
 import { openElasticsearchClient } from '@/core/elasticsearch';
 import { PrismaService } from '@/core/prisma.service';
-import { fakeAssetPatch, fakeAssetUsage, fakeContact, fakeUser } from '@/features/asset-edit/asset-edit.fake';
-import { AssetEditData, AssetEditRepo } from '@/features/asset-edit/asset-edit.repo';
-import { FileRepo } from '@/features/files/file.repo';
-import { StudyRepo } from '@/features/studies/study.repo';
+import { fakeContact, fakeCreateAssetData, fakeUserData } from '@/features/assets/asset.fake';
+import { CreateAssetDataWithCreator } from '@/features/assets/asset.model';
+import { FileRepo } from '@/features/assets/files/file.repo';
+import { GeometryDetailRepo } from '@/features/geometries/geometry-detail.repo';
+import { GeometryRepo } from '@/features/geometries/geometry.repo';
+import { UserRepo } from '@/features/users/user.repo';
 
 describe(AssetSearchService, () => {
   const elastic = openElasticsearchClient();
   const prisma = new PrismaService();
   const fileRepo = new FileRepo(prisma);
-  const assetRepo = new AssetEditRepo(prisma, fileRepo);
-  const studyRepo = new StudyRepo(prisma);
-  const service = new AssetSearchService(elastic, prisma, assetRepo, studyRepo);
+  const assetRepo = new AssetRepo(prisma, fileRepo);
+  const geometryRepo = new GeometryRepo(prisma);
+  const geometryDetailRepo = new GeometryDetailRepo(prisma);
+  const userRepo = new UserRepo(prisma);
+  const service = new AssetSearchService(elastic, prisma, assetRepo, geometryRepo, geometryDetailRepo);
 
   beforeAll(async () => {
     const existsIndex = await elastic.indices.exists({ index: ASSET_ELASTIC_INDEX });
@@ -65,33 +67,50 @@ describe(AssetSearchService, () => {
     });
   });
 
-  const create = async (data: AssetEditData): Promise<AssetEditDetail> => {
+  const create = async (data: CreateAssetDataWithCreator): Promise<Asset> => {
     const asset = await assetRepo.create(data);
     await service.register(asset);
     return asset;
   };
 
-  const assertHit = (hit: ElasticSearchAsset, asset: AssetEditDetail): void => {
-    expect(hit.assetId).toEqual(asset.assetId);
-    expect(hit.titlePublic).toEqual(asset.titlePublic);
-    expect(hit.titleOriginal).toEqual(asset.titleOriginal);
-    expect(hit.sgsId).toEqual(asset.sgsId);
-    expect(hit.createDate).toEqual(asset.createDate);
-    expect(hit.assetKindItemCode).toEqual(asset.assetKindItemCode);
-    expect(hit.usageCode).toEqual(makeUsageCode(asset.publicUse.isAvailable, asset.internalUse.isAvailable));
+  const createItem = async (data: CreateAssetDataWithCreator): Promise<AssetSearchResultItem> => {
+    const asset = await create(data);
+    return {
+      id: asset.id,
+      title: asset.title,
+      isPublic: asset.isPublic,
+      formatCode: asset.formatCode,
+      kindCode: asset.kindCode,
+      topicCodes: asset.topicCodes,
+      contacts: asset.contacts,
+      createdAt: asset.createdAt,
+      geometries: [],
+    };
+  };
+
+  const assertHit = (hit: ElasticsearchAsset, asset: Asset): void => {
+    expect(hit.id).toEqual(asset.id);
+    expect(hit.title).toEqual(asset.title);
+    expect(hit.originalTitle).toEqual(asset.originalTitle);
+    expect(hit.sgsId).toEqual(asset.legacyData?.sgsId ?? null);
+    expect(hit.createdAt).toEqual(asset.createdAt.toString());
+    expect(hit.kindCode).toEqual(asset.kindCode);
+    expect(hit.usageCode).toEqual(asset.isPublic ? AssetSearchUsageCode.Public : AssetSearchUsageCode.Internal);
     expect(hit.authorIds).toEqual([]);
     expect(hit.contactNames).toEqual([]);
-    expect(hit.manCatLabelItemCodes).toEqual([]);
+    expect(hit.topicCodes).toEqual([]);
 
-    const languageItemCodes =
-      asset.assetLanguages.length === 0 ? ['None'] : asset.assetLanguages.map((it) => it.languageItemCode);
-    expect(hit.languageItemCodes).toEqual(languageItemCodes);
+    const languageCodes = asset.languageCodes.length === 0 ? ['None'] : asset.languageCodes;
+    expect(hit.languageCodes).toEqual(languageCodes);
   };
 
   describe('register', () => {
     it('adds an asset to elasticsearch', async () => {
       // Given
-      const asset = await assetRepo.create({ patch: fakeAssetPatch(), user: fakeUser() });
+      const asset = await assetRepo.create({
+        ...fakeCreateAssetData(),
+        creatorId: (await userRepo.create(fakeUserData())).id,
+      });
 
       // When
       await service.register(asset);
@@ -104,7 +123,7 @@ describe(AssetSearchService, () => {
       });
       expect(response.hits.hits.length).toEqual(1);
 
-      const hit = response.hits.hits[0]._source as ElasticSearchAsset;
+      const hit = response.hits.hits[0]._source as ElasticsearchAsset;
       assertHit(hit, asset);
     });
   });
@@ -112,11 +131,14 @@ describe(AssetSearchService, () => {
   describe('deleteFromIndex', () => {
     it('deletes an an asset from elastic search', async () => {
       // Given
-      const asset = await assetRepo.create({ patch: fakeAssetPatch(), user: fakeUser() });
+      const asset = await assetRepo.create({
+        ...fakeCreateAssetData(),
+        creatorId: (await userRepo.create(fakeUserData())).id,
+      });
       await service.register(asset);
 
       // When
-      await service.deleteFromIndex(asset.assetId);
+      await service.deleteFromIndex(asset.id);
 
       const response = await elastic.search({
         index: ASSET_ELASTIC_INDEX,
@@ -129,20 +151,26 @@ describe(AssetSearchService, () => {
   });
 
   describe('search', () => {
-    const assertSingleResult = (result: AssetSearchResult, asset: AssetEditDetail): void => {
+    const assertSingleResult = (result: AssetSearchResult, asset: AssetSearchResultItem): void => {
       expect(result.page).toEqual({ total: 1, size: 1, offset: 0 } as PageStats);
       expect(result.data).toHaveLength(1);
       expect(result.data[0]).toEqual(asset);
     };
 
     const testSearchInProperty =
-      <T extends string | number>(text: T, setup: (asset: PatchAsset, text: T) => PatchAsset | Promise<PatchAsset>) =>
+      <T extends string | number>(
+        text: T,
+        setup: (
+          asset: CreateAssetDataWithCreator,
+          text: T,
+        ) => CreateAssetDataWithCreator | Promise<CreateAssetDataWithCreator>,
+      ) =>
       async () => {
         // Given
-        const user = fakeUser();
-        const patch = await setup(fakeAssetPatch(), text);
-        const asset = await create({ patch, user });
-        await create({ patch: fakeAssetPatch(), user });
+        const user = await userRepo.create(fakeUserData());
+        const data = await setup({ ...fakeCreateAssetData(), creatorId: user.id }, text);
+        const asset = await createItem(data);
+        await createItem({ ...fakeCreateAssetData(), creatorId: user.id });
 
         // When
         const result = await service.search({ text: `${text}` }, user);
@@ -154,174 +182,186 @@ describe(AssetSearchService, () => {
     const millisPerDay = 1000 * 60 * 60 * 24;
 
     it(
-      'finds text in titlePublic',
+      'finds text in title',
       testSearchInProperty(faker.string.uuid(), (asset, text) => ({
         ...asset,
-        titlePublic: text,
-      }))
+        title: text,
+      })),
     );
 
     it(
-      'finds text in titleOriginal',
+      'finds text in originalTitle',
       testSearchInProperty(faker.string.uuid(), (asset, text) => ({
         ...asset,
-        titleOriginal: text,
-      }))
+        originalTitle: text,
+      })),
     );
 
     const contactData = fakeContact();
     it(
       'finds text in contactNames',
       testSearchInProperty(contactData.name, async (asset) => {
-        const contact = await prisma.contact.create({ data: contactData });
+        const { kindCode, ...data } = contactData;
+        const contact = await prisma.contact.create({
+          data: {
+            ...data,
+            contactKindItemCode: kindCode,
+          },
+        });
         return {
           ...asset,
-          assetContacts: [{ contactId: contact.contactId, role: 'author' }],
+          contacts: [{ id: contact.contactId, role: AssetContactRole.Author }],
         };
-      })
+      }),
     );
 
-    it('finds assets by minimum createDate', async () => {
+    it('finds assets by minimum createdAt', async () => {
       // Given
-      const user = fakeUser();
-      const asset = await create({ patch: fakeAssetPatch(), user });
-      await create({
-        patch: {
-          ...fakeAssetPatch(),
-          createDate: dateIdFromDate(new Date(dateFromDateId(asset.createDate).getTime() - millisPerDay * 2)),
+      const user = await userRepo.create(fakeUserData());
+      const asset = await createItem({ ...fakeCreateAssetData(), creatorId: user.id });
+      await createItem({
+        ...fakeCreateAssetData(),
+        createdAt: LocalDate.fromDate(new Date(asset.createdAt.toDate().getTime() - millisPerDay * 2)),
+        creatorId: user.id,
+      });
+
+      // When
+      const result = await service.search(
+        {
+          createdAt: {
+            min: LocalDate.fromDate(new Date(asset.createdAt.toDate().getTime() - millisPerDay)),
+          },
         },
         user,
-      });
-
-      // When
-      const result = await service.search(
-        {
-          createDate: {
-            min: new Date(dateFromDateId(asset.createDate).getTime() - millisPerDay),
-          },
-        },
-        user
       );
 
       // Then
       assertSingleResult(result, asset);
     });
 
-    it('finds assets by maximum createDate', async () => {
+    it('finds assets by maximum createdAt', async () => {
       // Given
-      const user = fakeUser();
-      const asset = await create({ patch: fakeAssetPatch(), user });
-      await create({
-        patch: {
-          ...fakeAssetPatch(),
-          createDate: dateIdFromDate(new Date(dateFromDateId(asset.createDate).getTime() + millisPerDay * 2)),
+      const user = await userRepo.create(fakeUserData());
+      const asset = await createItem({ ...fakeCreateAssetData(), creatorId: user.id });
+      await createItem({
+        ...fakeCreateAssetData(),
+        createdAt: LocalDate.fromDate(new Date(asset.createdAt.toDate().getTime() + millisPerDay * 2)),
+        creatorId: user.id,
+      });
+
+      // When
+      const result = await service.search(
+        {
+          createdAt: {
+            max: LocalDate.fromDate(new Date(asset.createdAt.toDate().getTime() + millisPerDay)),
+          },
         },
         user,
-      });
-
-      // When
-      const result = await service.search(
-        {
-          createDate: {
-            max: new Date(dateFromDateId(asset.createDate).getTime() + millisPerDay),
-          },
-        },
-        user
       );
 
       // Then
       assertSingleResult(result, asset);
     });
 
-    it('finds assets by createDate range', async () => {
+    it('finds assets by createdAt range', async () => {
       // Given
-      const asset = await create({ patch: fakeAssetPatch(), user: fakeUser() });
-      await create({
-        patch: {
-          ...fakeAssetPatch(),
-          createDate: dateIdFromDate(new Date(dateFromDateId(asset.createDate).getTime() + millisPerDay * 2)),
-        },
-        user: fakeUser(),
+      const asset = await createItem({
+        ...fakeCreateAssetData(),
+        creatorId: (await userRepo.create(fakeUserData())).id,
       });
-      await create({
-        patch: {
-          ...fakeAssetPatch(),
-          createDate: dateIdFromDate(new Date(dateFromDateId(asset.createDate).getTime() - millisPerDay * 2)),
-        },
-        user: fakeUser(),
+      await createItem({
+        ...fakeCreateAssetData(),
+        createdAt: LocalDate.fromDate(new Date(asset.createdAt.toDate().getTime() + millisPerDay * 2)),
+        creatorId: (await userRepo.create(fakeUserData())).id,
       });
-      const user = fakeUser();
+      await createItem({
+        ...fakeCreateAssetData(),
+        createdAt: LocalDate.fromDate(new Date(asset.createdAt.toDate().getTime() - millisPerDay * 2)),
+        creatorId: (await userRepo.create(fakeUserData())).id,
+      });
+      const user = await userRepo.create(fakeUserData());
 
       // When
       const result = await service.search(
         {
-          createDate: {
-            min: new Date(dateFromDateId(asset.createDate).getTime() - millisPerDay),
-            max: new Date(dateFromDateId(asset.createDate).getTime() + millisPerDay),
+          createdAt: {
+            min: LocalDate.fromDate(new Date(asset.createdAt.toDate().getTime() - millisPerDay)),
+            max: LocalDate.fromDate(new Date(asset.createdAt.toDate().getTime() + millisPerDay)),
           },
         },
-        user
+        user,
       );
 
       // Then
       assertSingleResult(result, asset);
     });
 
-    it('finds assets by languageItemCodes', async () => {
+    it('finds assets by languageCode', async () => {
       // Given
-      const code1 = languageItems[0].languageItemCode;
-      const code2 = languageItems[1].languageItemCode;
-      const code3 = languageItems[2].languageItemCode;
-      const asset = await create({
-        patch: { ...fakeAssetPatch(), assetLanguages: [{ languageItemCode: code1 }] },
-        user: fakeUser(),
+      const code1 = languageItems[0].languageItemCode as LanguageCode;
+      const code2 = languageItems[1].languageItemCode as LanguageCode;
+      const code3 = languageItems[2].languageItemCode as LanguageCode;
+      const asset = await createItem({
+        ...fakeCreateAssetData(),
+        languageCodes: [code1],
+        creatorId: (await userRepo.create(fakeUserData())).id,
       });
-      await create({
-        patch: { ...fakeAssetPatch(), assetLanguages: [{ languageItemCode: code2 }] },
-        user: fakeUser(),
+      await createItem({
+        ...fakeCreateAssetData(),
+        languageCodes: [code2],
+        creatorId: (await userRepo.create(fakeUserData())).id,
       });
-      await create({
-        patch: { ...fakeAssetPatch(), assetLanguages: [{ languageItemCode: code3 }] },
-        user: fakeUser(),
+      await createItem({
+        ...fakeCreateAssetData(),
+        languageCodes: [code3],
+        creatorId: (await userRepo.create(fakeUserData())).id,
       });
-      const user = fakeUser();
+      const user = await userRepo.create(fakeUserData());
 
       // When
-      const result = await service.search({ languageItemCodes: [code1] }, user);
+      const result = await service.search({ languageCodes: [code1] }, user);
 
       // Then
       assertSingleResult(result, asset);
     });
 
-    it('finds assets by assetKindItemCode', async () => {
+    it('finds assets by kindCode', async () => {
       // Given
       const code1 = assetKindItems[0].assetKindItemCode;
       const code2 = assetKindItems[1].assetKindItemCode;
       const code3 = assetKindItems[2].assetKindItemCode;
-      const user = fakeUser();
-      const asset = await create({ patch: { ...fakeAssetPatch(), assetKindItemCode: code1 }, user });
-      await create({ patch: { ...fakeAssetPatch(), assetKindItemCode: code2 }, user });
-      await create({ patch: { ...fakeAssetPatch(), assetKindItemCode: code3 }, user });
+      const user = await userRepo.create(fakeUserData());
+      const asset = await createItem({
+        ...fakeCreateAssetData(),
+        kindCode: code1,
+        creatorId: user.id,
+      });
+      await createItem({ ...fakeCreateAssetData(), kindCode: code2, creatorId: user.id });
+      await createItem({ ...fakeCreateAssetData(), kindCode: code3, creatorId: user.id });
 
       // When
-      const result = await service.search({ assetKindItemCodes: [code1] }, user);
+      const result = await service.search({ kindCodes: [code1] }, user);
 
       // Then
       assertSingleResult(result, asset);
     });
 
-    it('finds assets by manCatLabelItemCodes', async () => {
+    it('finds assets by topicCode', async () => {
       // Given
       const code1 = manCatLabelItems[0].manCatLabelItemCode;
       const code2 = manCatLabelItems[1].manCatLabelItemCode;
       const code3 = manCatLabelItems[2].manCatLabelItemCode;
-      const user = fakeUser();
-      const asset = await create({ patch: { ...fakeAssetPatch(), manCatLabelRefs: [code1] }, user });
-      await create({ patch: { ...fakeAssetPatch(), manCatLabelRefs: [code2] }, user });
-      await create({ patch: { ...fakeAssetPatch(), manCatLabelRefs: [code3] }, user });
+      const user = await userRepo.create(fakeUserData());
+      const asset = await createItem({
+        ...fakeCreateAssetData(),
+        topicCodes: [code1],
+        creatorId: user.id,
+      });
+      await createItem({ ...fakeCreateAssetData(), topicCodes: [code2], creatorId: user.id });
+      await createItem({ ...fakeCreateAssetData(), topicCodes: [code3], creatorId: user.id });
 
       // When
-      const result = await service.search({ manCatLabelItemCodes: [code1] }, user);
+      const result = await service.search({ topicCodes: [code1] }, user);
 
       // Then
       assertSingleResult(result, asset);
@@ -329,31 +369,17 @@ describe(AssetSearchService, () => {
 
     it('finds assets by usageCode', async () => {
       // Given
-      const usageCode: UsageCode = 'public';
-      const user = fakeUser();
-      const asset = await create({
-        patch: {
-          ...fakeAssetPatch(),
-          publicUse: { ...fakeAssetUsage(), isAvailable: true },
-          internalUse: { ...fakeAssetUsage(), isAvailable: true },
-        },
-        user,
+      const usageCode = AssetSearchUsageCode.Public;
+      const user = await userRepo.create(fakeUserData());
+      const asset = await createItem({
+        ...fakeCreateAssetData(),
+        isPublic: true,
+        creatorId: user.id,
       });
-      await create({
-        patch: {
-          ...fakeAssetPatch(),
-          publicUse: { ...fakeAssetUsage(), isAvailable: false },
-          internalUse: { ...fakeAssetUsage(), isAvailable: true },
-        },
-        user,
-      });
-      await create({
-        patch: {
-          ...fakeAssetPatch(),
-          publicUse: { ...fakeAssetUsage(), isAvailable: false },
-          internalUse: { ...fakeAssetUsage(), isAvailable: false },
-        },
-        user,
+      await createItem({
+        ...fakeCreateAssetData(),
+        isPublic: false,
+        creatorId: user.id,
       });
 
       // When
@@ -365,20 +391,37 @@ describe(AssetSearchService, () => {
 
     it('finds assets by authorId', async () => {
       // Given
-      const contact1 = await prisma.contact.create({ data: fakeContact() });
-      const contact2 = await prisma.contact.create({ data: fakeContact() });
-      const user = fakeUser();
-      const asset = await create({
-        patch: { ...fakeAssetPatch(), assetContacts: [{ contactId: contact1.contactId, role: 'author' }] },
-        user,
+      const { kindCode: kindCode1, ...data1 } = fakeContact();
+      const contact1 = await prisma.contact.create({
+        data: {
+          ...data1,
+          contactKindItemCode: kindCode1,
+        },
       });
-      await create({
-        patch: { ...fakeAssetPatch(), assetContacts: [{ contactId: contact1.contactId, role: 'supplier' }] },
-        user,
+
+      const { kindCode: kindCode2, ...data2 } = fakeContact();
+      const contact2 = await prisma.contact.create({
+        data: {
+          ...data2,
+          contactKindItemCode: kindCode2,
+        },
       });
-      await create({
-        patch: { ...fakeAssetPatch(), assetContacts: [{ contactId: contact2.contactId, role: 'author' }] },
-        user,
+
+      const user = await userRepo.create(fakeUserData());
+      const asset = await createItem({
+        ...fakeCreateAssetData(),
+        contacts: [{ id: contact1.contactId, role: AssetContactRole.Author }],
+        creatorId: user.id,
+      });
+      await createItem({
+        ...fakeCreateAssetData(),
+        contacts: [{ id: contact1.contactId, role: AssetContactRole.Supplier }],
+        creatorId: user.id,
+      });
+      await createItem({
+        ...fakeCreateAssetData(),
+        contacts: [{ id: contact2.contactId, role: AssetContactRole.Author }],
+        creatorId: user.id,
       });
 
       // When
@@ -390,46 +433,46 @@ describe(AssetSearchService, () => {
   });
 
   describe('aggregate', () => {
-    const assertSingleStats = (stats: AssetSearchStats, asset: AssetEditDetail): void => {
+    const assertSingleStats = (stats: AssetSearchStats, asset: Asset): void => {
       expect(stats).not.toBeNull();
-      expect(stats.assetKindItemCodes).toEqual([
+      expect(stats.kindCodes).toEqual([
         {
-          value: asset.assetKindItemCode,
+          value: asset.kindCode,
           count: 1,
         },
       ]);
-      expect(stats.languageItemCodes).toEqual(
-        asset.assetLanguages.length === 0
+      expect(stats.languageCodes).toEqual(
+        asset.languageCodes.length === 0
           ? [
               {
                 count: 1,
                 value: 'None',
               },
             ]
-          : asset.assetLanguages.map((it) => ({
-              value: it.languageItemCode,
+          : asset.languageCodes.map((it) => ({
+              value: it,
               count: 1,
-            }))
+            })),
       );
       expect(stats.usageCodes).toEqual([
         {
-          value: makeUsageCode(asset.publicUse.isAvailable, asset.internalUse.isAvailable),
+          value: asset.isPublic ? AssetSearchUsageCode.Public : AssetSearchUsageCode.Internal,
           count: 1,
         },
       ]);
-      expect(stats.createDate).toEqual({
-        min: dateFromDateId(asset.createDate),
-        max: dateFromDateId(asset.createDate),
+      expect(stats.createdAt).toEqual({
+        min: asset.createdAt,
+        max: asset.createdAt,
       });
       expect(stats.authorIds).toEqual(
-        asset.assetContacts.filter((it) => it.role === 'author').map((it) => ({ value: it.contactId, count: 1 }))
+        asset.contacts.filter((it) => it.role === AssetContactRole.Author).map((it) => ({ value: it.id, count: 1 })),
       );
-      expect(stats.manCatLabelItemCodes).toEqual(asset.manCatLabelRefs.map((it) => ({ value: it, count: 1 })));
+      expect(stats.topicCodes).toEqual(asset.topicCodes.map((it) => ({ value: it, count: 1 })));
     };
 
     it('returns empty stats when no assets are present', async () => {
       // Given
-      const user = fakeUser();
+      const user = await userRepo.create(fakeUserData());
 
       // When
       const result = await service.aggregate({}, user);
@@ -437,17 +480,17 @@ describe(AssetSearchService, () => {
       // Then
       expect(result.total).toEqual(0);
       expect(result.authorIds).toHaveLength(0);
-      expect(result.assetKindItemCodes).toHaveLength(0);
-      expect(result.languageItemCodes).toHaveLength(0);
+      expect(result.kindCodes).toHaveLength(0);
+      expect(result.languageCodes).toHaveLength(0);
       expect(result.usageCodes).toHaveLength(0);
-      expect(result.manCatLabelItemCodes).toHaveLength(0);
-      expect(result.createDate).toBeNull();
+      expect(result.topicCodes).toHaveLength(0);
+      expect(result.createdAt).toBeNull();
     });
 
     it('aggregates stats for a single asset', async () => {
       // Given
-      const user = fakeUser();
-      const asset = await create({ patch: fakeAssetPatch(), user });
+      const user = await userRepo.create(fakeUserData());
+      const asset = await create({ ...fakeCreateAssetData(), creatorId: user.id });
 
       // When
       const result = await service.aggregate({}, user);
@@ -455,167 +498,6 @@ describe(AssetSearchService, () => {
       // Then
       assertSingleStats(result, asset);
     });
-  });
-
-  describe('searchOld', () => {
-    interface Bucket {
-      key: string | number;
-      count: number;
-    }
-
-    const makeBucket = (
-      expectedAssets: AssetEditDetail[],
-      extract: (asset: AssetEditDetail) => string | number | string[] | number[]
-    ): Bucket[] => {
-      return expectedAssets.reduce((buckets, asset) => {
-        const keyOrKeys = extract(asset);
-        const keys = Array.isArray(keyOrKeys) ? keyOrKeys : [keyOrKeys];
-        for (const key of keys) {
-          const bucket = buckets.find((it) => it.key === key);
-          if (bucket == null) {
-            buckets.push({ key, count: 1 });
-          } else {
-            bucket.count += 1;
-          }
-        }
-        return buckets;
-      }, [] as Bucket[]);
-    };
-
-    const compareBuckets = (a: Bucket, b: Bucket): number => a.key.toString().localeCompare(b.key.toString());
-
-    const testSearchOnProperty = (property: keyof PatchAsset & keyof ElasticSearchAsset) => async () => {
-      // Given
-      const uniqueString = faker.string.uuid();
-      const asset1 = await assetRepo.create({
-        user: fakeUser(),
-        patch: { ...fakeAssetPatch(), [property]: `My unique title: ${uniqueString}` },
-      });
-      const asset2 = await assetRepo.create({
-        user: fakeUser(),
-        patch: { ...fakeAssetPatch(), [property]: `${uniqueString} is also here` },
-      });
-      const asset3 = await assetRepo.create({
-        user: fakeUser(),
-        patch: { ...fakeAssetPatch(), [property]: `${uniqueString}` },
-      });
-      const asset4 = await assetRepo.create({
-        user: fakeUser(),
-        patch: { ...fakeAssetPatch(), [property]: `some${uniqueString}things` },
-      });
-      await service.register(asset1);
-      await service.register(asset2);
-      await service.register(asset3);
-      await service.register(asset4);
-      const expectedAssets = [asset1, asset2, asset3, asset4];
-
-      await service.register(
-        await assetRepo.create({
-          user: fakeUser(),
-          patch: { ...fakeAssetPatch(), [property]: 'unrelated' },
-        })
-      );
-      await service.register(
-        await assetRepo.create({
-          user: fakeUser(),
-          patch: { ...fakeAssetPatch(), [property]: '' },
-        })
-      );
-      await service.register(
-        await assetRepo.create({
-          user: fakeUser(),
-          patch: { ...fakeAssetPatch(), [property]: uniqueString.slice(0, 6).replace(/\d/, '_') },
-        })
-      );
-
-      // When
-      const result = await service.searchOld(uniqueString, {
-        scope: [property],
-      });
-
-      // Then
-      expect(result).toMatchObject({ _tag: 'SearchAssetResultNonEmpty' });
-      const { aggregations: aggs, assets } = result as SearchAssetResultNonEmpty;
-      assertAssets(expectedAssets, assets);
-      assertAggregations(expectedAssets, aggs);
-    };
-
-    it('should return an empty result when no assets exist', async () => {
-      // When
-      const result = await service.searchOld('', {
-        scope: ['titlePublic', 'titleOriginal', 'contactNames'],
-      });
-
-      // Then
-      expect(result).toEqual({ _tag: 'SearchAssetResultEmpty' });
-    });
-
-    it(
-      'should match all assets which contain the query in their `titleOriginal`',
-      testSearchOnProperty('titleOriginal')
-    );
-    it('should match all assets which contain the query in their `titlePublic`', testSearchOnProperty('titlePublic'));
-
-    const assertAssets = (expectedAssets: AssetEditDetail[], actualAssets: SearchAsset[]): void => {
-      expect(actualAssets.length).toEqual(expectedAssets.length);
-      for (let i = 0; i < actualAssets.length; i++) {
-        const actualAsset = actualAssets[i];
-        const expectedAsset = expectedAssets[i];
-
-        expect(actualAsset.assetId).toEqual(expectedAsset.assetId);
-        expect(actualAsset.titlePublic).toEqual(expectedAsset.titlePublic);
-        expect(actualAsset.createDate).toEqual(expectedAsset.createDate);
-        expect(actualAsset.assetFormatItemCode).toEqual(expectedAsset.assetFormatItemCode);
-        expect(actualAsset.assetKindItemCode).toEqual(expectedAsset.assetKindItemCode);
-        expect(actualAsset.languages).toEqual(
-          expectedAsset.assetLanguages.map((it) => ({ code: it.languageItemCode }))
-        );
-        expect(actualAsset.contacts).toEqual([]);
-        expect(actualAsset.studies).toEqual([]);
-        expect(actualAsset.manCatLabelItemCodes).toEqual([]);
-        expect(actualAsset.usageCode).toEqual(
-          makeUsageCode(expectedAsset.publicUse.isAvailable, expectedAsset.internalUse.isAvailable)
-        );
-      }
-    };
-
-    const assertAggregations = (expectedAssets: AssetEditDetail[], aggs: SearchAssetAggregations): void => {
-      const expectedMinCreateDate = Math.min(...expectedAssets.map((it) => it.createDate));
-      expect(aggs.ranges.createDate.min).toEqual(expectedMinCreateDate);
-
-      const expectedMaxCreateDate = Math.max(...expectedAssets.map((it) => it.createDate));
-      expect(aggs.ranges.createDate.max).toEqual(expectedMaxCreateDate);
-
-      const expectedAssetKindItemCodes = makeBucket(expectedAssets, (asset) => asset.assetKindItemCode);
-      aggs.buckets.assetKindItemCodes.sort(compareBuckets);
-      expectedAssetKindItemCodes.sort(compareBuckets);
-      expect(aggs.buckets.assetKindItemCodes).toEqual(expectedAssetKindItemCodes);
-
-      const expectedLanguageItemCodes = makeBucket(expectedAssets, (asset) =>
-        asset.assetLanguages.map((it) => it.languageItemCode)
-      );
-      const assetsWithoutLanguage = expectedAssets.filter((it) => it.assetLanguages.length === 0);
-      if (assetsWithoutLanguage.length !== 0) {
-        expectedLanguageItemCodes.push({
-          key: 'None',
-          count: assetsWithoutLanguage.length,
-        });
-      }
-      aggs.buckets.languageItemCodes.sort(compareBuckets);
-      expectedLanguageItemCodes.sort(compareBuckets);
-      expect(aggs.buckets.languageItemCodes).toEqual(expectedLanguageItemCodes);
-
-      const expectedUsageCodes = makeBucket(expectedAssets, (asset) =>
-        makeUsageCode(asset.publicUse.isAvailable, asset.internalUse.isAvailable)
-      );
-
-      aggs.buckets.usageCodes.sort(compareBuckets);
-      expectedUsageCodes.sort(compareBuckets);
-      expect(aggs.buckets.usageCodes).toEqual(expectedUsageCodes);
-
-      expect(aggs.buckets.manCatLabelItemCodes).toEqual([]);
-      expect(aggs.buckets.authorIds).toEqual([]);
-    };
   });
 
   describe('syncWithDatabase', () => {
@@ -634,9 +516,18 @@ describe(AssetSearchService, () => {
 
     it('writes assets to Elasticsearch', async () => {
       // Given
-      const asset1 = await assetRepo.create({ patch: fakeAssetPatch(), user: fakeUser() });
-      const asset2 = await assetRepo.create({ patch: fakeAssetPatch(), user: fakeUser() });
-      const asset3 = await assetRepo.create({ patch: fakeAssetPatch(), user: fakeUser() });
+      const asset1 = await assetRepo.create({
+        ...fakeCreateAssetData(),
+        creatorId: (await userRepo.create(fakeUserData())).id,
+      });
+      const asset2 = await assetRepo.create({
+        ...fakeCreateAssetData(),
+        creatorId: (await userRepo.create(fakeUserData())).id,
+      });
+      const asset3 = await assetRepo.create({
+        ...fakeCreateAssetData(),
+        creatorId: (await userRepo.create(fakeUserData())).id,
+      });
 
       // When
       await service.syncWithDatabase();
@@ -646,19 +537,19 @@ describe(AssetSearchService, () => {
         index: ASSET_ELASTIC_INDEX,
         size: 10_000,
         sort: {
-          assetId: 'asc',
+          id: 'asc',
         },
         _source: true,
       });
       expect(response.hits.hits.length).toEqual(3);
 
-      const hit1 = response.hits.hits[0]._source as ElasticSearchAsset;
+      const hit1 = response.hits.hits[0]._source as ElasticsearchAsset;
       assertHit(hit1, asset1);
 
-      const hit2 = response.hits.hits[1]._source as ElasticSearchAsset;
+      const hit2 = response.hits.hits[1]._source as ElasticsearchAsset;
       assertHit(hit2, asset2);
 
-      const hit3 = response.hits.hits[2]._source as ElasticSearchAsset;
+      const hit3 = response.hits.hits[2]._source as ElasticsearchAsset;
       assertHit(hit3, asset3);
     });
 
@@ -672,29 +563,5 @@ describe(AssetSearchService, () => {
       // Then
       expect(progress).toEqual([1]);
     });
-
-    it('reports progress', async () => {
-      // Given
-      // Create 5000 assets so the sync has to be done in batches.
-      for (let i = 0; i < 500; i++) {
-        await Promise.all(
-          Array.from({ length: 10 }, () =>
-            assetRepo.create({
-              patch: fakeAssetPatch(),
-              user: fakeUser(),
-            })
-          )
-        );
-      }
-
-      // When
-      const progress: number[] = [];
-      await service.syncWithDatabase((percentage) => {
-        progress.push(percentage);
-      });
-
-      // Then
-      expect(progress).toEqual([0.2, 0.4, 0.6, 0.8, 1]);
-    }, 60_000);
   });
 });

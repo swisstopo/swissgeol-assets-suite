@@ -1,15 +1,37 @@
-@if (title) {
-<h5>{{ title }}</h5>
-}
-<mat-form-field class="select">
-  <svg-icon key="arrow-down" class="icon" />
+<label asset-sg-form-item-wrapper [title]="title" [isRequired]="isRequired">
+  <mat-form-field class="select" subscriptSizing="dynamic">
+    <svg-icon key="arrow-down" class="icon" />
 
-  <mat-select [value]="selectedValues" (valueChange)="onFilterChange($event)" [multiple]="multiple" (blur)="onBlur()">
-    @for (value of values; track value) {
-    <mat-option [value]="value">{{ (bindLabel ? $any(value[bindLabel]) : value) | smartTranslate }}</mat-option>
+    <mat-select
+      [value]="selectedValues"
+      (valueChange)="onFilterChange($event)"
+      [multiple]="multiple"
+      (blur)="onBlur()"
+      [disabled]="disabled"
+    >
+      @if (trigger) {
+        <mat-select-trigger
+          >{{ Array.isArray(selectedValues) ? selectedValues.length : 0 }} {{ trigger }}
+        </mat-select-trigger>
+      }
+      @for (value of values; track value) {
+        <mat-option [value]="value" class="option">
+          {{ (bindLabel ? $any(value[bindLabel]) : value) | smartTranslate }}
+        </mat-option>
+      }
+
+      @for (option of customOptionsToRender; track option.value) {
+        <mat-option [value]="option.value" [disabled]="option.isDisabled" class="option">
+          <ng-container *ngTemplateOutlet="option.template" />
+        </mat-option>
+      }
+    </mat-select>
+    @if (errorMessage) {
+      <mat-hint class="mat-mdc-form-field-error">{{ errorMessage }}</mat-hint>
     }
-  </mat-select>
-  @if (shouldShowError) {
-  <mat-hint class="mat-mdc-form-field-error">{{ errorMessage }}</mat-hint>
-  }
-</mat-form-field>
+  </mat-form-field>
+
+  <div style="display: none">
+    <ng-content />
+  </div>
+</label>

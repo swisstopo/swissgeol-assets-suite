@@ -1,4 +1,4 @@
-export const deAppTranslations = {
+export const deTranslationMapping = {
   logoSwissGeol: 'Logo Swissgeol Assets',
   welcomeTo: 'Willkommen bei',
   accessForbidden: 'Sie haben keinen Zugriff auf diese Applikation.',
@@ -20,6 +20,8 @@ export const deAppTranslations = {
   delete: 'Löschen',
   close: 'Schliessen',
   datePlaceholder: 'JJJJ-MM-TT',
+  deletedUserName: 'gelöschter Benutzer',
+  downloadFailed: 'Datei konnte nicht heruntergeladen werden.',
   workgroup: {
     title: 'Arbeitsgruppe',
     errors: {
@@ -28,6 +30,29 @@ export const deAppTranslations = {
   },
   favorites: {
     title: 'Favoriten',
+  },
+  workflow: {
+    status: 'Status',
+    assignee: 'Zugewiesene Person',
+    requestedChanges: 'Änderungen angefordert',
+  },
+  workflowStatus: {
+    Draft: 'Draft',
+    InReview: 'Review',
+    Reviewed: 'Reviewed',
+    Published: 'Veröffentlicht',
+    notPublished: 'Nicht Veröffentlicht',
+  },
+  workflowSelection: {
+    general: 'General',
+    normalFiles: 'Normale Dateien',
+    legalFiles: 'Rechtliche Einwilligungen',
+    initiators: 'Auftraggeber',
+    suppliers: 'Einlieferer',
+    authors: 'Authoren',
+    references: 'Referenzen',
+    geometries: 'Geometrien',
+    legacy: 'Altdaten',
   },
   menuBar: {
     filters: 'Filter',
@@ -93,6 +118,8 @@ export const deAppTranslations = {
     workgroup: 'Arbeitsgruppe',
     resetSearch: 'Filter zurücksetzen',
     file: 'Datei',
+    filePageSingular: '1 Seite',
+    filePagePlural: '{{pageCount}} Seiten',
     legalFile: 'Rechtliche Einwilligungen',
     openFileInNewTab: '{{fileName}} in neuem Tab öffnen',
     downloadFile: '{{fileName}} herunterladen',
@@ -108,6 +135,11 @@ export const deAppTranslations = {
     supplier: 'Einlieferer',
   },
   edit: {
+    visibility: {
+      public: 'frei',
+      locked: 'gesperrt',
+      lockedUntil: 'gesperrt bis {{date}}',
+    },
     tabs: {
       general: {
         tabName: 'Allgemein',
@@ -128,6 +160,14 @@ export const deAppTranslations = {
         alternativeIdDescription: 'Beschreibung Alternativ-ID',
         addNewAlternativeId: 'Neue Alternativ-ID hinzufügen',
         referencesWarning: 'Um die Arbeitsgruppe zu ändern, müssen Sie erst alle Verweise entfernen.',
+        access: {
+          name: 'Beschränkung',
+          items: {
+            public: 'Frei',
+            restricted: 'Gesperrt',
+            temporarilyRestricted: 'Gesperrt bis',
+          },
+        },
       },
       files: {
         tabName: 'Dateien',
@@ -141,12 +181,25 @@ export const deAppTranslations = {
         },
         legalDocItemCode: 'Typ',
         or: 'oder',
+        export: 'Export',
+        clickOrDrop: 'Zum Durchsuchen klicken oder Datei hierher ziehen und ablegen',
+        uploadFile: 'Datei hochladen',
         dragFileHere: 'Datei hierher ziehen',
         selectFile: 'Datei auswählen',
         addNewFile: 'Neue Datei hinzufügen',
         willBeDeleted: 'Wird gelöscht werden',
         willBeUploaded: 'Wird hochgeladen werden',
-        fileSizeToLarge: 'Die Dateigrösse darf 250 MB nicht überschreiten.',
+        fileSizeToLarge: 'Die Dateigrösse darf 2 GB nicht überschreiten.',
+        uploadedAt: 'Hochgeladen',
+        ocrStatus: 'OCR Status',
+        ocrStatusValues: {
+          willNotBeProcessed: 'nicht berücksichtigt',
+          created: 'registriert',
+          waiting: 'wartet',
+          processing: 'wird prozessiert',
+          error: 'Fehler',
+          success: 'abgeschlossen',
+        },
       },
       usage: {
         tabName: 'Nutzung',
@@ -168,13 +221,15 @@ export const deAppTranslations = {
       },
       contacts: {
         tabName: 'Kontakte',
-        linkContact: 'Neuen Kontakt-Link hinzufügen',
+        linkContact: 'Kontakt verlinken',
         link: 'Verlinken',
+        addContact: 'Neuer Kontakt',
         createNewContact: 'Neuen Kontakt erstellen',
-        editContact: 'Konktakt bearbeiten',
+        editContact: 'Kontakt',
         unlink: 'Verlinkung aufheben',
         viewDetails: 'Konktaktdetails anzeigen',
         contact: 'Kontakt',
+        finishEditing: 'Bearbeiten beenden',
         role: 'Rolle',
         newContact: 'Neuer Kontakt',
         contactKind: 'Kontaktart',
@@ -188,13 +243,19 @@ export const deAppTranslations = {
         phone: 'Telefon',
         website: 'Website',
         create: 'Erstellen',
-        noContacts: 'Keine Kontakte',
+        noContacts: 'Noch keine Kontakte hinzugefügt ...',
         contactPlaceholder: 'Suche über Namen',
+        editWarnMessage:
+          'Änderungen an den untenstehenden Feldern werden über alle Assets synchronisiert, die' +
+          ' diesen Kontakt teilen.',
       },
       references: {
+        workgroupWarning: 'Um Verweise hinzuzufügen müssen Sie erst eine Arbeitsgruppe wählen.',
         tabName: 'Verweise',
+        assetId: 'Asset ID',
         assetTitlePublic: 'Öffentlicher Titel',
         assetTitlePublicPlaceholder: 'Suche über den öffentlichen Titel',
+        noReferencesAdded: 'Noch keine Verweise hinzugefügt...',
         referenceHeadings: {
           parent: 'Übergeordneter Asset',
           subordinate: 'Untergeordnete Assets',
@@ -233,12 +294,6 @@ export const deAppTranslations = {
       },
       administration: {
         tabName: 'Administration',
-        infoGeol: 'InfoGeol',
-        sgsId: 'SGS-ID',
-        data: 'Daten',
-        contactData: 'Kontaktdaten',
-        auxData: 'Zusatzdaten',
-        municipality: 'Gemeinde',
         workStatus: 'Arbeitsstatus',
         lastProcessed: 'Letztes Update',
         by: 'Von',
@@ -248,9 +303,29 @@ export const deAppTranslations = {
           hasValidationErrors: 'enthält Validierungsfehler',
         },
       },
+      status: {
+        tabName: 'Status',
+        selectionCategories: {
+          files: 'Dateien',
+          contacts: 'Kontakte',
+        },
+      },
+      legacyData: {
+        tabName: 'Altdaten',
+        infoGeol: 'InfoGeol',
+        sgsId: 'SGS-ID',
+        data: 'Daten',
+        contactData: 'Kontaktdaten',
+        auxData: 'Zusatzdaten',
+        municipality: 'Gemeinde',
+      },
     },
     closeManageAsset: 'Asset verwalten schliessen',
-    questionDiscardChanges: 'Möchten Sie die Änderungen verwerfen?',
+    unsavedChanges: 'Ungespeicherte Änderungen',
+    discardChanges: 'Änderungen verwerfen',
+    questionDiscardChanges: 'Es gibt ungespeicherte Änderungen. Möchten Sie alle Änderungen speichern?',
+    questionAbortChanges:
+      'Ihre Eingaben sind unvollständig. Das Asset kann in diesem Zustand nicht gespeichert werden.',
     userManagementHeading: 'Benutzer',
     userManagementButton: 'Benutzer verwalten',
     adminInstructionsSyncElasticAssetsHeading: 'Assets mit Elasticsearch synchronisieren',

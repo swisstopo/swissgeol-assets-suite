@@ -1,55 +1,62 @@
 import {
+  User,
   AssetSearchQuery,
-  AssetSearchQueryDTO,
-  AssetSearchResult,
-  AssetSearchResultDTO,
   AssetSearchStats,
-  AssetSearchStatsDTO,
-} from '@asset-sg/shared';
-import { User } from '@asset-sg/shared/v2';
-import { Controller, HttpCode, HttpStatus, Post, Query } from '@nestjs/common';
-import { plainToInstance } from 'class-transformer';
+  AssetSearchStatsSchema,
+  AssetSearchQuerySchema,
+  AssetSearchResultSchema,
+  AssetSearchResult,
+} from '@asset-sg/shared/v2';
+import {
+  ClassSerializerInterceptor,
+  Controller,
+  HttpCode,
+  HttpStatus,
+  Post,
+  Query,
+  SerializeOptions,
+  UseInterceptors,
+} from '@nestjs/common';
 import { Authorize } from '@/core/decorators/authorize.decorator';
 import { CurrentUser } from '@/core/decorators/current-user.decorator';
 import { ParseBody } from '@/core/decorators/parse.decorator';
 import { AssetSearchService } from '@/features/assets/search/asset-search.service';
 
 @Controller('/assets/search')
+@UseInterceptors(ClassSerializerInterceptor)
 export class AssetSearchController {
   constructor(private readonly assetSearchService: AssetSearchService) {}
 
   @Post('/')
   @Authorize.User()
   @HttpCode(HttpStatus.OK)
+  @SerializeOptions({ type: AssetSearchResultSchema, excludeExtraneousValues: true })
   async search(
-    @ParseBody(AssetSearchQueryDTO)
+    @ParseBody(AssetSearchQuerySchema)
     query: AssetSearchQuery,
     @CurrentUser() user: User,
-
     @Query('limit')
     limit?: number,
-
     @Query('offset')
-    offset?: number
+    offset?: number,
   ): Promise<AssetSearchResult> {
     limit = limit == null ? limit : Number(limit);
     offset = offset == null ? offset : Number(offset);
     restrictQueryForUser(query, user);
-    const result = await this.assetSearchService.search(query, user, { limit, offset, decode: false });
-    return plainToInstance(AssetSearchResultDTO, result);
+    return await this.assetSearchService.search(query, user, { limit, offset, decode: false });
   }
 
   @Post('/stats')
   @Authorize.User()
   @HttpCode(HttpStatus.OK)
+  @SerializeOptions({ type: AssetSearchStatsSchema })
   async showStats(
-    @ParseBody(AssetSearchQueryDTO)
+    @ParseBody(AssetSearchQuerySchema)
     query: AssetSearchQuery,
-    @CurrentUser() user: User
+    @CurrentUser() user: User,
   ): Promise<AssetSearchStats> {
     restrictQueryForUser(query, user);
-    const stats = await this.assetSearchService.aggregate(query, user);
-    return plainToInstance(AssetSearchStatsDTO, stats);
+    return await this.assetSearchService.aggregate(query, user);
   }
 }
 

@@ -1,10 +1,11 @@
 import { isNotNil } from '@asset-sg/core';
 import { Geom, LV95, Studies, Study } from '@asset-sg/shared';
+import { Coordinate } from '@asset-sg/shared/v2';
 import * as A from 'fp-ts/Array';
 import { pipe } from 'fp-ts/function';
 import * as NEA from 'fp-ts/NonEmptyArray';
 import * as O from 'fp-ts/Option';
-import { Coordinate } from 'ol/coordinate';
+import { Coordinate as OlCoordinate } from 'ol/coordinate';
 import * as Extent from 'ol/extent';
 import Feature from 'ol/Feature';
 import { LineString, Point, Polygon, SimpleGeometry } from 'ol/geom';
@@ -15,20 +16,20 @@ import { register } from 'ol/proj/proj4';
 import { Style } from 'ol/style';
 
 import proj4 from 'proj4';
-import { isoWGSLat, isoWGSLng } from '../models';
+import { isoWGSLat, isoWGSLng } from '../models/wgs.model';
 import { WindowService } from '../services';
 
-import { lv95ToWGS } from './wgs';
+import { coordinateToWGS, lv95ToWGS } from './wgs';
 
 proj4.defs(
   'EPSG:2056',
-  '+proj=somerc +lat_0=46.95240555555556 +lon_0=7.439583333333333 +k_0=1 +x_0=2600000 +y_0=1200000 +ellps=bessel +towgs84=674.374,15.056,405.346,0,0,0,0 +units=m +no_defs'
+  '+proj=somerc +lat_0=46.95240555555556 +lon_0=7.439583333333333 +k_0=1 +x_0=2600000 +y_0=1200000 +ellps=bessel +towgs84=674.374,15.056,405.346,0,0,0,0 +units=m +no_defs',
 );
 register(proj4);
 
 export const createFeaturesFromStudy = (
   study: Study,
-  featureStyles: { point: Style | Style[]; polygon: Style | Style[]; lineString: Style | Style[] }
+  featureStyles: { point: Style | Style[]; polygon: Style | Style[]; lineString: Style | Style[] },
 ) => ({
   ...study,
   olGeometry: decorateFeature(
@@ -47,23 +48,23 @@ export const createFeaturesFromStudy = (
       })(study.geom),
       id: `${study.studyId}`,
     },
-    { assetSgFeatureType: study.geom._tag }
+    { assetSgFeatureType: study.geom._tag },
   ),
 });
 
 export const createFeaturesFromStudies = (
   studies: Studies,
-  featureStyles: { point: Style | Style[]; polygon: Style | Style[]; lineString: Style | Style[] }
+  featureStyles: { point: Style | Style[]; polygon: Style | Style[]; lineString: Style | Style[] },
 ) =>
   pipe(
     studies,
-    A.map((s) => createFeaturesFromStudy(s, featureStyles))
+    A.map((s) => createFeaturesFromStudy(s, featureStyles)),
   );
 
 export const decorateFeature = (
   feature: Feature,
   attributes: { style: Style | Style[]; id: string | number },
-  properties: Record<string, string | number> = {}
+  properties: Record<string, string | number> = {},
   // attributes: Partial<{ style: Style; id: string | number; assetSgFeatureType: string }>,
 ) => {
   if (attributes.style) feature.setStyle(attributes.style);
@@ -72,10 +73,15 @@ export const decorateFeature = (
   return feature;
 };
 
-export const olCoordsFromLV95Array = (coords: LV95[]): Coordinate[] => coords.map(olCoordsFromLV95);
+export const olCoordsFromLV95Array = (coords: LV95[]): OlCoordinate[] => coords.map(olCoordsFromLV95);
 
-export const olCoordsFromLV95 = (lv95Coords: LV95): Coordinate => {
+export const olCoordsFromLV95 = (lv95Coords: LV95): OlCoordinate => {
   const wgsCoords = lv95ToWGS(lv95Coords);
+  return fromLonLat([isoWGSLng.unwrap(wgsCoords.lng), isoWGSLat.unwrap(wgsCoords.lat)]);
+};
+
+export const olCoordsFromCoordinate = (coordinate: Coordinate): OlCoordinate => {
+  const wgsCoords = coordinateToWGS(coordinate);
   return fromLonLat([isoWGSLng.unwrap(wgsCoords.lng), isoWGSLat.unwrap(wgsCoords.lat)]);
 };
 
@@ -83,7 +89,7 @@ export const zoomToStudies = (
   windowService: WindowService,
   olMap: Map,
   studies: Study[],
-  fractionOfMapToUse: number
+  fractionOfMapToUse: number,
 ) => {
   if (fractionOfMapToUse < 0 || fractionOfMapToUse > 1) {
     console.warn('fractionOfMapToUse must be between 0 and 1');
@@ -96,15 +102,15 @@ export const zoomToStudies = (
         Point: (g) => olCoordsFromLV95Array([g.coord]),
         Polygon: (g) => olCoordsFromLV95Array(g.coords),
         LineString: (g) => olCoordsFromLV95Array(g.coords),
-      })(a.geom)
+      })(a.geom),
     ),
     A.flatten,
     NEA.fromArray,
     O.map((a) =>
       a.length === 1
         ? { _tag: 'centerOn' as const, coord: a[0] }
-        : { _tag: 'fit' as const, polygon: pipe(findExtentFromPoints(a), polygonFromExtent) }
-    )
+        : { _tag: 'fit' as const, polygon: pipe(findExtentFromPoints(a), polygonFromExtent) },
+    ),
   );
 
   if (O.isSome(viewMoveAction)) {
@@ -152,7 +158,7 @@ export const zoomToStudies = (
   }
 };
 
-const findExtentFromPoints = (coords: NEA.NonEmptyArray<Coordinate>): Extent.Extent =>
+const findExtentFromPoints = (coords: NEA.NonEmptyArray<OlCoordinate>): Extent.Extent =>
   pipe(
     coords,
     A.reduce(
@@ -162,9 +168,9 @@ const findExtentFromPoints = (coords: NEA.NonEmptyArray<Coordinate>): Extent.Ext
         maxX: Math.max(acc.maxX, c[0]),
         minY: Math.min(acc.minY, c[1]),
         maxY: Math.max(acc.maxY, c[1]),
-      })
+      }),
     ),
-    ({ minX, maxX, minY, maxY }) => [minX, minY, maxX, maxY]
+    ({ minX, maxX, minY, maxY }) => [minX, minY, maxX, maxY],
   );
 
 const getSwissExtent = (): Extent.Extent => {

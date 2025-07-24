@@ -40,6 +40,12 @@
   }
 }
 
+::ng-deep .mat-mdc-option.option > .mdc-list-item__primary-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 :host([small]) ::ng-deep {
   .mdc-text-field--filled {
     border-radius: 4px;
@@ -57,8 +63,11 @@
 
 :host,
 mat-form-field {
-  max-width: 400px;
   width: 100%;
+}
+
+:host([has-max-width]) mat-form-field {
+  max-width: 400px;
 }
 
 h5 {

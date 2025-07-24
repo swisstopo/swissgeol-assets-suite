@@ -30,22 +30,6 @@ $sub-navigation-bar-height: 84px;
   height: 100%;
 }
 
-.header {
-  height: $sub-navigation-bar-height;
-  background-color: variables.$white;
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 18px;
-  padding: 0 24px;
-
-  .back-button {
-    height: 36px;
-    width: 36px;
-    padding: 0;
-  }
-}
-
 h2 {
   margin: 0;
   font-size: 26px;
@@ -88,26 +72,4 @@ h2 {
 .navigation {
   display: flex;
   font-size: 16px;
-
-  .navigation__link {
-    position: relative;
-    bottom: -1px;
-    color: black;
-    text-decoration: none;
-    padding: 24px;
-    font-weight: 400;
-
-    &--active {
-      color: variables.$cyan-09;
-      background-color: white;
-      border-top-left-radius: 4px;
-      border-top-right-radius: 4px;
-      border: 1px solid variables.$grey-02;
-      border-bottom: none;
-    }
-  }
-
-  .pointer {
-    cursor: pointer;
-  }
 }

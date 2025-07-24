@@ -1,0 +1,21 @@
+@use "../../styles/variables";
+
+:host {
+  position: relative;
+  bottom: -1px;
+  color: black;
+  padding: 24px;
+  text-decoration: none;
+  font-weight: 400;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+
+:host[aria-selected="true"] {
+  color: variables.$cyan-09;
+  background-color: white;
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
+  border-color: variables.$grey-02;
+  border-bottom: none;
+}

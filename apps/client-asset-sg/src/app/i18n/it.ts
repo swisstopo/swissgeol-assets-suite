@@ -1,6 +1,6 @@
-import { AppTranslations } from './i18n';
+import { AppTranslationMapping } from './i18n';
 
-export const itAppTranslations: AppTranslations = {
+export const itTranslationMapping: AppTranslationMapping = {
   logoSwissGeol: 'Logo Swissgeol Assets',
   welcomeTo: 'Benvenuti su',
   accessForbidden: 'Non avete accesso a questa applicazione.',
@@ -22,6 +22,8 @@ export const itAppTranslations: AppTranslations = {
   delete: 'IT Löschen',
   close: 'IT Schliessen',
   datePlaceholder: 'AAAA-MM-GG',
+  deletedUserName: 'IT gelöschter Benutzer',
+  downloadFailed: 'IT Datei konnte nicht heruntergeladen werden.',
   workgroup: {
     title: 'IT Arbeitsgruppe',
     errors: {
@@ -30,6 +32,29 @@ export const itAppTranslations: AppTranslations = {
   },
   favorites: {
     title: 'IT Favoriten',
+  },
+  workflow: {
+    status: 'IT Status',
+    assignee: 'IT Zugewiesene Person',
+    requestedChanges: 'IT Änderungen angefordert',
+  },
+  workflowStatus: {
+    Draft: 'IT Draft',
+    InReview: 'IT Review',
+    Reviewed: 'IT Reviewed',
+    Published: 'IT Veröffentlicht',
+    notPublished: 'IT Nicht Veröffentlicht',
+  },
+  workflowSelection: {
+    general: 'IT General',
+    normalFiles: 'IT Normale Dateien',
+    legalFiles: 'IT Rechtliche Einwilligungen',
+    initiators: 'IT Auftraggeber',
+    suppliers: 'IT Einlieferer',
+    authors: 'IT Authoren',
+    references: 'IT Referenzen',
+    geometries: 'IT Geometrien',
+    legacy: 'IT Altdaten',
   },
   menuBar: {
     filters: 'IT Filter',
@@ -94,6 +119,8 @@ export const itAppTranslations: AppTranslations = {
     workgroup: 'IT Arbeitsgruppe',
     resetSearch: 'IT Filter zurücksetzen',
     file: 'IT Datei',
+    filePageSingular: 'IT 1 Seite',
+    filePagePlural: 'IT {{pageCount}} Seiten',
     legalFile: 'IT Rechtliche Einwilligungen',
     openFileInNewTab: 'IT {{fileName}} in neuem Tab öffnen',
     downloadFile: 'IT {{fileName}} herunterladen',
@@ -109,6 +136,11 @@ export const itAppTranslations: AppTranslations = {
     supplier: 'IT Einlieferer',
   },
   edit: {
+    visibility: {
+      public: 'IT frei',
+      locked: 'IT gesperrt',
+      lockedUntil: 'IT gesperrt bis {{date}}',
+    },
     tabs: {
       general: {
         tabName: 'IT Allgemein',
@@ -129,6 +161,14 @@ export const itAppTranslations: AppTranslations = {
         alternativeIdDescription: 'IT Beschreibung Alternativ-ID',
         addNewAlternativeId: 'IT Neue Alternativ-ID hinzufügen',
         referencesWarning: 'IT Um die Arbeitsgruppe zu ändern, müssen Sie erst alle Verweise entfernen.',
+        access: {
+          name: 'IT Beschränkung',
+          items: {
+            public: 'IT Frei',
+            restricted: 'IT Gesperrt',
+            temporarilyRestricted: 'IT Gesperrt bis',
+          },
+        },
       },
       files: {
         tabName: 'IT Dateien',
@@ -141,13 +181,26 @@ export const itAppTranslations: AppTranslations = {
           many: 'IT Rechtliche Einwilligungen',
         },
         legalDocItemCode: 'IT Typ',
+        export: 'IT Export',
+        clickOrDrop: 'IT Zum Durchsuchen klicken oder Datei hierher ziehen und ablegen',
+        uploadFile: 'IT Datei hochladen',
         dragFileHere: 'IT Datei hierher ziehen',
         or: 'IT oder',
         selectFile: 'IT Datei auswählen',
         addNewFile: 'IT Neue Datei hinzufügen',
         willBeDeleted: 'IT Wird gelöscht werden',
         willBeUploaded: 'IT Wird hochgeladen werden',
-        fileSizeToLarge: 'IT Die Dateigrösse darf 250 MB nicht überschreiten.',
+        fileSizeToLarge: 'IT Die Dateigrösse darf 2 GB nicht überschreiten.',
+        uploadedAt: 'IT Hochgeladen',
+        ocrStatus: 'IT OCR Status',
+        ocrStatusValues: {
+          willNotBeProcessed: 'IT nicht berücksichtigt',
+          created: 'IT registriert',
+          waiting: 'IT wartet',
+          processing: 'IT wird prozessiert',
+          error: 'IT Fehler',
+          success: 'IT abgeschlossen',
+        },
       },
       usage: {
         tabName: 'IT Nutzung',
@@ -171,11 +224,13 @@ export const itAppTranslations: AppTranslations = {
         tabName: 'IT Kontakte',
         linkContact: 'IT Neuen Kontakt-Link hinzufügen',
         link: 'IT Verlinken',
+        addContact: 'IT Neuer Kontakt',
         createNewContact: 'IT Neuen Kontakt erstellen',
-        editContact: 'IT Konktakt bearbeiten',
+        editContact: 'IT Konktakt',
         unlink: 'IT Verlinkung aufheben',
         viewDetails: 'IT Konktaktdetails anzeigen',
         contact: 'IT Kontakt',
+        finishEditing: 'IT Bearbeiten beenden',
         role: 'IT Rolle',
         newContact: 'IT Neuer Kontakt',
         contactKind: 'IT Kontaktart',
@@ -191,11 +246,15 @@ export const itAppTranslations: AppTranslations = {
         create: 'IT Erstellen',
         noContacts: 'IT Keine Kontakte',
         contactPlaceholder: 'IT Suche über Namen',
+        editWarnMessage: 'IT Changes to the fields below will be synced across all assets that share the same contact.',
       },
       references: {
+        workgroupWarning: 'IT Um Verweise hinzuzufügen müssen Sie erst eine Arbeitsgruppe wählen.',
         tabName: 'IT Verweise',
+        assetId: 'IT Asset ID',
         assetTitlePublic: 'IT Öffentlicher Titel',
         assetTitlePublicPlaceholder: 'IT Suche über den öffentlichen Titel',
+        noReferencesAdded: 'IT Noch keine Verweise hinzugefügt...',
         referenceHeadings: {
           parent: 'IT Übergeordneter Asset',
           subordinate: 'IT Untergeordnete Assets',
@@ -234,12 +293,6 @@ export const itAppTranslations: AppTranslations = {
       },
       administration: {
         tabName: 'IT Administration',
-        infoGeol: 'IT InfoGeol',
-        sgsId: 'IT SGS-ID',
-        data: 'IT Daten',
-        contactData: 'IT Kontaktdaten',
-        auxData: 'IT Zusatzdaten',
-        municipality: 'IT Gemeinde',
         workStatus: 'IT Arbeitsstatus',
         lastProcessed: 'IT Letztes Update',
         by: 'IT Von',
@@ -249,11 +302,31 @@ export const itAppTranslations: AppTranslations = {
           hasValidationErrors: 'IT enthält Validierungsfehler',
         },
       },
+      status: {
+        tabName: 'IT Status',
+        selectionCategories: {
+          files: 'IT Dateien',
+          contacts: 'IT Kontakte',
+        },
+      },
+      legacyData: {
+        tabName: 'IT Administration',
+        infoGeol: 'IT InfoGeol',
+        sgsId: 'IT SGS-ID',
+        data: 'IT Daten',
+        contactData: 'IT Kontaktdaten',
+        auxData: 'IT Zusatzdaten',
+        municipality: 'IT Gemeinde',
+      },
     },
     closeManageAsset: 'IT Asset verwalten schliessen',
     userManagementHeading: 'IT Benutzer',
     userManagementButton: 'IT Benutzer verwalten',
-    questionDiscardChanges: 'IT Möchten Sie die Änderungen verwerfen?',
+    unsavedChanges: 'IT Ungespeicherte Änderungen',
+    discardChanges: 'Änderungen verwerfen',
+    questionDiscardChanges: 'IT Es gibt ungespeicherte Änderungen. Möchten Sie alle Änderungen speichern?',
+    questionAbortChanges:
+      'IT Ihre Eingaben sind unvollständig. Das Asset kann in diesem Zustand nicht gespeichert werden.',
     adminInstructionsSyncElasticAssetsHeading: 'IT Assets mit Elasticsearch synchronisieren',
     adminInstructionsSyncElasticAssets:
       'IT Gleicht den Zustand von Elasticsearch mit der Datenbank ab.' +

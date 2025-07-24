@@ -2,9 +2,8 @@ import { Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, ParamMap, Router } from '@angular/router';
 import { Filter } from '@asset-sg/client-shared';
-import { User, UserId, UserOnWorkgroup, Workgroup, WorkgroupData } from '@asset-sg/shared/v2';
+import { Role, User, UserId, UserOnWorkgroup, Workgroup, WorkgroupData } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
-import { Role } from '@prisma/client';
 import { BehaviorSubject, map } from 'rxjs';
 import * as actions from '../../state/admin.actions';
 import { AppStateWithAdmin } from '../../state/admin.reducer';
@@ -130,7 +129,7 @@ export class WorkgroupEditComponent
         this.dataSource.paginator = this.paginator;
       });
       return users;
-    })
+    }),
   );
 
   public cancel() {
@@ -165,7 +164,7 @@ export class WorkgroupEditComponent
         if (workgroup) {
           this.workgroup$.next(workgroup);
         }
-      })
+      }),
     );
   }
 
@@ -186,7 +185,7 @@ export class WorkgroupEditComponent
             numberOfAssets: 0,
           });
         }
-      })
+      }),
     );
   }
 }

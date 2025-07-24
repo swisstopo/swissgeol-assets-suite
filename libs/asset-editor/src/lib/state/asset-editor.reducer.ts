@@ -1,29 +1,25 @@
-import { ApiError, AppState } from '@asset-sg/client-shared';
-import * as RD from '@devexperts/remote-data-ts';
+import { AppState } from '@asset-sg/client-shared';
+import { Workflow } from '@asset-sg/shared/v2';
 import { createReducer, on } from '@ngrx/store';
-import { pipe } from 'fp-ts/function';
-import * as O from 'fp-ts/Option';
-
-import { AssetEditDetail } from '../models';
-
 import * as actions from './asset-editor.actions';
 
 export interface AssetEditorState {
-  rdAssetEditDetail: RD.RemoteData<ApiError, O.Option<AssetEditDetail>>;
+  workflow: Workflow | null;
 }
-const initialState: AssetEditorState = {
-  rdAssetEditDetail: RD.initial,
-};
 
-export interface AppStateWithAssetEditor extends AppState {
-  assetEditor: AssetEditorState;
+export interface AppStateWithEditor extends AppState {
+  editor: AssetEditorState;
 }
+
+const initialState: AssetEditorState = {
+  workflow: null,
+};
 
 export const assetEditorReducer = createReducer(
   initialState,
-  on(actions.loadAssetEditDetailResult, (state, rdAssetEditDetail) => ({ ...state, rdAssetEditDetail })),
-  on(actions.updateAssetEditDetailResult, (state, { data }) => ({
+  on(actions.setWorkflow, (state, { workflow }) => ({
     ...state,
-    rdAssetEditDetail: pipe(data, RD.map(O.some)),
-  }))
+    workflow,
+  })),
+  on(actions.reset, () => initialState),
 );

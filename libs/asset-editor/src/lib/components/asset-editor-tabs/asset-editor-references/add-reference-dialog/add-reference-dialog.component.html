@@ -1,0 +1,35 @@
+<div class="header">
+  <h2 translate>edit.tabs.references.referenceHeadings.newReference</h2>
+</div>
+<hr />
+<div mat-dialog-content>
+  <form [formGroup]="newReferenceForm">
+    <div class="content">
+      <asset-sg-text-input
+        [title]="'edit.tabs.general.publicTitle' | translate"
+        (valueChange)="inputChange($event)"
+        [autoCompleteValues]="optionsToDisplay$ | push"
+        bindLabel="title"
+        (selectionChange)="setSelectedAsset($event)"
+        [disabled]="!hasWorkgroupId"
+        [errorMessage]="hasWorkgroupId ? '' : ('edit.tabs.references.workgroupWarning' | translate)"
+        isRequired
+      ></asset-sg-text-input>
+      <asset-sg-select [title]="'edit.tabs.general.kind' | translate" isRequired formControlName="type">
+        <asset-sg-select-option [value]="LinkedAssetType.Sibling">
+          {{ "edit.tabs.references.referenceType.sibling" | translate }}
+        </asset-sg-select-option>
+        <asset-sg-select-option [value]="LinkedAssetType.Main" [isDisabled]="form.value.parent != null">
+          {{ "edit.tabs.references.referenceType.parent" | translate }}
+        </asset-sg-select-option>
+      </asset-sg-select>
+    </div>
+  </form>
+</div>
+<hr />
+<div mat-dialog-actions class="actions">
+  <button asset-sg-secondary (click)="cancel()" translate>cancel</button>
+  <button asset-sg-primary (click)="addReference()" [disabled]="newReferenceForm.invalid" translate>
+    edit.tabs.references.referenceHeadings.newReference
+  </button>
+</div>

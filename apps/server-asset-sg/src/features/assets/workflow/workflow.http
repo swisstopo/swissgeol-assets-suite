@@ -1,0 +1,19 @@
+### Get workflow
+GET {{host}}/api/assets/5/workflow
+Authorization: Impersonate {{user}}
+
+### Add change to a workflow
+POST {{host}}/api/assets/5/workflow/change
+Authorization: Impersonate {{user}}
+Content-Type: application/json
+
+{
+  "assignee": "admin@assets.swissgeol.ch",
+  "comment": "Test comment",
+  "toStatus": "reviewed"
+}
+
+### Publish a workflow
+POST {{host}}/api/assets/5/workflow/publish
+Authorization: Impersonate {{user}}
+

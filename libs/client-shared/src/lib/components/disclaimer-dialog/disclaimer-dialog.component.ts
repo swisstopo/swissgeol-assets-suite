@@ -7,9 +7,9 @@ import { MatDivider } from '@angular/material/divider';
 import { Store } from '@ngrx/store';
 import { TranslateModule } from '@ngx-translate/core';
 import { map } from 'rxjs';
+import { LanguageService } from '../../services';
 import { setTrackingConsent } from '../../state/app-shared-state.actions';
 import { AppState } from '../../state/index';
-import { CURRENT_LANG } from '../../utils';
 import { ButtonComponent } from '../button/button.component';
 import { LanguageSelectorComponent } from '../language-selector/language-selector.component';
 
@@ -37,12 +37,12 @@ export class DisclaimerDialogComponent implements AfterViewInit {
   private readonly dialogRef = inject(MatDialogRef<DisclaimerDialogComponent>);
   private readonly store = inject(Store<AppState>);
 
-  private readonly currentLang$ = inject(CURRENT_LANG);
-  public readonly legalAnchor$ = this.currentLang$.pipe(
+  private readonly languageService = inject(LanguageService);
+  public readonly legalAnchor$ = this.languageService.language$.pipe(
     map((lang) => {
       const url = `https://www.swissgeol.ch/pages/legal/${lang}.html`;
       return `<a href="${url}" target="_blank" rel="noopener nofollow">${url}</a>`;
-    })
+    }),
   );
 
   @ViewChild('consentCheckbox') consentCheckbox!: MatCheckbox;

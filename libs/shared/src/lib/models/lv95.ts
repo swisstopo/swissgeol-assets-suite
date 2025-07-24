@@ -15,7 +15,7 @@ const maxLV95X = 1999999 as LV95X;
 export type LV95X = number & LV95XBrand;
 export const LV95X = pipe(
   C.number,
-  C.refine((n): n is LV95X => n >= minLV95X && n <= maxLV95X, 'LV95X')
+  C.refine((n): n is LV95X => n >= minLV95X && n <= maxLV95X, 'LV95X'),
 );
 export const eqLV95X = TEq.number;
 
@@ -30,7 +30,7 @@ const maxLV95Y = 2999999 as LV95Y;
 export type LV95Y = number & LV95YBrand;
 export const LV95Y = pipe(
   C.number,
-  C.refine((n): n is LV95Y => n >= minLV95Y && n <= maxLV95Y, 'LV95Y')
+  C.refine((n): n is LV95Y => n >= minLV95Y && n <= maxLV95Y, 'LV95Y'),
 );
 export const eqLV95Y = TEq.number;
 
@@ -46,10 +46,7 @@ export const eqLV95 = TEq.struct({
 
 export const toPosition = (lv95: LV95) => [lv95.x, lv95.y];
 
-export const LV95Array = C.array(LV95);
-export type LV95Array = C.TypeOf<typeof LV95Array>;
 export const eqLV95Array = TEq.array(eqLV95);
-export const toPositions = (lv95s: LV95[]) => lv95s.map(toPosition);
 
 const makeLV95FromSeparatedString = (codecName: string, separator: string) => {
   const decoder = pipe(
@@ -59,7 +56,7 @@ const makeLV95FromSeparatedString = (codecName: string, separator: string) => {
       if (parts.length !== 2) return D.failure(s, `${codecName}: expected 2 parts, got ${parts.length}`);
       const [y, x] = parts;
       return LV95.decode({ y: +y, x: +x });
-    })
+    }),
   );
   const encoder = {
     encode: (lv95: LV95) => `${lv95.y}${separator}${lv95.x}`,
@@ -68,10 +65,6 @@ const makeLV95FromSeparatedString = (codecName: string, separator: string) => {
 };
 
 export const LV95FromSpaceSeparatedString = makeLV95FromSeparatedString('LV95FromSpaceSeparatedString', ' ');
-type LV95FromSpaceSeparatedString = D.TypeOf<typeof LV95FromSpaceSeparatedString>;
-
-export const LV95FromCommaSeparatedString = makeLV95FromSeparatedString('LV95FromCommaSeparatedString', ',');
-type LV95FromCommaSeparatedString = D.TypeOf<typeof LV95FromCommaSeparatedString>;
 
 export const roundToMillimeter = (n: number) => Math.round(n * 1000) / 1000;
 
@@ -84,11 +77,3 @@ export const lv95RoundedToMillimeter = (lv95: LV95): LV95 => ({
   x: roundToMillimeter(lv95.x) as LV95X,
   y: roundToMillimeter(lv95.y) as LV95Y,
 });
-
-export const parseLV95 = (value: string, { separator }: { separator: string }): LV95 => {
-  const [y, x] = value.split(separator, 2);
-  return {
-    x: parseFloat(x) as LV95X,
-    y: parseFloat(y) as LV95Y,
-  };
-};

@@ -1,5 +1,9 @@
+import { Role as PrismaRole } from '@prisma/client';
+import { SimpleUser } from '@swissgeol/ui-core';
 import { Data, Model } from './base/model';
 import { getRoleIndex, Role, WorkgroupId } from './workgroup';
+
+export { SimpleUser };
 
 export interface User extends Model<UserId> {
   email: string;
@@ -17,7 +21,7 @@ export interface User extends Model<UserId> {
 export type UserId = string;
 export type UserData = Omit<Data<User>, 'email'>;
 
-const hasRole = (role: Role) => (user: User | null | undefined, workgroupId?: WorkgroupId) => {
+export const hasRole = (role: Role) => (user: User | null | undefined, workgroupId?: WorkgroupId) => {
   if (user == null) {
     return false;
   }
@@ -34,5 +38,14 @@ const hasRole = (role: Role) => (user: User | null | undefined, workgroupId?: Wo
   return false;
 };
 
-export const isMasterEditor = hasRole(Role.MasterEditor);
+export const mapRoleToPrisma = (role: Role): PrismaRole => {
+  return role as PrismaRole;
+};
+
+export const mapRoleFromPrisma = (role: PrismaRole): Role => {
+  return role as Role;
+};
+
 export const isEditor = hasRole(Role.Editor);
+export const isReviewer = hasRole(Role.Reviewer);
+export const isPublisher = hasRole(Role.Publisher);

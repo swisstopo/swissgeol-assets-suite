@@ -1,6 +1,6 @@
-import { AppTranslations } from './i18n';
+import { AppTranslationMapping } from './i18n';
 
-export const enAppTranslations: AppTranslations = {
+export const enTranslationMapping: AppTranslationMapping = {
   logoSwissGeol: 'Logo Swissgeol Assets',
   welcomeTo: 'Welcome to',
   accessForbidden: 'You do not have access to this application.',
@@ -22,6 +22,8 @@ export const enAppTranslations: AppTranslations = {
   delete: 'Delete',
   close: 'Close',
   datePlaceholder: 'YYYY-MM-DD',
+  deletedUserName: 'deleted User',
+  downloadFailed: 'File could not be downloaded.',
   workgroup: {
     title: 'Workgroup',
     errors: {
@@ -30,6 +32,29 @@ export const enAppTranslations: AppTranslations = {
   },
   favorites: {
     title: 'Favorites',
+  },
+  workflow: {
+    status: 'Status',
+    assignee: 'Assignee',
+    requestedChanges: 'Changes requested',
+  },
+  workflowStatus: {
+    Draft: 'Draft',
+    InReview: 'Review',
+    Reviewed: 'Reviewed',
+    Published: 'Published',
+    notPublished: 'Not Published',
+  },
+  workflowSelection: {
+    general: 'General',
+    normalFiles: 'Normal Files',
+    legalFiles: 'Legal Consents',
+    initiators: 'Clients',
+    suppliers: 'Suppliers',
+    authors: 'Authors',
+    references: 'References',
+    geometries: 'Geometries',
+    legacy: 'Legacy Data',
   },
   menuBar: {
     filters: 'Filters',
@@ -94,6 +119,8 @@ export const enAppTranslations: AppTranslations = {
     workgroup: 'Workgroup',
     resetSearch: 'Reset filters',
     file: 'File',
+    filePageSingular: '1 page',
+    filePagePlural: '{{pageCount}} pages',
     legalFile: 'Legal consent',
     openFileInNewTab: 'Open {{fileName}} in new tab',
     downloadFile: 'Download {{fileName}}',
@@ -109,6 +136,11 @@ export const enAppTranslations: AppTranslations = {
     supplier: 'Supplier',
   },
   edit: {
+    visibility: {
+      public: 'public',
+      locked: 'locked',
+      lockedUntil: 'locked until {{date}}',
+    },
     tabs: {
       general: {
         tabName: 'General',
@@ -129,6 +161,14 @@ export const enAppTranslations: AppTranslations = {
         alternativeIdDescription: 'Alternative ID Description',
         addNewAlternativeId: 'Add new alternative ID',
         referencesWarning: 'In order to change the workgroup, you must first remove all references.',
+        access: {
+          name: 'Restriction',
+          items: {
+            public: 'Public',
+            restricted: 'Restricted',
+            temporarilyRestricted: 'Restricted until',
+          },
+        },
       },
       files: {
         tabName: 'Files',
@@ -141,13 +181,26 @@ export const enAppTranslations: AppTranslations = {
           many: 'Legal consents',
         },
         legalDocItemCode: 'Type',
+        export: 'Export',
+        clickOrDrop: 'Click to browse, or drag & drop a file here',
+        uploadFile: 'Upload File',
         dragFileHere: 'Drag file here',
         or: 'or',
         selectFile: 'Select file',
         addNewFile: 'Add new file',
         willBeDeleted: 'Will be deleted',
         willBeUploaded: 'Will be uploaded',
-        fileSizeToLarge: 'File size may not exceed 250MB',
+        fileSizeToLarge: 'File size may not exceed 2GB',
+        uploadedAt: 'Uploaded',
+        ocrStatus: 'OCR Status',
+        ocrStatusValues: {
+          willNotBeProcessed: 'will not be processed',
+          created: 'created',
+          waiting: 'waiting',
+          processing: 'processing',
+          error: 'error',
+          success: 'success',
+        },
       },
       usage: {
         tabName: 'Usage',
@@ -169,13 +222,15 @@ export const enAppTranslations: AppTranslations = {
       },
       contacts: {
         tabName: 'Contacts',
-        linkContact: 'Add new Contact-Link',
+        linkContact: 'Add existing contact',
         link: 'Link',
         unlink: 'Unlink contact',
         viewDetails: 'Show contact details',
-        createNewContact: 'Create new contact',
-        editContact: 'Edit contact',
+        addContact: 'Add Contact',
+        createNewContact: 'Create new Contact',
+        editContact: 'Contact',
         contact: 'Contact',
+        finishEditing: 'Finish editing',
         role: 'Role',
         newContact: 'New Contact',
         contactKind: 'Contact kind',
@@ -189,18 +244,22 @@ export const enAppTranslations: AppTranslations = {
         phone: 'Telephone',
         website: 'Website',
         create: 'Create',
-        noContacts: 'No contacts',
+        noContacts: 'No contacts added yet ...',
         contactPlaceholder: 'Search by name',
+        editWarnMessage: 'Changes to the fields below will be synced across all assets that share the same contact.',
       },
       references: {
+        workgroupWarning: 'To add references, you must first choose a workgroup.',
         tabName: 'References',
+        assetId: 'Asset ID',
         assetTitlePublic: 'Public title',
         assetTitlePublicPlaceholder: 'Search via public title',
+        noReferencesAdded: 'No references added yet...',
         referenceHeadings: {
           parent: 'Main asset',
           subordinate: 'Subordinate assets',
           sibling: 'Sibling assets',
-          newReference: 'New reference',
+          newReference: 'Add reference',
         },
         referenceType: {
           parent: 'Main',
@@ -234,12 +293,6 @@ export const enAppTranslations: AppTranslations = {
       },
       administration: {
         tabName: 'Administration',
-        infoGeol: 'InfoGeol',
-        sgsId: 'SGS ID',
-        data: 'Data',
-        contactData: 'Contact data',
-        auxData: 'Auxiliary data',
-        municipality: 'Municipality',
         workStatus: 'Work status',
         lastProcessed: 'Last processed',
         by: 'By',
@@ -249,9 +302,28 @@ export const enAppTranslations: AppTranslations = {
           hasValidationErrors: 'has validation errors',
         },
       },
+      status: {
+        tabName: 'Status',
+        selectionCategories: {
+          files: 'Files',
+          contacts: 'Contacts',
+        },
+      },
+      legacyData: {
+        tabName: 'Legacy data',
+        infoGeol: 'InfoGeol',
+        sgsId: 'SGS ID',
+        data: 'Data',
+        contactData: 'Contact data',
+        auxData: 'Auxiliary data',
+        municipality: 'Municipality',
+      },
     },
     closeManageAsset: 'Close manage asset',
-    questionDiscardChanges: 'Do you want to discard your changes?',
+    unsavedChanges: 'Unsaved Changes',
+    discardChanges: 'Discard changes',
+    questionDiscardChanges: 'There are unsaved changes. Do you want to save all changes?',
+    questionAbortChanges: 'Your edits are currently incomplete. The asset cannot be saved in this state.',
     userManagementHeading: 'Users',
     userManagementButton: 'Manage users',
     adminInstructionsSyncElasticAssetsHeading: 'Synchronize assets with Elasticsearch',

@@ -34,6 +34,27 @@
   background-color: variables.$grey-07;
 }
 
+:host(.light):not(.disabled) .mat-mdc-standard-chip.mdc-evolution-chip--disabled {
+  background-color: variables.$grey-02;
+
+  * {
+    /// ugly hack, but these components need redesign anyhow
+    color: #1c2834;
+  }
+}
+
+:host(.alert):not(.disabled) .mat-mdc-standard-chip.mdc-evolution-chip--disabled {
+  background-color: #99191e;
+}
+
+:host(.success):not(.disabled) .mat-mdc-standard-chip.mdc-evolution-chip--disabled {
+  background-color: #047857;
+}
+
+:host(.warn):not(.disabled) .mat-mdc-standard-chip.mdc-evolution-chip--disabled {
+  background-color: #b45309;
+}
+
 :host(.disabled) .mat-mdc-standard-chip.mdc-evolution-chip--disabled {
   background-color: variables.$grey-05;
 }

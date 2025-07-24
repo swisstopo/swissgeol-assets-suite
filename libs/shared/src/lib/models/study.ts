@@ -8,25 +8,22 @@ import { Eq as eqString } from 'fp-ts/string';
 import * as C from 'io-ts/Codec';
 import * as D from 'io-ts/Decoder';
 
-import { LV95, LV95FromSpaceSeparatedString, eqLV95, eqLV95Array, toPosition } from './lv95';
+import { LV95, LV95FromSpaceSeparatedString, eqLV95, eqLV95Array } from './lv95';
 
 export interface Point {
   _tag: 'Point';
   coord: LV95;
 }
-export const pointToPosition = (p: Point) => toPosition(p.coord);
 
 export interface LineString {
   _tag: 'LineString';
   coords: LV95[];
 }
-export const linestringToPositions = (p: LineString) => p.coords.map(toPosition);
 
 export interface StudyPolygon {
   _tag: 'Polygon';
   coords: LV95[];
 }
-export const polygonToPositions = (p: StudyPolygon) => p.coords.map(toPosition);
 
 export const Geom = makeADT('_tag')({
   Point: ofType<Point>(),
@@ -56,18 +53,11 @@ export const eqGeom: Eq<Geom> = {
 export const GeomWithCoords = Geom.exclude(['Point']);
 export type GeomWithCoords = ADTType<typeof GeomWithCoords>;
 
-export const getStudyWithPolygon = (s: Study): O.Option<Study & { geom: StudyPolygon }> =>
-  pipe(
-    s.geom,
-    O.fromPredicate(Geom.is.Polygon),
-    O.map((g) => ({ ...s, geom: g }))
-  );
-
 export const getStudyWithGeomWithCoords = (s: Study): O.Option<Study & { geom: GeomWithCoords }> =>
   pipe(
     s.geom,
     O.fromPredicate(Geom.isAnyOf(['LineString', 'Polygon'])),
-    O.map((g) => ({ ...s, geom: g }))
+    O.map((g) => ({ ...s, geom: g })),
   );
 
 const stringToGeom = (_s: string): E.Either<D.DecodeError, Geom> => {
@@ -88,7 +78,7 @@ const stringToGeom = (_s: string): E.Either<D.DecodeError, Geom> => {
 const stringToPoint = (s: string): E.Either<D.DecodeError, Geom> =>
   pipe(
     LV95FromSpaceSeparatedString.decode(s),
-    E.map((coord) => Geom.of.Point({ coord }))
+    E.map((coord) => Geom.of.Point({ coord })),
   );
 
 const stringToCoords = (s: string) =>
@@ -96,29 +86,29 @@ const stringToCoords = (s: string) =>
     s.split(','),
     A.map((s) => s.split(' ')),
     A.map((a) =>
-      a.length === 2 ? D.success(a as [string, string]) : D.failure(a, 'GeomFromGeomText: expected 2 parts')
+      a.length === 2 ? D.success(a as [string, string]) : D.failure(a, 'GeomFromGeomText: expected 2 parts'),
     ),
     A.sequence(E.Applicative),
     E.chain(
       flow(
         A.map(([y, x]) => LV95.decode({ x: Number(x), y: Number(y) })),
-        A.sequence(E.Applicative)
-      )
-    )
+        A.sequence(E.Applicative),
+      ),
+    ),
   );
 
 const stringToPolygon = (s: string): E.Either<D.DecodeError, Geom> =>
   pipe(
     s.substring(1, s.length - 1),
     stringToCoords,
-    E.map((coords) => Geom.of.Polygon({ coords }))
+    E.map((coords) => Geom.of.Polygon({ coords })),
   );
 
 const stringToLinestring = (s: string): E.Either<D.DecodeError, Geom> =>
   pipe(
     s,
     stringToCoords,
-    E.map((coords) => Geom.of.LineString({ coords }))
+    E.map((coords) => Geom.of.LineString({ coords })),
   );
 
 const GeomFromGeomTextDecoder: D.Decoder<unknown, Geom> = {
@@ -136,7 +126,7 @@ export const GeomFromGeomText = C.make(GeomFromGeomTextDecoder, {
 // TODO how to find how to compose Study from StudyDTO. Probably another function than map
 export const Study = pipe(
   D.struct({ studyId: D.string, geomText: GeomFromGeomText }),
-  D.map((o) => ({ studyId: o.studyId, geom: o.geomText }))
+  D.map((o) => ({ studyId: o.studyId, geom: o.geomText })),
 );
 export type Study = D.TypeOf<typeof Study>;
 export const eqStudy: Eq<Study> = struct({
@@ -149,6 +139,3 @@ export const eqStudyByStudyId = contramap((s: Study) => s.studyId)(eqString);
 export const Studies = D.array(Study);
 export type Studies = D.TypeOf<typeof Studies>;
 export const eqStudies: Eq<Studies> = A.getEq(eqStudy);
-
-export const getCoordsFromStudy = (study: Study): LV95[] =>
-  study.geom._tag === 'Point' ? [study.geom.coord] : study.geom.coords;

@@ -1,5 +1,6 @@
 import { Component, ElementRef, EventEmitter, inject, OnDestroy, OnInit, Output, ViewChild } from '@angular/core';
-import { sleep, tick } from '@asset-sg/shared/v2';
+import { fromAppShared } from '@asset-sg/client-shared';
+import { AssetContact, AssetContactRole, AssetSearchResultItem, sleep, tick } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
 import { BehaviorSubject, combineLatestWith, firstValueFrom, map, Subject, Subscription, switchMap, take } from 'rxjs';
 import { ViewerControllerService } from '../../services/viewer-controller.service';
@@ -7,11 +8,9 @@ import * as actions from '../../state/asset-search/asset-search.actions';
 import { PanelState, setScrollOffsetForResults } from '../../state/asset-search/asset-search.actions';
 import { AppStateWithAssetSearch } from '../../state/asset-search/asset-search.reducer';
 import {
-  AssetEditDetailVM,
-  selectAssetEditDetailVM,
-  selectCurrentAsset,
   selectIsResultsOpen,
   selectScrollOffsetForResults,
+  selectSearchResultItems,
   selectSearchStats,
 } from '../../state/asset-search/asset-search.selector';
 
@@ -37,18 +36,18 @@ export class AssetSearchResultsComponent implements OnInit, OnDestroy {
     'createDate',
   ];
 
-  public allResults$ = new BehaviorSubject<AssetEditDetailVM[]>([]);
+  public allResults$ = new BehaviorSubject<AssetSearchResultItem[]>([]);
 
-  public resultsToDisplay: AssetEditDetailVM[] = [];
+  public resultsToDisplay: AssetSearchResultItem[] = [];
   private size = 0;
   private readonly pageSize = 50;
 
   private readonly store = inject(Store<AppStateWithAssetSearch>);
   private readonly viewerControllerService = inject(ViewerControllerService);
   public readonly isResultsOpen$ = this.store.select(selectIsResultsOpen);
-  public readonly assets$ = this.store.select(selectAssetEditDetailVM);
+  public readonly assets$ = this.store.select(selectSearchResultItems);
   public readonly total$ = this.store.select(selectSearchStats).pipe(map((stats) => stats.total));
-  public readonly currentAssetDetail$ = this.store.select(selectCurrentAsset);
+  public readonly currentAsset$ = this.store.select(fromAppShared.selectCurrentAsset);
   public readonly scrollOffset$ = this.store.select(selectScrollOffsetForResults);
 
   private readonly subscriptions: Subscription = new Subscription();
@@ -131,7 +130,7 @@ export class AssetSearchResultsComponent implements OnInit, OnDestroy {
         take(1),
         switchMap(() => this.scrollOffset$),
         take(1),
-        switchMap((offset) => this.scrollByOffset(offset))
+        switchMap((offset) => this.scrollByOffset(offset)),
       )
       .subscribe();
 
@@ -147,7 +146,7 @@ export class AssetSearchResultsComponent implements OnInit, OnDestroy {
           container.scrollTo({ top: 0, behavior: 'smooth' });
         }
         this.resultsReady$.next();
-      })
+      }),
     );
 
     // Emit `isTableReady$` when the table has been rendered.
@@ -166,11 +165,17 @@ export class AssetSearchResultsComponent implements OnInit, OnDestroy {
             break;
           }
         }
-      })
+      }),
     );
   }
 
-  public get allResults(): AssetEditDetailVM[] {
+  private get allResults(): AssetSearchResultItem[] {
     return this.allResults$.value;
   }
+
+  protected trackContact(contact: AssetContact) {
+    return `${contact.id}-${contact.role}`;
+  }
+
+  protected readonly AssetContactRole = AssetContactRole;
 }

@@ -18,7 +18,7 @@ spec:
       template:
         spec:
           containers:
-            - name: {{ .Release.Name }}
+            - name: {{ .Release.Name }}--sync-view
               image: {{ .Values.image }}
               imagePullPolicy: Always
 
@@ -27,17 +27,17 @@ spec:
                   valueFrom:
                     secretKeyRef:
                       name: {{ .Release.Name }}-secrets
-                      key: sourceConnectionString
+                      key: syncViewSourceConnectionString
                 - name: SOURCE_WORKGROUP_IDS
-                  value: "{{ .Values.sourceAllowedWorkgroupIds }}"
+                  value: "{{ .Values.syncView.sourceAllowedWorkgroupIds }}"
                 - name: DESTINATION_CONNECTION_STRING
                   valueFrom:
                     secretKeyRef:
                       name: {{ .Release.Name }}-secrets
-                      key: destinationConnectionString
+                      key: syncViewDestinationConnectionString
                 - name: DESTINATION_WORKGROUP_IDS
-                  value: "{{ .Values.destinationAllowedWorkgroupIds }}"
+                  value: "{{ .Values.syncView.destinationAllowedWorkgroupIds }}"
                 - name: MODE
-                  value: {{ .Values.mode }}
+                  value: {{ .Values.syncView.mode }}
           restartPolicy: Never
       backoffLimit: 4

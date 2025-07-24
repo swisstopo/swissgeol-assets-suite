@@ -10,13 +10,19 @@ import {
   ViewChild,
   ViewContainerRef,
 } from '@angular/core';
-import { AppPortalService, AuthService, LifecycleHooks, LifecycleHooksDirective } from '@asset-sg/client-shared';
-import { AssetEditDetail } from '@asset-sg/shared';
+import {
+  AppPortalService,
+  AppSharedState,
+  AuthService,
+  fromAppShared,
+  LifecycleHooks,
+  LifecycleHooksDirective,
+} from '@asset-sg/client-shared';
+import { AssetSearchResultItem } from '@asset-sg/shared/v2';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { Store } from '@ngrx/store';
 import * as A from 'fp-ts/Array';
 import { Eq as eqNumber } from 'fp-ts/number';
-import * as O from 'fp-ts/Option';
 import {
   asyncScheduler,
   filter,
@@ -37,8 +43,6 @@ import * as actions from '../../state/asset-search/asset-search.actions';
 import { PanelState } from '../../state/asset-search/asset-search.actions';
 import { AppStateWithAssetSearch, AssetSearchState } from '../../state/asset-search/asset-search.reducer';
 import {
-  selectCurrentAsset,
-  selectHasCurrentAsset,
   selectIsFiltersOpen,
   selectSearchQuery,
   selectSearchResults,
@@ -56,71 +60,70 @@ export class AssetViewerPageComponent implements OnInit, OnDestroy {
   @ViewChild('templateAppBarPortalContent') templateAppBarPortalContent!: TemplateRef<unknown>;
   @ViewChild('searchInput') searchInput!: ElementRef<HTMLInputElement>;
 
-  private readonly _lc = inject(LifecycleHooks);
-  private readonly _appPortalService = inject(AppPortalService);
-  private readonly _viewContainerRef = inject(ViewContainerRef);
+  private readonly lc = inject(LifecycleHooks);
+  private readonly appPortalService = inject(AppPortalService);
+  private readonly viewContainerRef = inject(ViewContainerRef);
   private readonly store = inject(Store<AppStateWithAssetSearch>);
-  private readonly _cd = inject(ChangeDetectorRef);
+  private readonly cd = inject(ChangeDetectorRef);
 
   private readonly authService = inject(AuthService);
   private readonly viewerControllerService = inject(ViewerControllerService);
 
   public isLoading$ = this.store.pipe(
-    map((store): AssetSearchState => store.assetSearch),
+    map((store): { search: AssetSearchState; shared: AppSharedState } => {
+      return { search: store.assetSearch, shared: store.shared };
+    }),
     map(
-      (search) =>
-        search.isLoadingStudies ||
+      ({ search, shared }) =>
+        search.isLoadingGeometries ||
         search.isLoadingResults ||
         search.isLoadingStats ||
         // Loading for the current asset is only shown on the map in case an asset is already being displayed.
         // Otherwise, the detail panel shows a loader.
-        (search.isLoadingAsset && search.currentAsset !== null)
-    )
+        (shared.isLoadingAsset && shared.currentAsset !== null),
+    ),
   );
 
-  public currentAssetId$ = this.store.select(selectCurrentAsset).pipe(
-    map((currentAsset) => currentAsset?.assetId),
-    map(O.fromNullable)
-  );
+  public currentAssetId$ = this.store.select(fromAppShared.selectCurrentAsset).pipe(map((asset) => asset?.id ?? null));
 
-  public hasCurrentAsset$ = this.store.select(selectHasCurrentAsset);
+  public hasCurrentAsset$ = this.store.select(fromAppShared.selectHasCurrentAsset);
 
   public isFiltersOpen$ = this.store.select(selectIsFiltersOpen);
 
-  public _searchTextKeyDown$ = new Subject<KeyboardEvent>();
-  private readonly searchTextChanged$ = this._searchTextKeyDown$.pipe(
+  public searchTextKeyDown$ = new Subject<KeyboardEvent>();
+  private readonly searchTextChanged$ = this.searchTextKeyDown$.pipe(
     filter((event) => event.key === 'Enter'),
-    map((event) => (event.target as HTMLInputElement).value)
+    map((event) => (event.target as HTMLInputElement).value),
   );
 
   public assetClicked$ = new Subject<number[]>();
-  public assetsForPicker$: Observable<AssetEditDetail[]>;
+  public assetsForPicker$: Observable<AssetSearchResultItem[]>;
   public highlightedAssetId: number | null = null;
 
   constructor() {
-    const setupPortals$ = this._lc.afterViewInit$.pipe(
+    const setupPortals$ = this.lc.afterViewInit$.pipe(
       observeOn(asyncScheduler),
       switchMap(
         () =>
           new Promise<void>((resolve) => {
-            this._appPortalService.setAppBarPortalContent(
-              new TemplatePortal(this.templateAppBarPortalContent, this._viewContainerRef)
+            this.appPortalService.setAppBarPortalContent(
+              new TemplatePortal(this.templateAppBarPortalContent, this.viewContainerRef),
             );
-            this._appPortalService.setDrawerPortalContent(null);
+            this.appPortalService.setDrawerPortalContent(null);
             setTimeout(() => {
-              this._cd.detectChanges();
+              this.cd.detectChanges();
               resolve();
             });
-          })
+          }),
       ),
-      share()
+      share(),
     );
     setupPortals$.pipe(untilDestroyed(this)).subscribe();
 
     setupPortals$
       .pipe(
         switchMap(() => this.store.select(selectSearchQuery)),
-        untilDestroyed(this)
+        untilDestroyed(this),
       )
       .subscribe((searchQuery) => {
         if (this.searchInput == null) {
@@ -131,21 +134,21 @@ export class AssetViewerPageComponent implements OnInit, OnDestroy {
         }
       });
 
-    const [singleStudyClicked$, multipleStudiesClicked$] = partition(
+    const [singleGeometryClicked$, multipleGeometriesClicked$] = partition(
       this.assetClicked$.pipe(
         map(A.uniq(eqNumber)),
         filter((as) => as.length > 0),
-        share()
+        share(),
       ),
-      (ss) => ss.length === 1
+      (ss) => ss.length === 1,
     );
 
-    this.assetsForPicker$ = multipleStudiesClicked$.pipe(
+    this.assetsForPicker$ = multipleGeometriesClicked$.pipe(
       withLatestFrom(this.store.select(selectSearchResults)),
-      map(([assetIds, searchAssets]) => searchAssets.data.filter((a) => assetIds.includes(a.assetId)))
+      map(([assetIds, searchAssets]) => searchAssets.data.filter((a) => assetIds.includes(a.id))),
     );
 
-    singleStudyClicked$.pipe(untilDestroyed(this)).subscribe((assetIds) => {
+    singleGeometryClicked$.pipe(untilDestroyed(this)).subscribe((assetIds) => {
       this.viewerControllerService.selectAsset(assetIds[0]);
     });
 
@@ -160,11 +163,11 @@ export class AssetViewerPageComponent implements OnInit, OnDestroy {
     this.authService.isInitialized$.pipe(filter(identity), take(1)).subscribe(() => {
       this.viewerControllerService.initialize();
     });
-    this._appPortalService.setAppBarPortalContent(null);
+    this.appPortalService.setAppBarPortalContent(null);
   }
 
   ngOnDestroy() {
-    this._appPortalService.setAppBarPortalContent(null);
+    this.appPortalService.setAppBarPortalContent(null);
     this.viewerControllerService.reset();
   }
 }

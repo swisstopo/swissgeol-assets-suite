@@ -1,4 +1,4 @@
-import { StudyAccessType, StudyGeometryType } from '@asset-sg/shared/v2';
+import { GeometryAccessType, GeometryType } from '@asset-sg/shared/v2';
 import { FeatureLike } from 'ol/Feature';
 import Fill from 'ol/style/Fill';
 import Stroke from 'ol/style/Stroke';
@@ -9,7 +9,6 @@ import { makeLineShape, makeSimpleCircle, makeTriangleShape } from '../utils';
 import { getGeometryToPointRepresentationMapping, LayerStyle } from './layer-style.type';
 
 type AccessTypeKey = {
-  restricted: Style | Style[];
   internal: Style | Style[];
   public: Style | Style[];
 };
@@ -21,27 +20,13 @@ const publicAccess = {
   strokeColor: '#064E3B',
 };
 const internalAccess = {
-  fillColor: (opacityOverride = 1.0) => `rgba(245, 158, 11, ${opacityOverride})`,
-  strokeColor: '#78350F',
-};
-const restrictedAccess = {
   fillColor: (opacityOverride = 1.0) => `rgba(229, 57, 64, ${opacityOverride})`,
   strokeColor: '#801519',
 };
 
-const accessTypeMapping: { [key in StudyAccessType]: keyof AccessTypeKey } = {
+const accessTypeMapping: { [key in GeometryAccessType]: keyof AccessTypeKey } = {
   0: 'public',
   1: 'internal',
-  2: 'restricted',
-};
-
-/**
- * Used to extract the point representation for a given geometry from the layer style.
- */
-const geometryToPointRepresentationMapping: { [key in StudyGeometryType]: keyof LayerStyleByAccess['point'] } = {
-  Point: 'pointInstance',
-  Line: 'lineInstance',
-  Polygon: 'polygonInstance',
 };
 
 const overviewStylesAccess: LayerStyleByAccess = {
@@ -55,10 +40,6 @@ const overviewStylesAccess: LayerStyleByAccess = {
         zIndex: LAYER_Z_INDEX.POINT,
         image: makeSimpleCircle(internalAccess.fillColor(), internalAccess.strokeColor),
       }),
-      restricted: new Style({
-        zIndex: LAYER_Z_INDEX.POINT,
-        image: makeSimpleCircle(restrictedAccess.fillColor(), restrictedAccess.strokeColor),
-      }),
     },
     lineInstance: {
       public: new Style({
@@ -69,10 +50,6 @@ const overviewStylesAccess: LayerStyleByAccess = {
         zIndex: LAYER_Z_INDEX.POINT,
         image: makeLineShape(internalAccess.fillColor(), internalAccess.strokeColor),
       }),
-      restricted: new Style({
-        zIndex: LAYER_Z_INDEX.POINT,
-        image: makeLineShape(restrictedAccess.fillColor(), restrictedAccess.strokeColor),
-      }),
     },
     polygonInstance: {
       public: new Style({
@@ -82,10 +59,6 @@ const overviewStylesAccess: LayerStyleByAccess = {
       internal: new Style({
         zIndex: LAYER_Z_INDEX.POINT,
         image: makeTriangleShape(internalAccess.fillColor(), internalAccess.strokeColor),
-      }),
-      restricted: new Style({
-        zIndex: LAYER_Z_INDEX.POINT,
-        image: makeTriangleShape(restrictedAccess.fillColor(), restrictedAccess.strokeColor),
       }),
     },
   },
@@ -122,22 +95,6 @@ const overviewStylesAccess: LayerStyleByAccess = {
         zIndex: LAYER_Z_INDEX.LINE,
       }),
     ],
-    restricted: [
-      new Style({
-        stroke: new Stroke({
-          color: restrictedAccess.strokeColor,
-          width: DEFAULT_LINE_WIDTHS.STROKE,
-        }),
-        zIndex: LAYER_Z_INDEX.LINE,
-      }),
-      new Style({
-        stroke: new Stroke({
-          color: restrictedAccess.fillColor(),
-          width: DEFAULT_LINE_WIDTHS.FILL,
-        }),
-        zIndex: LAYER_Z_INDEX.LINE,
-      }),
-    ],
   },
   polygon: {
     public: new Style({
@@ -148,11 +105,6 @@ const overviewStylesAccess: LayerStyleByAccess = {
     internal: new Style({
       stroke: new Stroke({ color: internalAccess.strokeColor, width: DEFAULT_STROKE_WIDTH }),
       fill: new Fill({ color: internalAccess.fillColor(0.3) }),
-      zIndex: LAYER_Z_INDEX.POLYGON,
-    }),
-    restricted: new Style({
-      stroke: new Stroke({ color: restrictedAccess.strokeColor, width: DEFAULT_STROKE_WIDTH }),
-      fill: new Fill({ color: restrictedAccess.fillColor(0.3) }),
       zIndex: LAYER_Z_INDEX.POLYGON,
     }),
   },
@@ -166,9 +118,9 @@ const overviewStylesAccess: LayerStyleByAccess = {
  */
 const getPointRepresentationForGeometry = (
   feature: FeatureLike,
-  accessStyles: keyof AccessTypeKey
+  accessStyles: keyof AccessTypeKey,
 ): Style | Style[] => {
-  const geomType = feature.get(CustomFeatureProperties.GeometryType) as StudyGeometryType;
+  const geomType = feature.get(CustomFeatureProperties.GeometryType) as GeometryType;
   const styleKey = getGeometryToPointRepresentationMapping()[geomType];
   return overviewStylesAccess.point[styleKey][accessStyles];
 };
@@ -179,7 +131,7 @@ export const styleFunctionByAccess: StyleFunction = (feature) => {
     return new Style();
   }
 
-  const accessType = feature.get(CustomFeatureProperties.AccessType) as StudyAccessType;
+  const accessType = feature.get(CustomFeatureProperties.AccessType) as GeometryAccessType;
   const accessStyles: keyof AccessTypeKey = accessTypeMapping[accessType];
   switch (geometry.getType()) {
     case 'Point': {

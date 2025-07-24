@@ -38,7 +38,7 @@ export class FavoriteButtonComponent implements OnInit, OnDestroy {
     this.subscription.add(
       this.store.select(selectFavoriteAssetIds).subscribe((assetIds) => {
         this.assetIds = assetIds;
-      })
+      }),
     );
   }
 

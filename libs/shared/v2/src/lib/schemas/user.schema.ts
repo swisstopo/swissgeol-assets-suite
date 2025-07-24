@@ -1,4 +1,4 @@
-import { Role } from '@prisma/client';
+import { Role, SimpleUser } from '@swissgeol/ui-core';
 import { IsBoolean, IsEnum, IsString } from 'class-validator';
 import { User, UserData, UserId } from '../models/user';
 import { WorkgroupId } from '../models/workgroup';
@@ -29,4 +29,18 @@ export class UserSchema extends UserDataSchema implements User {
 
   @IsString()
   email!: string;
+}
+
+export class SimpleUserSchema implements SimpleUser {
+  @IsString()
+  id!: UserId;
+
+  @IsString()
+  firstName!: string;
+
+  @IsString()
+  lastName!: string;
+
+  @IsEnum(Role)
+  role!: Role;
 }

@@ -1,15 +1,11 @@
 import { inject, Injectable } from '@angular/core';
-import { NavigationEnd, Router, RouterStateSnapshot } from '@angular/router';
+import { NavigationEnd, Router } from '@angular/router';
 import { appSharedStateActions, AuthService, fromAppShared } from '@asset-sg/client-shared';
-import { ORD } from '@asset-sg/core';
-import { eqLangRight, Lang } from '@asset-sg/shared';
+import { isNotNull } from '@asset-sg/core';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
-import { ROUTER_NAVIGATION, RouterNavigationAction } from '@ngrx/router-store';
 import { Store } from '@ngrx/store';
-import { TranslateService } from '@ngx-translate/core';
-import * as E from 'fp-ts/Either';
-import { combineLatest, distinctUntilChanged, filter, map, switchMap, take } from 'rxjs';
+import { combineLatest, filter, map, switchMap, take } from 'rxjs';
 
 import { AppSharedStateService } from './app-shared-state.service';
 import { AppState } from './app-state';
@@ -18,7 +14,6 @@ import { AppState } from './app-state';
 @Injectable()
 export class AppSharedStateEffects {
   actions$ = inject(Actions);
-  translateService = inject(TranslateService);
   store = inject(Store<AppState>);
   appSharedStateService = inject(AppSharedStateService);
   authService = inject(AuthService);
@@ -26,7 +21,7 @@ export class AppSharedStateEffects {
 
   constructor() {
     combineLatest([
-      this.store.select(fromAppShared.selectRDUserProfile).pipe(ORD.fromFilteredSuccess),
+      this.store.select(fromAppShared.selectUser).pipe(filter(isNotNull)),
       this.router.events.pipe(filter((e) => e instanceof NavigationEnd)),
     ])
       .pipe(take(1), untilDestroyed(this))
@@ -38,54 +33,32 @@ export class AppSharedStateEffects {
       });
 
     this.actions$.pipe(ofType(appSharedStateActions.logout), untilDestroyed(this)).subscribe(() => {
-      this.store.dispatch(appSharedStateActions.loadUserProfile());
+      this.store.dispatch(appSharedStateActions.loadUser());
       this.store.dispatch(appSharedStateActions.loadReferenceData());
     });
-
-    this.actions$
-      .pipe(
-        ofType<RouterNavigationAction<RouterStateSnapshot>>(ROUTER_NAVIGATION),
-        map((a) => a.payload.routerState.url.match(/^\/(\w\w)/)?.[1]),
-        filter(Boolean),
-        map(Lang.decode),
-        distinctUntilChanged(eqLangRight.equals),
-        untilDestroyed(this)
-      )
-      .subscribe((result) => {
-        if (E.isLeft(result)) {
-          console.error('Invalid lang in URL:', result.left);
-          return;
-        }
-        const { right: lang } = result;
-        if (this.translateService.currentLang === lang) {
-          return;
-        }
-        this.translateService.use(lang);
-        this.store.dispatch(appSharedStateActions.setLang({ lang: lang as Lang }));
-      });
   }
 
   loadValueLists$ = createEffect(() =>
     this.actions$.pipe(
       ofType(appSharedStateActions.loadReferenceData),
-      switchMap(() => this.appSharedStateService.loadReferenceData()),
-      map(appSharedStateActions.loadReferenceDataResult)
-    )
+      switchMap(() => this.appSharedStateService.fetchReferenceData()),
+      map((referenceData) => appSharedStateActions.setReferenceData({ referenceData })),
+    ),
   );
 
   loadUser$ = createEffect(() =>
     this.actions$.pipe(
-      ofType(appSharedStateActions.loadUserProfile),
-      switchMap(() => this.authService.getUserProfile()),
-      map(appSharedStateActions.loadUserProfileResult)
-    )
+      ofType(appSharedStateActions.loadUser),
+      switchMap(() => this.authService.fetchUser()),
+      map(appSharedStateActions.setUser),
+    ),
   );
 
   loadWorkgroups$ = createEffect(() =>
     this.actions$.pipe(
       ofType(appSharedStateActions.loadWorkgroups),
       switchMap(() => this.appSharedStateService.loadWorkgroups()),
-      map((workgroups) => appSharedStateActions.loadWorkgroupsResult({ workgroups }))
-    )
+      map((workgroups) => appSharedStateActions.setWorkgroups({ workgroups })),
+    ),
   );
 }

@@ -1,29 +1,11 @@
-import { ApiError } from '@asset-sg/client-shared';
-import { ContactEdit, PatchAsset, PatchContact } from '@asset-sg/shared';
-import * as RD from '@devexperts/remote-data-ts';
+import { Asset, GeometryDetail, Workflow } from '@asset-sg/shared/v2';
 import { createAction, props } from '@ngrx/store';
-import * as O from 'fp-ts/Option';
 
-import { AssetEditorNewFile } from '../components/asset-editor-form-group';
-import { AssetEditDetail } from '../models';
+export const loadAsset = createAction('[Asset Editor] Load Asset', props<{ assetId: number }>());
 
-export const loadAssetEditDetailResult = createAction(
-  '[Asset Editor] Load Asset Edit Detail Result',
-  props<RD.RemoteData<ApiError, O.Option<AssetEditDetail>>>()
-);
-
-export const createNewAsset = createAction('[Asset Editor] Create new asset', props<{ patchAsset: PatchAsset }>());
-
-export const updateAssetEditDetail = createAction(
-  '[Asset Editor] Update asset',
-  props<{ assetId: number; patchAsset: PatchAsset; filesToDelete: number[]; newFiles: AssetEditorNewFile[] }>()
-);
-
-export const updateAssetEditDetailResult = createAction(
-  '[Asset Editor] Update Asset Edit Detail Result',
-  props<{
-    data: RD.RemoteData<ApiError, AssetEditDetail>;
-  }>()
+export const updateAsset = createAction(
+  '[Asset Editor] Update Asset',
+  props<{ asset: Asset; geometries: GeometryDetail[] }>(),
 );
 
 export const deleteAsset = createAction('[Asset Editor] Delete asset', props<{ assetId: number }>());
@@ -32,8 +14,11 @@ export const handleSuccessfulDeletion = createAction(
   '[Asset Editor] Handle successful deletion',
   props<{
     assetId: number;
-  }>()
+  }>(),
 );
-export const editContact = createAction('[Asset Editor] Edit contact', props<{ contact: ContactEdit }>());
 
-export const createContact = createAction('[Asset Editor] Create contact', props<{ contact: PatchContact }>());
+export const loadWorkflow = createAction('[Asset Editor] Load Workflow', props<{ assetId: number }>());
+
+export const setWorkflow = createAction('[Asset Editor] Set Workflow', props<{ workflow: Workflow }>());
+
+export const reset = createAction('[Asset Editor] Reset');

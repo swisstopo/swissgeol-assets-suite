@@ -1,0 +1,45 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ .Release.Name }}--sync-extern-to-intern
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    keel.sh/policy: force
+    keel.sh/match-tag: 'true'
+    keel.sh/trigger: poll
+spec:
+  schedule: "{{ .Values.cronSchedule | default "0 0 * * *" }}"
+  timeZone: "Europe/Zurich"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: {{ .Release.Name }}--sync-extern-to-intern
+              image: {{ .Values.image }}
+              imagePullPolicy: Always
+
+              env:
+                - name: SYNC_ASSIGNEE
+                  value: "{{ .Values.syncExternToIntern.defaultAssignee }}"
+                - name: SOURCE_CONNECTION_STRING
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ .Release.Name }}-secrets
+                      key: syncExternToInternSourceConnectionString
+                - name: SOURCE_WORKGROUP_IDS
+                  value: "{{ .Values.syncExternToIntern.sourceAllowedWorkgroupIds }}"
+                - name: DESTINATION_CONNECTION_STRING
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ .Release.Name }}-secrets
+                      key: syncExternToInternDestinationConnectionString
+                - name: DESTINATION_WORKGROUP_IDS
+                  value: "{{ .Values.syncExternToIntern.destinationAllowedWorkgroupIds }}"
+                - name: MODE
+                  value: {{ .Values.syncExternToIntern.mode }}
+          restartPolicy: Never
+      backoffLimit: 4

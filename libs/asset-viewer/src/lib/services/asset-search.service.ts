@@ -1,39 +1,43 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import {
-  AssetEditDetail,
+  Asset,
+  AssetId,
+  AssetSchema,
   AssetSearchQuery,
   AssetSearchResult,
-  AssetSearchResultDTO,
+  AssetSearchResultSchema,
   AssetSearchStats,
-  AssetSearchStatsDTO,
-} from '@asset-sg/shared';
+  AssetSearchStatsSchema,
+  GeometryDetail,
+  GeometryDetailSchema,
+} from '@asset-sg/shared/v2';
 import { plainToInstance } from 'class-transformer';
-import * as E from 'fp-ts/Either';
-import { map, Observable, tap } from 'rxjs';
+import { map, Observable } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class AssetSearchService {
   constructor(private _httpClient: HttpClient) {}
 
   public search(searchQuery: AssetSearchQuery): Observable<AssetSearchResult> {
-    return this._httpClient.post('/api/assets/search?limit=1000', searchQuery).pipe(
-      map((res) => plainToInstance(AssetSearchResultDTO, res)),
-      tap((result) => {
-        result.data = result.data.map((asset) => (AssetEditDetail.decode(asset) as E.Right<AssetEditDetail>).right);
-      })
-    );
+    return this._httpClient
+      .post('/api/assets/search?limit=1000', searchQuery)
+      .pipe(map((res) => plainToInstance(AssetSearchResultSchema, res)));
   }
 
   public searchStats(searchQuery: AssetSearchQuery): Observable<AssetSearchStats> {
     return this._httpClient
       .post('/api/assets/search/stats', searchQuery)
-      .pipe(map((res) => plainToInstance(AssetSearchStatsDTO, res)));
+      .pipe(map((res) => plainToInstance(AssetSearchStatsSchema, res)));
   }
 
-  public fetchAssetEditDetail(assetId: number): Observable<AssetEditDetail> {
+  public fetchAsset(id: AssetId): Observable<Asset> {
+    return this._httpClient.get<object>(`/api/assets/${id}`).pipe(map((res) => plainToInstance(AssetSchema, res)));
+  }
+
+  public fetchGeometries(id: AssetId): Observable<GeometryDetail[]> {
     return this._httpClient
-      .get(`/api/asset-edit/${assetId}`)
-      .pipe(map((res) => (AssetEditDetail.decode(res) as E.Right<AssetEditDetail>).right));
+      .get<object[]>(`/api/assets/${id}/geometries`)
+      .pipe(map((res) => res.map((it) => plainToInstance(GeometryDetailSchema, it))));
   }
 }
