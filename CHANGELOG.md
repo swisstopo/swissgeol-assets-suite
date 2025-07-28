@@ -8,6 +8,24 @@
 
 ### Fixed
 
+## v1.13.0
+
+### Added
+
+- Es wurden Workflows für die Bearbeitung von Assets eingeführt.
+- Das Sync-Service wurde an die neuen Workflows angepasst.
+
+### Changed
+
+- Die Bearbeitungsseite der Assets wurde neu gestaltet.
+- Die io/ts and fp/ts dependencies wurden weitgehend entfernt.
+
+### Fixed
+
+- Dateinamen werden ohne Id-Prefix angezeigt, dafür mit Seitenzahl.
+- In der Datenbank wurden Tabellen und Felder entfernt, die nicht mehr benötigt werden.
+- Files von Typ "Legal Files" werden nun auch vom OCR geparsed.
+
 ## v1.12.0
 
 ### Added
