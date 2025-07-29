@@ -5,27 +5,26 @@
   @if (locale$ | async; as locale) {
     <span class="name"> {{ assetFile | fileName }} ({{ assetFile | fileMetadata: locale }}) </span>
   }
-  @if (!isActiveFileDownload(assetFile, 'open-in-tab')) {
+  @if (!isActiveFileDownload(assetFile, "open-in-tab")) {
     <button
       asset-sg-icon-button
       [title]="'search.openFileInNewTab' | translate: { fileName: assetFile | fileName }"
       (click)="downloadFile(assetFile, 'open-in-tab')"
-      >
+    >
       <svg-icon key="ext-link"></svg-icon>
     </button>
   } @else {
     <mat-progress-spinner mode="indeterminate" [diameter]="20" />
   }
-  @if (!isActiveFileDownload(assetFile, 'save-file')) {
+  @if (!isActiveFileDownload(assetFile, "save-file")) {
     <button
       asset-sg-icon-button
       [title]="'search.downloadFile' | translate: { fileName: assetFile | fileName }"
       (click)="downloadFile(assetFile, 'save-file')"
-      >
+    >
       <svg-icon key="download"></svg-icon>
     </button>
   } @else {
     <mat-progress-spinner mode="indeterminate" [diameter]="20" />
   }
-
 </li>

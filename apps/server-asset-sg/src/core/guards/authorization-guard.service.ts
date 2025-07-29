@@ -1,3 +1,4 @@
+import { inject } from '@angular/core';
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { AuthorizationMetadata } from '@/core/decorators/authorize.decorator';
@@ -5,7 +6,7 @@ import { JwtRequest } from '@/models/jwt-request';
 
 @Injectable()
 export class AuthorizationGuard implements CanActivate {
-  constructor(private readonly reflector: Reflector) {}
+  private readonly reflector = inject(Reflector);
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const auth = this.reflector.get<AuthorizationMetadata>('authorization', context.getHandler());

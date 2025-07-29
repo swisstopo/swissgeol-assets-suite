@@ -1,4 +1,3 @@
-
 import { ElementRef, Pipe, PipeTransform, inject, DOCUMENT } from '@angular/core';
 import { LV95X, roundToMillimeter } from '@asset-sg/shared';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';

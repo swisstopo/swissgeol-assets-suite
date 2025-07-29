@@ -8,7 +8,7 @@
   [assets]="assetsForPicker$"
   [currentAssetId]="currentAssetId$"
   (assetMouseOver)="highlightedAssetId = $event"
-  />
+/>
 
 <ng-template #templateAppBarPortalContent>
   <div class="search-input-wrapper">
@@ -18,7 +18,7 @@
       class="search-input"
       [placeholder]="'search.textSearchFieldPlaceholder' | translate"
       (keydown)="searchTextKeyDown$.next($event)"
-      />
+    />
   </div>
 </ng-template>
 

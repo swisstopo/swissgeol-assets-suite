@@ -10,7 +10,7 @@ import {
   ViewChild,
   ViewChildren,
   ViewContainerRef,
-  DOCUMENT
+  DOCUMENT,
 } from '@angular/core';
 import { FormControl, FormGroup } from '@angular/forms';
 import { MatSelectChange } from '@angular/material/select';

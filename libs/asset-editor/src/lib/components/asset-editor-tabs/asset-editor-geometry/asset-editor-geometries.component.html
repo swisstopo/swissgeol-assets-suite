@@ -10,10 +10,10 @@
                 [value]="_selectedStudyId$ | push"
                 (selectionChange)="selectStudy($event)"
                 [placeholder]="'edit.tabs.geometries.selectGeometryLabel' | translate: { count: studies.length }"
-                >
+              >
                 <mat-option *rxFor="let study of studies; let index = index" [value]="study.studyId">
                   {{ "Geometry" }}&nbsp;{{ index + 1 }}&nbsp;&ndash;&nbsp;{{
-                  "edit.tabs.geometries.geometry" + study.geom._tag | translate
+                    "edit.tabs.geometries.geometry" + study.geom._tag | translate
                   }}
                 </mat-option>
               </mat-select>
@@ -24,7 +24,7 @@
               [matMenuTriggerFor]="geometryActionMenu"
               class="basis-10 shrink-0 grow-0 ml-2 mt-3"
               [disabled]="studies.length === 0 || mode !== 'edit-geometry'"
-              >
+            >
               <svg-icon key="action-menu"></svg-icon>
             </button>
             <mat-menu #geometryActionMenu="matMenu" class="geometry-menu">
@@ -41,7 +41,7 @@
             </mat-menu>
           </div>
         } @else {
-          @if (mode !== 'create-new-geometry' && mode !== 'choose-new-geometry') {
+          @if (mode !== "create-new-geometry" && mode !== "choose-new-geometry") {
             <div class="flex flex-column">
               <span translate>edit.tabs.geometries.noGeometries</span>
               <button asset-sg-primary class="self-start mt-4" (click)="drawNewGeometry()" translate>
@@ -50,7 +50,7 @@
             </div>
           }
         }
-        @if (mode !== 'edit-geometry') {
+        @if (mode !== "edit-geometry") {
           <div class="pr-10 flex flex-column">
             <div class="font-bold mb-4" translate>edit.tabs.geometries.geometryMenu.new</div>
             <mat-form-field>
@@ -70,7 +70,7 @@
         <ng-container *rxLet="_currentStudyCoordIndex$; let currentStudyCoordIndex">
           <ng-container *rxLet="_selectedStudyGeometrySelected$; let selectedStudyGeometrySelected">
             @if (_selectedStudy$ | push; as selectedStudy) {
-              @if (selectedStudy.geom._tag === 'Point') {
+              @if (selectedStudy.geom._tag === "Point") {
                 <ng-container
                   [ngTemplateOutlet]="tmplCoord"
                   [ngTemplateOutletContext]="{
@@ -90,60 +90,57 @@
                       showCoordMenu: false,
                     },
                   }"
-                  />
-                @if ((_newGeometryType$ | push) === 'Point') {
+                />
+                @if ((_newGeometryType$ | push) === "Point") {
                   <div class="flex -ml-1 mt-4">
                     <svg-icon key="info-filled" class="mr-5 shrink-0"></svg-icon>
                     <div class="mt-0.5" translate>edit.tabs.geometries.instructionsPoint</div>
                   </div>
                 }
               }
-              @if (selectedStudy.geom._tag === 'Polygon' || selectedStudy.geom._tag === 'LineString') {
+              @if (selectedStudy.geom._tag === "Polygon" || selectedStudy.geom._tag === "LineString") {
                 @if (selectedStudy.geom.coords.length > 0) {
-                  <div
-                    class="overflow-y-scroll scroll-smooth overflow-x-hidden -mr-6 mb-10"
-                    #coordList
-                    >
+                  <div class="overflow-y-scroll scroll-smooth overflow-x-hidden -mr-6 mb-10" #coordList>
                     <ng-container
-                    *rxFor="
-                      let coord of selectedStudy.geom.coords;
-                      let index = index;
-                      let last = last;
-                      trackBy: trackByIndex
-                    "
-                      >
+                      *rxFor="
+                        let coord of selectedStudy.geom.coords;
+                        let index = index;
+                        let last = last;
+                        trackBy: trackByIndex
+                      "
+                    >
                       <ng-container
                         [ngTemplateOutlet]="tmplCoord"
-                      [ngTemplateOutletContext]="{
-                        $implicit: {
-                          index,
-                          indexDisplay: selectedStudy.geom._tag && last ? '-' : index + 1,
-                          selected:
-                            selectedStudyGeometrySelected ||
-                            (currentStudyCoordIndex._tag === 'Some' &&
-                              (currentStudyCoordIndex.value === index ||
-                                (selectedStudy.geom._tag === 'Polygon' && last && currentStudyCoordIndex.value === 0))),
-                          x: coord.x,
-                          y: coord.y,
-                          updateCoordX: updateCoordX.bind(this),
-                          updateCoordY: updateCoordY.bind(this),
-                          setCurrentStudyCoordIndex: setCurrentStudyCoordIndex.bind(this),
-                          setCurrentStudyCoordWithMenuOpen: setCurrentStudyCoordWithMenuOpen.bind(this),
-                          disabled: (selectedStudy.geom._tag === 'Polygon' && last) || mode === 'create-new-geometry',
-                          canDelete:
-                            (selectedStudy.geom._tag === 'Polygon' && selectedStudy.geom.coords.length > 4) ||
-                            (selectedStudy.geom._tag === 'LineString' && selectedStudy.geom.coords.length > 2),
-                          showCoordMenu: true,
-                        },
-                      }"
-                        />
+                        [ngTemplateOutletContext]="{
+                          $implicit: {
+                            index,
+                            indexDisplay: selectedStudy.geom._tag && last ? '-' : index + 1,
+                            selected:
+                              selectedStudyGeometrySelected ||
+                              (currentStudyCoordIndex._tag === 'Some' &&
+                                (currentStudyCoordIndex.value === index ||
+                                  (selectedStudy.geom._tag === 'Polygon' &&
+                                    last &&
+                                    currentStudyCoordIndex.value === 0))),
+                            x: coord.x,
+                            y: coord.y,
+                            updateCoordX: updateCoordX.bind(this),
+                            updateCoordY: updateCoordY.bind(this),
+                            setCurrentStudyCoordIndex: setCurrentStudyCoordIndex.bind(this),
+                            setCurrentStudyCoordWithMenuOpen: setCurrentStudyCoordWithMenuOpen.bind(this),
+                            disabled: (selectedStudy.geom._tag === 'Polygon' && last) || mode === 'create-new-geometry',
+                            canDelete:
+                              (selectedStudy.geom._tag === 'Polygon' && selectedStudy.geom.coords.length > 4) ||
+                              (selectedStudy.geom._tag === 'LineString' && selectedStudy.geom.coords.length > 2),
+                            showCoordMenu: true,
+                          },
+                        }"
+                      />
                     </ng-container>
                   </div>
                 }
-                @if ((_newGeometryType$ | push) === 'Polygon' && selectedStudy.geom.coords.length < 4) {
-                  <div
-                    class="flex -ml-1 mt-0"
-                    >
+                @if ((_newGeometryType$ | push) === "Polygon" && selectedStudy.geom.coords.length < 4) {
+                  <div class="flex -ml-1 mt-0">
                     <svg-icon key="warning-filled" class="mr-5 shrink-0"></svg-icon>
                     <div class="mt-0.5" translate [translateParams]="{ count: 3 }">
                       edit.tabs.geometries.instructionsPolygonOrLIne
@@ -151,7 +148,7 @@
                   </div>
                 }
               }
-              @if (mode === 'create-new-geometry') {
+              @if (mode === "create-new-geometry") {
                 <div class="mt-6">
                   <button asset-sg-primary translate (click)="commitCreateGeometry()">
                     edit.tabs.geometries.createGeometry
@@ -168,7 +165,7 @@
               [ngClass]="{ 'coord-selected': context.selected, 'bg-cyan-01': context.selected }"
               cdkMonitorSubtreeFocus
               (cdkFocusChange)="context.setCurrentStudyCoordIndex($event, context.index)"
-              >
+            >
               <span class="w-7 pt-6 grow-0 shrink-0 mr-2">{{
                 context.indexDisplay === "-" ? "&ndash;" : context.indexDisplay
               }}</span>
@@ -181,7 +178,7 @@
                   [disabled]="context.disabled"
                   [value]="context.y | lv95yWithoutPrefix"
                   (input)="context.updateCoordY($event, context.index)"
-                  />
+                />
               </mat-form-field>
               <mat-form-field class="unset-width ml-2 no-subscript coord coord-n">
                 <mat-label>N</mat-label>
@@ -192,7 +189,7 @@
                   [disabled]="context.disabled"
                   [value]="context.x | lv95xWithoutPrefix"
                   (input)="context.updateCoordX($event, context.index)"
-                  />
+                />
               </mat-form-field>
               <button
                 [ngClass]="{ invisible: context.disabled || !context.showCoordMenu }"
@@ -203,7 +200,7 @@
                 #coordMenuTrigger="matMenuTrigger"
                 asset-sg-icon-button
                 class="basis-10 shrink-0 grow-0 ml-2 mt-3"
-                >
+              >
                 <svg-icon key="action-menu"></svg-icon>
               </button>
               <mat-menu #coordActionMenu="matMenu">

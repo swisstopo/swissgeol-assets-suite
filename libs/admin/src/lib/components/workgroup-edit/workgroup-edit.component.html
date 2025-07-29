@@ -47,7 +47,7 @@
             matSort
             (matSortChange)="sortChange($event)"
             class="mat-elevation-z1 table"
-            >
+          >
             <ng-container matColumnDef="firstName">
               <th mat-header-cell *matHeaderCellDef mat-sort-header="firstName">
                 <span translate> admin.firstName</span>
@@ -55,7 +55,9 @@
               <td mat-cell *matCellDef="let user">{{ user.firstName }}</td>
             </ng-container>
             <ng-container matColumnDef="lastName">
-              <th mat-header-cell *matHeaderCellDef mat-sort-header="lastName"><span translate>admin.lastName</span></th>
+              <th mat-header-cell *matHeaderCellDef mat-sort-header="lastName">
+                <span translate>admin.lastName</span>
+              </th>
               <td mat-cell *matCellDef="let user">{{ user.lastName }}</td>
             </ng-container>
             <ng-container matColumnDef="email">
@@ -70,7 +72,7 @@
                   [initialKeys]="[user.role]"
                   (selectionChanged)="updateWorkgroupRole($event, user.id, user)"
                   small
-                  >
+                >
                 </asset-sg-select>
               </td>
             </ng-container>

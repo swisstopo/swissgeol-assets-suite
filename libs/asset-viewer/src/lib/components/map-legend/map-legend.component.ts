@@ -1,6 +1,6 @@
 import { CdkAccordion, CdkAccordionItem } from '@angular/cdk/accordion';
 import { AsyncPipe } from '@angular/common';
-import { Component, EventEmitter, Output } from '@angular/core';
+import { Component, EventEmitter, inject, Output } from '@angular/core';
 import { ButtonComponent } from '@asset-sg/client-shared';
 import { SvgIconComponent } from '@ngneat/svg-icon';
 import { Store } from '@ngrx/store';
@@ -23,13 +23,14 @@ import { selectHasNoActiveFilters } from '../../state/asset-search/asset-search.
 })
 export class MapLegendComponent {
   @Output() public readonly changeStyle = new EventEmitter<StyleFunction>();
+
+  private readonly store: Store<AppStateWithAssetSearch> = inject(Store);
+
   protected hasNoActiveFilters$ = this.store.select(selectHasNoActiveFilters);
   private activeLayerStyle: LayerStyleIdentification = defaultLayerStyle;
   private readonly layerStyleKeys = Object.keys(availableLayerStyles) as LayerStyleIdentification[];
   private readonly activeLayerStyleSubject = new BehaviorSubject(availableLayerStyles[this.activeLayerStyle]);
   protected activeLayerStyle$ = this.activeLayerStyleSubject.asObservable();
-
-  constructor(private readonly store: Store<AppStateWithAssetSearch>) {}
 
   protected handleChange() {
     const currentIndex = this.layerStyleKeys.indexOf(this.activeLayerStyle);

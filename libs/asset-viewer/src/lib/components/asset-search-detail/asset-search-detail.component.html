@@ -6,7 +6,7 @@
       asset-sg-icon-button
       class="close-button"
       [attr.alt]="'search.closeAssetDetails' | translate"
-      >
+    >
       <svg-icon key="close"></svg-icon>
     </button>
   </div>
@@ -20,7 +20,7 @@
             isIcon
             *rxLet="language$; let language"
             (click)="navigateToEdit(language, asset.id)"
-            >
+          >
             <svg-icon key="edit" data-testid="edit-asset-button"></svg-icon>
           </button>
         }
@@ -31,13 +31,13 @@
             [attr.aria-hidden]="false"
             key="success-filled"
             [attr.alt]="'search.usageCode.public' | translate"
-            />
+          />
         } @else {
           <svg-icon
             [attr.aria-hidden]="false"
             key="warning-filled"
             [attr.alt]="'search.usageCode.internal' | translate"
-            />
+          />
         }
       </div>
       <table class="asset-details">
