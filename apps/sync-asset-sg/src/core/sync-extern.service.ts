@@ -169,6 +169,9 @@ export class SyncExternService {
           assetId: {
             notIn: alreadySyncedIds,
           },
+          workgroupId: {
+            in: this.config.source.allowedWorkgroupIds,
+          },
           isPublic: true,
         },
         include: {
