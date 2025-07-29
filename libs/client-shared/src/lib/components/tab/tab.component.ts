@@ -1,5 +1,5 @@
 import { coerceBooleanProperty } from '@angular/cdk/coercion';
-import { CommonModule } from '@angular/common';
+
 import {
   AfterViewInit,
   Component,
@@ -22,7 +22,7 @@ import type { TabsComponent } from '../tabs/tabs.component';
   templateUrl: './tab.component.html',
   styleUrl: './tab.component.scss',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   host: {
     role: 'tab',
   },

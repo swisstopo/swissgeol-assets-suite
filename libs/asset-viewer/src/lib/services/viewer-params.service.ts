@@ -141,6 +141,7 @@ const QUERY_PARAM_MAPPING = {
 };
 
 type ParamMapping<T> = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [K in keyof T]: T[K] extends Record<string, any> ? ParamMapping<Required<T[K]>> : string;
 };
 

@@ -3,7 +3,6 @@ const { FlatCompat } = require('@eslint/eslintrc');
 const js = require('@eslint/js');
 const nxEslintPlugin = require('@nx/eslint-plugin');
 const stylistic = require('@stylistic/eslint-plugin');
-const eslintConfigPrettier = require('eslint-config-prettier');
 const eslintPluginImport = require('eslint-plugin-import');
 const unusedImports = require('eslint-plugin-unused-imports');
 
@@ -57,7 +56,6 @@ module.exports = [
         ],
       },
     })),
-  eslintConfigPrettier,
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
     rules: {
@@ -91,6 +89,7 @@ module.exports = [
       'sort-imports': 'off',
 
       '@typescript-eslint/no-unused-vars': 'off',
+      '@typescript-eslint/no-non-null-assertion': 'off',
       'unused-imports/no-unused-imports': 'error',
       'unused-imports/no-unused-vars': [
         'warn',

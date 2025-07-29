@@ -1,5 +1,5 @@
 import { DecimalPipe } from '@angular/common';
-import { Pipe, PipeTransform } from '@angular/core';
+import { inject, Pipe, PipeTransform } from '@angular/core';
 import { AssetFile } from '@asset-sg/shared/v2';
 import { TranslatePipe } from '@ngx-translate/core';
 
@@ -9,10 +9,8 @@ import { TranslatePipe } from '@ngx-translate/core';
   standalone: false,
 })
 export class FileMetadataPipe implements PipeTransform {
-  constructor(
-    private readonly decimalPipe: DecimalPipe,
-    private readonly translatePipe: TranslatePipe,
-  ) {}
+  private readonly decimalPipe = inject(DecimalPipe);
+  private readonly translatePipe = inject(TranslatePipe);
 
   transform({ size, pageCount }: AssetFile, locale: string): string {
     const _fileSize = Math.round((size / 1024 / 1024) * 10) / 10;

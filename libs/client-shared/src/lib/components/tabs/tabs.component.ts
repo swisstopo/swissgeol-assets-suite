@@ -1,5 +1,5 @@
 import { coerceBooleanProperty } from '@angular/cdk/coercion';
-import { CommonModule } from '@angular/common';
+
 import {
   AfterContentInit,
   Component,
@@ -19,7 +19,7 @@ import { TabComponent } from '../tab/tab.component';
   templateUrl: './tabs.component.html',
   styleUrl: './tabs.component.scss',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
 })
 export class TabsComponent implements OnInit, AfterContentInit, OnDestroy {
   @Input({ transform: coerceBooleanProperty })

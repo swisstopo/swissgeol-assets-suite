@@ -5,6 +5,7 @@ import {
   AfterViewInit,
   Directive,
   DoCheck,
+  inject,
   OnDestroy,
   OnInit,
 } from '@angular/core';
@@ -19,7 +20,7 @@ import { LifecycleHooks } from './lifecycle-hooks.service';
 export class LifecycleHooksDirective
   implements OnInit, DoCheck, AfterViewInit, AfterViewChecked, AfterContentInit, AfterContentChecked, OnDestroy
 {
-  constructor(public lifecycleHooks: LifecycleHooks) {}
+  private readonly lifecycleHooks = inject(LifecycleHooks);
 
   ngOnInit(): void {
     this.lifecycleHooks.onInit$.next();

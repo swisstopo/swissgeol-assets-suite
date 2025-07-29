@@ -44,9 +44,9 @@ import { FavoritesModule } from '@asset-sg/favorites';
 import { SvgIconComponent } from '@ngneat/svg-icon';
 import { StoreModule } from '@ngrx/store';
 import { TranslateModule, TranslatePipe } from '@ngx-translate/core';
-import { ForModule } from '@rx-angular/template/for';
-import { LetModule } from '@rx-angular/template/let';
-import { PushModule } from '@rx-angular/template/push';
+import { RxFor } from '@rx-angular/template/for';
+import { RxLet } from '@rx-angular/template/let';
+import { RxPush } from '@rx-angular/template/push';
 import { de } from 'date-fns/locale/de';
 
 import { AssetPickerComponent } from './components/asset-picker';
@@ -97,9 +97,9 @@ const routes: Routes = [
     DatePipe,
     ZoomControlsComponent,
 
-    ForModule,
-    LetModule,
-    PushModule,
+    RxFor,
+    RxLet,
+    RxPush,
 
     MatProgressBarModule,
     MatProgressSpinnerModule,

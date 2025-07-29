@@ -1,4 +1,4 @@
-import { Component, inject, Inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { Role, User, UserId, Workgroup, WorkgroupData } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
@@ -29,10 +29,10 @@ export class AddUsersToWorkgroupDialogComponent implements OnInit {
   private readonly users$: Observable<User[]> = this.store.select(selectUsers);
   private readonly subscriptions: Subscription = new Subscription();
 
-  constructor(
-    @Inject(MAT_DIALOG_DATA) public data: { workgroup: Workgroup; mode: Mode },
-    private readonly dialogRef: MatDialogRef<AddUsersToWorkgroupDialogComponent>,
-  ) {
+  private readonly dialogRef: MatDialogRef<AddUsersToWorkgroupDialogComponent> = inject(MatDialogRef);
+  private readonly data: { workgroup: Workgroup; mode: Mode } = inject(MAT_DIALOG_DATA);
+
+  constructor() {
     this.workgroup = this.data.workgroup;
     this.mode = this.data.mode;
   }

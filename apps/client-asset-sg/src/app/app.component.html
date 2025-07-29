@@ -1,12 +1,11 @@
-<ng-container *ngIf="errorService.onMessage | async as error; else content">
+@if (errorService.onMessage | async; as error) {
   <asset-sg-app-bar />
   <div class="error">
     <span>{{ error }}</span>
     <button asset-sg-warn (click)="authService.logOut()">Logout</button>
   </div>
-</ng-container>
-<ng-template #content>
-  <ng-container *ngIf="authService.state$ | async as authState">
+} @else {
+  @if (authService.state$ | async; as authState) {
     @if (authState === AuthState.Success || authState === AuthState.ForbiddenResource) {
       <asset-sg-app-bar>
         <ng-template [cdkPortalOutlet]="(appPortalService.appBarPortalContent$ | push) ?? ''"></ng-template>
@@ -30,8 +29,8 @@
     } @else {
       <app-splash-screen />
     }
-  </ng-container>
-</ng-template>
+  }
+}
 
 <div class="alerts">
   <ul app-alert-list></ul>

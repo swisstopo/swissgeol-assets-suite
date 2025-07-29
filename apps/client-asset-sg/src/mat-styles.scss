@@ -4,7 +4,8 @@
 
 @use "theme" as *;
 
-@include mat.core();
+@include mat.elevation-classes();
+@include mat.app-background();
 
 @include mat.all-component-themes($asset-sg-theme);
 
@@ -293,10 +294,10 @@ mat-datepicker-content.mat-datepicker-content .mat-calendar {
 }
 
 .mat-mdc-radio-button.mat-accent {
-  --mdc-radio-selected-focus-icon-color: #{variables.$dark-red};
-  --mdc-radio-selected-hover-icon-color: #{variables.$dark-red};
-  --mdc-radio-selected-icon-color: #{variables.$dark-red};
-  --mdc-radio-selected-pressed-icon-color: #{variables.$dark-red};
+  --mat-radio-selected-focus-icon-color: #{variables.$dark-red};
+  --mat-radio-selected-hover-icon-color: #{variables.$dark-red};
+  --mat-radio-selected-icon-color: #{variables.$dark-red};
+  --mat-radio-selected-pressed-icon-color: #{variables.$dark-red};
   --mat-mdc-radio-checked-ripple-color: #{variables.$dark-red};
 }
 

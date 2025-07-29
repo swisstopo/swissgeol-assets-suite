@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, ElementRef, OnDestroy, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, inject, OnDestroy, ViewChild } from '@angular/core';
 import { SvgIconComponent } from '@ngneat/svg-icon';
 import { TranslateModule } from '@ngx-translate/core';
 import { Observable, Subject } from 'rxjs';
@@ -15,6 +15,8 @@ let uniqueId = 0;
   imports: [SvgIconComponent, ButtonComponent, TranslateModule],
 })
 export class ZoomControlsComponent implements OnDestroy {
+  public readonly host: ElementRef<HTMLElement> = inject(ElementRef);
+
   @ViewChild('drawModeCheckbox') private drawModeCheckbox!: ElementRef<HTMLInputElement>;
 
   public _zoomPlusClicked$ = new Subject<Event>();
@@ -32,8 +34,6 @@ export class ZoomControlsComponent implements OnDestroy {
     this.drawModeCheckbox.nativeElement.checked = value;
     this._drawingMode$.next(value);
   }
-
-  constructor(public host: ElementRef<HTMLElement>) {}
 
   ngOnDestroy(): void {
     this._zoomPlusClicked$.complete();

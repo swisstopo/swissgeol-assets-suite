@@ -52,10 +52,10 @@ import { SvgIconComponent } from '@ngneat/svg-icon';
 import { EffectsModule } from '@ngrx/effects';
 import { StoreModule } from '@ngrx/store';
 import { TranslateModule, TranslatePipe } from '@ngx-translate/core';
-import { ForModule } from '@rx-angular/template/for';
-import { IfModule } from '@rx-angular/template/if';
-import { LetModule } from '@rx-angular/template/let';
-import { PushModule } from '@rx-angular/template/push';
+import { RxFor } from '@rx-angular/template/for';
+import { RxIf } from '@rx-angular/template/if';
+import { RxLet } from '@rx-angular/template/let';
+import { RxPush } from '@rx-angular/template/push';
 import { AdminPageRoutingModule } from './admin-routing.module';
 import { AddUsersToWorkgroupDialogComponent } from './components/add-users-to-workgroup-dialog/add-users-to-workgroup-dialog.component';
 import { AddWorkgroupToUserDialogComponent } from './components/add-workgroup-to-user-dialog/add-workgroup-to-user-dialog.component';
@@ -94,9 +94,11 @@ import { adminReducer } from './state/admin.reducer';
     TranslateModule.forChild(),
     ReactiveFormsModule,
 
-    LetModule,
-    PushModule,
-    ForModule,
+    RxIf,
+    RxLet,
+    RxPush,
+    RxFor,
+
     SvgIconComponent,
     MatInputModule,
     MatRadioModule,
@@ -131,7 +133,6 @@ import { adminReducer } from './state/admin.reducer';
     MatAutocompleteModule,
     MatCard,
     MatSlideToggle,
-    IfModule,
     MatPaginator,
     TextInputComponent,
     FilterSelectorComponent,

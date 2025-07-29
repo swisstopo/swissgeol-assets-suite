@@ -7,11 +7,10 @@
 
 <asset-sg-language-selector />
 
-<ng-container *ngIf="(isAnonymous$ | async) === false">
+@if ((isAnonymous$ | async) === false) {
   <button asset-sg-primary isIcon type="button" class="profile" [matMenuTriggerFor]="profileMenu">
     <svg-icon key="profile" />
   </button>
-
   <mat-menu #profileMenu="matMenu" backdropClass="profile">
     @if (user$ | async; as user) {
       <div>{{ user.firstName }} {{ user.lastName }}</div>
@@ -20,4 +19,4 @@
       </div>
     }
   </mat-menu>
-</ng-container>
+}
