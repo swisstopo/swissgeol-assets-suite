@@ -1,30 +1,32 @@
-<div *ngIf="show$ | push" class="picker-background">
-  <ng-container *rxLet="assets$; let assets">
-    <div class="picker-container" #pickerContainer>
-      <div class="picker-drag-handle-wrapper">
-        <asset-sg-drag-handle (dragOffset$$)="dragHandleOffset$$.next($event)"></asset-sg-drag-handle>
-      </div>
-      <div class="picker-header">
-        <p class="picker-title" translate [translateParams]="{ assetsCount: assets.length }">
-          search.assetsUnderMouseCursor
-        </p>
-        <button asset-sg-icon-button (click)="closePicker$.next()" class="close-button">
-          <svg-icon key="close"></svg-icon>
-        </button>
-      </div>
-      <div class="picker-body">
-        <ul>
-          <li *rxFor="let asset of assets">
-            <a
-              asset-sg-reset
-              (click)="selectAndClose(asset.id)"
-              (mouseover)="assetMouseOver.emit(asset.id)"
-              (mouseout)="assetMouseOver.emit(null)"
-              >{{ asset.title }}</a
-            >
-          </li>
-        </ul>
-      </div>
+@if (show$ | push) {
+  <div class="picker-background">
+    <ng-container *rxLet="assets$; let assets">
+      <div class="picker-container" #pickerContainer>
+        <div class="picker-drag-handle-wrapper">
+          <asset-sg-drag-handle (dragOffset$$)="dragHandleOffset$$.next($event)"></asset-sg-drag-handle>
+        </div>
+        <div class="picker-header">
+          <p class="picker-title" translate [translateParams]="{ assetsCount: assets.length }">
+            search.assetsUnderMouseCursor
+          </p>
+          <button asset-sg-icon-button (click)="closePicker$.next()" class="close-button">
+            <svg-icon key="close"></svg-icon>
+          </button>
+        </div>
+        <div class="picker-body">
+          <ul>
+            <li *rxFor="let asset of assets">
+              <a
+                asset-sg-reset
+                (click)="selectAndClose(asset.id)"
+                (mouseover)="assetMouseOver.emit(asset.id)"
+                (mouseout)="assetMouseOver.emit(null)"
+                >{{ asset.title }}</a
+                >
+              </li>
+            </ul>
+          </div>
+        </div>
+      </ng-container>
     </div>
-  </ng-container>
-</div>
+  }

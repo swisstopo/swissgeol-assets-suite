@@ -5,21 +5,21 @@
     alt="{{ 'logoSwissGeol' | translate }}"
     height="100"
     width="361"
-  />
+    />
   <div class="text">
     <p class="welcome">{{ "welcomeTo" | translate }} {{ host }}</p>
     <p class="system">Assets</p>
   </div>
-  <ng-container [ngSwitch]="authService.state$ | async">
-    <ng-container *ngSwitchCase="AuthState.Ongoing">
+  @switch (authService.state$ | async) {
+    @case (AuthState.Ongoing) {
       <mat-progress-spinner mode="indeterminate" />
-    </ng-container>
-    <ng-container *ngSwitchCase="AuthState.Aborted">
+    }
+    @case (AuthState.Aborted) {
       <button asset-sg-primary (click)="authService.signIn()">
         {{ "login" | translate }}
       </button>
-    </ng-container>
-    <ng-container *ngSwitchCase="AuthState.AccessForbidden">
+    }
+    @case (AuthState.AccessForbidden) {
       <div class="alert">
         <p>
           {{ "accessForbidden" | translate }}
@@ -28,8 +28,8 @@
           {{ "logout" | translate }}
         </button>
       </div>
-    </ng-container>
-  </ng-container>
+    }
+  }
   <ul class="languages">
     @for (info of languageInfos$ | async; track info.language) {
       <li [class.is-active]="info.isActive">

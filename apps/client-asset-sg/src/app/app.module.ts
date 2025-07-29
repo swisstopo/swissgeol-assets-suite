@@ -16,18 +16,18 @@ import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { RouterModule, Routes } from '@angular/router';
 import {
-  isAdminGuard,
   AdminOnlyDirective,
   AlertModule,
   AnchorComponent,
   AuthModule,
   ButtonComponent,
   ErrorService,
-  prefixPathWithLanguageGuard,
-  redirectToRootGuard,
   icons,
+  isAdminGuard,
   LanguageSelectorComponent,
   LocalizePathPipe,
+  prefixPathWithLanguageGuard,
+  redirectToRootGuard,
   ROUTER_SEGMENTS,
   routerSegmentsFactory,
 } from '@asset-sg/client-shared';
@@ -37,10 +37,10 @@ import { EffectsModule } from '@ngrx/effects';
 import { FullRouterStateSerializer, routerReducer, StoreRouterConnectingModule } from '@ngrx/router-store';
 import { StoreModule } from '@ngrx/store';
 import { TranslateLoader, TranslateModule } from '@ngx-translate/core';
-import { ForModule } from '@rx-angular/template/for';
-import { LetModule } from '@rx-angular/template/let';
-import { PushModule } from '@rx-angular/template/push';
 
+import { RxFor } from '@rx-angular/template/for';
+import { RxLet } from '@rx-angular/template/let';
+import { RxPush } from '@rx-angular/template/push';
 import { SwissgeolCoreModule } from '@swissgeol/ui-core-angular';
 import { environment } from '../environments/environment';
 import { AppComponent } from './app.component';
@@ -124,9 +124,10 @@ const routes: Routes = [
       },
     ),
     EffectsModule.forRoot([AppSharedStateEffects]),
-    ForModule,
-    LetModule,
-    PushModule,
+
+    RxFor,
+    RxLet,
+    RxPush,
 
     SvgIconComponent,
 

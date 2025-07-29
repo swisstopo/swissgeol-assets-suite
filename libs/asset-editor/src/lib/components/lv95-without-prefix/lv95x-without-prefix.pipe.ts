@@ -1,5 +1,5 @@
-import { DOCUMENT } from '@angular/common';
-import { ElementRef, Pipe, PipeTransform, inject } from '@angular/core';
+
+import { ElementRef, Pipe, PipeTransform, inject, DOCUMENT } from '@angular/core';
 import { LV95X, roundToMillimeter } from '@asset-sg/shared';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import * as E from 'fp-ts/Either';

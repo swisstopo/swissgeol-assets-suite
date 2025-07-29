@@ -75,30 +75,31 @@
               matInput
               [formControl]="authorAutoCompleteControl"
               [matAutocomplete]="auto"
-            />
+              />
             <button
               class="input-clear-button"
               asset-sg-icon-button
               matSuffix
               cdkMonitorElementFocus
               (click)="resetAuthorSearch()"
-            >
+              >
               <svg-icon key="close"></svg-icon>
             </button>
             <mat-autocomplete #auto="matAutocomplete">
-              <mat-option
-                *ngFor="let author of filteredAuthors"
-                [value]="author.value.name"
-                class="author"
-                [matTooltip]="author.value.name"
-                matTooltipPosition="right"
-                (onSelectionChange)="updateAuthor($event, author.value.id)"
-              >
-                <div class="author__name">
-                  {{ author.value.name }}
-                </div>
-                <div class="author__count">({{ author.count }})</div>
-              </mat-option>
+              @for (author of filteredAuthors; track author) {
+                <mat-option
+                  [value]="author.value.name"
+                  class="author"
+                  [matTooltip]="author.value.name"
+                  matTooltipPosition="right"
+                  (onSelectionChange)="updateAuthor($event, author.value.id)"
+                  >
+                  <div class="author__name">
+                    {{ author.value.name }}
+                  </div>
+                  <div class="author__count">({{ author.count }})</div>
+                </mat-option>
+              }
             </mat-autocomplete>
           </mat-form-field>
         </form>
@@ -116,7 +117,7 @@
             [min]="createdAtRange?.min"
             [max]="createdAtRange?.max"
             [matDatepicker]="createDateFromPicker"
-          />
+            />
           <mat-datepicker-toggle matPrefix [for]="createDateFromPicker" cdkMonitorSubtreeFocus>
             <asset-sg-datepicker-toggle-icon matDatepickerToggleIcon></asset-sg-datepicker-toggle-icon>
           </mat-datepicker-toggle>
@@ -127,7 +128,7 @@
             matSuffix
             cdkMonitorElementFocus
             (click)="resetMinDateRangeSearch()"
-          >
+            >
             <svg-icon key="close"></svg-icon>
           </button>
         </mat-form-field>
@@ -142,7 +143,7 @@
             [min]="createdAtRange?.min"
             [max]="createdAtRange?.max"
             [matDatepicker]="createDateToPicker"
-          />
+            />
           <mat-datepicker-toggle matPrefix [for]="createDateToPicker" cdkMonitorSubtreeFocus>
             <asset-sg-datepicker-toggle-icon matDatepickerToggleIcon></asset-sg-datepicker-toggle-icon>
           </mat-datepicker-toggle>
@@ -153,7 +154,7 @@
             matSuffix
             cdkMonitorElementFocus
             (click)="resetMaxDateRangeSearch()"
-          >
+            >
             <svg-icon key="close"></svg-icon>
           </button>
         </mat-form-field>

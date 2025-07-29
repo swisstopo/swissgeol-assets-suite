@@ -1,24 +1,13 @@
-import { CommonModule } from '@angular/common';
 import { Component, Inject } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogActions, MatDialogContent, MatDialogRef } from '@angular/material/dialog';
 import { TranslateModule } from '@ngx-translate/core';
-import { LetModule } from '@rx-angular/template/let';
 import { ButtonComponent } from '../button';
 
 @Component({
   selector: 'asset-sg-disclaimer-dialog',
   standalone: true,
-  imports: [
-    CommonModule,
-    ButtonComponent,
-    FormsModule,
-    MatDialogActions,
-    MatDialogContent,
-    ReactiveFormsModule,
-    TranslateModule,
-    LetModule,
-  ],
+  imports: [ButtonComponent, FormsModule, MatDialogActions, MatDialogContent, ReactiveFormsModule, TranslateModule],
   templateUrl: './confirm-dialog.component.html',
   styleUrls: ['./confirm-dialog.component.scss'],
 })

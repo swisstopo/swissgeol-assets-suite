@@ -1,4 +1,6 @@
-<mat-progress-bar *ngIf="isLoading$ | async" mode="indeterminate" class="loading-bar" />
+@if (isLoading$ | async) {
+  <mat-progress-bar mode="indeterminate" class="loading-bar" />
+}
 <asset-sg-map [highlightedAssetId]="highlightedAssetId" (assetsClick)="assetClicked$.next($event)" />
 
 <asset-sg-asset-picker
@@ -6,7 +8,7 @@
   [assets]="assetsForPicker$"
   [currentAssetId]="currentAssetId$"
   (assetMouseOver)="highlightedAssetId = $event"
-/>
+  />
 
 <ng-template #templateAppBarPortalContent>
   <div class="search-input-wrapper">
@@ -16,12 +18,16 @@
       class="search-input"
       [placeholder]="'search.textSearchFieldPlaceholder' | translate"
       (keydown)="searchTextKeyDown$.next($event)"
-    />
+      />
   </div>
 </ng-template>
 
-<asset-sg-asset-search-refine *ngIf="isFiltersOpen$ | async" class="mat-elevation-z4" [style.visibility]="'visible'" />
+@if (isFiltersOpen$ | async) {
+  <asset-sg-asset-search-refine class="mat-elevation-z4" [style.visibility]="'visible'" />
+}
 
 <asset-sg-asset-search-results class="mat-elevation-z2" (assetMouseOver)="highlightedAssetId = $event" />
 
-<asset-sg-asset-search-detail *ngIf="hasCurrentAsset$ | async" class="mat-elevation-z4" />
+@if (hasCurrentAsset$ | async) {
+  <asset-sg-asset-search-detail class="mat-elevation-z4" />
+}
