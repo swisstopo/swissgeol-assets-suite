@@ -1,4 +1,4 @@
-image: 'swissgeol-assets-pipeline:latest'
+image: 'ghcr.io/swisstopo/swissgeol-assets-sync:latest'
 
 syncView:
   sourceAllowedWorkgroupIds: '1'
