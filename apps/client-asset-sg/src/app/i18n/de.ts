@@ -99,6 +99,7 @@ export const deTranslationMapping = {
     reference: 'Verweis',
     status: 'Status',
     closeAssetDetails: 'Assetdetails schliessen',
+    editAsset: 'Asset bearbeiten',
     usageCode: {
       public: 'Öffentliche Nutzung',
       internal: 'Interne Nutzung',

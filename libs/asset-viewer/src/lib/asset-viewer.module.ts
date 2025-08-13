@@ -47,6 +47,7 @@ import { TranslateModule, TranslatePipe } from '@ngx-translate/core';
 import { RxFor } from '@rx-angular/template/for';
 import { RxLet } from '@rx-angular/template/let';
 import { RxPush } from '@rx-angular/template/push';
+import { SwissgeolCoreModule } from '@swissgeol/ui-core-angular';
 import { de } from 'date-fns/locale/de';
 
 import { AssetPickerComponent } from './components/asset-picker';
@@ -134,6 +135,7 @@ const routes: Routes = [
     MapLegendComponent,
     FileNamePipe,
     ReferencePipe,
+    SwissgeolCoreModule,
   ],
   providers: [
     TranslatePipe,

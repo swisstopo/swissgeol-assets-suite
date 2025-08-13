@@ -100,6 +100,7 @@ export const frTranslationMapping: AppTranslationMapping = {
     reference: 'Référence',
     status: 'Statut',
     closeAssetDetails: 'Fermer informations détaillées',
+    editAsset: 'FR Asset bearbeiten',
     usageCode: {
       public: 'Utilisation publique',
       internal: 'Utilisation interne',

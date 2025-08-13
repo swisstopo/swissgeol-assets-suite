@@ -78,7 +78,7 @@ input {
 }
 
 * {
-  scrollbar-width: auto;
+  scrollbar-width: thin;
   scrollbar-color: transparent;
 
   &::-webkit-scrollbar {

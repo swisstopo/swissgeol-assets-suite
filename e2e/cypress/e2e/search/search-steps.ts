@@ -1,4 +1,5 @@
 import { Then, When } from '@badeball/cypress-cucumber-preprocessor';
+import { TEST_ASSET } from '../common/create-test-asset';
 
 When(/^A user types (.*) into the search field$/, (searchText: string) => {
   cy.get('.search-input').type(searchText);
@@ -17,4 +18,63 @@ Then(/^The user should see the asset in results$/, () => {
   );
   cy.get('.search-results').should('exist');
   cy.get('.search-results div:contains("CypressTestAsset")').should('exist');
+});
+
+Then(/^The asset should display all relevant attributes$/, () => {
+  cy.get('[data-testid="assetTitle"]').should('contain.text', TEST_ASSET.title);
+
+  cy.get('[data-testid="assetOriginalTitle"]')
+    .find('td')
+    .first()
+    .should('contain.text', TEST_ASSET.originalTitle);
+
+  cy.get('[data-testid="assetKindCode"]')
+    .find('td')
+    .first()
+    .should('contain.text', 'Basemap');
+
+  cy.get('[data-testid="assetAlternativeId"]')
+    .find('td')
+    .first()
+    .should('contain.text', '–');
+
+  cy.get('[data-testid="assetContacts"]')
+    .find('td')
+    .first()
+    .should('contain.text', '–');
+
+  cy.get('[data-testid="assetSubject"]')
+    .find('td')
+    .first()
+    .should('contain.text', 'Andere');
+
+  cy.get('[data-testid="assetLanguage"]')
+    .find('td')
+    .first()
+    .should('contain.text', '–');
+
+  cy.get('[data-testid="assetFormat"]')
+    .find('td')
+    .first()
+    .should('contain.text', 'Unbekannt');
+
+  cy.get('[data-testid="assetNatInt"]')
+    .find('td')
+    .first()
+    .should('contain.text', '–');
+
+  cy.get('[data-testid="assetReference"]')
+    .find('td')
+    .first()
+    .should('contain.text', '–');
+});
+
+Then(/^The footer should be visible as well as the edit asset button$/, () => {
+  cy.get('[data-testid="assetFooter"]').should('be.visible');
+  cy.get('[data-testid="edit-asset-button"]').should('be.visible');
+});
+
+Then(/^The footer should not be visible$/, () => {
+  cy.get('[data-testid="assetFooter"]').should('not.exist');
+  cy.get('[data-testid="edit-asset-button"]').should('not.exist');
 });

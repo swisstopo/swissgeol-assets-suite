@@ -1,7 +1,8 @@
+import { AssetSearchResultSchema } from '@asset-sg/shared/v2';
 import { Given } from '@badeball/cypress-cucumber-preprocessor';
 import { bearerAuth } from '../../support/commands/helper.commands';
 
-const body = JSON.stringify({
+export const TEST_ASSET = {
   title: 'CypressTestAsset',
   originalTitle: 'CypressTestAsset',
   createdAt: '2024-09-02',
@@ -25,7 +26,7 @@ const body = JSON.stringify({
   parent: null,
   siblings: [],
   workgroupId: 1,
-});
+};
 
 Given('Test asset is created', () => {
   cy.wait(3000);
@@ -34,27 +35,42 @@ Given('Test asset is created', () => {
     .as('access_token');
   cy.get('@access_token').then((token) =>
     cy
-      .request({
+      .request<AssetSearchResultSchema>({
         method: 'POST',
         url: 'http://localhost:4200/api/assets/search?limit=1000',
-        body: '{"text":"CypressTestAsset"}',
+        body: { text: 'CypressTestAsset' },
         auth: bearerAuth(token),
       })
       .then((response) => {
-        cy.log(response.body);
-        if (response.body.data.length === 0) {
-          cy.request({
-            method: 'POST',
-            url: 'http://localhost:4200/api/assets',
-            auth: bearerAuth(token),
-            body: body,
-            headers: {
-              'Content-Type': 'application/json',
-            },
-          }).then((response) => {
-            expect(response.status).to.be.eq(201);
+        cy.log(JSON.stringify(response.body));
+        if (response.body.data.length > 0) {
+          response.body.data.forEach(({ id }) => {
+            cy.request({
+              method: 'DELETE',
+              url: `http://localhost:4200/api/assets/${id}`,
+              auth: bearerAuth(token),
+              headers: {
+                'Content-Type': 'application/json',
+              },
+            }).then((r) => {
+              expect(r.status).to.be.eq(204);
+              cy.log(`Deleted asset with id ${id}`);
+            });
           });
         }
+
+        cy.log('Creating test asset');
+        cy.request({
+          method: 'POST',
+          url: 'http://localhost:4200/api/assets',
+          auth: bearerAuth(token),
+          body: TEST_ASSET,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }).then((response) => {
+          expect(response.status).to.be.eq(201);
+        });
       }),
   );
 });
@@ -65,11 +81,11 @@ Given('Elastic index is created', () => {
     .as('access_token');
   cy.get('@access_token').then((token) => {
     cy.request({
-      method: 'GET',
+      method: 'POST',
       url: '/api/assets/sync',
       auth: bearerAuth(token),
     }).then(() => {
-      cy.wait(1000);
+      cy.wait(5000);
     });
   });
 });

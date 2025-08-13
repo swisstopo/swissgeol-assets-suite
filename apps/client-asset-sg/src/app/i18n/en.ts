@@ -100,6 +100,7 @@ export const enTranslationMapping: AppTranslationMapping = {
     reference: 'Reference',
     status: 'Status',
     closeAssetDetails: 'Close asset details',
+    editAsset: 'Edit asset',
     usageCode: {
       public: 'Public use',
       internal: 'Internal use',

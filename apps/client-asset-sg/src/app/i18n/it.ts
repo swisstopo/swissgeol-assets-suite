@@ -100,6 +100,7 @@ export const itTranslationMapping: AppTranslationMapping = {
     reference: 'IT Verweis',
     status: 'IT Status',
     closeAssetDetails: 'IT Assetdetails schliessen',
+    editAsset: 'IT Asset bearbeiten',
     usageCode: {
       public: 'IT Öffentliche Nutzung',
       internal: 'IT Interne Nutzung',
