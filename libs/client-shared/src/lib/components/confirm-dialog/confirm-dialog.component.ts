@@ -13,7 +13,7 @@ import { ButtonComponent } from '../button';
 })
 export class ConfirmDialogComponent {
   private readonly dialogRef: MatDialogRef<ConfirmDialogComponent> = inject(MatDialogRef);
-  private readonly data: ConfirmDialogData = inject(MAT_DIALOG_DATA);
+  protected readonly data: ConfirmDialogData = inject(MAT_DIALOG_DATA);
 
   public close(confirmed: boolean) {
     this.dialogRef.close(confirmed);

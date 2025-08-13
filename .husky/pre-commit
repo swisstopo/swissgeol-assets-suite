@@ -1,2 +1,2 @@
 echo "🚀 Running linter!"
-npx lint-staged
+npx lint-staged --relative
