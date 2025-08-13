@@ -1,5 +1,5 @@
 import { FocusOrigin } from '@angular/cdk/a11y';
-import { DOCUMENT } from '@angular/common';
+
 import {
   Component,
   ElementRef,
@@ -10,6 +10,7 @@ import {
   ViewChild,
   ViewChildren,
   ViewContainerRef,
+  DOCUMENT,
 } from '@angular/core';
 import { FormControl, FormGroup } from '@angular/forms';
 import { MatSelectChange } from '@angular/material/select';

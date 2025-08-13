@@ -42,12 +42,14 @@
       </div>
       <table class="asset-details">
         @if (normalFiles$ | async; as normalFiles) {
-          <tr *ngIf="normalFiles.length > 0">
-            <th translate="search.file"></th>
-            <td>
-              <ul asset-sg-asset-viewer-files [assetId]="asset.id" [files]="normalFiles"></ul>
-            </td>
-          </tr>
+          @if (normalFiles.length > 0) {
+            <tr>
+              <th translate="search.file"></th>
+              <td>
+                <ul asset-sg-asset-viewer-files [assetId]="asset.id" [files]="normalFiles"></ul>
+              </td>
+            </tr>
+          }
         }
         <tr>
           <th translate="search.originalTitle"></th>
@@ -77,7 +79,9 @@
         <tr>
           <th translate="search.contacts"></th>
           <td>
-            <ng-container *ngIf="asset.contacts.length === 0">&ndash;</ng-container>
+            @if (asset.contacts.length === 0) {
+              &ndash;
+            }
             <ul [class.single-entry]="asset.contacts.length === 1">
               @for (contact of contacts$ | async; track contact.id + " " + contact.role) {
                 <li>
@@ -92,12 +96,14 @@
         </tr>
 
         @if (legalFiles$ | async; as legalFiles) {
-          <tr *ngIf="legalFiles.length > 0">
-            <th translate="search.legalFile"></th>
-            <td>
-              <ul asset-sg-asset-viewer-files [assetId]="asset.id" [files]="legalFiles" isLegal></ul>
-            </td>
-          </tr>
+          @if (legalFiles.length > 0) {
+            <tr>
+              <th translate="search.legalFile"></th>
+              <td>
+                <ul asset-sg-asset-viewer-files [assetId]="asset.id" [files]="legalFiles" isLegal></ul>
+              </td>
+            </tr>
+          }
         }
         <tr>
           <th translate="search.subject"></th>

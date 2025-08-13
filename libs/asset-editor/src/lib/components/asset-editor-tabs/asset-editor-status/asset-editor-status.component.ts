@@ -12,9 +12,8 @@ import {
 } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
 import { TranslateService } from '@ngx-translate/core';
-import { type SgcWorkflowSelectionEntry, WorkflowChange } from '@swissgeol/ui-core';
-import { SgcWorkflowChangeEvent } from '@swissgeol/ui-core/dist/types/components/sgc-workflow/sgc-workflow';
-import { SgcWorkflowSelectionChangeEvent } from '@swissgeol/ui-core/dist/types/components/sgc-workflow/sgc-workflow-selection/sgc-workflow-selection';
+import { SgcWorkflowChangeEventDetail, type SgcWorkflowSelectionEntry, WorkflowChange } from '@swissgeol/ui-core';
+import { SgcWorkflowSelectionChangeEventDetails } from '@swissgeol/ui-core';
 import { BehaviorSubject } from 'rxjs';
 import { AssetEditorService } from '../../../services/asset-editor.service';
 import { WorkflowApiService } from '../../../services/workflow-api.service';
@@ -65,7 +64,7 @@ export class AssetEditorStatusComponent implements OnChanges {
     }
   }
 
-  handleReviewChange(event: SgcWorkflowSelectionChangeEvent): void {
+  handleReviewChange(event: CustomEvent<SgcWorkflowSelectionChangeEventDetails>): void {
     const { workflow } = this;
     if (workflow === null) {
       return;
@@ -99,7 +98,7 @@ export class AssetEditorStatusComponent implements OnChanges {
     });
   }
 
-  handleApprovalChange(event: SgcWorkflowSelectionChangeEvent): void {
+  handleApprovalChange(event: CustomEvent<SgcWorkflowSelectionChangeEventDetails>): void {
     const { workflow } = this;
     if (workflow === null) {
       return;
@@ -121,7 +120,7 @@ export class AssetEditorStatusComponent implements OnChanges {
     });
   }
 
-  handleWorkflowChange(event: SgcWorkflowChangeEvent): void {
+  handleWorkflowChange(event: CustomEvent<SgcWorkflowChangeEventDetail>): void {
     if (!this.workflow) {
       return;
     }
@@ -142,7 +141,7 @@ export class AssetEditorStatusComponent implements OnChanges {
     });
   }
 
-  handleWorkflowPublish(event: SgcWorkflowChangeEvent): void {
+  handleWorkflowPublish(event: CustomEvent<SgcWorkflowChangeEventDetail>): void {
     if (!this.workflow) {
       return;
     }
