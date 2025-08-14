@@ -7,6 +7,7 @@ Feature: edit
     And Elastic index is created
     And Test asset is created
 
+    @login
   Scenario: Edit asset
     When A user types CypressTestAsset into the search field
     And The user clicks enter

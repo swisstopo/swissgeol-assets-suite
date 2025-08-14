@@ -6,6 +6,7 @@ import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatChipSet } from '@angular/material/chips';
 import { MAT_DATE_FORMATS, MAT_DATE_LOCALE } from '@angular/material/core';
 import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatDivider } from '@angular/material/divider';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
@@ -38,6 +39,7 @@ import {
   FileNamePipe,
   ReferencePipe,
   SmartTranslatePipe,
+  StatusChipComponent,
   ZoomControlsComponent,
 } from '@asset-sg/client-shared';
 import { FavoritesModule } from '@asset-sg/favorites';
@@ -136,6 +138,8 @@ const routes: Routes = [
     FileNamePipe,
     ReferencePipe,
     SwissgeolCoreModule,
+    MatDivider,
+    StatusChipComponent,
   ],
   providers: [
     TranslatePipe,

@@ -21,24 +21,7 @@
       <asset-sg-chip type="primary">{{ "workflowStatus.Draft" | translate }}</asset-sg-chip>
     } @else if (workflow !== null) {
       <!-- Main workflow status -->
-      @switch (workflow.status) {
-        @case (WorkflowStatus.Published) {
-          <asset-sg-chip type="success">{{ "workflowStatus.Reviewed" | translate }}</asset-sg-chip>
-          <asset-sg-chip type="success">{{ "workflowStatus.Published" | translate }}</asset-sg-chip>
-        }
-        @case (WorkflowStatus.Reviewed) {
-          <asset-sg-chip type="success">{{ "workflowStatus.Reviewed" | translate }}</asset-sg-chip>
-        }
-        @case (WorkflowStatus.InReview) {
-          <asset-sg-chip type="warn">{{ "workflowStatus.InReview" | translate }}</asset-sg-chip>
-        }
-        @case (WorkflowStatus.Draft) {
-          <asset-sg-chip type="primary">{{ "workflowStatus.Draft" | translate }}</asset-sg-chip>
-        }
-        @default {
-          <asset-sg-chip type="primary">{{ "workflowStatus." + workflow.status | translate }}</asset-sg-chip>
-        }
-      }
+      <asset-sg-status-chip [status]="workflow.status"></asset-sg-status-chip>
 
       <!-- Changes requested -->
       @if (workflow.hasRequestedChanges) {

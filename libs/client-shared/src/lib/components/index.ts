@@ -25,3 +25,4 @@ export * from './file-name.pipe';
 export * from './detail-section/detail-section.component';
 export * from './date-picker/date-picker.component';
 export * from './form-item-wrapper/form-item-wrapper.component';
+export * from './status-chip/status-chip.component';

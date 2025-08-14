@@ -23,50 +23,36 @@ Then(/^The user should see the asset in results$/, () => {
 Then(/^The asset should display all relevant attributes$/, () => {
   cy.get('[data-testid="assetTitle"]').should('contain.text', TEST_ASSET.title);
 
-  cy.get('[data-testid="assetOriginalTitle"]')
-    .find('td')
-    .first()
-    .should('contain.text', TEST_ASSET.originalTitle);
+  cy.get('[data-testid="assetOriginalTitle"]').should(
+    'contain.text',
+    TEST_ASSET.originalTitle,
+  );
 
-  cy.get('[data-testid="assetKindCode"]')
-    .find('td')
-    .first()
-    .should('contain.text', 'Basemap');
+  cy.get('[data-testid="assetKindCode"]').should('contain.text', 'Basemap');
 
-  cy.get('[data-testid="assetAlternativeId"]')
-    .find('td')
-    .first()
-    .should('contain.text', '–');
+  cy.get('[data-testid="assetDates"] dl').then(($dls) => {
+    expect($dls.eq(0)).to.contain.text(TEST_ASSET.createdAt);
+    expect($dls.eq(1)).to.contain.text(TEST_ASSET.receivedAt);
+  });
 
-  cy.get('[data-testid="assetContacts"]')
-    .find('td')
-    .first()
-    .should('contain.text', '–');
+  cy.get('[data-testid="assetAlternativeId"]').should('not.exist');
 
-  cy.get('[data-testid="assetSubject"]')
-    .find('td')
-    .first()
-    .should('contain.text', 'Andere');
+  cy.get('[data-testid="assetContacts"]').should('not.exist');
 
-  cy.get('[data-testid="assetLanguage"]')
-    .find('td')
-    .first()
-    .should('contain.text', '–');
+  cy.get('[data-testid="assetSubject"]').should('contain.text', 'Andere');
 
-  cy.get('[data-testid="assetFormat"]')
-    .find('td')
-    .first()
-    .should('contain.text', 'Unbekannt');
+  cy.get('[data-testid="assetLanguage"]').should('not.exist');
 
-  cy.get('[data-testid="assetNatInt"]')
-    .find('td')
-    .first()
-    .should('contain.text', '–');
+  cy.get('[data-testid="assetFormat"]').should('contain.text', 'Unbekannt');
 
-  cy.get('[data-testid="assetReference"]')
-    .find('td')
-    .first()
-    .should('contain.text', '–');
+  cy.get('[data-testid="assetNatInt"]').should('contain.text', 'Ja');
+  cy.get('[data-testid="assetNatIntCodes"]').should('not.contain.text');
+
+  cy.get('[data-testid="assetReferences"]').should('not.exist');
+
+  cy.get('[data-testid="assetNormalFiles"]').should('not.exist');
+
+  cy.get('[data-testid="assetLegalFiles"]').should('not.exist');
 });
 
 Then(/^The footer should be visible as well as the edit asset button$/, () => {

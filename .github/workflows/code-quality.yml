@@ -170,12 +170,6 @@ jobs:
       - test
       - lint
       - dependency-review
-    strategy:
-      # https://github.com/cypress-io/github-action/issues/48
-      fail-fast: false
-      matrix:
-        # Use 2 parallel instances
-        containers: [1, 2]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -203,7 +197,6 @@ jobs:
           sed -i 's/- \.\/volumes\/elasticsearch\/data:\/usr\/share\/elasticsearch\/data//g' ./docker-compose.yaml
           docker compose up -d --quiet-pull db oidc elasticsearch
           sleep 120
-          # docker logs $(docker ps --filter "name=elasticsearch" --format "{{.ID}}")
       - name: Migrate database
         run: |
           set -e
@@ -226,9 +219,7 @@ jobs:
             npx cypress run \
               --browser edge \
               --record \
-              --parallel \
               --key ${{ secrets.CYPRESS_RECORD_KEY }} \
-              --ci-build-id ${{ github.repository }}-${{ github.head_ref || github.ref_name }}-${{ github.sha }}
           build: npm run build
           start: npm start
           wait-on: "http://localhost:4200"
