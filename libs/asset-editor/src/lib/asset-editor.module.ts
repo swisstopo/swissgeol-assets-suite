@@ -31,7 +31,6 @@ import {
 import { MatTooltip } from '@angular/material/tooltip';
 import { CanActivateFn, RouterModule, Routes } from '@angular/router';
 import {
-  isAdminGuard,
   AdminOnlyDirective,
   AnchorComponent,
   ButtonComponent,
@@ -45,11 +44,13 @@ import {
   DrawerPanelComponent,
   FileNamePipe,
   fromAppShared,
+  isAdminGuard,
   LocalizePathPipe,
   PageHeaderComponent,
   SelectComponent,
   SelectOptionComponent,
   SmartTranslatePipe,
+  StatusChipComponent,
   TabComponent,
   TabsComponent,
   TextAreaComponent,
@@ -230,6 +231,7 @@ const routes: Routes = [
     SwissgeolCoreModule,
     SelectOptionComponent,
     LocalizePathPipe,
+    StatusChipComponent,
   ],
   providers: [
     { provide: MAT_DATE_LOCALE, useValue: de },

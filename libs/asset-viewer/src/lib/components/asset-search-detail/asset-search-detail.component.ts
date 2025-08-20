@@ -20,7 +20,7 @@ export class AssetSearchDetailComponent {
   public readonly language$ = this.languageService.language$;
   public readonly asset$ = this.store.select(fromAppShared.selectCurrentAsset);
 
-  public readonly contacts$: Observable<Array<Contact & { role: AssetContactRole }>> = this.asset$.pipe(
+  public readonly contacts$: Observable<{ [K in AssetContactRole]: Array<Contact> }> = this.asset$.pipe(
     filter(isNotNull),
     withLatestFrom(this.store.select(fromAppShared.selectReferenceContacts).pipe(filter(isNotNull))),
     map(([asset, contacts]) =>
@@ -28,11 +28,13 @@ export class AssetSearchDetailComponent {
         (acc, { id, role }) => {
           const contact = contacts.get(id);
           if (contact !== undefined) {
-            acc.push({ ...contact, role });
+            acc[role].push(contact);
           }
           return acc;
         },
-        [] as Array<Contact & { role: AssetContactRole }>,
+        { [AssetContactRole.Author]: [], [AssetContactRole.Initiator]: [], [AssetContactRole.Supplier]: [] } as {
+          [K in AssetContactRole]: Array<Contact>;
+        },
       ),
     ),
   );

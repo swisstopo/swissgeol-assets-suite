@@ -10,15 +10,33 @@ When(/^The user clicks start sync button$/, () => {
 });
 
 Then(/^The user should see the sync progress$/, () => {
-  let progress = 0.1;
+  let callCount = 0;
+
   cy.intercept('GET', 'http://localhost:4200/api/assets/sync', (req) => {
-    req.reply({ body: { progress } });
-  });
+    callCount++;
+
+    if (callCount === 1) {
+      req.reply({ body: { progress: 0 } });
+    } else if (callCount === 2) {
+      req.reply({ body: { progress: 0.5 } });
+    } else if (callCount === 3) {
+      req.reply({ body: { progress: 1 } });
+    } else {
+      req.reply({ statusCode: 204 });
+    }
+  }).as('getSync');
 
   cy.get('.progress').should('exist').and('be.visible');
-  cy.wait(1_000);
+
+  cy.wait('@getSync');
   cy.get('.progress').should('contain', '0%');
-  progress = 0.5;
-  cy.wait(1_000);
+
+  cy.wait('@getSync');
   cy.get('.progress').should('contain', '50%');
+
+  cy.wait('@getSync');
+  cy.get('.progress').should('contain', '100%');
+
+  cy.wait('@getSync');
+  cy.get('.progress').should('have.css', 'opacity', '0');
 });

@@ -1,3 +1,4 @@
+import { WorkflowStatus } from '@swissgeol/ui-core';
 import { AssetFile, UpdateAssetFileData } from './asset-file';
 import { AssetIdentifier, AssetIdentifierData } from './asset-identifier';
 import { LocalDate } from './base/local-date';
@@ -120,6 +121,11 @@ export interface Asset extends Model<AssetId> {
    * DB: `receipt_date`
    */
   receivedAt: LocalDate;
+
+  /**
+   * DB: `workflow` table, "status" field
+   */
+  workflowStatus: WorkflowStatus;
 }
 
 export interface AssetLegacyData {
@@ -168,7 +174,7 @@ export type LinkedAsset = Pick<Asset, 'id' | 'title'>;
 //      I would assume that whenever a `type_nat_rel` exists, `is_nat_rel` should be true.
 //      This would enable use to remove the `is_nat_rel` field.
 
-type OmittedDataKeys = 'id' | 'legacyData' | 'children' | 'creatorId' | 'files';
+type OmittedDataKeys = 'id' | 'legacyData' | 'children' | 'creatorId' | 'files' | 'workflowStatus';
 
 export type AssetData = {
   [K in keyof Omit<Asset, OmittedDataKeys>]: AssetDataValueMapping<Asset[K]>;

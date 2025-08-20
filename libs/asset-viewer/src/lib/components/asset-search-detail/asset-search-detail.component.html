@@ -1,6 +1,6 @@
 @if (asset$ | async; as asset) {
   <div class="header">
-    <span translate="search.detailedInformation"></span>
+    <span class="header__title" data-testid="assetTitle">{{ asset.title }}</span>
     <button
       (click)="clearSelectedAsset()"
       asset-sg-icon-button
@@ -12,164 +12,188 @@
   </div>
   <div class="asset-detail-scroll-container">
     <div class="asset-detail">
-      <div class="flex flex-row justify-between mb-4">
-        <div class="text-dark-red font-bold mt-2.5">{{ asset.title }}</div>
-        @if (canUpdate$ | async) {
-          <button
-            asset-sg-tertiary
-            isIcon
-            *rxLet="language$; let language"
-            (click)="navigateToEdit(language, asset.id)"
-          >
-            <svg-icon key="edit" data-testid="edit-asset-button"></svg-icon>
-          </button>
-        }
+      <div class="asset-detail__general">
+        <sgc-card [header]="'search.status' | translate" collapsed>
+          <asset-sg-status-chip [status]="asset.workflowStatus"></asset-sg-status-chip>
+        </sgc-card>
+        <sgc-card [header]="'edit.tabs.general.access.name' | translate" collapsed>
+          <!-- todo assets-631: add edit.visibility.lockedUntil with formatted date -->
+          <asset-sg-chip type="light"
+            >{{ (asset.isPublic ? "edit.visibility.public" : "edit.visibility.locked") | translate }}
+          </asset-sg-chip>
+        </sgc-card>
       </div>
-      <div class="asset-status">
-        @if (asset.isPublic) {
-          <svg-icon
-            [attr.aria-hidden]="false"
-            key="success-filled"
-            [attr.alt]="'search.usageCode.public' | translate"
-          />
-        } @else {
-          <svg-icon
-            [attr.aria-hidden]="false"
-            key="warning-filled"
-            [attr.alt]="'search.usageCode.internal' | translate"
-          />
-        }
-      </div>
-      <table class="asset-details">
-        @if (normalFiles$ | async; as normalFiles) {
-          @if (normalFiles.length > 0) {
-            <tr>
-              <th translate="search.file"></th>
-              <td>
-                <ul asset-sg-asset-viewer-files [assetId]="asset.id" [files]="normalFiles"></ul>
-              </td>
-            </tr>
-          }
-        }
-        <tr>
-          <th translate="search.originalTitle"></th>
-          <td>{{ asset.originalTitle }}</td>
-        </tr>
-        <tr>
-          <th translate="search.kind"></th>
-          <td>{{ asset.kindCode | reference: "assetKinds" }}</td>
-        </tr>
-        <tr>
-          <th translate="search.createdDate"></th>
-          <td>{{ asset.createdAt | assetSgDate }}</td>
-        </tr>
-        <tr>
-          <th translate="search.alternativeId"></th>
-          <td>
-            @if (asset.identifiers.length === 0) {
-              &ndash;
-            }
-            @for (identifier of asset.identifiers; track identifier.id) {
-              <span class="line">
-                {{ identifier.value + " [" + identifier.description + "]" }}
-              </span>
-            }
-          </td>
-        </tr>
-        <tr>
-          <th translate="search.contacts"></th>
-          <td>
-            @if (asset.contacts.length === 0) {
-              &ndash;
-            }
-            <ul [class.single-entry]="asset.contacts.length === 1">
-              @for (contact of contacts$ | async; track contact.id + " " + contact.role) {
-                <li>
-                  {{ "contactRoles." + contact.role | translate }}: <br />
-                  {{ contact.name }} <br />
-                  {{ contact.locality }} <br />
-                  {{ contact.kindCode | reference: "contactKinds" }}
-                </li>
-              }
-            </ul>
-          </td>
-        </tr>
 
-        @if (legalFiles$ | async; as legalFiles) {
-          @if (legalFiles.length > 0) {
-            <tr>
-              <th translate="search.legalFile"></th>
-              <td>
-                <ul asset-sg-asset-viewer-files [assetId]="asset.id" [files]="legalFiles" isLegal></ul>
-              </td>
-            </tr>
+      <hr class="divider" />
+
+      <sgc-card [header]="'search.subject' | translate" data-testid="assetSubject">
+        <div class="chip-group">
+          @for (topicCode of asset.topicCodes; track topicCode) {
+            <asset-sg-chip type="transparent">{{ topicCode | reference: "assetTopics" }}</asset-sg-chip>
           }
+        </div>
+      </sgc-card>
+
+      <sgc-card [header]="'search.kind' | translate" data-testid="assetKindCode">
+        <asset-sg-chip type="transparent">{{ asset.kindCode | reference: "assetKinds" }}</asset-sg-chip>
+      </sgc-card>
+
+      @if (asset.languageCodes.length > 0) {
+        <sgc-card [header]="'search.language' | translate" data-testid="assetLanguage">
+          <div class="chip-group">
+            @for (languageCode of asset.languageCodes; track languageCode) {
+              <asset-sg-chip type="transparent">
+                {{ languageCode | reference: "languages" }}
+              </asset-sg-chip>
+            }
+          </div>
+        </sgc-card>
+      }
+
+      <sgc-card [header]="'search.format' | translate" data-testid="assetFormat">
+        <asset-sg-chip type="transparent">{{ asset.formatCode | reference: "assetFormats" }}</asset-sg-chip>
+      </sgc-card>
+
+      <hr class="divider" />
+
+      @if (asset.originalTitle) {
+        <sgc-card [header]="'search.originalTitle' | translate" data-testid="assetOriginalTitle">
+          {{ asset.originalTitle }}
+        </sgc-card>
+      }
+
+      <sgc-card [header]="'search.date' | translate" data-testid="assetDates">
+        <div class="col-2">
+          <dl>
+            <dt translate>search.createdDate</dt>
+            <dd>{{ asset.createdAt | assetSgDate }}</dd>
+          </dl>
+          <dl>
+            <dt translate>search.receiptDate</dt>
+            <dd>{{ asset.receivedAt | assetSgDate }}</dd>
+          </dl>
+        </div>
+      </sgc-card>
+
+      <sgc-card [header]="'search.nationalInterest' | translate" data-testid="assetNatInt">
+        <span translate>{{ asset.isOfNationalInterest ? "yes" : "no" }}</span>
+        <hr class="divider" />
+        <div class="chip-group chip-group--vertical" data-testid="assetNatIntCodes">
+          @for (nationalInterestTypeCode of asset.nationalInterestTypeCodes; track nationalInterestTypeCode) {
+            <asset-sg-chip type="transparent">
+              {{ nationalInterestTypeCode | reference: "nationalInterestTypes" }}
+            </asset-sg-chip>
+          }
+        </div>
+      </sgc-card>
+
+      @if (asset.contacts.length > 0) {
+        <sgc-card [header]="'search.contacts' | translate" data-testid="assetContacts">
+          @for (contactGroup of contacts$ | async | keyvalue; track contactGroup.key) {
+            <dl>
+              <dt>{{ "contactRoles." + contactGroup.key | translate }}</dt>
+              <dd class="chip-group">
+                @for (contact of contactGroup.value; track contact.id) {
+                  <!-- todo: the tooltip should be replaced with a proper tooltip component; however, that's not in scope of this task -->
+                  <asset-sg-chip
+                    [title]="
+                      [
+                        contact.name,
+                        [contact.street, contact.houseNumber].join(' '),
+                        [contact.plz, contact.locality].join(' '),
+                      ].join('&#10;')
+                    "
+                    type="transparent"
+                    >{{ contact.name }}</asset-sg-chip
+                  >
+                }
+              </dd>
+            </dl>
+
+            @if (!$last) {
+              <hr class="divider" />
+            }
+          }
+        </sgc-card>
+      }
+
+      @if (asset.identifiers.length > 0) {
+        <sgc-card [header]="('search.alternativeId' | translate) + 's'" data-testid="assetAlternativeId">
+          @for (identifier of asset.identifiers; track identifier.id) {
+            <div class="col-2">
+              <dl>
+                <dt>ID</dt>
+                <dd>{{ identifier.value }}</dd>
+              </dl>
+              <dl>
+                <dt translate>search.alternativeIdDescription</dt>
+                <dd>{{ identifier.description }}</dd>
+              </dl>
+            </div>
+
+            @if (!$last) {
+              <hr class="divider" />
+            }
+          }
+        </sgc-card>
+      }
+
+      @if (normalFiles$ | async; as normalFiles) {
+        @if (normalFiles.length > 0) {
+          <sgc-card [header]="'search.documents' | translate" data-testid="assetNormalFiles">
+            <ul asset-sg-asset-viewer-files [assetId]="asset.id" [files]="normalFiles"></ul>
+          </sgc-card>
         }
-        <tr>
-          <th translate="search.subject"></th>
-          <td>
-            @if (asset.topicCodes.length === 0) {
-              &ndash;
-            }
-            @for (topicCode of asset.topicCodes; track topicCode; let isLast = $last) {
-              {{ (topicCode | reference: "assetTopics") + (isLast ? "" : ", ") }}
-            }
-          </td>
-        </tr>
-        <tr>
-          <th translate="search.language"></th>
-          <td>
-            @if (asset.languageCodes.length === 0) {
-              &ndash;
-            }
-            <ul class="languages">
-              @for (languageCode of asset.languageCodes; track languageCode) {
+      }
+
+      @if (legalFiles$ | async; as legalFiles) {
+        @if (legalFiles.length > 0) {
+          <sgc-card [header]="'search.legalDocuments' | translate" data-testid="assetLegalFiles">
+            <ul asset-sg-asset-viewer-files [assetId]="asset.id" [files]="legalFiles" isLegal></ul>
+          </sgc-card>
+        }
+      }
+
+      @if (linkedAssets$ | async; as linkedAssets) {
+        @if (linkedAssets.length > 0) {
+          <sgc-card [header]="'search.references' | translate" data-testid="assetReferences">
+            <ul>
+              @for (linkedAsset of linkedAssets; track linkedAsset.id) {
                 <li>
-                  {{ languageCode | reference: "languages" }}
+                  <a
+                    asset-sg-reset
+                    class="reference-link"
+                    (click)="selectAsset(linkedAsset.id)"
+                    queryParamsHandling="merge"
+                  >
+                    <sgc-icon [name]="'reference'" [size]="'large'"></sgc-icon>
+                    <span>{{ linkedAsset.title }}</span>
+                  </a>
                 </li>
+
+                @if (!$last) {
+                  <hr class="divider" />
+                }
               }
             </ul>
-          </td>
-        </tr>
-        <tr>
-          <th translate="search.format"></th>
-          <td>{{ asset.formatCode | reference: "assetFormats" }}</td>
-        </tr>
-        <tr>
-          <th translate="search.nationalInterest"></th>
-          <td>
-            @if (asset.nationalInterestTypeCodes.length === 0) {
-              &ndash;
-            }
-            @for (nationalInterestTypeCode of asset.nationalInterestTypeCodes; track nationalInterestTypeCode) {
-              <span class="line">
-                {{ nationalInterestTypeCode | reference: "nationalInterestTypes" }}
-              </span>
-            }
-          </td>
-        </tr>
-        @if (linkedAssets$ | async; as linkedAssets) {
-          <tr>
-            <th translate="search.reference"></th>
-            <td>
-              @if (linkedAssets.length === 0) {
-                &ndash;
-              }
-              <ul [class.single-entry]="linkedAssets.length === 1">
-                @for (linkedAsset of linkedAssets; track linkedAsset.id) {
-                  <li>
-                    <a asset-sg-reset class="line" (click)="selectAsset(linkedAsset.id)" queryParamsHandling="merge">
-                      {{ linkedAsset.title }}
-                    </a>
-                  </li>
-                }
-              </ul>
-            </td>
-          </tr>
+          </sgc-card>
         }
-      </table>
+      }
     </div>
   </div>
+
+  @if (canUpdate$ | async) {
+    <div class="footer" data-testid="assetFooter">
+      <sgc-button
+        data-testid="edit-asset-button"
+        *rxLet="language$; let language"
+        (click)="navigateToEdit(language, asset.id)"
+      >
+        <sgc-icon name="edit"></sgc-icon>
+        <span translate>search.editAsset</span>
+      </sgc-button>
+    </div>
+  }
 } @else {
   <div class="loading-spinner">
     <mat-progress-spinner mode="indeterminate" />
