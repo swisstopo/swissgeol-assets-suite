@@ -198,14 +198,13 @@ export const enTranslationMapping: AppTranslationMapping = {
         willBeUploaded: 'Will be uploaded',
         fileSizeToLarge: 'File size may not exceed 2GB',
         uploadedAt: 'Uploaded',
-        ocrStatus: 'OCR Status',
-        ocrStatusValues: {
-          willNotBeProcessed: 'will not be processed',
-          created: 'created',
-          waiting: 'waiting',
-          processing: 'processing',
-          error: 'error',
-          success: 'success',
+        fileProcessingState: 'Processing State',
+        fileProcessingStateValues: {
+          WillNotBeProcessed: 'will not be processed',
+          Waiting: 'waiting',
+          Processing: 'processing',
+          Error: 'error',
+          Success: 'success',
         },
       },
       usage: {
