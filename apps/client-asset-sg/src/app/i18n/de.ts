@@ -197,14 +197,13 @@ export const deTranslationMapping = {
         willBeUploaded: 'Wird hochgeladen werden',
         fileSizeToLarge: 'Die Dateigrösse darf 2 GB nicht überschreiten.',
         uploadedAt: 'Hochgeladen',
-        ocrStatus: 'OCR Status',
-        ocrStatusValues: {
-          willNotBeProcessed: 'nicht berücksichtigt',
-          created: 'registriert',
-          waiting: 'wartet',
-          processing: 'wird prozessiert',
-          error: 'Fehler',
-          success: 'abgeschlossen',
+        fileProcessingState: 'Status',
+        fileProcessingStateValues: {
+          WillNotBeProcessed: 'nicht berücksichtigt',
+          Waiting: 'wartet',
+          Processing: 'wird prozessiert',
+          Error: 'Fehler',
+          Success: 'abgeschlossen',
         },
       },
       usage: {

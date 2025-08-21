@@ -1,4 +1,20 @@
 services:
+  extract-api:
+    image: swissgeol-assets-dataextraction/api:dev
+    build:
+      context: .
+    volumes:
+      - .env:/app/.env:ro
+      - .env.api:/app/.env.api:ro
+      - ~/.aws:/home/app/.aws:ro
+    ports:
+      - "1337:8000"
+    environment:
+      FASTTEXT_MODEL_PATH: "models/FastText/lid.176.bin"
+      TMP_PATH: tmp/
+      AWS_PROFILE: swisstopo-ngm
+      S3_BUCKET: asset-sg
+      S3_FOLDER: asset-sg/
   storage:
     container_name: swissgeol-assets-storage
     image: quay.io/minio/minio
