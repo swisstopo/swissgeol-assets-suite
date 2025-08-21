@@ -38,9 +38,36 @@ export interface AssetFile {
   lastModifiedAt: Date;
 
   /**
-   * DB: `ocr_status`
+   * DB: `file_processing_state`
    */
-  ocrStatus: OcrStatus;
+  fileProcessingStage: FileProcessingStage | null;
+
+  /**
+   * DB: `file_processing_state`
+   */
+  fileProcessingState: FileProcessingState;
+
+  /**
+   * DB: `page_classifications`
+   */
+  pageClassifications: PageClassification[] | null;
+}
+
+export type SupportedPageLanguage = 'de' | 'fr' | 'it' | 'en';
+
+export enum PageCategory {
+  Text = 't',
+  Boreprofile = 'b',
+  Maps = 'm',
+  TitlePage = 'tp',
+  Unknown = 'u',
+}
+
+export interface PageClassification {
+  from: number;
+  to: number;
+  languages: SupportedPageLanguage[];
+  categories: PageCategory[];
 }
 
 export type AssetFileId = number;
@@ -69,4 +96,17 @@ export enum OcrStatus {
   Success = 'success',
   Error = 'error',
   WillNotBeProcessed = 'willNotBeProcessed',
+}
+
+export enum FileProcessingStage {
+  Ocr = 'Ocr',
+  Extraction = 'Extraction',
+}
+
+export enum FileProcessingState {
+  Waiting = 'Waiting',
+  Processing = 'Processing',
+  Success = 'Success',
+  Error = 'Error',
+  WillNotBeProcessed = 'WillNotBeProcessed',
 }

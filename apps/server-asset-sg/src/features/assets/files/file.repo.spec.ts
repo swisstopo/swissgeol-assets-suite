@@ -1,3 +1,4 @@
+import { FileProcessingState } from '@asset-sg/shared/v2';
 import { faker } from '@faker-js/faker';
 // eslint-disable-next-line @nx/enforce-module-boundaries
 import { clearPrismaAssets, setupDB } from '../../../../../../test/setup-db';
@@ -62,7 +63,7 @@ describe(FileRepo, () => {
           size: faker.number.int({ min: 0 }),
           lastModifiedAt: faker.date.past(),
           type: faker.helpers.arrayElement(['Normal', 'Legal']),
-          ocrStatus: 'willNotBeProcessed',
+          fileProcessingState: FileProcessingState.WillNotBeProcessed,
         },
       });
       const actual = await determineUniqueFilename(fullFileName, assetId, prisma);

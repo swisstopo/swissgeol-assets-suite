@@ -199,14 +199,13 @@ export const frTranslationMapping: AppTranslationMapping = {
         willBeUploaded: 'Sera téléchargé',
         fileSizeToLarge: 'La taille du fichier ne doit pas dépasser 2 Go.',
         uploadedAt: 'Téléchargé',
-        ocrStatus: 'OCR Status',
-        ocrStatusValues: {
-          willNotBeProcessed: 'FR nicht berücksichtigt',
-          created: 'FR registriert',
-          waiting: 'FR wartet',
-          processing: 'FR wird prozessiert',
-          error: 'FR Fehler',
-          success: 'FR abgeschlossen',
+        fileProcessingState: 'Status',
+        fileProcessingStateValues: {
+          WillNotBeProcessed: 'FR nicht berücksichtigt',
+          Waiting: 'FR wartet',
+          Processing: 'FR wird prozessiert',
+          Error: 'FR Fehler',
+          Success: 'FR abgeschlossen',
         },
       },
       usage: {
