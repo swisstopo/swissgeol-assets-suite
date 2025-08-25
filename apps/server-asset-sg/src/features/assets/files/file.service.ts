@@ -1,6 +1,7 @@
-import { AssetFile, AssetId, OcrStatus } from '@asset-sg/shared/v2';
+import { AssetFile, AssetId, FileProcessingStage, FileProcessingState } from '@asset-sg/shared/v2';
 import { Injectable, Logger } from '@nestjs/common';
-import { FileOcrService } from '@/features/assets/files/file-ocr.service';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { EVENTS } from '@/core/events';
 import { FileS3Service, SaveFileS3Options } from '@/features/assets/files/file-s3.service';
 import { CreateFileData, FileIdentifier, FileRepo } from '@/features/assets/files/file.repo';
 
@@ -10,9 +11,17 @@ export class FileService {
 
   constructor(
     private readonly fileRepo: FileRepo,
-    private readonly fileOcrService: FileOcrService,
     private readonly fileS3Service: FileS3Service,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
+
+  private getProcessingConfiguration(
+    isOcrCompatible: boolean,
+  ): Pick<AssetFile, 'fileProcessingStage' | 'fileProcessingState'> {
+    return isOcrCompatible
+      ? { fileProcessingState: FileProcessingState.Waiting, fileProcessingStage: FileProcessingStage.Ocr }
+      : { fileProcessingState: FileProcessingState.WillNotBeProcessed, fileProcessingStage: null };
+  }
 
   async create(data: UploadFileData): Promise<AssetFile> {
     const { content, mediaType, ...createData } = data;
@@ -22,15 +31,14 @@ export class FileService {
     // Store file in DB.
     const record = await this.fileRepo.create({
       ...createData,
-      ocrStatus: isOcrCompatible ? OcrStatus.Waiting : OcrStatus.WillNotBeProcessed,
+      ...this.getProcessingConfiguration(isOcrCompatible),
     });
 
     // Upload file to S3.
     await this.saveFileOrDeleteRecord(record, data.assetId, content, { mediaType });
 
     if (isOcrCompatible) {
-      // Run OCR on the file in the background.
-      setTimeout(() => this.fileOcrService.process(record));
+      this.eventEmitter.emit(EVENTS.FILE_START_OCR, record);
     }
 
     return record;
@@ -89,7 +97,7 @@ export class FileService {
   }
 }
 
-type UploadFileData = Omit<CreateFileData, 'ocrStatus'> & {
+type UploadFileData = Omit<CreateFileData, 'fileProcessingState' | 'fileProcessingStage'> & {
   content: Buffer;
   mediaType: string;
 };

@@ -198,14 +198,13 @@ export const itTranslationMapping: AppTranslationMapping = {
         willBeUploaded: 'IT Wird hochgeladen werden',
         fileSizeToLarge: 'IT Die Dateigrösse darf 2 GB nicht überschreiten.',
         uploadedAt: 'IT Hochgeladen',
-        ocrStatus: 'IT OCR Status',
-        ocrStatusValues: {
-          willNotBeProcessed: 'IT nicht berücksichtigt',
-          created: 'IT registriert',
-          waiting: 'IT wartet',
-          processing: 'IT wird prozessiert',
-          error: 'IT Fehler',
-          success: 'IT abgeschlossen',
+        fileProcessingState: 'IT Status',
+        fileProcessingStateValues: {
+          WillNotBeProcessed: 'IT nicht berücksichtigt',
+          Waiting: 'IT wartet',
+          Processing: 'IT wird prozessiert',
+          Error: 'IT Fehler',
+          Success: 'IT abgeschlossen',
         },
       },
       usage: {
