@@ -38,7 +38,7 @@ export interface AssetFile {
   lastModifiedAt: Date;
 
   /**
-   * DB: `file_processing_state`
+   * DB: `file_processing_stage`
    */
   fileProcessingStage: FileProcessingStage | null;
 
