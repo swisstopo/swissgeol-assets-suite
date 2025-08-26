@@ -3,6 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '@/core/prisma.service';
 import { GeometryBaseRepo } from '@/features/geometries/geometry-base.repo';
+import { parseLongGeometryIdToGeometryId } from '@/features/geometries/geometry.repo';
 
 @Injectable()
 export class GeometryDetailRepo extends GeometryBaseRepo<GeometryDetail> {
@@ -31,7 +32,7 @@ export class GeometryDetailRepo extends GeometryBaseRepo<GeometryDetail> {
         }
       })();
       return {
-        id: study.id,
+        id: parseLongGeometryIdToGeometryId(study.id),
         type: json.type,
         coordinates: coordinates.map(([y, x]) => ({ x, y })),
       };

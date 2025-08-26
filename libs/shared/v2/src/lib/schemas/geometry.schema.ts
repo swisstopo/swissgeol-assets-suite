@@ -45,7 +45,7 @@ export class UpdateGeometryDataSchema extends GeometryDataSchema implements Upda
   override mutation!: GeometryMutationType.Update;
 
   @IsString()
-  @Matches(/^study_(?:area|location|trace)_\d+$/)
+  @IsGeometryId()
   id!: GeometryId;
 
   @IsString()
@@ -57,7 +57,7 @@ export class DeleteGeometryDataSchema extends GeometryDataSchema implements Dele
   override mutation!: GeometryMutationType.Delete;
 
   @IsString()
-  @Matches(/^study_(?:area|location|trace)_\d+$/)
+  @IsGeometryId()
   id!: GeometryId;
 }
 
@@ -95,7 +95,7 @@ export class GeometryDetailSchema extends Schema implements GeometryDetail {
 
 export function IsGeometryId(): PropertyDecorator {
   const decorateIsString = IsString();
-  const decorateMatches = Matches(/^study_(?:area|location|trace)_\d+$/);
+  const decorateMatches = Matches(/^[alt]_\d+$/);
   return (target, propertyKey) => {
     decorateIsString(target, propertyKey);
     decorateMatches(target, propertyKey);

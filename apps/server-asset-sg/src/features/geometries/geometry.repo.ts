@@ -1,4 +1,4 @@
-import { Geometry, GeometryAccessType, GeometryType } from '@asset-sg/shared/v2';
+import { Geometry, GeometryAccessType, GeometryId, GeometryType } from '@asset-sg/shared/v2';
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '@/core/prisma.service';
@@ -20,8 +20,9 @@ export class GeometryRepo extends GeometryBaseRepo<Geometry> {
     const studies: RawStudy[] = await this.prisma.$queryRaw`
         SELECT s.study_id       AS "id",
                s.geometry_type  AS "type",
-               ST_X(s.centroid) AS "centerX",
-               ST_Y(s.centroid) AS "centerY",
+               -- NB: 1 meter precision is enough for the current app use cases
+               ROUND(ST_X(s.centroid))::integer AS "centerX",
+               ROUND(ST_Y(s.centroid))::integer AS "centerY",
                s.is_public      AS "isPublic",
                s.asset_id       AS "assetId"
         FROM public.all_study s
@@ -29,7 +30,7 @@ export class GeometryRepo extends GeometryBaseRepo<Geometry> {
     `;
     return studies.map((study) => {
       return {
-        id: study.id,
+        id: parseLongGeometryIdToGeometryId(study.id),
         type: study.type === 'Line' ? GeometryType.LineString : (study.type as GeometryType),
         assetId: study.assetId,
 
@@ -40,3 +41,20 @@ export class GeometryRepo extends GeometryBaseRepo<Geometry> {
     });
   }
 }
+
+/**
+ * Ideally, this would be stored in the database, but we do not have enough time for proper testing, so we do it here.
+ * @param id
+ */
+export const parseLongGeometryIdToGeometryId = (id: string): GeometryId => {
+  if (id.startsWith('study_area_')) {
+    return `a_${id.split('study_area_')[1]}` as GeometryId;
+  }
+  if (id.startsWith('study_location_')) {
+    return `l_${id.split('study_location_')[1]}` as GeometryId;
+  }
+  if (id.startsWith('study_trace_')) {
+    return `t_${id.split('study_trace_')[1]}` as GeometryId;
+  }
+  throw new Error('Unknown type');
+};

@@ -6,9 +6,9 @@ import {
   AssetSearchResultItemSchema,
   AssetSearchUsageCode,
   ContactId,
-  ElasticsearchPoint,
   ElasticsearchAsset,
   ElasticsearchLocalDate,
+  ElasticsearchPoint,
   GeometryType,
   UserId,
 } from '@asset-sg/shared/v2';
