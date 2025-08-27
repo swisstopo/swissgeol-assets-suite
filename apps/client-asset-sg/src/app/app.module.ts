@@ -41,7 +41,6 @@ import { TranslateLoader, TranslateModule } from '@ngx-translate/core';
 import { RxFor } from '@rx-angular/template/for';
 import { RxLet } from '@rx-angular/template/let';
 import { RxPush } from '@rx-angular/template/push';
-import { SwissgeolCoreModule } from '@swissgeol/ui-core-angular';
 import { environment } from '../environments/environment';
 import { AppComponent } from './app.component';
 import { AppBarComponent, MenuBarComponent, NotFoundComponent } from './components';
@@ -105,7 +104,6 @@ const routes: Routes = [
   imports: [
     RouterModule.forRoot(routes),
 
-    SwissgeolCoreModule,
     CommonModule,
     BrowserModule,
     AuthModule,
