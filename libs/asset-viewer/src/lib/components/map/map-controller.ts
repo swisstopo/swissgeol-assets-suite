@@ -362,7 +362,7 @@ export class MapController {
       }),
       heatmap: this.makeHeatmapLayer(),
       assetLocations: makeSimpleLayer<Point>({
-        minZoom: 11,
+        minZoom: 12.5,
         style: availableLayerStyles[defaultLayerStyle].styleFunction,
       }),
       polygon: makeSimpleLayer(),
@@ -382,7 +382,7 @@ export class MapController {
     return new Heatmap({
       source: cluster,
       weight: (feature) => (feature.get('features') == null ? 0 : 1),
-      maxZoom: 12,
+      maxZoom: 12.5,
       blur: 20,
       radius: 5,
       opacity: 0.7,
@@ -418,17 +418,14 @@ export class MapController {
           event.pixel,
           (feature): void => {
             if (assetId != null) {
-              assetId = 1;
               return;
             }
             const featureId = feature.getId();
             if (featureId == null) {
-              assetId = 2;
               return;
             }
             const currentAssetId = this.assetIdsByGeometryIds.get(featureId as GeometryId);
             if (currentAssetId != null) {
-              assetId = 3;
               assetId = currentAssetId;
             }
           },

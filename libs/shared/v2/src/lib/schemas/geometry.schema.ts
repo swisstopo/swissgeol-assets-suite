@@ -91,11 +91,15 @@ export class GeometryDetailSchema extends Schema implements GeometryDetail {
   @ValidateNested({ each: true })
   @Type(() => CoordinateSchema)
   coordinates!: Coordinate[];
+
+  @Expose()
+  @Type(() => CoordinateSchema)
+  centroid!: Coordinate;
 }
 
 export function IsGeometryId(): PropertyDecorator {
   const decorateIsString = IsString();
-  const decorateMatches = Matches(/^[alt]_\d+$/);
+  const decorateMatches = Matches(/^[alt]\d+$/);
   return (target, propertyKey) => {
     decorateIsString(target, propertyKey);
     decorateMatches(target, propertyKey);

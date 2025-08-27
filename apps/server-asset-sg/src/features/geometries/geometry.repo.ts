@@ -48,13 +48,13 @@ export class GeometryRepo extends GeometryBaseRepo<Geometry> {
  */
 export const parseLongGeometryIdToGeometryId = (id: string): GeometryId => {
   if (id.startsWith('study_area_')) {
-    return `a_${id.split('study_area_')[1]}` as GeometryId;
+    return `a${id.split('study_area_')[1]}` as GeometryId;
   }
   if (id.startsWith('study_location_')) {
-    return `l_${id.split('study_location_')[1]}` as GeometryId;
+    return `l${id.split('study_location_')[1]}` as GeometryId;
   }
   if (id.startsWith('study_trace_')) {
-    return `t_${id.split('study_trace_')[1]}` as GeometryId;
+    return `t${id.split('study_trace_')[1]}` as GeometryId;
   }
   throw new Error('Unknown type');
 };

@@ -12,6 +12,7 @@ export interface GeometryDetail {
   id: GeometryId;
   type: GeometryType;
   coordinates: Coordinate[];
+  centroid: Coordinate;
 }
 
 export interface Coordinate {
@@ -56,7 +57,7 @@ export enum GeometryAccessType {
 }
 
 type GeometryIdentifier = 'a' | 'l' | 't'; // area, location, trace
-export type GeometryId = `${GeometryIdentifier}_${number}`;
+export type GeometryId = `${GeometryIdentifier}${number}`;
 
 export enum StudyType {
   Area = 'area',
@@ -76,7 +77,7 @@ export const mapGeometryTypeToStudyType = (type: GeometryType): StudyType => {
 };
 
 export const extractGeometryTypeFromId = (id: GeometryId): GeometryType => {
-  const [studyType, _suffix] = id.split('_', 2);
+  const studyType = id.charAt(0);
   switch (studyType as GeometryIdentifier) {
     case 'l':
       return GeometryType.Point;
@@ -95,7 +96,7 @@ export const serializeGeometryAsCsv = (geometry: Geometry): string => {
 };
 
 export const parseGeometryIdNumber = (id: GeometryId): number => {
-  const match = /^[alt]_(\d+)$/.exec(id);
+  const match = /^[alt](\d+)$/.exec(id);
   if (match === null) {
     throw new Error(`Invalid studyId: ${id}`);
   }
