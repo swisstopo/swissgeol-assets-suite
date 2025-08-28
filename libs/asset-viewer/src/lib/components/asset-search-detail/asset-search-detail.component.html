@@ -12,19 +12,21 @@
   </div>
   <div class="asset-detail-scroll-container">
     <div class="asset-detail">
-      <div class="asset-detail__general">
-        <sgc-card [header]="'search.status' | translate" collapsed>
-          <asset-sg-status-chip [status]="asset.workflowStatus"></asset-sg-status-chip>
-        </sgc-card>
-        <sgc-card [header]="'edit.tabs.general.access.name' | translate" collapsed>
-          <!-- todo assets-631: add edit.visibility.lockedUntil with formatted date -->
-          <asset-sg-chip type="light"
-            >{{ (asset.isPublic ? "edit.visibility.public" : "edit.visibility.locked") | translate }}
-          </asset-sg-chip>
-        </sgc-card>
-      </div>
+      @if ((isAnonymous$ | async) === false) {
+        <div class="asset-detail__general">
+          <sgc-card [header]="'search.status' | translate" collapsed>
+            <asset-sg-status-chip [status]="asset.workflowStatus"></asset-sg-status-chip>
+          </sgc-card>
+          <sgc-card [header]="'edit.tabs.general.access.name' | translate" collapsed>
+            <!-- todo assets-631: add edit.visibility.lockedUntil with formatted date -->
+            <asset-sg-chip type="light"
+              >{{ (asset.isPublic ? "edit.visibility.public" : "edit.visibility.locked") | translate }}
+            </asset-sg-chip>
+          </sgc-card>
+        </div>
 
-      <hr class="divider" />
+        <hr class="divider" />
+      }
 
       <sgc-card [header]="'search.subject' | translate" data-testid="assetSubject">
         <div class="chip-group">
@@ -104,8 +106,8 @@
                       ].join('&#10;')
                     "
                     type="transparent"
-                    >{{ contact.name }}</asset-sg-chip
-                  >
+                    >{{ contact.name }}
+                  </asset-sg-chip>
                 }
               </dd>
             </dl>
