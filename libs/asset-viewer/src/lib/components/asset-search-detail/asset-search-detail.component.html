@@ -1,6 +1,6 @@
 @if (asset$ | async; as asset) {
   <div class="header">
-    <span class="header__title" data-testid="assetTitle">{{ asset.title }}</span>
+    <span class="header__title" data-testid="assetTitle" [title]="asset.title">{{ asset.title }}</span>
     <button
       (click)="clearSelectedAsset()"
       asset-sg-icon-button
