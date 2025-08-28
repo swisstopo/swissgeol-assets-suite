@@ -17,8 +17,9 @@ import { AppStateWithAssetSearch } from '../../state/asset-search/asset-search.r
 export class AssetSearchDetailComponent {
   private readonly store = inject(Store<AppStateWithAssetSearch>);
   private readonly languageService = inject(LanguageService);
-  public readonly language$ = this.languageService.language$;
-  public readonly asset$ = this.store.select(fromAppShared.selectCurrentAsset);
+  protected readonly language$ = this.languageService.language$;
+  protected readonly asset$ = this.store.select(fromAppShared.selectCurrentAsset);
+  protected readonly isAnonymous$ = this.store.select(fromAppShared.selectIsAnonymousMode);
 
   public readonly contacts$: Observable<{ [K in AssetContactRole]: Array<Contact> }> = this.asset$.pipe(
     filter(isNotNull),
