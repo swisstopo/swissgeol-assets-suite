@@ -23,7 +23,7 @@ export class GeometryService {
         map((line) => {
           const [id, assetId, geometryType, accessType, x, y] = line.split(';');
           return {
-            id: `study_${id}` as GeometryId,
+            id: `${id}` as GeometryId,
             assetId: parseInt(assetId),
             type: geometryType as GeometryType,
             center: { x: parseFloat(x), y: parseFloat(y) } as LV95,
