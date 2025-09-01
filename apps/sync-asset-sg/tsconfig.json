@@ -11,6 +11,7 @@
     }
   ],
   "compilerOptions": {
+    "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"],
       "@environment": ["environments/environment.ts"],

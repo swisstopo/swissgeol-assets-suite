@@ -1,3 +1,4 @@
+import { WorkgroupId } from '@asset-sg/shared/v2';
 import {
   Asset,
   AssetContact,
@@ -15,6 +16,7 @@ import { SyncConfig } from './config';
 import { log } from './log';
 
 const BATCH_SIZE = 10_000;
+const DEFAULT_SYNC_WORKGROUP = 'Sync';
 
 export class SyncExternService {
   private readonly config: SyncConfig;
@@ -26,6 +28,7 @@ export class SyncExternService {
   private readonly geometries: Geometries = { areas: new Map(), locations: new Map(), traces: new Map() };
   private readonly sourcePrisma: PrismaClient;
   private readonly destinationPrisma: PrismaClient;
+  private defaultWorkgroupId: WorkgroupId;
   private syncAssignee: string | null = null;
 
   constructor(sourcePrisma: PrismaClient, destinationPrisma: PrismaClient, config: SyncConfig) {
@@ -48,6 +51,12 @@ export class SyncExternService {
     await this.init();
 
     log(`Starting synchronization of ${this.assetsToSync.length} assets`);
+    this.defaultWorkgroupId = (
+      await this.destinationPrisma.workgroup.findFirstOrThrow({
+        where: { name: DEFAULT_SYNC_WORKGROUP },
+        select: { id: true },
+      })
+    ).id;
     for (const asset of this.assetsToSync) {
       await this.synchronizeAsset(asset);
     }
@@ -65,6 +74,12 @@ export class SyncExternService {
     const contactsCreate = await this.createContactsPayload(asset.assetContacts);
     const filesCreate = await this.createFilesPayload(asset.assetFiles);
 
+    const workgroup = await this.destinationPrisma.workgroup.findFirst({
+      where: { name: { equals: asset.workgroupName } },
+      select: { id: true },
+    });
+    const workgroupId = workgroup?.id ?? this.defaultWorkgroupId;
+
     const newAsset = await this.destinationPrisma.asset.create({
       include: { assetFiles: { include: { file: true } }, assetContacts: { include: { contact: true } } },
       data: {
@@ -73,6 +88,7 @@ export class SyncExternService {
         isPublic: false,
         assetFiles: filesCreate,
         assetContacts: contactsCreate.createData,
+        workgroupId,
       },
     });
 
@@ -169,7 +185,7 @@ export class SyncExternService {
           assetId: {
             notIn: alreadySyncedIds,
           },
-          isPublic: true,
+          workflow: { status: 'Reviewed' },
         },
         include: {
           ids: { select: { id: true, description: true } },
@@ -186,13 +202,27 @@ export class SyncExternService {
               file: true,
             },
           },
+          workgroup: {
+            select: { name: true },
+          },
         },
       })
     ).map((item) => {
-      const { assetId, sgsId, assetFiles, assetContacts, manCatLabelRefs, typeNatRels, ids, assetLanguages, ...asset } =
-        item;
+      const {
+        assetId,
+        sgsId,
+        assetFiles,
+        assetContacts,
+        manCatLabelRefs,
+        typeNatRels,
+        ids,
+        assetLanguages,
+        workgroup,
+        ...asset
+      } = item;
       return {
         asset,
+        workgroupName: workgroup.name,
         manCatLabelRefs,
         assetLanguages,
         typeNatRels,
@@ -219,7 +249,7 @@ export class SyncExternService {
    * duplicated.
    */
   private async createContactsPayload(
-    assetContacts: (AssetContact&{contact: Contact})[], // prettier-ignore
+    assetContacts: (AssetContact & { contact: Contact })[], // prettier-ignore
   ): Promise<{
     assignAfterwards: Map<string, { role: string }>;
     createData: Prisma.AssetContactUncheckedCreateNestedManyWithoutAssetInput;
@@ -278,13 +308,11 @@ export class SyncExternService {
     tableType: 'area' | 'location' | 'trace',
   ): Promise<StudyGeometriesPerAsset> {
     const assetIds = this.assetsToSync.map((a) => a.originalAssetId);
-    const query = `SELECT
-        study_${tableType}_id       AS "id",
-        asset_id            AS "assetId",
-        ST_ASBINARY(geom)   AS "geom",
-        is_revised          AS "isRevised"
-    FROM study_${tableType}
-    WHERE asset_id IN (${assetIds.join(',')})
+    const query = `SELECT study_${tableType}_id AS "id", asset_id AS "assetId",
+                          ST_ASBINARY(geom) AS "geom",
+                          is_revised        AS "isRevised"
+                   FROM study_${tableType}
+                   WHERE asset_id IN (${assetIds.join(',')})
     `;
 
     const result = await this.sourcePrisma.$queryRawUnsafe<StudyGeometry[]>(query);
@@ -318,27 +346,27 @@ export class SyncExternService {
     for (const [idx, batch] of this.batchList(areasSql, BATCH_SIZE).entries()) {
       log(`Creating batch #${idx + 1} of areas`, 'batch');
       await this.destinationPrisma.$executeRaw`
-          INSERT INTO study_area (asset_id, geom, is_revised)
-          VALUES ${Prisma.join(batch)}
-        `;
+        INSERT INTO study_area (asset_id, geom, is_revised)
+        VALUES ${Prisma.join(batch)}
+      `;
       log(`Finished batch #${idx + 1} of areas`, 'batch');
     }
 
     for (const [idx, batch] of this.batchList(locationsSql, BATCH_SIZE).entries()) {
       log(`Creating batch #${idx + 1} of locations`, 'batch');
       await this.destinationPrisma.$executeRaw`
-          INSERT INTO study_location (asset_id, geom, is_revised)
-          VALUES ${Prisma.join(batch)}
-        `;
+        INSERT INTO study_location (asset_id, geom, is_revised)
+        VALUES ${Prisma.join(batch)}
+      `;
       log(`Finished batch #${idx + 1} of locations`, 'batch');
     }
 
     for (const [idx, batch] of this.batchList(tracesSql, BATCH_SIZE).entries()) {
       log(`Creating batch #${idx + 1} of traces`, 'batch');
       await this.destinationPrisma.$executeRaw`
-          INSERT INTO study_trace (asset_id, geom, is_revised)
-          VALUES ${Prisma.join(batch)}
-        `;
+        INSERT INTO study_trace (asset_id, geom, is_revised)
+        VALUES ${Prisma.join(batch)}
+      `;
       log(`Finished batch #${idx + 1} of traces`, 'batch');
     }
   }
@@ -356,36 +384,36 @@ export class SyncExternService {
     for (const [idx, batch] of this.batchList(this.relationSqls.ids, BATCH_SIZE).entries()) {
       log(`Creating batch #${idx + 1} of ids`, 'batch');
       await this.destinationPrisma.$executeRaw`
-              INSERT INTO id (asset_id, id, description)
-              VALUES ${Prisma.join(batch)}
-            `;
+        INSERT INTO id (asset_id, id, description)
+        VALUES ${Prisma.join(batch)}
+      `;
       log(`Finished batch #${idx + 1} of ids`, 'batch');
     }
 
     for (const [idx, batch] of this.batchList(this.relationSqls.assetLanguages, BATCH_SIZE).entries()) {
       log(`Creating batch #${idx + 1} of asset languages`, 'batch');
       await this.destinationPrisma.$executeRaw`
-                  INSERT INTO asset_language (asset_id, language_item_code)
-                  VALUES ${Prisma.join(batch)}
-                `;
+        INSERT INTO asset_language (asset_id, language_item_code)
+        VALUES ${Prisma.join(batch)}
+      `;
       log(`Finished batch #${idx + 1} of asset languages`, 'batch');
     }
 
     for (const [idx, batch] of this.batchList(this.relationSqls.manCatLabelRefs, BATCH_SIZE).entries()) {
       log(`Creating batch #${idx + 1} of mancatlabelrefs`, 'batch');
       await this.destinationPrisma.$executeRaw`
-                  INSERT INTO man_cat_label_ref (asset_id, man_cat_label_item_code)
-                  VALUES ${Prisma.join(batch)}
-                `;
+        INSERT INTO man_cat_label_ref (asset_id, man_cat_label_item_code)
+        VALUES ${Prisma.join(batch)}
+      `;
       log(`Finished batch #${idx + 1} of mancatlabelrefs`, 'batch');
     }
 
     for (const [idx, batch] of this.batchList(this.relationSqls.typeNatRels, BATCH_SIZE).entries()) {
       log(`Creating batch #${idx + 1} of typeNatRels`, 'batch');
       await this.destinationPrisma.$executeRaw`
-                  INSERT INTO type_nat_rel (asset_id, nat_rel_item_code)
-                  VALUES ${Prisma.join(batch)}
-                `;
+        INSERT INTO type_nat_rel (asset_id, nat_rel_item_code)
+        VALUES ${Prisma.join(batch)}
+      `;
       log(`Finished batch #${idx + 1} of typeNatRels`, 'batch');
     }
   }
@@ -403,7 +431,7 @@ export class SyncExternService {
       select: { id: true },
       data: keys.map((n) => ({
         id: n,
-        status: 'Draft',
+        status: 'Reviewed',
         assigneeId: this.syncAssignee,
         reviewId: workflowSelection.shift().id,
         approvalId: workflowSelection.shift().id,
@@ -414,8 +442,8 @@ export class SyncExternService {
       data: workflows.map(({ id }) => ({
         workflowId: id,
         comment: `Synchronized from EXTERN with original ID ${this.newAssetToOriginalAsset.get(id).originalAssetId}`,
-        fromStatus: 'Published',
-        toStatus: 'Draft',
+        fromStatus: 'Draft',
+        toStatus: 'Reviewed',
         toAssigneeId: this.syncAssignee,
       })),
     });
@@ -461,6 +489,7 @@ interface RelationSqls {
 
 interface AssetToSync {
   asset: Omit<Asset, 'assetId' | 'sgsId'>;
+  workgroupName: string;
   originalAssetId: Asset['assetId'];
   originalSgsId: Asset['sgsId'];
   assetFiles: File[];
