@@ -141,23 +141,28 @@
       }
 
       @if (normalFiles$ | async; as normalFiles) {
-        @if (normalFiles.length > 0) {
-          <sgc-card [header]="'search.documents' | translate" data-testid="assetNormalFiles">
-            <ul asset-sg-asset-viewer-files [assetId]="asset.id" [files]="normalFiles"></ul>
-          </sgc-card>
-        }
-      }
+        @if (legalFiles$ | async; as legalFiles) {
+          @if (normalFiles.length > 0) {
+            <hr class="divider" />
+            <sgc-card [header]="'search.documents' | translate" data-testid="assetNormalFiles">
+              <ul asset-sg-asset-viewer-files [assetId]="asset.id" [files]="normalFiles"></ul>
+            </sgc-card>
+          }
 
-      @if (legalFiles$ | async; as legalFiles) {
-        @if (legalFiles.length > 0) {
-          <sgc-card [header]="'search.legalDocuments' | translate" data-testid="assetLegalFiles">
-            <ul asset-sg-asset-viewer-files [assetId]="asset.id" [files]="legalFiles" isLegal></ul>
-          </sgc-card>
+          @if (legalFiles.length > 0) {
+            @if (normalFiles.length === 0) {
+              <hr class="divider" />
+            }
+            <sgc-card [header]="'search.legalDocuments' | translate" data-testid="assetLegalFiles">
+              <ul asset-sg-asset-viewer-files [assetId]="asset.id" [files]="legalFiles" isLegal></ul>
+            </sgc-card>
+          }
         }
       }
 
       @if (linkedAssets$ | async; as linkedAssets) {
         @if (linkedAssets.length > 0) {
+          <hr class="divider" />
           <sgc-card [header]="'search.references' | translate" data-testid="assetReferences">
             <ul>
               @for (linkedAsset of linkedAssets; track linkedAsset.id) {
