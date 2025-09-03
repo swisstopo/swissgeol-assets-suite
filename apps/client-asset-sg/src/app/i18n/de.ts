@@ -424,4 +424,11 @@ export const deTranslationMapping = {
       },
     },
   },
+  pageClassificationCodes: {
+    t: 'Text',
+    b: 'Bohrprofil',
+    m: 'Karten',
+    tp: 'Titelseite',
+    u: 'Unbekannt',
+  },
 };
