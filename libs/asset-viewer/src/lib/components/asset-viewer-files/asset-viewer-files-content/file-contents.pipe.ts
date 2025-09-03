@@ -11,7 +11,7 @@ export class FileContentsPipe implements PipeTransform {
   transform(pageClassifications: PageClassification[]) {
     const languages = new Set<SupportedPageLanguage>();
     const categories = new Set<PageCategory>();
-    const groupedPageClassifications: { [key in PageCategory]?: PageClassification[] } = {};
+    const groupedPageClassifications: GroupedPageClassifications = {};
     pageClassifications.forEach((pc) => {
       pc.categories.forEach((category) => {
         if (!groupedPageClassifications[category]) {
