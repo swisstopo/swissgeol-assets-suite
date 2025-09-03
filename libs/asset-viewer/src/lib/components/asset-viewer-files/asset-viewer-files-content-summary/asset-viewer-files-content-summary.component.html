@@ -7,7 +7,7 @@
   }
   @if (legalDocCode != null) {
     @if (pageCount || languages.length > 0) {
-      <span class="tag-group__divider"></span>
+      <span class="tag-group__divider"><span></span></span>
     }
     <asset-sg-asset-viewer-files-tag> {{ legalDocCode | reference: "legalDocs" }}</asset-sg-asset-viewer-files-tag>
   }
