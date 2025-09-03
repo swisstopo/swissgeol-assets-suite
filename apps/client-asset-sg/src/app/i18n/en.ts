@@ -422,4 +422,11 @@ export const enTranslationMapping: AppTranslationMapping = {
       },
     },
   },
+  pageClassificationCodes: {
+    t: 'Text',
+    b: 'Borehole profile',
+    m: 'Maps',
+    tp: 'Title page',
+    u: 'Unknown',
+  },
 };

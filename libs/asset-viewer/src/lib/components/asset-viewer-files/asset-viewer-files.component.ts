@@ -1,14 +1,13 @@
-import { coerceBooleanProperty } from '@angular/cdk/coercion';
 import { HttpClient } from '@angular/common/http';
 import { Component, inject, Input } from '@angular/core';
 import { AlertType, AppState, FileNamePipe, LanguageService, showAlert } from '@asset-sg/client-shared';
-import { AssetId, AssetFile } from '@asset-sg/shared/v2';
+import { AssetFile, AssetId } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
 import { TranslateService } from '@ngx-translate/core';
 import { finalize } from 'rxjs';
 
 @Component({
-  selector: 'ul[asset-sg-asset-viewer-files]',
+  selector: 'asset-sg-asset-viewer-files',
   templateUrl: './asset-viewer-files.component.html',
   styleUrls: ['./asset-viewer-files.component.scss'],
   standalone: false,
@@ -19,9 +18,6 @@ export class AssetViewerFilesComponent {
 
   @Input({ required: true })
   files!: AssetFile[];
-
-  @Input({ transform: coerceBooleanProperty })
-  isLegal = false;
 
   private readonly fileNamePipe = inject(FileNamePipe);
 

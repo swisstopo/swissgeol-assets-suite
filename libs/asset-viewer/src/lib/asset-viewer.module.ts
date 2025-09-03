@@ -1,9 +1,10 @@
 import { CdkMonitorFocus } from '@angular/cdk/a11y';
+import { CdkAccordion, CdkAccordionItem } from '@angular/cdk/accordion';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
-import { MatChipSet } from '@angular/material/chips';
+import { MatChip, MatChipSet } from '@angular/material/chips';
 import { MAT_DATE_FORMATS, MAT_DATE_LOCALE } from '@angular/material/core';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatDivider } from '@angular/material/divider';
@@ -57,8 +58,13 @@ import { AssetSearchDetailComponent } from './components/asset-search-detail';
 import { AssetSearchFilterComponent } from './components/asset-search-filter/asset-search-filter.component';
 import { AssetSearchRefineComponent } from './components/asset-search-refine';
 import { AssetSearchResultsComponent } from './components/asset-search-results';
+import { AssetViewerFilesContentComponent } from './components/asset-viewer-files/asset-viewer-files-content/asset-viewer-files-content.component';
+import { FileContentsPipe } from './components/asset-viewer-files/asset-viewer-files-content/file-contents.pipe';
+import { AssetViewerFilesContentSummaryComponent } from './components/asset-viewer-files/asset-viewer-files-content-summary/asset-viewer-files-content-summary.component';
+import { FilePagePipe } from './components/asset-viewer-files/asset-viewer-files-content-summary/file-page.pipe';
+import { AssetViewerFilesTagComponent } from './components/asset-viewer-files/asset-viewer-files-tag/asset-viewer-files-tag.component';
 import { AssetViewerFilesComponent } from './components/asset-viewer-files/asset-viewer-files.component';
-import { FileMetadataPipe } from './components/asset-viewer-files/file-metadata.pipe';
+import { FileSizePipe } from './components/asset-viewer-files/file-size.pipe';
 import { AssetViewerPageComponent } from './components/asset-viewer-page';
 import { MapComponent } from './components/map/map.component';
 import { MapControlsComponent } from './components/map-controls/map-controls.component';
@@ -77,6 +83,9 @@ const routes: Routes = [
 @NgModule({
   declarations: [
     AssetViewerPageComponent,
+    AssetViewerFilesContentComponent,
+    AssetViewerFilesContentSummaryComponent,
+    AssetViewerFilesTagComponent,
     MapComponent,
     MapControlsComponent,
     AssetSearchDetailComponent,
@@ -85,7 +94,9 @@ const routes: Routes = [
     AssetSearchResultsComponent,
     AssetViewerFilesComponent,
     AssetPickerComponent,
-    FileMetadataPipe,
+    FileContentsPipe,
+    FilePagePipe,
+    FileSizePipe,
   ],
   imports: [
     CommonModule,
@@ -142,6 +153,9 @@ const routes: Routes = [
     SgcCard,
     SgcIcon,
     SgcButton,
+    CdkAccordion,
+    CdkAccordionItem,
+    MatChip,
   ],
   providers: [
     TranslatePipe,

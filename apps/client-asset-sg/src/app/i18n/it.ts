@@ -424,4 +424,11 @@ export const itTranslationMapping: AppTranslationMapping = {
       },
     },
   },
+  pageClassificationCodes: {
+    t: 'IT Text',
+    b: 'IT Bohrprofil',
+    m: 'IT Karten',
+    tp: 'IT Titelseite',
+    u: 'IT Unbekannt',
+  },
 };
