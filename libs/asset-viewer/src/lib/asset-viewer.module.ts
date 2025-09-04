@@ -59,7 +59,6 @@ import { AssetSearchFilterComponent } from './components/asset-search-filter/ass
 import { AssetSearchRefineComponent } from './components/asset-search-refine';
 import { AssetSearchResultsComponent } from './components/asset-search-results';
 import { AssetViewerFilesContentComponent } from './components/asset-viewer-files/asset-viewer-files-content/asset-viewer-files-content.component';
-import { FileContentsPipe } from './components/asset-viewer-files/asset-viewer-files-content/file-contents.pipe';
 import { AssetViewerFilesContentSummaryComponent } from './components/asset-viewer-files/asset-viewer-files-content-summary/asset-viewer-files-content-summary.component';
 import { FilePagePipe } from './components/asset-viewer-files/asset-viewer-files-content-summary/file-page.pipe';
 import { AssetViewerFilesTagComponent } from './components/asset-viewer-files/asset-viewer-files-tag/asset-viewer-files-tag.component';
@@ -94,7 +93,6 @@ const routes: Routes = [
     AssetSearchResultsComponent,
     AssetViewerFilesComponent,
     AssetPickerComponent,
-    FileContentsPipe,
     FilePagePipe,
     FileSizePipe,
   ],
