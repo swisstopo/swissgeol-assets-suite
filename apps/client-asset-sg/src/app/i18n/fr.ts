@@ -426,10 +426,10 @@ export const frTranslationMapping: AppTranslationMapping = {
     },
   },
   pageClassificationCodes: {
-    t: 'FR Text',
-    b: 'FR Bohrprofil',
-    m: 'FR Karten',
-    tp: 'FR Titelseite',
-    u: 'FR Unbekannt',
+    t: 'Texte',
+    b: 'Profil de forage',
+    m: 'Cartes',
+    tp: 'Page de titre',
+    u: 'Inconnu',
   },
 };

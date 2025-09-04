@@ -10,8 +10,8 @@ import { LegalDocCode, PageCategory, SupportedPageLanguage } from '@asset-sg/sha
 export class AssetViewerFilesContentSummaryComponent implements AfterViewInit {
   @Input() public languages: SupportedPageLanguage[] = [];
   @Input() public categories: PageCategory[] = [];
-  @Input({ required: true }) public pageCount!: number | null;
-  @Input({ required: true }) public legalDocCode!: LegalDocCode | null;
+  @Input({ required: true }) public pageCount: number | null = null;
+  @Input({ required: true }) public legalDocCode: LegalDocCode | null = null;
 
   @ViewChild('tagGroup', { static: true }) tagGroup!: ElementRef<HTMLDivElement>;
 
