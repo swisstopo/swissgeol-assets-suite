@@ -4,13 +4,16 @@ import { isNotNull } from '@asset-sg/core';
 import { Store } from '@ngrx/store';
 import { filter, firstValueFrom } from 'rxjs';
 import { LanguageService } from '../services';
-import { selectUser } from '../state/app-shared-state.selectors';
+import { selectIsAnonymousMode, selectUser } from '../state/app-shared-state.selectors';
 
 export const redirectToRootGuard: CanMatchFn = async () => {
   const router = inject(Router);
   const languageService = inject(LanguageService);
   const store = inject(Store);
-  await firstValueFrom(store.select(selectUser).pipe(filter(isNotNull)));
+  const isAnonymous = await firstValueFrom(store.select(selectIsAnonymousMode).pipe(filter(isNotNull)));
+  if (!isAnonymous) {
+    await firstValueFrom(store.select(selectUser).pipe(filter(isNotNull)));
+  }
   return new RedirectCommand(router.createUrlTree([languageService.language]), {
     info: 'redirectToRootGuard',
   });

@@ -19,7 +19,7 @@ export const storeContact = createAction('[App Shared State] Store Contact', pro
 
 export const loadUser = createAction('[App Shared State] Load User');
 
-export const setAnonymousMode = createAction('[App Shared State] Set Viewer Mode');
+export const setAnonymousMode = createAction('[App Shared State] Set Viewer Mode', props<{ isAnonymous: boolean }>());
 
 export const setTrackingConsent = createAction(
   '[App Shared State] Set Tracking Consent',

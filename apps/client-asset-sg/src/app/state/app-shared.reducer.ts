@@ -7,7 +7,7 @@ const initialState: AppSharedState = {
   user: null,
   referenceData: null,
   workgroups: [],
-  isAnonymousMode: false,
+  isAnonymousMode: null,
   hasConsentedToTracking: false,
   currentAsset: null,
   isLoadingAsset: false,
@@ -54,9 +54,9 @@ export const appSharedStateReducer = createReducer(
   on(appSharedStateActions.setUser, (state, user): AppSharedState => ({ ...state, user })),
   on(
     appSharedStateActions.setAnonymousMode,
-    (state): AppSharedState => ({
+    (state, { isAnonymous }): AppSharedState => ({
       ...state,
-      isAnonymousMode: true,
+      isAnonymousMode: isAnonymous,
     }),
   ),
   on(
