@@ -36,13 +36,14 @@ export class AuthService {
 
   private initializeAnonymousMode(): void {
     this.setState(AuthState.Success);
-    this.store.dispatch(appSharedStateActions.setAnonymousMode());
+    this.store.dispatch(appSharedStateActions.setAnonymousMode({ isAnonymous: true }));
   }
 
   private async initializeSession(config: AppConfig): Promise<void> {
     const callbackUrl = sessionStorage.getItem(CALLBACK_PATH_KEY);
     sessionStorage.setItem(CALLBACK_PATH_KEY, window.location.pathname + window.location.search);
     this.configureOAuth(config.oauth);
+    this.store.dispatch(appSharedStateActions.setAnonymousMode({ isAnonymous: false }));
     await this.signIn();
     this.store.dispatch(appSharedStateActions.loadUser());
     if (callbackUrl != null) {

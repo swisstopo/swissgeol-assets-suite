@@ -138,7 +138,7 @@ export class HttpInterceptor implements AngularHttpInterceptor, OnDestroy {
   private initializeStoreSubscription(): void {
     this.subscription.add(
       this.store.select(fromAppShared.selectIsAnonymousMode).subscribe((isAnonymousMode) => {
-        this.isAnonymousMode = isAnonymousMode;
+        this.isAnonymousMode = isAnonymousMode ?? false;
       }),
     );
   }

@@ -4,7 +4,7 @@ export interface AppSharedState {
   user: User | null;
   referenceData: ReferenceDataMapping | null;
   workgroups: SimpleWorkgroup[];
-  isAnonymousMode: boolean;
+  isAnonymousMode: boolean | null;
   hasConsentedToTracking: boolean;
   currentAsset: CurrentAsset | null;
   isLoadingAsset: boolean;
