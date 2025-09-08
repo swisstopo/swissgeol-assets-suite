@@ -86,19 +86,20 @@
               <svg-icon key="close"></svg-icon>
             </button>
             <mat-autocomplete #auto="matAutocomplete">
-              <mat-option
-                *ngFor="let author of filteredAuthors"
-                [value]="author.value.name"
-                class="author"
-                [matTooltip]="author.value.name"
-                matTooltipPosition="right"
-                (onSelectionChange)="updateAuthor($event, author.value.id)"
-              >
-                <div class="author__name">
-                  {{ author.value.name }}
-                </div>
-                <div class="author__count">({{ author.count }})</div>
-              </mat-option>
+              @for (author of filteredAuthors; track author) {
+                <mat-option
+                  [value]="author.value.name"
+                  class="author"
+                  [matTooltip]="author.value.name"
+                  matTooltipPosition="right"
+                  (onSelectionChange)="updateAuthor($event, author.value.id)"
+                >
+                  <div class="author__name">
+                    {{ author.value.name }}
+                  </div>
+                  <div class="author__count">({{ author.count }})</div>
+                </mat-option>
+              }
             </mat-autocomplete>
           </mat-form-field>
         </form>

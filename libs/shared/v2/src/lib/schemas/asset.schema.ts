@@ -1,3 +1,4 @@
+import { WorkflowStatus } from '@swissgeol/ui-core';
 import { Type } from 'class-transformer';
 import { IsArray, IsBoolean, IsEnum, IsInt, IsNotEmpty, IsObject, IsString, ValidateNested } from 'class-validator';
 import {
@@ -151,6 +152,8 @@ export class AssetSchema extends Schema implements Asset {
 
   @TransformLocalDate()
   receivedAt!: LocalDate;
+
+  workflowStatus!: WorkflowStatus;
 }
 
 class AssetDataSchema extends Schema implements AssetData {

@@ -55,6 +55,16 @@
   background-color: #b45309;
 }
 
+:host(.transparent):not(.disabled) .mat-mdc-standard-chip.mdc-evolution-chip--disabled {
+  background-color: transparent;
+  border: 1px solid var(--sgc-color-border--default);
+
+  * {
+    /// ugly hack, but these components need redesign anyhow
+    color: black;
+  }
+}
+
 :host(.disabled) .mat-mdc-standard-chip.mdc-evolution-chip--disabled {
   background-color: variables.$grey-05;
 }

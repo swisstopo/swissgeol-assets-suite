@@ -9,7 +9,7 @@
       <svg-icon [key]="isResultsOpen ? 'arrow-down' : 'arrow-up'"></svg-icon>
     </button>
   </div>
-  <ng-container *ngIf="isResultsOpen">
+  @if (isResultsOpen) {
     <div class="search-results">
       <div class="table-container" (scroll)="onScroll($event)" #scrollContainer>
         <table mat-table [dataSource]="resultsToDisplay" class="mat-elevation-z8 table">
@@ -88,5 +88,5 @@
         </table>
       </div>
     </div>
-  </ng-container>
+  }
 </ng-container>

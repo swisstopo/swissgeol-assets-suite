@@ -9,6 +9,7 @@ import {
   LanguageCode,
   LinkedAsset,
   LocalDate,
+  mapWorkflowStatusFromPrisma,
   UpdateAssetData,
 } from '@asset-sg/shared/v2';
 import { Prisma } from '@prisma/client';
@@ -105,6 +106,11 @@ export const assetSelection = {
   creatorId: true,
   createDate: true,
   receiptDate: true,
+  workflow: {
+    select: {
+      status: true,
+    },
+  },
 } satisfies Prisma.AssetSelect;
 
 export const parseAssetFromPrisma = (data: SelectedAsset): Asset => ({
@@ -140,6 +146,7 @@ export const parseAssetFromPrisma = (data: SelectedAsset): Asset => ({
   creatorId: data.creatorId,
   createdAt: LocalDate.fromDate(data.createDate),
   receivedAt: LocalDate.fromDate(data.receiptDate),
+  workflowStatus: mapWorkflowStatusFromPrisma(data.workflow!.status),
 });
 
 const parseLegacyDataFromPrisma = (data: SelectedLegacyData): AssetLegacyData | null => {

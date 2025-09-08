@@ -3,6 +3,7 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "apps/server-asset-sg",
   "projectType": "application",
+  "tags": [],
   "targets": {
     "build": {
       "executor": "nx:run-commands",
@@ -94,6 +95,5 @@
         "codeCoverage": true
       }
     }
-  },
-  "tags": []
+  }
 }

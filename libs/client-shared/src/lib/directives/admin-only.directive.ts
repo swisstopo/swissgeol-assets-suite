@@ -8,16 +8,15 @@ import { AppState, fromAppShared } from '../state';
   standalone: true,
 })
 export class AdminOnlyDirective implements OnInit, OnDestroy {
-  private store = inject(Store<AppState>);
+  private readonly store = inject(Store<AppState>);
 
   private readonly subscription = new Subscription();
 
-  private ref = inject(ChangeDetectorRef);
+  private readonly ref = inject(ChangeDetectorRef);
 
-  constructor(
-    private readonly templateRef: TemplateRef<unknown>,
-    private readonly viewContainer: ViewContainerRef,
-  ) {}
+  private readonly templateRef: TemplateRef<unknown> = inject(TemplateRef);
+
+  private readonly viewContainer = inject(ViewContainerRef);
 
   ngOnInit(): void {
     this.subscription.add(

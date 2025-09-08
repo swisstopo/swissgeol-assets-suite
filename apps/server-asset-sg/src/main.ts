@@ -1,6 +1,7 @@
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 
+import compression from 'compression';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { AppLogger } from '@/app.logger';
@@ -21,6 +22,7 @@ async function bootstrap(): Promise<void> {
   app.setGlobalPrefix(API_PREFIX);
   app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true, forbidNonWhitelisted: true }));
   app.useGlobalFilters(new PrismaExceptionFilter());
+  app.use(compression());
   await app.listen(API_PORT);
   logger.log('🚀 application is running!', { url: new URL(`http://localhost:${API_PORT}/${API_PREFIX}`) });
 }

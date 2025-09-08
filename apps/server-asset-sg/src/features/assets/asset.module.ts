@@ -34,6 +34,7 @@ import { UsersModule } from '@/features/users/users.module';
     FavoritesController,
     WorkflowController,
   ],
+  exports: [AssetSearchService],
   imports: [UsersModule],
   providers: [
     SyncOnStartHook,

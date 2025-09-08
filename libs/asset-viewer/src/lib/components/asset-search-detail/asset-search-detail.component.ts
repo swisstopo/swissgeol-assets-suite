@@ -17,10 +17,11 @@ import { AppStateWithAssetSearch } from '../../state/asset-search/asset-search.r
 export class AssetSearchDetailComponent {
   private readonly store = inject(Store<AppStateWithAssetSearch>);
   private readonly languageService = inject(LanguageService);
-  public readonly language$ = this.languageService.language$;
-  public readonly asset$ = this.store.select(fromAppShared.selectCurrentAsset);
+  protected readonly language$ = this.languageService.language$;
+  protected readonly asset$ = this.store.select(fromAppShared.selectCurrentAsset);
+  protected readonly isAnonymous$ = this.store.select(fromAppShared.selectIsAnonymousMode);
 
-  public readonly contacts$: Observable<Array<Contact & { role: AssetContactRole }>> = this.asset$.pipe(
+  public readonly contacts$: Observable<{ [K in AssetContactRole]: Array<Contact> }> = this.asset$.pipe(
     filter(isNotNull),
     withLatestFrom(this.store.select(fromAppShared.selectReferenceContacts).pipe(filter(isNotNull))),
     map(([asset, contacts]) =>
@@ -28,11 +29,13 @@ export class AssetSearchDetailComponent {
         (acc, { id, role }) => {
           const contact = contacts.get(id);
           if (contact !== undefined) {
-            acc.push({ ...contact, role });
+            acc[role].push(contact);
           }
           return acc;
         },
-        [] as Array<Contact & { role: AssetContactRole }>,
+        { [AssetContactRole.Author]: [], [AssetContactRole.Initiator]: [], [AssetContactRole.Supplier]: [] } as {
+          [K in AssetContactRole]: Array<Contact>;
+        },
       ),
     ),
   );

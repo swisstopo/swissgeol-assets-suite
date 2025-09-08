@@ -1,7 +1,7 @@
 import { DecimalPipe } from '@angular/common';
-import { Pipe, PipeTransform } from '@angular/core';
+import { inject, Pipe, PipeTransform } from '@angular/core';
 import { AssetFile } from '@asset-sg/shared/v2';
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslateService } from '@ngx-translate/core';
 
 @Pipe({
   name: 'fileMetadata',
@@ -9,10 +9,8 @@ import { TranslatePipe } from '@ngx-translate/core';
   standalone: false,
 })
 export class FileMetadataPipe implements PipeTransform {
-  constructor(
-    private readonly decimalPipe: DecimalPipe,
-    private readonly translatePipe: TranslatePipe,
-  ) {}
+  private readonly decimalPipe = inject(DecimalPipe);
+  private readonly translateService = inject(TranslateService);
 
   transform({ size, pageCount }: AssetFile, locale: string): string {
     const _fileSize = Math.round((size / 1024 / 1024) * 10) / 10;
@@ -25,8 +23,8 @@ export class FileMetadataPipe implements PipeTransform {
 
     const pageCountDisplay =
       pageCount > 1
-        ? this.translatePipe.transform('search.filePagePlural', { pageCount })
-        : this.translatePipe.transform('search.filePageSingular');
+        ? this.translateService.instant('search.filePagePlural', { pageCount })
+        : this.translateService.instant('search.filePageSingular');
 
     return [formattedFileSize, pageCountDisplay].join(', ');
   }

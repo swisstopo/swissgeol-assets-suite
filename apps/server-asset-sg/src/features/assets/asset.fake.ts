@@ -12,6 +12,7 @@ import {
 } from '@asset-sg/shared/v2';
 import { fakerDE_CH as faker } from '@faker-js/faker';
 
+import { WorkflowStatus } from '@swissgeol/ui-core';
 // eslint-disable-next-line @nx/enforce-module-boundaries
 import { fakeAssetFormatItemCode } from '../../../../../test/data/asset-format-item';
 // eslint-disable-next-line @nx/enforce-module-boundaries
@@ -113,4 +114,5 @@ export const fakeAsset = (): Asset => ({
   receivedAt: LocalDate.fromDate(faker.date.past()),
   creatorId: null,
   restrictionDate: null,
+  workflowStatus: WorkflowStatus.Draft,
 });

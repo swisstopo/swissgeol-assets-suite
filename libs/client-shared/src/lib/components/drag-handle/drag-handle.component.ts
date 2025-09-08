@@ -1,5 +1,4 @@
-import { DOCUMENT } from '@angular/common';
-import { Component, ElementRef, EventEmitter, NgZone, Output, inject } from '@angular/core';
+import { Component, ElementRef, EventEmitter, NgZone, Output, inject, DOCUMENT } from '@angular/core';
 import { Observable, distinctUntilChanged, fromEvent, map, merge, of, share, switchMap } from 'rxjs';
 
 export type DragHandleOffset = { offsetX: number; offsetY: number } | null;

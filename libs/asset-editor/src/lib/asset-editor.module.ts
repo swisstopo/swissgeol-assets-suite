@@ -31,7 +31,6 @@ import {
 import { MatTooltip } from '@angular/material/tooltip';
 import { CanActivateFn, RouterModule, Routes } from '@angular/router';
 import {
-  isAdminGuard,
   AdminOnlyDirective,
   AnchorComponent,
   ButtonComponent,
@@ -45,11 +44,13 @@ import {
   DrawerPanelComponent,
   FileNamePipe,
   fromAppShared,
+  isAdminGuard,
   LocalizePathPipe,
   PageHeaderComponent,
   SelectComponent,
   SelectOptionComponent,
   SmartTranslatePipe,
+  StatusChipComponent,
   TabComponent,
   TabsComponent,
   TextAreaComponent,
@@ -63,11 +64,11 @@ import { SvgIconComponent } from '@ngneat/svg-icon';
 import { EffectsModule } from '@ngrx/effects';
 import { Store, StoreModule } from '@ngrx/store';
 import { TranslateModule } from '@ngx-translate/core';
-import { ForModule } from '@rx-angular/template/for';
-import { IfModule } from '@rx-angular/template/if';
-import { LetModule } from '@rx-angular/template/let';
-import { PushModule } from '@rx-angular/template/push';
-import { SwissgeolCoreModule } from '@swissgeol/ui-core-angular';
+import { RxFor } from '@rx-angular/template/for';
+import { RxIf } from '@rx-angular/template/if';
+import { RxLet } from '@rx-angular/template/let';
+import { RxPush } from '@rx-angular/template/push';
+import { SgcWorkflow } from '@swissgeol/ui-core-angular';
 import { de } from 'date-fns/locale/de';
 import { combineLatest, filter, map } from 'rxjs';
 import { AssetEditorIdListComponent } from './components/asset-editor-id-list/asset-editor-id-list.component';
@@ -169,9 +170,10 @@ const routes: Routes = [
     ReactiveFormsModule,
     A11yModule,
 
-    LetModule,
-    PushModule,
-    ForModule,
+    RxIf,
+    RxLet,
+    RxPush,
+    RxFor,
     SvgIconComponent,
     DialogModule,
     A11yModule,
@@ -205,7 +207,6 @@ const routes: Routes = [
     DatePickerComponent,
     SmartTranslatePipe,
     TextAreaComponent,
-    IfModule,
     TabComponent,
     TabsComponent,
     UsernameComponent,
@@ -227,9 +228,10 @@ const routes: Routes = [
     MatProgressSpinner,
     MatDialogContent,
     MatDialogActions,
-    SwissgeolCoreModule,
     SelectOptionComponent,
     LocalizePathPipe,
+    StatusChipComponent,
+    SgcWorkflow,
   ],
   providers: [
     { provide: MAT_DATE_LOCALE, useValue: de },

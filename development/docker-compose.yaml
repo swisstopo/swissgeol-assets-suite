@@ -41,8 +41,7 @@ services:
       - ./init/db:/docker-entrypoint-initdb.d
       - ./init/dump.sql:/dump.sql
       - ./volumes/db/data/postgres:/var/lib/postgresql/data
-      - ./init/testing/give_admin_perm.sql:/give_admin_perm.sql
-      - ./init/testing/static_entities.sql:/static_entities.sql
+      - ./init/testing:/testing
 
     healthcheck:
       test: "pg_isready -U ${DB_USER} -d postgres -h db"

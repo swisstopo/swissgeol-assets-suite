@@ -1,33 +1,19 @@
-import { CommonModule } from '@angular/common';
-import { Component, Inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogActions, MatDialogContent, MatDialogRef } from '@angular/material/dialog';
 import { TranslateModule } from '@ngx-translate/core';
-import { LetModule } from '@rx-angular/template/let';
 import { ButtonComponent } from '../button';
 
 @Component({
   selector: 'asset-sg-disclaimer-dialog',
   standalone: true,
-  imports: [
-    CommonModule,
-    ButtonComponent,
-    FormsModule,
-    MatDialogActions,
-    MatDialogContent,
-    ReactiveFormsModule,
-    TranslateModule,
-    LetModule,
-  ],
+  imports: [ButtonComponent, FormsModule, MatDialogActions, MatDialogContent, ReactiveFormsModule, TranslateModule],
   templateUrl: './confirm-dialog.component.html',
   styleUrls: ['./confirm-dialog.component.scss'],
 })
 export class ConfirmDialogComponent {
-  constructor(
-    private readonly dialogRef: MatDialogRef<ConfirmDialogComponent>,
-    @Inject(MAT_DIALOG_DATA)
-    public data: ConfirmDialogData,
-  ) {}
+  private readonly dialogRef: MatDialogRef<ConfirmDialogComponent> = inject(MatDialogRef);
+  protected readonly data: ConfirmDialogData = inject(MAT_DIALOG_DATA);
 
   public close(confirmed: boolean) {
     this.dialogRef.close(confirmed);

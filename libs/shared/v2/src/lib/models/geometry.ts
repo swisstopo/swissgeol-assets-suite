@@ -12,6 +12,7 @@ export interface GeometryDetail {
   id: GeometryId;
   type: GeometryType;
   coordinates: Coordinate[];
+  centroid: Coordinate;
 }
 
 export interface Coordinate {
@@ -55,7 +56,8 @@ export enum GeometryAccessType {
   Internal,
 }
 
-export type GeometryId = `study_${StudyType}_${number}`;
+type GeometryIdentifier = 'a' | 'l' | 't'; // area, location, trace
+export type GeometryId = `${GeometryIdentifier}${number}`;
 
 export enum StudyType {
   Area = 'area',
@@ -75,13 +77,13 @@ export const mapGeometryTypeToStudyType = (type: GeometryType): StudyType => {
 };
 
 export const extractGeometryTypeFromId = (id: GeometryId): GeometryType => {
-  const [_prefix, studyType, _suffix] = id.split('_', 3);
-  switch (studyType) {
-    case StudyType.Location:
+  const studyType = id.charAt(0);
+  switch (studyType as GeometryIdentifier) {
+    case 'l':
       return GeometryType.Point;
-    case StudyType.Trace:
+    case 't':
       return GeometryType.LineString;
-    case StudyType.Area:
+    case 'a':
       return GeometryType.Polygon;
     default:
       throw new Error(`Invalid geometry id: ${id}`);
@@ -89,11 +91,12 @@ export const extractGeometryTypeFromId = (id: GeometryId): GeometryType => {
 };
 
 export const serializeGeometryAsCsv = (geometry: Geometry): string => {
-  return `${geometry.id.substring(6)};${geometry.assetId};${geometry.type};${geometry.accessType};${geometry.center.x};${geometry.center.y}`;
+  // todo: the double ; is because I could not be bothered to fix the parsing; Geometry type is used in multiple sources.
+  return `${geometry.id};${geometry.assetId};;${geometry.accessType};${geometry.center.x};${geometry.center.y}`;
 };
 
 export const parseGeometryIdNumber = (id: GeometryId): number => {
-  const match = /^study_(?:area|location|trace)_(\d+)$/.exec(id);
+  const match = /^[alt](\d+)$/.exec(id);
   if (match === null) {
     throw new Error(`Invalid studyId: ${id}`);
   }

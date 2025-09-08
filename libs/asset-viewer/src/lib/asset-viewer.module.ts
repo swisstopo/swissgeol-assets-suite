@@ -6,6 +6,7 @@ import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatChipSet } from '@angular/material/chips';
 import { MAT_DATE_FORMATS, MAT_DATE_LOCALE } from '@angular/material/core';
 import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatDivider } from '@angular/material/divider';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
@@ -38,15 +39,17 @@ import {
   FileNamePipe,
   ReferencePipe,
   SmartTranslatePipe,
+  StatusChipComponent,
   ZoomControlsComponent,
 } from '@asset-sg/client-shared';
 import { FavoritesModule } from '@asset-sg/favorites';
 import { SvgIconComponent } from '@ngneat/svg-icon';
 import { StoreModule } from '@ngrx/store';
 import { TranslateModule, TranslatePipe } from '@ngx-translate/core';
-import { ForModule } from '@rx-angular/template/for';
-import { LetModule } from '@rx-angular/template/let';
-import { PushModule } from '@rx-angular/template/push';
+import { RxFor } from '@rx-angular/template/for';
+import { RxLet } from '@rx-angular/template/let';
+import { RxPush } from '@rx-angular/template/push';
+import { SgcButton, SgcCard, SgcIcon } from '@swissgeol/ui-core-angular';
 import { de } from 'date-fns/locale/de';
 
 import { AssetPickerComponent } from './components/asset-picker';
@@ -97,9 +100,9 @@ const routes: Routes = [
     DatePipe,
     ZoomControlsComponent,
 
-    ForModule,
-    LetModule,
-    PushModule,
+    RxFor,
+    RxLet,
+    RxPush,
 
     MatProgressBarModule,
     MatProgressSpinnerModule,
@@ -134,6 +137,11 @@ const routes: Routes = [
     MapLegendComponent,
     FileNamePipe,
     ReferencePipe,
+    MatDivider,
+    StatusChipComponent,
+    SgcCard,
+    SgcIcon,
+    SgcButton,
   ],
   providers: [
     TranslatePipe,

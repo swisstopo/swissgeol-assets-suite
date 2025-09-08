@@ -38,7 +38,9 @@ export class AppBarComponent implements OnInit {
 
   private readonly _ngOnInit$ = new Subject<void>();
 
-  constructor(private readonly httpClient: HttpClient) {
+  private readonly httpClient = inject(HttpClient);
+
+  constructor() {
     this.httpClient.get<Version>('/assets/version.json').subscribe((v) => (this.version = v.version));
     this.searchTextChanged = this.searchTextKeyDown$.pipe(
       filter((ev) => ev.keyCode === ENTER),
