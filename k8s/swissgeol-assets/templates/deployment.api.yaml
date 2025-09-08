@@ -96,7 +96,7 @@ spec:
             - name: OCR_SERVICE_URL
               value: http://{{ .Release.Name }}-ocr:8000
             - name: EXTRACTION_SERVICE_URL
-              value: http://{{ .Release.Name }}-extraction:8000
+              value: http://{{ .Release.Name }}-dataextraction:8000
             - name: GOOGLE_ANALYTICS_ID
               value: {{ .Values.google_analytics_id }}
 
