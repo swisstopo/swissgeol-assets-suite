@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Release.Name }}-extraction
+  name: {{ .Release.Name }}-dataextraction
   namespace: {{ .Release.Namespace }}
   annotations:
     keel.sh/policy: force
@@ -11,33 +11,29 @@ spec:
   replicas: 1
   selector:
     matchLabels:
-      app: {{ .Release.Name }}-extraction
+      app: {{ .Release.Name }}-dataextraction
   template:
     metadata:
       labels:
-        app: {{ .Release.Name }}-extraction
+        app: {{ .Release.Name }}-dataextraction
     spec:
-      serviceAccountName: extraction
+      # TODO use dataextraction here once it has a custom role arn
+      serviceAccountName: ocr
       containers:
-      - name: {{ .Release.Name }}-extraction
-        image: {{ .Values.image_extraction }}
+      - name: {{ .Release.Name }}-dataextraction
+        image: {{ .Values.image_dataextraction }}
         imagePullPolicy: Always
         ports:
           - containerPort: 8000
         env:
-          - name: TMP_PATH
-            value: /tmp/ocr/
           - name: S3_BUCKET
             value: {{ .Values.s3_bucket_name }}
           - name: S3_FOLDER
             value: {{ .Values.s3_asset_folder }}/
-          - name: AWS_PROFILE
-            value: {{ .Values.s3_bucket_name }}
-          - name: FASTTEXT_MODEL_PATH
-            value: "models/FastText/lid.176.bin"
-        resources:
-          limits:
-            cpu: '0.5'
-            memory: '2Gi'
+        # TODO enable this once the clusters have enough resources to support it.
+        #resources:
+        #  limits:
+        #    cpu: '0.5'
+        #    memory: '2Gi'
       imagePullSecrets:
       - name: {{ .Release.Namespace }}-registry
