@@ -8,6 +8,20 @@
 
 ### Fixed
 
+## v1.14.0
+
+### Added
+
+### Changed
+
+- Die Deatailansicht der Assets wurde neu gestaltet.
+- Es wurden Perfomranceverbesserungen beim Laden der Geometrien vorgenommen.
+
+### Fixed
+
+- Der Sync von Ext nach Prod wurde verbessert. Die Workgroups werden jetzt nach Namen und nicht mehr nach Ids synchronisiert.
+- Eine Default Workgroup "Sync" wurde erstellt, wenn die Workgroup von Ext auf Prod nicht existiert.
+
 ## v1.13.0
 
 ### Added
