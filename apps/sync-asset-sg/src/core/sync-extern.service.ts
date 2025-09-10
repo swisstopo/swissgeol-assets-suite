@@ -84,6 +84,7 @@ export class SyncExternService {
       include: { assetFiles: { include: { file: true } }, assetContacts: { include: { contact: true } } },
       data: {
         ...asset.asset,
+        creatorId: this.syncAssignee,
         assetMainId: null, // this will be set afterwards
         isPublic: false,
         assetFiles: filesCreate,
