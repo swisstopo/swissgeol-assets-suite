@@ -1,3 +1,5 @@
+export * from './lib/fixtures';
+
 export * from './lib/models/base/model';
 export * from './lib/models/base/localized-string';
 export * from './lib/models/base/local-date';

@@ -31,7 +31,7 @@ export function getConfig(): SyncConfig {
     },
     destination: {
       connectionString: getEnvOrThrow('DESTINATION_CONNECTION_STRING'),
-      allowedWorkgroupIds: process.env['DESTINATION_WORKGROUP_IDS']?.split(',').map(Number),
+      allowedWorkgroupIds: process.env['DESTINATION_WORKGROUP_IDS']?.split(',').map(Number) ?? [],
     },
   };
 }

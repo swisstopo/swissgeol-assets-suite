@@ -1,11 +1,13 @@
 import { HttpModule } from '@nestjs/axios';
 import { CacheModule } from '@nestjs/cache-manager';
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ScheduleModule } from '@nestjs/schedule';
 
 import { AppController } from '@/app.controller';
+import { FixturesCreateCommand } from '@/commands/fixtures-create.command';
 import { AuthorizationGuard } from '@/core/guards/authorization-guard.service';
 import { JwtMiddleware } from '@/core/middleware/jwt.middleware';
 import { PrismaService } from '@/core/prisma.service';
@@ -30,6 +32,7 @@ import { WorkgroupsController } from '@/features/workgroups/workgroups.controlle
     WorkgroupsController,
   ],
   imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
     HttpModule,
     ScheduleModule.forRoot(),
     CacheModule.register(),
@@ -38,6 +41,8 @@ import { WorkgroupsController } from '@/features/workgroups/workgroups.controlle
     EventEmitterModule.forRoot(),
   ],
   providers: [
+    FixturesCreateCommand,
+
     ContactRepo,
     PrismaService,
     WorkgroupRepo,

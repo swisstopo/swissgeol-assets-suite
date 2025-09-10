@@ -1,4 +1,5 @@
-import { WorkgroupId } from '@asset-sg/shared/v2';
+import { isNotNil } from '@asset-sg/core';
+import { run, WorkgroupId } from '@asset-sg/shared/v2';
 import {
   Asset,
   AssetContact,
@@ -29,7 +30,7 @@ export class SyncExternService {
   private readonly geometries: Geometries = { areas: new Map(), locations: new Map(), traces: new Map() };
   private readonly sourcePrisma: PrismaClient;
   private readonly destinationPrisma: PrismaClient;
-  private defaultWorkgroupId: WorkgroupId;
+  private defaultWorkgroupId!: WorkgroupId;
   private syncAssignee: string | null = null;
 
   constructor(sourcePrisma: PrismaClient, destinationPrisma: PrismaClient, config: SyncConfig) {
@@ -109,12 +110,24 @@ export class SyncExternService {
     newAsset.assetFiles.map((a) => a.file).forEach((f) => this.existingFileIds.set(f.name, f.id));
 
     await this.destinationPrisma.assetContact.createMany({
-      data: [...contactsCreate.assignAfterwards.entries()].map(([uniqueKey, { role }]) => ({
-        role,
-        assetId: newAsset.assetId,
-        contactId: this.existingContactIds.get(uniqueKey),
-      })),
+      data: [...contactsCreate.assignAfterwards.entries()].map(
+        ([uniqueKey, { role }]): Prisma.AssetContactCreateManyInput => ({
+          role,
+          assetId: newAsset.assetId,
+          contactId: run(() => {
+            const id = this.existingContactIds.get(uniqueKey);
+            if (id === undefined) {
+              throw new Error(`Missing contactId for ${uniqueKey}`);
+            }
+            return id;
+          }),
+        }),
+      ),
     });
+
+    if (asset.originalSgsId === null) {
+      throw new Error(`originalSgsId must not be null: ${asset.originalAssetId}`);
+    }
 
     this.newAssetToOriginalAsset.set(newAsset.assetId, {
       originalAssetId: asset.originalAssetId,
@@ -149,6 +162,10 @@ export class SyncExternService {
     const allSynchronisations = await this.destinationPrisma.assetSynchronization.findMany();
     for (const asset of this.assetsToSync) {
       const newAssetId = assetSynchronizations.find((n) => n.originalAssetId === asset.originalAssetId);
+      if (newAssetId === undefined) {
+        throw new Error(`Could not find new asset id for asset ${asset.originalAssetId}`);
+      }
+
       const assetMainLink = allSynchronisations.find((n) => n.originalAssetId === asset.asset.assetMainId);
       const originalAssetXSiblings = existingSiblings
         .filter((n) => n.assetXId === asset.originalAssetId)
@@ -248,6 +265,9 @@ export class SyncExternService {
         workflow,
         ...asset
       } = item;
+      if (workflow === null) {
+        throw new Error(`Can't sync asset without workflow: ${assetId}`);
+      }
       return {
         asset,
         workgroupName: workgroup.name,
@@ -310,7 +330,7 @@ export class SyncExternService {
             contact: { connect: { contactId: match } },
           };
         })
-        .filter((s) => s),
+        .filter(isNotNil),
     };
 
     return { assignAfterwards, createData };
@@ -328,9 +348,11 @@ export class SyncExternService {
 
       return match
         ? { file: { connect: { id: match } } }
-        : (() => {
-            return { file: { create: file } };
-          })();
+        : ({
+            file: {
+              create: { ...file, pageRangeClassifications: file.pageRangeClassifications as Prisma.InputJsonValue },
+            },
+          } satisfies Prisma.AssetFileCreateWithoutAssetInput);
     });
 
     return { create };
@@ -465,6 +487,10 @@ export class SyncExternService {
     const newAssetId = Array.from(this.newAssetToOriginalAsset.entries()).find(
       ([_, v]) => v.originalAssetId === asset.originalAssetId,
     )?.[0];
+
+    if (newAssetId === undefined) {
+      throw new Error(`Could not find new asset id for original asset id ${asset.originalAssetId}`);
+    }
 
     const workflow = await this.destinationPrisma.workflow.create({
       select: { id: true },

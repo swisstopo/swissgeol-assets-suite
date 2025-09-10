@@ -32,6 +32,7 @@
               multiple
               isRequired
             />
+
             <asset-sg-select
               formControlName="languages"
               [title]="'edit.tabs.files.pageRanges.language' | translate"
@@ -71,7 +72,7 @@
 <hr />
 <div class="actions" mat-dialog-actions>
   <sgc-button (click)="cancel()" color="secondary" translate>cancel</sgc-button>
-  <sgc-button (click)="submit()" [isDisabled]="!form.valid" color="primary" translate
-    >edit.tabs.files.pageRanges.save
+  <sgc-button (click)="submit()" [isDisabled]="!form.valid" color="primary" data-testid="save-page-ranges" translate>
+    edit.tabs.files.pageRanges.save
   </sgc-button>
 </div>

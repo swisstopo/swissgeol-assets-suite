@@ -3,19 +3,21 @@
     <asset-sg-asset-viewer-files-tag>{{ pageCount | filePage }}</asset-sg-asset-viewer-files-tag>
   }
   @for (language of languages; track language) {
-    <asset-sg-asset-viewer-files-tag>{{ language.toUpperCase() }}</asset-sg-asset-viewer-files-tag>
+    <asset-sg-asset-viewer-files-tag [attr.data-testid]="'language-' + language">{{
+      language.toUpperCase()
+    }}</asset-sg-asset-viewer-files-tag>
   }
   @if (legalDocCode != null) {
     @if (pageCount || languages.length > 0) {
       <span class="tag-group__divider"><span></span></span>
     }
-    <asset-sg-asset-viewer-files-tag> {{ legalDocCode | reference: "legalDocs" }}</asset-sg-asset-viewer-files-tag>
+    <asset-sg-asset-viewer-files-tag>{{ legalDocCode | reference: "legalDocs" }}</asset-sg-asset-viewer-files-tag>
   }
   @for (category of categories; track category) {
     @if ($first && legalDocCode === null) {
       <span class="tag-group__divider"><span></span></span>
     }
-    <asset-sg-asset-viewer-files-tag>{{
+    <asset-sg-asset-viewer-files-tag [attr.data-testid]="'category-' + category">{{
       "pageClassificationCodes." + category | translate
     }}</asset-sg-asset-viewer-files-tag>
   }

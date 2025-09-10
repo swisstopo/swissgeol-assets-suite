@@ -8,12 +8,12 @@
 <asset-sg-language-selector />
 
 @if ((isAnonymous$ | async) === false) {
-  <button asset-sg-primary isIcon type="button" class="profile" [matMenuTriggerFor]="profileMenu">
+  <button asset-sg-primary isIcon type="button" class="profile" [matMenuTriggerFor]="profileMenu" data-testid="session">
     <svg-icon key="profile" />
   </button>
   <mat-menu #profileMenu="matMenu" backdropClass="profile">
     @if (user$ | async; as user) {
-      <div>{{ user.firstName }} {{ user.lastName }}</div>
+      <div data-testid="username">{{ user.firstName }} {{ user.lastName }}</div>
       <div>
         <button asset-sg-secondary translate (click)="logout()">logout</button>
       </div>

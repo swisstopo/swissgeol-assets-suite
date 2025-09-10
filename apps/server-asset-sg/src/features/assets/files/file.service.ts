@@ -62,6 +62,25 @@ export class FileService {
     return { ...asset, languageCodes: [...updatedLanguageCodes] };
   }
 
+  async delete(id: FileIdentifier): Promise<boolean> {
+    const file = await this.fileRepo.find(id);
+    if (file === null) {
+      // The file does not exist (anymore?), so it has not been deleted.
+      return false;
+    }
+    const isDbOk = await this.fileRepo.delete(id);
+    if (!isDbOk) {
+      // The connection between the asset and the file has been deleted,
+      // but the file is still linked to other assets.
+      // We still want to communicate that the file was successfully deleted,
+      // as by the viewpoint of the API, the deletion has been successful.
+      return true;
+    }
+
+    // Remove the file from S3, as no asset refers to it anymore.
+    return await this.fileS3Service.delete(file.name);
+  }
+
   async deleteOrphans(): Promise<void> {
     const orphans = await this.fileRepo.findOrphans();
     for (const orphan of orphans) {

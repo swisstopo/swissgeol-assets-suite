@@ -58,6 +58,7 @@ export class FileExtractionService extends AbstractProcessingService<PredictionS
   ) {
     super();
   }
+
   @OnEvent(EVENTS.FILE_START_EXTRACT)
   protected async handleStartEvent(payload: ProcessableFile): Promise<void> {
     void this.process(payload);
