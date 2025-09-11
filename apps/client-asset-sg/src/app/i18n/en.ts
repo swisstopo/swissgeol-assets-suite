@@ -197,7 +197,7 @@ export const enTranslationMapping: AppTranslationMapping = {
         willBeDeleted: 'Will be deleted',
         willBeUploaded: 'Will be uploaded',
         fileSizeToLarge: 'File size may not exceed 2GB',
-        uploadedAt: 'Uploaded',
+        fileNameTooltip: '{{name}} (Uploaded: {{date}})',
         fileProcessingState: 'Processing State',
         fileProcessingStateValues: {
           WillNotBeProcessed: 'will not be processed',

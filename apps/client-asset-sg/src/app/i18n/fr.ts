@@ -198,7 +198,7 @@ export const frTranslationMapping: AppTranslationMapping = {
         willBeDeleted: 'Sera supprimé',
         willBeUploaded: 'Sera téléchargé',
         fileSizeToLarge: 'La taille du fichier ne doit pas dépasser 2 Go.',
-        uploadedAt: 'Téléchargé',
+        fileNameTooltip: '{{name}} (Téléchargé: {{date}}) ',
         fileProcessingState: 'Status',
         fileProcessingStateValues: {
           WillNotBeProcessed: 'FR nicht berücksichtigt',

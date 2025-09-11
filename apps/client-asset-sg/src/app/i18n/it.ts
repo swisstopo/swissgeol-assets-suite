@@ -197,7 +197,7 @@ export const itTranslationMapping: AppTranslationMapping = {
         willBeDeleted: 'IT Wird gelöscht werden',
         willBeUploaded: 'IT Wird hochgeladen werden',
         fileSizeToLarge: 'IT Die Dateigrösse darf 2 GB nicht überschreiten.',
-        uploadedAt: 'IT Hochgeladen',
+        fileNameTooltip: 'IT {{name}} (Hochgeladen: {{date}})',
         fileProcessingState: 'IT Status',
         fileProcessingStateValues: {
           WillNotBeProcessed: 'IT nicht berücksichtigt',
