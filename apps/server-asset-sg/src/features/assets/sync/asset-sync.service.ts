@@ -1,9 +1,11 @@
 import fs, { rm } from 'fs/promises';
 import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
-import { SchedulerRegistry } from '@nestjs/schedule';
+import { Cron, SchedulerRegistry } from '@nestjs/schedule';
 import { CronJob } from 'cron';
 import { AssetRepo } from '@/features/assets/asset.repo';
 import { AssetSearchService } from '@/features/assets/search/asset-search.service';
+
+const at2AM = '0 2 * * *';
 
 @Injectable()
 export class AssetSyncService implements OnApplicationBootstrap {
@@ -26,6 +28,15 @@ export class AssetSyncService implements OnApplicationBootstrap {
       const job = new CronJob(every20Minutes, () => this.startSyncIfIndexOutOfSync());
       this.schedulerRegistry.addCronJob('elasticIndexSync', job);
       job.start();
+    }
+  }
+
+  @Cron(at2AM)
+  public async syncElasticIndexAfterExternSync() {
+    if (process.env.ANONYMOUES_MODE !== 'true') {
+      this.logger.log('Starting scheduled sync after external sync');
+      await this.clearSyncFileIfExists();
+      await this.start();
     }
   }
 

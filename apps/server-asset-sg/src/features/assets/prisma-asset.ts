@@ -146,7 +146,9 @@ export const parseAssetFromPrisma = (data: SelectedAsset): Asset => ({
   creatorId: data.creatorId,
   createdAt: LocalDate.fromDate(data.createDate),
   receivedAt: LocalDate.fromDate(data.receiptDate),
-  workflowStatus: mapWorkflowStatusFromPrisma(data.workflow!.status),
+  // In Anonymous Mode, Assets do not have a workflow. The previous nonNullAssertion caused the app to crash (see https://github.com/swisstopo/swissgeol-assets-suite/issues/702)
+  // We now default to 'Draft' in this case, since we never display the Workflowstatus in the Viewer App and the status is irrelevant.
+  workflowStatus: mapWorkflowStatusFromPrisma(data.workflow?.status ?? 'Draft'),
 });
 
 const parseLegacyDataFromPrisma = (data: SelectedLegacyData): AssetLegacyData | null => {
