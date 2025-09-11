@@ -1,4 +1,12 @@
-import { AssetFile, AssetFileId, AssetId, LegalDocCode, OcrStatus, User } from '@asset-sg/shared/v2';
+import {
+  AssetFile,
+  AssetFileId,
+  AssetId,
+  FileProcessingStage,
+  FileProcessingState,
+  LegalDocCode,
+  User,
+} from '@asset-sg/shared/v2';
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@/core/prisma.service';
 import { CreateRepo, DeleteRepo, FindRepo } from '@/core/repo';
@@ -38,7 +46,8 @@ export class FileRepo
         name: fileName,
         nameAlias,
         size: data.size,
-        ocrStatus: data.ocrStatus,
+        fileProcessingState: data.fileProcessingState,
+        fileProcessingStage: data.fileProcessingStage,
         type: data.legalDocCode === null ? 'Normal' : 'Legal',
         legalDocItemCode: data.legalDocCode,
         lastModifiedAt,
@@ -57,7 +66,9 @@ export class FileRepo
       legalDocCode: data.legalDocCode,
       pageCount: null, // this is filled (if at all) by postprocessing via OCR
       lastModifiedAt,
-      ocrStatus: data.ocrStatus,
+      fileProcessingStage: data.fileProcessingStage,
+      fileProcessingState: data.fileProcessingState,
+      pageClassifications: null, // this is filled (if at all) by postprocessing via Extraction
     };
   }
 
@@ -117,7 +128,8 @@ export interface CreateFileData {
   name: string;
   size: number;
   legalDocCode: LegalDocCode | null;
-  ocrStatus: OcrStatus;
+  fileProcessingState: FileProcessingState;
+  fileProcessingStage: FileProcessingStage | null;
   assetId: AssetId;
   user: User;
 }

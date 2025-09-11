@@ -39,7 +39,7 @@ export class AssetEditorFilesComponent implements OnInit, OnDestroy {
   private selectedFiles = new Set<AssetFormFile>();
 
   protected readonly dataSource = new MatTableDataSource<FormControl<AssetFormFile>>();
-  private readonly COLUMNS = ['select', 'name', 'lastModifiedAt', 'legalDocCode', 'ocrStatus'];
+  private readonly COLUMNS = ['select', 'name', 'lastModifiedAt', 'legalDocCode', 'processingState'];
   public displayedColumns: string[] = this.COLUMNS.filter((col) => col !== 'legalDocCode');
 
   private readonly store = inject(Store);
@@ -188,6 +188,8 @@ export class AssetEditorFilesComponent implements OnInit, OnDestroy {
       return (a < b ? -1 : 1) * (isAsc ? 1 : -1);
     });
   }
+
+  protected readonly JSON = JSON;
 }
 
 interface FileBlob {

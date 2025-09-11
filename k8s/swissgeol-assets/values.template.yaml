@@ -1,6 +1,7 @@
 host:
 image_app:
 image_api:
+image_extraction:
 elasticsearch_url:
 s3_bucket_name:
 s3_region:
@@ -8,6 +9,7 @@ s3_endpoint:
 s3_asset_folder:
 ocr_url:
 ocr_callback_url:
+ocr_extraction_url:
 oauth_issuer:
 oauth_client_id:
 oauth_scope:

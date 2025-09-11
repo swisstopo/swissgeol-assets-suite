@@ -1,32 +1,61 @@
+@use "../../styles/variables";
+
 :host {
-  list-style-type: none;
   display: flex;
   flex-direction: column;
-  row-gap: 6px;
+  gap: 6px;
 }
-
-:host > li {
+.file {
+  border: 1px solid variables.$grey-05;
+  border-radius: 4px;
+  padding: 16px;
   display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  .file__info {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    justify-content: space-between;
+
+    .file__info__metadata {
+      display: flex;
+      gap: 4px;
+      align-items: inherit;
+      flex-shrink: 1;
+      min-width: 0;
+
+      > :first-child,
+      > :last-child {
+        flex-shrink: 0;
+      }
+
+      > :nth-child(2) {
+        flex-shrink: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        padding-left: 8px;
+      }
+    }
+
+    .file__info__actions {
+      display: flex;
+      gap: 4px;
+      align-items: inherit;
+      flex-shrink: 0;
+
+      sgc-button::part(button) {
+        padding: 6px;
+        width: 36px;
+        height: 36px;
+      }
+    }
+  }
+}
+
+.divider {
   width: 100%;
-  align-items: center;
-  flex-wrap: wrap;
-  column-gap: 4px;
-}
-
-.legal-doc-item-code {
-  width: 100%;
-}
-
-.name {
-  max-width: calc(100% - 5.5rem);
-  word-wrap: break-word;
-}
-
-button[asset-sg-icon-button],
-button[asset-sg-icon-button] ::ng-deep svg-icon {
-  display: flex;
-  align-items: center;
-
-  width: 20px;
-  height: 20px;
+  border: 1px solid var(--sgc-color-border--default);
 }
