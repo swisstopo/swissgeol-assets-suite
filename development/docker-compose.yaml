@@ -101,6 +101,7 @@ services:
     volumes:
       - ./init/elasticsearch/:/init/:ro
       - ./volumes/elasticsearch/data:/usr/share/elasticsearch/data
+      - ./volumes/elasticsearch/logs:/usr/share/elasticsearch/logs
 
   kibana:
     container_name: swissgeol-assets-kibana
