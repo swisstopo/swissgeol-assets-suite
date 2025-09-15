@@ -19,12 +19,6 @@ import {
 } from '@/features/assets/files/file-processors/abstract-processing.service';
 import { FileS3Service } from '@/features/assets/files/file-s3.service';
 
-const serviceUrl = process.env.EXTRACTION_SERVICE_URL as string;
-if (serviceUrl == null || serviceUrl.length == 0) {
-  console.error("Missing 'EXTRACTION_SERVICE_URL' environment variable.");
-  exit(1);
-}
-
 /**
  * Represents the structure of the extraction result per page returned by the extraction service.
  */
@@ -74,7 +68,7 @@ export class FileExtractionService extends AbstractProcessingService<ExtractionR
 
   protected readonly logger = new Logger(FileExtractionService.name);
   protected readonly processingStage = FileProcessingStage.Extraction;
-  protected readonly serviceUrl = serviceUrl;
+  protected readonly serviceUrl: string;
 
   constructor(
     protected readonly fileS3Service: FileS3Service,
@@ -82,7 +76,16 @@ export class FileExtractionService extends AbstractProcessingService<ExtractionR
     protected readonly eventEmitter: EventEmitter2,
   ) {
     super();
+
+    const serviceUrl = process.env.EXTRACTION_SERVICE_URL as string;
+    if (serviceUrl == null || serviceUrl.length == 0) {
+      console.error("Missing 'EXTRACTION_SERVICE_URL' environment variable.");
+      exit(1);
+    }
+
+    this.serviceUrl = serviceUrl;
   }
+
   @OnEvent(EVENTS.FILE_START_EXTRACT)
   protected async handleStartEvent(payload: ProcessableFile): Promise<void> {
     void this.process(payload);

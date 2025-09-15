@@ -6,7 +6,8 @@ import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { AppLogger } from '@/app.logger';
 import { PrismaExceptionFilter } from '@/core/exception-filters/prisma.exception-filter';
-import { FileOcrService } from '@/features/assets/files/file-ocr.service';
+import { FileExtractionService } from '@/features/assets/files/file-processors/file-extraction.service';
+import { FileOcrService } from '@/features/assets/files/file-processors/file-ocr.service';
 import { AssetSyncService } from '@/features/assets/sync/asset-sync.service';
 import { UserService } from '@/features/users/user.service';
 
@@ -35,6 +36,9 @@ async function bootstrap(): Promise<void> {
 
   const fileOcrService = app.get(FileOcrService);
   await fileOcrService.processRemaining();
+
+  const fileExtractionService = app.get(FileExtractionService);
+  await fileExtractionService.processRemaining();
 
   await app.listen(API_PORT);
   logger.log('🚀 application is running!', { url: new URL(`http://localhost:${API_PORT}/${API_PREFIX}`) });

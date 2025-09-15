@@ -1,7 +1,7 @@
 import * as fs from 'node:fs';
 import { addCucumberPreprocessorPlugin } from '@badeball/cypress-cucumber-preprocessor';
 import { createEsbuildPlugin } from '@badeball/cypress-cucumber-preprocessor/esbuild';
-import * as createBundler from '@bahmutov/cypress-esbuild-preprocessor';
+import createBundler from '@bahmutov/cypress-esbuild-preprocessor';
 import { defineConfig } from 'cypress';
 
 // https://github.com/badeball/cypress-cucumber-preprocessor/blob/master/examples/esbuild-ts/cypress.config.ts
@@ -27,6 +27,7 @@ const setupNodeEvents = async (
 };
 
 export default defineConfig({
+  projectId: 'y2e1a9',
   viewportWidth: 1920,
   viewportHeight: 1280,
   e2e: {

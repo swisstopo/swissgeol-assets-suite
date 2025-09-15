@@ -4,7 +4,7 @@ Scenario: Redirect to external sign in mask
   When the application is visited
   Then the user is redirected to the sign in mask
 
-Scenario Outline: Sign in with authorized user '<username>'
+Scenario Outline: Sign in with authorized user "<username>"
   When the application is visited
   And the user is redirected to the sign in mask
   And the username "<username>" is entered

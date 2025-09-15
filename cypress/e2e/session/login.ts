@@ -1,19 +1,9 @@
 import { Then, When } from '@badeball/cypress-cucumber-preprocessor';
+import { waitForExternalNavigation } from '../common/session';
 
 When(/^the application is visited$/, () => {
   cy.visit('http://localhost:4200/');
-  cy.window().then((window) =>
-    cy.waitUntil(() => {
-      // Wait until accessing the window fails, as that indicates that the window context has switched.
-      try {
-        // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-        window.location.href;
-        return false;
-      } catch {
-        return true;
-      }
-    }),
-  );
+  waitForExternalNavigation();
 });
 
 Then(/^the user is redirected to the sign in mask$/, () => {
