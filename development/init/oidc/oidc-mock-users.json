@@ -208,5 +208,47 @@
         "ValueType": "string"
       }
     ]
+  },
+  {
+    "SubjectId": "2ba83d17-d46a-4648-ad73-e9e60d6c0a29",
+    "Username": "illegal",
+    "Password": "illegal",
+    "Claims": [
+      {
+        "Type": "name",
+        "Value": "Illegal",
+        "ValueType": "string"
+      },
+      {
+        "Type": "family_name",
+        "Value": "Egal",
+        "ValueType": "string"
+      },
+      {
+        "Type": "given_name",
+        "Value": "Ill",
+        "ValueType": "string"
+      },
+      {
+        "Type": "email",
+        "Value": "illegal@assets.swissgeol.ch",
+        "ValueType": "string"
+      },
+      {
+        "Type": "email_verified",
+        "Value": "true",
+        "ValueType": "boolean"
+      },
+      {
+        "Type": "cognito:groups",
+        "Value": "[\"no-usable-role\"]",
+        "ValueType": "json"
+      },
+      {
+        "Type": "username",
+        "Value": "5_illegal@assets.swissgeol.ch",
+        "ValueType": "string"
+      }
+    ]
   }
 ]
