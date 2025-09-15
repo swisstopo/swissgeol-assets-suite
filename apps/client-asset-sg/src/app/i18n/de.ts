@@ -205,6 +205,16 @@ export const deTranslationMapping = {
           Error: 'Fehler',
           Success: 'abgeschlossen',
         },
+        pageRanges: {
+          title: 'Klassifizierung',
+          recalculateRanges: 'Klassifizierung neu berechnen',
+          type: 'Typ',
+          language: 'Sprache',
+          pageFrom: 'Seite von',
+          pageTo: 'Seite bis',
+          save: 'Bearbeitung beenden',
+          toLessThanFromError: '"Seite von" muss kleiner oder gleich "Seite bis" sein.',
+        },
       },
       usage: {
         tabName: 'Nutzung',

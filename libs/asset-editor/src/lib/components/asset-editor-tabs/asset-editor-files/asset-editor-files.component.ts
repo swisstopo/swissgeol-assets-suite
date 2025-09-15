@@ -2,11 +2,19 @@ import { HttpClient } from '@angular/common/http';
 import { Component, inject, Input, OnDestroy, OnInit } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { MatCheckboxChange } from '@angular/material/checkbox';
+import { MatDialog } from '@angular/material/dialog';
 import { Sort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import { fromAppShared } from '@asset-sg/client-shared';
 import { isNotNull } from '@asset-sg/core';
-import { Asset, LegalDocCode, LocalizedItem } from '@asset-sg/shared/v2';
+import {
+  Asset,
+  FileProcessingStage,
+  FileProcessingState,
+  LegalDocCode,
+  LocalizedItem,
+  PageClassification,
+} from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
 import {
   BehaviorSubject,
@@ -20,6 +28,7 @@ import {
   tap,
 } from 'rxjs';
 import { AssetForm, AssetFormFile, ExistingAssetFile } from '../../asset-editor-page/asset-editor-page.component';
+import { PageRangeEditorComponent, PageRangeEditorData } from './page-range-editor/page-range-editor.component';
 
 export const isExistingAssetFile: (file: AssetFormFile) => file is ExistingAssetFile = (
   file,
@@ -40,6 +49,8 @@ export class AssetEditorFilesComponent implements OnInit, OnDestroy {
   protected readonly searchTerm$ = new BehaviorSubject<string>('');
   protected readonly isLegal$ = new BehaviorSubject(false);
   protected readonly dataSource = new MatTableDataSource<FormControl<AssetFormFile>>();
+  protected readonly FileProcessingState: typeof FileProcessingState = FileProcessingState;
+  protected readonly FileProcessingStage: typeof FileProcessingStage = FileProcessingStage;
   private selectedFiles = new Set<AssetFormFile>();
   private readonly COLUMNS = ['select', 'name', 'legalDocCode', 'processingState', 'actions'];
   public displayedColumns: string[] = this.COLUMNS.filter((col) => col !== 'legalDocCode');
@@ -52,6 +63,7 @@ export class AssetEditorFilesComponent implements OnInit, OnDestroy {
     );
   private readonly httpClient = inject(HttpClient);
   private readonly subscriptions: Subscription = new Subscription();
+  private readonly dialogService: MatDialog = inject(MatDialog);
 
   protected get hasSelectedFiles(): boolean {
     return this.selectedFiles.size !== 0;
@@ -86,6 +98,27 @@ export class AssetEditorFilesComponent implements OnInit, OnDestroy {
 
   public ngOnDestroy() {
     this.subscriptions.unsubscribe();
+  }
+
+  protected openPageRangeEditor(file: AssetFormFile) {
+    if (isExistingAssetFile(file)) {
+      const dialogRef = this.dialogService.open<PageRangeEditorComponent, PageRangeEditorData, PageClassification[]>(
+        PageRangeEditorComponent,
+        {
+          data: { classifications: file.pageClassifications, pageCount: file.pageCount ?? 0 }, // todo: pageCount can be 0
+          width: '925px',
+          autoFocus: false,
+        },
+      );
+
+      this.subscriptions.add(
+        dialogRef.afterClosed().subscribe((result) => {
+          if (result) {
+            this.updatePageClassifications(file, result);
+          }
+        }),
+      );
+    }
   }
 
   protected selectFile(control: FormControl<AssetFormFile>, event: MatCheckboxChange) {
@@ -174,6 +207,15 @@ export class AssetEditorFilesComponent implements OnInit, OnDestroy {
       const isAsc = sort.direction === 'asc';
       return (a < b ? -1 : 1) * (isAsc ? 1 : -1);
     });
+  }
+
+  private updatePageClassifications(file: ExistingAssetFile, result: PageClassification[]) {
+    const index = this.form.value.findIndex((e) => e === file);
+    if (index !== -1) {
+      const entry = this.form.at(index);
+      entry.patchValue({ ...file, pageClassifications: result });
+      entry.markAsDirty();
+    }
   }
 
   private startFileDownload(file: ExistingAssetFile): Observable<FileBlob> {

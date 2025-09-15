@@ -206,6 +206,16 @@ export const itTranslationMapping: AppTranslationMapping = {
           Error: 'IT Fehler',
           Success: 'IT abgeschlossen',
         },
+        pageRanges: {
+          title: 'IT Klassifizierung',
+          recalculateRanges: 'IT Klassifizierung neu berechnen',
+          type: 'IT Typ',
+          language: 'IT Sprache',
+          pageFrom: 'IT Seite von',
+          pageTo: 'IT Seite bis',
+          save: 'IT Bearbeitung beenden',
+          toLessThanFromError: 'IT "Seite von" muss kleiner oder gleich "Seite bis" sein.',
+        },
       },
       usage: {
         tabName: 'IT Nutzung',

@@ -53,7 +53,9 @@ export interface AssetFile {
   pageClassifications: PageClassification[] | null;
 }
 
-export type SupportedPageLanguage = 'de' | 'fr' | 'it' | 'en';
+export const SupportedPageLanguages = ['de', 'fr', 'it', 'en'] as const;
+
+export type SupportedPageLanguage = (typeof SupportedPageLanguages)[number];
 
 export enum PageCategory {
   Text = 't',
@@ -80,6 +82,7 @@ export interface CreateAssetFileData {
 export interface UpdateAssetFileData {
   id: AssetFileId;
   legalDocCode: LegalDocCode | null;
+  pageClassifications: PageClassification[] | null;
 }
 
 export enum LegalDocCode {
