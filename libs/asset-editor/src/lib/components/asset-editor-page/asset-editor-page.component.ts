@@ -487,7 +487,7 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
   protected readonly EditorMode = EditorMode;
 }
 
-export type ExistingAssetFile = Pick<AssetFile, 'id' | 'name' | 'legalDocCode'> & {
+export type ExistingAssetFile = Pick<AssetFile, 'id' | 'name' | 'legalDocCode' | 'lastModifiedAt'> & {
   shouldBeDeleted: boolean;
 };
 
