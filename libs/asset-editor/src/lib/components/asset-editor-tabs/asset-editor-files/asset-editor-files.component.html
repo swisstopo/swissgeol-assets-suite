@@ -32,12 +32,12 @@
             (matSortChange)="sortChange($event)"
           >
             <ng-container matColumnDef="select">
-              <th mat-header-cell *matHeaderCellDef>
+              <th mat-header-cell *matHeaderCellDef class="column-pick">
                 <span translate>
                   <mat-checkbox [checked]="areAllFilesSelected" (change)="toggleAll($event)" color="primary" />
                 </span>
               </th>
-              <td mat-cell *matCellDef="let control">
+              <td mat-cell *matCellDef="let control" class="column-pick">
                 @if (!activeFileDownloads.has(control.value.id)) {
                   <mat-checkbox
                     [checked]="isSelected(control.value)"
@@ -45,30 +45,29 @@
                     color="primary"
                   />
                 } @else {
-                  <mat-progress-spinner mode="indeterminate" [diameter]="20" />
+                  <div class="download-wrapper">
+                    <mat-progress-spinner mode="indeterminate" [diameter]="18" />
+                  </div>
                 }
               </td>
             </ng-container>
             <ng-container matColumnDef="name">
-              <th mat-header-cell mat-sort-header="name" *matHeaderCellDef class="large">
+              <th mat-header-cell mat-sort-header="name" *matHeaderCellDef class="column-name">
                 <span translate>admin.name</span>
               </th>
-              <td mat-cell *matCellDef="let control" class="large">
-                <span [class.will-be-deleted]="control.value.shouldBeDeleted">{{
-                  control.value.file?.name ?? control.value.name
-                }}</span>
-              </td>
-            </ng-container>
-            <ng-container matColumnDef="lastModifiedAt">
-              <th mat-header-cell *matHeaderCellDef class="large">
-                <span translate>edit.tabs.files.uploadedAt</span>
-              </th>
-              <td mat-cell *matCellDef="let control" class="large">
-                @if (control.value.lastModifiedAt) {
-                  {{ control.value.lastModifiedAt | date: "dd.MM.yyyy HH:mm" }}
-                } @else {
-                  -
-                }
+              <td mat-cell *matCellDef="let control" class="column-name">
+                <span
+                  [matTooltip]="
+                    control.value.file
+                      ? control.value.file.name
+                      : ('edit.tabs.files.fileNameTooltip'
+                        | translate
+                          : { name: control.value.name, date: control.value.lastModifiedAt | date: 'dd.MM.yyyy HH:mm' })
+                  "
+                  matTooltipPosition="above"
+                  [class.will-be-deleted]="control.value.shouldBeDeleted"
+                  >{{ control.value.file?.name ?? control.value.name }}</span
+                >
               </td>
             </ng-container>
             <ng-container matColumnDef="legalDocCode">
@@ -85,14 +84,63 @@
                 </asset-sg-select>
               </td>
             </ng-container>
-            <ng-container matColumnDef="ocrStatus">
-              <th mat-header-cell *matHeaderCellDef class="large">
-                <span translate>edit.tabs.files.ocrStatus</span>
+            <ng-container matColumnDef="processingState">
+              <th mat-header-cell *matHeaderCellDef class="column-ocr-status">
+                <span translate>edit.tabs.files.fileProcessingState</span>
               </th>
-              <td mat-cell *matCellDef="let control" class="large">
-                @if (control.value.ocrStatus) {
-                  {{ "edit.tabs.files.ocrStatusValues." + control.value.ocrStatus | translate }}
+              <td mat-cell *matCellDef="let control" class="column-ocr-status">
+                @if (control.value.fileProcessingState && control.value.fileProcessingStage) {
+                  {{ control.value.fileProcessingStage }} ({{
+                    "edit.tabs.files.fileProcessingStateValues." + control.value.fileProcessingState | translate
+                  }})
+                } @else {
+                  {{ "edit.tabs.files.fileProcessingStateValues.WillNotBeProcessed" | translate }}
                 }
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef class="column-actions"></th>
+              <td mat-cell *matCellDef="let control; let idx = index" class="column-actions">
+                <div>
+                  <sgc-button
+                    (click)="markFileForDeletion(control.value)"
+                    [matTooltip]="'delete' | translate"
+                    color="secondary"
+                    variant="icon"
+                    size="small"
+                    justify="center"
+                  >
+                    <sgc-icon name="trash" />
+                  </sgc-button>
+                  <sgc-button
+                    (click)="downloadFile(control.value)"
+                    [isDisabled]="!control.value.id"
+                    [matTooltip]="'edit.tabs.files.export' | translate"
+                    color="secondary"
+                    variant="icon"
+                    size="small"
+                    justify="center"
+                  >
+                    <sgc-icon name="download" />
+                  </sgc-button>
+                  <sgc-button
+                    [isDisabled]="
+                      !(
+                        control?.value?.fileProcessingStage != null &&
+                        control.value.fileProcessingStage === FileProcessingStage.Extraction &&
+                        (control.value.fileProcessingState === FileProcessingState.Success ||
+                          control.value.fileProcessingState === FileProcessingState.Error)
+                      )
+                    "
+                    color="secondary"
+                    variant="icon"
+                    size="small"
+                    justify="center"
+                    (click)="openPageRangeEditor(control.value)"
+                  >
+                    <sgc-icon name="tableOfContents" />
+                  </sgc-button>
+                </div>
               </td>
             </ng-container>
             <tr mat-header-row *matHeaderRowDef="displayedColumns" class="table__header"></tr>

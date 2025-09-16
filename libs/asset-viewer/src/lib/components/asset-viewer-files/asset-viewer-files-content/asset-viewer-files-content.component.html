@@ -1,0 +1,55 @@
+<cdk-accordion class="collapsible">
+  <cdk-accordion-item #accordionItem="cdkAccordionItem" (click)="accordionItem.toggle()" class="collapsible__header">
+    <div class="collapsible__header__toggle">
+      <sgc-icon size="large" [name]="accordionItem.expanded ? 'chevronDown' : 'chevronRight'"></sgc-icon>
+      <span>{{ "search.content" | translate }}:</span>
+    </div>
+    @if (!accordionItem.expanded) {
+      <asset-sg-asset-viewer-files-content-summary
+        [languages]="groupedPageClassifications.languages"
+        [categories]="groupedPageClassifications.categories"
+        [pageCount]="pageCount"
+        [legalDocCode]="legalDocCode"
+      ></asset-sg-asset-viewer-files-content-summary>
+    }
+  </cdk-accordion-item>
+  @if (accordionItem.expanded) {
+    <div
+      class="collapsible__body"
+      role="region"
+      [style.display]="accordionItem.expanded ? '' : 'none'"
+      [attr.id]="'accordion-body'"
+      [attr.aria-labelledby]="'accordion-header'"
+    >
+      @for (group of groupedPageClassifications.groupedPageClassifications | keyvalue; track group.key) {
+        <dl>
+          <dt translate>
+            {{ "pageClassificationCodes." + group.key }}
+          </dt>
+          @for (page of group.value; track page) {
+            <dd>
+              <span>{{ "pageClassificationCodes." + group.key | translate }}</span>
+              @if (page.languages.length > 0) {
+                <span class="tag-group">
+                  @for (language of page.languages; track language) {
+                    <asset-sg-asset-viewer-files-tag variant="small">{{
+                      language.toUpperCase()
+                    }}</asset-sg-asset-viewer-files-tag>
+                  }
+                </span>
+              }
+              <span class="range-divider"></span>
+              <span class="page-range">
+                @if (page.from === page.to) {
+                  {{ page.from }}
+                } @else {
+                  {{ page.from }} - {{ page.to }}
+                }
+              </span>
+            </dd>
+          }
+        </dl>
+      }
+    </div>
+  }
+</cdk-accordion>

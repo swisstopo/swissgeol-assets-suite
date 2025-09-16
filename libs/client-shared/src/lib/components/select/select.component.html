@@ -1,13 +1,13 @@
-<label asset-sg-form-item-wrapper [title]="title" [isRequired]="isRequired">
+<label [isRequired]="isRequired" [title]="title" asset-sg-form-item-wrapper>
   <mat-form-field class="select" subscriptSizing="dynamic">
-    <svg-icon key="arrow-down" class="icon" />
+    <svg-icon class="icon" key="arrow-down" />
 
     <mat-select
-      [value]="selectedValues"
-      (valueChange)="onFilterChange($event)"
-      [multiple]="multiple"
       (blur)="onBlur()"
+      (valueChange)="onFilterChange($event)"
       [disabled]="disabled"
+      [multiple]="multiple"
+      [value]="selectedValues"
     >
       @if (trigger) {
         <mat-select-trigger
@@ -16,7 +16,13 @@
       }
       @for (value of values; track value) {
         <mat-option [value]="value" class="option">
-          {{ (bindLabel ? $any(value[bindLabel]) : value) | smartTranslate }}
+          {{
+            skipTranslate
+              ? bindLabel
+                ? $any(value[bindLabel])
+                : value
+              : ((bindLabel ? $any(value[bindLabel]) : value) | smartTranslate)
+          }}
         </mat-option>
       }
 

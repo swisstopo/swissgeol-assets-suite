@@ -51,6 +51,7 @@ type FormValue<T> = T | T[] | T[keyof T] | T[keyof T][];
 })
 export class SelectComponent<T, K> implements OnInit, AfterViewInit, ControlValueAccessor {
   @Input() public values: T[] = [];
+  @Input({ transform: coerceBooleanProperty }) public skipTranslate = false;
   @Input() public bindLabel: keyof T | null = null;
   @Input() public bindKey: keyof T | null = null;
   @Input() public title = '';
