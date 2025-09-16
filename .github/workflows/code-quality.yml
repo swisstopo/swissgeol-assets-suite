@@ -179,13 +179,23 @@ jobs:
           DB_PASSWORD: ${{ env.DB_PASSWORD }}
         run: |
           cd development
+
+          # OCR env file - needs to exist for the OCR service to start.
           touch .env.ocr
+
+          # Ensure that the elasticsearch initialization script is executable.
           dos2unix ./init/elasticsearch/init.sh
           chmod +x ./init/elasticsearch/init.sh
           chmod +r ./init/elasticsearch/mappings/swissgeol_asset_asset.json
-          sed -i 's/- \.\/volumes\/elasticsearch\/data:\/usr\/share\/elasticsearch\/data//g' ./docker-compose.yaml
+
+          # Start all required services.
           docker compose up -d --quiet-pull db oidc elasticsearch
-          sleep 120
+
+          # Wait for the services to run.
+          chmod +x ../.github/scripts/wait_for_service.sh
+          ../.github/scripts/wait_for_service.sh db
+          ../.github/scripts/wait_for_service.sh oidc
+          ../.github/scripts/wait_for_service.sh elasticsearch
       - name: Migrate database
         run: |
           set -e
