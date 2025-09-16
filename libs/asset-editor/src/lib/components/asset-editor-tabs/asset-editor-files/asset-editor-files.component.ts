@@ -40,7 +40,6 @@ export class AssetEditorFilesComponent implements OnInit, OnDestroy {
   protected readonly searchTerm$ = new BehaviorSubject<string>('');
   protected readonly isLegal$ = new BehaviorSubject(false);
   protected readonly dataSource = new MatTableDataSource<FormControl<AssetFormFile>>();
-  protected readonly JSON = JSON;
   private selectedFiles = new Set<AssetFormFile>();
   private readonly COLUMNS = ['select', 'name', 'legalDocCode', 'processingState', 'actions'];
   public displayedColumns: string[] = this.COLUMNS.filter((col) => col !== 'legalDocCode');
