@@ -1,0 +1,73 @@
+<!-- todo: typehints on formControlName do not work -->
+<div class="header">
+  <h2 translate>edit.tabs.files.pageRanges.title</h2>
+</div>
+<hr />
+<div class="form-wrapper" mat-dialog-content>
+  <form #formElement [formGroup]="form">
+    <div class="page-range-editor" formArrayName="classifications">
+      @for (group of this.form.controls.classifications.controls; track $index) {
+        <div [formGroupName]="$index" class="page-range-editor__row">
+          <div class="page-range-editor__row__inputs">
+            <sgc-button
+              size="normal"
+              variant="icon"
+              color="tertiary"
+              [isTransparent]="true"
+              (click)="removeClassification($index)"
+            >
+              <sgc-icon name="trash"></sgc-icon>
+            </sgc-button>
+
+            <asset-sg-select
+              formControlName="categories"
+              [title]="'edit.tabs.files.pageRanges.type' | translate"
+              [values]="categories"
+              [bindKey]="'value'"
+              [bindLabel]="'label'"
+              multiple
+              isRequired
+            />
+            <asset-sg-select
+              formControlName="languages"
+              [title]="'edit.tabs.files.pageRanges.language' | translate"
+              [values]="languages"
+              [bindKey]="'value'"
+              [bindLabel]="'label'"
+              multiple
+            />
+
+            <asset-sg-select
+              formControlName="from"
+              [title]="'edit.tabs.files.pageRanges.pageFrom' | translate"
+              [values]="availablePages"
+              skipTranslate
+            />
+
+            <asset-sg-select
+              formControlName="to"
+              [title]="'edit.tabs.files.pageRanges.pageTo' | translate"
+              [values]="availablePages"
+              skipTranslate
+            />
+          </div>
+          @if (group.hasError("toLessThanFrom")) {
+            <div class="page-range-editor__row__error" translate>edit.tabs.files.pageRanges.toLessThanFromError</div>
+          }
+        </div>
+      }
+    </div>
+  </form>
+  <div (click)="addClassification()" class="page-range-editor__add-row" role="button">
+    <div class="page-range-editor__add-row__icon">
+      <sgc-icon name="plus"></sgc-icon>
+    </div>
+  </div>
+</div>
+<hr />
+<div class="actions" mat-dialog-actions>
+  <sgc-button (click)="cancel()" color="secondary" translate>cancel</sgc-button>
+  <sgc-button (click)="submit()" [isDisabled]="!form.valid" color="primary" translate
+    >edit.tabs.files.pageRanges.save
+  </sgc-button>
+</div>

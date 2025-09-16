@@ -207,6 +207,16 @@ export const frTranslationMapping: AppTranslationMapping = {
           Error: 'FR Fehler',
           Success: 'FR abgeschlossen',
         },
+        pageRanges: {
+          title: 'Classification',
+          recalculateRanges: 'Recalculer la classification',
+          type: 'Type',
+          language: 'Langue',
+          pageFrom: 'Page de',
+          pageTo: 'Page à',
+          save: 'Finaliser',
+          toLessThanFromError: '"La page "à" doit être supérieure ou égale à la page "de".',
+        },
       },
       usage: {
         tabName: 'Utilisation',

@@ -206,6 +206,16 @@ export const enTranslationMapping: AppTranslationMapping = {
           Error: 'error',
           Success: 'success',
         },
+        pageRanges: {
+          title: 'Classification',
+          recalculateRanges: 'Recalculate page ranges',
+          type: 'Type',
+          language: 'Language',
+          pageFrom: 'Page from',
+          pageTo: 'Page to',
+          save: 'Finish editing',
+          toLessThanFromError: '"To" must be greater than or equal to "From".',
+        },
       },
       usage: {
         tabName: 'Usage',

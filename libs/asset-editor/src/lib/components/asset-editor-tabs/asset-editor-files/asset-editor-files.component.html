@@ -109,8 +109,9 @@
                     variant="icon"
                     size="small"
                     justify="center"
-                    ><sgc-icon name="trash"
-                  /></sgc-button>
+                  >
+                    <sgc-icon name="trash" />
+                  </sgc-button>
                   <sgc-button
                     (click)="downloadFile(control.value)"
                     [isDisabled]="!control.value.id"
@@ -119,13 +120,26 @@
                     variant="icon"
                     size="small"
                     justify="center"
-                    ><sgc-icon name="download"
-                  /></sgc-button>
-                  <!-- todo assets-677: enable button for editing
-                  <sgc-button color="secondary" variant="icon" size="small" justify="center"
-                    ><sgc-icon name="tableOfContents"
-                  /></sgc-button>
-                  -->
+                  >
+                    <sgc-icon name="download" />
+                  </sgc-button>
+                  <sgc-button
+                    [isDisabled]="
+                      !(
+                        control?.value?.fileProcessingStage != null &&
+                        control.value.fileProcessingStage === FileProcessingStage.Extraction &&
+                        (control.value.fileProcessingState === FileProcessingState.Success ||
+                          control.value.fileProcessingState === FileProcessingState.Error)
+                      )
+                    "
+                    color="secondary"
+                    variant="icon"
+                    size="small"
+                    justify="center"
+                    (click)="openPageRangeEditor(control.value)"
+                  >
+                    <sgc-icon name="tableOfContents" />
+                  </sgc-button>
                 </div>
               </td>
             </ng-container>
