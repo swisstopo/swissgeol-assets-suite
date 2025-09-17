@@ -374,7 +374,7 @@ export class AssetSearchService {
         return false;
       }
       remainingOffset -= response.hits.hits.length;
-      state.lastAssetId = response.hits.hits[response.hits.hits.length - 1].fields!['id'][0] as number;
+      state.lastAssetId = response.hits.hits[response.hits.hits.length - 1].fields?.['id'][0] as number;
     }
     return state.totalCount == null || state.totalCount > offset;
   }
@@ -404,8 +404,8 @@ export class AssetSearchService {
         return;
       }
       for (const hit of response.hits.hits) {
-        const assetId: number = hit.fields!['id'][0];
-        const data = hit.fields!['data'][0];
+        const assetId = hit.fields?.['id'][0] as number;
+        const data = hit.fields?.['data'][0] as AssetJSON;
         state.matchedAssets.set(assetId, data);
         state.lastAssetId = assetId;
       }
@@ -597,10 +597,6 @@ interface PageOptions {
   limit?: number;
   offset?: number;
 }
-
-const escapeElasticQuery = (query: string): string => {
-  return query.replace(/(&&|\|\||!|\(|\)|\{|}|\[|]|\^|"|~|\*|\+|-|=|\?|:|\\|\/)/g, '\\$1');
-};
 
 const normalizeFieldQuery = (
   query: string,

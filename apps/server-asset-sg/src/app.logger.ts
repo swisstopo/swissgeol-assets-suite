@@ -17,6 +17,17 @@ export class AppLogger implements LoggerService {
       this.debug?.(message, ...optionalParams);
       return;
     }
+    if (optionalParams[0] === 'RoutesResolver') {
+      // Move router initialization messages to DEBUG so we can filter them out without discarding info messages.
+      this.debug?.(message, ...optionalParams);
+      return;
+    }
+    if (optionalParams[0] === 'RouterExplorer' && typeof message === 'string') {
+      // Move router initialization messages to DEBUG so we can filter them out without discarding info messages.
+      // We also add indentation to the message so that each controller's routes are neatly structured below its `RoutesResolver` message.
+      this.debug?.(`   ${message}`, ...optionalParams);
+      return;
+    }
     this.write(levels.log, message, optionalParams);
   }
 
@@ -36,7 +47,7 @@ export class AppLogger implements LoggerService {
     this.write(levels.verbose, message, optionalParams);
   }
 
-  fatal?(message: unknown, ...optionalParams: unknown[]) {
+  fatal(message: unknown, ...optionalParams: unknown[]) {
     this.write(levels.fatal, message, optionalParams);
   }
 

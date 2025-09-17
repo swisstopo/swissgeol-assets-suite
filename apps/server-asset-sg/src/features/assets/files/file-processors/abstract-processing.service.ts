@@ -114,7 +114,6 @@ export abstract class AbstractProcessingService<T> {
     for (;;) {
       await sleep(1000);
       const result = await this.collectResult(file);
-
       if (result.has_finished) {
         await this.updateStatus(file, FileProcessingState.Success);
         void this.postProcess(file, result.data);

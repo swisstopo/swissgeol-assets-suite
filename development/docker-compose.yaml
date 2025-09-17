@@ -15,7 +15,7 @@ services:
 
   db:
     container_name: swissgeol-assets-db
-    image: postgis/postgis
+    image: postgis/postgis:15-master
     restart: unless-stopped
     ports:
       - 5432:5432
