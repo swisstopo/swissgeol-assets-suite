@@ -439,7 +439,10 @@ export const frTranslationMapping: AppTranslationMapping = {
     t: 'Texte',
     b: 'Profil de forage',
     m: 'Cartes',
+    gp: 'Profil géologique',
     tp: 'Page de titre',
+    d: 'Diagramme',
+    tbl: 'Tableau',
     u: 'Inconnu',
   },
 };
