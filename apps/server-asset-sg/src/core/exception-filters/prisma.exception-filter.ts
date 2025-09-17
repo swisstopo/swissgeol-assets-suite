@@ -24,7 +24,7 @@ export class PrismaExceptionFilter implements ExceptionFilter<Prisma.PrismaClien
 
     this.logger.error(exception.stack);
     const isDevelopment = process.env.NODE_ENV === 'development';
-    response.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+    return response.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
       message: 'Internal Server Error',
       details: isDevelopment
         ? {

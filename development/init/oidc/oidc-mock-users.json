@@ -6,12 +6,12 @@
     "Claims": [
       {
         "Type": "name",
-        "Value": "Admin",
+        "Value": "Administrator",
         "ValueType": "string"
       },
       {
         "Type": "family_name",
-        "Value": "Admin",
+        "Value": "Istrator",
         "ValueType": "string"
       },
       {
@@ -43,27 +43,27 @@
   },
   {
     "SubjectId": "e06ad465-3adc-4ad7-bee5-ff0605a4b928",
-    "Username": "viewer",
-    "Password": "viewer",
+    "Username": "publisher",
+    "Password": "publisher",
     "Claims": [
       {
         "Type": "name",
-        "Value": "Viewer",
+        "Value": "Publisher",
         "ValueType": "string"
       },
       {
         "Type": "family_name",
-        "Value": "Viewer",
+        "Value": "Lisher",
         "ValueType": "string"
       },
       {
         "Type": "given_name",
-        "Value": "Viewer",
+        "Value": "Pub",
         "ValueType": "string"
       },
       {
         "Type": "email",
-        "Value": "viewer@assets.swissgeol.ch",
+        "Value": "publisher@assets.swissgeol.ch",
         "ValueType": "string"
       },
       {
@@ -78,13 +78,55 @@
       },
       {
         "Type": "username",
-        "Value": "2_viewer@assets.swissgeol.ch",
+        "Value": "2_publisher@assets.swissgeol.ch",
         "ValueType": "string"
       }
     ]
   },
   {
-    "SubjectId": "e06ad465-3adc-4ad7-bee5-ff0605a4b929",
+    "SubjectId": "4ce5570e-6987-40c8-881a-362074020419",
+    "Username": "reviewer",
+    "Password": "reviewer",
+    "Claims": [
+      {
+        "Type": "name",
+        "Value": "Reviewer",
+        "ValueType": "string"
+      },
+      {
+        "Type": "family_name",
+        "Value": "Viewer",
+        "ValueType": "string"
+      },
+      {
+        "Type": "given_name",
+        "Value": "Re",
+        "ValueType": "string"
+      },
+      {
+        "Type": "email",
+        "Value": "reviewer@assets.swissgeol.ch",
+        "ValueType": "string"
+      },
+      {
+        "Type": "email_verified",
+        "Value": "true",
+        "ValueType": "boolean"
+      },
+      {
+        "Type": "cognito:groups",
+        "Value": "[\"assets.swissgeol\"]",
+        "ValueType": "json"
+      },
+      {
+        "Type": "username",
+        "Value": "3_reviewer@assets.swissgeol.ch",
+        "ValueType": "string"
+      }
+    ]
+  },
+  {
+    "SubjectId": "8e5cc1b6-61c0-49f5-92f9-1ac749524515",
     "Username": "editor",
     "Password": "editor",
     "Claims": [
@@ -95,12 +137,12 @@
       },
       {
         "Type": "family_name",
-        "Value": "Editor",
+        "Value": "Or",
         "ValueType": "string"
       },
       {
         "Type": "given_name",
-        "Value": "Editor",
+        "Value": "Edit",
         "ValueType": "string"
       },
       {
@@ -120,34 +162,34 @@
       },
       {
         "Type": "username",
-        "Value": "3_editor@assets.swissgeol.ch",
+        "Value": "4_editor@assets.swissgeol.ch",
         "ValueType": "string"
       }
     ]
   },
   {
-    "SubjectId": "e06ad465-3adc-4ad7-bee5-ff0605a4b926",
-    "Username": "master-editor",
-    "Password": "master-editor",
+    "SubjectId": "e064c0f6-0ca3-4225-b4ae-01ebf5f8bc62",
+    "Username": "reader",
+    "Password": "reader",
     "Claims": [
       {
         "Type": "name",
-        "Value": "master-editor",
+        "Value": "Reader",
         "ValueType": "string"
       },
       {
         "Type": "family_name",
-        "Value": "master-editor",
+        "Value": "Der",
         "ValueType": "string"
       },
       {
         "Type": "given_name",
-        "Value": "master-editor",
+        "Value": "Rea",
         "ValueType": "string"
       },
       {
         "Type": "email",
-        "Value": "master-editor@assets.swissgeol.ch",
+        "Value": "reader@assets.swissgeol.ch",
         "ValueType": "string"
       },
       {
@@ -162,7 +204,49 @@
       },
       {
         "Type": "username",
-        "Value": "4_master-editor@assets.swissgeol.ch",
+        "Value": "5_reader@assets.swissgeol.ch",
+        "ValueType": "string"
+      }
+    ]
+  },
+  {
+    "SubjectId": "2ba83d17-d46a-4648-ad73-e9e60d6c0a29",
+    "Username": "illegal",
+    "Password": "illegal",
+    "Claims": [
+      {
+        "Type": "name",
+        "Value": "Illegal",
+        "ValueType": "string"
+      },
+      {
+        "Type": "family_name",
+        "Value": "Egal",
+        "ValueType": "string"
+      },
+      {
+        "Type": "given_name",
+        "Value": "Ill",
+        "ValueType": "string"
+      },
+      {
+        "Type": "email",
+        "Value": "illegal@assets.swissgeol.ch",
+        "ValueType": "string"
+      },
+      {
+        "Type": "email_verified",
+        "Value": "true",
+        "ValueType": "boolean"
+      },
+      {
+        "Type": "cognito:groups",
+        "Value": "[\"no-usable-role\"]",
+        "ValueType": "json"
+      },
+      {
+        "Type": "username",
+        "Value": "5_illegal@assets.swissgeol.ch",
         "ValueType": "string"
       }
     ]

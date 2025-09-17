@@ -60,6 +60,7 @@ module.exports = [
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
     rules: {
       '@angular-eslint/prefer-standalone': 'off',
+      'prefer-arrow-callback': 'error',
 
       // Enforce imports of NX modules to go through the module's entrypoint.
       '@nx/enforce-module-boundaries': [

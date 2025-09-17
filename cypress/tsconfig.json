@@ -1,24 +1,8 @@
 {
-  "compileOnSave": false,
+  "extends": "../tsconfig.base.json",
+  "files": [],
   "compilerOptions": {
-    "rootDir": ".",
-    "sourceMap": true,
-    "declaration": false,
-    "moduleResolution": "node",
-    "emitDecoratorMetadata": true,
-    "experimentalDecorators": true,
-    "importHelpers": true,
-    "target": "es2015",
-    "module": "esnext",
-    "lib": ["es2021", "dom"],
-    "skipLibCheck": true,
-    "skipDefaultLibCheck": true,
-    "allowSyntheticDefaultImports": true,
-    "forceConsistentCasingInFileNames": true,
-    "strict": true,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
-    "baseUrl": ".",
+    "types": ["cypress", "node"],
     "paths": {
       "@asset-sg/admin": ["libs/admin/src/index.ts"],
       "@asset-sg/asset-editor": ["libs/asset-editor/src/index.ts"],
@@ -33,5 +17,5 @@
       "persistence": ["libs/persistence/src/index.ts"]
     }
   },
-  "exclude": ["node_modules", "tmp"]
+  "include": ["**/*.ts"]
 }

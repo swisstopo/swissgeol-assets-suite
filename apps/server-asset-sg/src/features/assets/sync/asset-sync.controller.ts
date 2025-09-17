@@ -25,7 +25,7 @@ export class AssetSyncController {
   @Post('/')
   @Authorize.Admin()
   async start(@Res() res: Response): Promise<void> {
-    await this.assetSyncService.start();
+    await this.assetSyncService.startSync();
     res.status(200).end();
   }
 }
