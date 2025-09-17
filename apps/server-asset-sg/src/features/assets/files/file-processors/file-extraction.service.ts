@@ -1,4 +1,5 @@
 import { exit } from 'process';
+import { isNotNull } from '@asset-sg/core';
 import {
   AssetFileId,
   FileProcessingStage,
@@ -25,11 +26,14 @@ import { FileS3Service } from '@/features/assets/files/file-s3.service';
 interface ExtractionPage {
   page: number;
   classification: {
-    Text: 0 | 1;
-    Boreprofile: 0 | 1;
-    Maps: 0 | 1;
-    Title_Page: 0 | 1;
-    Unknown: 0 | 1;
+    text: 0 | 1;
+    boreprofile: 0 | 1;
+    map: 0 | 1;
+    geo_profile: 0 | 1;
+    title_page: 0 | 1;
+    diagram: 0 | 1;
+    table: 0 | 1;
+    unknown: 0 | 1;
   };
   metadata: {
     language: SupportedPageLanguage | null; // note: API currently only has single languages, but GUI allows multiple
@@ -55,11 +59,14 @@ type CategoryMap = {
 };
 
 const externalToInternalCategoryMap: CategoryMap = {
-  Text: PageCategory.Text,
-  Boreprofile: PageCategory.Boreprofile,
-  Maps: PageCategory.Maps,
-  Title_Page: PageCategory.TitlePage,
-  Unknown: PageCategory.Unknown,
+  text: PageCategory.Text,
+  boreprofile: PageCategory.Boreprofile,
+  map: PageCategory.Map,
+  title_page: PageCategory.TitlePage,
+  unknown: PageCategory.Unknown,
+  geo_profile: PageCategory.GeoProfile,
+  diagram: PageCategory.Diagram,
+  table: PageCategory.Table,
 };
 
 @Injectable()
@@ -109,7 +116,14 @@ export class FileExtractionService extends AbstractProcessingService<ExtractionR
     for (const page of result.pages) {
       const categories = (Object.keys(page.classification) as ExternalCategory[])
         .filter((key) => page.classification[key] === 1)
-        .map((e) => externalToInternalCategoryMap[e])
+        .map((e) => {
+          const category = externalToInternalCategoryMap[e];
+          if (category == null) {
+            this.logger.warn(`Extraction API sent an unknown page classification (it will be ignored): '${e}'`);
+          }
+          return category;
+        })
+        .filter(isNotNull)
         .sort((a, b) => a.localeCompare(b));
 
       const languages = page.metadata.language ? [page.metadata.language] : [];
