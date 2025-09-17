@@ -438,7 +438,10 @@ export const deTranslationMapping = {
     t: 'Text',
     b: 'Bohrprofil',
     m: 'Karten',
+    gp: 'Geoprofil',
     tp: 'Titelseite',
+    d: 'Diagramm',
+    tbl: 'Tabelle',
     u: 'Unbekannt',
   },
 };
