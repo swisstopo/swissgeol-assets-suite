@@ -5,6 +5,9 @@ on:
     branches:
       - "develop"
 
+      # TODO remove this before merge
+      - feature/assets-674-deploy-api
+
 # Run all publish workflow in sequence to ensure consistent version numbers.
 concurrency:
   group: "publish"
