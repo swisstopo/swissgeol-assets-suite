@@ -1,5 +1,4 @@
-import { exit } from 'process';
-import { isNotNull } from '@asset-sg/core';
+import { isNotNil } from '@asset-sg/core';
 import {
   AssetFileId,
   FileProcessingStage,
@@ -19,6 +18,7 @@ import {
   ProcessableFile,
 } from '@/features/assets/files/file-processors/abstract-processing.service';
 import { FileS3Service } from '@/features/assets/files/file-s3.service';
+import { requireEnv } from '@/utils/requireEnv';
 
 /**
  * Represents the structure of the extraction result per page returned by the extraction service.
@@ -26,14 +26,14 @@ import { FileS3Service } from '@/features/assets/files/file-s3.service';
 interface ExtractionPage {
   page: number;
   classification: {
-    text: 0 | 1;
-    boreprofile: 0 | 1;
-    map: 0 | 1;
-    geo_profile: 0 | 1;
-    title_page: 0 | 1;
-    diagram: 0 | 1;
-    table: 0 | 1;
-    unknown: 0 | 1;
+    Text: 0 | 1;
+    Boreprofile: 0 | 1;
+    Map: 0 | 1;
+    GeoProfile: 0 | 1;
+    TitlePage: 0 | 1;
+    Diagram: 0 | 1;
+    Table: 0 | 1;
+    Unknown: 0 | 1;
   };
   metadata: {
     language: SupportedPageLanguage | null; // note: API currently only has single languages, but GUI allows multiple
@@ -59,14 +59,14 @@ type CategoryMap = {
 };
 
 const externalToInternalCategoryMap: CategoryMap = {
-  text: PageCategory.Text,
-  boreprofile: PageCategory.Boreprofile,
-  map: PageCategory.Map,
-  title_page: PageCategory.TitlePage,
-  unknown: PageCategory.Unknown,
-  geo_profile: PageCategory.GeoProfile,
-  diagram: PageCategory.Diagram,
-  table: PageCategory.Table,
+  Text: PageCategory.Text,
+  Boreprofile: PageCategory.Boreprofile,
+  Map: PageCategory.Map,
+  TitlePage: PageCategory.TitlePage,
+  Unknown: PageCategory.Unknown,
+  GeoProfile: PageCategory.GeoProfile,
+  Diagram: PageCategory.Diagram,
+  Table: PageCategory.Table,
 };
 
 @Injectable()
@@ -75,7 +75,7 @@ export class FileExtractionService extends AbstractProcessingService<ExtractionR
 
   protected readonly logger = new Logger(FileExtractionService.name);
   protected readonly processingStage = FileProcessingStage.Extraction;
-  protected readonly serviceUrl: string;
+  protected readonly serviceUrl = requireEnv('EXTRACTION_SERVICE_URL');
 
   constructor(
     protected readonly fileS3Service: FileS3Service,
@@ -83,14 +83,6 @@ export class FileExtractionService extends AbstractProcessingService<ExtractionR
     protected readonly eventEmitter: EventEmitter2,
   ) {
     super();
-
-    const serviceUrl = process.env.EXTRACTION_SERVICE_URL as string;
-    if (serviceUrl == null || serviceUrl.length == 0) {
-      console.error("Missing 'EXTRACTION_SERVICE_URL' environment variable.");
-      exit(1);
-    }
-
-    this.serviceUrl = serviceUrl;
   }
 
   @OnEvent(EVENTS.FILE_START_EXTRACT)
@@ -123,7 +115,7 @@ export class FileExtractionService extends AbstractProcessingService<ExtractionR
           }
           return category;
         })
-        .filter(isNotNull)
+        .filter(isNotNil)
         .sort((a, b) => a.localeCompare(b));
 
       const languages = page.metadata.language ? [page.metadata.language] : [];
