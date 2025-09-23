@@ -16,7 +16,7 @@ const publisher: User = {
   email: 'publisher@assets.swissgeol.ch',
   firstName: 'Pub',
   lastName: 'Lisher',
-  lang: 'en',
+  lang: 'de',
   isAdmin: false,
   roles: new Map([[1, Role.Publisher]]),
 };
@@ -36,7 +36,7 @@ const editor: User = {
   email: 'editor@assets.swissgeol.ch',
   firstName: 'Edit',
   lastName: 'Or',
-  lang: 'fr',
+  lang: 'de',
   isAdmin: false,
   roles: new Map([[1, Role.Editor]]),
 };
@@ -46,7 +46,7 @@ const reader: User = {
   email: 'reader@assets.swissgeol.ch',
   firstName: 'Rea',
   lastName: 'Der',
-  lang: 'fr',
+  lang: 'de',
   isAdmin: false,
   roles: new Map([[1, Role.Reader]]),
 };
