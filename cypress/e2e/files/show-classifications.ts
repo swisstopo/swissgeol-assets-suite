@@ -1,15 +1,6 @@
-import { fixtures, PageCategory, SupportedPageLanguages } from '@asset-sg/shared/v2';
-import { Given, Then, When } from '@badeball/cypress-cucumber-preprocessor';
-import { searchAndSelectAssetById } from '../common/search';
-
-const assetWithPdf = fixtures.assets.hauteSorne2dSeismic2023AcquisitionAndProcessingReport;
-const pdf = assetWithPdf.files[0];
-
-Given(/^an asset with a PDF has been selected$/, () => {
-  searchAndSelectAssetById(assetWithPdf.id);
-
-  cy.get('asset-sg-asset-search-detail').as('detail').should('contain.text', assetWithPdf.title);
-});
+import { PageCategory, SupportedPageLanguages } from '@asset-sg/shared/v2';
+import { Then, When } from '@badeball/cypress-cucumber-preprocessor';
+import { pdf } from '../common/viewer';
 
 Then(/^the asset's details contain its PDF$/, () => {
   cy.get('@detail').find('.asset-detail-scroll-container').scrollTo('bottom');

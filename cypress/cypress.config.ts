@@ -30,6 +30,8 @@ export default defineConfig({
   projectId: 'y2e1a9',
   viewportWidth: 1920,
   viewportHeight: 1280,
+  includeShadowDom: true,
+  numTestsKeptInMemory: 1,
   e2e: {
     setupNodeEvents,
     baseUrl: 'http://localhost:4200',
