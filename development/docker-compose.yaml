@@ -1,38 +1,4 @@
 services:
-  extract-api:
-    image: swissgeol-assets-dataextraction/api:dev
-    build:
-      context: .
-    volumes:
-      - .env:/app/.env:ro
-      - .env.api:/app/.env.api:ro
-      - ~/.aws:/home/app/.aws:ro
-    ports:
-      - "1337:8000"
-    environment:
-      FASTTEXT_MODEL_PATH: "models/FastText/lid.176.bin"
-      TMP_PATH: tmp/
-      AWS_PROFILE: swisstopo-ngm
-      S3_BUCKET: asset-sg
-      S3_FOLDER: asset-sg/
-      USE_LOCAL: True
-      LOCAL_S3_ENDPOINT: http://storage:9000
-      LOCAL_S3_ACCESS_KEY: ${STORAGE_ACCESS_KEY}
-      LOCAL_S3_SECRET_KEY: ${STORAGE_ACCESS_KEY_SECRET}
-  storage:
-    container_name: swissgeol-assets-storage
-    image: quay.io/minio/minio
-    restart: unless-stopped
-    ports:
-      - 9000:9000
-      - 9001:9001
-    environment:
-      MINIO_ROOT_USER: ${STORAGE_USER}
-      MINIO_ROOT_PASSWORD: ${STORAGE_PASSWORD}
-    volumes:
-      - ./volumes/minio/data:/data
-    command: server --console-address ":9001" /data
-
   createbuckets:
     image: minio/mc
     depends_on:
@@ -48,8 +14,8 @@ services:
       "
 
   db:
-    container_name: swissgeol-assets-postgres
-    image: postgis/postgis
+    container_name: swissgeol-assets-db
+    image: postgis/postgis:15-master
     restart: unless-stopped
     ports:
       - 5432:5432
@@ -100,7 +66,14 @@ services:
       cluster.routing.allocation.disk.threshold_enabled: false
     volumes:
       - ./init/elasticsearch/:/init/:ro
-      - ./volumes/elasticsearch/data:/usr/share/elasticsearch/data
+      - elasticsearch_data:/usr/share/elasticsearch/data
+      - elasticsearch_logs:/usr/share/elasticsearch/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9200/_cluster/health?wait_for_status=yellow&timeout=5s"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
 
   kibana:
     container_name: swissgeol-assets-kibana
@@ -112,6 +85,20 @@ services:
       - 5601:5601
     environment:
       ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+
+  storage:
+    container_name: swissgeol-assets-storage
+    image: quay.io/minio/minio
+    restart: unless-stopped
+    ports:
+      - 9000:9000
+      - 9001:9001
+    environment:
+      MINIO_ROOT_USER: ${STORAGE_USER}
+      MINIO_ROOT_PASSWORD: ${STORAGE_PASSWORD}
+    volumes:
+      - ./volumes/minio/data:/data
+    command: server --console-address ":9001" /data
 
   smtp4dev:
     container_name: swissgeol-assets-smtp
@@ -141,11 +128,16 @@ services:
       - ./init/oidc/oidc-mock-scopes.json:/tmp/config/scopes-config.json:ro
       - ./init/oidc/oidc-mock-server_options.json:/tmp/config/server_options-config.json:ro
       - ./volumes/oidc/keys:/tmp/data/keys
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/.well-known/openid-configuration"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
 
   ocr:
     container_name: swissgeol-assets-ocr
-    # TODO change this to `latest` once it is released.
-    image: ghcr.io/swisstopo/swissgeol-ocr-api:edge
+    image: ghcr.io/swisstopo/swissgeol-ocr-api:latest
     restart: unless-stopped
     ports:
       - "5052:8000"
@@ -163,3 +155,25 @@ services:
       AWS_ACCESS_KEY_ID: ${STORAGE_ACCESS_KEY}
       AWS_SECRET_ACCESS_KEY: ${STORAGE_ACCESS_KEY_SECRET}
       AWS_DEFAULT_REGION: us-east-1
+
+  dataextraction:
+    container_name: swissgeol-assets-dataextraction
+    image: ghcr.io/swisstopo/swissgeol-assets-dataextraction-api:edge
+    restart: unless-stopped
+    volumes:
+      - ~/.aws:/home/app/.aws:ro
+    ports:
+      - "1337:8000"
+    environment:
+      TMP_PATH: /tmp # TODO remove this once its set by default in `latest`
+      AWS_PROFILE: swisstopo-ngm
+      S3_BUCKET: asset-sg
+      S3_FOLDER: asset-sg/
+      USE_LOCAL: True
+      LOCAL_S3_ENDPOINT: http://storage:9000
+      LOCAL_S3_ACCESS_KEY: ${STORAGE_ACCESS_KEY}
+      LOCAL_S3_SECRET_KEY: ${STORAGE_ACCESS_KEY_SECRET}
+
+volumes:
+  elasticsearch_data:
+  elasticsearch_logs:

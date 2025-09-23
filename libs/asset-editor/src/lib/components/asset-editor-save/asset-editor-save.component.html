@@ -9,7 +9,14 @@
   edit.discardChanges
   <svg-icon key="delete"></svg-icon>
 </button>
-<button asset-sg-primary (click)="saveChanges()" [disabled]="isSaveDisabled" translate [matTooltip]="tooltip">
+<button
+  asset-sg-primary
+  (click)="saveChanges()"
+  [disabled]="isSaveDisabled"
+  translate
+  [matTooltip]="tooltip"
+  data-testid="save-asset"
+>
   save
   <svg-icon key="save"></svg-icon>
 </button>

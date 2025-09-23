@@ -1,5 +1,5 @@
 import { AssetFile, FileProcessingStage, FileProcessingState, sleep } from '@asset-sg/shared/v2';
-import { Logger, OnModuleInit } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '@/core/prisma.service';
@@ -14,17 +14,13 @@ interface ApiData<T> {
   data: T;
 }
 
-export abstract class AbstractProcessingService<T> implements OnModuleInit {
+export abstract class AbstractProcessingService<T> {
   protected abstract readonly logger: Logger;
   protected abstract readonly fileS3Service: FileS3Service;
   protected abstract readonly prisma: PrismaService;
   protected abstract readonly eventEmitter: EventEmitter2;
   protected abstract readonly processingStage: FileProcessingStage;
   protected abstract serviceUrl: string;
-
-  public onModuleInit() {
-    this.processRemaining().then();
-  }
 
   protected abstract handleStartEvent(file: ProcessableFile): Promise<void>;
 
@@ -50,7 +46,7 @@ export abstract class AbstractProcessingService<T> implements OnModuleInit {
     }
   }
 
-  private async processRemaining(): Promise<void> {
+  async processRemaining(): Promise<void> {
     const unprocessedFiles = await this.prisma.file.findMany({
       select: { id: true, name: true, fileProcessingState: true, fileProcessingStage: true },
       where: {
@@ -118,7 +114,6 @@ export abstract class AbstractProcessingService<T> implements OnModuleInit {
     for (;;) {
       await sleep(1000);
       const result = await this.collectResult(file);
-
       if (result.has_finished) {
         await this.updateStatus(file, FileProcessingState.Success);
         void this.postProcess(file, result.data);

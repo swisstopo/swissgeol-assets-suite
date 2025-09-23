@@ -60,8 +60,11 @@ export type SupportedPageLanguage = (typeof SupportedPageLanguages)[number];
 export enum PageCategory {
   Text = 't',
   Boreprofile = 'b',
-  Maps = 'm',
+  Map = 'm',
+  GeoProfile = 'gp',
   TitlePage = 'tp',
+  Diagram = 'd',
+  Table = 'tbl',
   Unknown = 'u',
 }
 

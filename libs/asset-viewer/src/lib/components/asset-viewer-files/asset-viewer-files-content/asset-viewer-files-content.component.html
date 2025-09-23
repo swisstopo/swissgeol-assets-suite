@@ -1,6 +1,6 @@
 <cdk-accordion class="collapsible">
   <cdk-accordion-item #accordionItem="cdkAccordionItem" (click)="accordionItem.toggle()" class="collapsible__header">
-    <div class="collapsible__header__toggle">
+    <div class="collapsible__header__toggle" data-testid="content-toggle">
       <sgc-icon size="large" [name]="accordionItem.expanded ? 'chevronDown' : 'chevronRight'"></sgc-icon>
       <span>{{ "search.content" | translate }}:</span>
     </div>
@@ -10,7 +10,7 @@
         [categories]="groupedPageClassifications.categories"
         [pageCount]="pageCount"
         [legalDocCode]="legalDocCode"
-      ></asset-sg-asset-viewer-files-content-summary>
+      />
     }
   </cdk-accordion-item>
   @if (accordionItem.expanded) {
@@ -20,9 +20,10 @@
       [style.display]="accordionItem.expanded ? '' : 'none'"
       [attr.id]="'accordion-body'"
       [attr.aria-labelledby]="'accordion-header'"
+      data-testid="content-body"
     >
       @for (group of groupedPageClassifications.groupedPageClassifications | keyvalue; track group.key) {
-        <dl>
+        <dl [attr.data-testid]="'category-' + group.key">
           <dt translate>
             {{ "pageClassificationCodes." + group.key }}
           </dt>
@@ -32,7 +33,7 @@
               @if (page.languages.length > 0) {
                 <span class="tag-group">
                   @for (language of page.languages; track language) {
-                    <asset-sg-asset-viewer-files-tag variant="small">{{
+                    <asset-sg-asset-viewer-files-tag variant="small" [attr.data-testid]="'language-' + language">{{
                       language.toUpperCase()
                     }}</asset-sg-asset-viewer-files-tag>
                   }

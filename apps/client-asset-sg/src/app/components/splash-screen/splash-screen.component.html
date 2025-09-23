@@ -15,12 +15,12 @@
       <mat-progress-spinner mode="indeterminate" />
     }
     @case (AuthState.Aborted) {
-      <button asset-sg-primary (click)="authService.signIn()">
+      <button asset-sg-primary (click)="authService.signIn()" data-testid="go-to-login">
         {{ "login" | translate }}
       </button>
     }
     @case (AuthState.AccessForbidden) {
-      <div class="alert">
+      <div class="alert" data-testid="access-forbidden">
         <p>
           {{ "accessForbidden" | translate }}
         </p>

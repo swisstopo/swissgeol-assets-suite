@@ -27,10 +27,9 @@ export class UserService {
     this.client = new CognitoIdentityProviderClient({ region: readEnv('COGNITO_REGION') ?? 'local' });
     this._poolId = readEnv('COGNITO_POOL_ID');
     this._group = readEnv('COGNITO_GROUP');
-    this.startSync();
   }
 
-  private startSync(): void {
+  async startCronJob(): Promise<void> {
     if (this._poolId === null) {
       this.logger.warn('Users will not be synced with Cognito as COGNITO_POOL_ID is not set.');
       return;
@@ -40,12 +39,12 @@ export class UserService {
       return;
     }
 
-    this.syncUsers().then(() => {
-      const at2AM = '0 2 * * *';
-      const job = new CronJob(at2AM, () => this.syncUsers());
-      this.schedulerRegistry.addCronJob('userSync', job);
-      job.start();
-    });
+    await this.syncUsers();
+
+    const at2AM = '0 2 * * *';
+    const job = new CronJob(at2AM, () => this.syncUsers());
+    this.schedulerRegistry.addCronJob('userSync', job);
+    job.start();
   }
 
   private async syncUsers() {

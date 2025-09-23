@@ -3,13 +3,31 @@ import colors from 'colors/safe';
 
 @Injectable()
 export class AppLogger implements LoggerService {
-  levels: Set<LogLevel> | null = null;
-
-  constructor() {
+  constructor(private readonly options: { minLevel?: LogLevel } = {}) {
     colors.enable();
   }
 
   log(message: unknown, ...optionalParams: unknown[]) {
+    if (
+      optionalParams[0] === 'InstanceLoader' &&
+      typeof message === 'string' &&
+      message.endsWith(' dependencies initialized')
+    ) {
+      // Move InstanceLoader initialization messages to DEBUG so we can filter them out without discarding info messages.
+      this.debug?.(message, ...optionalParams);
+      return;
+    }
+    if (optionalParams[0] === 'RoutesResolver') {
+      // Move router initialization messages to DEBUG so we can filter them out without discarding info messages.
+      this.debug?.(message, ...optionalParams);
+      return;
+    }
+    if (optionalParams[0] === 'RouterExplorer' && typeof message === 'string') {
+      // Move router initialization messages to DEBUG so we can filter them out without discarding info messages.
+      // We also add indentation to the message so that each controller's routes are neatly structured below its `RoutesResolver` message.
+      this.debug?.(`   ${message}`, ...optionalParams);
+      return;
+    }
     this.write(levels.log, message, optionalParams);
   }
 
@@ -29,16 +47,15 @@ export class AppLogger implements LoggerService {
     this.write(levels.verbose, message, optionalParams);
   }
 
-  fatal?(message: unknown, ...optionalParams: unknown[]) {
+  fatal(message: unknown, ...optionalParams: unknown[]) {
     this.write(levels.fatal, message, optionalParams);
   }
 
-  setLogLevels?(levels: LogLevel[]) {
-    this.levels = new Set(levels);
-  }
-
   private hasLevel(level: LogLevel): boolean {
-    return this.levels == null || this.levels.has(level);
+    if (this.options.minLevel === undefined) {
+      return true;
+    }
+    return getLogLevelIndex(level) >= getLogLevelIndex(this.options.minLevel);
   }
 
   private write(level: Level, message: unknown, params: unknown[]) {
@@ -171,6 +188,23 @@ const levels: Record<LogLevel, Level> = {
     color: colors.red,
     bgColor: colors.bgRed,
   },
+};
+
+const getLogLevelIndex = (level: LogLevel): number => {
+  switch (level) {
+    case 'verbose':
+      return 0;
+    case 'debug':
+      return 1;
+    case 'log':
+      return 2;
+    case 'warn':
+      return 3;
+    case 'error':
+      return 4;
+    case 'fatal':
+      return 5;
+  }
 };
 
 const MAX_NAME_LENGTH = Math.max(...Object.values(levels).map((it) => it.name.length));
