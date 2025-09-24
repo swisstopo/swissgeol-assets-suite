@@ -436,7 +436,10 @@ export const enTranslationMapping: AppTranslationMapping = {
     t: 'Text',
     b: 'Borehole profile',
     m: 'Maps',
+    gp: 'Geo profile',
     tp: 'Title page',
+    d: 'Diagram',
+    tbl: 'Table',
     u: 'Unknown',
   },
 };

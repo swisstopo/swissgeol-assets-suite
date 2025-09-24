@@ -1,4 +1,4 @@
-import { exit } from 'process';
+import { isNotNil } from '@asset-sg/core';
 import {
   AssetFileId,
   FileProcessingStage,
@@ -18,12 +18,7 @@ import {
   ProcessableFile,
 } from '@/features/assets/files/file-processors/abstract-processing.service';
 import { FileS3Service } from '@/features/assets/files/file-s3.service';
-
-const serviceUrl = process.env.EXTRACTION_SERVICE_URL as string;
-if (serviceUrl == null || serviceUrl.length == 0) {
-  console.error("Missing 'EXTRACTION_SERVICE_URL' environment variable.");
-  exit(1);
-}
+import { requireEnv } from '@/utils/requireEnv';
 
 /**
  * Represents the structure of the extraction result per page returned by the extraction service.
@@ -33,8 +28,11 @@ interface ExtractionPage {
   classification: {
     Text: 0 | 1;
     Boreprofile: 0 | 1;
-    Maps: 0 | 1;
-    Title_Page: 0 | 1;
+    Map: 0 | 1;
+    GeoProfile: 0 | 1;
+    TitlePage: 0 | 1;
+    Diagram: 0 | 1;
+    Table: 0 | 1;
     Unknown: 0 | 1;
   };
   metadata: {
@@ -63,9 +61,12 @@ type CategoryMap = {
 const externalToInternalCategoryMap: CategoryMap = {
   Text: PageCategory.Text,
   Boreprofile: PageCategory.Boreprofile,
-  Maps: PageCategory.Maps,
-  Title_Page: PageCategory.TitlePage,
+  Map: PageCategory.Map,
+  TitlePage: PageCategory.TitlePage,
   Unknown: PageCategory.Unknown,
+  GeoProfile: PageCategory.GeoProfile,
+  Diagram: PageCategory.Diagram,
+  Table: PageCategory.Table,
 };
 
 @Injectable()
@@ -74,7 +75,7 @@ export class FileExtractionService extends AbstractProcessingService<ExtractionR
 
   protected readonly logger = new Logger(FileExtractionService.name);
   protected readonly processingStage = FileProcessingStage.Extraction;
-  protected readonly serviceUrl = serviceUrl;
+  protected readonly serviceUrl = requireEnv('EXTRACTION_SERVICE_URL');
 
   constructor(
     protected readonly fileS3Service: FileS3Service,
@@ -106,7 +107,14 @@ export class FileExtractionService extends AbstractProcessingService<ExtractionR
     for (const page of result.pages) {
       const categories = (Object.keys(page.classification) as ExternalCategory[])
         .filter((key) => page.classification[key] === 1)
-        .map((e) => externalToInternalCategoryMap[e])
+        .map((e) => {
+          const category = externalToInternalCategoryMap[e];
+          if (category == null) {
+            this.logger.warn(`Extraction API sent an unknown page classification (it will be ignored): '${e}'`);
+          }
+          return category;
+        })
+        .filter(isNotNil)
         .sort((a, b) => a.localeCompare(b));
 
       const languages = page.metadata.language ? [page.metadata.language] : [];

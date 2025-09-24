@@ -438,7 +438,10 @@ export const itTranslationMapping: AppTranslationMapping = {
     t: 'IT Text',
     b: 'IT Bohrprofil',
     m: 'IT Karten',
+    gp: 'IT Geoprofil',
     tp: 'IT Titelseite',
+    d: 'IT Diagramm',
+    tbl: 'IT Tabelle',
     u: 'IT Unbekannt',
   },
 };
