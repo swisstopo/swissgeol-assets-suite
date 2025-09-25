@@ -3,10 +3,11 @@ import {
   AssetFileId,
   FileProcessingStage,
   FileProcessingState,
-  isDeepEqual,
   PageCategory,
   PageClassification,
+  PageRangeClassification,
   SupportedPageLanguage,
+  transformPagesToRanges,
 } from '@asset-sg/shared/v2';
 import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
@@ -44,7 +45,7 @@ interface ExtractionPage {
 /**
  * Represents the structure of the overall extraction result returned by the extraction service.
  */
-interface ExtractionResult {
+export interface ExtractionResult {
   filename: string;
   metadata: {
     page_count: number;
@@ -99,10 +100,13 @@ export class FileExtractionService extends AbstractProcessingService<ExtractionR
     }
   }
 
-  private createPageRanges(result: ExtractionResult): PageClassification[] {
-    const ranges: PageClassification[] = [];
+  private createPageRanges(result: ExtractionResult): PageRangeClassification[] {
+    const pageClassifications = this.transformExtractionResultToPageClassifications(result);
+    return transformPagesToRanges(pageClassifications);
+  }
 
-    let currentRange: PageClassification | null = null;
+  private transformExtractionResultToPageClassifications(result: ExtractionResult): PageClassification[] {
+    const pages: PageClassification[] = [];
 
     for (const page of result.pages) {
       const categories = (Object.keys(page.classification) as ExternalCategory[])
@@ -114,36 +118,21 @@ export class FileExtractionService extends AbstractProcessingService<ExtractionR
           }
           return category;
         })
-        .filter(isNotNil)
-        .sort((a, b) => a.localeCompare(b));
+        .filter(isNotNil);
 
       const languages = page.metadata.language ? [page.metadata.language] : [];
 
-      if (
-        currentRange &&
-        isDeepEqual(categories, currentRange.categories) &&
-        isDeepEqual(languages, currentRange.languages)
-      ) {
-        currentRange.to = page.page;
-      } else {
-        currentRange = {
-          from: page.page,
-          to: page.page,
-          categories,
-          languages,
-        };
-        ranges.push(currentRange);
-      }
+      pages.push({ page: page.page, categories, languages });
     }
 
-    return ranges;
+    return pages;
   }
 
-  private async storeRanges(fileId: AssetFileId, ranges: PageClassification[]) {
+  private async storeRanges(fileId: AssetFileId, ranges: PageRangeClassification[]) {
     await this.prisma.file.update({
       where: { id: fileId },
       data: {
-        pageClassifications: ranges as unknown as Prisma.JsonArray,
+        pageRangeClassifications: ranges as unknown as Prisma.JsonArray,
       },
     });
   }

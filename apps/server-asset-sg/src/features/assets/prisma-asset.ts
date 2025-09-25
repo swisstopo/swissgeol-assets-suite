@@ -358,8 +358,8 @@ export const mapAssetDataToPrismaUpdate = (id: AssetId, data: UpdateAssetData): 
         file: {
           update: {
             legalDocItemCode: it.legalDocCode,
-            pageClassifications: it.pageClassifications
-              ? (it.pageClassifications as unknown as Prisma.JsonArray)
+            pageRangeClassifications: it.pageRangeClassifications
+              ? (it.pageRangeClassifications as unknown as Prisma.JsonArray)
               : Prisma.JsonNull,
           },
         },
