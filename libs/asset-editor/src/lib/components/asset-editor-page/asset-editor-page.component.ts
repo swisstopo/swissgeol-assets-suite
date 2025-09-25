@@ -411,6 +411,7 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
           filesToUpdate.push({
             id: entry.id,
             legalDocCode: entry.legalDocCode,
+            pageClassifications: entry.pageClassifications,
           });
         }
       } else if (!entry.shouldBeDeleted) {
@@ -487,7 +488,10 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
   protected readonly EditorMode = EditorMode;
 }
 
-export type ExistingAssetFile = Pick<AssetFile, 'id' | 'name' | 'legalDocCode'> & {
+export type ExistingAssetFile = Pick<
+  AssetFile,
+  'id' | 'name' | 'legalDocCode' | 'lastModifiedAt' | 'pageClassifications' | 'pageCount'
+> & {
   shouldBeDeleted: boolean;
 };
 

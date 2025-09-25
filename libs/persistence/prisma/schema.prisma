@@ -112,13 +112,17 @@ model AssetFile {
   @@map("asset_file")
 }
 
-enum OcrState {
-  willNotBeProcessed
-  created
-  waiting
-  processing
-  error
-  success
+enum FileProcessingStage {
+  Ocr
+  Extraction
+}
+
+enum FileProcessingState {
+  WillNotBeProcessed
+  Waiting
+  Processing
+  Error
+  Success
 }
 
 enum FileType {
@@ -127,12 +131,15 @@ enum FileType {
 }
 
 model File {
-  id             Int      @id @default(autoincrement()) @map("id")
+  id                  Int                  @id @default(autoincrement()) @map("id")
   /// the filename as stored in the bucket, must be unique and may not be equal to the original file name
-  name           String   @map("file_name")
+  name                String               @map("file_name")
   /// alias for the given file, typically the original file name
-  nameAlias      String?  @map("file_name_alias")
-  ocrStatus      OcrState @default(created) @map("ocr_status")
+  nameAlias           String?              @map("file_name_alias")
+  /// There is a CHECK constraint that enforces that the ocrStatus is not WillNotBeProcessed if the stage is null
+  fileProcessingStage FileProcessingStage? @map("file_processing_stage")
+  fileProcessingState FileProcessingState  @default(WillNotBeProcessed) @map("file_processing_state")
+
   size           BigInt   @map("size")
   lastModifiedAt DateTime @map("last_modified_at")
   type           FileType @default(Normal) @map("type")
@@ -140,6 +147,8 @@ model File {
 
   legalDocItemCode String?       @map("legal_doc_item_code")
   legalDocItem     LegalDocItem? @relation(fields: [legalDocItemCode], references: [legalDocItemCode])
+
+  pageClassifications Json? @map("page_classifications")
 
   AssetFile AssetFile[]
 

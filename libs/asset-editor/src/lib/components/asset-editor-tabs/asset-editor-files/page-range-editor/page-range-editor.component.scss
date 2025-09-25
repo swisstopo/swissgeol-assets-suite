@@ -1,0 +1,87 @@
+@use "../../../../styles/variables";
+
+.header {
+  padding: 24px 24px 16px 24px;
+}
+
+h2,
+hr {
+  margin: 0;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 16px;
+  padding: 24px;
+}
+
+.page-range-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+
+  &__row {
+    &__inputs {
+      display: grid;
+      width: 100%;
+      grid-template-columns: 36px 465px minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
+      gap: 16px;
+      align-items: end;
+    }
+
+    &__error {
+      color: var(--sgc-color-error);
+      font-size: 12px;
+      display: flex;
+      justify-content: end;
+    }
+  }
+}
+
+.page-range-editor__add-row {
+  display: flex;
+  flex-shrink: 0;
+  justify-content: center;
+  width: 100%;
+  border: 1px dashed variables.$cyan-08;
+  padding: 12px 0;
+
+  &__icon {
+    background-color: var(--sgc-color-primary);
+    color: white;
+    padding: 10.5px;
+    border-radius: 50%;
+    display: flex;
+  }
+
+  &:hover {
+    cursor: pointer;
+  }
+
+  &:hover &__icon {
+    background-color: var(--sgc-color-primary--hovered);
+  }
+
+  &:active &__icon {
+    background-color: var(--sgc-color-primary--pressed);
+  }
+}
+
+.form-wrapper {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  gap: 16px;
+
+  form {
+    overflow: auto;
+    padding-bottom: 20px;
+  }
+}

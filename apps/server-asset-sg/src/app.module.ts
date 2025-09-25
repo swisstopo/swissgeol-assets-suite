@@ -2,6 +2,7 @@ import { HttpModule } from '@nestjs/axios';
 import { CacheModule } from '@nestjs/cache-manager';
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ScheduleModule } from '@nestjs/schedule';
 
 import { AppController } from '@/app.controller';
@@ -28,7 +29,14 @@ import { WorkgroupsController } from '@/features/workgroups/workgroups.controlle
     UsersController,
     WorkgroupsController,
   ],
-  imports: [HttpModule, ScheduleModule.forRoot(), CacheModule.register(), AssetModule, UsersModule],
+  imports: [
+    HttpModule,
+    ScheduleModule.forRoot(),
+    CacheModule.register(),
+    AssetModule,
+    UsersModule,
+    EventEmitterModule.forRoot(),
+  ],
   providers: [
     ContactRepo,
     PrismaService,

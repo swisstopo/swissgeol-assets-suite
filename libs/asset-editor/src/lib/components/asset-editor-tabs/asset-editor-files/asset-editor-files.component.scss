@@ -44,3 +44,38 @@
 .will-be-deleted {
   text-decoration: line-through;
 }
+
+.table {
+  table-layout: fixed;
+  width: 100%;
+}
+
+.column-pick {
+  width: 44px;
+  padding: 0;
+}
+
+.column-name {
+  white-space: nowrap;
+}
+
+.column-ocr-status {
+  width: 210px;
+}
+
+.column-actions {
+  width: 130px;
+  padding: 0;
+
+  div {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+  }
+}
+
+.download-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
