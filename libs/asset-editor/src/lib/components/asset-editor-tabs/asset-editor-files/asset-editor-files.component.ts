@@ -13,7 +13,7 @@ import {
   FileProcessingState,
   LegalDocCode,
   LocalizedItem,
-  PageClassification,
+  PageRangeClassification,
 } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
 import {
@@ -102,14 +102,15 @@ export class AssetEditorFilesComponent implements OnInit, OnDestroy {
 
   protected openPageRangeEditor(file: AssetFormFile) {
     if (isExistingAssetFile(file)) {
-      const dialogRef = this.dialogService.open<PageRangeEditorComponent, PageRangeEditorData, PageClassification[]>(
+      const dialogRef = this.dialogService.open<
         PageRangeEditorComponent,
-        {
-          data: { classifications: file.pageClassifications, pageCount: file.pageCount ?? 0 }, // todo: pageCount can be 0
-          width: '925px',
-          autoFocus: false,
-        },
-      );
+        PageRangeEditorData,
+        PageRangeClassification[]
+      >(PageRangeEditorComponent, {
+        data: { classifications: file.pageRangeClassifications, pageCount: file.pageCount ?? 0 }, // todo: pageCount can be 0
+        width: '925px',
+        autoFocus: false,
+      });
 
       this.subscriptions.add(
         dialogRef.afterClosed().subscribe((result) => {
@@ -209,11 +210,11 @@ export class AssetEditorFilesComponent implements OnInit, OnDestroy {
     });
   }
 
-  private updatePageClassifications(file: ExistingAssetFile, result: PageClassification[]) {
+  private updatePageClassifications(file: ExistingAssetFile, result: PageRangeClassification[]) {
     const index = this.form.value.findIndex((e) => e === file);
     if (index !== -1) {
       const entry = this.form.at(index);
-      entry.patchValue({ ...file, pageClassifications: result });
+      entry.patchValue({ ...file, pageRangeClassifications: result });
       entry.markAsDirty();
     }
   }

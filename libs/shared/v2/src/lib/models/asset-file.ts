@@ -48,9 +48,9 @@ export interface AssetFile {
   fileProcessingState: FileProcessingState;
 
   /**
-   * DB: `page_classifications`
+   * DB: `page_range_classifications`
    */
-  pageClassifications: PageClassification[] | null;
+  pageRangeClassifications: PageRangeClassification[] | null;
 }
 
 export const SupportedPageLanguages = ['de', 'fr', 'it', 'en'] as const;
@@ -69,10 +69,14 @@ export enum PageCategory {
 }
 
 export interface PageClassification {
-  from: number;
-  to: number;
+  page: number;
   languages: SupportedPageLanguage[];
   categories: PageCategory[];
+}
+
+export interface PageRangeClassification extends Omit<PageClassification, 'page'> {
+  from: number;
+  to: number;
 }
 
 export type AssetFileId = number;
@@ -85,7 +89,7 @@ export interface CreateAssetFileData {
 export interface UpdateAssetFileData {
   id: AssetFileId;
   legalDocCode: LegalDocCode | null;
-  pageClassifications: PageClassification[] | null;
+  pageRangeClassifications: PageRangeClassification[] | null;
 }
 
 export enum LegalDocCode {

@@ -7,7 +7,7 @@ import {
   FileProcessingState,
   LegalDocCode,
   PageCategory,
-  PageClassification,
+  PageRangeClassification,
   SupportedPageLanguage,
   SupportedPageLanguages,
   UpdateAssetFileData,
@@ -15,7 +15,7 @@ import {
 import { IsNullable } from '../utils/class-validator/is-nullable.decorator';
 import { Schema } from './base/schema';
 
-class PageClassificationSchema implements PageClassification {
+class PageRangeClassificationSchema implements PageRangeClassification {
   @IsInt()
   to!: number;
   @IsInt()
@@ -58,9 +58,9 @@ export class AssetFileSchema extends Schema implements AssetFile {
   fileProcessingStage!: FileProcessingStage | null;
 
   @IsNullable()
-  @Type(() => PageClassificationSchema)
+  @Type(() => PageRangeClassificationSchema)
   @ValidateNested({ each: true })
-  pageClassifications!: PageClassificationSchema[] | null;
+  pageRangeClassifications!: PageRangeClassificationSchema[] | null;
 }
 
 export class UpdateAssetFileDataSchema extends Schema implements UpdateAssetFileData {
@@ -72,5 +72,5 @@ export class UpdateAssetFileDataSchema extends Schema implements UpdateAssetFile
   legalDocCode!: LegalDocCode;
 
   @IsNullable()
-  pageClassifications!: PageClassification[] | null;
+  pageRangeClassifications!: PageRangeClassification[] | null;
 }
