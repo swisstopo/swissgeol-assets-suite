@@ -33,10 +33,10 @@
     </div>
   </div>
 
-  @if (assetFile.pageClassifications) {
+  @if (assetFile.pageRangeClassifications) {
     <hr class="divider" />
     <asset-sg-asset-viewer-files-content
-      [pageClassifications]="assetFile.pageClassifications"
+      [pageRangeClassifications]="assetFile.pageRangeClassifications"
       [pageCount]="assetFile.pageCount"
       [legalDocCode]="assetFile.legalDocCode"
     ></asset-sg-asset-viewer-files-content>

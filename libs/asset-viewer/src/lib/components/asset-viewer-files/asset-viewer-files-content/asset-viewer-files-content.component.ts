@@ -1,7 +1,7 @@
 import { Component, Input } from '@angular/core';
-import { LegalDocCode, PageCategory, PageClassification, SupportedPageLanguage } from '@asset-sg/shared/v2';
+import { LegalDocCode, PageCategory, PageRangeClassification, SupportedPageLanguage } from '@asset-sg/shared/v2';
 
-type GroupedPageClassifications = { [key in PageCategory]?: PageClassification[] };
+type GroupedPageClassifications = { [key in PageCategory]?: PageRangeClassification[] };
 type PageContent = {
   groupedPageClassifications: GroupedPageClassifications;
   languages: SupportedPageLanguage[];
@@ -20,15 +20,15 @@ export class AssetViewerFilesContentComponent {
   protected groupedPageClassifications!: PageContent;
 
   @Input({ required: true })
-  public set pageClassifications(value: PageClassification[]) {
-    this.groupedPageClassifications = this.extractGroupedPageClassifications(value);
+  public set pageRangeClassifications(value: PageRangeClassification[]) {
+    this.groupedPageClassifications = this.extractGroupedPageRageClassifications(value);
   }
 
-  private extractGroupedPageClassifications(pageClassifications: PageClassification[]): PageContent {
+  private extractGroupedPageRageClassifications(pageRangeClassifications: PageRangeClassification[]): PageContent {
     const languages = new Set<SupportedPageLanguage>();
     const categories = new Set<PageCategory>();
     const groupedPageClassifications: GroupedPageClassifications = {};
-    pageClassifications.forEach((pc) => {
+    pageRangeClassifications.forEach((pc) => {
       pc.categories.forEach((category) => {
         if (!groupedPageClassifications[category]) {
           groupedPageClassifications[category] = [];
