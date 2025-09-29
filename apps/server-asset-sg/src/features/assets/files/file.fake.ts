@@ -14,5 +14,5 @@ export const fakeFile = (): AssetFile => ({
   lastModifiedAt: faker.date.past({ years: 10 }),
   fileProcessingStage: faker.helpers.enumValue(FileProcessingStage),
   fileProcessingState: faker.helpers.enumValue(FileProcessingState),
-  pageClassifications: null,
+  pageRangeClassifications: null,
 });
