@@ -1,6 +1,11 @@
 <!-- todo: typehints on formControlName do not work -->
+<!-- todo: icon -->
 <div class="header">
   <h2 translate>edit.tabs.files.pageRanges.title</h2>
+  <sgc-button (click)="recalculateClassification()" color="secondary" translate>
+    edit.tabs.files.pageRanges.recalculateRanges
+    <sgc-icon name="openLink"></sgc-icon>
+  </sgc-button>
 </div>
 <hr />
 <div class="form-wrapper" mat-dialog-content>

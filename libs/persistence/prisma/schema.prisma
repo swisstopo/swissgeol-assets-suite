@@ -148,7 +148,7 @@ model File {
   legalDocItemCode String?       @map("legal_doc_item_code")
   legalDocItem     LegalDocItem? @relation(fields: [legalDocItemCode], references: [legalDocItemCode])
 
-  pageClassifications Json? @map("page_classifications")
+  pageRangeClassifications Json? @map("page_range_classifications")
 
   AssetFile AssetFile[]
 

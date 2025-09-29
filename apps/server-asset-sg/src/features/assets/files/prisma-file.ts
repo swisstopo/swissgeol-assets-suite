@@ -3,7 +3,7 @@ import {
   FileProcessingStage,
   FileProcessingState,
   LegalDocCode,
-  PageClassification,
+  PageRangeClassification,
 } from '@asset-sg/shared/v2';
 import { Prisma } from '@prisma/client';
 
@@ -19,7 +19,7 @@ export const assetFileSelection = {
   lastModifiedAt: true,
   fileProcessingStage: true,
   fileProcessingState: true,
-  pageClassifications: true,
+  pageRangeClassifications: true,
 } satisfies Prisma.FileSelect;
 
 export const mapAssetFileFromPrisma = (data: SelectedAssetFile): AssetFile => ({
@@ -31,7 +31,7 @@ export const mapAssetFileFromPrisma = (data: SelectedAssetFile): AssetFile => ({
   lastModifiedAt: data.lastModifiedAt,
   fileProcessingStage: data.fileProcessingStage as FileProcessingStage | null,
   fileProcessingState: data.fileProcessingState as FileProcessingState,
-  pageClassifications: data.pageClassifications as unknown as PageClassification[] | null,
+  pageRangeClassifications: data.pageRangeClassifications as unknown as PageRangeClassification[] | null,
 
   // `Number.MAX_SAFE_INTEGER` represents around 9000TBs of bytes, so there is really no reason to ever use `bigint` here.
   size: Number(data.size),

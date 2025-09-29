@@ -14,12 +14,19 @@ import {
 } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogActions, MatDialogContent, MatDialogRef } from '@angular/material/dialog';
 import { SelectComponent } from '@asset-sg/client-shared';
-import { PageCategory, PageClassification, SupportedPageLanguage, SupportedPageLanguages } from '@asset-sg/shared/v2';
+import {
+  PageCategory,
+  PageClassification,
+  PageRangeClassification,
+  SupportedPageLanguage,
+  SupportedPageLanguages,
+  transformPagesToRanges,
+} from '@asset-sg/shared/v2';
 import { TranslateDirective, TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { SgcButton, SgcIcon } from '@swissgeol/ui-core-angular';
 
 export type PageRangeEditorData = {
-  classifications: PageClassification[] | null;
+  classifications: PageRangeClassification[] | null;
   pageCount: number;
 };
 
@@ -64,7 +71,7 @@ export class PageRangeEditorComponent {
   protected readonly categories: SelectOption<PageCategory>[];
   protected readonly languages: SelectOption<SupportedPageLanguage>[];
 
-  private readonly dialogRef = inject(MatDialogRef<PageRangeEditorComponent, PageClassification[]>);
+  private readonly dialogRef = inject(MatDialogRef<PageRangeEditorComponent, PageRangeClassification[]>);
   private readonly fb: FormBuilder = inject(FormBuilder);
   private readonly translateService = inject(TranslateService);
 
@@ -87,16 +94,25 @@ export class PageRangeEditorComponent {
     });
   }
 
-  private toGreaterOrEqualFromValidator(): ValidatorFn {
-    return (group: AbstractControl): ValidationErrors | null => {
-      const to = group.get('to')?.value;
-      const from = group.get('from')?.value;
+  public recalculateClassification() {
+    const pageRangeClassifications: PageRangeClassification[] = this.form.getRawValue().classifications;
 
-      if (to != null && from != null && to < from) {
-        return { toLessThanFrom: true };
-      }
-      return null;
-    };
+    const pageClassifications: PageClassification[] = [];
+    pageRangeClassifications.forEach(({ to, from, categories, languages }) => {
+      Array.from({ length: to - from + 1 }, (_, i) => from + i).forEach((page) =>
+        pageClassifications.push({
+          page,
+          categories: categories,
+          languages: languages,
+        }),
+      );
+    });
+
+    const newFormArray = this.fb.array<PageClassificationFormGroup>(
+      transformPagesToRanges(pageClassifications).map((pc) => this.createFormGroup(pc)),
+    );
+
+    this.form.setControl('classifications', newFormArray);
   }
 
   protected addClassification() {
@@ -118,6 +134,7 @@ export class PageRangeEditorComponent {
   }
 
   protected submit() {
+    this.recalculateClassification();
     this.dialogRef.close(this.form.getRawValue().classifications);
   }
 
@@ -125,7 +142,19 @@ export class PageRangeEditorComponent {
     this.dialogRef.close();
   }
 
-  private createFormGroup(pc: PageClassification): PageClassificationFormGroup {
+  private toGreaterOrEqualFromValidator(): ValidatorFn {
+    return (group: AbstractControl): ValidationErrors | null => {
+      const to = group.get('to')?.value;
+      const from = group.get('from')?.value;
+
+      if (to != null && from != null && to < from) {
+        return { toLessThanFrom: true };
+      }
+      return null;
+    };
+  }
+
+  private createFormGroup(pc: PageRangeClassification): PageClassificationFormGroup {
     return this.fb.group(
       {
         to: this.fb.nonNullable.control(pc.to, [

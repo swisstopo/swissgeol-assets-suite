@@ -68,7 +68,7 @@ export class FileRepo
       lastModifiedAt,
       fileProcessingStage: data.fileProcessingStage,
       fileProcessingState: data.fileProcessingState,
-      pageClassifications: null, // this is filled (if at all) by postprocessing via Extraction
+      pageRangeClassifications: null, // this is filled (if at all) by postprocessing via Extraction
     };
   }
 
