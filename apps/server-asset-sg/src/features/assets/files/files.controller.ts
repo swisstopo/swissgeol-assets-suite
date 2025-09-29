@@ -1,4 +1,4 @@
-import { AssetEditPolicy, AssetFileSchema, LegalDocCode, User } from '@asset-sg/shared/v2';
+import { AssetEditPolicy, AssetFileSchema, convert, LegalDocCode, User } from '@asset-sg/shared/v2';
 import {
   Controller,
   Delete,
@@ -33,6 +33,18 @@ export class FilesController {
     private readonly fileS3Service: FileS3Service,
     private readonly fileService: FileService,
   ) {}
+
+  @Get('/')
+  async list(@Param('assetId', ParseIntPipe) assetId: number, @CurrentUser() user: User): Promise<AssetFileSchema[]> {
+    const asset = await this.assetRepo.find(assetId);
+    if (asset == null) {
+      throw new HttpException('not found', HttpStatus.NOT_FOUND);
+    }
+    authorize(AssetEditPolicy, user).canShow(asset);
+
+    const files = await this.fileRepo.list({ assetId });
+    return convert(AssetFileSchema, files);
+  }
 
   @Get('/:id')
   async download(
