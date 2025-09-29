@@ -3,6 +3,7 @@ import {
   AssetFileId,
   FileProcessingStage,
   FileProcessingState,
+  getLanguageCodesOfPages,
   PageCategory,
   PageClassification,
   PageRangeClassification,
@@ -94,6 +95,7 @@ export class FileExtractionService extends AbstractProcessingService<ExtractionR
     const ranges = this.createPageRanges(result[0]);
     try {
       await this.storeRanges(file.id, ranges);
+      await this.storeLanguages(file.id, result);
     } catch (e) {
       this.logger.error(`Could not store page range result in database, ${e}`);
       await this.updateStatus(file, FileProcessingState.Error);
@@ -134,6 +136,23 @@ export class FileExtractionService extends AbstractProcessingService<ExtractionR
       data: {
         pageRangeClassifications: ranges as unknown as Prisma.JsonArray,
       },
+    });
+  }
+
+  private async storeLanguages(fileId: AssetFileId, results: ExtractionResult[]): Promise<void> {
+    // Find all languages that have been extracted.
+    const languages = getLanguageCodesOfPages(results.map((it) => it.metadata));
+
+    // Find all assets that are mapped to the processed file.
+    const assets = await this.prisma.assetFile.findMany({
+      where: { fileId },
+      select: { assetId: true },
+    });
+
+    // For each asset, add all languages that have not yet been mapped to it.
+    await this.prisma.assetLanguage.createMany({
+      data: assets.flatMap(({ assetId }) => [...languages].map((code) => ({ assetId, languageItemCode: code }))),
+      skipDuplicates: true,
     });
   }
 }

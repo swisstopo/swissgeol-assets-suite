@@ -281,18 +281,7 @@ export const mapAssetDataToPrismaCreate = (data: CreateAssetDataWithCreator): Pr
 
 export const mapAssetDataToPrismaUpdate = (id: AssetId, data: UpdateAssetData): Prisma.AssetUpdateInput => ({
   ...mapDataToPrisma(data),
-  assetLanguages: {
-    deleteMany: {
-      assetId: id,
-      languageItemCode: { notIn: data.languageCodes },
-    },
-    createMany: {
-      data: data.languageCodes.map((code) => ({
-        languageItemCode: code,
-      })),
-      skipDuplicates: true,
-    },
-  },
+  assetLanguages: mapAssetLanguagesToPrismaUpdate(id, data.languageCodes),
   typeNatRels: {
     // We can't detect which typeNatRels are already mapped as they use a separate id number which we do not use outside the database.
     // This means we have to delete all rels everytime, and then recreate them.
@@ -434,5 +423,21 @@ export const mapAssetDataToPrismaUpdate = (id: AssetId, data: UpdateAssetData): 
         })),
       skipDuplicates: true,
     },
+  },
+});
+
+export const mapAssetLanguagesToPrismaUpdate = (
+  assetId: AssetId,
+  codes: LanguageCode[],
+): Prisma.AssetLanguageUpdateManyWithoutAssetNestedInput => ({
+  deleteMany: {
+    assetId,
+    languageItemCode: { notIn: codes },
+  },
+  createMany: {
+    data: codes.map((code) => ({
+      languageItemCode: code,
+    })),
+    skipDuplicates: true,
   },
 });
