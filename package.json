@@ -145,6 +145,7 @@
     "jsdom": "^26.1.0",
     "lint-staged": "^15.5.1",
     "ng-packagr": "20.1.0",
+    "ngx-extended-pdf-viewer": "^25.6.0-alpha.3",
     "nx": "21.3.8",
     "postcss": "^8.4.5",
     "prettier": "~3.6.2",

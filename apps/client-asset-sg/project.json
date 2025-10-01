@@ -23,6 +23,11 @@
             "glob": "**/*",
             "input": "node_modules/@swissgeol/ui-core/dist/swissgeol-ui-core/assets/fonts",
             "output": "/assets/fonts"
+          },
+          {
+            "glob": "**/*",
+            "input": "node_modules/ngx-extended-pdf-viewer/assets",
+            "output": "/assets/"
           }
         ],
         "styles": [

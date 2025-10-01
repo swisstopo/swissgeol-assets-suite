@@ -1,0 +1,42 @@
+<!-- note: for dev reasons, we impersonate here; however, the injection of the JWT token should be done properly, e.g. interceptors -->
+<!-- note: scrollMode 3 -> we scroll only pages, and need to flip pages manually with the buttons; this avoids scrolling and loading too much -->
+<ngx-extended-pdf-viewer
+  [disableForms]="true"
+  [enableDragAndDrop]="false"
+  [showHighlightEditor]="false"
+  src="api/assets/44581/files/27675"
+  [httpHeaders]="{ Authorization: 'Impersonate admin@assets.swissgeol.ch' }"
+  [customFreeFloatingBar]="floatingZoombar"
+  [scrollMode]="3"
+></ngx-extended-pdf-viewer>
+
+<ng-template #floatingZoombar>
+  <div
+    style="
+      position: absolute;
+      bottom: 20px;
+      left: 41%;
+      z-index: 1;
+      background-color: #dbe5e9;
+      padding: 4px;
+      padding-bottom: 8px;
+      border: 1px solid darkgray;
+    "
+  >
+    <div>
+      <pdf-zoom-dropdown class="invisible"></pdf-zoom-dropdown>
+
+      <input type="radio" id="zoom50" class="toolbarField radio" tabindex="94" />
+      <label for="zoom50" class="toolbarLabel">50%</label>
+
+      <input type="radio" id="zoom100" class="toolbarField radio" tabindex="95" />
+      <label for="zoom100" class="toolbarLabel">100%</label>
+
+      <input type="radio" id="zoom200" class="toolbarField radio" tabindex="96" />
+      <label for="zoom200" class="toolbarLabel">200%</label>
+
+      <input type="radio" id="zoom-auto" class="toolbarField radio" tabindex="97" />
+      <label for="zoom-auto" class="toolbarLabel">auto</label>
+    </div>
+  </div>
+</ng-template>

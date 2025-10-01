@@ -46,6 +46,7 @@ import { AppComponent } from './app.component';
 import { AppBarComponent, MenuBarComponent, NotFoundComponent } from './components';
 import { GoogleAnalyticsComponent } from './components/google-analytics/google-analytics.component';
 import { MenuBarItemComponent } from './components/menu-bar-item/menu-bar-item.component';
+import { PdftestComponent } from './components/pdftest/pdftest.component';
 import { SplashScreenComponent } from './components/splash-screen/splash-screen.component';
 import { AppTranslateLoader } from './i18n';
 import { HttpInterceptor } from './services/http.interceptor';
@@ -64,6 +65,10 @@ const routes: Routes = [
       {
         path: '',
         loadChildren: loadAssetViewer,
+      },
+      {
+        path: 'pdftest',
+        component: PdftestComponent,
       },
       {
         path: 'assets',
