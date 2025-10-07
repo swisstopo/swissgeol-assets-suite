@@ -127,6 +127,23 @@
                     [isDisabled]="
                       !(
                         control?.value?.fileProcessingStage != null &&
+                        (control.value.fileProcessingState === FileProcessingState.Success ||
+                          control.value.fileProcessingState === FileProcessingState.Error)
+                      )
+                    "
+                    [matTooltip]="'edit.tabs.files.pageRanges.reanalyze' | translate"
+                    color="secondary"
+                    variant="icon"
+                    size="small"
+                    justify="center"
+                    (click)="reanalyzeFile(control.value)"
+                  >
+                    <sgc-icon name="ai" />
+                  </sgc-button>
+                  <sgc-button
+                    [isDisabled]="
+                      !(
+                        control?.value?.fileProcessingStage != null &&
                         control.value.fileProcessingStage === FileProcessingStage.Extraction &&
                         (control.value.fileProcessingState === FileProcessingState.Success ||
                           control.value.fileProcessingState === FileProcessingState.Error)

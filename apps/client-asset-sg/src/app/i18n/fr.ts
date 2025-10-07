@@ -216,6 +216,9 @@ export const frTranslationMapping: AppTranslationMapping = {
           pageTo: 'Page à',
           save: 'Finaliser',
           toLessThanFromError: '"La page "à" doit être supérieure ou égale à la page "de".',
+          reanalyze: 'Réanalyser',
+          confirmReanalyze:
+            'Lors d’une nouvelle analyse, les classes de pages et/ou les langues seront redéfinies. Les ajustements déjà effectués seront écrasés. L’analyse peut prendre un certain temps.',
         },
       },
       usage: {

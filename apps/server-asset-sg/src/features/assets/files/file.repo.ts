@@ -10,15 +10,26 @@ import {
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '@/core/prisma.service';
-import { CreateRepo, DeleteRepo, ReadRepo, RepoListOptions } from '@/core/repo';
+import { Repo, RepoListOptions } from '@/core/repo';
 import { assetFileSelection, mapAssetFileFromPrisma } from '@/features/assets/files/prisma-file';
 import { handlePrismaMutationError } from '@/utils/prisma';
 
 @Injectable()
-export class FileRepo
-  implements ReadRepo<AssetFile, FileIdentifier>, CreateRepo<AssetFile, CreateFileData>, DeleteRepo<FileIdentifier>
-{
+export class FileRepo implements Repo<AssetFile, FileIdentifier, CreateFileData, UpdateFileData> {
   constructor(private readonly prisma: PrismaService) {}
+
+  async update({ id: fileId }: FileIdentifier, data: UpdateFileData): Promise<AssetFile | null> {
+    try {
+      const updatedFile = await this.prisma.file.update({
+        where: { id: fileId },
+        data,
+      });
+
+      return mapAssetFileFromPrisma(updatedFile);
+    } catch (e) {
+      return handlePrismaMutationError(e);
+    }
+  }
 
   async find({ id, assetId }: FileIdentifier): Promise<AssetFile | null> {
     const entry = await this.prisma.file.findFirst({
@@ -154,6 +165,8 @@ export interface CreateFileData {
   assetId: AssetId;
   user: User;
 }
+
+export type UpdateFileData = Partial<Omit<CreateFileData, 'assetId' | 'user'>>;
 
 export interface UniqueFileName {
   fileName: string;

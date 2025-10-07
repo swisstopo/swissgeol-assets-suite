@@ -214,6 +214,9 @@ export const deTranslationMapping = {
           pageTo: 'Seite bis',
           save: 'Bearbeitung beenden',
           toLessThanFromError: '"Seite von" muss kleiner oder gleich "Seite bis" sein.',
+          reanalyze: 'Neu analysieren',
+          confirmReanalyze:
+            'Bei einer erneuten Analyse werden die Seitenklassen und/oder Sprachen neu definiert. Bereits vorgenommene Anpassungen werden dabei überschrieben. Die Analyse kann längere Zeit in Anspruch nehmen.',
         },
       },
       usage: {

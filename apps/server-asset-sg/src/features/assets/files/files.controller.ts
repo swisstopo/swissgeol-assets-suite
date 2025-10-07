@@ -1,7 +1,8 @@
-import { AssetEditPolicy, AssetFileSchema, convert, LegalDocCode, User } from '@asset-sg/shared/v2';
+import { Asset, AssetEditPolicy, AssetFile, AssetFileSchema, convert, LegalDocCode, User } from '@asset-sg/shared/v2';
 import {
   Controller,
   Get,
+  HttpCode,
   HttpException,
   HttpStatus,
   Param,
@@ -34,10 +35,7 @@ export class FilesController {
 
   @Get('/')
   async list(@Param('assetId', ParseIntPipe) assetId: number, @CurrentUser() user: User): Promise<AssetFileSchema[]> {
-    const asset = await this.assetRepo.find(assetId);
-    if (asset == null) {
-      throw new HttpException('not found', HttpStatus.NOT_FOUND);
-    }
+    const asset = await this.findAssetOrThrow(assetId);
     authorize(AssetEditPolicy, user).canShow(asset);
 
     const files = await this.fileRepo.list({ assetId });
@@ -85,10 +83,7 @@ export class FilesController {
     @UploadedFile() file: Express.Multer.File,
     @CurrentUser() user: User,
   ): Promise<AssetFileSchema> {
-    const asset = await this.assetRepo.find(assetId);
-    if (asset == null) {
-      throw new HttpException('not found', HttpStatus.NOT_FOUND);
-    }
+    const asset = await this.findAssetOrThrow(assetId);
     authorize(AssetEditPolicy, user).canUpdate(asset);
 
     const body = req.body as {
@@ -105,5 +100,26 @@ export class FilesController {
       mediaType: file.mimetype,
     });
     return plainToInstance(AssetFileSchema, record);
+  }
+
+  @Post('/:id/reanalyze')
+  @HttpCode(HttpStatus.ACCEPTED)
+  async reanalyze(
+    @Param('assetId', ParseIntPipe) assetId: number,
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: User,
+  ): Promise<AssetFile | null> {
+    const asset = await this.findAssetOrThrow(assetId);
+    authorize(AssetEditPolicy, user).canUpdate(asset);
+    return await this.fileService.reanalyzeFile({ id, assetId: asset.id });
+  }
+
+  private async findAssetOrThrow(assetId: number): Promise<Asset> {
+    const asset = await this.assetRepo.find(assetId);
+    if (asset == null) {
+      throw new HttpException('not found', HttpStatus.NOT_FOUND);
+    }
+
+    return asset;
   }
 }

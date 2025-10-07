@@ -7,7 +7,7 @@ import {
   getLanguageCodesOfPages,
   LanguageCode,
 } from '@asset-sg/shared/v2';
-import { Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { EVENTS } from '@/core/events';
 import { PrismaService } from '@/core/prisma.service';
@@ -25,14 +25,6 @@ export class FileService {
     private readonly eventEmitter: EventEmitter2,
     private readonly prismaService: PrismaService,
   ) {}
-
-  private getProcessingConfiguration(
-    isOcrCompatible: boolean,
-  ): Pick<AssetFile, 'fileProcessingStage' | 'fileProcessingState'> {
-    return isOcrCompatible
-      ? { fileProcessingState: FileProcessingState.Waiting, fileProcessingStage: FileProcessingStage.Ocr }
-      : { fileProcessingState: FileProcessingState.WillNotBeProcessed, fileProcessingStage: null };
-  }
 
   async create(data: UploadFileData): Promise<AssetFile> {
     const { content, mediaType, ...createData } = data;
@@ -75,6 +67,39 @@ export class FileService {
     for (const orphan of orphans) {
       await this.fileRepo.deleteUnused(orphan.id);
     }
+  }
+
+  async reanalyzeFile(id: FileIdentifier): Promise<AssetFile> {
+    const record = await this.fileRepo.find(id);
+    if (record === null) {
+      throw new NotFoundException('not found');
+    }
+
+    if (
+      record.fileProcessingState !== FileProcessingState.Error &&
+      record.fileProcessingState !== FileProcessingState.Success
+    ) {
+      throw new BadRequestException('File is not in a state that allows reanalysis');
+    }
+
+    const updatedAsset = await this.fileRepo.update(id, {
+      fileProcessingState: FileProcessingState.Waiting,
+      fileProcessingStage: FileProcessingStage.Ocr,
+    });
+    if (updatedAsset === null) {
+      throw new NotFoundException('not found');
+    }
+
+    this.eventEmitter.emit(EVENTS.FILE_START_OCR, updatedAsset);
+    return updatedAsset;
+  }
+
+  private getProcessingConfiguration(
+    isOcrCompatible: boolean,
+  ): Pick<AssetFile, 'fileProcessingStage' | 'fileProcessingState'> {
+    return isOcrCompatible
+      ? { fileProcessingState: FileProcessingState.Waiting, fileProcessingStage: FileProcessingStage.Ocr }
+      : { fileProcessingState: FileProcessingState.WillNotBeProcessed, fileProcessingStage: null };
   }
 
   private async saveFileOrDeleteRecord(
