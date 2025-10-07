@@ -8,14 +8,15 @@ import {
   User,
 } from '@asset-sg/shared/v2';
 import { Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '@/core/prisma.service';
-import { CreateRepo, DeleteRepo, FindRepo } from '@/core/repo';
+import { CreateRepo, DeleteRepo, ReadRepo, RepoListOptions } from '@/core/repo';
 import { assetFileSelection, mapAssetFileFromPrisma } from '@/features/assets/files/prisma-file';
 import { handlePrismaMutationError } from '@/utils/prisma';
 
 @Injectable()
 export class FileRepo
-  implements FindRepo<AssetFile, FileIdentifier>, CreateRepo<AssetFile, CreateFileData>, DeleteRepo<FileIdentifier>
+  implements ReadRepo<AssetFile, FileIdentifier>, CreateRepo<AssetFile, CreateFileData>, DeleteRepo<FileIdentifier>
 {
   constructor(private readonly prisma: PrismaService) {}
 
@@ -28,6 +29,25 @@ export class FileRepo
       return null;
     }
     return mapAssetFileFromPrisma(entry);
+  }
+
+  async list({ limit, offset, ids, assetId }: FileRepoListOptions = {}): Promise<AssetFile[]> {
+    const where: Prisma.FileWhereInput = {};
+    if (ids != null) {
+      // Require the files to match one of the given identifiers.
+      where['OR'] = ids.map(({ id, assetId }) => ({ id, AssetFile: { some: { assetId } } }));
+    }
+    if (assetId != null) {
+      // Require the files to belong to a specific asset.
+      where['AssetFile'] = { some: { assetId } };
+    }
+    const entries = await this.prisma.file.findMany({
+      where,
+      take: limit,
+      skip: offset,
+      select: assetFileSelection,
+    });
+    return await Promise.all(entries.map((it) => mapAssetFileFromPrisma(it)));
   }
 
   async findOrphans(): Promise<AssetFile[]> {
@@ -182,3 +202,7 @@ export const determineUniqueFilename = async (
     nameAlias: fileName,
   };
 };
+
+interface FileRepoListOptions extends RepoListOptions<FileIdentifier> {
+  assetId?: AssetId;
+}

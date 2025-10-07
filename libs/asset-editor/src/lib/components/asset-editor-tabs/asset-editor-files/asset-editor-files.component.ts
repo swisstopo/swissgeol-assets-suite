@@ -9,6 +9,8 @@ import { fromAppShared } from '@asset-sg/client-shared';
 import { isNotNull } from '@asset-sg/core';
 import {
   Asset,
+  AssetFileSchema,
+  convert,
   FileProcessingStage,
   FileProcessingState,
   LegalDocCode,
@@ -20,7 +22,9 @@ import {
   BehaviorSubject,
   combineLatestWith,
   filter,
+  firstValueFrom,
   forkJoin,
+  interval,
   map,
   Observable,
   startWith,
@@ -94,6 +98,8 @@ export class AssetEditorFilesComponent implements OnInit, OnDestroy {
         )
         .subscribe(),
     );
+
+    this.subscriptions.add(interval(5_000).subscribe(this.reloadFiles.bind(this)));
   }
 
   public ngOnDestroy() {
@@ -256,6 +262,26 @@ export class AssetEditorFilesComponent implements OnInit, OnDestroy {
 
   private isVisible(file: AssetFormFile): boolean {
     return (file.legalDocCode !== null) === this.isLegal$.value;
+  }
+
+  private async reloadFiles(): Promise<void> {
+    if (this.asset === null) {
+      return;
+    }
+    const files = await firstValueFrom(
+      this.httpClient
+        .get<object[]>(`/api/assets/${this.asset.id}/files`)
+        .pipe(map((res) => convert(AssetFileSchema, res))),
+    );
+    for (const fileFromServer of files) {
+      const fileInForm = this.form.value.find((it) => 'id' in it && it.id === fileFromServer.id);
+      if (fileInForm === undefined) {
+        // Ignore if a file has been changed by another session,
+        // as handling this would require us to update multiple states in this form.
+        continue;
+      }
+      Object.assign(fileInForm, fileFromServer);
+    }
   }
 }
 
