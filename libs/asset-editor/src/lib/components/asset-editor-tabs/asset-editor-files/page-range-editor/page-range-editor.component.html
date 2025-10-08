@@ -1,5 +1,4 @@
 <!-- todo: typehints on formControlName do not work -->
-<!-- todo: icon -->
 <div class="header">
   <h2 translate>edit.tabs.files.pageRanges.title</h2>
   <sgc-button (click)="recalculateClassification()" color="secondary" translate>
@@ -11,7 +10,7 @@
 <div class="form-wrapper" mat-dialog-content>
   <form #formElement [formGroup]="form">
     <div class="page-range-editor" formArrayName="classifications">
-      @for (group of this.form.controls.classifications.controls; track $index) {
+      @for (group of this.form.controls.classifications.controls; track group) {
         <div [formGroupName]="$index" class="page-range-editor__row">
           <div class="page-range-editor__row__inputs">
             <sgc-button

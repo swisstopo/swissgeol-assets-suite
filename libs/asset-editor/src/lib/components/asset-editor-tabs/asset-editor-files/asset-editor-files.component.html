@@ -89,12 +89,18 @@
                 <span translate>edit.tabs.files.fileProcessingState</span>
               </th>
               <td mat-cell *matCellDef="let control" class="column-ocr-status">
-                @if (control.value.fileProcessingState && control.value.fileProcessingStage) {
-                  {{ control.value.fileProcessingStage }} ({{
-                    "edit.tabs.files.fileProcessingStateValues." + control.value.fileProcessingState | translate
-                  }})
+                @if (this.fileProcessingStates().get(control.value.id); as state) {
+                  @if (state.fileProcessingStage) {
+                    {{ state.fileProcessingStage }} ({{
+                      "edit.tabs.files.fileProcessingStateValues." + state.fileProcessingState | translate
+                    }})
+                  } @else {
+                    {{ "edit.tabs.files.fileProcessingStateValues.WillNotBeProcessed" | translate }}
+                  }
+                } @else if (control.value.id) {
+                  <mat-progress-bar mode="indeterminate"></mat-progress-bar>
                 } @else {
-                  {{ "edit.tabs.files.fileProcessingStateValues.WillNotBeProcessed" | translate }}
+                  {{ "edit.tabs.files.fileProcessingStateValues.NotUploaded" | translate }}
                 }
               </td>
             </ng-container>

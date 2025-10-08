@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { Component, inject, Input, OnDestroy, OnInit } from '@angular/core';
+import { Component, inject, Input, OnChanges, OnDestroy, OnInit, signal, SimpleChanges } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { MatCheckboxChange } from '@angular/material/checkbox';
 import { MatDialog } from '@angular/material/dialog';
@@ -10,8 +10,6 @@ import { isNotNull } from '@asset-sg/core';
 import {
   Asset,
   AssetFile,
-  AssetFileSchema,
-  convert,
   FileProcessingStage,
   FileProcessingState,
   LegalDocCode,
@@ -40,18 +38,24 @@ export const isExistingAssetFile: (file: AssetFormFile) => file is ExistingAsset
   file,
 ): file is ExistingAssetFile => 'id' in file;
 
+type FileProcessingStateMap = Map<
+  number,
+  { fileProcessingState: FileProcessingState; fileProcessingStage: FileProcessingStage | null }
+>;
+
 @Component({
   selector: 'asset-sg-editor-files',
   styleUrls: ['./asset-editor-files.component.scss'],
   templateUrl: './asset-editor-files.component.html',
   standalone: false,
 })
-export class AssetEditorFilesComponent implements OnInit, OnDestroy {
+export class AssetEditorFilesComponent implements OnInit, OnDestroy, OnChanges {
   @Input() form!: AssetForm['controls']['files'];
   @Input() asset: Asset | null = null;
 
   public activeFileDownloads: Set<number> = new Set();
 
+  protected readonly fileProcessingStates = signal<FileProcessingStateMap>(new Map());
   protected readonly searchTerm$ = new BehaviorSubject<string>('');
   protected readonly isLegal$ = new BehaviorSubject(false);
   protected readonly dataSource = new MatTableDataSource<FormControl<AssetFormFile>>();
@@ -79,6 +83,12 @@ export class AssetEditorFilesComponent implements OnInit, OnDestroy {
     return this.selectedFiles.size === this.form.value.length;
   }
 
+  public async ngOnChanges(changes: SimpleChanges) {
+    if (changes['asset'] && !changes['asset'].firstChange) {
+      await this.fetchFileProcessingStates();
+    }
+  }
+
   public ngOnInit() {
     this.subscriptions.add(
       this.searchTerm$
@@ -101,7 +111,11 @@ export class AssetEditorFilesComponent implements OnInit, OnDestroy {
         .subscribe(),
     );
 
-    this.subscriptions.add(interval(5_000).subscribe(this.reloadFiles.bind(this)));
+    this.subscriptions.add(
+      interval(5_000)
+        .pipe(tap(() => this.fetchFileProcessingStates()))
+        .subscribe(),
+    );
   }
 
   public ngOnDestroy() {
@@ -130,6 +144,14 @@ export class AssetEditorFilesComponent implements OnInit, OnDestroy {
             const index = this.form.value.findIndex((e) => e === file);
             const entry = this.form.at(index);
             entry.patchValue({ ...res, shouldBeDeleted: false });
+            this.fileProcessingStates.update((current) => {
+              const newMap = new Map(current);
+              newMap.set(res.id, {
+                fileProcessingState: res.fileProcessingState,
+                fileProcessingStage: res.fileProcessingStage,
+              });
+              return newMap;
+            });
           }),
         )
         .subscribe(),
@@ -294,24 +316,25 @@ export class AssetEditorFilesComponent implements OnInit, OnDestroy {
     return (file.legalDocCode !== null) === this.isLegal$.value;
   }
 
-  private async reloadFiles(): Promise<void> {
+  private async fetchFileProcessingStates(): Promise<void> {
     if (this.asset === null) {
       return;
     }
-    const files = await firstValueFrom(
-      this.httpClient
-        .get<object[]>(`/api/assets/${this.asset.id}/files`)
-        .pipe(map((res) => convert(AssetFileSchema, res))),
+    const newFileProcessingStates: FileProcessingStateMap = new Map();
+    await firstValueFrom(
+      this.httpClient.get<AssetFile[]>(`/api/assets/${this.asset.id}/files`).pipe(
+        tap((assetFiles) => {
+          for (const assetFile of assetFiles) {
+            newFileProcessingStates.set(assetFile.id, {
+              fileProcessingStage: assetFile.fileProcessingStage,
+              fileProcessingState: assetFile.fileProcessingState,
+            });
+          }
+        }),
+      ),
     );
-    for (const fileFromServer of files) {
-      const fileInForm = this.form.value.find((it) => 'id' in it && it.id === fileFromServer.id);
-      if (fileInForm === undefined) {
-        // Ignore if a file has been changed by another session,
-        // as handling this would require us to update multiple states in this form.
-        continue;
-      }
-      Object.assign(fileInForm, fileFromServer);
-    }
+
+    this.fileProcessingStates.set(newFileProcessingStates);
   }
 }
 
