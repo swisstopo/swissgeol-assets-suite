@@ -5,10 +5,11 @@ import { MatCheckboxChange } from '@angular/material/checkbox';
 import { MatDialog } from '@angular/material/dialog';
 import { Sort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
-import { fromAppShared } from '@asset-sg/client-shared';
+import { ConfirmDialogComponent, ConfirmDialogData, fromAppShared } from '@asset-sg/client-shared';
 import { isNotNull } from '@asset-sg/core';
 import {
   Asset,
+  AssetFile,
   AssetFileSchema,
   convert,
   FileProcessingStage,
@@ -29,6 +30,7 @@ import {
   Observable,
   startWith,
   Subscription,
+  switchMap,
   tap,
 } from 'rxjs';
 import { AssetForm, AssetFormFile, ExistingAssetFile } from '../../asset-editor-page/asset-editor-page.component';
@@ -104,6 +106,34 @@ export class AssetEditorFilesComponent implements OnInit, OnDestroy {
 
   public ngOnDestroy() {
     this.subscriptions.unsubscribe();
+  }
+
+  protected reanalyzeFile(file: ExistingAssetFile) {
+    const dialogRef = this.dialogService.open<ConfirmDialogComponent, ConfirmDialogData, boolean>(
+      ConfirmDialogComponent,
+      {
+        data: {
+          text: 'edit.tabs.files.pageRanges.confirmReanalyze',
+          confirm: 'confirm',
+        },
+      },
+    );
+    this.subscriptions.add(
+      dialogRef
+        .afterClosed()
+        .pipe(
+          filter((hasConfirmed) => !!hasConfirmed && isNotNull(this.asset)),
+          switchMap(() => {
+            return this.httpClient.post<AssetFile>(`/api/assets/${this.asset!.id}/files/${file.id}/reanalyze`, null);
+          }),
+          tap((res) => {
+            const index = this.form.value.findIndex((e) => e === file);
+            const entry = this.form.at(index);
+            entry.patchValue({ ...res, shouldBeDeleted: false });
+          }),
+        )
+        .subscribe(),
+    );
   }
 
   protected openPageRangeEditor(file: AssetFormFile) {
