@@ -206,6 +206,7 @@ export const frTranslationMapping: AppTranslationMapping = {
           Processing: 'FR wird prozessiert',
           Error: 'FR Fehler',
           Success: 'FR abgeschlossen',
+          NotUploaded: 'FR nicht hochgeladen',
         },
         pageRanges: {
           title: 'Classification',

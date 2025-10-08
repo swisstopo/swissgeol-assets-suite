@@ -205,6 +205,7 @@ export const enTranslationMapping: AppTranslationMapping = {
           Processing: 'processing',
           Error: 'error',
           Success: 'success',
+          NotUploaded: 'not uploaded',
         },
         pageRanges: {
           title: 'Classification',

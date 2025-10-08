@@ -205,6 +205,7 @@ export const itTranslationMapping: AppTranslationMapping = {
           Processing: 'IT wird prozessiert',
           Error: 'IT Fehler',
           Success: 'IT abgeschlossen',
+          NotUploaded: 'IT nicht hochgeladen',
         },
         pageRanges: {
           title: 'IT Klassifizierung',

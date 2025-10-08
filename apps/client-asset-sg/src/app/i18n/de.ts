@@ -204,6 +204,7 @@ export const deTranslationMapping = {
           Processing: 'wird prozessiert',
           Error: 'Fehler',
           Success: 'abgeschlossen',
+          NotUploaded: 'nicht hochgeladen',
         },
         pageRanges: {
           title: 'Klassifizierung',
