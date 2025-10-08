@@ -53,6 +53,7 @@ export class FileRepo
   async findOrphans(): Promise<AssetFile[]> {
     const entries = await this.prisma.file.findMany({
       where: { AssetFile: { none: {} } },
+      select: assetFileSelection,
     });
     return entries.map(mapAssetFileFromPrisma);
   }

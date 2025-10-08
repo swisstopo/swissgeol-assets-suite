@@ -1,9 +1,7 @@
 import { AssetEditPolicy, AssetFileSchema, convert, LegalDocCode, User } from '@asset-sg/shared/v2';
 import {
   Controller,
-  Delete,
   Get,
-  HttpCode,
   HttpException,
   HttpStatus,
   Param,
@@ -107,20 +105,5 @@ export class FilesController {
       mediaType: file.mimetype,
     });
     return plainToInstance(AssetFileSchema, record);
-  }
-
-  @Delete('/:id')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  async delete(
-    @Param('assetId', ParseIntPipe) assetId: number,
-    @Param('id', ParseIntPipe) id: number,
-    @CurrentUser() user: User,
-  ): Promise<void> {
-    const asset = await this.assetRepo.find(assetId);
-    if (asset == null) {
-      throw new HttpException('not found', HttpStatus.NOT_FOUND);
-    }
-    authorize(AssetEditPolicy, user).canDelete(asset);
-    await this.fileService.delete({ id, assetId: asset.id });
   }
 }

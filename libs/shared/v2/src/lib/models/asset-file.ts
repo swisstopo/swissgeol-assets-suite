@@ -1,3 +1,5 @@
+import { LanguageCode } from './reference-data';
+
 /**
  * DB: `asset_file`
  */
@@ -120,3 +122,15 @@ export enum FileProcessingState {
   Error = 'Error',
   WillNotBeProcessed = 'WillNotBeProcessed',
 }
+
+export const getLanguageCodesOfPages = (pages: Array<{ languages: SupportedPageLanguage[] }>): Set<LanguageCode> => {
+  return pages.reduce((acc, page) => {
+    for (const lang of page.languages) {
+      acc.add(mapSupportedPageLanguageToCode(lang));
+    }
+    return acc;
+  }, new Set<LanguageCode>());
+};
+
+export const mapSupportedPageLanguageToCode = (language: SupportedPageLanguage): LanguageCode =>
+  language.toUpperCase() as LanguageCode;
