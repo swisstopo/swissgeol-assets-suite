@@ -208,6 +208,7 @@ export const deTranslationMapping = {
         },
         pageRanges: {
           title: 'Klassifizierung',
+          edit: 'Klassifizierung bearbeiten',
           recalculateRanges: 'Klassen neu zusammenfassen',
           type: 'Typ',
           language: 'Sprache',

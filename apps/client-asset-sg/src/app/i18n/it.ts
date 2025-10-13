@@ -209,6 +209,7 @@ export const itTranslationMapping: AppTranslationMapping = {
         },
         pageRanges: {
           title: 'IT Klassifizierung',
+          edit: 'IT Klassifizierung bearbeiten',
           recalculateRanges: 'IT Klassifizierung neu berechnen',
           type: 'IT Typ',
           language: 'IT Sprache',
