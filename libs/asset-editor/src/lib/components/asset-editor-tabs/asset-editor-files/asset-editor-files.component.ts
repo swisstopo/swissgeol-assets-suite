@@ -338,7 +338,11 @@ export class AssetEditorFilesComponent implements OnInit, OnDestroy, OnChanges {
                   : false,
               );
               const entry = this.form.at(index);
-              entry.patchValue({ ...entry.value, pageRangeClassifications: assetFile.pageRangeClassifications });
+              entry.patchValue({
+                ...entry.value,
+                pageCount: assetFile.pageCount,
+                pageRangeClassifications: assetFile.pageRangeClassifications,
+              });
               entry.markAsDirty();
             }
 
