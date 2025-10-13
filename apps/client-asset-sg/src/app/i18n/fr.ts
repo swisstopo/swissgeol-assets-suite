@@ -210,6 +210,7 @@ export const frTranslationMapping: AppTranslationMapping = {
         },
         pageRanges: {
           title: 'Classification',
+          edit: 'Éditer la classification',
           recalculateRanges: 'Recalculer la classification',
           type: 'Type',
           language: 'Langue',

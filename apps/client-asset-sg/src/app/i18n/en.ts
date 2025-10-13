@@ -209,6 +209,7 @@ export const enTranslationMapping: AppTranslationMapping = {
         },
         pageRanges: {
           title: 'Classification',
+          edit: 'Edit classification',
           recalculateRanges: 'Recalculate page ranges',
           type: 'Type',
           language: 'Language',
