@@ -208,7 +208,7 @@ export const deTranslationMapping = {
         },
         pageRanges: {
           title: 'Klassifizierung',
-          recalculateRanges: 'Klassifizierung neu berechnen',
+          recalculateRanges: 'Klassen neu zusammenfassen',
           type: 'Typ',
           language: 'Sprache',
           pageFrom: 'Seite von',
@@ -216,6 +216,7 @@ export const deTranslationMapping = {
           save: 'Bearbeitung beenden',
           toLessThanFromError: '"Seite von" muss kleiner oder gleich "Seite bis" sein.',
           reanalyze: 'Neu analysieren',
+          recalculateSuccess: 'Die Seitenklassen wurden zusammengefasst.',
           confirmReanalyze:
             'Bei einer erneuten Analyse werden die Seitenklassen und/oder Sprachen neu definiert. Bereits vorgenommene Anpassungen werden dabei überschrieben. Die Analyse kann längere Zeit in Anspruch nehmen.',
         },

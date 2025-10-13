@@ -217,6 +217,7 @@ export const itTranslationMapping: AppTranslationMapping = {
           save: 'IT Bearbeitung beenden',
           toLessThanFromError: 'IT "Seite von" muss kleiner oder gleich "Seite bis" sein.',
           reanalyze: 'Rianalizza',
+          recalculateSuccess: 'IT Die Seitenklassifizierungen wurden zusammengefasst.',
           confirmReanalyze:
             'Durante una nuova analisi, le classi di pagina e/o le lingue verranno ridefinite. Le modifiche già effettuate verranno sovrascritte. L’analisi potrebbe richiedere un po’ di tempo.',
         },

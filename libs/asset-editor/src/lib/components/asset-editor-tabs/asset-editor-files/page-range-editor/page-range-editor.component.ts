@@ -13,7 +13,7 @@ import {
   Validators,
 } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogActions, MatDialogContent, MatDialogRef } from '@angular/material/dialog';
-import { SelectComponent } from '@asset-sg/client-shared';
+import { AlertType, SelectComponent, showAlert } from '@asset-sg/client-shared';
 import {
   PageCategory,
   PageClassification,
@@ -22,6 +22,7 @@ import {
   SupportedPageLanguages,
   transformPagesToRanges,
 } from '@asset-sg/shared/v2';
+import { Store } from '@ngrx/store';
 import { TranslateDirective, TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { SgcButton, SgcIcon } from '@swissgeol/ui-core-angular';
 
@@ -74,6 +75,7 @@ export class PageRangeEditorComponent {
   private readonly dialogRef = inject(MatDialogRef<PageRangeEditorComponent, PageRangeClassification[]>);
   private readonly fb: FormBuilder = inject(FormBuilder);
   private readonly translateService = inject(TranslateService);
+  private readonly store = inject(Store);
 
   constructor() {
     this.availablePages = Array.from({ length: this.initialData.pageCount }, (_, i) => i + 1);
@@ -94,7 +96,21 @@ export class PageRangeEditorComponent {
     });
   }
 
-  public recalculateClassification() {
+  public handleManualRecalculation() {
+    this.recalculateClassification();
+
+    this.store.dispatch(
+      showAlert({
+        alert: {
+          id: `recalculation-${Date.now()}`,
+          text: this.translateService.instant('edit.tabs.files.pageRanges.recalculateSuccess'),
+          type: AlertType.Success,
+        },
+      }),
+    );
+  }
+
+  private recalculateClassification() {
     const pageRangeClassifications: PageRangeClassification[] = this.form.getRawValue().classifications;
 
     const pageClassifications: PageClassification[] = [];
