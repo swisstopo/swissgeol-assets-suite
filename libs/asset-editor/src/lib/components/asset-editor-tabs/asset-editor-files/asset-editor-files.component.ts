@@ -343,7 +343,6 @@ export class AssetEditorFilesComponent implements OnInit, OnDestroy, OnChanges {
                 pageCount: assetFile.pageCount,
                 pageRangeClassifications: assetFile.pageRangeClassifications,
               });
-              entry.markAsDirty();
             }
 
             newFileProcessingStates.set(assetFile.id, {
