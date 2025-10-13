@@ -217,6 +217,7 @@ export const enTranslationMapping: AppTranslationMapping = {
           save: 'Finish editing',
           toLessThanFromError: '"To" must be greater than or equal to "From".',
           reanalyze: 'Reanalyze',
+          recalculateSuccess: 'The page classes have been successfully recalculated.',
           confirmReanalyze:
             'When reanalyzing, the page classes and/or languages will be redefined. Any previously made adjustments will be overwritten. The analysis may take a longer time.',
         },

@@ -23,13 +23,13 @@ import {
   filter,
   firstValueFrom,
   forkJoin,
-  interval,
   map,
   Observable,
   startWith,
   Subscription,
   switchMap,
   tap,
+  timer,
 } from 'rxjs';
 import { AssetForm, AssetFormFile, ExistingAssetFile } from '../../asset-editor-page/asset-editor-page.component';
 import { PageRangeEditorComponent, PageRangeEditorData } from './page-range-editor/page-range-editor.component';
@@ -112,7 +112,7 @@ export class AssetEditorFilesComponent implements OnInit, OnDestroy, OnChanges {
     );
 
     this.subscriptions.add(
-      interval(5_000)
+      timer(0, 5_000)
         .pipe(tap(() => this.fetchFileProcessingStates()))
         .subscribe(),
     );
@@ -325,6 +325,23 @@ export class AssetEditorFilesComponent implements OnInit, OnDestroy, OnChanges {
       this.httpClient.get<AssetFile[]>(`/api/assets/${this.asset.id}/files`).pipe(
         tap((assetFiles) => {
           for (const assetFile of assetFiles) {
+            // if a file was successfully processed by the extraction stage, we need to update its classes
+            if (
+              this.fileProcessingStates().size > 0 &&
+              assetFile.fileProcessingState === FileProcessingState.Success &&
+              assetFile.fileProcessingStage === FileProcessingStage.Extraction &&
+              this.fileProcessingStates().get(assetFile.id)?.fileProcessingState !== FileProcessingState.Success
+            ) {
+              const index = this.form.controls.findIndex((f) =>
+                isExistingAssetFile(f.getRawValue())
+                  ? (f.getRawValue() as ExistingAssetFile).id === assetFile.id
+                  : false,
+              );
+              const entry = this.form.at(index);
+              entry.patchValue({ ...entry.value, pageRangeClassifications: assetFile.pageRangeClassifications });
+              entry.markAsDirty();
+            }
+
             newFileProcessingStates.set(assetFile.id, {
               fileProcessingStage: assetFile.fileProcessingStage,
               fileProcessingState: assetFile.fileProcessingState,
