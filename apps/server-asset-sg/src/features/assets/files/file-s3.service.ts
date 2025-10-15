@@ -34,12 +34,13 @@ export class FileS3Service {
     );
   }
 
-  async load(name: string): Promise<FileS3 | null> {
+  async load(name: string, range?: string): Promise<FileS3 | null> {
     try {
       const output = await this.client.send(
         new GetObjectCommand({
           Key: this.getKey(name),
           Bucket: this.bucket,
+          Range: range,
         }),
       );
       return {

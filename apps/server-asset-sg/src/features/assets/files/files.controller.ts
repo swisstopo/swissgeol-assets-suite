@@ -1,7 +1,18 @@
-import { Asset, AssetEditPolicy, AssetFile, AssetFileSchema, convert, LegalDocCode, User } from '@asset-sg/shared/v2';
+import {
+  Asset,
+  AssetEditPolicy,
+  AssetFile,
+  AssetFileSchema,
+  AssetPolicy,
+  convert,
+  LegalDocCode,
+  User,
+} from '@asset-sg/shared/v2';
 import {
   Controller,
   Get,
+  Header,
+  Headers,
   HttpCode,
   HttpException,
   HttpStatus,
@@ -43,36 +54,37 @@ export class FilesController {
   }
 
   @Get('/:id')
+  @Header('Accept-Ranges', 'bytes')
   async download(
     @Param('assetId', ParseIntPipe) assetId: number,
     @Param('id', ParseIntPipe) id: number,
     @Res() res: Response,
     @CurrentUser() user: User,
+    @Headers('Range') range: string,
   ) {
-    const asset = await this.assetRepo.find(assetId);
-    if (asset == null || null === asset.files.find((it) => it.id === id)) {
-      throw new HttpException('not found', HttpStatus.NOT_FOUND);
-    }
-    authorize(AssetEditPolicy, user).canShow(asset);
+    const asset = await this.findAssetOrThrow(assetId);
+    authorize(AssetPolicy, user).canShow(asset);
 
-    const record = await this.fileRepo.find({ assetId, id });
-    if (record == null) {
-      throw new HttpException('not found', HttpStatus.NOT_FOUND);
-    }
-
-    const file = await this.fileS3Service.load(record.name);
+    const file = asset.files.find((it) => it.id === id);
     if (file == null) {
       throw new HttpException('not found', HttpStatus.NOT_FOUND);
     }
 
-    if (file.metadata.mediaType) {
-      res.setHeader('Content-Type', file.metadata.mediaType);
+    const fileStream = await this.fileS3Service.load(file.name, range);
+    if (fileStream == null) {
+      throw new HttpException('not found', HttpStatus.NOT_FOUND);
     }
-    if (file.metadata.byteCount != null) {
-      res.setHeader('Content-Length', file.metadata.byteCount.toString());
+
+    res.setHeader('Content-Disposition', `filename="${file.name}"`);
+    res.setHeader('Content-Length', fileStream.metadata.byteCount ?? 0);
+    res.setHeader('Content-Type', fileStream.metadata.mediaType ?? 'application/octet-stream');
+
+    if (range) {
+      res.status(HttpStatus.PARTIAL_CONTENT);
+    } else {
+      res.status(HttpStatus.OK);
     }
-    res.setHeader('Content-Disposition', `filename="${record.name}"`);
-    file.content.pipe(res);
+    fileStream.content.pipe(res);
   }
 
   @Post('/')
