@@ -126,6 +126,35 @@ export class FilesController {
     return await this.fileService.reanalyzeFile({ id, assetId: asset.id });
   }
 
+  @Post('/:id/stream')
+  @Header('Accept-Ranges', 'bytes')
+  async stream(
+    @Headers('Range') range: string,
+    @Param('assetId', ParseIntPipe) assetId: number,
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: User,
+    @Res() res: Response,
+  ) {
+    const asset = await this.findAssetOrThrow(assetId);
+    authorize(AssetPolicy, user).canShow(asset);
+
+    const fileStream = await this.fileS3Service.load('a44421_1835.pdf', range);
+    if (fileStream == null) {
+      throw new HttpException('not found', HttpStatus.NOT_FOUND);
+    }
+
+    // important: Content-Length must be set manually; if it is missing, the browser will still load the full pdf
+    res.setHeader('Content-Disposition', `filename="${fileStream.metadata.name}"`);
+    res.setHeader('Content-Length', fileStream.metadata.byteCount ?? 0);
+
+    if (range) {
+      res.status(HttpStatus.PARTIAL_CONTENT);
+    } else {
+      res.status(HttpStatus.OK);
+    }
+    fileStream.content.pipe(res);
+  }
+
   private async findAssetOrThrow(assetId: number): Promise<Asset> {
     const asset = await this.assetRepo.find(assetId);
     if (asset == null) {
