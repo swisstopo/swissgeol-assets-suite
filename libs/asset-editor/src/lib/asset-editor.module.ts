@@ -71,6 +71,7 @@ import { RxPush } from '@rx-angular/template/push';
 import { SgcButton, SgcIcon, SgcWorkflow } from '@swissgeol/ui-core-angular';
 import { de } from 'date-fns/locale/de';
 import { combineLatest, filter, map } from 'rxjs';
+import { CustomPdfViewerComponent } from '../../../../apps/client-asset-sg/src/app/components/custom-pdf-viewer/custom-pdf-viewer.component';
 import { AssetEditorIdListComponent } from './components/asset-editor-id-list/asset-editor-id-list.component';
 import { AssetEditorLaunchComponent } from './components/asset-editor-launch/asset-editor-launch.component';
 import { AssetEditorNavigationComponent } from './components/asset-editor-navigation/asset-editor-navigation.component';
@@ -234,6 +235,7 @@ const routes: Routes = [
     SgcWorkflow,
     SgcIcon,
     SgcButton,
+    CustomPdfViewerComponent,
   ],
   providers: [
     { provide: MAT_DATE_LOCALE, useValue: de },
