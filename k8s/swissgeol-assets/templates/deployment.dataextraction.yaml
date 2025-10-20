@@ -17,8 +17,7 @@ spec:
       labels:
         app: {{ .Release.Name }}-dataextraction
     spec:
-      # TODO use dataextraction here once it has a custom role arn
-      serviceAccountName: ocr
+      serviceAccountName: dataextraction
       containers:
       - name: {{ .Release.Name }}-dataextraction
         image: {{ .Values.image_dataextraction }}
