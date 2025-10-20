@@ -17,7 +17,7 @@ spec:
       labels:
         app: {{ .Release.Name }}-dataextraction
     spec:
-      serviceAccountName: dataextraction
+      serviceAccountName: ocr
       containers:
       - name: {{ .Release.Name }}-dataextraction
         image: {{ .Values.image_dataextraction }}
