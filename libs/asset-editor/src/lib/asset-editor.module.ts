@@ -75,6 +75,7 @@ import { AssetEditorIdListComponent } from './components/asset-editor-id-list/as
 import { AssetEditorLaunchComponent } from './components/asset-editor-launch/asset-editor-launch.component';
 import { AssetEditorNavigationComponent } from './components/asset-editor-navigation/asset-editor-navigation.component';
 import { AssetEditorPageComponent } from './components/asset-editor-page/asset-editor-page.component';
+
 import { AssetEditorSaveComponent } from './components/asset-editor-save/asset-editor-save.component';
 import { AssetEditorSyncComponent } from './components/asset-editor-sync/asset-editor-sync.component';
 import { AssetEditorContactsComponent } from './components/asset-editor-tabs/asset-editor-contacts/asset-editor-contacts.component';
@@ -83,6 +84,7 @@ import { LinkContactDialogComponent } from './components/asset-editor-tabs/asset
 import { ManageContactDialogComponent } from './components/asset-editor-tabs/asset-editor-contacts/manage-contact-dialog/manage-contact-dialog.component';
 import { AssetEditorFilesComponent } from './components/asset-editor-tabs/asset-editor-files/asset-editor-files.component';
 import { FileDropZoneComponent } from './components/asset-editor-tabs/asset-editor-files/file-drop-zone/file-drop-zone.component';
+import { HasCompletedExtractionPipe } from './components/asset-editor-tabs/asset-editor-files/has-completed-extraction.pipe';
 import { AssetEditorGeneralComponent } from './components/asset-editor-tabs/asset-editor-general/asset-editor-general.component';
 import { AssetEditorGeometriesComponent } from './components/asset-editor-tabs/asset-editor-geometry/asset-editor-geometries.component';
 import { AssetEditorLegacyDataComponent } from './components/asset-editor-tabs/asset-editor-legacy-data/asset-editor-legacy-data.component';
@@ -234,6 +236,7 @@ const routes: Routes = [
     SgcWorkflow,
     SgcIcon,
     SgcButton,
+    HasCompletedExtractionPipe,
   ],
   providers: [
     { provide: MAT_DATE_LOCALE, useValue: de },

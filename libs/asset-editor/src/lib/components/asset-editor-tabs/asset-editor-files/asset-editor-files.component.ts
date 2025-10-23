@@ -33,12 +33,13 @@ import {
 } from 'rxjs';
 import { AssetForm, AssetFormFile, ExistingAssetFile } from '../../asset-editor-page/asset-editor-page.component';
 import { PageRangeEditorComponent, PageRangeEditorData } from './page-range-editor/page-range-editor.component';
+import { PdfOverlayComponent, PdfOverlayData } from './pdf-overlay/pdf-overlay.component';
 
 export const isExistingAssetFile: (file: AssetFormFile) => file is ExistingAssetFile = (
   file,
 ): file is ExistingAssetFile => 'id' in file;
 
-type FileProcessingStateMap = Map<
+export type FileProcessingStateMap = Map<
   number,
   { fileProcessingState: FileProcessingState; fileProcessingStage: FileProcessingStage | null }
 >;
@@ -177,6 +178,16 @@ export class AssetEditorFilesComponent implements OnInit, OnDestroy, OnChanges {
           }
         }),
       );
+    }
+  }
+
+  protected openPdfPreview(file: AssetFormFile) {
+    if (isExistingAssetFile(file)) {
+      this.dialogService.open<PdfOverlayComponent, PdfOverlayData>(PdfOverlayComponent, {
+        data: { pdfId: file.id, assetId: this.asset!.id },
+        width: '925px',
+        autoFocus: false,
+      });
     }
   }
 
