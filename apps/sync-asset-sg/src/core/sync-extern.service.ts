@@ -146,13 +146,14 @@ export class SyncExternService {
     const existingSiblings = await this.sourcePrisma.assetXAssetY.findMany({
       where: { assetXId: { in: this.assetsToSync.map((a) => a.originalAssetId) } },
     });
+    const allSynchronisations = await this.destinationPrisma.assetSynchronization.findMany();
     for (const asset of this.assetsToSync) {
       const newAssetId = assetSynchronizations.find((n) => n.originalAssetId === asset.originalAssetId);
-      const assetMainLink = assetSynchronizations.find((n) => n.originalAssetId === asset.asset.assetMainId);
+      const assetMainLink = allSynchronisations.find((n) => n.originalAssetId === asset.asset.assetMainId);
       const originalAssetXSiblings = existingSiblings
         .filter((n) => n.assetXId === asset.originalAssetId)
         .map((n) => n.assetYId);
-      const newAssetSiblings = assetSynchronizations
+      const newAssetSiblings = allSynchronisations
         .filter((n) => originalAssetXSiblings.includes(n.originalAssetId))
         .map((n) => n.assetId);
 
@@ -163,6 +164,15 @@ export class SyncExternService {
           siblingXAssets: { create: newAssetSiblings.map((n) => ({ assetYId: n })) },
         },
       });
+      for (const child of asset.children) {
+        const syncedChildAsset = allSynchronisations.find((n) => n.originalAssetId === child.assetId);
+        await this.destinationPrisma.asset.update({
+          where: { assetId: syncedChildAsset.assetId },
+          data: {
+            assetMainId: newAssetId.assetId,
+          },
+        });
+      }
     }
   }
 
@@ -196,6 +206,7 @@ export class SyncExternService {
           workflow: { status: 'Reviewed' },
         },
         include: {
+          subordinateAssets: { select: { assetId: true } },
           ids: { select: { id: true, description: true } },
           assetLanguages: { select: { languageItemCode: true } },
           manCatLabelRefs: { select: { manCatLabelItemCode: true } },
@@ -231,6 +242,7 @@ export class SyncExternService {
         ids,
         assetLanguages,
         workgroup,
+        subordinateAssets,
         workflow,
         ...asset
       } = item;
@@ -245,6 +257,7 @@ export class SyncExternService {
         assetFiles: assetFiles.flatMap((a) => a.file),
         originalAssetId: assetId,
         originalSgsId: sgsId,
+        children: subordinateAssets,
         reviewSelection: workflow.review,
       };
     });
@@ -524,4 +537,5 @@ interface AssetToSync {
   ids: Pick<Id, 'id' | 'description'>[];
   assetLanguages: Pick<AssetLanguage, 'languageItemCode'>[];
   reviewSelection: WorkflowSelectionFromPrisma;
+  children: Array<{ assetId: number }>;
 }
