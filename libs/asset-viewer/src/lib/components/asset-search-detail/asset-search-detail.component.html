@@ -164,7 +164,7 @@
         @if (linkedAssets.length > 0) {
           <hr class="divider" />
           <sgc-card [header]="'search.references' | translate" data-testid="assetReferences">
-            <ul>
+            <ul class="reference-list">
               @for (linkedAsset of linkedAssets; track linkedAsset.id) {
                 <li>
                   <a
