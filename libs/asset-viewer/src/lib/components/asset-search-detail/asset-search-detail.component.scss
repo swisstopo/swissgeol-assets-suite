@@ -127,6 +127,12 @@ dd {
   }
 }
 
+.reference-list {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+
 sgc-card {
   font-size: var(--sgc-typo-body-2-medium--size);
   line-height: var(--sgc-typo-body-2-medium--line-height);
