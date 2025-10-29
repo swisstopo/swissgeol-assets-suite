@@ -1,4 +1,4 @@
-import { exit } from 'process';
+import { exit } from 'node:process';
 import { FileProcessingStage, FileProcessingState } from '@asset-sg/shared/v2';
 import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
@@ -22,6 +22,7 @@ export class FileOcrService extends AbstractProcessingService<[]> {
   protected readonly logger = new Logger(FileOcrService.name);
   protected readonly processingStage = FileProcessingStage.Ocr;
   protected readonly serviceUrl = serviceUrl;
+  protected readonly serviceVersion = undefined;
 
   constructor(
     protected readonly fileS3Service: FileS3Service,
