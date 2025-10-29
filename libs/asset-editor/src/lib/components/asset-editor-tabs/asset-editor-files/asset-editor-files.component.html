@@ -107,66 +107,66 @@
             <ng-container matColumnDef="actions">
               <th mat-header-cell *matHeaderCellDef class="column-actions"></th>
               <td mat-cell *matCellDef="let control; let idx = index" class="column-actions">
-                @if (this.fileProcessingStates().get(control.value.id) || { fileProcessingStage: null }; as state) {
-                  <div>
-                    <sgc-button
-                      (click)="markFileForDeletion(control.value)"
-                      [matTooltip]="'delete' | translate"
-                      color="secondary"
-                      variant="icon"
-                      size="small"
-                      justify="center"
-                    >
-                      <sgc-icon name="trash" />
-                    </sgc-button>
-                    <sgc-button
-                      (click)="downloadFile(control.value)"
-                      [isDisabled]="!control.value.id"
-                      [matTooltip]="'edit.tabs.files.export' | translate"
-                      color="secondary"
-                      variant="icon"
-                      size="small"
-                      justify="center"
-                    >
-                      <sgc-icon name="download" />
-                    </sgc-button>
-                    <sgc-button
-                      [isDisabled]="
-                        !(
-                          state.fileProcessingStage != null &&
-                          (state.fileProcessingState === FileProcessingState.Success ||
-                            state.fileProcessingState === FileProcessingState.Error)
-                        )
-                      "
-                      [matTooltip]="'edit.tabs.files.pageRanges.reanalyze' | translate"
-                      color="secondary"
-                      variant="icon"
-                      size="small"
-                      justify="center"
-                      (click)="reanalyzeFile(control.value)"
-                    >
-                      <sgc-icon name="ai" />
-                    </sgc-button>
-                    <sgc-button
-                      [matTooltip]="'edit.tabs.files.pageRanges.edit' | translate"
-                      [isDisabled]="
-                        !(
-                          state.fileProcessingStage != null &&
-                          state.fileProcessingStage === FileProcessingStage.Extraction &&
-                          (state.fileProcessingState === FileProcessingState.Success ||
-                            state.fileProcessingState === FileProcessingState.Error)
-                        )
-                      "
-                      color="secondary"
-                      variant="icon"
-                      size="small"
-                      justify="center"
-                      (click)="openPageRangeEditor(control.value)"
-                    >
-                      <sgc-icon name="tableOfContents" />
-                    </sgc-button>
-                  </div>
-                }
+                <div>
+                  <sgc-button
+                    (click)="markFileForDeletion(control.value)"
+                    [matTooltip]="'delete' | translate"
+                    color="secondary"
+                    variant="icon"
+                    size="small"
+                    justify="center"
+                  >
+                    <sgc-icon name="trash" />
+                  </sgc-button>
+                  <sgc-button
+                    (click)="downloadFile(control.value)"
+                    [isDisabled]="!control.value.id"
+                    [matTooltip]="'edit.tabs.files.export' | translate"
+                    color="secondary"
+                    variant="icon"
+                    size="small"
+                    justify="center"
+                  >
+                    <sgc-icon name="download" />
+                  </sgc-button>
+                  <sgc-button
+                    [isDisabled]="!(control.value | hasCompletedExtraction: fileProcessingStates())"
+                    [matTooltip]="'edit.tabs.files.pageRanges.reanalyze' | translate"
+                    color="secondary"
+                    variant="icon"
+                    size="small"
+                    justify="center"
+                    (click)="reanalyzeFile(control.value)"
+                  >
+                    <sgc-icon name="ai" />
+                  </sgc-button>
+                  <sgc-button
+                    [matTooltip]="'edit.tabs.files.pageRanges.edit' | translate"
+                    [isDisabled]="!(control.value | hasCompletedExtraction: fileProcessingStates() : true)"
+                    color="secondary"
+                    variant="icon"
+                    size="small"
+                    justify="center"
+                    (click)="openPageRangeEditor(control.value)"
+                  >
+                    <sgc-icon name="tableOfContents" />
+                  </sgc-button>
+                  <sgc-button
+                    matTooltip="BETA: PDF Preview"
+                    [isDisabled]="
+                      !(control.value | hasCompletedExtraction: fileProcessingStates()) ||
+                      !control.value.name ||
+                      !control.value.name.toLowerCase().includes('.pdf')
+                    "
+                    color="secondary"
+                    variant="icon"
+                    size="small"
+                    justify="center"
+                    (click)="openPdfPreview(control.value)"
+                  >
+                    <sgc-icon name="openLink" />
+                  </sgc-button>
+                </div>
               </td>
             </ng-container>
             <tr mat-header-row *matHeaderRowDef="displayedColumns" class="table__header"></tr>

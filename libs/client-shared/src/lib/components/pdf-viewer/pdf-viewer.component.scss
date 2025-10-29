@@ -1,0 +1,36 @@
+@use "@angular/material" as mat;
+
+.viewer {
+  position: relative;
+  overflow: hidden;
+  background-color: var(--sgc-color-secondary--500);
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  &__loading {
+    position: absolute;
+    top: 0;
+    @include mat.progress-bar-overrides(
+      (
+        track-color: var(--sgc-color-bg--grey),
+      )
+    );
+
+    &--error {
+      @include mat.progress-bar-overrides(
+        (
+          track-color: var(--sgc-color-bg--error),
+          active-indicator-color: var(--sgc-color-bg--error),
+        )
+      );
+    }
+  }
+
+  canvas {
+    height: auto;
+    max-width: 100%;
+    max-height: 100%;
+  }
+}

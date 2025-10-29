@@ -23,6 +23,11 @@
             "glob": "**/*",
             "input": "node_modules/@swissgeol/ui-core/dist/swissgeol-ui-core/assets/fonts",
             "output": "/assets/fonts"
+          },
+          {
+            "glob": "pdf.worker.*",
+            "input": "node_modules/pdfjs-dist/build/",
+            "output": "/assets/pdfjs"
           }
         ],
         "styles": [
@@ -48,7 +53,7 @@
             {
               "type": "initial",
               "maximumWarning": "2.6mb",
-              "maximumError": "3.0mb"
+              "maximumError": "3.5mb"
             },
             {
               "type": "anyComponentStyle",
