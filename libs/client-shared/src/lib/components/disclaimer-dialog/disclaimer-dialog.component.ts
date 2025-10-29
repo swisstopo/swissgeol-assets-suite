@@ -40,7 +40,7 @@ export class DisclaimerDialogComponent implements AfterViewInit {
   private readonly languageService = inject(LanguageService);
   public readonly legalAnchor$ = this.languageService.language$.pipe(
     map((lang) => {
-      const url = `https://www.swissgeol.ch/pages/legal/${lang}.html`;
+      const url = `https://www.swissgeol.ch/${lang}/impressum`;
       return `<a href="${url}" target="_blank" rel="noopener nofollow">${url}</a>`;
     }),
   );
