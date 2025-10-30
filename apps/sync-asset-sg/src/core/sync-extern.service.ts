@@ -166,12 +166,14 @@ export class SyncExternService {
       });
       for (const child of asset.children) {
         const syncedChildAsset = allSynchronisations.find((n) => n.originalAssetId === child.assetId);
-        await this.destinationPrisma.asset.update({
-          where: { assetId: syncedChildAsset.assetId },
-          data: {
-            assetMainId: newAssetId.assetId,
-          },
-        });
+        if (syncedChildAsset) {
+          await this.destinationPrisma.asset.update({
+            where: { assetId: syncedChildAsset.assetId },
+            data: {
+              assetMainId: newAssetId.assetId,
+            },
+          });
+        }
       }
     }
   }
