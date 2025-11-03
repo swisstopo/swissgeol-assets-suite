@@ -21,6 +21,7 @@ export abstract class AbstractProcessingService<T> implements OnModuleInit {
   protected abstract readonly eventEmitter: EventEmitter2;
   protected abstract readonly processingStage: FileProcessingStage;
   protected abstract serviceUrl: string;
+  protected abstract serviceVersion: string | undefined;
 
   public onModuleInit() {
     this.processRemaining().then();
@@ -48,6 +49,13 @@ export abstract class AbstractProcessingService<T> implements OnModuleInit {
       this.logger.error(`${this.processingStage} failed.`, { file: file.name, error: e });
       return false;
     }
+  }
+
+  private getFullServiceUrl(): string {
+    if (this.serviceVersion) {
+      return `${this.serviceUrl}/${this.serviceVersion}`;
+    }
+    return this.serviceUrl;
   }
 
   private async processRemaining(): Promise<void> {
@@ -155,7 +163,7 @@ export abstract class AbstractProcessingService<T> implements OnModuleInit {
   }
 
   private async fetch<T>(path: string, body: object): Promise<T> {
-    const response = await fetch(`${this.serviceUrl}${path}`, {
+    const response = await fetch(`${this.getFullServiceUrl()}${path}`, {
       method: 'POST',
       body: JSON.stringify(body),
       headers: {

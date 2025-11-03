@@ -1,4 +1,3 @@
-import { isNotNil } from '@asset-sg/core';
 import {
   AssetFileId,
   FileProcessingStage,
@@ -8,6 +7,7 @@ import {
   PageClassification,
   PageRangeClassification,
   SupportedPageLanguage,
+  SupportedPageLanguages,
   transformPagesToRanges,
 } from '@asset-sg/shared/v2';
 import { Injectable, Logger } from '@nestjs/common';
@@ -19,43 +19,14 @@ import {
   AbstractProcessingService,
   ProcessableFile,
 } from '@/features/assets/files/file-processors/abstract-processing.service';
+import {
+  PagePrediction,
+  PredictionSchema,
+} from '@/features/assets/files/file-processors/file-extraction/extraction-service-generated.interfaces';
 import { FileS3Service } from '@/features/assets/files/file-s3.service';
 import { requireEnv } from '@/utils/requireEnv';
 
-/**
- * Represents the structure of the extraction result per page returned by the extraction service.
- */
-interface ExtractionPage {
-  page: number;
-  classification: {
-    Text: 0 | 1;
-    Boreprofile: 0 | 1;
-    Map: 0 | 1;
-    GeoProfile: 0 | 1;
-    TitlePage: 0 | 1;
-    Diagram: 0 | 1;
-    Table: 0 | 1;
-    Unknown: 0 | 1;
-  };
-  metadata: {
-    language: SupportedPageLanguage | null; // note: API currently only has single languages, but GUI allows multiple
-    is_frontpage: boolean;
-  };
-}
-
-/**
- * Represents the structure of the overall extraction result returned by the extraction service.
- */
-export interface ExtractionResult {
-  filename: string;
-  metadata: {
-    page_count: number;
-    languages: SupportedPageLanguage[];
-  };
-  pages: ExtractionPage[];
-}
-
-type ExternalCategory = keyof ExtractionPage['classification'];
+type ExternalCategory = 'Text' | 'Boreprofile' | 'Maps' | 'TitlePage' | 'Unknown' | 'GeoProfile' | 'Diagram' | 'Table';
 type CategoryMap = {
   [key in ExternalCategory]: PageCategory;
 };
@@ -63,7 +34,7 @@ type CategoryMap = {
 const externalToInternalCategoryMap: CategoryMap = {
   Text: PageCategory.Text,
   Boreprofile: PageCategory.Boreprofile,
-  Map: PageCategory.Map,
+  Maps: PageCategory.Map,
   TitlePage: PageCategory.TitlePage,
   Unknown: PageCategory.Unknown,
   GeoProfile: PageCategory.GeoProfile,
@@ -72,12 +43,13 @@ const externalToInternalCategoryMap: CategoryMap = {
 };
 
 @Injectable()
-export class FileExtractionService extends AbstractProcessingService<ExtractionResult[]> {
+export class FileExtractionService extends AbstractProcessingService<PredictionSchema[]> {
   // todo: why array
 
   protected readonly logger = new Logger(FileExtractionService.name);
   protected readonly processingStage = FileProcessingStage.Extraction;
   protected readonly serviceUrl = requireEnv('EXTRACTION_SERVICE_URL');
+  protected readonly serviceVersion = 'v1';
 
   constructor(
     protected readonly fileS3Service: FileS3Service,
@@ -91,8 +63,8 @@ export class FileExtractionService extends AbstractProcessingService<ExtractionR
     void this.process(payload);
   }
 
-  protected async postProcess(file: ProcessableFile, result: ExtractionResult[]): Promise<void> {
-    const ranges = this.createPageRanges(result[0]);
+  protected async postProcess(file: ProcessableFile, result: PredictionSchema[]): Promise<void> {
+    const ranges = this.createPageRanges(result[0].pages);
     try {
       await this.storeRanges(file.id, ranges);
       await this.storeLanguages(file.id, result);
@@ -102,29 +74,31 @@ export class FileExtractionService extends AbstractProcessingService<ExtractionR
     }
   }
 
-  private createPageRanges(result: ExtractionResult): PageRangeClassification[] {
+  private createPageRanges(result: PagePrediction[]): PageRangeClassification[] {
     const pageClassifications = this.transformExtractionResultToPageClassifications(result);
     return transformPagesToRanges(pageClassifications);
   }
 
-  private transformExtractionResultToPageClassifications(result: ExtractionResult): PageClassification[] {
+  private transformExtractionResultToPageClassifications(result: PagePrediction[]): PageClassification[] {
     const pages: PageClassification[] = [];
 
-    for (const page of result.pages) {
-      const categories = (Object.keys(page.classification) as ExternalCategory[])
-        .filter((key) => page.classification[key] === 1)
-        .map((e) => {
-          const category = externalToInternalCategoryMap[e];
-          if (category == null) {
-            this.logger.warn(`Extraction API sent an unknown page classification (it will be ignored): '${e}'`);
-          }
-          return category;
-        })
-        .filter(isNotNil);
+    for (const page of result) {
+      // note: in v1, the API only returns a single predicted class per page, but we keep the structure for multiple categories for future use
+      const categories: PageCategory[] = [];
+      if (page.predicted_class in externalToInternalCategoryMap) {
+        categories.push(externalToInternalCategoryMap[page.predicted_class as ExternalCategory]);
+      } else {
+        this.logger.warn(
+          `Extraction API sent an unknown page classification (it will be ignored): '${page.predicted_class}'`,
+        );
+      }
 
-      const languages = page.metadata.language ? [page.metadata.language] : [];
+      const languages =
+        page.page_metadata.language && this.isSupportedPageLanguage(page.page_metadata.language)
+          ? [page.page_metadata.language]
+          : [];
 
-      pages.push({ page: page.page, categories, languages });
+      pages.push({ page: page.page_number, categories, languages });
     }
 
     return pages;
@@ -139,9 +113,20 @@ export class FileExtractionService extends AbstractProcessingService<ExtractionR
     });
   }
 
-  private async storeLanguages(fileId: AssetFileId, results: ExtractionResult[]): Promise<void> {
+  private isSupportedPageLanguage(language: string): language is SupportedPageLanguage {
+    if ((SupportedPageLanguages as readonly string[]).includes(language)) {
+      return true;
+    } else {
+      this.logger.warn(`Extraction API sent an unknown language (it will be ignored): '${language}'`);
+      return false;
+    }
+  }
+
+  private async storeLanguages(fileId: AssetFileId, results: PredictionSchema[]): Promise<void> {
     // Find all languages that have been extracted.
-    const languages = getLanguageCodesOfPages(results.map((it) => it.metadata));
+    const languages = getLanguageCodesOfPages(
+      results.map((it) => ({ languages: it.metadata.languages.filter(this.isSupportedPageLanguage) })),
+    );
 
     // Find all assets that are mapped to the processed file.
     const assets = await this.prisma.assetFile.findMany({
