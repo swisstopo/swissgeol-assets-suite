@@ -9,6 +9,31 @@
   justify-content: center;
   align-items: center;
 
+  &__button-container {
+    padding: 4px;
+    background-color: var(--sgc-color-bg--white);
+    z-index: 10;
+    border: 1px solid var(--sgc-color-border--default);
+    border-radius: 4px;
+    box-shadow: 4px 4px 2px 0 #0000001f;
+    color: var(--sgc-color-primary);
+  }
+
+  &__navigation {
+    position: absolute;
+    bottom: 16px;
+    left: 16px;
+  }
+
+  &__interaction {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
   &__loading {
     position: absolute;
     top: 0;

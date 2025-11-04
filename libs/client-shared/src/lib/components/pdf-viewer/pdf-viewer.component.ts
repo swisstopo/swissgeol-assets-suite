@@ -19,6 +19,8 @@ import {
   PdfNavigationAction,
   PdfViewerNavigationComponent,
 } from './pdf-viewer-navigation/pdf-viewer-navigation.component';
+import { PdfViewerRotateComponent } from './pdf-viewer-rotate/pdf-viewer-rotate.component';
+import { PdfViewerZoomComponent } from './pdf-viewer-zoom/pdf-viewer-zoom.component';
 import { PdfViewerService } from './pdf-viewer.service';
 
 // data-attribute to identify the page number on the canvas elements
@@ -28,7 +30,13 @@ const PDF_RENDERING_MARGIN = 0.95;
 
 @Component({
   selector: 'asset-sg-pdf-viewer',
-  imports: [CommonModule, MatProgressBar, PdfViewerNavigationComponent],
+  imports: [
+    CommonModule,
+    MatProgressBar,
+    PdfViewerNavigationComponent,
+    PdfViewerZoomComponent,
+    PdfViewerRotateComponent,
+  ],
   templateUrl: './pdf-viewer.component.html',
   styleUrl: './pdf-viewer.component.scss',
   providers: [PdfViewerService],

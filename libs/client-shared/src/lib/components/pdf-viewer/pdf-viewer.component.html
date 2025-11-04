@@ -7,12 +7,20 @@
       [value]="100"
     ></mat-progress-bar>
   }
-  <div class="viewer__navigation">
+  <div class="viewer__button-container viewer__navigation">
     <asset-sg-pdf-viewer-navigation
       [currentPage]="currentPage() >= 0 ? currentPage() : undefined"
       [pageCount]="pageCount() >= 0 ? pageCount() : undefined"
       [disableInteractions]="isRendering()"
       (navigate)="handleNavigation($event)"
     ></asset-sg-pdf-viewer-navigation>
+  </div>
+  <div class="viewer__interaction">
+    <div class="viewer__button-container">
+      <asset-sg-pdf-viewer-zoom [disableInteractions]="isRendering()"></asset-sg-pdf-viewer-zoom>
+    </div>
+    <div class="viewer__button-container">
+      <asset-sg-pdf-viewer-rotate [disableInteractions]="isRendering()"></asset-sg-pdf-viewer-rotate>
+    </div>
   </div>
 </div>
