@@ -25,6 +25,8 @@ import { PdfViewerService } from './pdf-viewer.service';
 
 // data-attribute to identify the page number on the canvas elements
 const DATA_PAGE_NUMBER_ID = 'data-pdf-page-number';
+// data-attribute to identify the rotation of the canvas elements
+const DATA_PAGE_ROTATION_ID = 'data-pdf-page-rotation';
 // Define a margin to ensure the PDF fits well within the container; as a percentage
 const PDF_RENDERING_MARGIN = 0.95;
 
@@ -55,6 +57,7 @@ export class PdfViewerComponent implements AfterViewInit, OnDestroy {
   private readonly pdfCanvasElements: Map<number, HTMLCanvasElement> = new Map();
   private readonly store = inject(Store);
   private readonly translateService = inject(TranslateService);
+  private rotation = 0;
 
   public async ngAfterViewInit() {
     try {
@@ -109,6 +112,13 @@ export class PdfViewerComponent implements AfterViewInit, OnDestroy {
     }
   }
 
+  protected handleRotation() {
+    this.rotation = (this.rotation + 90) % 360;
+    for (const canvas of this.pdfCanvasElements.values()) {
+      this.renderer.setAttribute(canvas, DATA_PAGE_ROTATION_ID, this.rotation.toString());
+    }
+  }
+
   private async renderPage(pageNum: number) {
     for (const canvas of this.pdfCanvasElements.values()) {
       this.renderer.setStyle(canvas, 'display', 'none');
@@ -142,6 +152,7 @@ export class PdfViewerComponent implements AfterViewInit, OnDestroy {
   private createCanvasPlaceholder(pageNum: number): HTMLCanvasElement {
     const canvas = this.renderer.createElement('canvas') as HTMLCanvasElement;
     this.renderer.setAttribute(canvas, DATA_PAGE_NUMBER_ID, pageNum.toString());
+    this.renderer.setAttribute(canvas, DATA_PAGE_ROTATION_ID, this.rotation.toString());
     this.renderer.appendChild(this.pdfElement.nativeElement, canvas);
 
     return canvas;

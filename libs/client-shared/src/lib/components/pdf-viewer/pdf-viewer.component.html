@@ -20,7 +20,10 @@
       <asset-sg-pdf-viewer-zoom [disableInteractions]="isRendering()"></asset-sg-pdf-viewer-zoom>
     </div>
     <div class="viewer__button-container">
-      <asset-sg-pdf-viewer-rotate [disableInteractions]="isRendering()"></asset-sg-pdf-viewer-rotate>
+      <asset-sg-pdf-viewer-rotate
+        (rotateClockwise)="handleRotation()"
+        [disableInteractions]="isRendering()"
+      ></asset-sg-pdf-viewer-rotate>
     </div>
   </div>
 </div>
