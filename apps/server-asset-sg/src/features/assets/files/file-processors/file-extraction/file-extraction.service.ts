@@ -26,7 +26,7 @@ import {
 import { FileS3Service } from '@/features/assets/files/file-s3.service';
 import { requireEnv } from '@/utils/requireEnv';
 
-type ExternalCategory = 'Text' | 'Boreprofile' | 'Maps' | 'TitlePage' | 'Unknown' | 'GeoProfile' | 'Diagram' | 'Table';
+type ExternalCategory = 'Text' | 'Boreprofile' | 'Map' | 'TitlePage' | 'Unknown' | 'GeoProfile' | 'Diagram' | 'Table';
 type CategoryMap = {
   [key in ExternalCategory]: PageCategory;
 };
@@ -34,7 +34,7 @@ type CategoryMap = {
 const externalToInternalCategoryMap: CategoryMap = {
   Text: PageCategory.Text,
   Boreprofile: PageCategory.Boreprofile,
-  Maps: PageCategory.Map,
+  Map: PageCategory.Map,
   TitlePage: PageCategory.TitlePage,
   Unknown: PageCategory.Unknown,
   GeoProfile: PageCategory.GeoProfile,
