@@ -29,10 +29,9 @@ spec:
             value: {{ .Values.s3_bucket_name }}
           - name: S3_FOLDER
             value: {{ .Values.s3_asset_folder }}/
-        # TODO enable this once the clusters have enough resources to support it.
-        #resources:
-        #  limits:
-        #    cpu: '0.5'
-        #    memory: '2Gi'
+        resources:
+          limits:
+            cpu: '0.5'
+            memory: '2Gi'
       imagePullSecrets:
       - name: {{ .Release.Namespace }}-registry
