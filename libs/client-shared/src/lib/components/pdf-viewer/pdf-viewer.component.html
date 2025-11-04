@@ -1,4 +1,4 @@
-<div class="viewer" #pdf>
+<div class="viewer">
   @if (isRendering() || hasError()) {
     <mat-progress-bar
       class="viewer__loading"
@@ -7,6 +7,8 @@
       [value]="100"
     ></mat-progress-bar>
   }
+  <div #pdf class="viewer__page-wrapper" [class.viewer__page-wrapper--is-zoomed]="isZoomed()"></div>
+
   <div class="viewer__button-container viewer__navigation">
     <asset-sg-pdf-viewer-navigation
       [currentPage]="currentPage() >= 0 ? currentPage() : undefined"
@@ -17,7 +19,12 @@
   </div>
   <div class="viewer__interaction">
     <div class="viewer__button-container">
-      <asset-sg-pdf-viewer-zoom [disableInteractions]="isRendering()"></asset-sg-pdf-viewer-zoom>
+      <asset-sg-pdf-viewer-zoom
+        (zoom)="handleZoom($event)"
+        [disableInteractions]="isRendering()"
+        [isAtMinZoomLevel]="zoom() === this.minZoomLevel"
+        [isAtMaxZoomLevel]="zoom() === this.maxZoomLevel"
+      ></asset-sg-pdf-viewer-zoom>
     </div>
     <div class="viewer__button-container">
       <asset-sg-pdf-viewer-rotate

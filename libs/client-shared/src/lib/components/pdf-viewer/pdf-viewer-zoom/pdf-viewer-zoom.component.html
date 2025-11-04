@@ -1,11 +1,29 @@
 <div class="navigation">
-  <sgc-button color="tertiary" variant="icon" [isTransparent]="true" [isDisabled]="disableInteractions">
+  <sgc-button
+    color="tertiary"
+    variant="icon"
+    (click)="handleZoom('in')"
+    [isTransparent]="true"
+    [isDisabled]="disableInteractions || isAtMaxZoomLevel"
+  >
     <sgc-icon name="plus" size="normal"></sgc-icon>
   </sgc-button>
-  <sgc-button color="tertiary" variant="icon" [isTransparent]="true" [isDisabled]="disableInteractions">
+  <sgc-button
+    color="tertiary"
+    variant="icon"
+    (click)="handleZoom('reset')"
+    [isTransparent]="true"
+    [isDisabled]="disableInteractions"
+  >
     <sgc-icon name="circle" size="normal"></sgc-icon>
   </sgc-button>
-  <sgc-button color="tertiary" variant="icon" [isTransparent]="true" [isDisabled]="disableInteractions">
+  <sgc-button
+    color="tertiary"
+    variant="icon"
+    (click)="handleZoom('out')"
+    [isTransparent]="true"
+    [isDisabled]="disableInteractions || isAtMinZoomLevel"
+  >
     <sgc-icon name="minus" size="normal"></sgc-icon>
   </sgc-button>
 </div>

@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import {
   AfterViewInit,
   Component,
+  computed,
   ElementRef,
   inject,
   Input,
@@ -20,7 +21,7 @@ import {
   PdfViewerNavigationComponent,
 } from './pdf-viewer-navigation/pdf-viewer-navigation.component';
 import { PdfViewerRotateComponent } from './pdf-viewer-rotate/pdf-viewer-rotate.component';
-import { PdfViewerZoomComponent } from './pdf-viewer-zoom/pdf-viewer-zoom.component';
+import { PdfViewerZoomComponent, PdfZoomAction } from './pdf-viewer-zoom/pdf-viewer-zoom.component';
 import { PdfViewerService } from './pdf-viewer.service';
 
 // data-attribute to identify the page number on the canvas elements
@@ -29,6 +30,12 @@ const DATA_PAGE_NUMBER_ID = 'data-pdf-page-number';
 const DATA_PAGE_ROTATION_ID = 'data-pdf-page-rotation';
 // Define a margin to ensure the PDF fits well within the container; as a percentage
 const PDF_RENDERING_MARGIN = 0.95;
+// Defines the maximum zoom level allowed
+const MAX_ZOOM_LEVEL = 5.0;
+// Defines the minimum zoom level allowed
+const MIN_ZOOM_LEVEL = 1.0;
+// Defines the zoom step increment/decrement
+const ZOOM_STEP = 0.5;
 
 @Component({
   selector: 'asset-sg-pdf-viewer',
@@ -58,17 +65,16 @@ export class PdfViewerComponent implements AfterViewInit, OnDestroy {
   private readonly store = inject(Store);
   private readonly translateService = inject(TranslateService);
   private rotation = 0;
+  protected readonly zoom = signal(1);
+  protected readonly isZoomed = computed(() => this.zoom() !== 1);
+  protected readonly maxZoomLevel = MAX_ZOOM_LEVEL;
+  protected readonly minZoomLevel = MIN_ZOOM_LEVEL;
 
   public async ngAfterViewInit() {
     try {
       const pageNum = await this.pdfViewerService.loadPdf(this.assetId, this.pdfId);
       this.pageCount.set(pageNum);
       await this.renderPage(1);
-      this.resizeObserver = new ResizeObserver(async () => {
-        this.clearCanvases();
-        await this.renderPage(this.currentPage());
-      });
-      this.resizeObserver.observe(this.pdfElement.nativeElement);
     } catch (e) {
       this.hasError.set(true);
       this.store.dispatch(
@@ -163,8 +169,24 @@ export class PdfViewerComponent implements AfterViewInit, OnDestroy {
     const parentWidth = this.pdfElement.nativeElement.clientWidth * PDF_RENDERING_MARGIN;
     const parentHeight = this.pdfElement.nativeElement.clientHeight * PDF_RENDERING_MARGIN;
     const canvas = this.createCanvasPlaceholder(pageNum);
-    await this.pdfViewerService.renderPageToCanvas(canvas, pageNum, parentWidth, parentHeight);
+    await this.pdfViewerService.renderPageToCanvas(canvas, pageNum, parentWidth, parentHeight, this.zoom());
     this.pdfCanvasElements.set(pageNum, canvas);
     this.isRendering.set(false);
+  }
+
+  protected async handleZoom($event: PdfZoomAction) {
+    switch ($event) {
+      case 'in':
+        this.zoom.update((val) => Math.min(MAX_ZOOM_LEVEL, val + ZOOM_STEP));
+        break;
+      case 'out':
+        this.zoom.update((val) => Math.max(MIN_ZOOM_LEVEL, val - ZOOM_STEP));
+        break;
+      case 'reset':
+        this.zoom.set(1);
+        break;
+    }
+    this.clearCanvases();
+    await this.renderPage(this.currentPage());
   }
 }
