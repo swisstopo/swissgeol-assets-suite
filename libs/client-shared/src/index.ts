@@ -26,5 +26,6 @@ export * from './lib/state/alert/alert.selectors';
 export * from './lib/features/auth/auth.module';
 export * from './lib/features/auth/auth.service';
 export * from './lib/features/auth/error.service';
+export * from './lib/services/session-storage.service';
 
 export * from './lib/directives/admin-only.directive';

@@ -1,25 +1,48 @@
 import { HttpClient } from '@angular/common/http';
-import { Component, inject, Input, OnDestroy, OnInit } from '@angular/core';
+import { Component, inject, Input, OnChanges, OnDestroy, OnInit, signal, SimpleChanges } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { MatCheckboxChange } from '@angular/material/checkbox';
+import { MatDialog } from '@angular/material/dialog';
 import { Sort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
-import { fromAppShared } from '@asset-sg/client-shared';
+import { ConfirmDialogComponent, ConfirmDialogData, fromAppShared } from '@asset-sg/client-shared';
 import { isNotNull } from '@asset-sg/core';
-import { Asset, LegalDocCode, LocalizedItem } from '@asset-sg/shared/v2';
+import {
+  Asset,
+  AssetFile,
+  FileProcessingStage,
+  FileProcessingState,
+  LegalDocCode,
+  LocalizedItem,
+  PageRangeClassification,
+} from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
 import {
   BehaviorSubject,
   combineLatestWith,
   filter,
+  firstValueFrom,
   forkJoin,
   map,
   Observable,
   startWith,
   Subscription,
+  switchMap,
   tap,
+  timer,
 } from 'rxjs';
 import { AssetForm, AssetFormFile, ExistingAssetFile } from '../../asset-editor-page/asset-editor-page.component';
+import { PageRangeEditorComponent, PageRangeEditorData } from './page-range-editor/page-range-editor.component';
+import { PdfOverlayComponent, PdfOverlayData } from './pdf-overlay/pdf-overlay.component';
+
+export const isExistingAssetFile: (file: AssetFormFile) => file is ExistingAssetFile = (
+  file,
+): file is ExistingAssetFile => 'id' in file;
+
+export type FileProcessingStateMap = Map<
+  number,
+  { fileProcessingState: FileProcessingState; fileProcessingStage: FileProcessingStage | null }
+>;
 
 @Component({
   selector: 'asset-sg-editor-files',
@@ -27,32 +50,45 @@ import { AssetForm, AssetFormFile, ExistingAssetFile } from '../../asset-editor-
   templateUrl: './asset-editor-files.component.html',
   standalone: false,
 })
-export class AssetEditorFilesComponent implements OnInit, OnDestroy {
+export class AssetEditorFilesComponent implements OnInit, OnDestroy, OnChanges {
   @Input() form!: AssetForm['controls']['files'];
   @Input() asset: Asset | null = null;
 
   public activeFileDownloads: Set<number> = new Set();
 
+  protected readonly fileProcessingStates = signal<FileProcessingStateMap>(new Map());
   protected readonly searchTerm$ = new BehaviorSubject<string>('');
   protected readonly isLegal$ = new BehaviorSubject(false);
-
-  private selectedFiles = new Set<AssetFormFile>();
-
   protected readonly dataSource = new MatTableDataSource<FormControl<AssetFormFile>>();
-  private readonly COLUMNS = ['select', 'name', 'lastModifiedAt', 'legalDocCode', 'ocrStatus'];
+  protected readonly FileProcessingState: typeof FileProcessingState = FileProcessingState;
+  protected readonly FileProcessingStage: typeof FileProcessingStage = FileProcessingStage;
+  private selectedFiles = new Set<AssetFormFile>();
+  private readonly COLUMNS = ['select', 'name', 'legalDocCode', 'processingState', 'actions'];
   public displayedColumns: string[] = this.COLUMNS.filter((col) => col !== 'legalDocCode');
-
   private readonly store = inject(Store);
-
   public readonly legalDocItems$: Observable<Array<LocalizedItem<LegalDocCode>>> = this.store
     .select(fromAppShared.selectReferenceLegalDocCodes)
     .pipe(
       filter(isNotNull),
       map((it) => [...it.values()]),
     );
-
   private readonly httpClient = inject(HttpClient);
   private readonly subscriptions: Subscription = new Subscription();
+  private readonly dialogService: MatDialog = inject(MatDialog);
+
+  protected get hasSelectedFiles(): boolean {
+    return this.selectedFiles.size !== 0;
+  }
+
+  protected get areAllFilesSelected(): boolean {
+    return this.selectedFiles.size === this.form.value.length;
+  }
+
+  public async ngOnChanges(changes: SimpleChanges) {
+    if (changes['asset'] && !changes['asset'].firstChange) {
+      await this.fetchFileProcessingStates();
+    }
+  }
 
   public ngOnInit() {
     this.subscriptions.add(
@@ -75,21 +111,99 @@ export class AssetEditorFilesComponent implements OnInit, OnDestroy {
         )
         .subscribe(),
     );
+
+    this.subscriptions.add(
+      timer(0, 5_000)
+        .pipe(tap(() => this.fetchFileProcessingStates()))
+        .subscribe(),
+    );
   }
 
   public ngOnDestroy() {
     this.subscriptions.unsubscribe();
   }
 
-  get hasSelectedFiles(): boolean {
-    return this.selectedFiles.size !== 0;
+  protected reanalyzeFile(file: ExistingAssetFile) {
+    const dialogRef = this.dialogService.open<ConfirmDialogComponent, ConfirmDialogData, boolean>(
+      ConfirmDialogComponent,
+      {
+        data: {
+          text: 'edit.tabs.files.pageRanges.confirmReanalyze',
+          confirm: 'confirm',
+        },
+      },
+    );
+    this.subscriptions.add(
+      dialogRef
+        .afterClosed()
+        .pipe(
+          filter((hasConfirmed) => !!hasConfirmed && isNotNull(this.asset)),
+          switchMap(() => {
+            return this.httpClient.post<AssetFile>(`/api/assets/${this.asset!.id}/files/${file.id}/reanalyze`, null);
+          }),
+          tap((res) => {
+            const index = this.form.value.findIndex((e) => e === file);
+            const entry = this.form.at(index);
+            entry.patchValue({ ...res, shouldBeDeleted: false });
+            this.fileProcessingStates.update((current) => {
+              const newMap = new Map(current);
+              newMap.set(res.id, {
+                fileProcessingState: res.fileProcessingState,
+                fileProcessingStage: res.fileProcessingStage,
+              });
+              return newMap;
+            });
+          }),
+        )
+        .subscribe(),
+    );
   }
 
-  public setSearchTerm(term: string) {
+  protected openPageRangeEditor(file: AssetFormFile) {
+    if (isExistingAssetFile(file)) {
+      const dialogRef = this.dialogService.open<
+        PageRangeEditorComponent,
+        PageRangeEditorData,
+        PageRangeClassification[]
+      >(PageRangeEditorComponent, {
+        data: { classifications: file.pageRangeClassifications, pageCount: file.pageCount ?? 0 }, // todo: pageCount can be 0
+        width: '925px',
+        autoFocus: false,
+      });
+
+      this.subscriptions.add(
+        dialogRef.afterClosed().subscribe((result) => {
+          if (result) {
+            this.updatePageClassifications(file, result);
+          }
+        }),
+      );
+    }
+  }
+
+  protected openPdfPreview(file: AssetFormFile) {
+    if (isExistingAssetFile(file)) {
+      this.dialogService.open<PdfOverlayComponent, PdfOverlayData>(PdfOverlayComponent, {
+        data: { pdfId: file.id, assetId: this.asset!.id },
+        width: '925px',
+        autoFocus: false,
+      });
+    }
+  }
+
+  protected selectFile(control: FormControl<AssetFormFile>, event: MatCheckboxChange) {
+    if (event.checked) {
+      this.selectedFiles.add(control.value);
+    } else {
+      this.selectedFiles.delete(control.value);
+    }
+  }
+
+  protected setSearchTerm(term: string) {
     this.searchTerm$.next(term);
   }
 
-  public setFileType({ isLegal }: { isLegal: boolean }) {
+  protected setFileType({ isLegal }: { isLegal: boolean }) {
     if (isLegal === this.isLegal$.value) {
       return;
     }
@@ -97,7 +211,7 @@ export class AssetEditorFilesComponent implements OnInit, OnDestroy {
     this.isLegal$.next(isLegal);
   }
 
-  public updateLegalDocItemCode(control: FormControl<AssetFormFile>, [code]: LegalDocCode[]) {
+  protected updateLegalDocItemCode(control: FormControl<AssetFormFile>, [code]: LegalDocCode[]) {
     const file = { ...control.value, legalDocCode: code };
     control.setValue(file);
     if (this.selectedFiles.delete(control.value)) {
@@ -106,7 +220,7 @@ export class AssetEditorFilesComponent implements OnInit, OnDestroy {
     this.form.markAsDirty();
   }
 
-  public toggleAll(event: MatCheckboxChange) {
+  protected toggleAll(event: MatCheckboxChange) {
     if (event.checked) {
       this.selectedFiles = new Set(this.form.value.filter((file) => this.isVisible(file)));
     } else {
@@ -114,24 +228,85 @@ export class AssetEditorFilesComponent implements OnInit, OnDestroy {
     }
   }
 
-  public selectFile(control: FormControl<AssetFormFile>, event: MatCheckboxChange) {
-    if (event.checked) {
-      this.selectedFiles.add(control.value);
-    } else {
-      this.selectedFiles.delete(control.value);
-    }
-  }
-
-  public isSelected(file: AssetFormFile): boolean {
+  protected isSelected(file: AssetFormFile): boolean {
     return this.selectedFiles.has(file);
   }
 
-  public get areAllFilesSelected(): boolean {
-    return this.selectedFiles.size === this.form.value.length;
+  protected markFileForDeletion(file: AssetFormFile) {
+    const fileIndex = this.form.value.findIndex((f) => f === file);
+    if (fileIndex !== -1) {
+      const updatedFile: AssetFormFile = { ...file, shouldBeDeleted: !file.shouldBeDeleted };
+      this.form.at(fileIndex).patchValue(updatedFile);
+
+      if (this.selectedFiles.delete(file)) {
+        this.selectedFiles.add(updatedFile);
+      }
+      this.form.markAsDirty();
+    }
   }
 
-  public markSelectedFilesForDeletion() {
+  protected downloadFile(file: AssetFormFile) {
+    if (isExistingAssetFile(file)) {
+      this.startFileDownload(file).subscribe(async (fileBlob) => {
+        await this.finalizeFileDownload(fileBlob);
+      });
+    }
+  }
+
+  protected markSelectedFilesForDeletion() {
     this.transformSelectedFiles((file) => ({ ...file, shouldBeDeleted: true }));
+  }
+
+  protected downloadSelectedFiles() {
+    const filesToDownload: ExistingAssetFile[] = this.dataSource.data
+      .map((control) => control.value)
+      .filter((file): file is ExistingAssetFile => isExistingAssetFile(file) && this.selectedFiles.has(file));
+
+    const downloadRequests: Array<Observable<FileBlob>> = filesToDownload.map((file) => this.startFileDownload(file));
+
+    forkJoin(downloadRequests).subscribe((fileBlobs) => {
+      fileBlobs.forEach(async (fileBlob: FileBlob) => {
+        await this.finalizeFileDownload(fileBlob);
+      });
+    });
+  }
+
+  protected sortChange(sort: Sort): void {
+    const data = this.dataSource.data.slice();
+    this.dataSource.data = data.sort((a, b) => {
+      const isAsc = sort.direction === 'asc';
+      return (a < b ? -1 : 1) * (isAsc ? 1 : -1);
+    });
+  }
+
+  private updatePageClassifications(file: ExistingAssetFile, result: PageRangeClassification[]) {
+    const index = this.form.value.findIndex((e) => e === file);
+    if (index !== -1) {
+      const entry = this.form.at(index);
+      entry.patchValue({ ...file, pageRangeClassifications: result });
+      entry.markAsDirty();
+    }
+  }
+
+  private startFileDownload(file: ExistingAssetFile): Observable<FileBlob> {
+    if (!this.asset) {
+      throw new Error('Asset is not yet loaded.');
+    }
+
+    this.activeFileDownloads.add(file.id);
+    return this.httpClient.get(`/api/assets/${this.asset.id}/files/${file.id}`, { responseType: 'blob' }).pipe(
+      map((blob) => {
+        return {
+          blob,
+          file,
+        };
+      }),
+    );
+  }
+
+  private async finalizeFileDownload(fileBlob: FileBlob) {
+    await triggerDownload(fileBlob);
+    this.activeFileDownloads.delete(fileBlob.file.id);
   }
 
   private transformSelectedFiles(transform: (file: AssetFormFile) => AssetFormFile): void {
@@ -152,41 +327,45 @@ export class AssetEditorFilesComponent implements OnInit, OnDestroy {
     return (file.legalDocCode !== null) === this.isLegal$.value;
   }
 
-  public downloadSelectedFiles() {
-    if (!this.asset) {
+  private async fetchFileProcessingStates(): Promise<void> {
+    if (this.asset === null) {
       return;
     }
-    const filesToDownload: ExistingAssetFile[] = this.dataSource.data
-      .map((control) => control.value)
-      .filter((file): file is ExistingAssetFile => 'id' in file && this.selectedFiles.has(file));
+    const newFileProcessingStates: FileProcessingStateMap = new Map();
+    await firstValueFrom(
+      this.httpClient.get<AssetFile[]>(`/api/assets/${this.asset.id}/files`).pipe(
+        tap((assetFiles) => {
+          for (const assetFile of assetFiles) {
+            // if a file was successfully processed by the extraction stage, we need to update its classes
+            if (
+              this.fileProcessingStates().size > 0 &&
+              assetFile.fileProcessingState === FileProcessingState.Success &&
+              assetFile.fileProcessingStage === FileProcessingStage.Extraction &&
+              this.fileProcessingStates().get(assetFile.id)?.fileProcessingState !== FileProcessingState.Success
+            ) {
+              const index = this.form.controls.findIndex((f) =>
+                isExistingAssetFile(f.getRawValue())
+                  ? (f.getRawValue() as ExistingAssetFile).id === assetFile.id
+                  : false,
+              );
+              const entry = this.form.at(index);
+              entry.patchValue({
+                ...entry.value,
+                pageCount: assetFile.pageCount,
+                pageRangeClassifications: assetFile.pageRangeClassifications,
+              });
+            }
 
-    const { id: assetId } = this.asset;
-    const downloadRequests: Array<Observable<FileBlob>> = filesToDownload.map((file) => {
-      this.activeFileDownloads.add(file.id);
-      return this.httpClient.get(`/api/assets/${assetId}/files/${file.id}`, { responseType: 'blob' }).pipe(
-        map((blob) => {
-          return {
-            blob,
-            file,
-          };
+            newFileProcessingStates.set(assetFile.id, {
+              fileProcessingStage: assetFile.fileProcessingStage,
+              fileProcessingState: assetFile.fileProcessingState,
+            });
+          }
         }),
-      );
-    });
+      ),
+    );
 
-    forkJoin(downloadRequests).subscribe((fileBlobs) => {
-      fileBlobs.forEach(async (fileBlob: FileBlob) => {
-        await triggerDownload(fileBlob);
-        this.activeFileDownloads.delete(fileBlob.file.id);
-      });
-    });
-  }
-
-  protected sortChange(sort: Sort): void {
-    const data = this.dataSource.data.slice();
-    this.dataSource.data = data.sort((a, b) => {
-      const isAsc = sort.direction === 'asc';
-      return (a < b ? -1 : 1) * (isAsc ? 1 : -1);
-    });
+    this.fileProcessingStates.set(newFileProcessingStates);
   }
 }
 

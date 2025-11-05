@@ -1,8 +1,8 @@
-<div>
+<div class="confirmation-dialog">
   <div mat-dialog-content>
     <p>{{ data.text | translate }}</p>
   </div>
-  <div mat-dialog-actions class="actions">
+  <div mat-dialog-actions class="confirmation-dialog__actions">
     <button asset-sg-secondary (click)="close(false)" translate>cancel</button>
     <button asset-sg-primary (click)="close(true)" [disabled]="data.isSaveDisabled">
       {{ data.confirm | translate }}

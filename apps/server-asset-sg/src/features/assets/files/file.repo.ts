@@ -1,15 +1,35 @@
-import { AssetFile, AssetFileId, AssetId, LegalDocCode, OcrStatus, User } from '@asset-sg/shared/v2';
+import {
+  AssetFile,
+  AssetFileId,
+  AssetId,
+  FileProcessingStage,
+  FileProcessingState,
+  LegalDocCode,
+  User,
+} from '@asset-sg/shared/v2';
 import { Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '@/core/prisma.service';
-import { CreateRepo, DeleteRepo, FindRepo } from '@/core/repo';
+import { Repo, RepoListOptions } from '@/core/repo';
 import { assetFileSelection, mapAssetFileFromPrisma } from '@/features/assets/files/prisma-file';
 import { handlePrismaMutationError } from '@/utils/prisma';
 
 @Injectable()
-export class FileRepo
-  implements FindRepo<AssetFile, FileIdentifier>, CreateRepo<AssetFile, CreateFileData>, DeleteRepo<FileIdentifier>
-{
+export class FileRepo implements Repo<AssetFile, FileIdentifier, CreateFileData, UpdateFileData> {
   constructor(private readonly prisma: PrismaService) {}
+
+  async update({ id: fileId }: FileIdentifier, data: UpdateFileData): Promise<AssetFile | null> {
+    try {
+      const updatedFile = await this.prisma.file.update({
+        where: { id: fileId },
+        data,
+      });
+
+      return mapAssetFileFromPrisma(updatedFile);
+    } catch (e) {
+      return handlePrismaMutationError(e);
+    }
+  }
 
   async find({ id, assetId }: FileIdentifier): Promise<AssetFile | null> {
     const entry = await this.prisma.file.findFirst({
@@ -22,9 +42,29 @@ export class FileRepo
     return mapAssetFileFromPrisma(entry);
   }
 
+  async list({ limit, offset, ids, assetId }: FileRepoListOptions = {}): Promise<AssetFile[]> {
+    const where: Prisma.FileWhereInput = {};
+    if (ids != null) {
+      // Require the files to match one of the given identifiers.
+      where['OR'] = ids.map(({ id, assetId }) => ({ id, AssetFile: { some: { assetId } } }));
+    }
+    if (assetId != null) {
+      // Require the files to belong to a specific asset.
+      where['AssetFile'] = { some: { assetId } };
+    }
+    const entries = await this.prisma.file.findMany({
+      where,
+      take: limit,
+      skip: offset,
+      select: assetFileSelection,
+    });
+    return await Promise.all(entries.map((it) => mapAssetFileFromPrisma(it)));
+  }
+
   async findOrphans(): Promise<AssetFile[]> {
     const entries = await this.prisma.file.findMany({
       where: { AssetFile: { none: {} } },
+      select: assetFileSelection,
     });
     return entries.map(mapAssetFileFromPrisma);
   }
@@ -38,7 +78,8 @@ export class FileRepo
         name: fileName,
         nameAlias,
         size: data.size,
-        ocrStatus: data.ocrStatus,
+        fileProcessingState: data.fileProcessingState,
+        fileProcessingStage: data.fileProcessingStage,
         type: data.legalDocCode === null ? 'Normal' : 'Legal',
         legalDocItemCode: data.legalDocCode,
         lastModifiedAt,
@@ -57,7 +98,9 @@ export class FileRepo
       legalDocCode: data.legalDocCode,
       pageCount: null, // this is filled (if at all) by postprocessing via OCR
       lastModifiedAt,
-      ocrStatus: data.ocrStatus,
+      fileProcessingStage: data.fileProcessingStage,
+      fileProcessingState: data.fileProcessingState,
+      pageRangeClassifications: null, // this is filled (if at all) by postprocessing via Extraction
     };
   }
 
@@ -117,10 +160,13 @@ export interface CreateFileData {
   name: string;
   size: number;
   legalDocCode: LegalDocCode | null;
-  ocrStatus: OcrStatus;
+  fileProcessingState: FileProcessingState;
+  fileProcessingStage: FileProcessingStage | null;
   assetId: AssetId;
   user: User;
 }
+
+export type UpdateFileData = Partial<Omit<CreateFileData, 'assetId' | 'user'>>;
 
 export interface UniqueFileName {
   fileName: string;
@@ -170,3 +216,7 @@ export const determineUniqueFilename = async (
     nameAlias: fileName,
   };
 };
+
+interface FileRepoListOptions extends RepoListOptions<FileIdentifier> {
+  assetId?: AssetId;
+}

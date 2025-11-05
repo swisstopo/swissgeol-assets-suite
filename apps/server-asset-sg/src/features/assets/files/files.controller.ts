@@ -1,8 +1,18 @@
-import { AssetEditPolicy, AssetFileSchema, LegalDocCode, User } from '@asset-sg/shared/v2';
+import {
+  Asset,
+  AssetEditPolicy,
+  AssetFile,
+  AssetFileSchema,
+  AssetPolicy,
+  convert,
+  LegalDocCode,
+  User,
+} from '@asset-sg/shared/v2';
 import {
   Controller,
-  Delete,
   Get,
+  Header,
+  Headers,
   HttpCode,
   HttpException,
   HttpStatus,
@@ -34,37 +44,47 @@ export class FilesController {
     private readonly fileService: FileService,
   ) {}
 
+  @Get('/')
+  async list(@Param('assetId', ParseIntPipe) assetId: number, @CurrentUser() user: User): Promise<AssetFileSchema[]> {
+    const asset = await this.findAssetOrThrow(assetId);
+    authorize(AssetEditPolicy, user).canShow(asset);
+
+    const files = await this.fileRepo.list({ assetId });
+    return convert(AssetFileSchema, files);
+  }
+
   @Get('/:id')
+  @Header('Accept-Ranges', 'bytes')
   async download(
     @Param('assetId', ParseIntPipe) assetId: number,
     @Param('id', ParseIntPipe) id: number,
     @Res() res: Response,
     @CurrentUser() user: User,
+    @Headers('Range') range: string,
   ) {
-    const asset = await this.assetRepo.find(assetId);
-    if (asset == null || null === asset.files.find((it) => it.id === id)) {
-      throw new HttpException('not found', HttpStatus.NOT_FOUND);
-    }
-    authorize(AssetEditPolicy, user).canShow(asset);
+    const asset = await this.findAssetOrThrow(assetId);
+    authorize(AssetPolicy, user).canShow(asset);
 
-    const record = await this.fileRepo.find({ assetId, id });
-    if (record == null) {
-      throw new HttpException('not found', HttpStatus.NOT_FOUND);
-    }
-
-    const file = await this.fileS3Service.load(record.name);
+    const file = asset.files.find((it) => it.id === id);
     if (file == null) {
       throw new HttpException('not found', HttpStatus.NOT_FOUND);
     }
 
-    if (file.metadata.mediaType) {
-      res.setHeader('Content-Type', file.metadata.mediaType);
+    const fileStream = await this.fileS3Service.load(file.name, range);
+    if (fileStream == null) {
+      throw new HttpException('not found', HttpStatus.NOT_FOUND);
     }
-    if (file.metadata.byteCount != null) {
-      res.setHeader('Content-Length', file.metadata.byteCount.toString());
+
+    res.setHeader('Content-Disposition', `filename="${file.name}"`);
+    res.setHeader('Content-Length', fileStream.metadata.byteCount ?? 0);
+    res.setHeader('Content-Type', fileStream.metadata.mediaType ?? 'application/octet-stream');
+
+    if (range) {
+      res.status(HttpStatus.PARTIAL_CONTENT);
+    } else {
+      res.status(HttpStatus.OK);
     }
-    res.setHeader('Content-Disposition', `filename="${record.name}"`);
-    file.content.pipe(res);
+    fileStream.content.pipe(res);
   }
 
   @Post('/')
@@ -75,10 +95,7 @@ export class FilesController {
     @UploadedFile() file: Express.Multer.File,
     @CurrentUser() user: User,
   ): Promise<AssetFileSchema> {
-    const asset = await this.assetRepo.find(assetId);
-    if (asset == null) {
-      throw new HttpException('not found', HttpStatus.NOT_FOUND);
-    }
+    const asset = await this.findAssetOrThrow(assetId);
     authorize(AssetEditPolicy, user).canUpdate(asset);
 
     const body = req.body as {
@@ -97,18 +114,24 @@ export class FilesController {
     return plainToInstance(AssetFileSchema, record);
   }
 
-  @Delete('/:id')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  async delete(
+  @Post('/:id/reanalyze')
+  @HttpCode(HttpStatus.ACCEPTED)
+  async reanalyze(
     @Param('assetId', ParseIntPipe) assetId: number,
     @Param('id', ParseIntPipe) id: number,
     @CurrentUser() user: User,
-  ): Promise<void> {
+  ): Promise<AssetFile | null> {
+    const asset = await this.findAssetOrThrow(assetId);
+    authorize(AssetEditPolicy, user).canUpdate(asset);
+    return await this.fileService.reanalyzeFile({ id, assetId: asset.id });
+  }
+
+  private async findAssetOrThrow(assetId: number): Promise<Asset> {
     const asset = await this.assetRepo.find(assetId);
     if (asset == null) {
       throw new HttpException('not found', HttpStatus.NOT_FOUND);
     }
-    authorize(AssetEditPolicy, user).canDelete(asset);
-    await this.fileService.delete({ id, assetId: asset.id });
+
+    return asset;
   }
 }

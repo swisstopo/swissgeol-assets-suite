@@ -1,3 +1,5 @@
+import { LanguageCode } from './reference-data';
+
 /**
  * DB: `asset_file`
  */
@@ -38,9 +40,45 @@ export interface AssetFile {
   lastModifiedAt: Date;
 
   /**
-   * DB: `ocr_status`
+   * DB: `file_processing_stage`
    */
-  ocrStatus: OcrStatus;
+  fileProcessingStage: FileProcessingStage | null;
+
+  /**
+   * DB: `file_processing_state`
+   */
+  fileProcessingState: FileProcessingState;
+
+  /**
+   * DB: `page_range_classifications`
+   */
+  pageRangeClassifications: PageRangeClassification[] | null;
+}
+
+export const SupportedPageLanguages = ['de', 'fr', 'it', 'en'] as const;
+
+export type SupportedPageLanguage = (typeof SupportedPageLanguages)[number];
+
+export enum PageCategory {
+  Text = 't',
+  Boreprofile = 'b',
+  Map = 'm',
+  GeoProfile = 'gp',
+  TitlePage = 'tp',
+  Diagram = 'd',
+  Table = 'tbl',
+  Unknown = 'u',
+}
+
+export interface PageClassification {
+  page: number;
+  languages: SupportedPageLanguage[];
+  categories: PageCategory[];
+}
+
+export interface PageRangeClassification extends Omit<PageClassification, 'page'> {
+  from: number;
+  to: number;
 }
 
 export type AssetFileId = number;
@@ -53,6 +91,7 @@ export interface CreateAssetFileData {
 export interface UpdateAssetFileData {
   id: AssetFileId;
   legalDocCode: LegalDocCode | null;
+  pageRangeClassifications: PageRangeClassification[] | null;
 }
 
 export enum LegalDocCode {
@@ -70,3 +109,28 @@ export enum OcrStatus {
   Error = 'error',
   WillNotBeProcessed = 'willNotBeProcessed',
 }
+
+export enum FileProcessingStage {
+  Ocr = 'Ocr',
+  Extraction = 'Extraction',
+}
+
+export enum FileProcessingState {
+  Waiting = 'Waiting',
+  Processing = 'Processing',
+  Success = 'Success',
+  Error = 'Error',
+  WillNotBeProcessed = 'WillNotBeProcessed',
+}
+
+export const getLanguageCodesOfPages = (pages: Array<{ languages: SupportedPageLanguage[] }>): Set<LanguageCode> => {
+  return pages.reduce((acc, page) => {
+    for (const lang of page.languages) {
+      acc.add(mapSupportedPageLanguageToCode(lang));
+    }
+    return acc;
+  }, new Set<LanguageCode>());
+};
+
+export const mapSupportedPageLanguageToCode = (language: SupportedPageLanguage): LanguageCode =>
+  language.toUpperCase() as LanguageCode;

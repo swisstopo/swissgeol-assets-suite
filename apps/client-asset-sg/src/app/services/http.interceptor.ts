@@ -7,7 +7,14 @@ import {
 } from '@angular/common/http';
 import { inject, Injectable, OnDestroy } from '@angular/core';
 import { NavigationCancel, NavigationEnd, NavigationError, NavigationStart, Router } from '@angular/router';
-import { AlertType, AuthService, AuthState, fromAppShared, showAlert } from '@asset-sg/client-shared';
+import {
+  AlertType,
+  AuthService,
+  AuthState,
+  fromAppShared,
+  showAlert,
+  SessionStorageService,
+} from '@asset-sg/client-shared';
 import { Store } from '@ngrx/store';
 import { TranslateService } from '@ngx-translate/core';
 import { OAuthService } from 'angular-oauth2-oidc';
@@ -17,6 +24,7 @@ import { catchError, EMPTY, from, Observable, Subscription, switchMap } from 'rx
 export class HttpInterceptor implements AngularHttpInterceptor, OnDestroy {
   private readonly oauthService = inject(OAuthService);
   private readonly authService = inject(AuthService);
+  private readonly sessionStorageService = inject(SessionStorageService);
   private readonly translateService = inject(TranslateService);
 
   private readonly store = inject(Store);
@@ -38,7 +46,7 @@ export class HttpInterceptor implements AngularHttpInterceptor, OnDestroy {
   }
 
   intercept(req: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
-    const token = sessionStorage.getItem('access_token');
+    const token = this.sessionStorageService.get('access_token');
     if (
       (this.oauthService.issuer && req.url.includes(this.oauthService.issuer)) ||
       (this.oauthService.tokenEndpoint && req.url.includes(this.oauthService.tokenEndpoint)) ||

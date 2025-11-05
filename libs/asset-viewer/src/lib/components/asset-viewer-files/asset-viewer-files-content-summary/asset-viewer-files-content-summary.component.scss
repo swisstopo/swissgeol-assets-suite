@@ -1,0 +1,21 @@
+@use "../../../styles/variables";
+
+.tag-group {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  align-items: center;
+
+  &__divider {
+    height: 28px;
+    display: flex;
+    justify-content: center;
+    padding: 4px 0;
+
+    span {
+      width: 1px;
+      background-color: variables.$grey-02;
+      height: 100%;
+    }
+  }
+}

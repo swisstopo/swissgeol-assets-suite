@@ -9,12 +9,14 @@ import { plainToInstance } from 'class-transformer';
 import { BehaviorSubject, map, Observable } from 'rxjs';
 import { DisclaimerDialogComponent } from '../../components/disclaimer-dialog/disclaimer-dialog.component';
 import { ConfigService } from '../../services';
+import { SessionStorageService } from '../../services/session-storage.service';
 import { appSharedStateActions, AppState } from '../../state';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly configService = inject(ConfigService);
   private readonly oauthService = inject(OAuthService);
+  private readonly sessionStorageService = inject(SessionStorageService);
 
   private readonly httpClient = inject(HttpClient);
   private readonly store = inject(Store<AppState>);
@@ -40,8 +42,8 @@ export class AuthService {
   }
 
   private async initializeSession(config: AppConfig): Promise<void> {
-    const callbackUrl = sessionStorage.getItem(CALLBACK_PATH_KEY);
-    sessionStorage.setItem(CALLBACK_PATH_KEY, window.location.pathname + window.location.search);
+    const callbackUrl = this.sessionStorageService.get('session.callback_path');
+    this.sessionStorageService.set('session.callback_path', window.location.pathname + window.location.search);
     this.configureOAuth(config.oauth);
     this.store.dispatch(appSharedStateActions.setAnonymousMode({ isAnonymous: false }));
     await this.signIn();
@@ -50,7 +52,7 @@ export class AuthService {
       await this.router.navigateByUrl(callbackUrl, { replaceUrl: true });
     }
     if (this.oauthService.hasValidAccessToken()) {
-      sessionStorage.removeItem(CALLBACK_PATH_KEY);
+      this.sessionStorageService.unset('session.callback_path');
     }
   }
 
@@ -128,8 +130,6 @@ export class AuthService {
     });
   }
 }
-
-const CALLBACK_PATH_KEY = 'session.callback_path';
 
 export enum AuthState {
   Ongoing,

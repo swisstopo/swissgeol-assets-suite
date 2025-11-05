@@ -1,8 +1,19 @@
-import { AssetFile, AssetId, OcrStatus } from '@asset-sg/shared/v2';
-import { Injectable, Logger } from '@nestjs/common';
-import { FileOcrService } from '@/features/assets/files/file-ocr.service';
+import {
+  Asset,
+  AssetFile,
+  AssetId,
+  FileProcessingStage,
+  FileProcessingState,
+  getLanguageCodesOfPages,
+  LanguageCode,
+} from '@asset-sg/shared/v2';
+import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { EVENTS } from '@/core/events';
+import { PrismaService } from '@/core/prisma.service';
 import { FileS3Service, SaveFileS3Options } from '@/features/assets/files/file-s3.service';
 import { CreateFileData, FileIdentifier, FileRepo } from '@/features/assets/files/file.repo';
+import { mapAssetLanguagesToPrismaUpdate } from '@/features/assets/prisma-asset';
 
 @Injectable()
 export class FileService {
@@ -10,8 +21,9 @@ export class FileService {
 
   constructor(
     private readonly fileRepo: FileRepo,
-    private readonly fileOcrService: FileOcrService,
     private readonly fileS3Service: FileS3Service,
+    private readonly eventEmitter: EventEmitter2,
+    private readonly prismaService: PrismaService,
   ) {}
 
   async create(data: UploadFileData): Promise<AssetFile> {
@@ -22,37 +34,32 @@ export class FileService {
     // Store file in DB.
     const record = await this.fileRepo.create({
       ...createData,
-      ocrStatus: isOcrCompatible ? OcrStatus.Waiting : OcrStatus.WillNotBeProcessed,
+      ...this.getProcessingConfiguration(isOcrCompatible),
     });
 
     // Upload file to S3.
     await this.saveFileOrDeleteRecord(record, data.assetId, content, { mediaType });
 
     if (isOcrCompatible) {
-      // Run OCR on the file in the background.
-      setTimeout(() => this.fileOcrService.process(record));
+      this.eventEmitter.emit(EVENTS.FILE_START_OCR, record);
     }
 
     return record;
   }
 
-  async delete(id: FileIdentifier): Promise<boolean> {
-    const file = await this.fileRepo.find(id);
-    if (file === null) {
-      // The file does not exist (anymore?), so it has not been deleted.
-      return false;
-    }
-    const isDbOk = await this.fileRepo.delete(id);
-    if (!isDbOk) {
-      // The connection between the asset and the file has been deleted,
-      // but the file is still linked to other assets.
-      // We still want to communicate that the file was successfully deleted,
-      // as by the viewpoint of the API, the deletion has been successful.
-      return true;
-    }
+  async syncAssetWithRemovedFiles(asset: Asset, removedFiles: AssetFile[]): Promise<Asset> {
+    const updatedLanguageCodes = new Set(asset.languageCodes);
 
-    // Remove the file from S3, as no asset refers to it anymore.
-    return await this.fileS3Service.delete(file.name);
+    await this.removeLanguagesFromAsset(asset, updatedLanguageCodes, removedFiles);
+
+    await this.prismaService.asset.update({
+      where: { assetId: asset.id },
+      data: {
+        assetLanguages: mapAssetLanguagesToPrismaUpdate(asset.id, [...updatedLanguageCodes]),
+      },
+    });
+
+    return { ...asset, languageCodes: [...updatedLanguageCodes] };
   }
 
   async deleteOrphans(): Promise<void> {
@@ -60,6 +67,39 @@ export class FileService {
     for (const orphan of orphans) {
       await this.fileRepo.deleteUnused(orphan.id);
     }
+  }
+
+  async reanalyzeFile(id: FileIdentifier): Promise<AssetFile> {
+    const record = await this.fileRepo.find(id);
+    if (record === null) {
+      throw new NotFoundException('not found');
+    }
+
+    if (
+      record.fileProcessingState !== FileProcessingState.Error &&
+      record.fileProcessingState !== FileProcessingState.Success
+    ) {
+      throw new BadRequestException('File is not in a state that allows reanalysis');
+    }
+
+    const updatedAsset = await this.fileRepo.update(id, {
+      fileProcessingState: FileProcessingState.Waiting,
+      fileProcessingStage: FileProcessingStage.Ocr,
+    });
+    if (updatedAsset === null) {
+      throw new NotFoundException('not found');
+    }
+
+    this.eventEmitter.emit(EVENTS.FILE_START_OCR, updatedAsset);
+    return updatedAsset;
+  }
+
+  private getProcessingConfiguration(
+    isOcrCompatible: boolean,
+  ): Pick<AssetFile, 'fileProcessingStage' | 'fileProcessingState'> {
+    return isOcrCompatible
+      ? { fileProcessingState: FileProcessingState.Waiting, fileProcessingStage: FileProcessingStage.Ocr }
+      : { fileProcessingState: FileProcessingState.WillNotBeProcessed, fileProcessingStage: null };
   }
 
   private async saveFileOrDeleteRecord(
@@ -87,9 +127,36 @@ export class FileService {
       });
     }
   }
+
+  private async removeLanguagesFromAsset(
+    updatedAsset: Asset,
+    languages: Set<LanguageCode>,
+    removedFiles: AssetFile[],
+  ): Promise<void> {
+    // Find the languages of the removed files.
+    const removedFileLanguages = new Set(
+      removedFiles.flatMap((file) =>
+        file.pageRangeClassifications === null ? [] : [...getLanguageCodesOfPages(file.pageRangeClassifications ?? [])],
+      ),
+    );
+
+    // Find the languages present within all other files of the asset.
+    const remainingFilesLanguages = new Set(
+      updatedAsset.files.flatMap((file) => [...getLanguageCodesOfPages(file.pageRangeClassifications ?? [])]),
+    );
+
+    // For each of the deleted file's languages,
+    // remove it from the asset's languages,
+    // unless another file also has that language.
+    for (const removedLang of removedFileLanguages) {
+      if (!remainingFilesLanguages.has(removedLang)) {
+        languages.delete(removedLang);
+      }
+    }
+  }
 }
 
-type UploadFileData = Omit<CreateFileData, 'ocrStatus'> & {
+type UploadFileData = Omit<CreateFileData, 'fileProcessingState' | 'fileProcessingStage'> & {
   content: Buffer;
   mediaType: string;
 };

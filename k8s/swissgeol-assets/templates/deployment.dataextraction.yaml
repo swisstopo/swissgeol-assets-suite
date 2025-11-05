@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-dataextraction
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    keel.sh/policy: force
+    keel.sh/match-tag: 'true'
+    keel.sh/trigger: poll
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-dataextraction
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-dataextraction
+    spec:
+      serviceAccountName: dataextraction
+      containers:
+      - name: {{ .Release.Name }}-dataextraction
+        image: {{ .Values.image_dataextraction }}
+        imagePullPolicy: Always
+        ports:
+          - containerPort: 8000
+        env:
+          - name: S3_BUCKET
+            value: {{ .Values.s3_bucket_name }}
+          - name: S3_FOLDER
+            value: {{ .Values.s3_asset_folder }}/
+        resources:
+          limits:
+            cpu: '0.5'
+            memory: '2Gi'
+      imagePullSecrets:
+      - name: {{ .Release.Namespace }}-registry

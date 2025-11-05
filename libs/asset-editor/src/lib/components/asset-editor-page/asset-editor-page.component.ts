@@ -318,12 +318,15 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
   }
 
   public openConfirmDialogForAssetDeletion(assetId: number): void {
-    const dialogRef = this.dialogService.open<ConfirmDialogComponent, ConfirmDialogData>(ConfirmDialogComponent, {
-      data: {
-        text: 'confirmDelete',
-        confirm: 'confirm',
+    const dialogRef = this.dialogService.open<ConfirmDialogComponent, ConfirmDialogData, boolean>(
+      ConfirmDialogComponent,
+      {
+        data: {
+          text: 'confirmDelete',
+          confirm: 'confirm',
+        },
       },
-    });
+    );
     dialogRef.afterClosed().subscribe((hasConfirmed) => {
       if (hasConfirmed) {
         this.store.dispatch(actions.deleteAsset({ assetId }));
@@ -354,16 +357,18 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
     ) {
       return true;
     }
-    const dialogRef = this.dialogService.open<ConfirmDialogComponent, ConfirmDialogData>(ConfirmDialogComponent, {
-      data: {
-        text: this.form.invalid ? 'edit.questionAbortChanges' : 'edit.questionDiscardChanges',
-        confirm: 'save',
-        isSaveDisabled: this.form.invalid,
+    const dialogRef = this.dialogService.open<ConfirmDialogComponent, ConfirmDialogData, boolean>(
+      ConfirmDialogComponent,
+      {
+        data: {
+          text: this.form.invalid ? 'edit.questionAbortChanges' : 'edit.questionDiscardChanges',
+          confirm: 'save',
+          isSaveDisabled: this.form.invalid,
+        },
       },
-      maxWidth: '420px',
-    });
+    );
     return dialogRef.afterClosed().pipe(
-      filter((hasConfirmed) => hasConfirmed),
+      filter((hasConfirmed) => !!hasConfirmed),
       switchMap(() => {
         return this.setupSaveBehaviour().pipe(map(() => true));
       }),
@@ -411,6 +416,7 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
           filesToUpdate.push({
             id: entry.id,
             legalDocCode: entry.legalDocCode,
+            pageRangeClassifications: entry.pageRangeClassifications,
           });
         }
       } else if (!entry.shouldBeDeleted) {
@@ -487,7 +493,10 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
   protected readonly EditorMode = EditorMode;
 }
 
-export type ExistingAssetFile = Pick<AssetFile, 'id' | 'name' | 'legalDocCode'> & {
+export type ExistingAssetFile = Pick<
+  AssetFile,
+  'id' | 'name' | 'legalDocCode' | 'lastModifiedAt' | 'pageRangeClassifications' | 'pageCount'
+> & {
   shouldBeDeleted: boolean;
 };
 

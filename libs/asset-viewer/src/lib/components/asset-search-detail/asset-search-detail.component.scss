@@ -77,140 +77,6 @@
   }
 }
 
-table.asset-details {
-  table-layout: fixed;
-  width: 100%;
-  min-width: 100%;
-  max-width: 100%;
-
-  // Add space between each of the table's rows.
-  border-collapse: separate;
-  border-spacing: 0 6px;
-
-  tr:first-child {
-    th:nth-child(1) {
-      $width: 10rem;
-      width: $width;
-      min-width: $width;
-      max-width: $width;
-    }
-  }
-
-  th {
-    overflow-wrap: break-word;
-    vertical-align: top;
-    font-weight: unset;
-    text-align: left;
-    padding-right: 0.5rem;
-
-    &.icon-height {
-      line-height: 2.5rem;
-    }
-  }
-}
-
-td,
-th {
-  padding: 0.125rem 0;
-  vertical-align: unset;
-  overflow-wrap: break-word;
-}
-
-td .line {
-  & + span.line {
-    padding-top: 0.125rem;
-  }
-}
-
-.title-original {
-  padding-bottom: 1rem;
-}
-
-.creation-date {
-  padding-bottom: 1rem;
-}
-
-table.status-works {
-  table-layout: fixed;
-  border-collapse: separate;
-  border-spacing: 0 0.125rem;
-  width: 100%;
-  min-width: 100%;
-  max-width: 100%;
-
-  tr:first-child {
-    th:nth-child(1) {
-      $width: 7rem;
-      width: $width;
-      min-width: $width;
-      max-width: $width;
-    }
-  }
-
-  th {
-    overflow-wrap: break-word;
-    vertical-align: unset;
-    font-weight: unset;
-    text-align: unset;
-  }
-}
-
-ul {
-  padding: 0;
-  margin: 0;
-  list-style: none;
-
-  &.single-entry {
-    list-style-type: none;
-  }
-}
-
-li > * {
-  vertical-align: top;
-}
-
-li::marker {
-  color: variables.$grey-06;
-}
-
-li.link {
-  display: inline-flex;
-  width: 100%;
-  overflow: visible;
-  align-items: center;
-  flex-wrap: wrap;
-  column-gap: 6px;
-
-  &:not(:first-child) {
-    margin-top: 6px;
-  }
-
-  a {
-    flex: 0 0 2.5rem;
-  }
-
-  a:first-of-type {
-    margin-left: 0.5rem;
-  }
-}
-
-// A list of languages to which an asset is mapped.
-ul.languages {
-  display: flex;
-  flex-wrap: wrap;
-  list-style: none;
-
-  & > li {
-    display: flex;
-    flex-wrap: nowrap;
-  }
-
-  // Insert commas between every two languages.
-  & > li:not(:last-child)::after {
-    content: ",\00a0";
-  }
-}
-
 .chip-group {
   display: flex;
   flex-wrap: wrap;
@@ -259,6 +125,12 @@ dd {
   > :last-child {
     flex: 1;
   }
+}
+
+.reference-list {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
 }
 
 sgc-card {

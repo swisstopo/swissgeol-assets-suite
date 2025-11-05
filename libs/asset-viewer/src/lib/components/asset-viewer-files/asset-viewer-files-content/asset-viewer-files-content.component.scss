@@ -1,0 +1,59 @@
+@use "../../../styles/variables";
+
+.collapsible {
+  &__header {
+    display: flex;
+    cursor: pointer;
+    gap: 8px;
+
+    &__toggle {
+      color: var(--sgc-color-primary);
+      display: flex;
+      flex-shrink: 0;
+      align-items: center;
+      height: fit-content;
+      padding-top: 2px;
+      gap: 4px;
+    }
+  }
+
+  &__body {
+    padding-left: 30px; /// 56px = 16px padding + 10px icon + rest
+
+    dl {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+
+      dd {
+        font-weight: 400;
+        margin-left: 36px;
+        display: flex;
+        gap: 4px;
+        align-items: center;
+
+        span:not(.range-divider) {
+          flex: 0 0 auto;
+        }
+
+        .range-divider {
+          width: 12px;
+          height: 1px;
+          background-color: var(--sgc-color-border--default);
+          flex: 1;
+        }
+
+        .page-range {
+          color: var(--sgc-color-text--disabled);
+        }
+      }
+    }
+  }
+}
+
+.tag-group {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  align-items: center;
+}

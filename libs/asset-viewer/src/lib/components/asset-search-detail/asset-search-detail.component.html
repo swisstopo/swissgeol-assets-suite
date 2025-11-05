@@ -145,7 +145,7 @@
           @if (normalFiles.length > 0) {
             <hr class="divider" />
             <sgc-card [header]="'search.documents' | translate" data-testid="assetNormalFiles">
-              <ul asset-sg-asset-viewer-files [assetId]="asset.id" [files]="normalFiles"></ul>
+              <asset-sg-asset-viewer-files [assetId]="asset.id" [files]="normalFiles"></asset-sg-asset-viewer-files>
             </sgc-card>
           }
 
@@ -154,7 +154,7 @@
               <hr class="divider" />
             }
             <sgc-card [header]="'search.legalDocuments' | translate" data-testid="assetLegalFiles">
-              <ul asset-sg-asset-viewer-files [assetId]="asset.id" [files]="legalFiles" isLegal></ul>
+              <asset-sg-asset-viewer-files [assetId]="asset.id" [files]="legalFiles"></asset-sg-asset-viewer-files>
             </sgc-card>
           }
         }
@@ -164,7 +164,7 @@
         @if (linkedAssets.length > 0) {
           <hr class="divider" />
           <sgc-card [header]="'search.references' | translate" data-testid="assetReferences">
-            <ul>
+            <ul class="reference-list">
               @for (linkedAsset of linkedAssets; track linkedAsset.id) {
                 <li>
                   <a

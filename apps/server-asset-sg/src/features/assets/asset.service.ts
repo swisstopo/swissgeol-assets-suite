@@ -51,7 +51,13 @@ export class AssetService {
       return null;
     }
 
-    await Promise.all([
+    // Find all files that have been removed by checking which files only exist in the old asset data.
+    const removedFiles = asset.files.filter(
+      (oldFile) => undefined === updatedAsset.files.find((newFile) => newFile.id === oldFile.id),
+    );
+
+    const [syncedAsset] = await Promise.all([
+      this.fileService.syncAssetWithRemovedFiles(updatedAsset, removedFiles),
       this.assetSearchService.register(updatedAsset),
       this.workflowService.updateSelectionByChanges(asset, updatedAsset, data.geometries),
     ]);
@@ -60,7 +66,8 @@ export class AssetService {
     // This removes them both from the DB and from S3.
     // We do this after the request so unrelated errors and wait times do not impact the response.
     setTimeout(() => this.fileService.deleteOrphans());
-    return updatedAsset;
+
+    return syncedAsset;
   }
 
   async delete(id: AssetId): Promise<boolean> {

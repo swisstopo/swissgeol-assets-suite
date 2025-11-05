@@ -1,30 +1,49 @@
-<li *rxFor="let assetFile of files" class="link">
-  @if (assetFile.legalDocCode != null) {
-    <span class="legal-doc-item-code"> {{ assetFile.legalDocCode | reference: "legalDocs" }}: </span>
+<div class="file" *rxFor="let assetFile of files">
+  <div class="file__info">
+    <div class="file__info__metadata">
+      <sgc-icon name="file"></sgc-icon>
+      <span class="file__info__file-name">{{ assetFile | fileName }}</span>
+      @if (locale$ | async; as locale) {
+        <asset-sg-asset-viewer-files-tag>{{ assetFile | fileSize: locale }}</asset-sg-asset-viewer-files-tag>
+      }
+    </div>
+    <div class="file__info__actions">
+      <sgc-button
+        [isDisabled]="isActiveFileDownload(assetFile, 'open-in-tab')"
+        [title]="'search.openFileInNewTab' | translate: { fileName: assetFile | fileName }"
+        (click)="downloadFile(assetFile, 'open-in-tab')"
+      >
+        @if (!isActiveFileDownload(assetFile, "open-in-tab")) {
+          <sgc-icon name="openLink"></sgc-icon>
+        } @else {
+          <mat-progress-spinner mode="indeterminate" [diameter]="20" />
+        }
+      </sgc-button>
+      <sgc-button
+        [isDisabled]="isActiveFileDownload(assetFile, 'save-file')"
+        [title]="'search.downloadFile' | translate: { fileName: assetFile | fileName }"
+        (click)="downloadFile(assetFile, 'save-file')"
+      >
+        @if (!isActiveFileDownload(assetFile, "save-file")) {
+          <sgc-icon name="download"></sgc-icon>
+        } @else {
+          <mat-progress-spinner mode="indeterminate" [diameter]="20" />
+        }
+      </sgc-button>
+    </div>
+  </div>
+
+  @if (assetFile.pageRangeClassifications) {
+    <hr class="divider" />
+    <asset-sg-asset-viewer-files-content
+      [pageRangeClassifications]="assetFile.pageRangeClassifications"
+      [pageCount]="assetFile.pageCount"
+      [legalDocCode]="assetFile.legalDocCode"
+    ></asset-sg-asset-viewer-files-content>
+  } @else if (assetFile.pageCount || assetFile.legalDocCode) {
+    <asset-sg-asset-viewer-files-content-summary
+      [pageCount]="assetFile.pageCount"
+      [legalDocCode]="assetFile.legalDocCode"
+    ></asset-sg-asset-viewer-files-content-summary>
   }
-  @if (locale$ | async; as locale) {
-    <span class="name"> {{ assetFile | fileName }} ({{ assetFile | fileMetadata: locale }}) </span>
-  }
-  @if (!isActiveFileDownload(assetFile, "open-in-tab")) {
-    <button
-      asset-sg-icon-button
-      [title]="'search.openFileInNewTab' | translate: { fileName: assetFile | fileName }"
-      (click)="downloadFile(assetFile, 'open-in-tab')"
-    >
-      <svg-icon key="ext-link"></svg-icon>
-    </button>
-  } @else {
-    <mat-progress-spinner mode="indeterminate" [diameter]="20" />
-  }
-  @if (!isActiveFileDownload(assetFile, "save-file")) {
-    <button
-      asset-sg-icon-button
-      [title]="'search.downloadFile' | translate: { fileName: assetFile | fileName }"
-      (click)="downloadFile(assetFile, 'save-file')"
-    >
-      <svg-icon key="download"></svg-icon>
-    </button>
-  } @else {
-    <mat-progress-spinner mode="indeterminate" [diameter]="20" />
-  }
-</li>
+</div>

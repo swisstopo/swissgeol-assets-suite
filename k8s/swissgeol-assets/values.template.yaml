@@ -1,6 +1,8 @@
 host:
 image_app:
 image_api:
+image_ocr:
+image_dataextraction:
 elasticsearch_url:
 s3_bucket_name:
 s3_region:
@@ -8,6 +10,7 @@ s3_endpoint:
 s3_asset_folder:
 ocr_url:
 ocr_callback_url:
+ocr_extraction_url:
 oauth_issuer:
 oauth_client_id:
 oauth_scope:
@@ -15,5 +18,6 @@ oauth_show_debug_info:
 oauth_token_endpoint:
 oauth_user_info_endpoint:
 ocr_service_account_role:
+dataextraction_service_account_role:
 cognito_pool_id:
 cognito_group:
