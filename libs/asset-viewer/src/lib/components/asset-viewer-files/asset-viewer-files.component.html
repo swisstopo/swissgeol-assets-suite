@@ -9,26 +9,16 @@
     </div>
     <div class="file__info__actions">
       <sgc-button
-        [isDisabled]="isActiveFileDownload(assetFile, 'open-in-tab')"
         [title]="'search.openFileInNewTab' | translate: { fileName: assetFile | fileName }"
         (click)="downloadFile(assetFile, 'open-in-tab')"
       >
-        @if (!isActiveFileDownload(assetFile, "open-in-tab")) {
-          <sgc-icon name="openLink"></sgc-icon>
-        } @else {
-          <mat-progress-spinner mode="indeterminate" [diameter]="20" />
-        }
+        <sgc-icon name="openLink"></sgc-icon>
       </sgc-button>
       <sgc-button
-        [isDisabled]="isActiveFileDownload(assetFile, 'save-file')"
         [title]="'search.downloadFile' | translate: { fileName: assetFile | fileName }"
         (click)="downloadFile(assetFile, 'save-file')"
       >
-        @if (!isActiveFileDownload(assetFile, "save-file")) {
-          <sgc-icon name="download"></sgc-icon>
-        } @else {
-          <mat-progress-spinner mode="indeterminate" [diameter]="20" />
-        }
+        <sgc-icon name="download"></sgc-icon>
       </sgc-button>
     </div>
   </div>

@@ -38,17 +38,11 @@
                 </span>
               </th>
               <td mat-cell *matCellDef="let control" class="column-pick">
-                @if (!activeFileDownloads.has(control.value.id)) {
-                  <mat-checkbox
-                    [checked]="isSelected(control.value)"
-                    (change)="selectFile(control, $event)"
-                    color="primary"
-                  />
-                } @else {
-                  <div class="download-wrapper">
-                    <mat-progress-spinner mode="indeterminate" [diameter]="18" />
-                  </div>
-                }
+                <mat-checkbox
+                  [checked]="isSelected(control.value)"
+                  (change)="selectFile(control, $event)"
+                  color="primary"
+                />
               </td>
             </ng-container>
             <ng-container matColumnDef="name">

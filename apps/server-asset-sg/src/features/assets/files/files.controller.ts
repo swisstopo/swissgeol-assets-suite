@@ -3,6 +3,7 @@ import {
   AssetEditPolicy,
   AssetFile,
   AssetFileSchema,
+  AssetFileSignedUrlSchema,
   AssetPolicy,
   convert,
   LegalDocCode,
@@ -10,6 +11,7 @@ import {
 } from '@asset-sg/shared/v2';
 import {
   Controller,
+  DefaultValuePipe,
   Get,
   Header,
   Headers,
@@ -17,8 +19,10 @@ import {
   HttpException,
   HttpStatus,
   Param,
+  ParseBoolPipe,
   ParseIntPipe,
   Post,
+  Query,
   Req,
   Res,
   UploadedFile,
@@ -51,6 +55,25 @@ export class FilesController {
 
     const files = await this.fileRepo.list({ assetId });
     return convert(AssetFileSchema, files);
+  }
+
+  @Get('/:id/presigned')
+  async presignedUrl(
+    @Param('assetId', ParseIntPipe) assetId: number,
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: User,
+    @Query('download', new DefaultValuePipe(false), new ParseBoolPipe()) download: boolean,
+  ): Promise<AssetFileSignedUrlSchema> {
+    const asset = await this.findAssetOrThrow(assetId);
+    authorize(AssetPolicy, user).canShow(asset);
+
+    const file = await this.fileRepo.find({ id, assetId: asset.id });
+    if (file == null) {
+      throw new HttpException('not found', HttpStatus.NOT_FOUND);
+    }
+    const url = await this.fileS3Service.getPresignedUrl(file.name, file.alias, download);
+
+    return plainToInstance(AssetFileSignedUrlSchema, { url });
   }
 
   @Get('/:id')

@@ -5,11 +5,12 @@ import { MatCheckboxChange } from '@angular/material/checkbox';
 import { MatDialog } from '@angular/material/dialog';
 import { Sort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
-import { ConfirmDialogComponent, ConfirmDialogData, fromAppShared } from '@asset-sg/client-shared';
+import { ConfirmDialogComponent, ConfirmDialogData, fromAppShared, triggerDownload } from '@asset-sg/client-shared';
 import { isNotNull } from '@asset-sg/core';
 import {
   Asset,
   AssetFile,
+  AssetFileSignedUrl,
   FileProcessingStage,
   FileProcessingState,
   LegalDocCode,
@@ -20,9 +21,11 @@ import { Store } from '@ngrx/store';
 import {
   BehaviorSubject,
   combineLatestWith,
+  concatMap,
+  delay,
   filter,
   firstValueFrom,
-  forkJoin,
+  from,
   map,
   Observable,
   startWith,
@@ -53,8 +56,6 @@ export type FileProcessingStateMap = Map<
 export class AssetEditorFilesComponent implements OnInit, OnDestroy, OnChanges {
   @Input() form!: AssetForm['controls']['files'];
   @Input() asset: Asset | null = null;
-
-  public activeFileDownloads: Set<number> = new Set();
 
   protected readonly fileProcessingStates = signal<FileProcessingStateMap>(new Map());
   protected readonly searchTerm$ = new BehaviorSubject<string>('');
@@ -247,9 +248,7 @@ export class AssetEditorFilesComponent implements OnInit, OnDestroy, OnChanges {
 
   protected downloadFile(file: AssetFormFile) {
     if (isExistingAssetFile(file)) {
-      this.startFileDownload(file).subscribe(async (fileBlob) => {
-        await this.finalizeFileDownload(fileBlob);
-      });
+      this.downloadFromPresignedUrl(file).subscribe();
     }
   }
 
@@ -258,17 +257,14 @@ export class AssetEditorFilesComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   protected downloadSelectedFiles() {
-    const filesToDownload: ExistingAssetFile[] = this.dataSource.data
+    const selectedFiles = this.dataSource.data
       .map((control) => control.value)
       .filter((file): file is ExistingAssetFile => isExistingAssetFile(file) && this.selectedFiles.has(file));
 
-    const downloadRequests: Array<Observable<FileBlob>> = filesToDownload.map((file) => this.startFileDownload(file));
-
-    forkJoin(downloadRequests).subscribe((fileBlobs) => {
-      fileBlobs.forEach(async (fileBlob: FileBlob) => {
-        await this.finalizeFileDownload(fileBlob);
-      });
-    });
+    // We add a delay to avoid having all anchors added at the same time, because clicks won't register properly
+    from(selectedFiles)
+      .pipe(concatMap((file) => this.downloadFromPresignedUrl(file).pipe(delay(300))))
+      .subscribe();
   }
 
   protected sortChange(sort: Sort): void {
@@ -288,25 +284,18 @@ export class AssetEditorFilesComponent implements OnInit, OnDestroy, OnChanges {
     }
   }
 
-  private startFileDownload(file: ExistingAssetFile): Observable<FileBlob> {
+  private downloadFromPresignedUrl(file: ExistingAssetFile): Observable<AssetFileSignedUrl> {
     if (!this.asset) {
       throw new Error('Asset is not yet loaded.');
     }
 
-    this.activeFileDownloads.add(file.id);
-    return this.httpClient.get(`/api/assets/${this.asset.id}/files/${file.id}`, { responseType: 'blob' }).pipe(
-      map((blob) => {
-        return {
-          blob,
-          file,
-        };
-      }),
-    );
-  }
-
-  private async finalizeFileDownload(fileBlob: FileBlob) {
-    await triggerDownload(fileBlob);
-    this.activeFileDownloads.delete(fileBlob.file.id);
+    return this.httpClient
+      .get<AssetFileSignedUrl>(`/api/assets/${this.asset.id}/files/${file.id}/presigned?download=true`)
+      .pipe(
+        tap(({ url }) => {
+          triggerDownload(url, true);
+        }),
+      );
   }
 
   private transformSelectedFiles(transform: (file: AssetFormFile) => AssetFormFile): void {
@@ -368,31 +357,3 @@ export class AssetEditorFilesComponent implements OnInit, OnDestroy, OnChanges {
     this.fileProcessingStates.set(newFileProcessingStates);
   }
 }
-
-interface FileBlob {
-  blob: Blob;
-  file: ExistingAssetFile;
-}
-
-const triggerDownload = async ({ blob, file }: FileBlob) => {
-  const isPdf = file.name.endsWith('.pdf');
-  if (isPdf) {
-    blob = await blob.arrayBuffer().then((buffer) => new Blob([buffer], { type: 'application/pdf' }));
-  }
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement('a');
-
-  anchor.setAttribute('style', 'display: none');
-  anchor.href = url;
-  if (!isPdf) {
-    anchor.download = file.name;
-  } else {
-    anchor.target = '_blank';
-  }
-  document.body.appendChild(anchor);
-  anchor.click();
-  anchor.remove();
-  setTimeout(() => {
-    window.URL.revokeObjectURL(url);
-  });
-};
