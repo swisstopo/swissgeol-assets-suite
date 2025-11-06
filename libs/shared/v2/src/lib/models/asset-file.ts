@@ -94,6 +94,10 @@ export interface UpdateAssetFileData {
   pageRangeClassifications: PageRangeClassification[] | null;
 }
 
+export interface AssetFileSignedUrl {
+  url: string;
+}
+
 export enum LegalDocCode {
   FederalData = 'federalData',
   PermissionForm = 'permissionForm',

@@ -1,8 +1,9 @@
 import { Type } from 'class-transformer';
-import { IsDate, IsEnum, IsIn, IsInt, IsString, ValidateNested } from 'class-validator';
+import { IsDate, IsEnum, IsIn, IsInt, IsString, IsUrl, ValidateNested } from 'class-validator';
 import {
   AssetFile,
   AssetFileId,
+  AssetFileSignedUrl,
   FileProcessingStage,
   FileProcessingState,
   LegalDocCode,
@@ -73,4 +74,9 @@ export class UpdateAssetFileDataSchema extends Schema implements UpdateAssetFile
 
   @IsNullable()
   pageRangeClassifications!: PageRangeClassification[] | null;
+}
+
+export class AssetFileSignedUrlSchema extends Schema implements AssetFileSignedUrl {
+  @IsUrl()
+  url!: string;
 }
