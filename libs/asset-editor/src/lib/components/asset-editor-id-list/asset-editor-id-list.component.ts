@@ -20,6 +20,7 @@ export class AssetEditorIdListComponent {
       return id;
     });
     this.control.setValue(identifier);
+    this.control.markAsDirty();
   }
 
   get identifiers(): Array<AssetIdentifier | AssetIdentifierData> {
