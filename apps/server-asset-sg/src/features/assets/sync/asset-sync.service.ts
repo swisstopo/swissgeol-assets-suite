@@ -1,5 +1,5 @@
 import fs, { rm } from 'fs/promises';
-import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { Cron, SchedulerRegistry } from '@nestjs/schedule';
 import { CronJob } from 'cron';
 import { AssetRepo } from '@/features/assets/asset.repo';
@@ -8,7 +8,7 @@ import { AssetSearchService } from '@/features/assets/search/asset-search.servic
 const at2AM = '0 2 * * *';
 
 @Injectable()
-export class AssetSyncService implements OnApplicationBootstrap {
+export class AssetSyncService {
   private readonly logger = new Logger(AssetSyncService.name);
 
   constructor(
@@ -17,8 +17,9 @@ export class AssetSyncService implements OnApplicationBootstrap {
     private readonly assetRepo: AssetRepo,
   ) {}
 
-  public async onApplicationBootstrap() {
+  public async startCronJob(): Promise<void> {
     await this.clearSyncFileIfExists();
+    await this.startSync();
 
     if (process.env.ANONYMOUS_MODE === 'true') {
       this.logger.log('Anonymous Mode is activated. Search Index will be automatically synced.');
@@ -36,7 +37,7 @@ export class AssetSyncService implements OnApplicationBootstrap {
     if (process.env.ANONYMOUES_MODE !== 'true') {
       this.logger.log('Starting scheduled sync after external sync');
       await this.clearSyncFileIfExists();
-      await this.start();
+      await this.startSync();
     }
   }
 
@@ -68,7 +69,7 @@ export class AssetSyncService implements OnApplicationBootstrap {
       .catch(() => false);
   }
 
-  public async start(): Promise<void> {
+  public async startSync(): Promise<void> {
     if (await this.isSyncRunning()) {
       this.logger.debug('Sync already running.');
       return;
@@ -92,7 +93,7 @@ export class AssetSyncService implements OnApplicationBootstrap {
     const numberOfIndexedAssets = await this.assetSearchService.count();
     this.logger.debug('startSyncIfIndexOutOfSync', { assets: numberOfAssets, indexedAssets: numberOfIndexedAssets });
     if (numberOfAssets !== numberOfIndexedAssets) {
-      await this.start();
+      await this.startSync();
     }
   }
 }

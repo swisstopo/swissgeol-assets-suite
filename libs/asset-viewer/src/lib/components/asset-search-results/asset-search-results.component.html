@@ -1,7 +1,7 @@
 <ng-container *rxLet="isResultsOpen$; let isResultsOpen">
   <div class="header">
     <div>
-      <asset-sg-animate-number [nextValue]="(total$ | async) ?? 0" />
+      <asset-sg-animate-number [nextValue]="(total$ | async) ?? 0" data-testid="assetCount" />
       {{ "search.searchResults" | translate }}
     </div>
     <button asset-sg-tertiary (click)="toggleResultsOpen()">

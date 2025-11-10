@@ -141,6 +141,7 @@
                     variant="icon"
                     size="small"
                     justify="center"
+                    data-testid="page-range-editor-button"
                     (click)="openPageRangeEditor(control.value)"
                   >
                     <sgc-icon name="tableOfContents" />
@@ -164,7 +165,11 @@
               </td>
             </ng-container>
             <tr mat-header-row *matHeaderRowDef="displayedColumns" class="table__header"></tr>
-            <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+            <tr
+              mat-row
+              *matRowDef="let row; columns: displayedColumns"
+              [attr.data-testid]="'file-' + row.value.id"
+            ></tr>
           </table>
         </div>
       }

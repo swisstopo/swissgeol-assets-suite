@@ -59,23 +59,12 @@ jobs:
           key: "${{ runner.os }}-node_modules-${{ env.NODE_VERSION }}-${{ hashFiles('package-lock.json') }}-${{ hashFiles('**/schema.prisma') }}"
           restore-keys: |
             ${{ runner.os }}-node_modules-
-      - name: Cache e2e node modules
-        uses: actions/cache@v4
-        with:
-          path: ./e2e/node_modules
-          key: "${{ runner.os }}-node_modules_e2e-${{ env.NODE_VERSION }}-${{ hashFiles('./e2e/package-lock.json') }}"
-          restore-keys: |
-            ${{ runner.os }}-node_modules_e2e-
       - name: Install node dependencies
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npm install
       - name: Generate prisma types
         run: npm run prisma -- generate
-      - name: Install e2e node dependencies
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: cd e2e && npm ci
 
   test:
     runs-on: ubuntu-latest
@@ -190,13 +179,24 @@ jobs:
           DB_PASSWORD: ${{ env.DB_PASSWORD }}
         run: |
           cd development
+
+          # OCR env file - needs to exist for the OCR service to start.
           touch .env.ocr
+
+          # Ensure that the elasticsearch initialization script is executable.
           dos2unix ./init/elasticsearch/init.sh
           chmod +x ./init/elasticsearch/init.sh
           chmod +r ./init/elasticsearch/mappings/swissgeol_asset_asset.json
-          sed -i 's/- \.\/volumes\/elasticsearch\/data:\/usr\/share\/elasticsearch\/data//g' ./docker-compose.yaml
-          docker compose up -d --quiet-pull db oidc elasticsearch
-          sleep 120
+
+          # Start all required services.
+          docker compose up -d --quiet-pull db oidc elasticsearch ocr dataextraction storage createbuckets
+
+          # Wait for the services to run.
+          chmod +x ../.github/scripts/wait_for_service.sh
+          ../.github/scripts/wait_for_service.sh db
+          ../.github/scripts/wait_for_service.sh storage
+          ../.github/scripts/wait_for_service.sh elasticsearch
+          ../.github/scripts/wait_for_service.sh oidc
       - name: Migrate database
         run: |
           set -e
@@ -207,27 +207,29 @@ jobs:
               psql --dbname=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:5432/${POSTGRES_DB} -v ON_ERROR_STOP=1 -f $file
             done
           '
-      - name: Restore cached e2e node modules
-        uses: actions/cache/restore@v4
-        with:
-          path: ./e2e/node_modules
-          key: "${{ runner.os }}-node_modules_e2e-${{ env.NODE_VERSION }}-${{ hashFiles('./e2e/package-lock.json') }}"
+      - name: Create fixtures
+        run: |
+          set -e
+          if ! npm run api-command -- fixtures:create; then
+            cd development
+            docker compose logs dataextraction
+            exit 1
+          fi
       - name: Cypress run
         uses: cypress-io/github-action@v6
         with:
           command: |
-            npx cypress run \
+            npm run cypress:run -- \
               --browser edge \
               --record \
               --key ${{ secrets.CYPRESS_RECORD_KEY }} \
-          build: npm run build
           start: npm start
           wait-on: "http://localhost:4200"
           wait-on-timeout: 120
-          working-directory: ./e2e
         env:
           TZ: Europe/Zurich
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CYPRESS_SKIP_E2E_SETUP: true
       - name: Stop services
         if: always()
         run: |

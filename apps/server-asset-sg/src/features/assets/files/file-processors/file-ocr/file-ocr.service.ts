@@ -1,4 +1,3 @@
-import { exit } from 'node:process';
 import { FileProcessingStage, FileProcessingState } from '@asset-sg/shared/v2';
 import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
@@ -10,18 +9,13 @@ import {
   ProcessableFile,
 } from '@/features/assets/files/file-processors/abstract-processing.service';
 import { FileS3Service } from '@/features/assets/files/file-s3.service';
-
-const serviceUrl = process.env.OCR_SERVICE_URL as string;
-if (serviceUrl == null || serviceUrl.length == 0) {
-  console.error("Missing 'OCR_SERVICE_URL' environment variable.");
-  exit(1);
-}
+import { requireEnv } from '@/utils/requireEnv';
 
 @Injectable()
 export class FileOcrService extends AbstractProcessingService<[]> {
   protected readonly logger = new Logger(FileOcrService.name);
   protected readonly processingStage = FileProcessingStage.Ocr;
-  protected readonly serviceUrl = serviceUrl;
+  protected readonly serviceUrl = requireEnv('OCR_SERVICE_URL');
   protected readonly serviceVersion = undefined;
 
   constructor(

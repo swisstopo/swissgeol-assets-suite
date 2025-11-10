@@ -3,6 +3,8 @@ import { DialogModule } from '@angular/cdk/dialog';
 import { CommonModule, NgOptimizedImage, registerLocaleData } from '@angular/common';
 import { HTTP_INTERCEPTORS, provideHttpClient, withFetch, withInterceptorsFromDi } from '@angular/common/http';
 import locale_deCH from '@angular/common/locales/de-CH';
+import locale_frCH from '@angular/common/locales/fr-CH';
+import locale_itCH from '@angular/common/locales/it-CH';
 import { NgModule } from '@angular/core';
 import { MatBadge } from '@angular/material/badge';
 import { MatButton } from '@angular/material/button';
@@ -53,6 +55,8 @@ import { AppSharedStateEffects } from './state';
 import { appSharedStateReducer } from './state/app-shared.reducer';
 
 registerLocaleData(locale_deCH, 'de-CH');
+registerLocaleData(locale_frCH, 'fr-CH');
+registerLocaleData(locale_itCH, 'it-CH');
 
 const loadAssetViewer = () => import('@asset-sg/asset-viewer').then((m) => m.AssetViewerModule);
 

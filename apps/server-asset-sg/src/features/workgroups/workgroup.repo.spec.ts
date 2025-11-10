@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { Role, WorkgroupData } from '@asset-sg/shared/v2';
 import { faker } from '@faker-js/faker';
 // eslint-disable-next-line @nx/enforce-module-boundaries
@@ -182,9 +183,10 @@ describe('WorkgroupRepo', () => {
       const updatedWorkgroup = await repo.update(workgroup.id, data);
 
       //Then
-      expect(updatedWorkgroup.name).toEqual(data.name);
-      expect(updatedWorkgroup.disabledAt).toEqual(data.disabledAt);
-      expect(updatedWorkgroup.users).toEqual(data.users);
+      expect(updatedWorkgroup).not.toBeNull();
+      expect(updatedWorkgroup!.name).toEqual(data.name);
+      expect(updatedWorkgroup!.disabledAt).toEqual(data.disabledAt);
+      expect(updatedWorkgroup!.users).toEqual(data.users);
     });
   });
   describe('delete', () => {
