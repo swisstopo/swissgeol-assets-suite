@@ -1,0 +1,22 @@
+<div class="header">
+  <sgc-button
+    class="header__button"
+    color="tertiary"
+    variant="icon"
+    [isTransparent]="true"
+    (click)="this.onDownloadClick()"
+    [hidden]="hideDownloadButton"
+  >
+    <sgc-icon name="download" size="normal"></sgc-icon>
+  </sgc-button>
+  <sgc-button
+    class="header__button"
+    color="tertiary"
+    variant="icon"
+    [isTransparent]="true"
+    (click)="this.onCloseClick()"
+    [hidden]="hideCloseButton"
+  >
+    <sgc-icon name="cross" size="normal"></sgc-icon>
+  </sgc-button>
+</div>

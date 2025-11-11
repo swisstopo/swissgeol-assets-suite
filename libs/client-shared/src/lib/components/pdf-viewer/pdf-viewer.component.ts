@@ -1,5 +1,6 @@
 import { DragDrop, DragRef } from '@angular/cdk/drag-drop';
 import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 import {
   AfterViewInit,
   Component,
@@ -13,10 +14,13 @@ import {
   ViewChild,
 } from '@angular/core';
 import { MatProgressBar } from '@angular/material/progress-bar';
+import { AssetFileSignedUrl } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
 import { TranslateService } from '@ngx-translate/core';
 import { showAlert } from '../../state/alert/alert.actions';
 import { AlertType } from '../../state/alert/alert.model';
+import { triggerDownload } from '../../utils';
+import { PdfViewerHeaderComponent } from './pdf-viewer-header/pdf-viewer-header.component';
 import {
   PdfNavigationAction,
   PdfViewerNavigationComponent,
@@ -51,12 +55,14 @@ const ZOOM_STEP = 0.5;
     PdfViewerNavigationComponent,
     PdfViewerZoomComponent,
     PdfViewerRotateComponent,
+    PdfViewerHeaderComponent,
   ],
   templateUrl: './pdf-viewer.component.html',
   styleUrl: './pdf-viewer.component.scss',
   providers: [PdfViewerService],
 })
 export class PdfViewerComponent implements AfterViewInit, OnDestroy {
+  // todo: add output events
   @ViewChild('pdf') public pdfElement!: ElementRef<HTMLDivElement>;
   @Input({ required: true }) public pdfId!: number;
   @Input({ required: true }) public assetId!: number;
@@ -77,6 +83,7 @@ export class PdfViewerComponent implements AfterViewInit, OnDestroy {
   private rotation = 0;
   private readonly cdkDragHandler = inject(DragDrop);
   private readonly dragHandlers: Set<DragRef> = new Set();
+  private readonly httpClient = inject(HttpClient);
 
   public async ngAfterViewInit() {
     try {
@@ -230,5 +237,18 @@ export class PdfViewerComponent implements AfterViewInit, OnDestroy {
     await this.pdfViewerService.renderPageToCanvas(canvas, pageNum, parentWidth, parentHeight, this.zoom());
     this.pdfCanvasElements.set(pageNum, canvas);
     this.isRendering.set(false);
+  }
+
+  protected closeViewer() {
+    // Placeholder for closing the viewer, implementation depends on how the viewer is integrated
+    console.log('Closing PDF viewer');
+  }
+
+  protected downloadPdf() {
+    this.httpClient
+      .get<AssetFileSignedUrl>(`/api/assets/${this.assetId}/files/${this.pdfId}/presigned?download=true`)
+      .subscribe(({ url }) => {
+        triggerDownload(url, true);
+      });
   }
 }
