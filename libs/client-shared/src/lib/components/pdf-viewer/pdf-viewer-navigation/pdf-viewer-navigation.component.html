@@ -3,8 +3,8 @@
     color="tertiary"
     variant="icon"
     [isTransparent]="true"
-    (click)="handleNavigate('start')"
-    [isDisabled]="disableInteractions || currentPage === 1"
+    (click)="this.handleNavigate('start')"
+    [isDisabled]="this.disableInteractions() || this.currentPage() === 1"
   >
     <sgc-icon name="first" size="normal"></sgc-icon>
   </sgc-button>
@@ -12,14 +12,14 @@
     color="tertiary"
     variant="icon"
     [isTransparent]="true"
-    (click)="handleNavigate('previous')"
-    [isDisabled]="disableInteractions || currentPage === 1"
+    (click)="this.handleNavigate('previous')"
+    [isDisabled]="this.disableInteractions() || this.currentPage() === 1"
   >
     <sgc-icon name="chevronLeft" size="normal"></sgc-icon>
   </sgc-button>
   <span class="navigation__page-count">
-    @if (this.currentPage && this.pageCount) {
-      {{ this.currentPage }} / {{ this.pageCount }}
+    @if (this.currentPage() && this.pageCount()) {
+      {{ this.currentPage() }} / {{ this.pageCount() }}
     } @else {
       - / -
     }
@@ -28,8 +28,8 @@
     color="tertiary"
     variant="icon"
     [isTransparent]="true"
-    (click)="handleNavigate('next')"
-    [isDisabled]="disableInteractions || currentPage === pageCount"
+    (click)="this.handleNavigate('next')"
+    [isDisabled]="this.disableInteractions() || this.currentPage() === this.pageCount()"
   >
     <sgc-icon name="chevronRight" size="normal"></sgc-icon>
   </sgc-button>
@@ -37,8 +37,8 @@
     color="tertiary"
     variant="icon"
     [isTransparent]="true"
-    (click)="handleNavigate('end')"
-    [isDisabled]="disableInteractions || currentPage === pageCount"
+    (click)="this.handleNavigate('end')"
+    [isDisabled]="this.disableInteractions() || this.currentPage() === this.pageCount()"
   >
     <sgc-icon name="last" size="normal"></sgc-icon>
   </sgc-button>

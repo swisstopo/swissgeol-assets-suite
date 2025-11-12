@@ -1,8 +1,16 @@
 <div class="viewer-wrapper">
-  <asset-sg-pdf-viewer-header
-    (downloadPdf)="this.downloadPdf()"
-    (closeViewer)="this.closeViewer()"
-  ></asset-sg-pdf-viewer-header>
+  @if (!this.hideHeader()) {
+    <asset-sg-pdf-viewer-header
+      (downloadPdf)="this.downloadPdf()"
+      (closeViewer)="this.onCloseViewer()"
+      [(selectedPdf)]="this.selectedPdf"
+      [assetPdfs]="this.assetPdfs()"
+      [hidePdfSelection]="this.hidePdfSelection()"
+      [hideDownloadButton]="this.hideDownloadButton()"
+      [hideCloseButton]="this.hideCloseButton()"
+    ></asset-sg-pdf-viewer-header>
+  }
+
   <div class="viewer">
     @if (isRendering() || hasError()) {
       <mat-progress-bar

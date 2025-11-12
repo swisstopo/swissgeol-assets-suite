@@ -1,5 +1,5 @@
 import { inject, Injectable, OnDestroy } from '@angular/core';
-import { getDocument, GlobalWorkerOptions, PageViewport, PDFDocumentProxy } from 'pdfjs-dist';
+import { getDocument, GlobalWorkerOptions, PageViewport, PDFDocumentLoadingTask, PDFDocumentProxy } from 'pdfjs-dist';
 import { PDFPageProxy } from 'pdfjs-dist/types/src/display/api';
 import { SessionStorageService } from '../../services/session-storage.service';
 
@@ -8,11 +8,12 @@ GlobalWorkerOptions.workerSrc = 'assets/pdfjs/pdf.worker.min.mjs';
 
 @Injectable()
 export class PdfViewerService implements OnDestroy {
+  private loadingTask: PDFDocumentLoadingTask | undefined;
   private pdfDoc: PDFDocumentProxy | undefined;
   private readonly sessionStorageService = inject(SessionStorageService);
 
   async ngOnDestroy() {
-    await this.pdfDoc?.destroy();
+    await this.destroyPdfJsWorker();
   }
 
   /**
@@ -29,7 +30,9 @@ export class PdfViewerService implements OnDestroy {
    * @param pdfId
    */
   public async loadPdf(assetId: number, pdfId: number): Promise<number> {
-    const loadingTask = getDocument({
+    await this.destroyPdfJsWorker();
+
+    this.loadingTask = getDocument({
       url: `/api/assets/${assetId}/files/${pdfId}`,
       httpHeaders: {
         Authorization: `Bearer ${this.sessionStorageService.get('access_token')}`,
@@ -38,7 +41,7 @@ export class PdfViewerService implements OnDestroy {
       disableStream: true,
     });
     try {
-      this.pdfDoc = await loadingTask.promise;
+      this.pdfDoc = await this.loadingTask.promise;
       return this.pdfDoc.numPages;
     } catch (e) {
       /**
@@ -87,5 +90,10 @@ export class PdfViewerService implements OnDestroy {
     const scale = Math.min(parentWidth / unscaledViewport.width, parentHeight / unscaledViewport.height) * zoom;
 
     return page.getViewport({ scale });
+  }
+
+  private async destroyPdfJsWorker() {
+    await this.loadingTask?.destroy();
+    await this.pdfDoc?.destroy();
   }
 }

@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, input, output } from '@angular/core';
 import { SgcButton, SgcIcon } from '@swissgeol/ui-core-angular';
 
 @Component({
@@ -8,8 +8,8 @@ import { SgcButton, SgcIcon } from '@swissgeol/ui-core-angular';
   imports: [SgcButton, SgcIcon],
 })
 export class PdfViewerRotateComponent {
-  @Input() public disableInteractions = false;
-  @Output() public rotateClockwise = new EventEmitter<void>();
+  public readonly disableInteractions = input(false);
+  public readonly rotateClockwise = output();
 
   protected handleRotateClockwise() {
     this.rotateClockwise.emit();
