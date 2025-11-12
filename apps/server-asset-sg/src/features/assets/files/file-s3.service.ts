@@ -8,8 +8,11 @@ import {
   S3ClientConfig,
   S3ServiceException,
 } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { Injectable } from '@nestjs/common';
 import { readEnv, requireEnv } from '@/utils/requireEnv';
+
+const PRESIGNED_URL_DURATION_IN_SECONDS = 60;
 
 @Injectable()
 export class FileS3Service {
@@ -21,6 +24,15 @@ export class FileS3Service {
     this.bucket = requireEnv('S3_BUCKET_NAME');
     this.folder = requireEnv('S3_ASSET_FOLDER');
     this.client = new S3Client(loadS3ClientConfig());
+  }
+
+  async getPresignedUrl(name: string, alias: string | null, forceDownload = false): Promise<string> {
+    const command = new GetObjectCommand({
+      Key: this.getKey(name),
+      Bucket: this.bucket,
+      ResponseContentDisposition: forceDownload ? 'attachment; filename="' + (alias ?? name) + '"' : '',
+    });
+    return getSignedUrl(this.client, command, { expiresIn: PRESIGNED_URL_DURATION_IN_SECONDS });
   }
 
   async save(name: string, content: Buffer, options: SaveFileS3Options): Promise<void> {

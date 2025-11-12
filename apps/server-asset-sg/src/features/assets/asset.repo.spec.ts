@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 // eslint-disable-next-line @nx/enforce-module-boundaries
 import { clearPrismaAssets, setupDB } from '../../../../../test/setup-db';
 
@@ -159,26 +160,27 @@ describe(AssetRepo, () => {
       const updated = await repo.update(record.id, data);
 
       // Then
-      expect(updated.id).toEqual(record.id);
-      expect(updated.title).toEqual(data.title);
-      expect(updated.originalTitle).toEqual(data.originalTitle);
-      expect(updated.createdAt).toEqual(data.createdAt);
-      expect(updated.receivedAt).toEqual(data.receivedAt);
-      expect(updated.isPublic).toEqual(data.isPublic);
-      expect(updated.kindCode).toEqual(data.kindCode);
-      expect(updated.formatCode).toEqual(data.formatCode);
-      expect(updated.isOfNationalInterest).toEqual(data.isOfNationalInterest);
-      expect(updated.legacyData).toBeNull();
-      expect(updated.identifiers).toEqual(data.identifiers);
-      expect(updated.contacts).toEqual(data.contacts);
-      expect(updated.languageCodes).toEqual(data.languageCodes);
-      expect(updated.topicCodes).toEqual(data.topicCodes);
-      expect(updated.nationalInterestTypeCodes).toEqual(data.nationalInterestTypeCodes);
-      expect(updated.parent).toBeNull();
-      expect(updated.children).toEqual([]);
-      expect(updated.siblings).toEqual([]);
-      expect(updated.files).toEqual([]);
-      expect(updated.workgroupId).toEqual(data.workgroupId);
+      expect(updated).not.toBeNull();
+      expect(updated!.id).toEqual(record.id);
+      expect(updated!.title).toEqual(data.title);
+      expect(updated!.originalTitle).toEqual(data.originalTitle);
+      expect(updated!.createdAt).toEqual(data.createdAt);
+      expect(updated!.receivedAt).toEqual(data.receivedAt);
+      expect(updated!.isPublic).toEqual(data.isPublic);
+      expect(updated!.kindCode).toEqual(data.kindCode);
+      expect(updated!.formatCode).toEqual(data.formatCode);
+      expect(updated!.isOfNationalInterest).toEqual(data.isOfNationalInterest);
+      expect(updated!.legacyData).toBeNull();
+      expect(updated!.identifiers).toEqual(data.identifiers);
+      expect(updated!.contacts).toEqual(data.contacts);
+      expect(updated!.languageCodes).toEqual(data.languageCodes);
+      expect(updated!.topicCodes).toEqual(data.topicCodes);
+      expect(updated!.nationalInterestTypeCodes).toEqual(data.nationalInterestTypeCodes);
+      expect(updated!.parent).toBeNull();
+      expect(updated!.children).toEqual([]);
+      expect(updated!.siblings).toEqual([]);
+      expect(updated!.files).toEqual([]);
+      expect(updated!.workgroupId).toEqual(data.workgroupId);
     });
   });
 

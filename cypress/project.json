@@ -1,0 +1,27 @@
+{
+  "name": "cypress",
+  "sourceRoot": "cypress/",
+  "targets": {
+    "e2e": {
+      "executor": "@nx/cypress:cypress",
+      "options": {
+        "cypressConfig": "cypress/cypress.config.ts",
+        "testingType": "e2e",
+        "baseUrl": "http://localhost:4200"
+      },
+      "configurations": {
+        "local": { "baseUrl": "http://localhost:4200" }
+      },
+      "dependsOn": ["^serve"]
+    },
+    "component": {
+      "executor": "@nx/cypress:cypress",
+      "options": {
+        "cypressConfig": "cypress/cypress.component.config.ts",
+        "testingType": "component"
+      }
+    }
+  },
+  "tags": ["scope:root-e2e"],
+  "implicitDependencies": ["client-asset-sg"]
+}

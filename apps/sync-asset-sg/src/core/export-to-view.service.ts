@@ -166,7 +166,7 @@ export class ExportToViewService {
     result = await this.destinationPrisma.assetFile.createMany({ data: filteredAssets.assetFiles });
     log(`Created ${result.count} assetFiles.`, 'batch');
 
-    const geometriesToPublish = assetIds.filter((f) => this.publicAssetConfigs.get(f).publishData.geometries);
+    const geometriesToPublish = assetIds.filter((f) => this.publicAssetConfigs.get(f)?.publishData.geometries);
     for (const [idx, batch] of this.batchList(geometriesToPublish, BATCH_SIZE_GEOMETRIES).entries()) {
       log(`Creating batch #${idx + 1} of geometries`, 'batch');
       await this.exportGeometries(batch, 'study_area');
@@ -238,9 +238,13 @@ export class ExportToViewService {
    * Export all entries of the table.
    */
   private async exportTable(table: string) {
-    const items = await this.sourcePrisma[table].findMany();
-    const result = await this.destinationPrisma[table].createMany({ data: items, skipDuplicates: true });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const source: any = this.sourcePrisma[table as keyof PrismaClient];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const destination: any = this.destinationPrisma[table as keyof PrismaClient];
 
+    const items = await source.findMany();
+    const result = await destination.createMany({ data: items, skipDuplicates: true });
     log(`Created ${result.count} ${table}.`);
   }
 
@@ -248,9 +252,12 @@ export class ExportToViewService {
    * Export table with ids.
    */
   private async export(table: string, idField: string, ids: number[], partOfBatch = false) {
-    const items = await this.sourcePrisma[table].findMany({ where: { [idField]: { in: ids } } });
-    const result = await this.destinationPrisma[table].createMany({ data: items, skipDuplicates: true });
-
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const source: any = this.sourcePrisma[table as keyof PrismaClient];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const destination: any = this.destinationPrisma[table as keyof PrismaClient];
+    const items = await source.findMany({ where: { [idField]: { in: ids } } });
+    const result = await destination.createMany({ data: items, skipDuplicates: true });
     log(`Created ${result.count} ${table}.`, partOfBatch ? 'batch' : 'main');
   }
 
@@ -260,7 +267,7 @@ export class ExportToViewService {
    */
   private async exportSiblings(ids: number[], allPublicAssetIds: number[]) {
     const assetIdsWithReferencesForPublication = ids.filter(
-      (id) => this.publicAssetConfigs.get(id).publishData.references,
+      (id) => this.publicAssetConfigs.get(id)?.publishData.references,
     );
     const itemsX = await this.sourcePrisma.assetXAssetY.findMany({
       where: { assetXId: { in: assetIdsWithReferencesForPublication } },
@@ -274,7 +281,7 @@ export class ExportToViewService {
       .filter(
         (item) =>
           allPublicAssetIds.includes(item.assetYId) &&
-          this.publicAssetConfigs.get(item.assetYId).publishData.references,
+          this.publicAssetConfigs.get(item.assetYId)?.publishData.references,
       )
       .map((item) => item);
     const result = await this.destinationPrisma.assetXAssetY.createMany({ data: publicSiblings });
@@ -329,7 +336,12 @@ export class ExportToViewService {
     const filteredAssetFiles: Prisma.AssetFileCreateManyInput[] = [];
     const filteredAssetContacts: Prisma.AssetContactCreateManyInput[] = [];
     for (const { assetFiles, assetContacts, ...asset } of assets) {
-      const { publishData } = this.publicAssetConfigs.get(asset.assetId);
+      const publicAssetConfig = this.publicAssetConfigs.get(asset.assetId);
+      if (publicAssetConfig === undefined) {
+        continue;
+      }
+      const { publishData } = publicAssetConfig;
+
       // todo: fix module boundaries for ContactAssignmentRole
       if (publishData.authors) {
         filteredAssetContacts.push(...assetContacts.filter((c) => c.role === 'author'));
