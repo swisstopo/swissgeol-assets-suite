@@ -8,6 +8,20 @@
 
 ### Fixed
 
+## v.1.15.0
+
+### Added
+
+- Für neu hochgeladene Files wird automatisch ein Data Extraction Service verwendet, um Metadaten für jede Seite zu extrahieren. Diese beinhalten die Kategorien und Sprachen.
+- Für bestehende Files kann der Data Extraction Service manuell über die Detailansicht eines Assets angestossen werden.
+- Die Seitenklassifizierung kann manuell in der Detailansicht eines Assets angepasst werden.
+
+### Changed
+
+### Fixed
+
+- Im Bearbeitungsmodus können Alterniativ-Ids nun direkt nach dem Ändern gespeichert werden.
+
 ## v1.14.0
 
 ### Added
