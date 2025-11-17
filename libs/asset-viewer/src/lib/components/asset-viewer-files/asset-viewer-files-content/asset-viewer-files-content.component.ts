@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, computed, input, output } from '@angular/core';
 import { LegalDocCode, PageCategory, PageRangeClassification, SupportedPageLanguage } from '@asset-sg/shared/v2';
 
 type GroupedPageClassifications = { [key in PageCategory]?: PageRangeClassification[] };
@@ -15,13 +15,16 @@ type PageContent = {
   standalone: false,
 })
 export class AssetViewerFilesContentComponent {
-  @Input({ required: true }) public pageCount!: number | null;
-  @Input({ required: true }) public legalDocCode!: LegalDocCode | null;
-  protected groupedPageClassifications!: PageContent;
+  public readonly pageCount = input.required<number | null>();
+  public readonly legalDocCode = input.required<LegalDocCode | null>();
+  public readonly pageRangeClassifications = input.required<PageRangeClassification[]>();
+  public readonly openOnPage = output<number>();
+  protected readonly groupedPageClassifications = computed(() =>
+    this.extractGroupedPageRageClassifications(this.pageRangeClassifications()),
+  );
 
-  @Input({ required: true })
-  public set pageRangeClassifications(value: PageRangeClassification[]) {
-    this.groupedPageClassifications = this.extractGroupedPageRageClassifications(value);
+  protected openPdfOnPage(pageNumber: number): void {
+    this.openOnPage.emit(pageNumber);
   }
 
   private extractGroupedPageRageClassifications(pageRangeClassifications: PageRangeClassification[]): PageContent {

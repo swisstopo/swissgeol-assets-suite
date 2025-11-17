@@ -27,4 +27,4 @@ export * from './date-picker/date-picker.component';
 export * from './form-item-wrapper/form-item-wrapper.component';
 export * from './status-chip/status-chip.component';
 export * from './pdf-viewer/pdf-viewer.component';
-export * from './pdf-viewer/pdf-overlay/pdf-overlay.component';
+export * from './pdf-viewer/pdf-overlay/pdf-overlay.service';

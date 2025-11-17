@@ -6,6 +6,7 @@ export interface PdfOverlayData {
   assetId: number;
   assetPdfs: PdfViewerFile[];
   initialPdfId?: number;
+  initialPageNumber?: number;
 }
 @Component({
   selector: 'asset-sg-pdf-overlay',

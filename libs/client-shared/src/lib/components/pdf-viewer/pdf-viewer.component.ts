@@ -81,6 +81,7 @@ export class PdfViewerComponent implements OnDestroy {
   public readonly assetId = input.required<number>();
   public readonly assetPdfs = input.required<PdfViewerFile[]>();
   public readonly initialPdfId = input<number>();
+  public readonly initialPageNumber = input<number>();
   public readonly exitViewer = output();
   protected readonly currentPage = signal(-1);
   protected readonly hasError = signal(false);
@@ -219,7 +220,7 @@ export class PdfViewerComponent implements OnDestroy {
     try {
       const pageNum = await this.pdfViewerService.loadPdf(this.assetId(), pdfId);
       this.pageCount.set(pageNum);
-      await this.renderPage(1);
+      await this.renderPage(this.initialPageNumber() ?? 1);
     } catch (e) {
       this.hasError.set(true);
       this.store.dispatch(

@@ -130,6 +130,7 @@ export const itTranslationMapping: AppTranslationMapping = {
     legalFile: 'IT Rechtliche Einwilligungen',
     openFileInNewTab: 'IT {{fileName}} in neuem Tab öffnen',
     downloadFile: 'IT {{fileName}} herunterladen',
+    openPdf: 'IT PDF öffnen',
     assetsUnderMouseCursor: 'IT {{ assetsCount }} Assets unter dem Mauszeiger gefunden. Bitte wählen Sie eines aus:',
     removePolygon: 'IT Polygon aufheben',
     drawPolygon: 'IT Draw polygon',

@@ -130,6 +130,7 @@ export const frTranslationMapping: AppTranslationMapping = {
     legalFile: 'Consentements légaux',
     openFileInNewTab: 'Ouvrir {{fileName}} dans un nouvel onglet',
     downloadFile: 'Télécharger {{fileName}}',
+    openPdf: 'Ouvrir le PDF',
     assetsUnderMouseCursor:
       '{{ assetsCount }} ssets trouvés sous le curseur de la souris. Veuillez en sélectionner un :',
     removePolygon: 'Annuler le polygone',

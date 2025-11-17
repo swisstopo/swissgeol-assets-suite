@@ -9,8 +9,7 @@ import {
   ConfirmDialogComponent,
   ConfirmDialogData,
   fromAppShared,
-  PdfOverlayComponent,
-  PdfOverlayData,
+  PdfOverlayService,
   triggerDownload,
 } from '@asset-sg/client-shared';
 import { isNotNull } from '@asset-sg/core';
@@ -82,6 +81,7 @@ export class AssetEditorFilesComponent implements OnInit, OnDestroy, OnChanges {
   private readonly httpClient = inject(HttpClient);
   private readonly subscriptions: Subscription = new Subscription();
   private readonly dialogService: MatDialog = inject(MatDialog);
+  private readonly pdfOverlayService = inject(PdfOverlayService);
 
   protected get hasSelectedFiles(): boolean {
     return this.selectedFiles.size !== 0;
@@ -190,17 +190,13 @@ export class AssetEditorFilesComponent implements OnInit, OnDestroy, OnChanges {
 
   protected openPdfPreview(file: AssetFormFile) {
     if (isExistingAssetFile(file)) {
-      this.dialogService.open<PdfOverlayComponent, PdfOverlayData>(PdfOverlayComponent, {
-        data: {
-          assetId: this.asset!.id,
-          initialPdfId: file.id,
-          assetPdfs: this.asset!.files.filter((f) => isExistingAssetFile(f) && f.name.endsWith('.pdf')).map((f) => ({
-            id: f.id,
-            fileName: f.name,
-          })),
-        },
-        width: '925px',
-        autoFocus: false,
+      this.pdfOverlayService.openPdfOverlay({
+        assetId: this.asset!.id,
+        initialPdfId: file.id,
+        assetPdfs: this.asset!.files.filter((f) => isExistingAssetFile(f) && f.name.endsWith('.pdf')).map((f) => ({
+          id: f.id,
+          fileName: f.name,
+        })),
       });
     }
   }
