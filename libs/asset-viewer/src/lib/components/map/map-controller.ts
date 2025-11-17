@@ -296,9 +296,6 @@ export class MapController {
     this.sources.activeAsset.clear();
     this.layers.assetGeometries.setOpacity(1);
     this.layers.assetLocations.setOpacity(1);
-    window.requestAnimationFrame(() => {
-      resetZoom(this.map.getView(), { isAnimated: true });
-    });
   }
 
   getPosition(): MapPosition | null {
@@ -513,7 +510,7 @@ export class MapController {
   }
 
   private hideFeature(feature: Feature): void {
-    feature.set('previousStyle', feature.getStyle());
+    feature.set('previousStyle', feature.getStyle() ?? availableLayerStyles[defaultLayerStyle].styleFunction);
     feature.setStyle(new Style(undefined));
   }
 
