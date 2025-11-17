@@ -201,10 +201,6 @@ export class MapController {
           [CustomFeatureProperties.AccessType]: mapAssetAccessToAccessType(asset),
         });
         features.push(feature);
-        const locationFeature = this.sources.assetLocations.getFeatureById(geometry.id);
-        if (locationFeature != null) {
-          this.hideFeature(locationFeature);
-        }
         geometries.push(geometry);
       }
     }
@@ -215,18 +211,6 @@ export class MapController {
       if (this.isInitialized) {
         zoomToGeometries(this.map, geometries);
       }
-    });
-  }
-
-  clearAssets(): void {
-    this.assetsById.clear();
-    window.requestAnimationFrame(() => {
-      this.sources.assetGeometries.clear();
-      this.sources.polygon.clear();
-      this.sources.picker.clear();
-      this.sources.assetLocations.forEachFeature((feature) => {
-        this.unhideFeature(feature);
-      });
     });
   }
 
@@ -274,11 +258,6 @@ export class MapController {
 
       const bufferedFeature = this.bufferFeatureWithStyle(existingFeature, interactionStyles.selectedPolygon);
       features.push(bufferedFeature);
-
-      const locationFeature = this.sources.assetLocations.getFeatureById(geometry.id);
-      if (locationFeature != null) {
-        this.hideFeature(locationFeature);
-      }
     }
 
     window.requestAnimationFrame(() => {
@@ -501,26 +480,6 @@ export class MapController {
     if (this.activeAsset == null || this.assetsById.has(this.activeAsset.id)) {
       return;
     }
-    for (const geometry of this.activeAsset.geometries) {
-      const feature = this.sources.assetLocations.getFeatureById(geometry.id);
-      if (feature != null) {
-        this.unhideFeature(feature);
-      }
-    }
-  }
-
-  private hideFeature(feature: Feature): void {
-    feature.set('previousStyle', feature.getStyle() ?? availableLayerStyles[defaultLayerStyle].styleFunction);
-    feature.setStyle(new Style(undefined));
-  }
-
-  private unhideFeature(feature: Feature): void {
-    const previousStyle = feature.get('previousStyle');
-    if (previousStyle == null) {
-      return;
-    }
-    feature.setStyle(previousStyle);
-    feature.unset('previousStyle');
   }
 
   private mapGeometryToGeometryType(geometry: OlGeometry | undefined) {
