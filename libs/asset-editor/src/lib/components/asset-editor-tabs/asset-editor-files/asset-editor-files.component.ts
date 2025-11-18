@@ -195,7 +195,7 @@ export class AssetEditorFilesComponent implements OnInit, OnDestroy, OnChanges {
         initialPdfId: file.id,
         assetPdfs: this.asset!.files.filter((f) => isExistingAssetFile(f) && f.name.endsWith('.pdf')).map((f) => ({
           id: f.id,
-          fileName: f.name,
+          fileName: f.alias ?? f.name,
         })),
       });
     }

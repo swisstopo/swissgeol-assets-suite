@@ -56,11 +56,14 @@
                       ? control.value.file.name
                       : ('edit.tabs.files.fileNameTooltip'
                         | translate
-                          : { name: control.value.name, date: control.value.lastModifiedAt | date: 'dd.MM.yyyy HH:mm' })
+                          : {
+                              name: control.value.alias ?? control.value.name,
+                              date: control.value.lastModifiedAt | date: 'dd.MM.yyyy HH:mm',
+                            })
                   "
                   matTooltipPosition="above"
                   [class.will-be-deleted]="control.value.shouldBeDeleted"
-                  >{{ control.value.file?.name ?? control.value.name }}</span
+                  >{{ control.value.file?.name ?? control.value.alias ?? control.value.name }}</span
                 >
               </td>
             </ng-container>

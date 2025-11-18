@@ -217,6 +217,7 @@ export class PdfViewerComponent implements OnDestroy {
   private async loadPdf(pdfId: number) {
     this.clearCanvases();
     this.isRendering.set(true);
+    this.hasError.set(false);
     try {
       const pageNum = await this.pdfViewerService.loadPdf(this.assetId(), pdfId);
       this.pageCount.set(pageNum);
