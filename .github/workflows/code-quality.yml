@@ -5,7 +5,6 @@ on:
     types: [opened, synchronize, reopened]
     branches:
       - "**"
-      - "!main"
 
 env:
   NODE_VERSION: "22.x"
@@ -29,11 +28,17 @@ jobs:
 
           # https://github.com/advisories/GHSA-x2rg-q646-7m2v (2025-05-13)
           # We do not use module federation, so this issue should not have any impact on us.
+
+          # https://github.com/advisories/GHSA-mh29-5h37-fv8m
+          # Among others, issue is present in latest NX version, which we can't update away from.
           allow-ghsas: >-
             GHSA-67mh-4wv8-2f99,
             GHSA-x2rg-q646-7m2v
+            GHSA-mh29-5h37-fv8m
 
   install:
+    # Don't check the build if we are merging from develop to main.
+    if: ${{ !(github.event.pull_request.base.ref == 'main' && github.event.pull_request.head.ref == 'develop') }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -62,7 +67,7 @@ jobs:
       - name: Install node dependencies
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npm install
+        run: npm ci
       - name: Generate prisma types
         run: npm run prisma -- generate
 
@@ -222,7 +227,7 @@ jobs:
             npm run cypress:run -- \
               --browser edge \
               --record \
-              --key ${{ secrets.CYPRESS_RECORD_KEY }} \
+              --key ${{ secrets.CYPRESS_RECORD_KEY }}
           start: npm start
           wait-on: "http://localhost:4200"
           wait-on-timeout: 120
