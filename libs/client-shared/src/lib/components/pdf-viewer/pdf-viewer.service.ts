@@ -1,5 +1,5 @@
 import { inject, Injectable, OnDestroy } from '@angular/core';
-import { getDocument, GlobalWorkerOptions, PageViewport, PDFDocumentProxy } from 'pdfjs-dist';
+import { getDocument, GlobalWorkerOptions, PageViewport, PDFDocumentLoadingTask, PDFDocumentProxy } from 'pdfjs-dist';
 import { PDFPageProxy } from 'pdfjs-dist/types/src/display/api';
 import { SessionStorageService } from '../../services/session-storage.service';
 
@@ -8,11 +8,12 @@ GlobalWorkerOptions.workerSrc = 'assets/pdfjs/pdf.worker.min.mjs';
 
 @Injectable()
 export class PdfViewerService implements OnDestroy {
+  private loadingTask: PDFDocumentLoadingTask | undefined;
   private pdfDoc: PDFDocumentProxy | undefined;
   private readonly sessionStorageService = inject(SessionStorageService);
 
   async ngOnDestroy() {
-    await this.pdfDoc?.destroy();
+    await this.destroyPdfJsWorker();
   }
 
   /**
@@ -29,7 +30,9 @@ export class PdfViewerService implements OnDestroy {
    * @param pdfId
    */
   public async loadPdf(assetId: number, pdfId: number): Promise<number> {
-    const loadingTask = getDocument({
+    await this.destroyPdfJsWorker();
+
+    this.loadingTask = getDocument({
       url: `/api/assets/${assetId}/files/${pdfId}`,
       httpHeaders: {
         Authorization: `Bearer ${this.sessionStorageService.get('access_token')}`,
@@ -38,7 +41,7 @@ export class PdfViewerService implements OnDestroy {
       disableStream: true,
     });
     try {
-      this.pdfDoc = await loadingTask.promise;
+      this.pdfDoc = await this.loadingTask.promise;
       return this.pdfDoc.numPages;
     } catch (e) {
       /**
@@ -61,15 +64,19 @@ export class PdfViewerService implements OnDestroy {
     pageNum: number,
     parentWidth: number,
     parentHeight: number,
+    zoom: number,
   ) {
     if (!this.pdfDoc) {
       throw new Error('PDF document not loaded');
     }
 
     const page = await this.pdfDoc.getPage(pageNum);
-    const viewport = this.prepareViewport(page, parentWidth, parentHeight);
+    const viewport = this.prepareViewport(page, parentWidth, parentHeight, zoom);
     this.prepareCanvas(canvas, viewport);
-    const context = canvas.getContext('2d')!;
+    const context = canvas.getContext('2d');
+    if (!context) {
+      throw new Error('Could not get 2d context from canvas');
+    }
     await page.render({ canvasContext: context, viewport, canvas }).promise;
   }
 
@@ -78,10 +85,15 @@ export class PdfViewerService implements OnDestroy {
     canvas.height = viewport.height;
   }
 
-  private prepareViewport(page: PDFPageProxy, parentWidth: number, parentHeight: number): PageViewport {
+  private prepareViewport(page: PDFPageProxy, parentWidth: number, parentHeight: number, zoom: number): PageViewport {
     const unscaledViewport = page.getViewport({ scale: 1 });
-    const scale = Math.min(parentWidth / unscaledViewport.width, parentHeight / unscaledViewport.height);
+    const scale = Math.min(parentWidth / unscaledViewport.width, parentHeight / unscaledViewport.height) * zoom;
 
     return page.getViewport({ scale });
+  }
+
+  private async destroyPdfJsWorker() {
+    await this.loadingTask?.destroy();
+    await this.pdfDoc?.destroy();
   }
 }

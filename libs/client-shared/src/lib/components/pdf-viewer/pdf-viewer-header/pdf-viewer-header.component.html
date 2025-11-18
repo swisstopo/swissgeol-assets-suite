@@ -1,0 +1,36 @@
+<div class="header">
+  <div class="header-file-interaction-container">
+    @if (assetPdfs().length > 0) {
+      <sgc-select
+        class="header-select"
+        [values]="assetPdfs()"
+        (selectionChanged)="changePdf($event)"
+        [bindKey]="'id'"
+        [initialKeys]="[selectedPdf()?.id]"
+        bindLabel="fileName"
+        [ngClass]="{ 'header-select--hidden': hidePdfSelection() }"
+      >
+      </sgc-select>
+    }
+    <sgc-button
+      class="header-button"
+      color="tertiary"
+      variant="icon"
+      [isTransparent]="true"
+      (click)="onDownloadClick()"
+      [hidden]="hideDownloadButton()"
+    >
+      <sgc-icon name="download" size="normal"></sgc-icon>
+    </sgc-button>
+  </div>
+  <sgc-button
+    class="header-button"
+    color="tertiary"
+    variant="icon"
+    [isTransparent]="true"
+    (click)="onCloseClick()"
+    [hidden]="hideCloseButton()"
+  >
+    <sgc-icon name="cross" size="normal"></sgc-icon>
+  </sgc-button>
+</div>

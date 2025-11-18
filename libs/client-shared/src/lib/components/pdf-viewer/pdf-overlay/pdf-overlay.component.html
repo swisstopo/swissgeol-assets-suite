@@ -1,0 +1,8 @@
+<div class="wrapper" mat-dialog-content>
+  <asset-sg-pdf-viewer
+    [assetId]="data.assetId"
+    [assetPdfs]="data.assetPdfs"
+    [initialPdfId]="data.initialPdfId"
+    (exitViewer)="onClose()"
+  ></asset-sg-pdf-viewer>
+</div>
