@@ -37,7 +37,7 @@ export class AssetViewerFilesComponent {
         .filter((f) => f.name.endsWith('.pdf'))
         .map((f) => ({
           id: f.id,
-          fileName: f.name,
+          fileName: f.alias ?? f.name,
         })),
     });
   }

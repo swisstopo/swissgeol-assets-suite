@@ -36,3 +36,8 @@
   align-items: center;
   gap: 6px;
 }
+
+// temporary fix for making the non-finished sgc-select similar to what we find in Figma
+sgc-select::part(select-dropdown) {
+  min-width: 270px;
+}
