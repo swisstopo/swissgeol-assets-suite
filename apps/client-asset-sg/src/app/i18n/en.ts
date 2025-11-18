@@ -130,6 +130,7 @@ export const enTranslationMapping: AppTranslationMapping = {
     legalFile: 'Legal consent',
     openFileInNewTab: 'Open {{fileName}} in new tab',
     downloadFile: 'Download {{fileName}}',
+    openPdf: 'Open PDF',
     assetsUnderMouseCursor: '{{ assetsCount }} assets found under the mouse cursor. Please select one:',
     removePolygon: 'Remove polygon',
     drawPolygon: 'Polygon selection',

@@ -128,6 +128,7 @@ export const deTranslationMapping = {
     filePagePlural: '{{pageCount}} Seiten',
     legalFile: 'Rechtliche Einwilligungen',
     openFileInNewTab: '{{fileName}} in neuem Tab öffnen',
+    openPdf: 'PDF anzeigen',
     downloadFile: '{{fileName}} herunterladen',
     assetsUnderMouseCursor: '{{ assetsCount }} Assets unter dem Mauszeiger gefunden. Bitte wählen Sie eines aus:',
     removePolygon: 'Polygon aufheben',

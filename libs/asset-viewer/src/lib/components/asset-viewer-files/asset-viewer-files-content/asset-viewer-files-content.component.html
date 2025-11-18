@@ -6,10 +6,10 @@
     </div>
     @if (!accordionItem.expanded) {
       <asset-sg-asset-viewer-files-content-summary
-        [languages]="groupedPageClassifications.languages"
-        [categories]="groupedPageClassifications.categories"
-        [pageCount]="pageCount"
-        [legalDocCode]="legalDocCode"
+        [languages]="groupedPageClassifications().languages"
+        [categories]="groupedPageClassifications().categories"
+        [pageCount]="pageCount()"
+        [legalDocCode]="legalDocCode()"
       />
     }
   </cdk-accordion-item>
@@ -22,14 +22,16 @@
       [attr.aria-labelledby]="'accordion-header'"
       data-testid="content-body"
     >
-      @for (group of groupedPageClassifications.groupedPageClassifications | keyvalue; track group.key) {
+      @for (group of groupedPageClassifications().groupedPageClassifications | keyvalue; track group.key) {
         <dl [attr.data-testid]="'category-' + group.key">
           <dt translate>
             {{ "pageClassificationCodes." + group.key }}
           </dt>
           @for (page of group.value; track page) {
             <dd>
-              <span>{{ "pageClassificationCodes." + group.key | translate }}</span>
+              <button (click)="this.openPdfOnPage(page.from)">
+                {{ "pageClassificationCodes." + group.key | translate }}
+              </button>
               @if (page.languages.length > 0) {
                 <span class="tag-group">
                   @for (language of page.languages; track language) {

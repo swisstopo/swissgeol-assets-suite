@@ -32,6 +32,15 @@
         gap: 4px;
         align-items: center;
 
+        button {
+          color: var(--sgc-color-primary);
+          padding: 0;
+          min-width: 0;
+          text-transform: none;
+          cursor: pointer;
+          font-size: inherit;
+        }
+
         span:not(.range-divider) {
           flex: 0 0 auto;
         }

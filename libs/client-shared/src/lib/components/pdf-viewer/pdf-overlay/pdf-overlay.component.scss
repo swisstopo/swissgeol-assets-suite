@@ -1,3 +1,8 @@
 .wrapper {
   height: 100vh;
+  width: 100vw;
+
+  // override the matDialog options
+  padding: 0;
+  max-height: unset;
 }
