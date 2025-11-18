@@ -1,13 +1,13 @@
 <div class="viewer-wrapper">
-  @if (!this.hideHeader()) {
+  @if (!hideHeader()) {
     <asset-sg-pdf-viewer-header
-      (downloadPdf)="this.downloadPdf()"
-      (closeViewer)="this.onCloseViewer()"
-      [(selectedPdf)]="this.selectedPdf"
-      [assetPdfs]="this.assetPdfs()"
-      [hidePdfSelection]="this.hidePdfSelection()"
-      [hideDownloadButton]="this.hideDownloadButton()"
-      [hideCloseButton]="this.hideCloseButton()"
+      (downloadPdf)="downloadPdf()"
+      (closeViewer)="onCloseViewer()"
+      [(selectedPdf)]="selectedPdf"
+      [assetPdfs]="assetPdfs()"
+      [hidePdfSelection]="hidePdfSelection()"
+      [hideDownloadButton]="hideDownloadButton()"
+      [hideCloseButton]="hideCloseButton()"
     ></asset-sg-pdf-viewer-header>
   }
 
@@ -35,8 +35,8 @@
         <asset-sg-pdf-viewer-zoom
           (zoom)="handleZoom($event)"
           [disableInteractions]="isRendering()"
-          [isAtMinZoomLevel]="zoom() === this.minZoomLevel"
-          [isAtMaxZoomLevel]="zoom() === this.maxZoomLevel"
+          [isAtMinZoomLevel]="zoom() === minZoomLevel"
+          [isAtMaxZoomLevel]="zoom() === maxZoomLevel"
         ></asset-sg-pdf-viewer-zoom>
       </div>
       <div class="viewer__button-container">

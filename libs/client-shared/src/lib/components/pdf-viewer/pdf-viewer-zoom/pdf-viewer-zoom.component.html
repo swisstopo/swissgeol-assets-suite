@@ -4,16 +4,16 @@
     variant="icon"
     (click)="handleZoom('in')"
     [isTransparent]="true"
-    [isDisabled]="this.disableInteractions() || this.isAtMaxZoomLevel()"
+    [isDisabled]="disableInteractions() || isAtMaxZoomLevel()"
   >
     <sgc-icon name="plus" size="normal"></sgc-icon>
   </sgc-button>
   <sgc-button
     color="tertiary"
     variant="icon"
-    (click)="this.handleZoom('reset')"
+    (click)="handleZoom('reset')"
     [isTransparent]="true"
-    [isDisabled]="this.disableInteractions()"
+    [isDisabled]="disableInteractions()"
   >
     <sgc-icon name="circle" size="normal"></sgc-icon>
   </sgc-button>
@@ -22,7 +22,7 @@
     variant="icon"
     (click)="handleZoom('out')"
     [isTransparent]="true"
-    [isDisabled]="this.disableInteractions() || this.isAtMinZoomLevel()"
+    [isDisabled]="disableInteractions() || isAtMinZoomLevel()"
   >
     <sgc-icon name="minus" size="normal"></sgc-icon>
   </sgc-button>
