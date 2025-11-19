@@ -266,15 +266,46 @@ export class MapController {
     });
   }
 
+  getPreviousMapView(): MapViewState | null {
+    const view = this.map.getView();
+
+    const size = this.map.getSize();
+    const resolution = view.getResolution();
+    if (size == null || resolution == null) {
+      return null;
+    }
+    const leftCenterCoord = this.map.getCoordinateFromPixel([0, size[1] / 2]);
+    return { resolution: resolution, coordinateLeft: leftCenterCoord };
+  }
+
+  setMapViewToPreviousView(previousState: MapViewState): void {
+    const size = this.map.getSize();
+    if (size == null) {
+      return;
+    }
+    const view = this.map.getView();
+    const [xLeft, yLeft] = previousState.coordinateLeft;
+    const newCenter: [number, number] = [xLeft + (previousState.resolution * size[0]) / 2, yLeft];
+    view.setCenter(newCenter);
+  }
+
   clearActiveAsset(): void {
     if (this.activeAsset === null) {
       return;
     }
     this.resetActiveAssetStyle();
+    const previousState = this.getPreviousMapView();
+
     this.activeAsset = null;
     this.sources.activeAsset.clear();
     this.layers.assetGeometries.setOpacity(1);
     this.layers.assetLocations.setOpacity(1);
+
+    if (previousState) {
+      setTimeout(() => {
+        this.setMapViewToPreviousView(previousState);
+      });
+    }
   }
 
   getPosition(): MapPosition | null {
@@ -531,6 +562,11 @@ interface MapLayers {
   polygon: MapLayer;
 
   picker: MapLayer;
+}
+
+interface MapViewState {
+  resolution: number;
+  coordinateLeft: Coordinate;
 }
 
 type MapLayerSources = {
