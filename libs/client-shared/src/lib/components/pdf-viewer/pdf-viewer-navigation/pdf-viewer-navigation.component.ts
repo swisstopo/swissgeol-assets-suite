@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, input, output } from '@angular/core';
 import { SgcButton, SgcIcon } from '@swissgeol/ui-core-angular';
 
 export type PdfNavigationAction = 'next' | 'previous' | 'start' | 'end';
@@ -10,10 +10,10 @@ export type PdfNavigationAction = 'next' | 'previous' | 'start' | 'end';
   styleUrl: './pdf-viewer-navigation.component.scss',
 })
 export class PdfViewerNavigationComponent {
-  @Input() public currentPage?: number = undefined;
-  @Input() public pageCount?: number = undefined;
-  @Input() public disableInteractions = false;
-  @Output() public navigate = new EventEmitter<PdfNavigationAction>();
+  public readonly currentPage = input<number | undefined>();
+  public readonly pageCount = input<number | undefined>();
+  public readonly disableInteractions = input(false);
+  public readonly navigate = output<PdfNavigationAction>();
 
   protected handleNavigate(action: PdfNavigationAction) {
     this.navigate.emit(action);

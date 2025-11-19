@@ -5,7 +5,13 @@ import { MatCheckboxChange } from '@angular/material/checkbox';
 import { MatDialog } from '@angular/material/dialog';
 import { Sort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
-import { ConfirmDialogComponent, ConfirmDialogData, fromAppShared, triggerDownload } from '@asset-sg/client-shared';
+import {
+  ConfirmDialogComponent,
+  ConfirmDialogData,
+  fromAppShared,
+  PdfOverlayService,
+  triggerDownload,
+} from '@asset-sg/client-shared';
 import { isNotNull } from '@asset-sg/core';
 import {
   Asset,
@@ -36,9 +42,8 @@ import {
 } from 'rxjs';
 import { AssetForm, AssetFormFile, ExistingAssetFile } from '../../asset-editor-page/asset-editor-page.component';
 import { PageRangeEditorComponent, PageRangeEditorData } from './page-range-editor/page-range-editor.component';
-import { PdfOverlayComponent, PdfOverlayData } from './pdf-overlay/pdf-overlay.component';
 
-export const isExistingAssetFile: (file: AssetFormFile) => file is ExistingAssetFile = (
+export const isExistingAssetFile: (file: AssetFormFile | AssetFile) => file is ExistingAssetFile = (
   file,
 ): file is ExistingAssetFile => 'id' in file;
 
@@ -76,6 +81,7 @@ export class AssetEditorFilesComponent implements OnInit, OnDestroy, OnChanges {
   private readonly httpClient = inject(HttpClient);
   private readonly subscriptions: Subscription = new Subscription();
   private readonly dialogService: MatDialog = inject(MatDialog);
+  private readonly pdfOverlayService = inject(PdfOverlayService);
 
   protected get hasSelectedFiles(): boolean {
     return this.selectedFiles.size !== 0;
@@ -184,10 +190,13 @@ export class AssetEditorFilesComponent implements OnInit, OnDestroy, OnChanges {
 
   protected openPdfPreview(file: AssetFormFile) {
     if (isExistingAssetFile(file)) {
-      this.dialogService.open<PdfOverlayComponent, PdfOverlayData>(PdfOverlayComponent, {
-        data: { pdfId: file.id, assetId: this.asset!.id },
-        width: '925px',
-        autoFocus: false,
+      this.pdfOverlayService.openPdfOverlay({
+        assetId: this.asset!.id,
+        initialPdfId: file.id,
+        assetPdfs: this.asset!.files.filter((f) => isExistingAssetFile(f) && f.name.endsWith('.pdf')).map((f) => ({
+          id: f.id,
+          fileName: f.alias ?? f.name,
+        })),
       });
     }
   }

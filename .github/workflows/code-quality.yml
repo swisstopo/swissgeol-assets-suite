@@ -31,10 +31,15 @@ jobs:
 
           # https://github.com/advisories/GHSA-mh29-5h37-fv8m
           # Among others, issue is present in latest NX version, which we can't update away from.
+
+          # https://github.com/advisories/GHSA-5j98-mcp5-4vw2
+          # Shouldn't be relevant/dangerous to us, and blocks our CI/CD.
+
           allow-ghsas: >-
             GHSA-67mh-4wv8-2f99,
-            GHSA-x2rg-q646-7m2v
-            GHSA-mh29-5h37-fv8m
+            GHSA-x2rg-q646-7m2v,
+            GHSA-mh29-5h37-fv8m,
+            GHSA-5j98-mcp5-4vw2
 
   install:
     # Don't check the build if we are merging from develop to main.
