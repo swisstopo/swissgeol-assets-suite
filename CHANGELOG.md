@@ -8,6 +8,20 @@
 
 ### Fixed
 
+## v.1.16.0
+
+### Added
+
+- PDF Dateien können nun auch direkt in der Applikation angezeigt werden (und nicht mehr im Browsereigenen PDF-Viewer.
+
+### Changed
+
+- Nach dem schliessen der Detailansicht eines Assets wird die Karte nicht mehr auf die gesamte Schweiz gezoomt.
+
+### Fixed
+
+- Geometriedaten verschwinden nicht mehr auf der Karte, nachdem die Detailansicht eines Assets geöffnet und wieder geschlossen wurde.
+
 ## v.1.15.0
 
 ### Added
