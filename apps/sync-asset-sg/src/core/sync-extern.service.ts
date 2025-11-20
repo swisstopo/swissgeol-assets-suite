@@ -26,7 +26,8 @@ export class SyncExternService {
   private readonly relationSqls: RelationSqls = { ids: [], assetLanguages: [], manCatLabelRefs: [], typeNatRels: [] };
   private readonly existingFileIds: Map<string, number> = new Map();
   private readonly assetsToSync: AssetToSync[] = [];
-  private readonly newAssetToOriginalAsset: Map<number, { originalAssetId: number; originalSgsId: number }> = new Map();
+  private readonly newAssetToOriginalAsset: Map<number, { originalAssetId: number; originalSgsId: number | null }> =
+    new Map();
   private readonly geometries: Geometries = { areas: new Map(), locations: new Map(), traces: new Map() };
   private readonly sourcePrisma: PrismaClient;
   private readonly destinationPrisma: PrismaClient;
@@ -124,10 +125,6 @@ export class SyncExternService {
         }),
       ),
     });
-
-    if (asset.originalSgsId === null) {
-      throw new Error(`originalSgsId must not be null: ${asset.originalAssetId}`);
-    }
 
     this.newAssetToOriginalAsset.set(newAsset.assetId, {
       originalAssetId: asset.originalAssetId,
