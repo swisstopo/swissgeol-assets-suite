@@ -1,107 +1,118 @@
 @if (isLoading) {
   <mat-progress-bar mode="indeterminate" class="loading-bar" />
 }
-<asset-sg-page-header (backNavigation)="navigateToStart()">
-  <h2>{{ asset?.title }}</h2>
-  <mat-chip-set>
-    <!--
-    Basic setup: [WorkflowStatus] [ChangesRequested] [Assignee]
-    The following chip rules exist:
-    - Current Status
-      - Draft = Primary Color
-      - Review = Brownish Color
-      - Reviewed = Green Color
-      - Published = Green Color
-    - Assignee is shown _only_ if Status !== Published and !== Reviewed
-    - If Status === Published, both "Reviewed" and "Published" chip are shown
-    - If Status === Reviewed, we show the "Beschränkung", i.e. frei, gesperrt, gesperrt bis
-    - If Changes Requested, we show a red chip after the Status
-    -->
-    @if (mode === EditorMode.Create) {
-      <asset-sg-chip type="primary">{{ "workflowStatus.Draft" | translate }}</asset-sg-chip>
-    } @else if (workflow !== null) {
-      <!-- Main workflow status -->
-      <asset-sg-status-chip [status]="workflow.status"></asset-sg-status-chip>
+<div class="main">
+  <asset-sg-page-header (backNavigation)="navigateToStart()" class="navbar">
+    <h2 class="asset-title">{{ asset?.title }}</h2>
+    <mat-chip-set>
+      <!--
+      Basic setup: [WorkflowStatus] [ChangesRequested] [Assignee]
+      The following chip rules exist:
+      - Current Status
+        - Draft = Primary Color
+        - Review = Brownish Color
+        - Reviewed = Green Color
+        - Published = Green Color
+      - Assignee is shown _only_ if Status !== Published and !== Reviewed
+      - If Status === Published, both "Reviewed" and "Published" chip are shown
+      - If Status === Reviewed, we show the "Beschränkung", i.e. frei, gesperrt, gesperrt bis
+      - If Changes Requested, we show a red chip after the Status
+      -->
+      @if (mode === EditorMode.Create) {
+        <asset-sg-chip type="primary">{{ "workflowStatus.Draft" | translate }}</asset-sg-chip>
+      } @else if (workflow !== null) {
+        <!-- Main workflow status -->
+        <asset-sg-status-chip [status]="workflow.status"></asset-sg-status-chip>
 
-      <!-- Changes requested -->
-      @if (workflow.hasRequestedChanges) {
-        <asset-sg-chip type="alert">{{ "workflow.requestedChanges" | translate }}</asset-sg-chip>
-      }
+        <!-- Changes requested -->
+        @if (workflow.hasRequestedChanges) {
+          <asset-sg-chip type="alert">{{ "workflow.requestedChanges" | translate }}</asset-sg-chip>
+        }
 
-      <!-- Visibility restriction -->
-      @if (workflow.status === WorkflowStatus.Reviewed) {
-        <asset-sg-chip type="light">
-          <!-- todo assets-631: add edit.visibility.lockedUntil with formatted date -->
-          {{ (asset?.isPublic ? "edit.visibility.public" : "edit.visibility.locked") | translate }}
-        </asset-sg-chip>
-      }
+        <!-- Visibility restriction -->
+        @if (workflow.status === WorkflowStatus.Reviewed) {
+          <asset-sg-chip type="light">
+            <!-- todo assets-631: add edit.visibility.lockedUntil with formatted date -->
+            {{ (asset?.isPublic ? "edit.visibility.public" : "edit.visibility.locked") | translate }}
+          </asset-sg-chip>
+        }
 
-      <!-- Assignee -->
-      @if (
-        workflow.status !== WorkflowStatus.Published &&
-          workflow.status !== WorkflowStatus.Reviewed &&
-          workflow.assignee;
-        as assignee
-      ) {
-        <asset-sg-chip type="light">{{ assignee.firstName }} {{ assignee.lastName }}</asset-sg-chip>
+        <!-- Assignee -->
+        @if (
+          workflow.status !== WorkflowStatus.Published &&
+            workflow.status !== WorkflowStatus.Reviewed &&
+            workflow.assignee;
+          as assignee
+        ) {
+          <asset-sg-chip type="light">{{ assignee.firstName }} {{ assignee.lastName }}</asset-sg-chip>
+        }
       }
+    </mat-chip-set>
+    <div class="spacer"></div>
+
+    @if (asset !== null) {
+      <button asset-sg-secondary (click)="openConfirmDialogForAssetDeletion(asset.id)" translate>
+        delete
+        <svg-icon key="delete"></svg-icon>
+      </button>
     }
-  </mat-chip-set>
-  <div class="spacer"></div>
-
-  @if (asset !== null) {
-    <button asset-sg-secondary (click)="openConfirmDialogForAssetDeletion(asset.id)" translate>
-      delete
-      <svg-icon key="delete"></svg-icon>
-    </button>
-  }
-</asset-sg-page-header>
-<div class="editor-container">
-  <asset-sg-editor-navigation [tabs]="availableTabs" [activeTab]="activeTab" [mode]="mode" />
-  <div>
+  </asset-sg-page-header>
+  <div class="content">
+    <asset-sg-editor-navigation
+      [tabs]="availableTabs"
+      [activeTab]="activeTab"
+      [mode]="mode"
+      class="editor-navigation"
+    />
     <div class="form-container">
-      @switch (activeTab) {
-        @case (Tab.General) {
-          <asset-sg-editor-general
-            [form]="form.controls.general"
-            [asset]="asset"
-            [hasReferences]="hasReferences"
-          ></asset-sg-editor-general>
-        }
-        @case (Tab.Files) {
-          <asset-sg-editor-files [form]="form.controls.files" [asset]="asset"></asset-sg-editor-files>
-        }
-        @case (Tab.Status) {
-          @if (mode === EditorMode.Edit) {
-            <asset-sg-editor-status [workflow]="workflow" [isRestricted]="!asset?.isPublic" />
+      <div class="form-data">
+        @switch (activeTab) {
+          @case (Tab.General) {
+            <asset-sg-editor-general
+              [form]="form.controls.general"
+              [asset]="asset"
+              [hasReferences]="hasReferences"
+            ></asset-sg-editor-general>
+          }
+          @case (Tab.Files) {
+            <asset-sg-editor-files [form]="form.controls.files" [asset]="asset"></asset-sg-editor-files>
+          }
+          @case (Tab.Status) {
+            @if (mode === EditorMode.Edit) {
+              <asset-sg-editor-status [workflow]="workflow" [isRestricted]="!asset?.isPublic" />
+            }
+          }
+          @case (Tab.LegacyData) {
+            @if (asset) {
+              <asset-sg-editor-legacy-data [asset]="asset"></asset-sg-editor-legacy-data>
+            }
+          }
+          @case (Tab.References) {
+            <asset-sg-editor-references
+              [form]="form.controls.references"
+              [asset]="asset"
+              [workgroupId]="form.controls.general.controls.workgroupId.value"
+            ></asset-sg-editor-references>
+          }
+          @case (Tab.Geometries) {
+            <asset-sg-edit-geometries [form]="geometryForm"></asset-sg-edit-geometries>
+          }
+          @case (Tab.Contacts) {
+            <asset-sg-editor-contacts
+              [form]="form.controls.contacts"
+              [asset]="asset ?? null"
+            ></asset-sg-editor-contacts>
           }
         }
-        @case (Tab.LegacyData) {
-          @if (asset) {
-            <asset-sg-editor-legacy-data [asset]="asset"></asset-sg-editor-legacy-data>
-          }
-        }
-        @case (Tab.References) {
-          <asset-sg-editor-references
-            [form]="form.controls.references"
-            [asset]="asset"
-            [workgroupId]="form.controls.general.controls.workgroupId.value"
-          ></asset-sg-editor-references>
-        }
-        @case (Tab.Geometries) {
-          <asset-sg-edit-geometries [form]="geometryForm"></asset-sg-edit-geometries>
-        }
-        @case (Tab.Contacts) {
-          <asset-sg-editor-contacts [form]="form.controls.contacts" [asset]="asset ?? null"></asset-sg-editor-contacts>
-        }
-      }
-    </div>
+      </div>
 
-    <asset-sg-editor-save
-      [isSaveDisabled]="form.invalid || !form.dirty"
-      [hasUnsavedChanges]="form.dirty"
-      (discard)="initializeForm()"
-      (save)="save()"
-    ></asset-sg-editor-save>
+      <asset-sg-editor-save
+        class="form-footer"
+        [isSaveDisabled]="form.invalid || !form.dirty"
+        [hasUnsavedChanges]="form.dirty"
+        (discard)="initializeForm()"
+        (save)="save()"
+      ></asset-sg-editor-save>
+    </div>
   </div>
 </div>
