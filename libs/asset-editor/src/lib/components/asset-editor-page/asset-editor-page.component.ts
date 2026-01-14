@@ -64,9 +64,9 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
   /**
    * The current asset. This is `null` while the asset is being loaded, or when a new asset is being created.
    */
-  protected asset = signal<Asset | null>(null);
+  protected readonly asset = signal<Asset | null>(null);
 
-  protected assetPdfs = computed(() => {
+  protected readonly assetPdfs = computed(() => {
     const asset = this.asset();
     if (asset === null) {
       return [];
@@ -79,8 +79,9 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
         fileName: f.alias ?? f.name,
       }));
   });
-  protected hasPdfs = computed(() => this.assetPdfs().length > 0);
-  protected showPdfViewer = signal(false);
+  protected readonly hasPdfs = computed(() => this.assetPdfs().length > 0);
+  protected readonly showPdfViewer = signal(false);
+  protected readonly pdfViewerInitialized = signal(false);
 
   /**
    * The current asset's geometries. This remains empty when an asset is being created.
@@ -107,19 +108,25 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
   protected availableTabs: Tab[] = [];
   protected readonly WorkflowStatus = WorkflowStatus;
   protected isLoading = false;
-
+  protected readonly Tab = Tab;
+  protected readonly EditorMode = EditorMode;
   private readonly store = inject(Store<AppSharedState>);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly dialogService = inject(MatDialog);
-
   private readonly languageService = inject(LanguageService);
   private readonly assetEditorService = inject(AssetEditorService);
   private readonly assetSearchService = inject(AssetSearchService);
-
   private readonly routerSegments$ = inject(ROUTER_SEGMENTS);
-
   private readonly subscriptions: Subscription = new Subscription();
+
+  get hasReferences(): boolean {
+    return (
+      this.form.controls.references.controls.parent.value !== null ||
+      this.form.controls.references.controls.siblings.value.length > 0 ||
+      this.form.controls.references.controls.children.value.length > 0
+    );
+  }
 
   public ngOnInit() {
     this.subscriptions.add(
@@ -161,120 +168,9 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
     );
   }
 
-  protected togglePdfViewer() {
-    this.showPdfViewer.set(!this.showPdfViewer());
-  }
-
-  private connectGeometryForm(): void {
-    this.geometryForm = makeGeometryForm();
-
-    let lastKnownGeometries: GeometryData[] = [];
-    this.form.controls.geometries.valueChanges.subscribe((geometries) => {
-      if (lastKnownGeometries === geometries) {
-        return;
-      }
-      lastKnownGeometries = geometries;
-
-      const studyMapping: Map<string, Study> = new Map();
-      for (const geometry of this.geometries) {
-        studyMapping.set(geometry.id, {
-          studyId: geometry.id,
-          geom:
-            geometry.type === GeometryType.Point
-              ? { _tag: 'Point', coord: geometry.coordinates[0] as LV95 }
-              : {
-                  _tag: geometry.type as 'LineString' | 'Polygon',
-                  coords: geometry.coordinates as LV95[],
-                },
-        });
-      }
-      let id = 0;
-      for (const geometry of geometries) {
-        let studyId: string;
-        switch (geometry.mutation) {
-          case GeometryMutationType.Create:
-            studyId = `study_${mapGeometryTypeToStudyType(geometry.type)}_new_${id++}`;
-            break;
-          case GeometryMutationType.Update:
-            studyId = geometry.id;
-            break;
-          case GeometryMutationType.Delete:
-            // Deletion is represented as absence.
-            studyMapping.delete(geometry.id);
-            continue;
-        }
-        const geom = GeomFromGeomText.decode(geometry.text);
-        studyMapping.set(studyId, {
-          studyId,
-          geom: (geom as E.Right<Geom>).right,
-        });
-      }
-
-      lastKnownStudies = [...studyMapping.values()];
-      this.geometryForm.controls.studies.setValue(lastKnownStudies);
-    });
-
-    let lastKnownStudies: Studies = [];
-    this.geometryForm.controls.studies.valueChanges.subscribe((studies) => {
-      if (lastKnownStudies === studies) {
-        return;
-      }
-      lastKnownStudies = studies;
-
-      const knownIds = new Set<GeometryId>();
-      const newGeometries: GeometryData[] = [];
-      for (const study of studies) {
-        if (study.studyId.includes('_new_')) {
-          newGeometries.push({
-            mutation: GeometryMutationType.Create,
-            type: study.geom._tag as GeometryType,
-            text: GeomFromGeomText.encode(study.geom),
-          } satisfies CreateGeometryData);
-          continue;
-        }
-        const id = study.studyId as GeometryId;
-        knownIds.add(id);
-
-        const studyCoordinates = study.geom._tag === 'Point' ? [study.geom.coord] : study.geom.coords;
-        const geometryCoordinates = this.geometries.find((it) => it.id === id)?.coordinates;
-        if (isDeepEqual(studyCoordinates, geometryCoordinates)) {
-          // If the saved and updated coordinates are the same,
-          // then we don't need to send an update to the server.
-          continue;
-        }
-        newGeometries.push({
-          mutation: GeometryMutationType.Update,
-          id,
-          text: GeomFromGeomText.encode(study.geom),
-        } satisfies UpdateGeometryData);
-      }
-
-      const deletedGeometries = this.geometries
-        .filter((geometry) => !knownIds.has(geometry.id))
-        .map(
-          (geometry): DeleteGeometryData => ({
-            mutation: GeometryMutationType.Delete,
-            id: geometry.id,
-          }),
-        );
-
-      lastKnownGeometries = [...newGeometries, ...deletedGeometries];
-      this.form.controls.geometries.setValue(lastKnownGeometries);
-      this.form.controls.geometries.markAsDirty();
-    });
-  }
-
   public ngOnDestroy() {
     this.store.dispatch(actions.reset());
     this.subscriptions.unsubscribe();
-  }
-
-  get hasReferences(): boolean {
-    return (
-      this.form.controls.references.controls.parent.value !== null ||
-      this.form.controls.references.controls.siblings.value.length > 0 ||
-      this.form.controls.references.controls.children.value.length > 0
-    );
   }
 
   public navigateToStart() {
@@ -396,6 +292,113 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
     );
   }
 
+  protected togglePdfViewer() {
+    const newValue = !this.showPdfViewer();
+    this.showPdfViewer.set(newValue);
+    if (newValue) {
+      this.pdfViewerInitialized.set(true);
+    }
+  }
+
+  private connectGeometryForm(): void {
+    this.geometryForm = makeGeometryForm();
+
+    let lastKnownGeometries: GeometryData[] = [];
+    this.form.controls.geometries.valueChanges.subscribe((geometries) => {
+      if (lastKnownGeometries === geometries) {
+        return;
+      }
+      lastKnownGeometries = geometries;
+
+      const studyMapping: Map<string, Study> = new Map();
+      for (const geometry of this.geometries) {
+        studyMapping.set(geometry.id, {
+          studyId: geometry.id,
+          geom:
+            geometry.type === GeometryType.Point
+              ? { _tag: 'Point', coord: geometry.coordinates[0] as LV95 }
+              : {
+                  _tag: geometry.type as 'LineString' | 'Polygon',
+                  coords: geometry.coordinates as LV95[],
+                },
+        });
+      }
+      let id = 0;
+      for (const geometry of geometries) {
+        let studyId: string;
+        switch (geometry.mutation) {
+          case GeometryMutationType.Create:
+            studyId = `study_${mapGeometryTypeToStudyType(geometry.type)}_new_${id++}`;
+            break;
+          case GeometryMutationType.Update:
+            studyId = geometry.id;
+            break;
+          case GeometryMutationType.Delete:
+            // Deletion is represented as absence.
+            studyMapping.delete(geometry.id);
+            continue;
+        }
+        const geom = GeomFromGeomText.decode(geometry.text);
+        studyMapping.set(studyId, {
+          studyId,
+          geom: (geom as E.Right<Geom>).right,
+        });
+      }
+
+      lastKnownStudies = [...studyMapping.values()];
+      this.geometryForm.controls.studies.setValue(lastKnownStudies);
+    });
+
+    let lastKnownStudies: Studies = [];
+    this.geometryForm.controls.studies.valueChanges.subscribe((studies) => {
+      if (lastKnownStudies === studies) {
+        return;
+      }
+      lastKnownStudies = studies;
+
+      const knownIds = new Set<GeometryId>();
+      const newGeometries: GeometryData[] = [];
+      for (const study of studies) {
+        if (study.studyId.includes('_new_')) {
+          newGeometries.push({
+            mutation: GeometryMutationType.Create,
+            type: study.geom._tag as GeometryType,
+            text: GeomFromGeomText.encode(study.geom),
+          } satisfies CreateGeometryData);
+          continue;
+        }
+        const id = study.studyId as GeometryId;
+        knownIds.add(id);
+
+        const studyCoordinates = study.geom._tag === 'Point' ? [study.geom.coord] : study.geom.coords;
+        const geometryCoordinates = this.geometries.find((it) => it.id === id)?.coordinates;
+        if (isDeepEqual(studyCoordinates, geometryCoordinates)) {
+          // If the saved and updated coordinates are the same,
+          // then we don't need to send an update to the server.
+          continue;
+        }
+        newGeometries.push({
+          mutation: GeometryMutationType.Update,
+          id,
+          text: GeomFromGeomText.encode(study.geom),
+        } satisfies UpdateGeometryData);
+      }
+
+      const deletedGeometries = this.geometries
+        .filter((geometry) => !knownIds.has(geometry.id))
+        .map(
+          (geometry): DeleteGeometryData => ({
+            mutation: GeometryMutationType.Delete,
+            id: geometry.id,
+          }),
+        );
+
+      lastKnownGeometries = [...newGeometries, ...deletedGeometries];
+      this.form.controls.geometries.setValue(lastKnownGeometries);
+      this.form.controls.geometries.markAsDirty();
+    });
+  }
+
   private initializeTabs() {
     this.availableTabs = Object.values(Tab);
     if (this.asset()?.legacyData == null) {
@@ -421,6 +424,7 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
       }),
     );
   }
+
   private setupSaveBehaviour(): Observable<{ asset: Asset; geometries: GeometryDetail[] }> {
     const asset = this.asset();
     if (!this.asset && this.mode === EditorMode.Edit) {
@@ -509,9 +513,6 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
       ),
     );
   }
-
-  protected readonly Tab = Tab;
-  protected readonly EditorMode = EditorMode;
 }
 
 export type ExistingAssetFile = Pick<

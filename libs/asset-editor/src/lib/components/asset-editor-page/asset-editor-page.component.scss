@@ -17,7 +17,7 @@ $max-pdf-width: 580px;
   grid-template-areas:
     "navbar"
     "content";
-  height: calc(100vh - #{variables.$app-bar-height}); // subtract header height
+  height: calc(100vh - #{variables.$app-bar-height});
 
   & .navbar {
     grid-area: navbar;
@@ -38,7 +38,7 @@ $max-pdf-width: 580px;
     grid-area: content;
     grid-template-columns: auto // editor-navigation
       minmax($min-content-width, 1fr) // editor-content: grows from $min-content-width to fill remaining space
-      minmax(0, $max-pdf-width); // pdf-preview: shrinks from 0 to $max-pdf-width
+      minmax(0, $max-pdf-width); // pdf-preview: shrinks to 0 from $max-pdf-width
     grid-template-areas: "editor-navigation editor-content pdf-preview";
     min-height: 0;
 

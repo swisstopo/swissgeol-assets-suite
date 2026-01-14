@@ -212,7 +212,7 @@ export class PdfViewerComponent implements OnDestroy {
       const selectedPdf = untracked(() => this.selectedPdf());
 
       if (selectedPdf) {
-        if (!this.assetPdfs().find((f) => f.id == selectedPdf.id && f.fileName === selectedPdf.fileName)) {
+        if (!this.assetPdfs().some((f) => f.id == selectedPdf.id && f.fileName === selectedPdf.fileName)) {
           this.selectedPdf.set(this.assetPdfs()[0]);
 
           this.store.dispatch(

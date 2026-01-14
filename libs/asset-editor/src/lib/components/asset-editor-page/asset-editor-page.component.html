@@ -124,8 +124,8 @@
       >
         <sgc-icon [name]="showPdfViewer() ? 'drawerRight' : 'drawerLeft'" size="normal"></sgc-icon>
       </sgc-button>
-      @if (showPdfViewer() && hasPdfs()) {
-        <div class="pdf-viewer-wrapper">
+      @if (pdfViewerInitialized() && hasPdfs()) {
+        <div class="pdf-viewer-wrapper" [hidden]="!showPdfViewer()">
           <asset-sg-pdf-viewer
             [assetId]="asset()!.id"
             [assetPdfs]="assetPdfs()"
