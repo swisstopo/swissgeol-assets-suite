@@ -22,6 +22,7 @@ export const deTranslationMapping = {
   datePlaceholder: 'JJJJ-MM-TT',
   deletedUserName: 'gelöschter Benutzer',
   downloadFailed: 'Datei konnte nicht heruntergeladen werden.',
+  pdfNoLongerAvailable: 'Das geöffnete PDF ist nicht mehr verfügbar. Es wurde ein anderes PDF ausgewählt.',
   workgroup: {
     title: 'Arbeitsgruppe',
     errors: {

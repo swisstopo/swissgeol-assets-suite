@@ -1,6 +1,9 @@
 @use "../../styles/mixins";
 @use "../../styles/variables";
 
+$min-content-width: 600px;
+$max-pdf-width: 580px;
+
 .loading-bar {
   position: absolute;
   inset: 0;
@@ -33,9 +36,16 @@
   & .content {
     display: grid;
     grid-area: content;
-    grid-template-columns: auto 1fr;
-    grid-template-areas: "editor-navigation editor-content";
+    grid-template-columns: auto // editor-navigation
+      minmax($min-content-width, 1fr) // editor-content: grows from $min-content-width to fill remaining space
+      minmax(0, $max-pdf-width); // pdf-preview: shrinks from 0 to $max-pdf-width
+    grid-template-areas: "editor-navigation editor-content pdf-preview";
     min-height: 0;
+
+    &.pdf-preview-hidden {
+      grid-template-columns: auto 1fr 0;
+      grid-template-areas: "editor-navigation editor-content pdf-preview";
+    }
 
     & .editor-navigation {
       grid-area: editor-navigation;
@@ -49,6 +59,7 @@
         "form-data"
         "form-footer";
       min-height: 0;
+      min-width: $min-content-width;
 
       & .form-data {
         grid-area: form-data;
@@ -61,6 +72,37 @@
 
       & .form-footer {
         grid-area: form-footer;
+        max-width: 100%;
+      }
+    }
+
+    & .pdf-preview {
+      grid-area: pdf-preview;
+      background-color: red;
+      max-width: $max-pdf-width;
+      min-width: 0;
+      width: 100%;
+      position: relative;
+      min-height: 0;
+
+      & .pdf-viewer-wrapper {
+        overflow: hidden;
+        height: 100%;
+      }
+
+      & .pdf-preview-toggle {
+        position: absolute;
+        left: -44px;
+        display: flex;
+        justify-self: flex-end;
+        z-index: 10;
+        box-shadow: 4px 4px 2px 0 #0000001f;
+        height: 44px;
+        width: 44px;
+
+        &::part(button) {
+          border-radius: 0 0 0 4px;
+        }
       }
     }
   }

@@ -1,6 +1,8 @@
 @use "../../../styles/variables";
+@use "../../../styles/mixins";
 
 :host {
+  @include mixins.editor-page-layout;
   display: flex;
   justify-content: center;
   position: relative;

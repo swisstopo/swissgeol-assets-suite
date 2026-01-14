@@ -12,6 +12,7 @@ import {
   output,
   Renderer2,
   signal,
+  untracked,
   viewChild,
 } from '@angular/core';
 import { MatProgressBar } from '@angular/material/progress-bar';
@@ -106,6 +107,7 @@ export class PdfViewerComponent implements OnDestroy {
   constructor() {
     this.setupInitialPdfEffect();
     this.setupRenderingEffect();
+    this.setupAssetPdfChangeEffect();
   }
 
   public async ngOnDestroy() {
@@ -199,6 +201,33 @@ export class PdfViewerComponent implements OnDestroy {
       },
       { manualCleanup: true },
     );
+  }
+
+  /**
+   * Because the list of assetPdfs could change while the viewer is open, we need to ensure that the selected PDF is
+   * still valid. If not, we reset it to the first available PDF.
+   */
+  private setupAssetPdfChangeEffect() {
+    effect(() => {
+      const selectedPdf = untracked(() => this.selectedPdf());
+
+      if (selectedPdf) {
+        if (!this.assetPdfs().find((f) => f.id == selectedPdf.id && f.fileName === selectedPdf.fileName)) {
+          this.selectedPdf.set(this.assetPdfs()[0]);
+
+          this.store.dispatch(
+            showAlert({
+              alert: {
+                id: `pdf-notice-${this.assetId}-${this.selectedPdf()?.id}`,
+                text: this.translateService.instant('pdfNoLongerAvailable'),
+                type: AlertType.Warning,
+                isPersistent: false,
+              },
+            }),
+          );
+        }
+      }
+    });
   }
 
   /**

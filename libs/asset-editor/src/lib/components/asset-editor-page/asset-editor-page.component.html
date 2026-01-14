@@ -3,7 +3,7 @@
 }
 <div class="main">
   <asset-sg-page-header (backNavigation)="navigateToStart()" class="navbar">
-    <h2 class="asset-title">{{ asset?.title }}</h2>
+    <h2 class="asset-title">{{ asset()?.title }}</h2>
     <mat-chip-set>
       <!--
       Basic setup: [WorkflowStatus] [ChangesRequested] [Assignee]
@@ -33,7 +33,7 @@
         @if (workflow.status === WorkflowStatus.Reviewed) {
           <asset-sg-chip type="light">
             <!-- todo assets-631: add edit.visibility.lockedUntil with formatted date -->
-            {{ (asset?.isPublic ? "edit.visibility.public" : "edit.visibility.locked") | translate }}
+            {{ (asset()?.isPublic ? "edit.visibility.public" : "edit.visibility.locked") | translate }}
           </asset-sg-chip>
         }
 
@@ -50,14 +50,14 @@
     </mat-chip-set>
     <div class="spacer"></div>
 
-    @if (asset !== null) {
-      <button asset-sg-secondary (click)="openConfirmDialogForAssetDeletion(asset.id)" translate>
+    @if (asset() !== null) {
+      <button asset-sg-secondary (click)="openConfirmDialogForAssetDeletion(asset()!.id)" translate>
         delete
         <svg-icon key="delete"></svg-icon>
       </button>
     }
   </asset-sg-page-header>
-  <div class="content">
+  <div class="content" [class.pdf-preview-hidden]="!showPdfViewer() || !hasPdfs()">
     <asset-sg-editor-navigation
       [tabs]="availableTabs"
       [activeTab]="activeTab"
@@ -70,27 +70,27 @@
           @case (Tab.General) {
             <asset-sg-editor-general
               [form]="form.controls.general"
-              [asset]="asset"
+              [asset]="asset()"
               [hasReferences]="hasReferences"
             ></asset-sg-editor-general>
           }
           @case (Tab.Files) {
-            <asset-sg-editor-files [form]="form.controls.files" [asset]="asset"></asset-sg-editor-files>
+            <asset-sg-editor-files [form]="form.controls.files" [asset]="asset()"></asset-sg-editor-files>
           }
           @case (Tab.Status) {
             @if (mode === EditorMode.Edit) {
-              <asset-sg-editor-status [workflow]="workflow" [isRestricted]="!asset?.isPublic" />
+              <asset-sg-editor-status [workflow]="workflow" [isRestricted]="!asset()?.isPublic" />
             }
           }
           @case (Tab.LegacyData) {
-            @if (asset) {
-              <asset-sg-editor-legacy-data [asset]="asset"></asset-sg-editor-legacy-data>
+            @if (asset()) {
+              <asset-sg-editor-legacy-data [asset]="asset()"></asset-sg-editor-legacy-data>
             }
           }
           @case (Tab.References) {
             <asset-sg-editor-references
               [form]="form.controls.references"
-              [asset]="asset"
+              [asset]="asset()"
               [workgroupId]="form.controls.general.controls.workgroupId.value"
             ></asset-sg-editor-references>
           }
@@ -100,7 +100,7 @@
           @case (Tab.Contacts) {
             <asset-sg-editor-contacts
               [form]="form.controls.contacts"
-              [asset]="asset ?? null"
+              [asset]="asset() ?? null"
             ></asset-sg-editor-contacts>
           }
         }
@@ -113,6 +113,26 @@
         (discard)="initializeForm()"
         (save)="save()"
       ></asset-sg-editor-save>
+    </div>
+    <div class="pdf-preview">
+      <sgc-button
+        class="pdf-preview-toggle"
+        color="primary"
+        variant="icon"
+        (click)="togglePdfViewer()"
+        [isDisabled]="!hasPdfs()"
+      >
+        <sgc-icon [name]="showPdfViewer() ? 'drawerRight' : 'drawerLeft'" size="normal"></sgc-icon>
+      </sgc-button>
+      @if (showPdfViewer() && hasPdfs()) {
+        <div class="pdf-viewer-wrapper">
+          <asset-sg-pdf-viewer
+            [assetId]="asset()!.id"
+            [assetPdfs]="assetPdfs()"
+            [hideCloseButton]="true"
+          ></asset-sg-pdf-viewer>
+        </div>
+      }
     </div>
   </div>
 </div>

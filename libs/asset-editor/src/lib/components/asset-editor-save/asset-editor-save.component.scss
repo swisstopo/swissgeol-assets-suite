@@ -1,9 +1,6 @@
 @use "../../styles/variables";
 
 :host {
-  position: absolute;
-  bottom: 0;
-  width: calc(100vw - 280px);
   height: 56px;
   padding: 0 10px;
   display: flex;

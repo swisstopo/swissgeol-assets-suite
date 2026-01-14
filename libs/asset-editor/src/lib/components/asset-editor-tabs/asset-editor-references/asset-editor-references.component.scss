@@ -1,6 +1,7 @@
-form {
-  padding: 40px 0;
-  width: 950px;
+@use "../../../styles/mixins";
+
+:host {
+  @include mixins.editor-page-layout;
 }
 
 .header {

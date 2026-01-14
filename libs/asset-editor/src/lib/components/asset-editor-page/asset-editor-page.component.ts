@@ -1,4 +1,4 @@
-import { Component, inject, OnDestroy, OnInit } from '@angular/core';
+import { Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { AbstractControl, FormArray, FormControl, FormGroup, ValidationErrors, Validators } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, Router, RouterStateSnapshot } from '@angular/router';
@@ -46,6 +46,7 @@ import { AssetEditorService } from '../../services/asset-editor.service';
 import * as actions from '../../state/asset-editor.actions';
 import { selectWorkflow } from '../../state/asset-editor.selector';
 import { Tab } from '../asset-editor-navigation/asset-editor-navigation.component';
+import { isExistingAssetFile } from '../asset-editor-tabs/asset-editor-files/asset-editor-files.component';
 import {
   GeometryForm,
   makeGeometryForm,
@@ -58,24 +59,40 @@ import {
   standalone: false,
 })
 export class AssetEditorPageComponent implements OnInit, OnDestroy {
-  public mode = EditorMode.Create;
+  protected mode = EditorMode.Create;
 
   /**
    * The current asset. This is `null` while the asset is being loaded, or when a new asset is being created.
    */
-  public asset: Asset | null = null;
+  protected asset = signal<Asset | null>(null);
+
+  protected assetPdfs = computed(() => {
+    const asset = this.asset();
+    if (asset === null) {
+      return [];
+    }
+
+    return asset.files
+      .filter((f) => isExistingAssetFile(f) && f.name.endsWith('.pdf'))
+      .map((f) => ({
+        id: f.id,
+        fileName: f.alias ?? f.name,
+      }));
+  });
+  protected hasPdfs = computed(() => this.assetPdfs().length > 0);
+  protected showPdfViewer = signal(false);
 
   /**
    * The current asset's geometries. This remains empty when an asset is being created.
    */
-  public geometries: GeometryDetail[] = [];
+  protected geometries: GeometryDetail[] = [];
 
   /**
    * The asset's workflow. This is `null` while the workflow is being loaded, or when a new asset is being created.
    */
-  public workflow: Workflow | null = null;
+  protected workflow: Workflow | null = null;
 
-  public form!: AssetForm;
+  protected form!: AssetForm;
 
   /**
    * The form that controls the asset's geometries.
@@ -84,9 +101,9 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
    * Note that this only exists so we do not need to refactor the `asset-editor-geometries` component.
    * When that component is being replaced, this value should be removed.
    */
-  public geometryForm!: GeometryForm;
+  protected geometryForm!: GeometryForm;
 
-  public activeTab: Tab = Tab.General;
+  protected activeTab: Tab = Tab.General;
   protected availableTabs: Tab[] = [];
   protected readonly WorkflowStatus = WorkflowStatus;
   protected isLoading = false;
@@ -128,7 +145,7 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
           tap((current) => {
             if (this.mode === EditorMode.Edit && current !== null) {
               const { asset, geometries } = current;
-              this.asset = asset;
+              this.asset.set(asset);
               this.geometries = geometries;
             }
             this.initializeTabs();
@@ -142,6 +159,10 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
         this.workflow = workflow;
       }),
     );
+  }
+
+  protected togglePdfViewer() {
+    this.showPdfViewer.set(!this.showPdfViewer());
   }
 
   private connectGeometryForm(): void {
@@ -262,7 +283,7 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
 
   public initializeForm() {
     this.form.reset();
-    const { asset } = this;
+    const asset = this.asset();
     const { files, contacts } = this.form.controls;
     if (asset !== null) {
       files.clear();
@@ -353,7 +374,7 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
     if (
       this.form === undefined ||
       !this.form.dirty ||
-      targetRoute.url.startsWith(`/${this.languageService.language}/asset-admin/${this.asset?.id ?? 'new'}`)
+      targetRoute.url.startsWith(`/${this.languageService.language}/asset-admin/${this.asset()?.id ?? 'new'}`)
     ) {
       return true;
     }
@@ -377,7 +398,7 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
 
   private initializeTabs() {
     this.availableTabs = Object.values(Tab);
-    if (this.asset?.legacyData == null) {
+    if (this.asset()?.legacyData == null) {
       this.availableTabs.splice(this.availableTabs.indexOf(Tab.LegacyData), 1);
     }
   }
@@ -401,7 +422,7 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
     );
   }
   private setupSaveBehaviour(): Observable<{ asset: Asset; geometries: GeometryDetail[] }> {
-    const asset = this.asset;
+    const asset = this.asset();
     if (!this.asset && this.mode === EditorMode.Edit) {
       throw new Error('missing asset');
     }
