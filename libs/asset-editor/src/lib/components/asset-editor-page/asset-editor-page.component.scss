@@ -44,7 +44,6 @@ $max-pdf-width: 580px;
 
     &.pdf-preview-hidden {
       grid-template-columns: auto 1fr 0;
-      grid-template-areas: "editor-navigation editor-content pdf-preview";
     }
 
     & .editor-navigation {
@@ -78,7 +77,6 @@ $max-pdf-width: 580px;
 
     & .pdf-preview {
       grid-area: pdf-preview;
-      background-color: red;
       max-width: $max-pdf-width;
       min-width: 0;
       width: 100%;
