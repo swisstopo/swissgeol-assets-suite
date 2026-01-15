@@ -17,12 +17,13 @@
               <span translate>edit.tabs.files.export</span>
             </button>
             <span></span>
-            <asset-sg-text-input
-              (valueChange)="setSearchTerm($event)"
-              icon="search"
-              small
-              [placeholder]="'search.textSearchFieldPlaceholder' | translate"
-            />
+            <div class="search-input">
+              <asset-sg-text-input
+                (valueChange)="setSearchTerm($event)"
+                icon="search"
+                [placeholder]="'search.textSearchFieldPlaceholder' | translate"
+              />
+            </div>
           </div>
           <table
             mat-table
@@ -148,21 +149,6 @@
                     (click)="openPageRangeEditor(control.value)"
                   >
                     <sgc-icon name="tableOfContents" />
-                  </sgc-button>
-                  <sgc-button
-                    matTooltip="PDF Preview"
-                    [isDisabled]="
-                      !(control.value | hasCompletedExtraction: fileProcessingStates()) ||
-                      !control.value.name ||
-                      !control.value.name.toLowerCase().includes('.pdf')
-                    "
-                    color="secondary"
-                    variant="icon"
-                    size="small"
-                    justify="center"
-                    (click)="openPdfPreview(control.value)"
-                  >
-                    <sgc-icon name="openLink" />
                   </sgc-button>
                 </div>
               </td>

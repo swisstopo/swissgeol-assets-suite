@@ -24,6 +24,7 @@ export const itTranslationMapping: AppTranslationMapping = {
   datePlaceholder: 'AAAA-MM-GG',
   deletedUserName: 'IT gelöschter Benutzer',
   downloadFailed: 'IT Datei konnte nicht heruntergeladen werden.',
+  pdfNoLongerAvailable: 'IT Das geöffnete PDF ist nicht mehr verfügbar. Es wurde ein anderes PDF ausgewählt.',
   workgroup: {
     title: 'IT Arbeitsgruppe',
     errors: {

@@ -1,8 +1,12 @@
+@use "../../../styles/mixins";
+
+:host {
+  @include mixins.editor-page-layout;
+}
+
 .wrapper {
-  padding: 40px 0;
   display: flex;
   flex-direction: column;
-  width: 950px;
   gap: 24px;
 
   .content {
