@@ -111,18 +111,20 @@ export class SyncExternService {
     newAsset.assetFiles.map((a) => a.file).forEach((f) => this.existingFileIds.set(f.name, f.id));
 
     await this.destinationPrisma.assetContact.createMany({
-      data: [...contactsCreate.assignAfterwards.entries()].map(
-        ([uniqueKey, { role }]): Prisma.AssetContactCreateManyInput => ({
-          role,
-          assetId: newAsset.assetId,
-          contactId: run(() => {
-            const id = this.existingContactIds.get(uniqueKey);
-            if (id === undefined) {
-              throw new Error(`Missing contactId for ${uniqueKey}`);
-            }
-            return id;
+      data: [...contactsCreate.assignAfterwards.entries()].flatMap(([uniqueKey, roles]) =>
+        roles.map(
+          ({ role }): Prisma.AssetContactCreateManyInput => ({
+            role,
+            assetId: newAsset.assetId,
+            contactId: run(() => {
+              const id = this.existingContactIds.get(uniqueKey);
+              if (id === undefined) {
+                throw new Error(`Missing contactId for ${uniqueKey}`);
+              }
+              return id;
+            }),
           }),
-        }),
+        ),
       ),
     });
 
@@ -300,11 +302,11 @@ export class SyncExternService {
   private async createContactsPayload(
     assetContacts: (AssetContact & { contact: Contact })[], // prettier-ignore
   ): Promise<{
-    assignAfterwards: Map<string, { role: string }>;
+    assignAfterwards: Map<string, Array<{ role: string }>>;
     createData: Prisma.AssetContactUncheckedCreateNestedManyWithoutAssetInput;
   }> {
     const newlyAddedContactKeys: Set<string> = new Set();
-    const assignAfterwards: Map<string, { role: string }> = new Map();
+    const assignAfterwards: Map<string, Array<{ role: string }>> = new Map();
     const createData = {
       create: assetContacts
         .map(({ role, contact: { contactId: _, ...contact } }) => {
@@ -312,7 +314,11 @@ export class SyncExternService {
           const match = this.existingContactIds.get(uniqueContactKey);
           if (!match) {
             if (newlyAddedContactKeys.has(uniqueContactKey)) {
-              assignAfterwards.set(uniqueContactKey, { role });
+              if (assignAfterwards.has(uniqueContactKey)) {
+                assignAfterwards.set(uniqueContactKey, [...assignAfterwards.get(uniqueContactKey)!, { role }]);
+              } else {
+                assignAfterwards.set(uniqueContactKey, [{ role }]);
+              }
               return;
             } else {
               newlyAddedContactKeys.add(uniqueContactKey);
