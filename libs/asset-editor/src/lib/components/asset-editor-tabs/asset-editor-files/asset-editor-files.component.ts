@@ -173,8 +173,14 @@ export class AssetEditorFilesComponent implements OnInit, OnDestroy, OnChanges {
         PageRangeEditorData,
         PageRangeClassification[]
       >(PageRangeEditorComponent, {
-        data: { classifications: file.pageRangeClassifications, pageCount: file.pageCount ?? 0 }, // todo: pageCount can be 0
-        width: '925px',
+        data: {
+          classifications: file.pageRangeClassifications,
+          pageCount: file.pageCount ?? 0,
+          assetId: this.asset!.id,
+          assetFile: { id: file.id, fileName: file.name },
+        }, // todo: pageCount can be 0
+        width: 'auto',
+        height: '90%',
         autoFocus: false,
       });
 
