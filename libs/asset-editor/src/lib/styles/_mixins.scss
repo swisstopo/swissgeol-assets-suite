@@ -1,1 +1,7 @@
 @forward "../../../../../libs/client-shared/src/lib/styles/mixins";
+
+@mixin editor-page-layout {
+  padding: 40px 60px;
+  max-width: 950px;
+  width: 100%;
+}

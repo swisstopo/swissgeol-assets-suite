@@ -12,6 +12,7 @@ import {
   output,
   Renderer2,
   signal,
+  untracked,
   viewChild,
 } from '@angular/core';
 import { MatProgressBar } from '@angular/material/progress-bar';
@@ -106,6 +107,7 @@ export class PdfViewerComponent implements OnDestroy {
   constructor() {
     this.setupInitialPdfEffect();
     this.setupRenderingEffect();
+    this.setupAssetPdfChangeEffect();
   }
 
   public async ngOnDestroy() {
@@ -202,26 +204,59 @@ export class PdfViewerComponent implements OnDestroy {
   }
 
   /**
-   * Effect that triggers PDF loading and rendering whenever the selected PDF changes. This also handles the initial
-   * load, since it only runs as soon as the pdfElement is available.
+   * Because the list of assetPdfs could change while the viewer is open, we need to ensure that the selected PDF is
+   * still valid. If not, we reset it to the first available PDF.
    */
-  private setupRenderingEffect() {
-    effect(async () => {
-      const selectedPdf = this.selectedPdf();
-      if (this.pdfElement() && selectedPdf) {
-        await this.loadPdf(selectedPdf.id);
+  private setupAssetPdfChangeEffect() {
+    effect(() => {
+      const selectedPdf = untracked(() => this.selectedPdf());
+
+      if (selectedPdf) {
+        if (!this.assetPdfs().some((f) => f.id == selectedPdf.id && f.fileName === selectedPdf.fileName)) {
+          this.selectedPdf.set(this.assetPdfs()[0]);
+
+          this.store.dispatch(
+            showAlert({
+              alert: {
+                id: `pdf-notice-${this.assetId}-${this.selectedPdf()?.id}`,
+                text: this.translateService.instant('pdfNoLongerAvailable'),
+                type: AlertType.Warning,
+                isPersistent: false,
+              },
+            }),
+          );
+        }
       }
     });
   }
 
-  private async loadPdf(pdfId: number) {
+  /**
+   * Effect that triggers PDF loading and rendering whenever the selected PDF changes. This also handles the initial
+   * load, since it only runs as soon as the pdfElement is available. If it's the first run, it uses the
+   * initialPageNumber input to navigate to that page, otherwise it defaults to page 1.
+   */
+  private setupRenderingEffect() {
+    let isFirstRun = true;
+
+    effect(async () => {
+      const selectedPdf = this.selectedPdf();
+      if (this.pdfElement() && selectedPdf) {
+        await this.loadPdf(selectedPdf.id, isFirstRun ? this.initialPageNumber() : 1);
+        isFirstRun = false;
+      }
+    });
+  }
+
+  private async loadPdf(pdfId: number, onPage = 1) {
     this.clearCanvases();
     this.isRendering.set(true);
     this.hasError.set(false);
+    this.pageCount.set(-1);
+    this.currentPage.set(-1);
     try {
       const pageNum = await this.pdfViewerService.loadPdf(this.assetId(), pdfId);
       this.pageCount.set(pageNum);
-      await this.renderPage(this.initialPageNumber() ?? 1);
+      await this.renderPage(onPage);
     } catch (e) {
       this.hasError.set(true);
       this.store.dispatch(
@@ -251,6 +286,7 @@ export class PdfViewerComponent implements OnDestroy {
   }
 
   private async renderPage(pageNum: number, center?: PdfPageWrapperCenter) {
+    this.isRendering.set(true);
     for (const canvas of this.pdfCanvasElements.values()) {
       this.renderer.setStyle(canvas.parentElement, 'display', 'none');
     }
@@ -260,6 +296,7 @@ export class PdfViewerComponent implements OnDestroy {
     }
 
     this.currentPage.set(pageNum);
+    this.isRendering.set(false);
   }
 
   private useCachedPageIfExists(pageNum: number): boolean {
@@ -309,12 +346,10 @@ export class PdfViewerComponent implements OnDestroy {
   }
 
   private async renderPageAndCache(pageNum: number, center?: PdfPageWrapperCenter) {
-    this.isRendering.set(true);
     const parentWidth = this.pdfElement().nativeElement.clientWidth * PDF_RENDERING_MARGIN;
     const parentHeight = this.pdfElement().nativeElement.clientHeight * PDF_RENDERING_MARGIN;
     const canvas = this.createCanvasPlaceholder(pageNum, center);
     await this.pdfViewerService.renderPageToCanvas(canvas, pageNum, parentWidth, parentHeight, this.zoom());
     this.pdfCanvasElements.set(pageNum, canvas);
-    this.isRendering.set(false);
   }
 }

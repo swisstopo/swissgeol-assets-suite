@@ -24,6 +24,7 @@ export const frTranslationMapping: AppTranslationMapping = {
   datePlaceholder: 'AAAA-MM-JJ',
   deletedUserName: 'FR gelöschter Benutzer',
   downloadFailed: 'FR Datei konnte nicht heruntergeladen werden.',
+  pdfNoLongerAvailable: 'Le PDF n’est plus disponible. Un autre PDF a été choisi.',
   workgroup: {
     title: 'groupe de travail',
     errors: {

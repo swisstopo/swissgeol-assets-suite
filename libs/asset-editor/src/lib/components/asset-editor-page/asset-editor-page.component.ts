@@ -1,4 +1,4 @@
-import { Component, inject, OnDestroy, OnInit } from '@angular/core';
+import { Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { AbstractControl, FormArray, FormControl, FormGroup, ValidationErrors, Validators } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, Router, RouterStateSnapshot } from '@angular/router';
@@ -46,6 +46,7 @@ import { AssetEditorService } from '../../services/asset-editor.service';
 import * as actions from '../../state/asset-editor.actions';
 import { selectWorkflow } from '../../state/asset-editor.selector';
 import { Tab } from '../asset-editor-navigation/asset-editor-navigation.component';
+import { isExistingAssetFile } from '../asset-editor-tabs/asset-editor-files/asset-editor-files.component';
 import {
   GeometryForm,
   makeGeometryForm,
@@ -58,24 +59,41 @@ import {
   standalone: false,
 })
 export class AssetEditorPageComponent implements OnInit, OnDestroy {
-  public mode = EditorMode.Create;
+  protected mode = EditorMode.Create;
 
   /**
    * The current asset. This is `null` while the asset is being loaded, or when a new asset is being created.
    */
-  public asset: Asset | null = null;
+  protected readonly asset = signal<Asset | null>(null);
+
+  protected readonly assetPdfs = computed(() => {
+    const asset = this.asset();
+    if (asset === null) {
+      return [];
+    }
+
+    return asset.files
+      .filter((f) => isExistingAssetFile(f) && f.name.endsWith('.pdf'))
+      .map((f) => ({
+        id: f.id,
+        fileName: f.alias ?? f.name,
+      }));
+  });
+  protected readonly hasPdfs = computed(() => this.assetPdfs().length > 0);
+  protected readonly showPdfViewer = signal(false);
+  protected readonly pdfViewerInitialized = signal(false);
 
   /**
    * The current asset's geometries. This remains empty when an asset is being created.
    */
-  public geometries: GeometryDetail[] = [];
+  protected geometries: GeometryDetail[] = [];
 
   /**
    * The asset's workflow. This is `null` while the workflow is being loaded, or when a new asset is being created.
    */
-  public workflow: Workflow | null = null;
+  protected workflow: Workflow | null = null;
 
-  public form!: AssetForm;
+  protected form!: AssetForm;
 
   /**
    * The form that controls the asset's geometries.
@@ -84,25 +102,31 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
    * Note that this only exists so we do not need to refactor the `asset-editor-geometries` component.
    * When that component is being replaced, this value should be removed.
    */
-  public geometryForm!: GeometryForm;
+  protected geometryForm!: GeometryForm;
 
-  public activeTab: Tab = Tab.General;
+  protected activeTab: Tab = Tab.General;
   protected availableTabs: Tab[] = [];
   protected readonly WorkflowStatus = WorkflowStatus;
   protected isLoading = false;
-
+  protected readonly Tab = Tab;
+  protected readonly EditorMode = EditorMode;
   private readonly store = inject(Store<AppSharedState>);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly dialogService = inject(MatDialog);
-
   private readonly languageService = inject(LanguageService);
   private readonly assetEditorService = inject(AssetEditorService);
   private readonly assetSearchService = inject(AssetSearchService);
-
   private readonly routerSegments$ = inject(ROUTER_SEGMENTS);
-
   private readonly subscriptions: Subscription = new Subscription();
+
+  get hasReferences(): boolean {
+    return (
+      this.form.controls.references.controls.parent.value !== null ||
+      this.form.controls.references.controls.siblings.value.length > 0 ||
+      this.form.controls.references.controls.children.value.length > 0
+    );
+  }
 
   public ngOnInit() {
     this.subscriptions.add(
@@ -128,7 +152,7 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
           tap((current) => {
             if (this.mode === EditorMode.Edit && current !== null) {
               const { asset, geometries } = current;
-              this.asset = asset;
+              this.asset.set(asset);
               this.geometries = geometries;
             }
             this.initializeTabs();
@@ -142,6 +166,138 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
         this.workflow = workflow;
       }),
     );
+  }
+
+  public ngOnDestroy() {
+    this.store.dispatch(actions.reset());
+    this.subscriptions.unsubscribe();
+  }
+
+  public navigateToStart() {
+    this.router.navigate(['/']).then();
+  }
+
+  public initializeForm() {
+    this.form.reset();
+    const asset = this.asset();
+    const { files, contacts } = this.form.controls;
+    if (asset !== null) {
+      files.clear();
+      for (const file of asset.files) {
+        files.push(
+          new FormControl(
+            {
+              ...file,
+              shouldBeDeleted: false,
+            } satisfies AssetFormFile,
+            { nonNullable: true },
+          ),
+        );
+      }
+
+      contacts.clear();
+      for (const contact of asset.contacts) {
+        contacts.push(new FormControl(contact, { nonNullable: true }));
+      }
+
+      let restrictionType: RestrictionType = RestrictionType.Restricted;
+      if (asset.isPublic) {
+        restrictionType = RestrictionType.Public;
+      } else if (asset.restrictionDate) {
+        restrictionType = RestrictionType.TemporarilyRestricted;
+      }
+
+      this.form.controls.general.setValue({
+        title: asset.title,
+        originalTitle: asset.originalTitle,
+        languageCodes: asset.languageCodes,
+        formatCode: asset.formatCode,
+        kindCode: asset.kindCode,
+        topicCodes: asset.topicCodes,
+        isOfNationalInterest: asset.isOfNationalInterest,
+        nationalInterestTypeCodes: asset.nationalInterestTypeCodes,
+        identifiers: asset.identifiers,
+        workgroupId: asset.workgroupId,
+        createdAt: asset.createdAt.toDate(),
+        receivedAt: asset.receivedAt.toDate(),
+        restrictionType: restrictionType,
+        restrictionDate: asset.restrictionDate?.toDate() ?? null,
+      });
+
+      this.form.controls.references.setValue({
+        parent: asset.parent,
+        siblings: asset.siblings,
+        children: asset.children,
+      });
+
+      this.form.controls.geometries.setValue([]);
+    }
+  }
+
+  public openConfirmDialogForAssetDeletion(assetId: number): void {
+    const dialogRef = this.dialogService.open<ConfirmDialogComponent, ConfirmDialogData, boolean>(
+      ConfirmDialogComponent,
+      {
+        data: {
+          text: 'confirmDelete',
+          confirm: 'confirm',
+        },
+      },
+    );
+    dialogRef.afterClosed().subscribe((hasConfirmed) => {
+      if (hasConfirmed) {
+        this.store.dispatch(actions.deleteAsset({ assetId }));
+      }
+    });
+  }
+
+  public save(): void {
+    this.subscriptions.add(
+      this.setupSaveBehaviour().subscribe(({ asset, geometries }) => {
+        this.isLoading = false;
+        if (this.mode === EditorMode.Create) {
+          // When the asset has just been created, then we want to navigate to its edit page.
+          // Note that this won't reload this component - it's simply a "cosmetic" change.
+          this.router.navigate([this.languageService.language, 'asset-admin', asset.id], { replaceUrl: true }).then();
+        }
+        this.mode = EditorMode.Edit;
+        this.store.dispatch(actions.updateAsset({ asset, geometries }));
+      }),
+    );
+  }
+
+  public canDeactivate(targetRoute: RouterStateSnapshot): boolean | Observable<boolean> {
+    if (
+      this.form === undefined ||
+      !this.form.dirty ||
+      targetRoute.url.startsWith(`/${this.languageService.language}/asset-admin/${this.asset()?.id ?? 'new'}`)
+    ) {
+      return true;
+    }
+    const dialogRef = this.dialogService.open<ConfirmDialogComponent, ConfirmDialogData, boolean>(
+      ConfirmDialogComponent,
+      {
+        data: {
+          text: this.form.invalid ? 'edit.questionAbortChanges' : 'edit.questionDiscardChanges',
+          confirm: 'save',
+          isSaveDisabled: this.form.invalid,
+        },
+      },
+    );
+    return dialogRef.afterClosed().pipe(
+      filter((hasConfirmed) => !!hasConfirmed),
+      switchMap(() => {
+        return this.setupSaveBehaviour().pipe(map(() => true));
+      }),
+    );
+  }
+
+  protected togglePdfViewer() {
+    const newValue = !this.showPdfViewer();
+    this.showPdfViewer.set(newValue);
+    if (newValue) {
+      this.pdfViewerInitialized.set(true);
+    }
   }
 
   private connectGeometryForm(): void {
@@ -243,141 +399,9 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
     });
   }
 
-  public ngOnDestroy() {
-    this.store.dispatch(actions.reset());
-    this.subscriptions.unsubscribe();
-  }
-
-  get hasReferences(): boolean {
-    return (
-      this.form.controls.references.controls.parent.value !== null ||
-      this.form.controls.references.controls.siblings.value.length > 0 ||
-      this.form.controls.references.controls.children.value.length > 0
-    );
-  }
-
-  public navigateToStart() {
-    this.router.navigate(['/']).then();
-  }
-
-  public initializeForm() {
-    this.form.reset();
-    const { asset } = this;
-    const { files, contacts } = this.form.controls;
-    if (asset !== null) {
-      files.clear();
-      for (const file of asset.files) {
-        files.push(
-          new FormControl(
-            {
-              ...file,
-              shouldBeDeleted: false,
-            } satisfies AssetFormFile,
-            { nonNullable: true },
-          ),
-        );
-      }
-
-      contacts.clear();
-      for (const contact of asset.contacts) {
-        contacts.push(new FormControl(contact, { nonNullable: true }));
-      }
-
-      let restrictionType: RestrictionType = RestrictionType.Restricted;
-      if (asset.isPublic) {
-        restrictionType = RestrictionType.Public;
-      } else if (asset.restrictionDate) {
-        restrictionType = RestrictionType.TemporarilyRestricted;
-      }
-
-      this.form.controls.general.setValue({
-        title: asset.title,
-        originalTitle: asset.originalTitle,
-        languageCodes: asset.languageCodes,
-        formatCode: asset.formatCode,
-        kindCode: asset.kindCode,
-        topicCodes: asset.topicCodes,
-        isOfNationalInterest: asset.isOfNationalInterest,
-        nationalInterestTypeCodes: asset.nationalInterestTypeCodes,
-        identifiers: asset.identifiers,
-        workgroupId: asset.workgroupId,
-        createdAt: asset.createdAt.toDate(),
-        receivedAt: asset.receivedAt.toDate(),
-        restrictionType: restrictionType,
-        restrictionDate: asset.restrictionDate?.toDate() ?? null,
-      });
-
-      this.form.controls.references.setValue({
-        parent: asset.parent,
-        siblings: asset.siblings,
-        children: asset.children,
-      });
-
-      this.form.controls.geometries.setValue([]);
-    }
-  }
-
-  public openConfirmDialogForAssetDeletion(assetId: number): void {
-    const dialogRef = this.dialogService.open<ConfirmDialogComponent, ConfirmDialogData, boolean>(
-      ConfirmDialogComponent,
-      {
-        data: {
-          text: 'confirmDelete',
-          confirm: 'confirm',
-        },
-      },
-    );
-    dialogRef.afterClosed().subscribe((hasConfirmed) => {
-      if (hasConfirmed) {
-        this.store.dispatch(actions.deleteAsset({ assetId }));
-      }
-    });
-  }
-
-  public save(): void {
-    this.subscriptions.add(
-      this.setupSaveBehaviour().subscribe(({ asset, geometries }) => {
-        this.isLoading = false;
-        if (this.mode === EditorMode.Create) {
-          // When the asset has just been created, then we want to navigate to its edit page.
-          // Note that this won't reload this component - it's simply a "cosmetic" change.
-          this.router.navigate([this.languageService.language, 'asset-admin', asset.id], { replaceUrl: true }).then();
-        }
-        this.mode = EditorMode.Edit;
-        this.store.dispatch(actions.updateAsset({ asset, geometries }));
-      }),
-    );
-  }
-
-  public canDeactivate(targetRoute: RouterStateSnapshot): boolean | Observable<boolean> {
-    if (
-      this.form === undefined ||
-      !this.form.dirty ||
-      targetRoute.url.startsWith(`/${this.languageService.language}/asset-admin/${this.asset?.id ?? 'new'}`)
-    ) {
-      return true;
-    }
-    const dialogRef = this.dialogService.open<ConfirmDialogComponent, ConfirmDialogData, boolean>(
-      ConfirmDialogComponent,
-      {
-        data: {
-          text: this.form.invalid ? 'edit.questionAbortChanges' : 'edit.questionDiscardChanges',
-          confirm: 'save',
-          isSaveDisabled: this.form.invalid,
-        },
-      },
-    );
-    return dialogRef.afterClosed().pipe(
-      filter((hasConfirmed) => !!hasConfirmed),
-      switchMap(() => {
-        return this.setupSaveBehaviour().pipe(map(() => true));
-      }),
-    );
-  }
-
   private initializeTabs() {
     this.availableTabs = Object.values(Tab);
-    if (this.asset?.legacyData == null) {
+    if (this.asset()?.legacyData == null) {
       this.availableTabs.splice(this.availableTabs.indexOf(Tab.LegacyData), 1);
     }
   }
@@ -400,8 +424,9 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
       }),
     );
   }
+
   private setupSaveBehaviour(): Observable<{ asset: Asset; geometries: GeometryDetail[] }> {
-    const asset = this.asset;
+    const asset = this.asset();
     if (!this.asset && this.mode === EditorMode.Edit) {
       throw new Error('missing asset');
     }
@@ -488,9 +513,6 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
       ),
     );
   }
-
-  protected readonly Tab = Tab;
-  protected readonly EditorMode = EditorMode;
 }
 
 export type ExistingAssetFile = Pick<

@@ -8,6 +8,21 @@
 
 ### Fixed
 
+## v.1.17.0
+
+### Added
+
+- PDF Dateien können nun auch in einem Sidepanel in der Edit-Ansicht angezeigt werden neben den Details zum Asset.
+
+### Changed
+
+### Fixed
+
+- Dateinamen mit Umlauten werden nun korrekt angezeigt.
+- Neu erstellte Kontakte mit allen drei Rollen werden korrekt gesynced
+- Wenn eine neue Datei geöffnet wird, nachdem bereits eine geöffnet war, wird diese immer auf der ersten Seite geöffnet.
+- Konflikte zwischen Dependencies wurden behoben
+
 ## v.1.16.0
 
 ### Added

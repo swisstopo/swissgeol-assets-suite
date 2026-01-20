@@ -2,7 +2,6 @@
 @use "@angular/material" as mat;
 @use "../theme" as *;
 
-$app-bar-height: 88px;
 $menu-bar-width: 80px;
 
 :host {
@@ -21,9 +20,9 @@ asset-sg-menu-bar {
 
 .drawer-portal {
   position: absolute;
-  top: $app-bar-height;
+  top: variables.$app-bar-height;
   left: $menu-bar-width;
-  height: calc(100vh - $app-bar-height);
+  height: calc(100vh - #{variables.$app-bar-height});
 }
 
 .router-outlet {
@@ -39,7 +38,7 @@ asset-sg-menu-bar {
   :host {
     margin: 0 auto;
     grid-template-areas: "app-bar app-bar" "menu-bar router-outlet";
-    grid-template-rows: $app-bar-height calc(100vh - $app-bar-height);
+    grid-template-rows: variables.$app-bar-height calc(100vh - #{variables.$app-bar-height});
     grid-template-columns: $menu-bar-width 1fr;
     box-shadow: 0 0 60px 0 rgb(0 0 0 / 60%);
     --viewport-width: min(calc(100vw - #{$menu-bar-width}), calc(1920px - #{$menu-bar-width}));

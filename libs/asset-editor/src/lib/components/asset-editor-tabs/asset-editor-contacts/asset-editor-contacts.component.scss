@@ -1,6 +1,6 @@
+@use "../../../styles/mixins";
 :host {
-  padding: 40px 0;
-  width: 950px;
+  @include mixins.editor-page-layout;
 }
 
 .mat-column-delete {

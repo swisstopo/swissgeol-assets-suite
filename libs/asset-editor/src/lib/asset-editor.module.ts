@@ -47,6 +47,7 @@ import {
   isAdminGuard,
   LocalizePathPipe,
   PageHeaderComponent,
+  PdfViewerComponent,
   SelectComponent,
   SelectOptionComponent,
   SmartTranslatePipe,
@@ -237,6 +238,7 @@ const routes: Routes = [
     SgcIcon,
     SgcButton,
     HasCompletedExtractionPipe,
+    PdfViewerComponent,
   ],
   providers: [
     { provide: MAT_DATE_LOCALE, useValue: de },

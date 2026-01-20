@@ -126,7 +126,7 @@ export class FilesController {
     };
     const legalDocCode = parseEnumFromRequest(LegalDocCode, body.legalDocCode, 'Invalid legalDocCode');
     const record = await this.fileService.create({
-      name: file.originalname,
+      name: this.decodeFilename(file.originalname),
       size: file.size,
       legalDocCode,
       assetId: asset.id,
@@ -156,5 +156,16 @@ export class FilesController {
     }
 
     return asset;
+  }
+
+  /**
+   * Decode filename from latin1 to utf8 to support special characters. This is a known issue with multer/busboy, in
+   * that filenames are encoded in latin1 by default. The solution here is the proposed workaround from the library
+   * maintainers.
+   *
+   * More info: https://github.com/mscdex/busboy/issues/20#issuecomment-1003622855
+   */
+  private decodeFilename(fileName: string): string {
+    return Buffer.from(fileName, 'latin1').toString('utf8');
   }
 }

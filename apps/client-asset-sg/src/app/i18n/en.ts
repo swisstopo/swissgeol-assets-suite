@@ -24,6 +24,7 @@ export const enTranslationMapping: AppTranslationMapping = {
   datePlaceholder: 'YYYY-MM-DD',
   deletedUserName: 'deleted User',
   downloadFailed: 'File could not be downloaded.',
+  pdfNoLongerAvailable: 'The opened PDF is no longer available. Another PDF has been opened.',
   workgroup: {
     title: 'Workgroup',
     errors: {
