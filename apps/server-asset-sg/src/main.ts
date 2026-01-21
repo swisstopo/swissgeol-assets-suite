@@ -1,6 +1,7 @@
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 
+import { NestExpressApplication } from '@nestjs/platform-express';
 import compression from 'compression';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
@@ -21,12 +22,13 @@ process.on('warning', (e) => console.warn(e.stack));
 
 async function bootstrap(): Promise<void> {
   const logger = new AppLogger();
-  const app = await NestFactory.create(AppModule, { logger });
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, { logger });
   app.use(helmet());
   app.setGlobalPrefix(API_PREFIX);
   app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true, forbidNonWhitelisted: true }));
   app.useGlobalFilters(new PrismaExceptionFilter());
   app.use(compression());
+  app.set('query-parser', 'extended'); // see https://docs.nestjs.com/migration-guide#query-parameters-parsing
 
   const userService = app.get(UserService);
   await userService.startCronJob();

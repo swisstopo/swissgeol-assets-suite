@@ -1,10 +1,9 @@
 import { Role, User, WorkgroupId } from '@asset-sg/shared/v2';
 import { environment } from '@environment';
-import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { HttpService } from '@nestjs/axios';
+import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
 import { HttpException, Inject, Injectable, NestMiddleware } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import axios from 'axios';
-import { Cache } from 'cache-manager';
 import { NextFunction, Request, Response } from 'express';
 import * as E from 'fp-ts/Either';
 import { pipe } from 'fp-ts/function';
@@ -22,6 +21,7 @@ import { JwtRequest } from '@/models/jwt-request';
 export class JwtMiddleware implements NestMiddleware {
   constructor(
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
+    @Inject(HttpService) private readonly httpService: HttpService,
     private readonly userRepo: UserRepo,
     private readonly workgroupRepo: WorkgroupRepo,
   ) {}
@@ -129,7 +129,7 @@ export class JwtMiddleware implements NestMiddleware {
     const jwksPath = environment.production ? '/.well-known/jwks.json' : '/.well-known/openid-configuration/jwks';
     return pipe(
       TE.tryCatch(
-        () => axios.get(`${process.env.OAUTH_ISSUER}${jwksPath}`),
+        () => this.httpService.axiosRef.get(`${process.env.OAUTH_ISSUER}${jwksPath}`),
         (reason) => new Error(`${reason}`),
       ),
       TE.map((response) => response.data.keys),
@@ -238,7 +238,7 @@ export class JwtMiddleware implements NestMiddleware {
     return pipe(
       TE.tryCatch(
         () =>
-          axios.get(`${process.env.OAUTH_USER_INFO_ENDPOINT}`, {
+          this.httpService.axiosRef.get(`${process.env.OAUTH_USER_INFO_ENDPOINT}`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
         (reason) => {
