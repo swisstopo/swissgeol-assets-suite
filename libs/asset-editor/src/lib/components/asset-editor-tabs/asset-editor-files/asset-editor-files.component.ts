@@ -194,19 +194,6 @@ export class AssetEditorFilesComponent implements OnInit, OnDestroy, OnChanges {
     }
   }
 
-  protected openPdfPreview(file: AssetFormFile) {
-    if (isExistingAssetFile(file)) {
-      this.pdfOverlayService.openPdfOverlay({
-        assetId: this.asset!.id,
-        initialPdfId: file.id,
-        assetPdfs: this.asset!.files.filter((f) => isExistingAssetFile(f) && f.name.endsWith('.pdf')).map((f) => ({
-          id: f.id,
-          fileName: f.alias ?? f.name,
-        })),
-      });
-    }
-  }
-
   protected selectFile(control: FormControl<AssetFormFile>, event: MatCheckboxChange) {
     if (event.checked) {
       this.selectedFiles.add(control.value);
