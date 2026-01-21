@@ -1,89 +1,113 @@
 @use "../../../../styles/variables";
+@use "../../../../styles/mixins";
 
-.header {
-  padding: 24px 24px 16px 24px;
-  display: flex;
-  justify-content: space-between;
-}
+.wrapper {
+  display: grid;
+  grid-template: "content pdf-preview" / minmax(850px, 925px) 560px;
+  height: 100%;
 
-h2,
-hr {
-  margin: 0;
-}
+  & .editor {
+    grid-area: content;
+    min-width: 850px;
 
-.content {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 16px;
-  padding: 24px;
-}
-
-.page-range-editor {
-  display: flex;
-  flex-direction: column;
-  gap: 36px;
-
-  &__row {
-    &__inputs {
-      display: grid;
-      width: 100%;
-      grid-template-columns: 36px 465px minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
-      gap: 16px;
-      align-items: end;
+    h2,
+    hr {
+      margin: 0;
     }
 
-    &__error {
-      color: var(--sgc-color-error);
-      font-size: 12px;
+    & .header {
+      padding: 24px 24px 16px 24px;
       display: flex;
-      justify-content: end;
+      justify-content: space-between;
+      gap: 24px;
+      align-items: center;
+
+      &__title {
+        @include mixins.text-ellipsis;
+        flex: 1;
+        min-width: 0;
+      }
+
+      &__reclassify {
+        flex-shrink: 0;
+      }
+    }
+
+    & .form-wrapper {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      gap: 16px;
+
+      & form {
+        overflow: auto;
+        //padding-bottom: 20px;
+
+        & .page-range-editor {
+          display: flex;
+          flex-direction: column;
+          gap: 36px;
+
+          &__row {
+            &__inputs {
+              display: grid;
+              width: 100%;
+              grid-template-columns: 36px 465px minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
+              gap: 16px;
+              align-items: end;
+            }
+
+            &__error {
+              color: var(--sgc-color-error);
+              font-size: 12px;
+              display: flex;
+              justify-content: end;
+            }
+          }
+        }
+      }
+
+      & .page-range-editor__add-row {
+        display: flex;
+        flex-shrink: 0;
+        justify-content: center;
+        width: 100%;
+        border: 1px dashed variables.$cyan-08;
+        padding: 12px 0;
+
+        &__icon {
+          background-color: var(--sgc-color-primary);
+          color: white;
+          padding: 10.5px;
+          border-radius: 50%;
+          display: flex;
+        }
+
+        &:hover {
+          cursor: pointer;
+
+          & .page-range-editor__add-row__icon {
+            background-color: var(--sgc-color-primary--hovered);
+          }
+        }
+
+        &:active {
+          & .page-range-editor__add-row__icon {
+            background-color: var(--sgc-color-primary--pressed);
+          }
+        }
+      }
+    }
+
+    & .actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 16px;
+      padding: 24px;
     }
   }
-}
 
-.page-range-editor__add-row {
-  display: flex;
-  flex-shrink: 0;
-  justify-content: center;
-  width: 100%;
-  border: 1px dashed variables.$cyan-08;
-  padding: 12px 0;
-
-  &__icon {
-    background-color: var(--sgc-color-primary);
-    color: white;
-    padding: 10.5px;
-    border-radius: 50%;
-    display: flex;
-  }
-
-  &:hover {
-    cursor: pointer;
-  }
-
-  &:hover &__icon {
-    background-color: var(--sgc-color-primary--hovered);
-  }
-
-  &:active &__icon {
-    background-color: var(--sgc-color-primary--pressed);
-  }
-}
-
-.form-wrapper {
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  gap: 16px;
-
-  form {
-    overflow: auto;
-    padding-bottom: 20px;
+  & .pdf-preview {
+    grid-area: pdf-preview;
   }
 }

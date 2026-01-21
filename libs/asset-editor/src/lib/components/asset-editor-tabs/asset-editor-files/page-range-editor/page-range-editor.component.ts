@@ -13,7 +13,7 @@ import {
   Validators,
 } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogActions, MatDialogContent, MatDialogRef } from '@angular/material/dialog';
-import { AlertType, SelectComponent, showAlert } from '@asset-sg/client-shared';
+import { AlertType, PdfViewerComponent, PdfViewerFile, SelectComponent, showAlert } from '@asset-sg/client-shared';
 import {
   PageCategory,
   PageClassification,
@@ -29,6 +29,8 @@ import { SgcButton, SgcIcon } from '@swissgeol/ui-core-angular';
 export type PageRangeEditorData = {
   classifications: PageRangeClassification[] | null;
   pageCount: number;
+  assetId: number;
+  assetFile: PdfViewerFile;
 };
 
 type PageClassificationFormGroup = FormGroup<{
@@ -60,6 +62,7 @@ type SelectOption<T> = {
     SelectComponent,
     TranslatePipe,
     SgcIcon,
+    PdfViewerComponent,
   ],
   templateUrl: './page-range-editor.component.html',
   styleUrl: './page-range-editor.component.scss',
