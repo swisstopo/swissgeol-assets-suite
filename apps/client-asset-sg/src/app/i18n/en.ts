@@ -22,7 +22,7 @@ export const enTranslationMapping: AppTranslationMapping = {
   delete: 'Delete',
   close: 'Close',
   datePlaceholder: 'YYYY-MM-DD',
-  deletedUserName: 'deleted User',
+  deletedUserName: 'deleted user',
   downloadFailed: 'File could not be downloaded.',
   pdfNoLongerAvailable: 'The opened PDF is no longer available. Another PDF has been opened.',
   workgroup: {
@@ -44,18 +44,18 @@ export const enTranslationMapping: AppTranslationMapping = {
     InReview: 'Review',
     Reviewed: 'Reviewed',
     Published: 'Published',
-    notPublished: 'Not Published',
+    notPublished: 'Not published',
   },
   workflowSelection: {
     general: 'General',
-    normalFiles: 'Normal Files',
-    legalFiles: 'Legal Consents',
+    normalFiles: 'Normal files',
+    legalFiles: 'Legal consents',
     initiators: 'Clients',
     suppliers: 'Suppliers',
     authors: 'Authors',
     references: 'References',
     geometries: 'Geometries',
-    legacy: 'Legacy Data',
+    legacy: 'Legacy data',
   },
   menuBar: {
     filters: 'Filters',
@@ -65,7 +65,7 @@ export const enTranslationMapping: AppTranslationMapping = {
     profile: 'Profile',
     settings: 'Settings',
     signOut: 'Close',
-    createAsset: 'New Asset',
+    createAsset: 'New asset',
   },
   map: {
     zoomIn: 'Zoom in',
@@ -102,7 +102,7 @@ export const enTranslationMapping: AppTranslationMapping = {
     contacts: 'Contacts',
     subject: 'Subject',
     content: 'Content',
-    nationalInterest: 'Nat. Interest',
+    nationalInterest: 'Nat. interest',
     references: 'References',
     status: 'Status',
     closeAssetDetails: 'Close asset details',
@@ -166,7 +166,7 @@ export const enTranslationMapping: AppTranslationMapping = {
         dateReceived: 'Receipt date',
         type: 'Type',
         alternativeId: 'Alternative ID',
-        alternativeIdDescription: 'Alternative ID Description',
+        alternativeIdDescription: 'Alternative ID description',
         addNewAlternativeId: 'Add new alternative ID',
         referencesWarning: 'In order to change the workgroup, you must first remove all references.',
         access: {
@@ -181,8 +181,8 @@ export const enTranslationMapping: AppTranslationMapping = {
       files: {
         tabName: 'Files',
         Normal: {
-          one: 'Normal File',
-          many: 'Normal Files',
+          one: 'Normal file',
+          many: 'Normal files',
         },
         Legal: {
           one: 'Legal consent',
@@ -200,7 +200,7 @@ export const enTranslationMapping: AppTranslationMapping = {
         willBeUploaded: 'Will be uploaded',
         fileSizeToLarge: 'File size may not exceed 2GB',
         fileNameTooltip: '{{name}} (Uploaded: {{date}})',
-        fileProcessingState: 'Processing State',
+        fileProcessingState: 'Processing state',
         fileProcessingStateValues: {
           WillNotBeProcessed: 'will not be processed',
           Waiting: 'waiting',
@@ -219,10 +219,10 @@ export const enTranslationMapping: AppTranslationMapping = {
           pageTo: 'Page to',
           save: 'Finish editing',
           toLessThanFromError: '"To" must be greater than or equal to "From".',
-          reanalyze: 'Reanalyze',
+          reanalyze: 'Reanalyse',
           recalculateSuccess: 'The page classes have been successfully recalculated.',
           confirmReanalyze:
-            'When reanalyzing, the page classes and/or languages will be redefined. Any previously made adjustments will be overwritten. The analysis may take a longer time.',
+            'When reanalysing, the page classes and/or languages will be redefined. Any previously made adjustments will be overwritten. The analysis may take a longer time.',
         },
       },
       usage: {
@@ -249,18 +249,18 @@ export const enTranslationMapping: AppTranslationMapping = {
         link: 'Link',
         unlink: 'Unlink contact',
         viewDetails: 'Show contact details',
-        addContact: 'Add Contact',
-        createNewContact: 'Create new Contact',
+        addContact: 'Add contact',
+        createNewContact: 'Create new contact',
         editContact: 'Contact',
         contact: 'Contact',
         finishEditing: 'Finish editing',
         role: 'Role',
-        newContact: 'New Contact',
+        newContact: 'New contact',
         contactKind: 'Contact kind',
         name: 'Name',
         street: 'Street',
         number: 'Number',
-        postCode: 'Post code',
+        postCode: 'Postal code',
         locality: 'Locality',
         country: 'Country',
         email: 'Email',
@@ -343,17 +343,17 @@ export const enTranslationMapping: AppTranslationMapping = {
       },
     },
     closeManageAsset: 'Close manage asset',
-    unsavedChanges: 'Unsaved Changes',
+    unsavedChanges: 'Unsaved changes',
     discardChanges: 'Discard changes',
     questionDiscardChanges: 'There are unsaved changes. Do you want to save all changes?',
     questionAbortChanges: 'Your edits are currently incomplete. The asset cannot be saved in this state.',
     userManagementHeading: 'Users',
     userManagementButton: 'Manage users',
-    adminInstructionsSyncElasticAssetsHeading: 'Synchronize assets with Elasticsearch',
+    adminInstructionsSyncElasticAssetsHeading: 'Synchronise assets with Elasticsearch',
     adminInstructionsSyncElasticAssets:
-      'Equalizes the state of Elasticsearch with the local database.' +
+      'Equalises the state of Elasticsearch with the local database.' +
       ' This ensures that the search includes all existing assets.',
-    adminInstructionsSyncElasticAssetsStart: 'Start synchronization',
+    adminInstructionsSyncElasticAssetsStart: 'Start synchronisation',
   },
   admin: {
     users: 'Users',
@@ -378,21 +378,21 @@ export const enTranslationMapping: AppTranslationMapping = {
       lang: 'Language',
       addWorkgroups: 'Add workgroup',
       general: 'General',
-      more: 'more',
+      more: 'More',
       userAddError: 'Add at least one user',
       workgroupAddError: 'Add at least one workgroup',
-      amount: 'Number of Assets',
+      amount: 'Number of assets',
     },
     workgroupPage: {
       name: 'Name',
       isActive: 'Active',
       activate: 'Activate',
       deactivate: 'Deactivate',
-      create: 'New Workgroup',
+      create: 'New workgroup',
       isDisabled: 'Inactive',
       chooseUsersText: 'Add users to manage',
       addUsers: 'Add users',
-      usersPerRole: 'Users per Role',
+      usersPerRole: 'Users per role',
       delete: 'Delete workgroup',
       unableToDelete: 'The workgroup can not be deleted because it still has assets assigned to it.',
     },
@@ -404,7 +404,7 @@ export const enTranslationMapping: AppTranslationMapping = {
   disclaimer: {
     title: 'Terms of Service',
     liability: {
-      title: 'Limitation of liability',
+      title: 'Limitation of Liability',
       content:
         'Although every care has been taken by the Federal Office of Topography swisstopo to ensure the accuracy of the information published, no guarantee can be given with regard to the accurate, reliable, up-to-date or complete nature of this information.' +
         '<br><br>' +
@@ -426,9 +426,9 @@ export const enTranslationMapping: AppTranslationMapping = {
     geometry: {
       name: 'Geometry',
       items: {
-        point: 'Asset Point',
-        line: 'Asset Line',
-        polygon: 'Asset Area',
+        point: 'Asset point',
+        line: 'Asset line',
+        polygon: 'Asset polygon',
       },
     },
     access: {
