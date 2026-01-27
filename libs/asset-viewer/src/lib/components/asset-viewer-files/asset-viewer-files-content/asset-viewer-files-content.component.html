@@ -7,7 +7,7 @@
     @if (!accordionItem.expanded) {
       <asset-sg-asset-viewer-files-content-summary
         [languages]="groupedPageClassifications().languages"
-        [categories]="groupedPageClassifications().categories"
+        [categories]="pageCategories()"
         [pageCount]="pageCount()"
         [legalDocCode]="legalDocCode()"
       />
@@ -22,19 +22,19 @@
       [attr.aria-labelledby]="'accordion-header'"
       data-testid="content-body"
     >
-      @for (group of groupedPageClassifications().groupedPageClassifications | keyvalue; track group.key) {
-        <dl [attr.data-testid]="'category-' + group.key">
+      @for (group of groupedPageClassifications().groupedPageClassifications; track group.category) {
+        <dl [attr.data-testid]="'category-' + group.category">
           <dt translate>
-            {{ "pageClassificationCodes." + group.key }}
+            {{ "pageClassificationCodes." + group.category }}
           </dt>
-          @for (page of group.value; track page) {
+          @for (classification of group.classifications; track classification) {
             <dd>
-              <button (click)="this.openPdfOnPage(page.from)">
-                {{ "pageClassificationCodes." + group.key | translate }}
+              <button (click)="this.openPdfOnPage(classification.from)">
+                {{ "pageClassificationCodes." + group.category | translate }}
               </button>
-              @if (page.languages.length > 0) {
+              @if (classification.languages.length > 0) {
                 <span class="tag-group">
-                  @for (language of page.languages; track language) {
+                  @for (language of classification.languages; track language) {
                     <asset-sg-asset-viewer-files-tag variant="small" [attr.data-testid]="'language-' + language">{{
                       language.toUpperCase()
                     }}</asset-sg-asset-viewer-files-tag>
@@ -43,10 +43,10 @@
               }
               <span class="range-divider"></span>
               <span class="page-range">
-                @if (page.from === page.to) {
-                  {{ page.from }}
+                @if (classification.from === classification.to) {
+                  {{ classification.from }}
                 } @else {
-                  {{ page.from }} - {{ page.to }}
+                  {{ classification.from }} - {{ classification.to }}
                 }
               </span>
             </dd>

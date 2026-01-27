@@ -1,6 +1,7 @@
 <div class="viewer-wrapper">
   @if (!hideHeader()) {
     <asset-sg-pdf-viewer-header
+      class="viewer__header"
       (downloadPdf)="downloadPdf()"
       (closeViewer)="onCloseViewer()"
       [(selectedPdf)]="selectedPdf"
@@ -19,6 +20,17 @@
         [mode]="hasError() ? 'determinate' : 'indeterminate'"
         [value]="100"
       ></mat-progress-bar>
+    }
+
+    @if (selectedPdf()?.pageRangeClassifications) {
+      <div class="viewer__toc">
+        <asset-sg-pdf-viewer-toc
+          [pageRangeClassifications]="selectedPdf()?.pageRangeClassifications!"
+          [currentPage]="currentPage()"
+          (changePageEvent)="this.navigateToPage($event)"
+          [isRendering]="isRendering()"
+        ></asset-sg-pdf-viewer-toc>
+      </div>
     }
     <div #pdf class="viewer__page-wrapper" [class.viewer__page-wrapper--is-zoomed]="isZoomed()"></div>
 

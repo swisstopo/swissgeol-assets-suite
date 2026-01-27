@@ -1,4 +1,9 @@
-import { PageCategory, PageClassification, PageRangeClassification, SupportedPageLanguage } from '../models/asset-file';
+import {
+  PageCategory,
+  PageClassification,
+  PageRangeClassification,
+  SupportedPageLanguage,
+} from '../models/page-classification';
 import { isDeepEqual } from './is-deep-equal';
 
 /**

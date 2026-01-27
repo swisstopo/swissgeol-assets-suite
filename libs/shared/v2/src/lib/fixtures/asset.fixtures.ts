@@ -1,7 +1,7 @@
 import { LocalDate, WorkflowStatus } from '@swissgeol/ui-core';
 import { Asset } from '../models/asset';
-import { PageCategory } from '../models/asset-file';
 import { AssetContactRole } from '../models/contact';
+import { PageCategory } from '../models/page-classification';
 import { LanguageCode } from '../models/reference-data';
 import { contactFixtures } from './contact.fixtures';
 import { fileFixtures } from './files.fixtures';
