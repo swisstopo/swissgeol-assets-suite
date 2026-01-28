@@ -16,7 +16,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { MatProgressBar } from '@angular/material/progress-bar';
-import { AssetFileSignedUrl } from '@asset-sg/shared/v2';
+import { AssetFile, AssetFileSignedUrl } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
 import { TranslateService } from '@ngx-translate/core';
 import { showAlert } from '../../state/alert/alert.actions';
@@ -28,6 +28,7 @@ import {
   PdfViewerNavigationComponent,
 } from './pdf-viewer-navigation/pdf-viewer-navigation.component';
 import { PdfViewerRotateComponent } from './pdf-viewer-rotate/pdf-viewer-rotate.component';
+import { PdfViewerTocComponent } from './pdf-viewer-toc/pdf-viewer-toc.component';
 import { PdfViewerZoomComponent, PdfZoomAction } from './pdf-viewer-zoom/pdf-viewer-zoom.component';
 import { PdfViewerService } from './pdf-viewer.service';
 
@@ -36,8 +37,7 @@ type PdfPageWrapperCenter = {
   y: number;
 };
 
-export type PdfViewerFile = {
-  id: number;
+export type PdfViewerFile = Pick<AssetFile, 'id' | 'pageRangeClassifications'> & {
   fileName: string;
 };
 
@@ -69,6 +69,7 @@ const ZOOM_STEP = 0.5;
     PdfViewerZoomComponent,
     PdfViewerRotateComponent,
     PdfViewerHeaderComponent,
+    PdfViewerTocComponent,
   ],
   templateUrl: './pdf-viewer.component.html',
   styleUrl: './pdf-viewer.component.scss',

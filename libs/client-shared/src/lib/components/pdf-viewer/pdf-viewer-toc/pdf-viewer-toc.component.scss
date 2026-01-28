@@ -1,0 +1,82 @@
+@use "../../../styles/variables";
+
+.pdf-viewer-toc {
+  z-index: 20;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+
+  &__toggle-button {
+    display: flex;
+    justify-self: flex-end;
+    box-shadow: 4px 4px 2px 0 #0000001f;
+    height: 44px;
+    width: 44px;
+
+    &::part(button) {
+      border-radius: 0 0 4px 0;
+    }
+  }
+
+  &__content {
+    background-color: var(--sgc-color-bg--white);
+    height: 100%;
+    width: 280px;
+    overflow: auto;
+    padding: 0;
+    border-right: 1px solid var(--sgc-color-border--default);
+
+    &__item {
+      &__heading {
+        padding: 0 16px 0 8px;
+        border-bottom: 1px solid var(--sgc-color-border--default);
+        height: 40px;
+        align-items: center;
+        display: flex;
+        width: 100%;
+        font-weight: variables.$font-normal;
+        font-size: 14px;
+        color: var(--sgc-color-text--emphasis-high);
+
+        &:hover {
+          background-color: var(--sgc-color-secondary--hovered);
+        }
+      }
+
+      &__content {
+        border-bottom: 1px solid var(--sgc-color-border--default);
+        height: 40px;
+        align-items: center;
+        display: flex;
+        padding: 0 16px 0 54px;
+        justify-content: space-between;
+        width: 100%;
+        font-weight: variables.$font-normal;
+        font-size: 14px;
+        color: var(--sgc-color-text--emphasis-high);
+
+        &--active {
+          background-color: var(--sgc-color-textfield-grey);
+          box-shadow: inset 3px 0 0 0 var(--sgc-color-primary);
+        }
+
+        &:disabled {
+          cursor: not-allowed;
+        }
+
+        &:hover {
+          background-color: var(--sgc-color-secondary--hovered);
+        }
+
+        &__category {
+          &--active {
+            color: var(--sgc-color-primary);
+            font-weight: variables.$font-bold;
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,4 +1,4 @@
-import { PageCategory, PageClassification } from '../models/asset-file';
+import { PageCategory, PageClassification } from '../models/page-classification';
 import { transformPagesToRanges } from './transform-pages-to-ranges';
 
 describe('TransformPagesToRanges', () => {

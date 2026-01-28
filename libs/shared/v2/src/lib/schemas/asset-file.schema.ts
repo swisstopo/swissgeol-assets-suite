@@ -7,12 +7,14 @@ import {
   FileProcessingStage,
   FileProcessingState,
   LegalDocCode,
+  UpdateAssetFileData,
+} from '../models/asset-file';
+import {
   PageCategory,
   PageRangeClassification,
   SupportedPageLanguage,
   SupportedPageLanguages,
-  UpdateAssetFileData,
-} from '../models/asset-file';
+} from '../models/page-classification';
 import { IsNullable } from '../utils/class-validator/is-nullable.decorator';
 import { Schema } from './base/schema';
 

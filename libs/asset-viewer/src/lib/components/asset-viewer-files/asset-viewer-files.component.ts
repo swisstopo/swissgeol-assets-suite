@@ -38,6 +38,7 @@ export class AssetViewerFilesComponent {
         .map((f) => ({
           id: f.id,
           fileName: f.alias ?? f.name,
+          pageRangeClassifications: f.pageRangeClassifications,
         })),
     });
   }

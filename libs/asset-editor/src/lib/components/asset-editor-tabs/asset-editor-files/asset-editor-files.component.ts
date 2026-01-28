@@ -177,7 +177,7 @@ export class AssetEditorFilesComponent implements OnInit, OnDestroy, OnChanges {
           classifications: file.pageRangeClassifications,
           pageCount: file.pageCount ?? 0,
           assetId: this.asset!.id,
-          assetFile: { id: file.id, fileName: file.name },
+          assetFile: { id: file.id, fileName: file.name, pageRangeClassifications: file.pageRangeClassifications },
         }, // todo: pageCount can be 0
         width: 'auto',
         height: '90%',

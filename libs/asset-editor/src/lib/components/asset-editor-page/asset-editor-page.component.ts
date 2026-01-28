@@ -77,6 +77,7 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
       .map((f) => ({
         id: f.id,
         fileName: f.alias ?? f.name,
+        pageRangeClassifications: f.pageRangeClassifications,
       }));
   });
   protected readonly hasPdfs = computed(() => this.assetPdfs().length > 0);
