@@ -32,30 +32,40 @@ runs:
 
     - name: "Write values to file"
       shell: bash
+      env:
+        HELM_VALUES: ${{ env.HELM_VALUES }}
       run: |
         cat <<'EOF' > ./k8s/values.yaml
-        ${{ env.HELM_VALUES }}
+        ${HELM_VALUES}
         EOF
 
     - name: "Write secrets to file"
       shell: bash
+      env:
+        HELM_SECRETS: ${{ env.HELM_SECRETS }}
       run: |
         cat <<'EOF' > ./k8s/secrets.yaml
-        ${{ env.HELM_SECRETS }}
+        ${HELM_SECRETS}
         EOF
 
     - name: "Write kubeconfig to file"
       shell: bash
+      env:
+        KUBECONFIG_CONTENT: ${{ env.KUBECONFIG }}
       run: |
         cat <<'EOF' > kubeconfig.yaml
-        ${{ env.KUBECONFIG }}
+        ${KUBECONFIG_CONTENT}
         EOF
 
     - name: "Deploy helm charts"
       shell: bash
+      env:
+        DEPLOYMENT_NAME: ${{ inputs.DEPLOYMENT_NAME }}
+        REPO_PATH: ${{ inputs.REPO_PATH }}
+        K8S_NAMESPACE: ${{ env.K8S_NAMESPACE }}
       run: |
-        helm upgrade --install ${{ inputs.DEPLOYMENT_NAME }} ${{ inputs.REPO_PATH }} \
+        helm upgrade --install "${DEPLOYMENT_NAME}" "${REPO_PATH}" \
           --values ./k8s/values.yaml \
           --values ./k8s/secrets.yaml \
-          --kubeconfig $(pwd)/kubeconfig.yaml \
-          --namespace ${{ env.K8S_NAMESPACE }}
+          --kubeconfig "$(pwd)/kubeconfig.yaml" \
+          --namespace "${K8S_NAMESPACE}"

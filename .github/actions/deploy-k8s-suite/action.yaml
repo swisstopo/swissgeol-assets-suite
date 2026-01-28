@@ -24,7 +24,14 @@ runs:
   steps:
     - name: "Setup env"
       shell: bash
-      run: echo "SUITE_NAME_SUFFIX=${{ inputs.SUITE_NAME_SUFFIX && format('-{0}', inputs.SUITE_NAME_SUFFIX) }}" >> $GITHUB_ENV
+      env:
+        SUFFIX: ${{ inputs.SUITE_NAME_SUFFIX }}
+      run: |
+        if [ -n "${SUFFIX}" ]; then
+          echo "SUITE_NAME_SUFFIX=-${SUFFIX}" >> $GITHUB_ENV
+        else
+          echo "SUITE_NAME_SUFFIX=" >> $GITHUB_ENV
+        fi
     - name: "Setup kubectl"
       uses: azure/setup-kubectl@v4
     - name: "Install helm"
