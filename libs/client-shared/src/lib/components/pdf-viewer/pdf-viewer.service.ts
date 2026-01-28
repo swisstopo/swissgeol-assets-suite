@@ -81,8 +81,17 @@ export class PdfViewerService implements OnDestroy {
   }
 
   private prepareCanvas(canvas: HTMLCanvasElement, viewport: PageViewport) {
-    canvas.width = viewport.width;
-    canvas.height = viewport.height;
+    const dpr = window.devicePixelRatio || 1;
+
+    canvas.width = viewport.width * dpr;
+    canvas.height = viewport.height * dpr;
+    canvas.style.width = `${viewport.width}px`;
+    canvas.style.height = `${viewport.height}px`;
+
+    const context = canvas.getContext('2d');
+    if (context) {
+      context.scale(dpr, dpr);
+    }
   }
 
   private prepareViewport(page: PDFPageProxy, parentWidth: number, parentHeight: number, zoom: number): PageViewport {
