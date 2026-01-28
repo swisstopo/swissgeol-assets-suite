@@ -6,9 +6,6 @@ on:
 concurrency:
   group: "publish"
 
-# Run all publish workflow in sequence to ensure consistent version numbers.
-permissions: write-all
-
 jobs:
   enforce-main:
     name: "enforce main"
@@ -24,6 +21,9 @@ jobs:
   publish:
     needs:
       - enforce-main
+    permissions:
+      contents: read
+      packages: write
     uses: "./.github/workflows/publish.yml"
     with:
       tag: latest
@@ -45,6 +45,8 @@ jobs:
     needs:
       - publish
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -75,6 +77,9 @@ jobs:
     needs:
       - publish
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4

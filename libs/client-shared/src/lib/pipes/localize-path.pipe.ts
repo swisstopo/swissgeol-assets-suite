@@ -40,7 +40,7 @@ export class LocalizePathPipe implements PipeTransform, OnDestroy {
 }
 
 const makePath = (value: string | string[]): string => {
-  return typeof value === 'string' ? joinPath('/', value) : value.reduce(joinPath, '/');
+  return typeof value === 'string' ? joinPath('/', value) : value.reduce((left, right) => joinPath(left, right), '/');
 };
 
 const joinPath = (left: string, right: string): string => {

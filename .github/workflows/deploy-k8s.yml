@@ -11,10 +11,6 @@ on:
           - int
           - prod
 
-permissions:
-  contents: read
-  id-token: write
-
 env:
   TARGET_ENV: ${{ github.event.inputs.env || 'dev' }}
 
@@ -22,6 +18,9 @@ jobs:
   deploy-assets:
     name: "deploy assets"
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - name: "Select AWS_ROLE"
         id: select-aws-role
@@ -46,6 +45,9 @@ jobs:
     name: "deploy assets-ext"
     if: ${{ inputs.env == 'prod' }}
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - name: "Select AWS_ROLE"
         id: select-aws-role
@@ -71,6 +73,9 @@ jobs:
     name: "deploy assets-view"
     if: ${{ inputs.env == 'prod' }}
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - name: "Select AWS_ROLE"
         id: select-aws-role
