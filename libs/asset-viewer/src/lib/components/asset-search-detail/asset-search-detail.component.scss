@@ -62,6 +62,12 @@
   justify-content: flex-end;
 }
 
+.two-col-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
 .asset-detail {
   min-height: calc(100% - 3rem);
   padding: 16px;
@@ -70,9 +76,9 @@
   flex-direction: column;
   gap: 16px;
 
-  &__general {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+  &__ids {
+    display: flex;
+    flex-direction: column;
     gap: 8px;
   }
 }

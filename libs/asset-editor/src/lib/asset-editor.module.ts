@@ -69,7 +69,7 @@ import { RxFor } from '@rx-angular/template/for';
 import { RxIf } from '@rx-angular/template/if';
 import { RxLet } from '@rx-angular/template/let';
 import { RxPush } from '@rx-angular/template/push';
-import { SgcButton, SgcIcon, SgcWorkflow } from '@swissgeol/ui-core-angular';
+import { SgcButton, SgcCard, SgcIcon, SgcWorkflow } from '@swissgeol/ui-core-angular';
 import { de } from 'date-fns/locale/de';
 import { combineLatest, filter, map } from 'rxjs';
 import { AssetEditorIdListComponent } from './components/asset-editor-id-list/asset-editor-id-list.component';
@@ -239,6 +239,7 @@ const routes: Routes = [
     SgcButton,
     HasCompletedExtractionPipe,
     PdfViewerComponent,
+    SgcCard,
   ],
   providers: [
     { provide: MAT_DATE_LOCALE, useValue: de },
