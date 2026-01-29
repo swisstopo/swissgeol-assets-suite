@@ -150,7 +150,7 @@
       </mat-chip-set>
     </div>
   </asset-sg-detail-section>
-  <asset-sg-detail-section [title]="'edit.tabs.general.alternativeId' | translate">
+  <asset-sg-detail-section title="IDs">
     <div actions>
       <button asset-sg-secondary (click)="addNewAlternativeId()" translate>
         edit.tabs.general.addNewAlternativeId
@@ -158,12 +158,18 @@
       </button>
     </div>
     <div class="content column" content>
-      <asset-sg-asset-editor-id-list [control]="form.controls.identifiers" />
+      <asset-sg-text-input disabled [value]="asset?.id?.toString() ?? ''" title="Asset-ID"></asset-sg-text-input>
       <asset-sg-text-input
         disabled
         [value]="asset?.legacyData?.sgsId?.toString() ?? ''"
         [title]="'edit.tabs.general.sgsId' | translate"
       ></asset-sg-text-input>
+
+      @if (form.controls.identifiers.value.length > 0) {
+        <sgc-card [header]="('edit.tabs.general.alternativeId' | translate) + 's'" collapsed>
+          <asset-sg-asset-editor-id-list [control]="form.controls.identifiers" />
+        </sgc-card>
+      }
     </div>
   </asset-sg-detail-section>
 </form>
