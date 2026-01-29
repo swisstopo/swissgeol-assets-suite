@@ -76,6 +76,7 @@ export class AssetSearchWriter {
 
     return {
       id: asset.id,
+      alternativeIds: asset.identifiers.map((id) => id.value),
       title: asset.title,
       originalTitle: asset.originalTitle,
       sgsId: asset.legacyData?.sgsId ?? null,

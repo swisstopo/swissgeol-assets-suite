@@ -38,10 +38,17 @@ import { AssetSearchWriter, AssetSearchWriterOptions } from '@/features/assets/s
 import { GeometryDetailRepo } from '@/features/geometries/geometry-detail.repo';
 import { GeometryRepo } from '@/features/geometries/geometry.repo';
 
-const INDEX = 'swissgeol_asset_asset';
-export { INDEX as ASSET_ELASTIC_INDEX };
+export const ASSET_ELASTIC_INDEX = 'swissgeol_asset_asset';
 
 const SEARCH_BATCH_SIZE = 10_000;
+
+const SEARCHABLE_FIELDS: (keyof ElasticsearchAsset)[] = [
+  'title',
+  'originalTitle',
+  'contactNames',
+  'sgsId',
+  'alternativeIds',
+];
 
 @Injectable()
 export class AssetSearchService {
@@ -65,20 +72,20 @@ export class AssetSearchService {
       this.prisma,
       this.geometryRepo,
       this.geometryDetailRepo,
-      options ?? { index: INDEX, shouldRefresh: true },
+      options ?? { index: ASSET_ELASTIC_INDEX, shouldRefresh: true },
     );
   }
 
   async deleteFromIndex(assetId: number): Promise<void> {
     await this.elastic.delete({
-      index: INDEX,
+      index: ASSET_ELASTIC_INDEX,
       id: `${assetId}`,
       refresh: true,
     });
   }
 
   async count(): Promise<number> {
-    return (await this.elastic.count({ index: INDEX, ignore_unavailable: true })).count;
+    return (await this.elastic.count({ index: ASSET_ELASTIC_INDEX, ignore_unavailable: true })).count;
   }
 
   async syncWithDatabase(onProgress?: (percentage: number) => void | Promise<void>): Promise<void> {
@@ -93,7 +100,7 @@ export class AssetSearchService {
     }
 
     // Initialize a temporary sync index.
-    const SYNC_INDEX = `sync-${INDEX}-${getDateTimeString()}`;
+    const SYNC_INDEX = `sync-${ASSET_ELASTIC_INDEX}-${getDateTimeString()}`;
     const existsSyncIndex = await this.elastic.indices.exists({ index: SYNC_INDEX });
     if (existsSyncIndex) {
       throw new Error(`can't sync to '${SYNC_INDEX}', index already exists`);
@@ -126,12 +133,12 @@ export class AssetSearchService {
     this.logger.debug('Done syncing assets.', { total });
 
     // Delete the existing asset index.
-    await this.elastic.indices.delete({ index: INDEX, ignore_unavailable: true });
+    await this.elastic.indices.delete({ index: ASSET_ELASTIC_INDEX, ignore_unavailable: true });
 
     // Recreate the asset index and configure its mapping.
-    await this.elastic.indices.create({ index: INDEX });
+    await this.elastic.indices.create({ index: ASSET_ELASTIC_INDEX });
     await this.elastic.indices.putMapping({
-      index: INDEX,
+      index: ASSET_ELASTIC_INDEX,
       ...indexMapping,
     });
 
@@ -141,11 +148,11 @@ export class AssetSearchService {
     // Copy the sync index's contents into the empty asset index.
     await this.elastic.reindex({
       source: { index: SYNC_INDEX },
-      dest: { index: INDEX },
+      dest: { index: ASSET_ELASTIC_INDEX },
     });
 
     // Refresh the asset index so its contents are searchable.
-    await this.elastic.indices.refresh({ index: INDEX });
+    await this.elastic.indices.refresh({ index: ASSET_ELASTIC_INDEX });
 
     // Delete the sync index.
     await this.elastic.indices.delete({ index: SYNC_INDEX });
@@ -254,7 +261,7 @@ export class AssetSearchService {
 
     const aggregateByQuery = async (aggs: Record<string, AggregationsAggregationContainer>) => {
       return await this.elastic.search({
-        index: INDEX,
+        index: ASSET_ELASTIC_INDEX,
         size: 0,
         query: { bool: { must } },
         track_total_hits: true,
@@ -264,7 +271,7 @@ export class AssetSearchService {
     };
 
     const response = await this.elastic.search({
-      index: INDEX,
+      index: ASSET_ELASTIC_INDEX,
       size: 0,
       query: { bool: { must, filter } },
       track_total_hits: true,
@@ -434,7 +441,7 @@ export class AssetSearchService {
     options: { limit: number; fields: string[] },
   ): Promise<SearchResponse> {
     const response = await this.elastic.search({
-      index: INDEX,
+      index: ASSET_ELASTIC_INDEX,
       query: elasticQuery,
       size: options.limit,
       fields: options.fields,
@@ -464,16 +471,17 @@ const mapQueryToElasticDslParts = (
   query: AssetSearchQuery,
   user: User,
 ): { must: QueryDslQueryContainer[]; filter: QueryDslQueryContainer[] } => {
-  const scope = ['title', 'originalTitle', 'contactNames', 'sgsId'];
+  const scope = SEARCHABLE_FIELDS;
   const queries: QueryDslQueryContainer[] = [];
   const filters: QueryDslQueryContainer[] = [];
+
   if (query.text != null && query.text.length > 0) {
     queries.push({
       bool: {
         should: [
           {
             query_string: {
-              query: normalizeFieldQuery(query.text), // todo assets-639: check how to deal with escape
+              query: escapeElasticQuery(normalizeFieldQuery(query.text)),
               fields: scope,
             },
           },
@@ -598,9 +606,27 @@ interface PageOptions {
   offset?: number;
 }
 
-const normalizeFieldQuery = (
-  query: string,
-): string => // todo assets-639: check how to deal with escape
+/**
+ * Escapes special characters in an Elasticsearch query string. Preserves wildcards (*) since this is what users might
+ * use. This is a fix for a long-standing issue after io-ts refactor (see assets-639 for details).
+ *
+ * Furthermore, it also escapes the colon (:) character, but then un-escapes it for specific fields that are allowed to
+ * be searched, to avoid issues when users search for e.g. "title:My Title".
+ */
+export const escapeElasticQuery = (query: string): string => {
+  let escaped = query.replace(/(&&|\|\||!|\(|\)|\{|}|\[|]|\^|"|~|\+|-|=|\?|:|\\|\/)/g, '\\$1');
+
+  for (const field of SEARCHABLE_FIELDS) {
+    escaped = escaped.replace(new RegExp(`${field}\\\\:`, 'gi'), `${field}:`);
+  }
+
+  return escaped;
+};
+
+/**
+ * Helper function for backwards compatibility of field names in search queries.
+ */
+export const normalizeFieldQuery = (query: string): string =>
   query
     .replace(/title(_*)public:/gi, 'title:')
     .replace(/title(_*)original:/gi, 'originalTitle:')
