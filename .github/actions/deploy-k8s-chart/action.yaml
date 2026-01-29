@@ -35,7 +35,7 @@ runs:
       env:
         HELM_VALUES: ${{ env.HELM_VALUES }}
       run: |
-        cat <<'EOF' > ./k8s/values.yaml
+        cat <<EOF > ./k8s/values.yaml
         ${HELM_VALUES}
         EOF
 
@@ -44,7 +44,7 @@ runs:
       env:
         HELM_SECRETS: ${{ env.HELM_SECRETS }}
       run: |
-        cat <<'EOF' > ./k8s/secrets.yaml
+        cat <<EOF > ./k8s/secrets.yaml
         ${HELM_SECRETS}
         EOF
 
@@ -53,7 +53,7 @@ runs:
       env:
         KUBECONFIG_CONTENT: ${{ env.KUBECONFIG }}
       run: |
-        cat <<'EOF' > kubeconfig.yaml
+        cat <<EOF > kubeconfig.yaml
         ${KUBECONFIG_CONTENT}
         EOF
 
