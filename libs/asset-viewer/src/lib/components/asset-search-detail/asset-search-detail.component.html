@@ -13,7 +13,7 @@
   <div class="asset-detail-scroll-container">
     <div class="asset-detail">
       @if ((isAnonymous$ | async) === false) {
-        <div class="asset-detail__general">
+        <div class="two-col-cards">
           <sgc-card [header]="'search.status' | translate" collapsed>
             <asset-sg-status-chip [status]="asset.workflowStatus"></asset-sg-status-chip>
           </sgc-card>
@@ -119,26 +119,38 @@
         </sgc-card>
       }
 
-      @if (asset.identifiers.length > 0) {
-        <sgc-card [header]="('search.alternativeId' | translate) + 's'" data-testid="assetAlternativeId">
-          @for (identifier of asset.identifiers; track identifier.id) {
-            <div class="col-2">
-              <dl>
-                <dt>ID</dt>
-                <dd>{{ identifier.value }}</dd>
-              </dl>
-              <dl>
-                <dt translate>search.alternativeIdDescription</dt>
-                <dd>{{ identifier.description }}</dd>
-              </dl>
-            </div>
+      <sgc-card header="IDs">
+        <div class="asset-detail__ids">
+          <div class="two-col-cards">
+            <sgc-card header="Asset-ID" collapsed>
+              {{ asset.id }}
+            </sgc-card>
+            <sgc-card [header]="'edit.tabs.general.sgsId' | translate" collapsed>
+              {{ asset.legacyData?.sgsId ?? "-" }}
+            </sgc-card>
+          </div>
+          @if (asset.identifiers.length > 0) {
+            <sgc-card [header]="('search.alternativeId' | translate) + 's'" collapsed data-testid="assetAlternativeId">
+              @for (identifier of asset.identifiers; track identifier.id) {
+                <div class="col-2">
+                  <dl>
+                    <dt>ID</dt>
+                    <dd>{{ identifier.value }}</dd>
+                  </dl>
+                  <dl>
+                    <dt translate>search.alternativeIdDescription</dt>
+                    <dd>{{ identifier.description }}</dd>
+                  </dl>
+                </div>
 
-            @if (!$last) {
-              <hr class="divider" />
-            }
+                @if (!$last) {
+                  <hr class="divider" />
+                }
+              }
+            </sgc-card>
           }
-        </sgc-card>
-      }
+        </div>
+      </sgc-card>
 
       @if (normalFiles$ | async; as normalFiles) {
         @if (legalFiles$ | async; as legalFiles) {

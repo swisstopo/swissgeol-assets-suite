@@ -173,8 +173,14 @@ export class AssetEditorFilesComponent implements OnInit, OnDestroy, OnChanges {
         PageRangeEditorData,
         PageRangeClassification[]
       >(PageRangeEditorComponent, {
-        data: { classifications: file.pageRangeClassifications, pageCount: file.pageCount ?? 0 }, // todo: pageCount can be 0
-        width: '925px',
+        data: {
+          classifications: file.pageRangeClassifications,
+          pageCount: file.pageCount ?? 0,
+          assetId: this.asset!.id,
+          assetFile: { id: file.id, fileName: file.name, pageRangeClassifications: file.pageRangeClassifications },
+        }, // todo: pageCount can be 0
+        width: 'auto',
+        height: '90%',
         autoFocus: false,
       });
 
@@ -185,19 +191,6 @@ export class AssetEditorFilesComponent implements OnInit, OnDestroy, OnChanges {
           }
         }),
       );
-    }
-  }
-
-  protected openPdfPreview(file: AssetFormFile) {
-    if (isExistingAssetFile(file)) {
-      this.pdfOverlayService.openPdfOverlay({
-        assetId: this.asset!.id,
-        initialPdfId: file.id,
-        assetPdfs: this.asset!.files.filter((f) => isExistingAssetFile(f) && f.name.endsWith('.pdf')).map((f) => ({
-          id: f.id,
-          fileName: f.alias ?? f.name,
-        })),
-      });
     }
   }
 

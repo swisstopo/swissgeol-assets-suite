@@ -8,6 +8,21 @@
 
 ### Fixed
 
+## v.1.18.0
+
+### Added
+
+- Italienisch wurde als Sprache hinzugefügt.
+- Die PDF Preview ist auch beim Reklassifizieren von Dokumenten verfügbar.
+- Die PDF Preview zeigt nun auch ein Inhaltsverzeichnis an.
+
+### Changed
+
+- PDF Dateien werden auf Retina Displays schärfer dargestellt.
+- Die AssetId und Alternativ-Ids werden in der Asset-Detailansicht dargestellt.
+
+### Fixed
+
 ## v.1.17.0
 
 ### Added

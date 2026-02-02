@@ -1,5 +1,6 @@
 import { Asset } from '../models/asset';
-import { FileProcessingStage, FileProcessingState, PageCategory, PageRangeClassification } from '../models/asset-file';
+import { FileProcessingStage, FileProcessingState } from '../models/asset-file';
+import { PageCategory, PageRangeClassification } from '../models/page-classification';
 
 export interface RegisterFileOptions {
   name: string;

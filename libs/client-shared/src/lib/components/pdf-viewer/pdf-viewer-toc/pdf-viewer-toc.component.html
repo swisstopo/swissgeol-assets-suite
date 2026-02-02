@@ -1,0 +1,42 @@
+<div class="pdf-viewer-toc">
+  @if (showToc()) {
+    <cdk-accordion class="pdf-viewer-toc__content" multi>
+      @for (group of groupedPageClassifications().groupedPageClassifications; track group.category) {
+        <cdk-accordion-item #accordionItem="cdkAccordionItem" class="pdf-viewer-toc__item">
+          @let categoryTitle = "pageClassificationCodes." + group.category | translate;
+          <button class="pdf-viewer-toc__content__item__heading" (click)="accordionItem.toggle()">
+            <sgc-icon [name]="accordionItem.expanded ? 'chevronDown' : 'chevronRight'"></sgc-icon>
+            {{ categoryTitle }}
+          </button>
+          @if (accordionItem.expanded) {
+            @for (classification of group.classifications; track classification) {
+              @let isActive = currentPage() >= classification.from && currentPage() <= classification.to;
+              <button
+                class="pdf-viewer-toc__content__item__content"
+                [class.pdf-viewer-toc__content__item__content--active]="isActive"
+                (click)="goToPage(classification.from)"
+                [disabled]="isRendering()"
+              >
+                <span
+                  class="pdf-viewer-toc__content__item__content__category"
+                  [class.pdf-viewer-toc__content__item__content__category--active]="isActive"
+                  >{{ categoryTitle }} {{ $index + 1 }}</span
+                >
+                <span class="pdf-viewer-toc__content__item__content__page-range">
+                  @if (classification.from === classification.to) {
+                    {{ classification.from }}
+                  } @else {
+                    {{ classification.from }} - {{ classification.to }}
+                  }
+                </span>
+              </button>
+            }
+          }
+        </cdk-accordion-item>
+      }
+    </cdk-accordion>
+  }
+  <sgc-button class="pdf-viewer-toc__toggle-button" color="primary" variant="icon" (click)="toggleToc()">
+    <sgc-icon [name]="showToc() ? 'drawerLeft' : 'drawerRight'" size="normal"></sgc-icon>
+  </sgc-button>
+</div>

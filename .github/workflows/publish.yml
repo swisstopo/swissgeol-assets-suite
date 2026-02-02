@@ -16,12 +16,13 @@ on:
         description: "The version determined via `version_script`."
         value: ${{ jobs.determine-version.outputs.version }}
 
-permissions: write-all
-
 jobs:
   determine-version:
     name: "determine version"
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
     outputs:
       version: ${{ steps.find-version.outputs.result }}
     steps:
@@ -47,6 +48,9 @@ jobs:
     needs:
       - determine-version
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -64,6 +68,9 @@ jobs:
     needs:
       - determine-version
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -81,6 +88,9 @@ jobs:
     needs:
       - determine-version
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -101,6 +111,8 @@ jobs:
       - build-and-push-app
       - build-and-push-sync
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
