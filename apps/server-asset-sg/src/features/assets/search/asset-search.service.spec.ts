@@ -24,7 +24,12 @@ import { manCatLabelItems } from '../../../../../../test/data/man-cat-label-item
 import { clearPrismaAssets, setupDB } from '../../../../../../test/setup-db';
 
 import { AssetRepo } from '../asset.repo';
-import { ASSET_ELASTIC_INDEX, AssetSearchService } from './asset-search.service';
+import {
+  ASSET_ELASTIC_INDEX,
+  AssetSearchService,
+  escapeElasticQuery,
+  normalizeFieldQuery,
+} from './asset-search.service';
 
 import { openElasticsearchClient } from '@/core/elasticsearch';
 import { PrismaService } from '@/core/prisma.service';
@@ -562,6 +567,221 @@ describe(AssetSearchService, () => {
 
       // Then
       expect(progress).toEqual([1]);
+    });
+  });
+
+  describe('AssetSearchService utility functions', () => {
+    describe('escapeElasticQuery', () => {
+      describe('simple escaping', () => {
+        it('should escape Elasticsearch special characters that are not explicitly needed by the app', () => {
+          // Test logical operators
+          expect(escapeElasticQuery('test && value')).toBe('test \\&& value');
+          expect(escapeElasticQuery('test || value')).toBe('test \\|| value');
+          expect(escapeElasticQuery('test!value')).toBe('test\\!value');
+
+          // Test grouping characters
+          expect(escapeElasticQuery('test(value)')).toBe('test\\(value\\)');
+          expect(escapeElasticQuery('test{value}')).toBe('test\\{value\\}');
+          expect(escapeElasticQuery('test[value]')).toBe('test\\[value\\]');
+
+          // Test query modifiers
+          expect(escapeElasticQuery('test^value')).toBe('test\\^value');
+          expect(escapeElasticQuery('test"value"')).toBe('test\\"value\\"');
+          expect(escapeElasticQuery('test~value')).toBe('test\\~value');
+          expect(escapeElasticQuery('test+value')).toBe('test\\+value');
+          expect(escapeElasticQuery('test-value')).toBe('test\\-value');
+          expect(escapeElasticQuery('test=value')).toBe('test\\=value');
+          expect(escapeElasticQuery('test?value')).toBe('test\\?value');
+
+          // Test escape and path characters
+          expect(escapeElasticQuery('test\\value')).toBe('test\\\\value');
+          expect(escapeElasticQuery('test/value')).toBe('test\\/value');
+        });
+
+        it('should preserve wildcards (*)', () => {
+          const input = 'test*value*';
+          const result = escapeElasticQuery(input);
+          expect(result).toBe('test*value*');
+        });
+
+        it('should handle empty string', () => {
+          const input = '';
+          const result = escapeElasticQuery(input);
+          expect(result).toBe('');
+        });
+      });
+
+      describe('colon handling', () => {
+        it('should un-escape title field', () => {
+          const input = 'title:My Title';
+          const result = escapeElasticQuery(input);
+          expect(result).toBe('title:My Title');
+        });
+
+        it('should un-escape originalTitle field', () => {
+          const input = 'originalTitle:Original';
+          const result = escapeElasticQuery(input);
+          expect(result).toBe('originalTitle:Original');
+        });
+
+        it('should un-escape contactNames field', () => {
+          const input = 'contactNames:John Doe';
+          const result = escapeElasticQuery(input);
+          expect(result).toBe('contactNames:John Doe');
+        });
+
+        it('should un-escape sgsId field', () => {
+          const input = 'sgsId:ABC123';
+          const result = escapeElasticQuery(input);
+          expect(result).toBe('sgsId:ABC123');
+        });
+
+        it('should un-escape alternativeIds field', () => {
+          const input = 'alternativeIds:ABC123';
+          const result = escapeElasticQuery(input);
+          expect(result).toBe('alternativeIds:ABC123');
+        });
+
+        it('should be case insensitive for field names', () => {
+          const input = 'TITLE:Test TiTlE:Another';
+          const result = escapeElasticQuery(input);
+          expect(result).toBe('title:Test title:Another');
+        });
+
+        it('should escape colons that are not part of allowed fields', () => {
+          const input = 'unknown:field some:value';
+          const result = escapeElasticQuery(input);
+          expect(result).toBe('unknown\\:field some\\:value');
+        });
+      });
+
+      describe('complex cases', () => {
+        it('should handle complex queries with multiple special characters', () => {
+          const input = 'title:Test && (value || another) + more*';
+          const result = escapeElasticQuery(input);
+          expect(result).toBe('title:Test \\&& \\(value \\|| another\\) \\+ more*');
+        });
+
+        it('should handle strings with only special characters', () => {
+          const input = '&&||!(){}[]';
+          const result = escapeElasticQuery(input);
+          expect(result).toBe('\\&&\\||\\!\\(\\)\\{\\}\\[\\]');
+        });
+
+        it('should handle mixed allowed and non-allowed field names', () => {
+          const input = 'title:Valid test:invalid sgsId:123';
+          const result = escapeElasticQuery(input);
+          expect(result).toBe('title:Valid test\\:invalid sgsId:123');
+        });
+
+        it('should preserve wildcards in field values', () => {
+          const input = 'title:Test*Value*';
+          const result = escapeElasticQuery(input);
+          expect(result).toBe('title:Test*Value*');
+        });
+      });
+    });
+
+    describe('normalizeFieldQuery', () => {
+      describe('field normalizations', () => {
+        it('should normalize title_public to title', () => {
+          const input = 'title_public:Test';
+          const result = normalizeFieldQuery(input);
+          expect(result).toBe('title:Test');
+        });
+
+        it('should normalize title__public to title (multiple underscores)', () => {
+          const input = 'title__public:Test';
+          const result = normalizeFieldQuery(input);
+          expect(result).toBe('title:Test');
+        });
+
+        it('should normalize title_original to originalTitle', () => {
+          const input = 'title_original:Test';
+          const result = normalizeFieldQuery(input);
+          expect(result).toBe('originalTitle:Test');
+        });
+
+        it('should normalize contact_name to contactNames', () => {
+          const input = 'contact_name:John';
+          const result = normalizeFieldQuery(input);
+          expect(result).toBe('contactNames:John');
+        });
+
+        it('should normalize asset_id to id', () => {
+          const input = 'asset_id:123';
+          const result = normalizeFieldQuery(input);
+          expect(result).toBe('id:123');
+        });
+
+        it('should normalize sgs_id to sgsId', () => {
+          const input = 'sgs_id:ABC';
+          const result = normalizeFieldQuery(input);
+          expect(result).toBe('sgsId:ABC');
+        });
+
+        it('should be case insensitive', () => {
+          const input = 'TITLE_PUBLIC:Test';
+          const result = normalizeFieldQuery(input);
+          expect(result).toBe('title:Test');
+        });
+
+        it('should handle empty string', () => {
+          const input = '';
+          const result = normalizeFieldQuery(input);
+          expect(result).toBe('');
+        });
+
+        it('should not modify non-matching fields', () => {
+          const input = 'someOtherField:Value';
+          const result = normalizeFieldQuery(input);
+          expect(result).toBe('someOtherField:Value');
+        });
+
+        it('should handle contact___name with multiple underscores', () => {
+          const input = 'contact___name:John';
+          const result = normalizeFieldQuery(input);
+          expect(result).toBe('contactNames:John');
+        });
+
+        it('should handle asset__id with multiple underscores', () => {
+          const input = 'asset__id:456';
+          const result = normalizeFieldQuery(input);
+          expect(result).toBe('id:456');
+        });
+
+        it('should handle sgs____id with multiple underscores', () => {
+          const input = 'sgs____id:XYZ';
+          const result = normalizeFieldQuery(input);
+          expect(result).toBe('sgsId:XYZ');
+        });
+      });
+
+      describe('complex cases', () => {
+        it('should handle multiple normalizations in one query', () => {
+          const input = 'title_public:Test contact_name:John asset_id:123';
+          const result = normalizeFieldQuery(input);
+          expect(result).toBe('title:Test contactNames:John id:123');
+        });
+
+        it('should handle title with no underscores but original with underscores', () => {
+          const input = 'titlepublic:Test title_original:Original';
+          const result = normalizeFieldQuery(input);
+          // titlepublic matches title(_*)public (zero underscores), so it gets normalized
+          expect(result).toBe('title:Test originalTitle:Original');
+        });
+        it('should handle mixed case with underscores', () => {
+          const input = 'Title_Public:Test CONTACT_Name:John';
+          const result = normalizeFieldQuery(input);
+          expect(result).toBe('title:Test contactNames:John');
+        });
+
+        it('should handle all field normalizations in complex query', () => {
+          const input = 'title_public:Geology title_original:Geologie contact_name:Smith asset_id:789 sgs_id:CH123';
+          const result = normalizeFieldQuery(input);
+          expect(result).toBe('title:Geology originalTitle:Geologie contactNames:Smith id:789 sgsId:CH123');
+        });
+      });
     });
   });
 });

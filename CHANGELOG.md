@@ -15,11 +15,13 @@
 - Italienisch wurde als Sprache hinzugefügt.
 - Die PDF Preview ist auch beim Reklassifizieren von Dokumenten verfügbar.
 - Die PDF Preview zeigt nun auch ein Inhaltsverzeichnis an.
+- Suche nach `alternativeIds` ist nun verfügbar.
 
 ### Changed
 
 - PDF Dateien werden auf Retina Displays schärfer dargestellt.
 - Die AssetId und Alternativ-Ids werden in der Asset-Detailansicht dargestellt.
+- Verschiedene Fehler bei der Suche behoben (fehlendes Escaping, Fehler bei bestimmten Kombinationen)
 
 ### Fixed
 

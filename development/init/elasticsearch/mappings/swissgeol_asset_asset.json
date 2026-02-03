@@ -1,7 +1,7 @@
 {
   "properties": {
     "id": {
-      "type": "integer"
+      "type": "keyword"
     },
     "kindCode": {
       "type": "keyword"
@@ -10,6 +10,15 @@
       "type": "integer"
     },
     "contactNames": {
+      "type": "text",
+      "fields": {
+        "keyword": {
+          "type": "keyword",
+          "ignore_above": 256
+        }
+      }
+    },
+    "alternativeIds": {
       "type": "text",
       "fields": {
         "keyword": {
