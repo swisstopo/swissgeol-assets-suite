@@ -22,6 +22,7 @@ export interface ElasticsearchAsset {
   workgroupId: number;
   favoredByUserIds: UserId[];
   data: AssetJSON;
+  alternativeIds: string[];
 }
 
 export interface ElasticsearchPoint {
