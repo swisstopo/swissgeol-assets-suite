@@ -622,7 +622,7 @@ export const escapeElasticQuery = (query: string): string => {
   let escaped = query.replace(/(&&|\|\||!|\(|\)|\{|}|\[|]|\^|"|~|\+|-|=|\?|:|\\|\/)/g, '\\$1');
 
   for (const field of SEARCHABLE_FIELDS) {
-    escaped = escaped.replace(new RegExp(`${field}\\\\:`, 'gi'), `${field}:`);
+    escaped = escaped.replaceAll(new RegExp(String.raw`\b${field}\\:`, 'gi'), `${field}:`);
   }
 
   return escaped;

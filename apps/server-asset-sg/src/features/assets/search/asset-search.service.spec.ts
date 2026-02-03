@@ -621,7 +621,7 @@ describe(AssetSearchService, () => {
         it('should un-escape originalTitle field', () => {
           const input = 'originalTitle:Original';
           const result = escapeElasticQuery(input);
-          expect(result).toBe('originaltitle:Original');
+          expect(result).toBe('originalTitle:Original');
         });
 
         it('should un-escape contactNames field', () => {
