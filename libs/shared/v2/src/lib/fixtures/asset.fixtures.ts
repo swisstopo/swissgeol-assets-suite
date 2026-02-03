@@ -74,14 +74,21 @@ const hauteSorne2dSeismic2023AcquisitionAndProcessingReport: Asset = {
   workflowStatus: WorkflowStatus.Reviewed,
 };
 
+/**
+ * IMPORTANT: The current implementation of asset fixtures is directly tied to both the OCR and the Dataextraction
+ * service; the below given details for fileFixtures must be changed if the OCR or Dataextraction results change, which
+ * can happen when e.g. their extraction mechanisms are fine-tuned. In such cases, the createFixtures command will
+ * log a different expectation, which can be seen in the pipelines and locally.
+ *
+ * See https://github.com/swisstopo/swissgeol-assets-suite/issues/804 for more information.
+ */
 fileFixtures.register(hauteSorne2dSeismic2023AcquisitionAndProcessingReport, {
   name: 'haute-sorne_2D_light_2023_swisstopo_technical_note.pdf',
   size: 2_777_874,
   lastModifiedAt: new Date('2025-09-11T16:18:00'),
   pageCount: 13,
   pageRangeClassifications: [
-    { to: 1, from: 1, languages: [], categories: [PageCategory.Text] },
-    { to: 5, from: 2, languages: ['en'], categories: [PageCategory.Text] },
+    { to: 5, from: 1, languages: ['en'], categories: [PageCategory.Text] },
     { to: 8, from: 6, languages: ['en'], categories: [PageCategory.Unknown] },
     { to: 10, from: 9, languages: ['en'], categories: [PageCategory.Text] },
     { to: 12, from: 11, languages: ['en'], categories: [PageCategory.Diagram] },
