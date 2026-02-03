@@ -5,6 +5,11 @@ import { GeometryType } from './geometry';
 import { LocalizedItemCode } from './localized-item';
 import { UserId } from './user';
 
+/**
+ * Corresponds to the index mapping defined in swissgeol_asset_asset.json.
+ *
+ * Note that fields that are searchable (see asset-search.service.ts) must be stored as `keyword`.
+ */
 export interface ElasticsearchAsset {
   id: AssetId;
   title: string;
