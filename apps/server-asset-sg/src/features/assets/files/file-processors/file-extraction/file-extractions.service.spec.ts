@@ -9,7 +9,10 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import { FileExtractionService } from './file-extraction.service';
 import { PrismaService } from '@/core/prisma.service';
-import { PredictionSchema } from '@/features/assets/files/file-processors/file-extraction/extraction-service-generated.interfaces';
+import {
+  PascalPageClasses,
+  PredictionSchema,
+} from '@/features/assets/files/file-processors/file-extraction/extraction-service-generated.interfaces';
 import { FileS3Service } from '@/features/assets/files/file-s3.service';
 
 describe('FileExtractionService', () => {
@@ -45,17 +48,17 @@ describe('FileExtractionService', () => {
         pages: [
           {
             page_number: 1,
-            predicted_class: 'Text',
+            predicted_class: PascalPageClasses.Text,
             page_metadata: { language: 'de', is_frontpage: true },
           },
           {
             page_number: 2,
-            predicted_class: 'Text',
+            predicted_class: PascalPageClasses.Text,
             page_metadata: { language: 'de', is_frontpage: false },
           },
           {
             page_number: 3,
-            predicted_class: 'Boreprofile',
+            predicted_class: PascalPageClasses.Boreprofile,
             page_metadata: { language: 'fr', is_frontpage: false },
           },
         ],
