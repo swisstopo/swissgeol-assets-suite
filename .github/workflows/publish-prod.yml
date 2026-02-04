@@ -22,7 +22,7 @@ jobs:
     needs:
       - enforce-main
     permissions:
-      contents: read
+      contents: write
       packages: write
     uses: "./.github/workflows/publish.yml"
     with:
