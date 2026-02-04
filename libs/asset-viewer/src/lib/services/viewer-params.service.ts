@@ -122,7 +122,7 @@ export interface ViewerParams {
   assetId: AssetId | null;
 }
 
-const QUERY_PARAM_MAPPING = {
+export const QUERY_PARAM_MAPPING = {
   text: 'search[text]',
   polygon: 'search[polygon]',
   authorId: 'search[author]',

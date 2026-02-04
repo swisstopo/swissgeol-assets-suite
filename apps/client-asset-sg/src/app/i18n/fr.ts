@@ -76,6 +76,8 @@ export const frTranslationMapping: AppTranslationMapping = {
     dragHandleLabel: 'Poignée de déplacement',
   },
   search: {
+    directLink: 'Lien direct',
+    directLinkCopied: 'Lien direct copié dans le presse-papiers',
     textSearchFieldPlaceholder: 'Rechercher par...',
     searchInstructionsHeading: "Recherche d'assets",
     searchInstructions:
