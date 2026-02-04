@@ -21,14 +21,14 @@ import {
 } from '@/features/assets/files/file-processors/abstract-processing.service';
 import {
   PagePrediction,
+  PascalPageClasses,
   PredictionSchema,
 } from '@/features/assets/files/file-processors/file-extraction/extraction-service-generated.interfaces';
 import { FileS3Service } from '@/features/assets/files/file-s3.service';
 import { requireEnv } from '@/utils/requireEnv';
 
-type ExternalCategory = 'Text' | 'Boreprofile' | 'Map' | 'TitlePage' | 'Unknown' | 'GeoProfile' | 'Diagram' | 'Table';
 type CategoryMap = {
-  [key in ExternalCategory]: PageCategory;
+  [key in PascalPageClasses]: PageCategory;
 };
 
 const externalToInternalCategoryMap: CategoryMap = {
@@ -87,7 +87,7 @@ export class FileExtractionService extends AbstractProcessingService<PredictionS
       // note: in v1, the API only returns a single predicted class per page, but we keep the structure for multiple categories for future use
       const categories: PageCategory[] = [];
       if (page.predicted_class in externalToInternalCategoryMap) {
-        categories.push(externalToInternalCategoryMap[page.predicted_class as ExternalCategory]);
+        categories.push(externalToInternalCategoryMap[page.predicted_class]);
       } else {
         this.logger.warn(
           `Extraction API sent an unknown page classification (it will be ignored): '${page.predicted_class}'`,
