@@ -76,6 +76,8 @@ export const enTranslationMapping: AppTranslationMapping = {
     dragHandleLabel: 'Drag handle',
   },
   search: {
+    directLink: 'Direct link',
+    directLinkCopied: 'Direct link copied to clipboard',
     textSearchFieldPlaceholder: 'Search by...',
     searchInstructionsHeading: 'Asset-Search',
     searchInstructions: 'Search for an asset using the search field or by drawing a ploygon on the map.',

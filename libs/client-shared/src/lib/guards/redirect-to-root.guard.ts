@@ -14,7 +14,17 @@ export const redirectToRootGuard: CanMatchFn = async () => {
   if (!isAnonymous) {
     await firstValueFrom(store.select(selectUser).pipe(filter(isNotNull)));
   }
-  return new RedirectCommand(router.createUrlTree([languageService.language]), {
-    info: 'redirectToRootGuard',
-  });
+
+  // keep query params when redirecting to the root path to ensure things like assetId can be shared regardless of
+  // language
+  const navigation = router.currentNavigation();
+  const currentQueryParams = navigation?.extractedUrl.queryParams || {};
+
+  return new RedirectCommand(
+    router.createUrlTree([languageService.language], {
+      queryParams: currentQueryParams,
+      queryParamsHandling: 'merge',
+    }),
+    { info: 'redirectToRootGuard' },
+  );
 };

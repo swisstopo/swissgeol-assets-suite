@@ -1,11 +1,21 @@
-import { Component, inject } from '@angular/core';
+import { Clipboard } from '@angular/cdk/clipboard';
+import { Component, DOCUMENT, inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { appSharedStateActions, can$, fromAppShared, LanguageService } from '@asset-sg/client-shared';
+import {
+  AlertType,
+  appSharedStateActions,
+  can$,
+  fromAppShared,
+  LanguageService,
+  showAlert,
+} from '@asset-sg/client-shared';
 import { isNotNull } from '@asset-sg/core';
 import { AssetContactRole, AssetEditPolicy, AssetFile, AssetId, Contact, LinkedAsset } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
-import { filter, map, Observable, shareReplay, withLatestFrom } from 'rxjs';
+import { TranslateService } from '@ngx-translate/core';
+import { filter, firstValueFrom, map, Observable, shareReplay, withLatestFrom } from 'rxjs';
 import { ViewerControllerService } from '../../services/viewer-controller.service';
+import { QUERY_PARAM_MAPPING } from '../../services/viewer-params.service';
 import { AppStateWithAssetSearch } from '../../state/asset-search/asset-search.reducer';
 
 @Component({
@@ -15,11 +25,25 @@ import { AppStateWithAssetSearch } from '../../state/asset-search/asset-search.r
   standalone: false,
 })
 export class AssetSearchDetailComponent {
+  private readonly clipboardService = inject(Clipboard);
+  private readonly translateService = inject(TranslateService);
+  private readonly document = inject(DOCUMENT);
   private readonly store = inject(Store<AppStateWithAssetSearch>);
   private readonly languageService = inject(LanguageService);
   protected readonly language$ = this.languageService.language$;
   protected readonly asset$ = this.store.select(fromAppShared.selectCurrentAsset);
   protected readonly isAnonymous$ = this.store.select(fromAppShared.selectIsAnonymousMode);
+
+  private readonly directLink$ = this.asset$.pipe(
+    filter(isNotNull),
+    map(({ id }) => {
+      const tree = this.router.createUrlTree([''], {
+        queryParams: { [QUERY_PARAM_MAPPING.assetId]: id },
+      });
+      const url = this.router.serializeUrl(tree);
+      return `${this.document.location.origin}${url}`;
+    }),
+  );
 
   public readonly contacts$: Observable<{ [K in AssetContactRole]: Array<Contact> }> = this.asset$.pipe(
     filter(isNotNull),
@@ -84,5 +108,20 @@ export class AssetSearchDetailComponent {
 
   public selectAsset(assetId: number) {
     this.viewerControllerService.selectAsset(assetId);
+  }
+
+  protected copyDirectLinkToClipboard() {
+    firstValueFrom(this.directLink$).then((link) => {
+      this.clipboardService.copy(link);
+      this.store.dispatch(
+        showAlert({
+          alert: {
+            id: 'asset-direct-link-copy-notice',
+            type: AlertType.Success,
+            text: this.translateService.instant('search.directLinkCopied'),
+          },
+        }),
+      );
+    });
   }
 }

@@ -7,3 +7,5 @@ After the files have been checked and updated, reset this list.
 Newly added Keys (since 22.01.2026)
 
 - pdfNoLongerAvailable
+- directLink
+- directLinkCopied

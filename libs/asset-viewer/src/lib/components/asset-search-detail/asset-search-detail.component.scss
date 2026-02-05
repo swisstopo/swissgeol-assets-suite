@@ -38,10 +38,11 @@
 .footer {
   @extend %bar;
   border-top: 1px solid variables.$grey-02;
-  justify-content: flex-end;
+  justify-content: space-between;
   box-shadow:
     0px -2px 4px -1px rgba(0, 0, 0, 0.03),
     0px -4px 4px 0px rgba(0, 0, 0, 0.05);
+  display: flex;
 }
 
 .loading-spinner {
