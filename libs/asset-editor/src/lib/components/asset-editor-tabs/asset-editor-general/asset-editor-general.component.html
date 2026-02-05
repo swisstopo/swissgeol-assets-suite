@@ -166,7 +166,7 @@
       ></asset-sg-text-input>
 
       @if (form.controls.identifiers.value.length > 0) {
-        <sgc-card [header]="('edit.tabs.general.alternativeId' | translate) + 's'" collapsed>
+        <sgc-card [header]="'edit.tabs.general.alternativeIds' | translate" collapsed>
           <asset-sg-asset-editor-id-list [control]="form.controls.identifiers" />
         </sgc-card>
       }
