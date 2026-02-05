@@ -273,3 +273,12 @@ npm run generate-interfaces:data-extraction
 ```
 
 This command fetches the OpenAPI specification from the local data extraction service and generates the interfaces. Note that when the version changes, the command needs to be adjusted as well.
+
+## Versioning
+
+We use [Semantic Versioning](https://semver.org/) for versioning.
+The new version number is determined by this [script](./.github/scripts/version.utils.mjs).
+Merges to develop will either increase the minor version or the prerelease version based on the previous release version.
+Merges to main from develop will increase the minor version if it is not the same as the minor version on develop, otherwise the prerelease version is increased.
+Merges to main from hotfix branches will increase the patch version.
+Releases to prod will remove the prerelease tag from the release candidate.
