@@ -10,6 +10,18 @@
  * ---------------------------------------------------------------
  */
 
+/** PascalPageClasses */
+export enum PascalPageClasses {
+  Text = 'Text',
+  Boreprofile = 'Boreprofile',
+  Map = 'Map',
+  GeoProfile = 'GeoProfile',
+  TitlePage = 'TitlePage',
+  Diagram = 'Diagram',
+  Table = 'Table',
+  Unknown = 'Unknown',
+}
+
 /**
  * CollectPayload
  * Payload model for retrieving results of a processed document.
@@ -44,12 +56,6 @@ export interface ErrorResponse {
   detail: string;
 }
 
-/** HTTPValidationError */
-export interface HTTPValidationError {
-  /** Detail */
-  detail?: ValidationError[];
-}
-
 /**
  * MetaDataSchema
  * Schema for document-level metadata including page count and languages.
@@ -77,8 +83,7 @@ export interface PageMetaDataSchema {
  * Schema for individual page prediction results including class, number and metadata.
  */
 export interface PagePrediction {
-  /** Predicted Class */
-  predicted_class: string;
+  predicted_class: PascalPageClasses;
   /**
    * Page Number
    * Page number must be greater than 0
@@ -113,14 +118,4 @@ export interface StartPayload {
    * @minLength 5
    */
   file: string;
-}
-
-/** ValidationError */
-export interface ValidationError {
-  /** Location */
-  loc: (string | number)[];
-  /** Message */
-  msg: string;
-  /** Error Type */
-  type: string;
 }

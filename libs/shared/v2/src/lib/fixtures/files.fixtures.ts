@@ -35,33 +35,24 @@ const registerSampleReport = (asset: Asset) =>
     pageRangeClassifications: [
       { to: 2, from: 1, languages: ['en'], categories: [PageCategory.Unknown] },
       {
-        to: 3,
+        to: 4,
         from: 3,
         languages: ['en'],
         categories: [PageCategory.Text],
       },
-      { to: 4, from: 4, languages: [], categories: [PageCategory.Text] },
       {
-        to: 5,
+        to: 8,
         from: 5,
         languages: ['en'],
         categories: [PageCategory.Unknown],
       },
-      { to: 6, from: 6, languages: [], categories: [PageCategory.Unknown] },
-      {
-        to: 7,
-        from: 7,
-        languages: ['en'],
-        categories: [PageCategory.Unknown],
-      },
-      { to: 8, from: 8, languages: [], categories: [PageCategory.Unknown] },
       {
         to: 9,
         from: 9,
-        languages: [],
+        languages: ['en'],
         categories: [PageCategory.Text],
       },
-      { to: 10, from: 10, languages: [], categories: [PageCategory.Unknown] },
+      { to: 10, from: 10, languages: ['fr'], categories: [PageCategory.Unknown] },
     ],
   });
 

@@ -18,7 +18,8 @@
     "lint:fix": "npx nx run-many --target=lint --all -- --fix && npx prettier . --write",
     "cypress:open": "cypress open --config-file cypress/cypress.config.ts",
     "cypress:run": "cypress run --config-file cypress/cypress.config.ts",
-    "prepare": "husky"
+    "prepare": "husky",
+    "generate-interfaces:data-extraction": "npx swagger-typescript-api generate --path http://localhost:1337/v1/openapi.json --output ./apps/server-asset-sg/src/features/assets/files/file-processors/file-extraction --name extraction-service-generated.interfaces.ts --no-client"
   },
   "private": true,
   "dependencies": {
