@@ -130,7 +130,7 @@
             </sgc-card>
           </div>
           @if (asset.identifiers.length > 0) {
-            <sgc-card [header]="('search.alternativeId' | translate) + 's'" collapsed data-testid="assetAlternativeId">
+            <sgc-card [header]="'search.alternativeIds' | translate" collapsed data-testid="assetAlternativeId">
               @for (identifier of asset.identifiers; track identifier.id) {
                 <div class="col-2">
                   <dl>
