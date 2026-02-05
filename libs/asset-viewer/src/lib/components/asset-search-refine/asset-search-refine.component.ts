@@ -20,6 +20,7 @@ import {
   selectSearchQuery,
   selectUsageCodeFilters,
   selectWorkgroupFilters,
+  selectStatusFilters,
 } from '../../state/asset-search/asset-search.selector';
 import * as mapControlActions from '../../state/map-control/map-control.actions';
 import { selectMapControlIsDrawing } from '../../state/map-control/map-control.selector';
@@ -56,6 +57,7 @@ export class AssetSearchRefineComponent implements OnInit, OnDestroy, AfterViewI
 
   readonly usageCodeFilters$ = this.store.select(selectUsageCodeFilters);
   readonly geometryCodeFilters$ = this.store.select(selectGeometryFilters);
+  readonly statusFilters$ = this.store.select(selectStatusFilters);
   readonly manCatLabelFilters$ = this.store.select(selectAssetTopicFilters);
   readonly languageFilters$ = this.store.select(selectLanguageFilters);
   readonly assetKindFilters$ = this.store.select(selectAssetKindFilters);

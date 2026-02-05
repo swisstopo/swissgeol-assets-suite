@@ -14,6 +14,7 @@ import {
 } from '@asset-sg/shared/v2';
 import { createSelector } from '@ngrx/store';
 
+import { WorkflowStatus } from '@swissgeol/ui-core';
 import { isPanelOpen } from './asset-search.actions';
 import { AppStateWithAssetSearch } from './asset-search.reducer';
 
@@ -195,6 +196,13 @@ export const selectGeometryFilters = selectFilters<GeometryType | 'None'>('geome
   },
 ]);
 
+export const selectStatusFilters = selectFilters<WorkflowStatus>('status', () =>
+  Object.values(WorkflowStatus).map((code) => ({
+    name: { key: `workflowStatus.${code}` },
+    value: code,
+  })),
+);
+
 export const selectAssetTopicFilters = selectFilters<string>('topicCodes', (data) =>
   Object.values(Array.from(data.assetTopics.values())).map((item) => ({
     name: item.name,
@@ -207,6 +215,7 @@ export const selectActiveFilters = createSelector(
   selectAssetKindFilters,
   selectLanguageFilters,
   selectGeometryFilters,
+  selectStatusFilters,
   selectAssetTopicFilters,
   selectWorkgroupFilters,
   (...filterGroups) => {

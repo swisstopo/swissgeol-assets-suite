@@ -1,3 +1,4 @@
+import { WorkflowStatus } from '@swissgeol/ui-core';
 import { LocalDateRange } from '../base/local-date-range';
 import { ContactId } from '../contact';
 import { GeometryType } from '../geometry';
@@ -15,6 +16,7 @@ export interface AssetSearchStats {
   usageCodes: ValueCount<AssetSearchUsageCode>[];
   workgroupIds: ValueCount<WorkgroupId>[];
   createdAt: LocalDateRange | null;
+  status: ValueCount<WorkflowStatus>[];
 }
 
 export interface ValueCount<T> {
@@ -32,4 +34,5 @@ export const makeEmptyAssetSearchStats = (): AssetSearchStats => ({
   usageCodes: [],
   workgroupIds: [],
   createdAt: null,
+  status: [],
 });
