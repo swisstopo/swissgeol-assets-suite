@@ -367,7 +367,10 @@ export class ExportToViewService {
       const filteredAsset: Prisma.AssetCreateManyInput = {
         ...asset,
         // optional fields for siblings
-        assetMainId: publishData.references ? asset.assetMainId : null,
+        assetMainId:
+          publishData.references && asset.assetMainId && this.publicAssetConfigs.has(asset.assetMainId)
+            ? asset.assetMainId
+            : null,
         // optional fields for legacy
         sgsId: publishData.legacy ? asset.sgsId : null,
         geolDataInfo: publishData.legacy ? asset.geolDataInfo : null,
