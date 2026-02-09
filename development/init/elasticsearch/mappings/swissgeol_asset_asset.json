@@ -3,6 +3,9 @@
     "id": {
       "type": "keyword"
     },
+    "status": {
+      "type": "keyword"
+    },
     "kindCode": {
       "type": "keyword"
     },

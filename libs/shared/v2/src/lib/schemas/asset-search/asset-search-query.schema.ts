@@ -1,3 +1,4 @@
+import { WorkflowStatus } from '@swissgeol/ui-core';
 import { Type } from 'class-transformer';
 import { IsBoolean, IsIn, IsNumber, IsOptional, IsString, ValidateNested } from 'class-validator';
 
@@ -52,4 +53,8 @@ export class AssetSearchQuerySchema extends Schema implements AssetSearchQuery {
   @ValidateNested()
   @Type(() => PartialDateRangeSchema)
   createdAt?: PartialDateRangeSchema;
+
+  @IsOptional()
+  @IsIn(Object.values(WorkflowStatus), { each: true })
+  status?: Array<WorkflowStatus>;
 }

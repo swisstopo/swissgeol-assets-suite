@@ -1,4 +1,5 @@
 import { LV95 } from '@asset-sg/shared';
+import { WorkflowStatus } from '@swissgeol/ui-core';
 import { LocalDateRange } from '../base/local-date-range';
 import { GeometryType } from '../geometry';
 import { LocalizedItemCode } from '../localized-item';
@@ -16,6 +17,7 @@ export interface AssetSearchQuery {
   workgroupIds?: WorkgroupId[];
   favoritesOnly?: boolean;
   createdAt?: Partial<LocalDateRange>;
+  status?: Array<WorkflowStatus>;
 }
 
 export enum AssetSearchUsageCode {
