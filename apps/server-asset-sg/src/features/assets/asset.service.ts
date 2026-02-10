@@ -9,7 +9,7 @@ import {
   AssetData,
   GeometryDetail,
 } from '@asset-sg/shared/v2';
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { forwardRef, HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { PrismaService } from '@/core/prisma.service';
 import { AssetRepo } from '@/features/assets/asset.repo';
 import { FileService } from '@/features/assets/files/file.service';
@@ -22,7 +22,7 @@ export class AssetService {
   constructor(
     private readonly assetRepo: AssetRepo,
     private readonly assetSearchService: AssetSearchService,
-    private readonly workflowService: WorkflowService,
+    @Inject(forwardRef(() => WorkflowService)) private readonly workflowService: WorkflowService,
     private readonly geometryDetailRepo: GeometryDetailRepo,
     private readonly fileService: FileService,
     private readonly prismaService: PrismaService,

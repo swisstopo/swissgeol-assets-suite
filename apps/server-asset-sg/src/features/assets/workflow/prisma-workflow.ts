@@ -1,11 +1,12 @@
 import {
   LocalDate,
   mapWorkflowStatusFromPrisma,
-  Workflow,
   WorkflowChange,
   WorkflowSelection,
+  WorkflowWithAsset,
 } from '@asset-sg/shared/v2';
 import { Prisma } from '@prisma/client';
+import { assetSelection, parseAssetFromPrisma } from '@/features/assets/prisma-asset';
 import { parseSimpleUser, simpleUserSelection } from '@/features/users/user.repo';
 import { satisfy } from '@/utils/define';
 
@@ -27,7 +28,7 @@ export const workflowSelection = satisfy<Prisma.WorkflowSelect>()({
   id: true,
   asset: {
     select: {
-      workgroupId: true,
+      ...assetSelection,
       creator: { select: simpleUserSelection },
       createdAt: true,
     },
@@ -57,8 +58,9 @@ export const workflowSelection = satisfy<Prisma.WorkflowSelect>()({
   },
 });
 
-export const parseWorkflowFromPrisma = (entry: SelectedWorkflow): Workflow => ({
+export const parseWorkflowFromPrisma = (entry: SelectedWorkflow): WorkflowWithAsset => ({
   id: entry.id,
+  asset: parseAssetFromPrisma(entry.asset),
   hasRequestedChanges: entry.hasRequestedChanges,
   status: mapWorkflowStatusFromPrisma(entry.status),
   assignee: entry.assignee && parseSimpleUser(entry.assignee, entry.asset.workgroupId),

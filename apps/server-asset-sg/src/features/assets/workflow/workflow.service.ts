@@ -4,15 +4,16 @@ import {
   GeometryData,
   hasWorkflowSelectionChanged,
   UserId,
-  Workflow,
   WorkflowChangeData,
   WorkflowPolicy,
   WorkflowPublishDataSchema,
   WorkflowSelection,
   WorkflowSelectionCategory,
   WorkflowStatus,
+  WorkflowWithAsset,
 } from '@asset-sg/shared/v2';
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { AssetSearchService } from '../search/asset-search.service';
 import { WorkflowRepo } from '@/features/assets/workflow/workflow.repo';
 import { UserRepo } from '@/features/users/user.repo';
 
@@ -21,13 +22,18 @@ export class WorkflowService {
   constructor(
     private readonly workflowRepo: WorkflowRepo,
     private readonly userRepo: UserRepo,
+    private readonly assetSearchService: AssetSearchService,
   ) {}
 
-  async find(assetId: AssetId): Promise<Workflow> {
+  async find(assetId: AssetId): Promise<WorkflowWithAsset> {
     return handleMissing(await this.workflowRepo.find(assetId));
   }
 
-  async addChange(workflow: Workflow, change: WorkflowChangeData, creatorId: UserId): Promise<Workflow> {
+  async addChange(
+    workflow: WorkflowWithAsset,
+    change: WorkflowChangeData,
+    creatorId: UserId,
+  ): Promise<WorkflowWithAsset> {
     if (workflow.status === change.status && workflow.assignee?.id === change.assigneeId) {
       throw new HttpException(
         "A change must update either the workflow's status or assignee.",
@@ -48,16 +54,20 @@ export class WorkflowService {
       }
     }
 
-    return this.workflowRepo.change(workflow.id, {
+    const updatedWorkflow = await this.workflowRepo.change(workflow.id, {
       creatorId,
       comment: change.comment,
       hasRequestedChanges: change.hasRequestedChanges,
       from: { status: workflow.status, assigneeId: (workflow.assignee?.id ?? null) as string | null },
       to: { status: change.status, assigneeId: change.assigneeId },
     });
+
+    await this.registerAssetForChange(updatedWorkflow.asset);
+
+    return updatedWorkflow;
   }
 
-  async updateReview(workflow: Workflow, review: Partial<WorkflowSelection>): Promise<WorkflowSelection> {
+  async updateReview(workflow: WorkflowWithAsset, review: Partial<WorkflowSelection>): Promise<WorkflowSelection> {
     if (workflow.status !== WorkflowStatus.InReview) {
       throw new HttpException("Review can only be changed for workflows with 'InReview' status.", HttpStatus.CONFLICT);
     }
@@ -74,7 +84,7 @@ export class WorkflowService {
     return reviews;
   }
 
-  async updateApproval(workflow: Workflow, approval: Partial<WorkflowSelection>): Promise<WorkflowSelection> {
+  async updateApproval(workflow: WorkflowWithAsset, approval: Partial<WorkflowSelection>): Promise<WorkflowSelection> {
     if (workflow.status !== WorkflowStatus.Reviewed) {
       throw new HttpException(
         "Approval can only be changed for workflows with 'Reviewed' status.",
@@ -84,16 +94,24 @@ export class WorkflowService {
     return handleMissing(await this.workflowRepo.approvals.update(workflow.id, approval));
   }
 
-  async publish(workflow: Workflow, creatorId: UserId, data: WorkflowPublishDataSchema) {
+  async publish(
+    workflow: WorkflowWithAsset,
+    creatorId: UserId,
+    data: WorkflowPublishDataSchema,
+  ): Promise<WorkflowWithAsset> {
     if (workflow.status !== WorkflowStatus.Reviewed) {
       throw new HttpException('Cannot publish workflow in current status', HttpStatus.BAD_REQUEST);
     }
-    return this.workflowRepo.change(workflow.id, {
+    const updatedWorkflow = await this.workflowRepo.change(workflow.id, {
       creatorId: creatorId,
       comment: data.comment,
       from: { status: workflow.status, assigneeId: (workflow.assignee?.id ?? null) as string | null },
       to: { status: WorkflowStatus.Published, assigneeId: (workflow.assignee?.id ?? null) as string | null },
     });
+
+    await this.registerAssetForChange(updatedWorkflow.asset);
+
+    return updatedWorkflow;
   }
 
   async updateSelectionByChanges(original: Asset, update: Asset, geometryData: GeometryData[]): Promise<void> {
@@ -119,6 +137,18 @@ export class WorkflowService {
         this.workflowRepo.reviews.update(original.id, changes),
       ]);
     }
+  }
+
+  /**
+   * Registers the asset for update in the search index, so that any changes to the workflow will be reflected in the
+   * search results. Note that in theory, this might result in a race condition, where a user submits asset changes and
+   * immediately sends workflow changes; in which case, the asset fetched here might not be updated yet and override
+   * the previously synced asset with the older state. However, this case seems very unlikely and if this happens, the
+   * approach would require changes to how assets are registered, i.e. submitting the assetid only and fetching the
+   * latest asset in AssetSeachService.register().
+   */
+  private async registerAssetForChange(asset: Asset) {
+    await this.assetSearchService.register(asset);
   }
 }
 
