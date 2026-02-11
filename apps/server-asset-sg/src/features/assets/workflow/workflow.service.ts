@@ -3,6 +3,7 @@ import {
   AssetId,
   GeometryData,
   hasWorkflowSelectionChanged,
+  User,
   UserId,
   WorkflowChangeData,
   WorkflowPolicy,
@@ -136,6 +137,25 @@ export class WorkflowService {
         this.workflowRepo.approvals.update(original.id, changes),
         this.workflowRepo.reviews.update(original.id, changes),
       ]);
+    }
+  }
+
+  public async handleWorkflowForUpdatedAsset(asset: Asset, user: User) {
+    if (asset.workflowStatus !== WorkflowStatus.Draft) {
+      const workflow = await this.workflowRepo.find(asset.id);
+      if (workflow === null) {
+        throw new HttpException('not found', HttpStatus.NOT_FOUND);
+      }
+
+      const change: WorkflowChangeData = {
+        status: WorkflowStatus.Draft,
+        assigneeId: user.id,
+        comment: "Asset was edited. Resetting workflow to 'Draft'.",
+      };
+
+      await this.addChange(workflow, change, user.id);
+    } else {
+      await this.registerAssetForChange(asset);
     }
   }
 

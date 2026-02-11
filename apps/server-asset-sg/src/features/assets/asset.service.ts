@@ -58,7 +58,7 @@ export class AssetService {
 
     const [syncedAsset] = await Promise.all([
       this.fileService.syncAssetWithRemovedFiles(updatedAsset, removedFiles),
-      this.assetSearchService.register(updatedAsset),
+      this.workflowService.handleWorkflowForUpdatedAsset(updatedAsset, user),
       this.workflowService.updateSelectionByChanges(asset, updatedAsset, data.geometries),
     ]);
 
