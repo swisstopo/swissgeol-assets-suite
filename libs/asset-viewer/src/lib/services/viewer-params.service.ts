@@ -48,6 +48,7 @@ export class ViewerParamsService {
     query.geometryTypes = readArrayParam(params, QUERY_PARAM_MAPPING.geometryTypes);
     query.languageCodes = readArrayParam(params, QUERY_PARAM_MAPPING.languageCodes);
     query.workgroupIds = readArrayParam<number>(params, QUERY_PARAM_MAPPING.workgroupIds);
+    query.status = readArrayParam(params, QUERY_PARAM_MAPPING.status);
     query.favoritesOnly = this.parseFavoritesOnlyFromUrl();
     const ui: AssetSearchUiState = {
       filtersState:
@@ -88,6 +89,7 @@ export class ViewerParamsService {
     updateArrayParam(params, QUERY_PARAM_MAPPING.languageCodes, query.languageCodes);
     updateArrayParam(params, QUERY_PARAM_MAPPING.workgroupIds, query.workgroupIds);
     updatePlainParam(params, QUERY_PARAM_MAPPING.assetId, assetId);
+    updateArrayParam(params, QUERY_PARAM_MAPPING.status, query.status);
 
     updatePlainParam(params, UI_PARAM_MAPPING.scrollOffsetForResults, ui.scrollOffsetForResults, { defaultValue: 0 });
     updatePlainParam(params, UI_PARAM_MAPPING.filtersState, isPanelOpen(ui.filtersState), { defaultValue: true });
@@ -138,6 +140,7 @@ export const QUERY_PARAM_MAPPING = {
   assetId: 'assetId',
   workgroupIds: 'search[workgroup]',
   categories: 'search[categories]',
+  status: 'search[status]',
 };
 
 type ParamMapping<T> = {
