@@ -23,7 +23,7 @@
 </asset-sg-detail-section>
 <asset-sg-detail-section [title]="'admin.workgroups' | translate">
   <div actions>
-    <button asset-sg-primary (click)="openAddWorkgroupToUserDialog()" translate>
+    <button asset-sg-primary (click)="openAddWorkgroupToUserDialog()" data-testid="add-workgroup-button" translate>
       admin.userPage.addWorkgroups
       <svg-icon key="add"></svg-icon>
     </button>
