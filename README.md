@@ -2,13 +2,15 @@
 
 Web application for the simple, structured and harmonized recording of geological assets.
 
+This document contains very broad information to get the project up and running; for more specific information, please refer to the [Developer Docs](DEVELOPER_DOCS.md) and the [Release Process](RELEASE_PROCESS.md).
+
 ## Development
 
 The following components must be installed on the development computer:
 
 ✔️ Git  
 ✔️ Docker  
-✔️ Node.js 20 LTS
+✔️ Node.js 22 LTS
 
 ### Setting Up the Development Environment
 
