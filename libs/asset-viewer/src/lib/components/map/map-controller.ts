@@ -23,7 +23,7 @@ import MapBrowserEvent from 'ol/MapBrowserEvent';
 import { Cluster, Tile, Vector as VectorSource, XYZ } from 'ol/source';
 import Style, { StyleFunction } from 'ol/style/Style';
 import View from 'ol/View';
-import { filter, fromEventPattern, map, Observable, ReplaySubject, switchMap } from 'rxjs';
+import { filter, fromEventPattern, map, merge, Observable, ReplaySubject, switchMap } from 'rxjs';
 import { CustomFeatureProperties } from '../../shared/map-configuration/custom-feature-properties.enum';
 import { availableLayerStyles, defaultLayerStyle } from '../../shared/map-configuration/map-layer-styles';
 import { interactionStyles } from '../../shared/map-configuration/styles/system-styles.map-layer-style';
@@ -397,7 +397,10 @@ export class MapController {
   }
 
   private makePositionChange$(): Observable<MapPosition> {
-    return fromEventPattern((h) => this.map.getView().on('change:center', h)).pipe(
+    const view = this.map.getView();
+    const center$ = fromEventPattern((h) => view.on('change:center', h));
+    const resolution$ = fromEventPattern((h) => view.on('change:resolution', h));
+    return merge(center$, resolution$).pipe(
       map(() => this.getPosition()),
       filter((it) => it !== null),
     );

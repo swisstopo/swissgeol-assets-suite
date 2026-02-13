@@ -104,7 +104,6 @@ export class ViewerParamsService {
 
     await this.router.navigate([url[1], ...route], {
       queryParams: params,
-      queryParamsHandling: 'merge',
       replaceUrl: options.shouldReplaceUrl,
     });
   }
@@ -116,7 +115,11 @@ export class ViewerParamsService {
 }
 
 export const isEmptyViewerParams = (params: ViewerParams): boolean =>
-  params.assetId == null && isEmptySearchQuery(params.query);
+  params.assetId == null &&
+  isEmptySearchQuery(params.query) &&
+  params.ui.map.x === DEFAULT_MAP_POSITION.x &&
+  params.ui.map.y === DEFAULT_MAP_POSITION.y &&
+  params.ui.map.z === DEFAULT_MAP_POSITION.z;
 
 export interface ViewerParams {
   query: AssetSearchQuery;
