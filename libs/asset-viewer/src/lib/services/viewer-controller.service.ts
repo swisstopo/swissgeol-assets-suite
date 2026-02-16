@@ -100,6 +100,12 @@ export class ViewerControllerService {
     } else {
       params = paramsFromUrl;
     }
+
+    // Preserve the results panel state if it was manually toggled by the user
+    if (!isPanelAutomaticallyToggled(paramsFromStore.ui.resultsState)) {
+      params = { ...params, ui: { ...params.ui, resultsState: paramsFromStore.ui.resultsState } };
+    }
+
     loads.push(this.updateStoreByParams(params));
 
     const geometries = await firstValueFrom(this.store.select(selectGeometries));
