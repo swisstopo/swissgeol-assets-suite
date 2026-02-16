@@ -132,7 +132,8 @@ export class ViewerControllerService {
     query: AssetSearchQuery,
     options: { force?: boolean; skipAssetReset?: boolean } = {},
   ): Promise<void> {
-    if (!options.force && isEmptySearchQuery(query)) {
+    // Always load results when favoritesOnly is true, even if other search criteria are empty
+    if (!options.force && isEmptySearchQuery(query) && !query.favoritesOnly) {
       this.store.dispatch(actions.setResults({ results: makeEmptyAssetSearchResults(), isLoading: false }));
       return;
     }
@@ -166,7 +167,8 @@ export class ViewerControllerService {
   }
 
   private async updateByQuery(query: AssetSearchQuery): Promise<void> {
-    if (isEmptySearchQuery(query)) {
+    // Only reset map position if the query is empty and not in favorites mode
+    if (isEmptySearchQuery(query) && !query.favoritesOnly) {
       this.store.dispatch(actions.setMapPosition({ position: DEFAULT_MAP_POSITION }));
     }
     await Promise.all([this.loadResults(query), this.loadStats(query)]);
