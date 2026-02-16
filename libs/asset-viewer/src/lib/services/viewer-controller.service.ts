@@ -243,6 +243,13 @@ export class ViewerControllerService {
         return;
       }
       const params = await this.viewerParamsService.readParamsFromUrl();
+
+      // Preserve the results panel state if it was manually toggled by the user
+      const currentResultsState = await firstValueFrom(this.store.select(selectResultsState));
+      if (!isPanelAutomaticallyToggled(currentResultsState)) {
+        params.ui.resultsState = currentResultsState;
+      }
+
       this.isUpdatingStore = true;
       await this.updateStoreByParams(params);
       this.isUpdatingStore = false;
