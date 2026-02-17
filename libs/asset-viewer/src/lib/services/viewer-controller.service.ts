@@ -41,7 +41,7 @@ import {
 } from '../state/asset-search/asset-search.selector';
 import { AssetSearchService } from './asset-search.service';
 import { GeometryService } from './geometry.service';
-import { isEmptyViewerParams, ViewerParams, ViewerParamsService } from './viewer-params.service';
+import { areViewerParamsEqual, isEmptyViewerParams, ViewerParams, ViewerParamsService } from './viewer-params.service';
 
 @Injectable({ providedIn: 'root' })
 export class ViewerControllerService {
@@ -256,6 +256,10 @@ export class ViewerControllerService {
         params.ui.resultsState = currentResultsState;
       }
 
+      const currentParams = await this.viewerParamsService.readParamsFromStore();
+      if (areViewerParamsEqual(params, currentParams)) {
+        return;
+      }
       this.isUpdatingStore = true;
       await this.updateStoreByParams(params);
       this.isUpdatingStore = false;

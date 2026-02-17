@@ -121,6 +121,16 @@ export const isEmptyViewerParams = (params: ViewerParams): boolean =>
   params.ui.map.y === DEFAULT_MAP_POSITION.y &&
   params.ui.map.z === DEFAULT_MAP_POSITION.z;
 
+export const areViewerParamsEqual = (a: ViewerParams, b: ViewerParams): boolean =>
+  a.assetId === b.assetId &&
+  JSON.stringify(a.query) === JSON.stringify(b.query) &&
+  a.ui.scrollOffsetForResults === b.ui.scrollOffsetForResults &&
+  isPanelOpen(a.ui.filtersState) === isPanelOpen(b.ui.filtersState) &&
+  isPanelOpen(a.ui.resultsState) === isPanelOpen(b.ui.resultsState) &&
+  a.ui.map.x === b.ui.map.x &&
+  a.ui.map.y === b.ui.map.y &&
+  a.ui.map.z === b.ui.map.z;
+
 export interface ViewerParams {
   query: AssetSearchQuery;
   ui: AssetSearchUiState;
