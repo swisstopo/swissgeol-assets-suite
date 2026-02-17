@@ -1,6 +1,7 @@
 import { AppConfig, AppMode } from '@asset-sg/shared/v2';
 import { Controller, Get } from '@nestjs/common';
 
+import { Public } from '@/core/decorators/public.decorator';
 import { readEnv, requireEnv } from '@/utils/requireEnv';
 
 @Controller('/')
@@ -21,6 +22,7 @@ export class AppController {
     };
   }
 
+  @Public()
   @Get('/config')
   showConfig(): AppConfig {
     return this.config;
