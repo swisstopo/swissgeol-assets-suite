@@ -43,7 +43,7 @@ jobs:
 
   deploy-assets-ext:
     name: "deploy assets-ext"
-    if: ${{ inputs.env == 'prod' }}
+    if: ${{ inputs.env == 'prod' || inputs.env == 'int' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
