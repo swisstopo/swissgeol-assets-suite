@@ -1,51 +1,54 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Cron, SchedulerRegistry } from '@nestjs/schedule';
+import { SchedulerRegistry } from '@nestjs/schedule';
 import { CronJob } from 'cron';
 import { AssetRepo } from '@/features/assets/asset.repo';
+import { FileService } from '@/features/assets/files/file.service';
 import { AssetSearchService } from '@/features/assets/search/asset-search.service';
 import { AtomicProgressService } from '@/features/assets/sync/atomic-progress.service';
 
-const at2AM = '0 2 * * *';
-
 @Injectable()
-export class AssetSyncService extends AtomicProgressService {
-  protected override readonly logger = new Logger(AssetSyncService.name);
-  protected override readonly syncFile = './asset-sync-progress.tmp.json';
+export class FileFulltextSyncService extends AtomicProgressService {
+  protected override readonly logger = new Logger(FileFulltextSyncService.name);
+  protected override readonly syncFile = './file-fulltext-sync-progress.tmp.json';
+
+  private reloadFromS3 = false;
 
   constructor(
     private readonly assetSearchService: AssetSearchService,
     private readonly schedulerRegistry: SchedulerRegistry,
     private readonly assetRepo: AssetRepo,
+    private readonly fileService: FileService,
   ) {
     super();
   }
 
-  public async startCronJob(): Promise<void> {
+  public async init(): Promise<void> {
     await this.clearSyncFileIfExists();
-    await this.startSync();
 
     if (process.env.ANONYMOUS_MODE === 'true') {
       this.logger.log('Anonymous Mode is activated. Search Index will be automatically synced.');
+      // TODO: This trigger depends on the way we implement the index.
       await this.startSyncIfIndexOutOfSync();
 
       const every20Minutes = '*/20 * * * *';
       const job = new CronJob(every20Minutes, () => this.startSyncIfIndexOutOfSync());
-      this.schedulerRegistry.addCronJob('elasticIndexSync', job);
+      this.schedulerRegistry.addCronJob('elasticFulltextIndexSync', job);
       job.start();
     }
   }
 
-  @Cron(at2AM)
-  public async syncElasticIndexAfterExternSync() {
-    if (process.env.ANONYMOUES_MODE !== 'true') {
-      this.logger.log('Starting scheduled sync after external sync');
-      await this.clearSyncFileIfExists();
-      await this.startSync();
-    }
+  public async reloadFromS3AndStartSync(): Promise<void> {
+    this.reloadFromS3 = true;
+    await this.startSync();
   }
 
-  protected override sync(writeProgress: (progress: number) => Promise<void>): Promise<void> {
-    return this.assetSearchService.syncWithDatabase(writeProgress);
+  protected override async sync(writeProgress: (progress: number) => Promise<void>): Promise<void> {
+    if (this.reloadFromS3) {
+      this.logger.log('Starting full text sync with reload from S3');
+      await this.fileService.loadAllFulltextContentFromS3((progress: number) => writeProgress(progress * 0.5));
+    }
+
+    // TODO: Implement indexing.
   }
 
   private async startSyncIfIndexOutOfSync() {

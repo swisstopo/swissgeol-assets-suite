@@ -4,16 +4,21 @@ import {
   AssetId,
   FileProcessingStage,
   FileProcessingState,
+  FulltextContent,
   getLanguageCodesOfPages,
   LanguageCode,
 } from '@asset-sg/shared/v2';
 import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { Prisma } from '@prisma/client';
+import { getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs';
+import { TextItem } from 'pdfjs-dist/types/src/display/api';
 import { EVENTS } from '@/core/events';
 import { PrismaService } from '@/core/prisma.service';
 import { FileS3Service, SaveFileS3Options } from '@/features/assets/files/file-s3.service';
 import { CreateFileData, FileIdentifier, FileRepo } from '@/features/assets/files/file.repo';
 import { mapAssetLanguagesToPrismaUpdate } from '@/features/assets/prisma-asset';
+import { streamToUint8Array } from '@/utils/stream';
 
 @Injectable()
 export class FileService {
@@ -111,6 +116,63 @@ export class FileService {
 
     this.eventEmitter.emit(EVENTS.FILE_START_OCR, updatedAsset);
     return updatedAsset;
+  }
+
+  async loadAllFulltextContentFromS3(writeProgress?: (progress: number) => Promise<void>): Promise<void> {
+    const files = await this.prismaService.file.findMany({ select: { id: true, name: true } });
+    let i = 0;
+    for (const file of files) {
+      if (i % 1000 === 0) {
+        this.logger.debug('Downloading file fulltext..', {
+          total: files.length,
+          offset: i,
+          progress: Number((i / files.length).toFixed(2)),
+        });
+        await writeProgress?.(Math.min(i / files.length, 1));
+      }
+      i++;
+      await this.loadFulltextContentFromS3(file.id, file.name);
+    }
+    writeProgress?.(1);
+    this.logger.debug('Done downloading file fulltext.', { total: files.length });
+  }
+
+  async loadFulltextContentFromS3(fileId: number, s3FileName: string | null = null): Promise<void> {
+    try {
+      if (s3FileName === null) {
+        const file = await this.prismaService.file.findUnique({ where: { id: fileId }, select: { name: true } });
+        if (file === null) {
+          this.logger.warn('File not found in database', { fileId });
+          return;
+        }
+        s3FileName = file.name;
+      }
+
+      const file = await this.fileS3Service.load(s3FileName);
+      if (file === null) {
+        this.logger.warn('File not found in S3', { fileId, fileName: s3FileName });
+        return;
+      }
+
+      const buffer = await streamToUint8Array(file.content);
+      const doc = await getDocument(buffer).promise;
+      const content: FulltextContent[] = Array(doc.numPages);
+      for (let i = 1; i <= doc.numPages; i++) {
+        const page = await doc.getPage(i);
+        const textContent = await page.getTextContent();
+        content[i - 1] = {
+          page: i,
+          content: textContent.items.map((item) => (item as TextItem).str).join(),
+        };
+      }
+
+      await this.prismaService.file.update({
+        where: { id: fileId },
+        data: { fulltextContent: content as unknown as Prisma.JsonArray },
+      });
+    } catch (e) {
+      this.logger.warn('Failed to load fulltext content from S3', { fileId, error: e });
+    }
   }
 
   private getProcessingConfiguration(

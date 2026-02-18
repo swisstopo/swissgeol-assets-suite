@@ -1,11 +1,15 @@
-import { Controller, Get, HttpException, Post, Res } from '@nestjs/common';
+import { Controller, DefaultValuePipe, Get, HttpException, Param, ParseBoolPipe, Post, Res } from '@nestjs/common';
 import { Response } from 'express';
 import { Authorize } from '@/core/decorators/authorize.decorator';
 import { AssetSyncService } from '@/features/assets/sync/asset-sync.service';
+import { FileFulltextSyncService } from '@/features/assets/sync/file-fulltext-sync.service';
 
 @Controller('/assets/sync')
 export class AssetSyncController {
-  constructor(private readonly assetSyncService: AssetSyncService) {}
+  constructor(
+    private readonly assetSyncService: AssetSyncService,
+    private readonly fileFulltextSyncService: FileFulltextSyncService,
+  ) {}
 
   @Get('/')
   @Authorize.Admin()
@@ -26,6 +30,20 @@ export class AssetSyncController {
   @Authorize.Admin()
   async start(@Res() res: Response): Promise<void> {
     await this.assetSyncService.startSync();
+    res.status(200).end();
+  }
+
+  @Post('/full-text')
+  @Authorize.Admin()
+  async startFullText(
+    @Res() res: Response,
+    @Param('reloadFromS3', new DefaultValuePipe(false), new ParseBoolPipe()) reloadFromS3: boolean,
+  ): Promise<void> {
+    if (reloadFromS3) {
+      await this.fileFulltextSyncService.reloadFromS3AndStartSync();
+    } else {
+      await this.fileFulltextSyncService.startSync();
+    }
     res.status(200).end();
   }
 }

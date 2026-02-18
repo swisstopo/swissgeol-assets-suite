@@ -10,6 +10,7 @@ import { PrismaExceptionFilter } from '@/core/exception-filters/prisma.exception
 import { FileExtractionService } from '@/features/assets/files/file-processors/file-extraction/file-extraction.service';
 import { FileOcrService } from '@/features/assets/files/file-processors/file-ocr/file-ocr.service';
 import { AssetSyncService } from '@/features/assets/sync/asset-sync.service';
+import { FileFulltextSyncService } from '@/features/assets/sync/file-fulltext-sync.service';
 import { UserService } from '@/features/users/user.service';
 
 export * from 'fp-ts';
@@ -35,6 +36,9 @@ async function bootstrap(): Promise<void> {
 
   const assetSyncService = app.get(AssetSyncService);
   await assetSyncService.startCronJob();
+
+  const fileFulltextSyncService = app.get(FileFulltextSyncService);
+  await fileFulltextSyncService.init();
 
   const fileOcrService = app.get(FileOcrService);
   await fileOcrService.processRemaining();
