@@ -129,6 +129,12 @@ const loadS3ClientConfig = (): S3ClientConfig => {
 
     // Disables the client automatically appending the hostname to the bucket name.
     forcePathStyle: true,
+    requestHandler: {
+      // Reduces the default socket timeout to prevent hanging connections in case of network issues or client
+      // disconnects if a request is terminated prematurely. If left out, aborted requests leave sockets occupied
+      // without returning them, leading to an exhaustion of sockets after the default (50 sockets) are taken.
+      socketTimeout: 500,
+    },
   };
 };
 
