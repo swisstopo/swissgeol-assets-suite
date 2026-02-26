@@ -33,7 +33,7 @@ export class FileRepo implements Repo<AssetFile, FileIdentifier, CreateFileData,
 
   async find({ id, assetId }: FileIdentifier): Promise<AssetFile | null> {
     const entry = await this.prisma.file.findFirst({
-      where: { id, AssetFile: { some: { assetId } } },
+      where: { id, assetId },
       select: assetFileSelection,
     });
     if (entry == null) {
@@ -46,11 +46,11 @@ export class FileRepo implements Repo<AssetFile, FileIdentifier, CreateFileData,
     const where: Prisma.FileWhereInput = {};
     if (ids != null) {
       // Require the files to match one of the given identifiers.
-      where['OR'] = ids.map(({ id, assetId }) => ({ id, AssetFile: { some: { assetId } } }));
+      where['OR'] = ids.map(({ id, assetId }) => ({ id, assetId }));
     }
     if (assetId != null) {
       // Require the files to belong to a specific asset.
-      where['AssetFile'] = { some: { assetId } };
+      where['assetId'] = assetId;
     }
     const entries = await this.prisma.file.findMany({
       where,
@@ -62,11 +62,9 @@ export class FileRepo implements Repo<AssetFile, FileIdentifier, CreateFileData,
   }
 
   async findOrphans(): Promise<AssetFile[]> {
-    const entries = await this.prisma.file.findMany({
-      where: { AssetFile: { none: {} } },
-      select: assetFileSelection,
-    });
-    return entries.map(mapAssetFileFromPrisma);
+    // With the one-to-many relationship (assetId is NOT NULL on file),
+    // orphaned files should not exist. This method is kept for safety.
+    return [];
   }
 
   async create(data: CreateFileData): Promise<AssetFile> {
@@ -83,11 +81,7 @@ export class FileRepo implements Repo<AssetFile, FileIdentifier, CreateFileData,
         type: data.legalDocCode === null ? 'Normal' : 'Legal',
         legalDocItemCode: data.legalDocCode,
         lastModifiedAt,
-        AssetFile: {
-          create: {
-            assetId: data.assetId,
-          },
-        },
+        assetId: data.assetId,
       },
     });
     return {
@@ -105,37 +99,23 @@ export class FileRepo implements Repo<AssetFile, FileIdentifier, CreateFileData,
   }
 
   async delete(file: FileIdentifier): Promise<boolean> {
-    return this.prisma.$transaction(async () => {
-      const fileName = (
-        await this.prisma.file.findUnique({
-          where: { id: file.id },
-          select: { name: true },
-        })
-      )?.name;
-      if (fileName == null) {
-        return false;
-      }
-      await this.prisma.assetFile.delete({
-        where: {
-          assetId_fileId: { assetId: file.assetId, fileId: file.id },
-        },
-        select: { fileId: true },
+    try {
+      // Verify the file belongs to the specified asset before deleting.
+      const existing = await this.prisma.file.findFirst({
+        where: { id: file.id, assetId: file.assetId },
+        select: { id: true },
       });
-
-      // Check if the file is assigned to any other assets.
-      // In that case, we can't delete it.
-      // This is necessary since files can be assigned to multiple assets at the database level.
-      const isFileUnused =
-        null !=
-        this.prisma.assetFile.findFirst({
-          where: { fileId: file.id, assetId: { not: file.assetId } },
-          select: { fileId: true },
-        });
-      if (!isFileUnused) {
+      if (existing == null) {
         return false;
       }
-      return await this.deleteUnused(file.id);
-    });
+      await this.prisma.file.delete({
+        where: { id: file.id },
+        select: { id: true },
+      });
+      return true;
+    } catch (e) {
+      return handlePrismaMutationError(e) ?? false;
+    }
   }
 
   async deleteUnused(id: AssetFileId): Promise<boolean> {

@@ -155,7 +155,6 @@ export class FixturesCreateCommand extends CommandRunner {
           }));
         if (doesFileExist) {
           this.logger.log(`Old file could not be deleted, cleaning it up manually.`, { file: file.name });
-          await this.prismaService.assetFile.deleteMany({ where: { fileId: file.id } });
           await this.prismaService.file.delete({ where: { id: file.id } });
         }
       }

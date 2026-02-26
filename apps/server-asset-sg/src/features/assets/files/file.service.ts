@@ -74,14 +74,10 @@ export class FileService {
     }
     const isDbOk = await this.fileRepo.delete(id);
     if (!isDbOk) {
-      // The connection between the asset and the file has been deleted,
-      // but the file is still linked to other assets.
-      // We still want to communicate that the file was successfully deleted,
-      // as by the viewpoint of the API, the deletion has been successful.
-      return true;
+      return false;
     }
 
-    // Remove the file from S3, as no asset refers to it anymore.
+    // Remove the file from S3.
     return await this.fileS3Service.delete(file.name);
   }
 
