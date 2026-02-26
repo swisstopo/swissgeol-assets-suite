@@ -129,15 +129,20 @@ export class FileExtractionService extends AbstractProcessingService<PredictionS
       results.map((it) => ({ languages: it.metadata.languages.filter(this.isSupportedPageLanguage) })),
     );
 
-    // Find all assets that are mapped to the processed file.
-    const assets = await this.prisma.assetFile.findMany({
-      where: { fileId },
+    // Find the asset that the processed file belongs to.
+    const file = await this.prisma.file.findUnique({
+      where: { id: fileId },
       select: { assetId: true },
     });
 
-    // For each asset, add all languages that have not yet been mapped to it.
+    if (file == null) {
+      this.logger.warn(`File ${fileId} not found, cannot store languages.`);
+      return;
+    }
+
+    // Add all languages that have not yet been mapped to the asset.
     await this.prisma.assetLanguage.createMany({
-      data: assets.flatMap(({ assetId }) => [...languages].map((code) => ({ assetId, languageItemCode: code }))),
+      data: [...languages].map((code) => ({ assetId: file.assetId, languageItemCode: code })),
       skipDuplicates: true,
     });
   }

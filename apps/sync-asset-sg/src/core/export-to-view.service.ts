@@ -14,11 +14,7 @@ type PublishedAssetSelection = Prisma.AssetGetPayload<{
     createDate: true;
     receiptDate: true;
     assetContacts: true;
-    assetFiles: {
-      include: {
-        file: true;
-      };
-    };
+    files: true;
     isNatRel: true;
     assetKindItemCode: true;
     assetFormatItemCode: true;
@@ -101,12 +97,12 @@ export class ExportToViewService {
       await this.exportSiblings(assetIds, [...this.publicAssetConfigs.keys()]);
     }
 
-    // Cleanup relations that are not used in any reference
+    // Cleanup files that are not linked to any exported asset
     let cleaned = await this.destinationPrisma.$executeRaw`
       DELETE FROM "file"
       WHERE NOT EXISTS (
-        SELECT 1 FROM "asset_file"
-        WHERE "asset_file"."file_id" = "file"."id"
+        SELECT 1 FROM "asset"
+        WHERE "asset"."asset_id" = "file"."asset_id"
       );
     `;
     log(`Removed ${cleaned} files not used in any relation.`, 'batch');
@@ -139,9 +135,7 @@ export class ExportToViewService {
         createDate: true,
         receiptDate: true,
         assetContacts: true,
-        assetFiles: {
-          include: { file: true },
-        },
+        files: true,
         isNatRel: true,
         assetKindItemCode: true,
         assetFormatItemCode: true,
@@ -163,8 +157,14 @@ export class ExportToViewService {
     result = await this.destinationPrisma.assetContact.createMany({ data: filteredAssets.assetContacts });
     log(`Created ${result.count} assetContacts.`, 'batch');
 
-    result = await this.destinationPrisma.assetFile.createMany({ data: filteredAssets.assetFiles });
-    log(`Created ${result.count} assetFiles.`, 'batch');
+    // Export files that belong to the published assets (filtered by type based on publish config)
+    if (filteredAssets.filesToExport.length > 0) {
+      result = await this.destinationPrisma.file.createMany({
+        data: filteredAssets.filesToExport,
+        skipDuplicates: true,
+      });
+      log(`Created ${result.count} files.`, 'batch');
+    }
 
     const geometriesToPublish = assetIds.filter((f) => this.publicAssetConfigs.get(f)?.publishData.geometries);
     for (const [idx, batch] of this.batchList(geometriesToPublish, BATCH_SIZE_GEOMETRIES).entries()) {
@@ -226,7 +226,6 @@ export class ExportToViewService {
       'ManCatLabelItem',
       'NatRelItem',
       'Contact',
-      'File',
     ];
 
     for (const table of tables) {
@@ -330,12 +329,12 @@ export class ExportToViewService {
   private preparePublishedData(assets: PublishedAssetSelection[]): {
     assets: Prisma.AssetCreateManyInput[];
     assetContacts: Prisma.AssetContactCreateManyInput[];
-    assetFiles: Prisma.AssetFileCreateManyInput[];
+    filesToExport: Prisma.FileCreateManyInput[];
   } {
     const filteredAssets: Prisma.AssetCreateManyInput[] = [];
-    const filteredAssetFiles: Prisma.AssetFileCreateManyInput[] = [];
+    const filteredFiles: Prisma.FileCreateManyInput[] = [];
     const filteredAssetContacts: Prisma.AssetContactCreateManyInput[] = [];
-    for (const { assetFiles, assetContacts, ...asset } of assets) {
+    for (const { files, assetContacts, ...asset } of assets) {
       const publicAssetConfig = this.publicAssetConfigs.get(asset.assetId);
       if (publicAssetConfig === undefined) {
         continue;
@@ -354,13 +353,17 @@ export class ExportToViewService {
       }
 
       if (publishData.legalFiles) {
-        filteredAssetFiles.push(
-          ...assetFiles.filter((f) => f.file.type === 'Legal').map((f) => ({ assetId: f.assetId, fileId: f.fileId })),
+        filteredFiles.push(
+          ...files
+            .filter((f) => f.type === 'Legal')
+            .map((f) => ({ ...f, pageRangeClassifications: f.pageRangeClassifications as Prisma.InputJsonValue })),
         );
       }
       if (publishData.normalFiles) {
-        filteredAssetFiles.push(
-          ...assetFiles.filter((f) => f.file.type === 'Normal').map((f) => ({ assetId: f.assetId, fileId: f.fileId })),
+        filteredFiles.push(
+          ...files
+            .filter((f) => f.type === 'Normal')
+            .map((f) => ({ ...f, pageRangeClassifications: f.pageRangeClassifications as Prisma.InputJsonValue })),
         );
       }
 
@@ -380,7 +383,7 @@ export class ExportToViewService {
     return {
       assets: filteredAssets,
       assetContacts: filteredAssetContacts,
-      assetFiles: filteredAssetFiles,
+      filesToExport: filteredFiles,
     };
   }
 }

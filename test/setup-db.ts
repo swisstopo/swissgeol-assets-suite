@@ -41,7 +41,6 @@ export const clearPrismaAssets = async (prisma: PrismaClient): Promise<void> => 
   await prisma.contact.deleteMany();
   await prisma.id.deleteMany();
   await prisma.typeNatRel.deleteMany();
-  await prisma.assetFile.deleteMany();
   await prisma.file.deleteMany();
   await prisma.asset.deleteMany();
   await prisma.workgroupsOnUsers.deleteMany();
