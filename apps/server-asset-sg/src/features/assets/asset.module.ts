@@ -34,7 +34,7 @@ import { UsersModule } from '@/features/users/users.module';
     FavoritesController,
     WorkflowController,
   ],
-  exports: [AssetSearchService, AssetRepo, AssetService, WorkflowService, FileService, FileRepo],
+  exports: [AssetSearchService, AssetRepo, AssetService, WorkflowService, FileS3Service, FileService, FileRepo],
   imports: [UsersModule],
   providers: [
     provideElasticsearch,
