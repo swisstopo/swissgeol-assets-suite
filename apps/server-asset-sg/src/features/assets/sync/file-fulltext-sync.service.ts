@@ -29,10 +29,10 @@ export class FileFulltextSyncService extends AtomicProgressService<FileFulltextS
 
   public async init(): Promise<void> {
     await this.clearSyncFileIfExists();
+    await this.startSyncIfIndexOutOfSync();
 
     if (process.env.ANONYMOUS_MODE === 'true') {
       this.logger.log('Anonymous Mode is activated. Search Index will be automatically synced.');
-      await this.startSyncIfIndexOutOfSync();
 
       const every20Minutes = '*/20 * * * *';
       const job = new CronJob(every20Minutes, () => this.startSyncIfIndexOutOfSync());

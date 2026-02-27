@@ -27,6 +27,7 @@ export interface AssetSearchState {
   results: AssetSearchResult;
   fileResults: FileSearchResult;
   stats: AssetSearchStats;
+  fileStats: AssetSearchStats;
   geometries: Geometry[];
   ui: AssetSearchUiState;
 
@@ -34,6 +35,7 @@ export interface AssetSearchState {
   isLoadingResults: boolean;
   isLoadingFileResults: boolean;
   isLoadingStats: boolean;
+  isLoadingFileStats: boolean;
 }
 
 export interface AssetSearchUiState {
@@ -53,6 +55,7 @@ const initialState: AssetSearchState = {
   results: makeEmptyAssetSearchResults(),
   fileResults: makeEmptyFileSearchResults(),
   stats: makeEmptyAssetSearchStats(),
+  fileStats: makeEmptyAssetSearchStats(),
   ui: {
     filtersState: PanelState.OpenedAutomatically,
     resultsState: PanelState.ClosedAutomatically,
@@ -64,6 +67,7 @@ const initialState: AssetSearchState = {
   isLoadingResults: false,
   isLoadingFileResults: false,
   isLoadingStats: false,
+  isLoadingFileStats: false,
 };
 
 export const assetSearchReducer = createReducer(
@@ -115,6 +119,14 @@ export const assetSearchReducer = createReducer(
       ...state,
       fileResults: fileResults ?? state.fileResults,
       isLoadingFileResults: isLoading ?? state.isLoadingFileResults,
+    }),
+  ),
+  on(
+    actions.setFileStats,
+    (state, { fileStats, isLoading }): AssetSearchState => ({
+      ...state,
+      fileStats: fileStats ?? state.fileStats,
+      isLoadingFileStats: isLoading ?? state.isLoadingFileStats,
     }),
   ),
   on(

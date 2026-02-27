@@ -39,6 +39,12 @@ export class AssetSearchService {
       .pipe(map((res) => plainToInstance(FileSearchResultSchema, res)));
   }
 
+  public searchFileStats(searchQuery: AssetSearchQuery): Observable<AssetSearchStats> {
+    return this.httpClient
+      .post('/api/files/search/stats', searchQuery)
+      .pipe(map((res) => plainToInstance(AssetSearchStatsSchema, res)));
+  }
+
   public fetchAsset(id: AssetId): Observable<Asset> {
     return this.httpClient.get<object>(`/api/assets/${id}`).pipe(map((res) => plainToInstance(AssetSchema, res)));
   }

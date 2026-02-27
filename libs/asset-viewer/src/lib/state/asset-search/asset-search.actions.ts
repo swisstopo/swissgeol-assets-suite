@@ -39,6 +39,14 @@ export const setFileResults = createAction(
   }>(),
 );
 
+export const setFileStats = createAction(
+  '[Asset Search] Set File Stats',
+  props<{
+    fileStats?: AssetSearchStats;
+    isLoading?: boolean;
+  }>(),
+);
+
 export const setGeometries = createAction(
   '[Asset Search] Set Geometries',
   props<{

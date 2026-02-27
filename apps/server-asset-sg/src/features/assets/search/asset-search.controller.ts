@@ -92,6 +92,19 @@ export class FileSearchController {
     restrictQueryForUser(query, user);
     return await this.assetSearchService.searchFiles(query, user, { limit, offset });
   }
+
+  @Post('/stats')
+  @Authorize.User()
+  @HttpCode(HttpStatus.OK)
+  @SerializeOptions({ type: AssetSearchStatsSchema })
+  async showStats(
+    @ParseBody(AssetSearchQuerySchema)
+    query: AssetSearchQuery,
+    @CurrentUser() user: User,
+  ): Promise<AssetSearchStats> {
+    restrictQueryForUser(query, user);
+    return await this.assetSearchService.aggregateFiles(query, user);
+  }
 }
 
 /**

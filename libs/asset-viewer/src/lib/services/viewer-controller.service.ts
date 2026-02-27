@@ -6,6 +6,7 @@ import {
   AssetSearchQuery,
   isEmptySearchQuery,
   makeEmptyAssetSearchResults,
+  makeEmptyAssetSearchStats,
   makeEmptyFileSearchResults,
 } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
@@ -172,9 +173,23 @@ export class ViewerControllerService {
   }
 
   private async loadStats(query: AssetSearchQuery): Promise<void> {
+    const hasTextFilter = query.text != null && query.text.length > 0;
     this.store.dispatch(actions.setStats({ isLoading: true }));
-    const stats = await firstValueFrom(this.assetSearchService.searchStats(query));
-    this.store.dispatch(actions.setStats({ stats, isLoading: false }));
+
+    if (hasTextFilter) {
+      // When a text filter is present, load both asset stats and file stats in parallel.
+      // The file stats ensure that filters reflect file content matches.
+      const [assetStats, fileStats] = await Promise.all([
+        firstValueFrom(this.assetSearchService.searchStats(query)),
+        firstValueFrom(this.assetSearchService.searchFileStats(query)),
+      ]);
+      this.store.dispatch(actions.setStats({ stats: assetStats, isLoading: false }));
+      this.store.dispatch(actions.setFileStats({ fileStats, isLoading: false }));
+    } else {
+      const stats = await firstValueFrom(this.assetSearchService.searchStats(query));
+      this.store.dispatch(actions.setStats({ stats, isLoading: false }));
+      this.store.dispatch(actions.setFileStats({ fileStats: makeEmptyAssetSearchStats(), isLoading: false }));
+    }
   }
 
   private async loadAsset(id: AssetId | null): Promise<void> {

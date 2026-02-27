@@ -41,10 +41,50 @@ export const selectSearchResults = createSelector(assetSearchFeature, (state) =>
 
 export const selectSearchResultItems = createSelector(assetSearchFeature, (state) => state.results.data);
 
-export const selectSearchStats = createSelector(
-  assetSearchFeature,
-  (state) => state?.stats ?? makeEmptyAssetSearchStats(),
-);
+export const selectSearchStats = createSelector(assetSearchFeature, (state): AssetSearchStats => {
+  const assetStats = state?.stats ?? makeEmptyAssetSearchStats();
+  const fileStats = state?.fileStats ?? makeEmptyAssetSearchStats();
+
+  // If file stats have no results, just use asset stats.
+  if (fileStats.total === 0) {
+    return assetStats;
+  }
+
+  // If asset stats have no results, use file stats.
+  if (assetStats.total === 0) {
+    return fileStats;
+  }
+
+  // Merge both stats: take the max count per facet value.
+  return {
+    total: assetStats.total,
+    authorIds: mergeValueCounts(assetStats.authorIds, fileStats.authorIds),
+    kindCodes: mergeValueCounts(assetStats.kindCodes, fileStats.kindCodes),
+    languageCodes: mergeValueCounts(assetStats.languageCodes, fileStats.languageCodes),
+    geometryTypes: mergeValueCounts(assetStats.geometryTypes, fileStats.geometryTypes),
+    topicCodes: mergeValueCounts(assetStats.topicCodes, fileStats.topicCodes),
+    usageCodes: mergeValueCounts(assetStats.usageCodes, fileStats.usageCodes),
+    workgroupIds: mergeValueCounts(assetStats.workgroupIds, fileStats.workgroupIds),
+    status: mergeValueCounts(assetStats.status, fileStats.status),
+    createdAt: assetStats.createdAt ?? fileStats.createdAt,
+  };
+});
+
+/**
+ * Merges two arrays of value counts by taking the max count for each unique value.
+ * Values that only appear in one array are included as-is.
+ */
+function mergeValueCounts<T>(a: ValueCount<T>[], b: ValueCount<T>[]): ValueCount<T>[] {
+  const map = new Map<T, number>();
+  for (const { value, count } of a) {
+    map.set(value, count);
+  }
+  for (const { value, count } of b) {
+    const existing = map.get(value);
+    map.set(value, existing != null ? Math.max(existing, count) : count);
+  }
+  return [...map.entries()].map(([value, count]) => ({ value, count }));
+}
 
 export const selectFileSearchResults = createSelector(
   assetSearchFeature,

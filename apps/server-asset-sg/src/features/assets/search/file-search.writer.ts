@@ -11,7 +11,7 @@ import {
 } from '@asset-sg/shared/v2';
 import { Client as ElasticsearchClient } from '@elastic/elasticsearch';
 import { BulkOperationContainer } from '@elastic/elasticsearch/lib/api/types';
-import { PrismaClient } from '@prisma/client';
+import { Prisma, PrismaClient } from '@prisma/client';
 import { GeometryRepo } from '@/features/geometries/geometry.repo';
 import { ProcessQueue } from '@/utils/process-queue';
 
@@ -145,14 +145,25 @@ export class FileSearchWriter {
       return results;
     }
 
-    const files = await queryFilesWithFulltextByIds(this.prisma, fileIds);
+    const files = await this.prisma.file.findMany({
+      where: {
+        id: { in: fileIds },
+        fulltextContent: { not: Prisma.AnyNull },
+      },
+      select: {
+        id: true,
+        name: true,
+        nameAlias: true,
+        fulltextContent: true,
+      },
+    });
 
     return files
       .filter((f) => f.fulltextContent != null)
       .map((f) => ({
         fileId: f.id,
         fileName: f.nameAlias ?? f.name,
-        pages: f.fulltextContent as FulltextContent[],
+        pages: f.fulltextContent as unknown as FulltextContent[],
       }));
   }
 
@@ -198,13 +209,21 @@ export class FileSearchWriter {
   }
 
   private async fetchEagerFulltextContent(): Promise<Map<number, { fileName: string; pages: FulltextContent[] }>> {
-    const files = await queryFilesWithFulltext(this.prisma);
+    const files = await this.prisma.file.findMany({
+      where: { fulltextContent: { not: Prisma.AnyNull } },
+      select: {
+        id: true,
+        name: true,
+        nameAlias: true,
+        fulltextContent: true,
+      },
+    });
     const mapping = new Map<number, { fileName: string; pages: FulltextContent[] }>();
     for (const file of files) {
       if (file.fulltextContent != null) {
         mapping.set(file.id, {
           fileName: file.nameAlias ?? file.name,
-          pages: file.fulltextContent as FulltextContent[],
+          pages: file.fulltextContent as unknown as FulltextContent[],
         });
       }
     }
@@ -248,44 +267,4 @@ interface FileEager {
   fileIdToFulltextContent: Map<number, { fileName: string; pages: FulltextContent[] }>;
   assetIdToFavoredByUserId: Map<AssetId, UserId[]>;
   assetIdToGeometryTypes: Map<AssetId, GeometryType[] | ['None']>;
-}
-
-interface FileWithFulltext {
-  id: number;
-  name: string;
-  nameAlias: string | null;
-  fulltextContent: unknown;
-}
-
-/**
- * Queries all files that have fulltext content.
- * Isolated into a standalone function to avoid Prisma type inference issues
- * with the `fulltextContent` Json field.
- */
-
-async function queryFilesWithFulltext(prisma: PrismaClient): Promise<FileWithFulltext[]> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const result: any = await prisma.$queryRawUnsafe(`
-    SELECT id, name, name_alias AS "nameAlias", fulltext_content AS "fulltextContent"
-    FROM file
-    WHERE fulltext_content IS NOT NULL
-  `);
-  return result as FileWithFulltext[];
-}
-
-/**
- * Queries files with fulltext content filtered by file ids.
- */
-async function queryFilesWithFulltextByIds(prisma: PrismaClient, fileIds: number[]): Promise<FileWithFulltext[]> {
-  if (fileIds.length === 0) {
-    return [];
-  }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const result: any = await prisma.$queryRawUnsafe(
-    `SELECT id, name, name_alias AS "nameAlias", fulltext_content AS "fulltextContent"
-     FROM file
-     WHERE fulltext_content IS NOT NULL AND id = ANY($1)`,
-    fileIds,
-  );
-  return result as FileWithFulltext[];
 }

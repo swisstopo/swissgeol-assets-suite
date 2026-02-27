@@ -29,11 +29,6 @@ export interface AssetSearchResultItem {
 export interface AssetSearchResult {
   page: PageStats;
   data: AssetSearchResultItem[];
-  /**
-   * The total number of matching file pages.
-   * Only present when the search query includes a text filter.
-   */
-  fileTotal?: number;
 }
 
 export interface PageStats {
