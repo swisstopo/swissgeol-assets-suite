@@ -60,15 +60,15 @@ export class S3DuplicateFilesCommand extends CommandRunner {
     let errorCount = 0;
 
     for (const shared of sharedFiles) {
-      // The primary assignment (lowest asset_id) keeps the original file.
-      // All other assignments need a duplicated file.
-      const sortedAssetIds = shared.assetIds.sort((a, b) => a - b);
-      const primaryAssetId = sortedAssetIds[0];
-      const secondaryAssetIds = sortedAssetIds.slice(1);
+      // The primary asset is the one whose `a{assetId}_` prefix already matches
+      // the existing file name – that asset keeps the original file without copying.
+      // All other assets need a duplicated file with their own prefix.
+      const primaryAssetId = this.detectPrimaryAssetId(shared.fileName, shared.assetIds);
+      const secondaryAssetIds = shared.assetIds.filter((id) => id !== primaryAssetId);
 
       this.logger.log(
-        `File id=${shared.fileId} name="${shared.fileName}" is shared by assets [${sortedAssetIds.join(', ')}]. ` +
-          `Primary: ${primaryAssetId}. Duplicating for: [${secondaryAssetIds.join(', ')}].`,
+        `File id=${shared.fileId} name="${shared.fileName}" is shared by assets [${shared.assetIds.join(', ')}]. ` +
+          `Primary (matches file name): ${primaryAssetId}. Duplicating for: [${secondaryAssetIds.join(', ')}].`,
       );
 
       for (const targetAssetId of secondaryAssetIds) {
@@ -173,6 +173,26 @@ export class S3DuplicateFilesCommand extends CommandRunner {
     this.logger.log(`  Updated asset_file: asset ${targetAssetId} now points to file ${newFileId}.`);
 
     return true;
+  }
+
+  /**
+   * Determines which asset is the "primary" owner of the file.
+   *
+   * The primary asset is the one for which `computeNewFileName` would return
+   * the same name as the existing file – i.e. the asset whose `a{assetId}_`
+   * prefix already matches the file name. That asset keeps the original file
+   * and does not need a copy.
+   *
+   * Falls back to the lowest asset id if no prefix matches.
+   */
+  private detectPrimaryAssetId(fileName: string, assetIds: number[]): number {
+    for (const assetId of assetIds) {
+      if (this.computeNewFileName(fileName, assetId) === fileName) {
+        return assetId;
+      }
+    }
+    // No prefix match – fall back to lowest asset id.
+    return assetIds.reduce((min, id) => (id < min ? id : min), assetIds[0]);
   }
 
   /**
