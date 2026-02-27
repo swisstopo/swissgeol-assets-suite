@@ -12,13 +12,12 @@ import { BadRequestException, Injectable, Logger, NotFoundException } from '@nes
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Prisma } from '@prisma/client';
 import { getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs';
-import { TextItem } from 'pdfjs-dist/types/src/display/api';
+import { PDFDocumentProxy } from 'pdfjs-dist/types/src/display/api';
 import { EVENTS } from '@/core/events';
 import { PrismaService } from '@/core/prisma.service';
 import { FileS3Service, SaveFileS3Options } from '@/features/assets/files/file-s3.service';
 import { CreateFileData, FileIdentifier, FileRepo } from '@/features/assets/files/file.repo';
 import { mapAssetLanguagesToPrismaUpdate } from '@/features/assets/prisma-asset';
-import { streamToUint8Array } from '@/utils/stream';
 
 @Injectable()
 export class FileService {
@@ -119,7 +118,7 @@ export class FileService {
   }
 
   async loadAllFulltextContentFromS3(writeProgress?: (progress: number) => Promise<void>): Promise<void> {
-    const files = await this.prismaService.file.findMany({ select: { id: true, name: true } });
+    const files = await this.prismaService.file.findMany({ select: { id: true } });
     let i = 0;
     for (const file of files) {
       if (i % 1000 === 0) {
@@ -131,47 +130,66 @@ export class FileService {
         await writeProgress?.(Math.min(i / files.length, 1));
       }
       i++;
-      await this.loadFulltextContentFromS3(file.id, file.name);
+      await this.loadFulltextContentFromS3(file.id);
     }
     writeProgress?.(1);
     this.logger.debug('Done downloading file fulltext.', { total: files.length });
   }
 
-  async loadFulltextContentFromS3(fileId: number, s3FileName: string | null = null): Promise<void> {
+  async loadFulltextContentFromS3(fileId: number): Promise<void> {
     try {
-      if (s3FileName === null) {
-        const file = await this.prismaService.file.findUnique({ where: { id: fileId }, select: { name: true } });
-        if (file === null) {
-          this.logger.warn('File not found in database', { fileId });
-          return;
-        }
-        s3FileName = file.name;
-      }
-
-      const file = await this.fileS3Service.load(s3FileName);
+      const file = await this.prismaService.file.findUnique({
+        where: { id: fileId },
+        select: { name: true, nameAlias: true },
+      });
       if (file === null) {
-        this.logger.warn('File not found in S3', { fileId, fileName: s3FileName });
+        this.logger.warn('File not found in database', { fileId });
         return;
       }
 
-      const buffer = await streamToUint8Array(file.content);
-      const doc = await getDocument(buffer).promise;
-      const content: FulltextContent[] = Array(doc.numPages);
-      for (let i = 1; i <= doc.numPages; i++) {
-        const page = await doc.getPage(i);
-        const textContent = await page.getTextContent();
-        content[i - 1] = {
-          page: i,
-          content: textContent.items.map((item) => (item as TextItem).str).join(),
-        };
+      const presignedUrl = await this.fileS3Service.getPresignedUrl(file.name, file.nameAlias, false);
+      if (presignedUrl === null) {
+        this.logger.warn('File not found in S3', { fileId, fileName: file.name });
+        return;
       }
 
+      const content: FulltextContent[] = [];
+      for await (const page of this.streamPdfPages(presignedUrl)) {
+        content.push({
+          page: page.pageNumber,
+          content: page.text,
+        });
+      }
       await this.prismaService.file.update({
         where: { id: fileId },
         data: { fulltextContent: content as unknown as Prisma.JsonArray },
       });
     } catch (e) {
       this.logger.warn('Failed to load fulltext content from S3', { fileId, error: e });
+    }
+  }
+
+  private async *streamPdfPages(presignedUrl: string) {
+    let doc: PDFDocumentProxy | null = null;
+    try {
+      doc = await getDocument({
+        url: presignedUrl,
+        disableAutoFetch: true,
+        disableStream: false,
+      }).promise;
+
+      for (let i = 1; i <= doc?.numPages; i++) {
+        const page = await doc?.getPage(i);
+        const textContent = await page.getTextContent();
+        const text = textContent.items
+          .filter((item: any) => 'str' in item)
+          .map((item: any) => item.str)
+          .join(' ');
+        page.cleanup();
+        yield { pageNumber: i, text };
+      }
+    } finally {
+      doc?.destroy();
     }
   }
 
