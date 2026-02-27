@@ -4,12 +4,14 @@ import {
   AssetSearchResult,
   AssetSearchStats,
   Coordinate,
+  FileSearchResult,
   Geometry,
   GeometryAccessType,
   GeometryDetail,
   GeometryType,
   makeEmptyAssetSearchResults,
   makeEmptyAssetSearchStats,
+  makeEmptyFileSearchResults,
   run,
 } from '@asset-sg/shared/v2';
 import { createReducer, on } from '@ngrx/store';
@@ -23,12 +25,14 @@ import { PanelState } from './asset-search.actions';
 export interface AssetSearchState {
   query: AssetSearchQuery;
   results: AssetSearchResult;
+  fileResults: FileSearchResult;
   stats: AssetSearchStats;
   geometries: Geometry[];
   ui: AssetSearchUiState;
 
   isLoadingGeometries: boolean;
   isLoadingResults: boolean;
+  isLoadingFileResults: boolean;
   isLoadingStats: boolean;
 }
 
@@ -47,6 +51,7 @@ const initialState: AssetSearchState = {
   query: {},
   geometries: [],
   results: makeEmptyAssetSearchResults(),
+  fileResults: makeEmptyFileSearchResults(),
   stats: makeEmptyAssetSearchStats(),
   ui: {
     filtersState: PanelState.OpenedAutomatically,
@@ -57,6 +62,7 @@ const initialState: AssetSearchState = {
 
   isLoadingGeometries: false,
   isLoadingResults: false,
+  isLoadingFileResults: false,
   isLoadingStats: false,
 };
 
@@ -101,6 +107,14 @@ export const assetSearchReducer = createReducer(
       ...state,
       stats: stats ?? state.stats,
       isLoadingStats: isLoading ?? state.isLoadingStats,
+    }),
+  ),
+  on(
+    actions.setFileResults,
+    (state, { fileResults, isLoading }): AssetSearchState => ({
+      ...state,
+      fileResults: fileResults ?? state.fileResults,
+      isLoadingFileResults: isLoading ?? state.isLoadingFileResults,
     }),
   ),
   on(

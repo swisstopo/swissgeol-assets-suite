@@ -1,0 +1,30 @@
+import { AssetId } from '../asset';
+import { AssetFileId } from '../asset-file';
+import { PageStats } from './asset-search-result';
+
+export interface FileSearchResultItem {
+  fileId: AssetFileId;
+  assetId: AssetId;
+  assetTitle: string;
+  fileName: string;
+  page: number;
+  highlights: string[];
+}
+
+export interface FileSearchResult {
+  page: PageStats;
+  assetTotal: number;
+  fileTotal: number;
+  data: FileSearchResultItem[];
+}
+
+export const makeEmptyFileSearchResults = (): FileSearchResult => ({
+  page: {
+    size: 0,
+    offset: 0,
+    total: 0,
+  },
+  assetTotal: 0,
+  fileTotal: 0,
+  data: [],
+});

@@ -1,5 +1,5 @@
 import { Expose, Type } from 'class-transformer';
-import { IsArray, IsBoolean, IsEnum, IsNumber, IsString, ValidateNested } from 'class-validator';
+import { IsArray, IsBoolean, IsEnum, IsNumber, IsOptional, IsString, ValidateNested } from 'class-validator';
 import { AssetId } from '../../models/asset';
 import {
   AssetSearchResult,
@@ -87,4 +87,9 @@ export class AssetSearchResultSchema extends Schema implements AssetSearchResult
   @ValidateNested({ each: true })
   @Type(() => AssetSearchResultItemSchema)
   data!: AssetSearchResultItem[];
+
+  @Expose()
+  @IsNumber()
+  @IsOptional()
+  fileTotal?: number;
 }

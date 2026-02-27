@@ -1,0 +1,66 @@
+{
+  "properties": {
+    "fileId": {
+      "type": "keyword"
+    },
+    "assetId": {
+      "type": "keyword"
+    },
+    "assetTitle": {
+      "type": "text",
+      "fields": {
+        "keyword": {
+          "type": "keyword",
+          "ignore_above": 256
+        }
+      }
+    },
+    "fileName": {
+      "type": "text",
+      "fields": {
+        "keyword": {
+          "type": "keyword",
+          "ignore_above": 256
+        }
+      }
+    },
+    "page": {
+      "type": "integer"
+    },
+    "content": {
+      "type": "text",
+      "term_vector": "with_positions_offsets"
+    },
+    "workgroupId": {
+      "type": "integer"
+    },
+    "usageCode": {
+      "type": "keyword"
+    },
+    "kindCode": {
+      "type": "keyword"
+    },
+    "status": {
+      "type": "keyword"
+    },
+    "languageCodes": {
+      "type": "keyword"
+    },
+    "topicCodes": {
+      "type": "keyword"
+    },
+    "geometryTypes": {
+      "type": "keyword"
+    },
+    "authorIds": {
+      "type": "integer"
+    },
+    "favoredByUserIds": {
+      "type": "keyword"
+    },
+    "createdAt": {
+      "type": "date",
+      "format": "yyyy-MM-dd"
+    }
+  }
+}

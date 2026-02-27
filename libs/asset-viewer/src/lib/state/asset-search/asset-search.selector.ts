@@ -7,6 +7,7 @@ import {
   GeometryType,
   LocalDateRange,
   makeEmptyAssetSearchStats,
+  makeEmptyFileSearchResults,
   ReferenceDataMapping,
   SimpleWorkgroup,
   ValueCount,
@@ -44,6 +45,20 @@ export const selectSearchStats = createSelector(
   assetSearchFeature,
   (state) => state?.stats ?? makeEmptyAssetSearchStats(),
 );
+
+export const selectFileSearchResults = createSelector(
+  assetSearchFeature,
+  (state) => state?.fileResults ?? makeEmptyFileSearchResults(),
+);
+
+export const selectFileSearchResultItems = createSelector(assetSearchFeature, (state) => state.fileResults.data);
+
+export const selectFileTotal = createSelector(
+  assetSearchFeature,
+  (state) => state.results.fileTotal ?? state.fileResults.fileTotal ?? 0,
+);
+
+export const selectIsLoadingFileResults = createSelector(assetSearchFeature, (state) => state.isLoadingFileResults);
 
 export const selectGeometries = createSelector(assetSearchFeature, (state) => state.geometries);
 

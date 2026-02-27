@@ -6,6 +6,8 @@ import {
   AssetSearchQuerySchema,
   AssetSearchResultSchema,
   AssetSearchResult,
+  FileSearchResult,
+  FileSearchResultSchema,
 } from '@asset-sg/shared/v2';
 import {
   ClassSerializerInterceptor,
@@ -67,10 +69,35 @@ export class AssetSearchController {
   }
 }
 
+@Controller('/files/search')
+@UseInterceptors(ClassSerializerInterceptor)
+export class FileSearchController {
+  constructor(private readonly assetSearchService: AssetSearchService) {}
+
+  @Post('/')
+  @Authorize.User()
+  @HttpCode(HttpStatus.OK)
+  @SerializeOptions({ type: FileSearchResultSchema, excludeExtraneousValues: true })
+  async search(
+    @ParseBody(AssetSearchQuerySchema)
+    query: AssetSearchQuery,
+    @CurrentUser() user: User,
+    @Query('limit')
+    limit?: number,
+    @Query('offset')
+    offset?: number,
+  ): Promise<FileSearchResult> {
+    limit = limit == null ? limit : Number(limit);
+    offset = offset == null ? offset : Number(offset);
+    restrictQueryForUser(query, user);
+    return await this.assetSearchService.searchFiles(query, user, { limit, offset });
+  }
+}
+
 /**
  * Restricts the search query to only include workgroups the user has explicit membership in.
  */
-export const restrictQueryForUser = (query: AssetSearchQuery, user: User) => {
+const restrictQueryForUser = (query: AssetSearchQuery, user: User) => {
   query.workgroupIds =
     query.workgroupIds == null ? [...user.roles.keys()] : query.workgroupIds.filter((it) => user.roles.has(it));
 };

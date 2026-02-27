@@ -10,6 +10,8 @@ import {
   AssetSearchUsageCode,
   ContactId,
   ElasticsearchAsset,
+  FileSearchResult,
+  FileSearchResultItem,
   GeometryType,
   LocalDate,
   User,
@@ -31,15 +33,19 @@ import { plainToInstance } from 'class-transformer';
 
 // eslint-disable-next-line @nx/enforce-module-boundaries
 import indexMapping from '../../../../../../development/init/elasticsearch/mappings/swissgeol_asset_asset.json';
+// eslint-disable-next-line @nx/enforce-module-boundaries
+import fileIndexMapping from '../../../../../../development/init/elasticsearch/mappings/swissgeol_asset_file.json';
 
 import { PrismaService } from '@/core/prisma.service';
 import { AssetRepo } from '@/features/assets/asset.repo';
 import { mapLv95ToElastic } from '@/features/assets/search/asset-search.utils';
 import { AssetSearchWriter, AssetSearchWriterOptions } from '@/features/assets/search/asset-search.writer';
+import { FileSearchWriter, FileSearchWriterOptions } from '@/features/assets/search/file-search.writer';
 import { GeometryDetailRepo } from '@/features/geometries/geometry-detail.repo';
 import { GeometryRepo } from '@/features/geometries/geometry.repo';
 
 export const ASSET_ELASTIC_INDEX = 'swissgeol_asset_asset';
+export const FILE_ELASTIC_INDEX = 'swissgeol_asset_file';
 
 const SEARCH_BATCH_SIZE = 10_000;
 
@@ -68,8 +74,8 @@ export class AssetSearchService {
     private readonly geometryDetailRepo: GeometryDetailRepo,
   ) {}
 
-  register(asset: Asset): Promise<void> {
-    return this.getWriter().write(asset);
+  async register(asset: Asset): Promise<void> {
+    await Promise.all([this.getWriter().write(asset), this.getFileWriter().write(asset)]);
   }
 
   getWriter(options?: AssetSearchWriterOptions): AssetSearchWriter {
@@ -82,16 +88,37 @@ export class AssetSearchService {
     );
   }
 
+  getFileWriter(options?: FileSearchWriterOptions): FileSearchWriter {
+    return new FileSearchWriter(
+      this.elastic,
+      this.prisma,
+      this.geometryRepo,
+      options ?? { index: FILE_ELASTIC_INDEX, shouldRefresh: true },
+    );
+  }
+
   async deleteFromIndex(assetId: number): Promise<void> {
-    await this.elastic.delete({
-      index: ASSET_ELASTIC_INDEX,
-      id: `${assetId}`,
-      refresh: true,
-    });
+    await Promise.all([
+      this.elastic.delete({
+        index: ASSET_ELASTIC_INDEX,
+        id: `${assetId}`,
+        refresh: true,
+      }),
+      this.elastic.deleteByQuery({
+        index: FILE_ELASTIC_INDEX,
+        query: { term: { assetId: assetId } },
+        refresh: true,
+        ignore_unavailable: true,
+      }),
+    ]);
   }
 
   async count(): Promise<number> {
     return (await this.elastic.count({ index: ASSET_ELASTIC_INDEX, ignore_unavailable: true })).count;
+  }
+
+  async countFiles(): Promise<number> {
+    return (await this.elastic.count({ index: FILE_ELASTIC_INDEX, ignore_unavailable: true })).count;
   }
 
   async syncWithDatabase(onProgress?: (percentage: number) => void | Promise<void>): Promise<void> {
@@ -105,20 +132,27 @@ export class AssetSearchService {
       return;
     }
 
-    // Initialize a temporary sync index.
+    // Initialize temporary sync indices.
     const SYNC_INDEX = `sync-${ASSET_ELASTIC_INDEX}-${getDateTimeString()}`;
+    const FILE_SYNC_INDEX = `sync-${FILE_ELASTIC_INDEX}-${getDateTimeString()}`;
+
     const existsSyncIndex = await this.elastic.indices.exists({ index: SYNC_INDEX });
     if (existsSyncIndex) {
       throw new Error(`can't sync to '${SYNC_INDEX}', index already exists`);
     }
+    const existsFileSyncIndex = await this.elastic.indices.exists({ index: FILE_SYNC_INDEX });
+    if (existsFileSyncIndex) {
+      throw new Error(`can't sync to '${FILE_SYNC_INDEX}', index already exists`);
+    }
 
     await this.elastic.indices.create({ index: SYNC_INDEX });
-    await this.elastic.indices.putMapping({
-      index: SYNC_INDEX,
-      ...indexMapping,
-    });
+    await this.elastic.indices.putMapping({ index: SYNC_INDEX, ...indexMapping });
+
+    await this.elastic.indices.create({ index: FILE_SYNC_INDEX });
+    await this.elastic.indices.putMapping({ index: FILE_SYNC_INDEX, ...fileIndexMapping });
 
     const writer = this.getWriter({ index: SYNC_INDEX, isEager: true });
+    const fileWriter = this.getFileWriter({ index: FILE_SYNC_INDEX, isEager: true });
     let offset = 0;
     for (;;) {
       this.logger.debug('Syncing assets.', {
@@ -130,7 +164,7 @@ export class AssetSearchService {
       if (records.length === 0) {
         break;
       }
-      await writer.write(records);
+      await Promise.all([writer.write(records), fileWriter.write(records)]);
       offset += records.length;
       if (onProgress != null) {
         await onProgress(Math.min(offset / total, 1));
@@ -138,30 +172,31 @@ export class AssetSearchService {
     }
     this.logger.debug('Done syncing assets.', { total });
 
-    // Delete the existing asset index.
+    // Delete existing indices and recreate them.
     await this.elastic.indices.delete({ index: ASSET_ELASTIC_INDEX, ignore_unavailable: true });
-
-    // Recreate the asset index and configure its mapping.
     await this.elastic.indices.create({ index: ASSET_ELASTIC_INDEX });
-    await this.elastic.indices.putMapping({
-      index: ASSET_ELASTIC_INDEX,
-      ...indexMapping,
-    });
+    await this.elastic.indices.putMapping({ index: ASSET_ELASTIC_INDEX, ...indexMapping });
 
-    // Refresh the sync index, so we can reindex its contents.
+    await this.elastic.indices.delete({ index: FILE_ELASTIC_INDEX, ignore_unavailable: true });
+    await this.elastic.indices.create({ index: FILE_ELASTIC_INDEX });
+    await this.elastic.indices.putMapping({ index: FILE_ELASTIC_INDEX, ...fileIndexMapping });
+
+    // Refresh and reindex sync indices into live indices.
     await this.elastic.indices.refresh({ index: SYNC_INDEX });
-
-    // Copy the sync index's contents into the empty asset index.
     await this.elastic.reindex({
       source: { index: SYNC_INDEX },
       dest: { index: ASSET_ELASTIC_INDEX },
     });
-
-    // Refresh the asset index so its contents are searchable.
     await this.elastic.indices.refresh({ index: ASSET_ELASTIC_INDEX });
-
-    // Delete the sync index.
     await this.elastic.indices.delete({ index: SYNC_INDEX });
+
+    await this.elastic.indices.refresh({ index: FILE_SYNC_INDEX });
+    await this.elastic.reindex({
+      source: { index: FILE_SYNC_INDEX },
+      dest: { index: FILE_ELASTIC_INDEX },
+    });
+    await this.elastic.indices.refresh({ index: FILE_ELASTIC_INDEX });
+    await this.elastic.indices.delete({ index: FILE_SYNC_INDEX });
   }
 
   /**
@@ -183,6 +218,10 @@ export class AssetSearchService {
     // Apply the query to find all matching ids.
     const [serializedAssets, total] = await this.searchAssetsByQuery(query, user, { limit, offset });
 
+    // If there is a text filter, also count matching files.
+    const hasTextFilter = query.text != null && query.text.length > 0;
+    const fileTotal = hasTextFilter ? await this.countFilesByQuery(query, user) : undefined;
+
     // Load the matched assets from the database.
     const data: AssetSearchResultItem[] = [];
     for (const serializedAsset of serializedAssets.values()) {
@@ -202,7 +241,94 @@ export class AssetSearchService {
         total,
       },
       data,
+      fileTotal,
     };
+  }
+
+  /**
+   * Searches for file pages matching the text query, with asset metadata filters applied.
+   * Returns file results with highlights, plus both asset and file total counts.
+   */
+  async searchFiles(
+    query: AssetSearchQuery,
+    user: User,
+    { limit = 100, offset = 0 }: PageOptions = {},
+  ): Promise<FileSearchResult> {
+    const elasticQuery = mapQueryToFileElasticDsl(query, user);
+
+    const response = await this.elastic.search({
+      index: FILE_ELASTIC_INDEX,
+      query: elasticQuery,
+      size: limit,
+      from: offset,
+      highlight: {
+        fields: {
+          content: {
+            fragment_size: 150,
+            number_of_fragments: 3,
+            pre_tags: ['<em>'],
+            post_tags: ['</em>'],
+          },
+        },
+      },
+      _source: ['fileId', 'assetId', 'assetTitle', 'fileName', 'page'],
+      track_total_hits: true,
+    });
+
+    const fileTotal = (response.hits.total as SearchTotalHits).value;
+
+    const data: FileSearchResultItem[] = response.hits.hits.map((hit) => {
+      const source = hit._source as Record<string, unknown>;
+      const highlights = hit.highlight?.['content'] ?? [];
+      return {
+        fileId: source['fileId'] as number,
+        assetId: source['assetId'] as number,
+        assetTitle: source['assetTitle'] as string,
+        fileName: source['fileName'] as string,
+        page: source['page'] as number,
+        highlights,
+      };
+    });
+
+    // Count matching assets in parallel.
+    const assetTotal = await this.countAssetsByQuery(query, user);
+
+    return {
+      page: {
+        offset,
+        size: data.length,
+        total: fileTotal,
+      },
+      assetTotal,
+      fileTotal,
+      data,
+    };
+  }
+
+  /**
+   * Count file pages matching the query in the file index.
+   */
+  async countFilesByQuery(query: AssetSearchQuery, user: User): Promise<number> {
+    const elasticQuery = mapQueryToFileElasticDsl(query, user);
+    const response = await this.elastic.count({
+      index: FILE_ELASTIC_INDEX,
+      query: elasticQuery,
+      ignore_unavailable: true,
+    });
+    return response.count;
+  }
+
+  /**
+   * Count assets matching the query in the asset index.
+   */
+  private async countAssetsByQuery(query: AssetSearchQuery, user: User): Promise<number> {
+    const elasticQuery = mapQueryToElasticDsl(query, user);
+    const response = await this.elastic.count({
+      index: ASSET_ELASTIC_INDEX,
+      query: elasticQuery,
+      ignore_unavailable: true,
+    });
+    return response.count;
   }
 
   /**
@@ -596,10 +722,7 @@ const mapQueryToElasticDslParts = (
  * @param field The field to match.
  * @param query The set of allowed values.
  */
-const makeArrayFilter = <T extends string | number>(
-  field: keyof ElasticsearchAsset,
-  query: T[],
-): QueryDslQueryContainer => {
+const makeArrayFilter = <T extends string | number>(field: string, query: T[]): QueryDslQueryContainer => {
   if (query.length === 0) {
     return { bool: { must_not: { exists: { field } } } };
   }
@@ -608,6 +731,80 @@ const makeArrayFilter = <T extends string | number>(
       should: query.map((term) => ({ term: { [field]: term } })),
     },
   };
+};
+
+/**
+ * Maps the shared filter parts of an {@link AssetSearchQuery} to Elasticsearch filter clauses.
+ * These filters apply to both asset and file indices (which share the same denormalized metadata fields).
+ */
+const mapSharedFilterParts = (query: AssetSearchQuery, user: User): QueryDslQueryContainer[] => {
+  const filters: QueryDslQueryContainer[] = [];
+
+  if (query.authorId != null) {
+    filters.push({ term: { authorIds: query.authorId } });
+  }
+  if (query.createdAt != null && Object.keys(query.createdAt).length > 0) {
+    const createdAtFilter: QueryDslDateRangeQuery = { format: 'yyyy-MM-dd' };
+    if (query.createdAt.min != null) {
+      createdAtFilter.gte = query.createdAt.min.toString();
+    }
+    if (query.createdAt.max != null) {
+      createdAtFilter.lte = query.createdAt.max.toString();
+    }
+    filters.push({ range: { createdAt: createdAtFilter } });
+  }
+  if (query.topicCodes != null) {
+    filters.push(makeArrayFilter('topicCodes', query.topicCodes));
+  }
+  if (query.kindCodes != null) {
+    filters.push(makeArrayFilter('kindCode', query.kindCodes));
+  }
+  if (query.usageCodes != null) {
+    filters.push(makeArrayFilter('usageCode', query.usageCodes));
+  }
+  if (query.languageCodes != null) {
+    filters.push(makeArrayFilter('languageCodes', query.languageCodes));
+  }
+  if (query.geometryTypes != null) {
+    filters.push(makeArrayFilter('geometryTypes', query.geometryTypes));
+  }
+  if (query.status != null) {
+    filters.push(makeArrayFilter('status', query.status));
+  }
+  if (query.workgroupIds != null) {
+    filters.push({ terms: { workgroupId: query.workgroupIds } });
+  }
+  if (query.favoritesOnly) {
+    filters.push({ terms: { favoredByUserIds: [user.id] } });
+  }
+
+  return filters;
+};
+
+const mapQueryToFileElasticDsl = (query: AssetSearchQuery, user: User): QueryDslQueryContainer => {
+  const { must, filter } = mapQueryToFileElasticDslParts(query, user);
+  return { bool: { must, filter } };
+};
+
+const mapQueryToFileElasticDslParts = (
+  query: AssetSearchQuery,
+  user: User,
+): { must: QueryDslQueryContainer[]; filter: QueryDslQueryContainer[] } => {
+  const queries: QueryDslQueryContainer[] = [];
+  const filters = mapSharedFilterParts(query, user);
+
+  if (query.text != null && query.text.length > 0) {
+    queries.push({
+      match: {
+        content: {
+          query: query.text,
+          operator: 'and',
+        },
+      },
+    });
+  }
+
+  return { must: queries, filter: filters };
 };
 
 const getDateTimeString = (): string => {

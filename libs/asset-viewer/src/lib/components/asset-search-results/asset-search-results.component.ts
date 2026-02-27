@@ -1,6 +1,13 @@
 import { Component, ElementRef, EventEmitter, inject, OnDestroy, OnInit, Output, ViewChild } from '@angular/core';
 import { fromAppShared } from '@asset-sg/client-shared';
-import { AssetContact, AssetContactRole, AssetSearchResultItem, sleep, tick } from '@asset-sg/shared/v2';
+import {
+  AssetContact,
+  AssetContactRole,
+  AssetSearchResultItem,
+  FileSearchResultItem,
+  sleep,
+  tick,
+} from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
 import { BehaviorSubject, combineLatestWith, firstValueFrom, map, Subject, Subscription, switchMap, take } from 'rxjs';
 import { ViewerControllerService } from '../../services/viewer-controller.service';
@@ -8,6 +15,8 @@ import * as actions from '../../state/asset-search/asset-search.actions';
 import { PanelState, setScrollOffsetForResults } from '../../state/asset-search/asset-search.actions';
 import { AppStateWithAssetSearch } from '../../state/asset-search/asset-search.reducer';
 import {
+  selectFileSearchResultItems,
+  selectFileTotal,
   selectIsResultsOpen,
   selectScrollOffsetForResults,
   selectSearchResultItems,
@@ -36,9 +45,14 @@ export class AssetSearchResultsComponent implements OnInit, OnDestroy {
     'createDate',
   ];
 
+  protected readonly FILE_COLUMNS = ['fileName', 'assetTitle', 'page', 'highlights'];
+
+  public activeTab: 'assets' | 'files' = 'assets';
+
   public allResults$ = new BehaviorSubject<AssetSearchResultItem[]>([]);
 
   public resultsToDisplay: AssetSearchResultItem[] = [];
+  public fileResultsToDisplay: FileSearchResultItem[] = [];
   private size = 0;
   private readonly pageSize = 50;
 
@@ -46,7 +60,9 @@ export class AssetSearchResultsComponent implements OnInit, OnDestroy {
   private readonly viewerControllerService = inject(ViewerControllerService);
   public readonly isResultsOpen$ = this.store.select(selectIsResultsOpen);
   public readonly assets$ = this.store.select(selectSearchResultItems);
+  public readonly fileResults$ = this.store.select(selectFileSearchResultItems);
   public readonly total$ = this.store.select(selectSearchStats).pipe(map((stats) => stats.total));
+  public readonly fileTotal$ = this.store.select(selectFileTotal);
   public readonly currentAsset$ = this.store.select(fromAppShared.selectCurrentAsset);
   public readonly scrollOffset$ = this.store.select(selectScrollOffsetForResults);
 
@@ -77,6 +93,10 @@ export class AssetSearchResultsComponent implements OnInit, OnDestroy {
     } else {
       this.store.dispatch(actions.setResultsState({ state: PanelState.OpenedManually }));
     }
+  }
+
+  public setActiveTab(tab: 'assets' | 'files'): void {
+    this.activeTab = tab;
   }
 
   public onScroll(event: Event): void {
@@ -146,6 +166,13 @@ export class AssetSearchResultsComponent implements OnInit, OnDestroy {
           container.scrollTo({ top: 0, behavior: 'smooth' });
         }
         this.resultsReady$.next();
+      }),
+    );
+
+    // Subscribe to file results.
+    this.subscriptions.add(
+      this.viewerControllerService.viewerReady$.pipe(switchMap(() => this.fileResults$)).subscribe((fileResults) => {
+        this.fileResultsToDisplay = fileResults;
       }),
     );
 

@@ -1,7 +1,13 @@
 import { inject, Injectable } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
 import { appSharedStateActions, fromAppShared } from '@asset-sg/client-shared';
-import { AssetId, AssetSearchQuery, isEmptySearchQuery, makeEmptyAssetSearchResults } from '@asset-sg/shared/v2';
+import {
+  AssetId,
+  AssetSearchQuery,
+  isEmptySearchQuery,
+  makeEmptyAssetSearchResults,
+  makeEmptyFileSearchResults,
+} from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
 import {
   distinctUntilChanged,
@@ -141,6 +147,7 @@ export class ViewerControllerService {
     // Always load results when favoritesOnly is true, even if other search criteria are empty
     if (!options.force && isEmptySearchQuery(query) && !query.favoritesOnly) {
       this.store.dispatch(actions.setResults({ results: makeEmptyAssetSearchResults(), isLoading: false }));
+      this.store.dispatch(actions.setFileResults({ fileResults: makeEmptyFileSearchResults(), isLoading: false }));
       return;
     }
     this.store.dispatch(actions.setResults({ isLoading: true }));
@@ -151,6 +158,17 @@ export class ViewerControllerService {
     } else if (!options.skipAssetReset) {
       this.store.dispatch(appSharedStateActions.setCurrentAsset({ asset: null, isLoading: false }));
     }
+  }
+
+  private async loadFileResults(query: AssetSearchQuery): Promise<void> {
+    const hasTextFilter = query.text != null && query.text.length > 0;
+    if (!hasTextFilter) {
+      this.store.dispatch(actions.setFileResults({ fileResults: makeEmptyFileSearchResults(), isLoading: false }));
+      return;
+    }
+    this.store.dispatch(actions.setFileResults({ isLoading: true }));
+    const fileResults = await firstValueFrom(this.assetSearchService.searchFiles(query));
+    this.store.dispatch(actions.setFileResults({ fileResults, isLoading: false }));
   }
 
   private async loadStats(query: AssetSearchQuery): Promise<void> {
@@ -177,7 +195,7 @@ export class ViewerControllerService {
     if (isEmptySearchQuery(query) && !query.favoritesOnly) {
       this.store.dispatch(actions.setMapPosition({ position: DEFAULT_MAP_POSITION }));
     }
-    await Promise.all([this.loadResults(query), this.loadStats(query)]);
+    await Promise.all([this.loadResults(query), this.loadStats(query), this.loadFileResults(query)]);
     const results = await firstValueFrom(this.store.select(selectSearchResults));
     this.store.dispatch(
       actions.setResultsState({

@@ -9,6 +9,8 @@ import {
   AssetSearchResultSchema,
   AssetSearchStats,
   AssetSearchStatsSchema,
+  FileSearchResult,
+  FileSearchResultSchema,
   GeometryDetail,
   GeometryDetailSchema,
 } from '@asset-sg/shared/v2';
@@ -29,6 +31,12 @@ export class AssetSearchService {
     return this.httpClient
       .post('/api/assets/search/stats', searchQuery)
       .pipe(map((res) => plainToInstance(AssetSearchStatsSchema, res)));
+  }
+
+  public searchFiles(searchQuery: AssetSearchQuery, limit = 100, offset = 0): Observable<FileSearchResult> {
+    return this.httpClient
+      .post(`/api/files/search?limit=${limit}&offset=${offset}`, searchQuery)
+      .pipe(map((res) => plainToInstance(FileSearchResultSchema, res)));
   }
 
   public fetchAsset(id: AssetId): Observable<Asset> {

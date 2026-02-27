@@ -18,6 +18,32 @@
   padding: 16px;
   margin: 0;
   font-weight: 400;
+
+  &__tabs {
+    display: flex;
+    gap: 16px;
+  }
+
+  &__tab {
+    background: none;
+    border: none;
+    padding: 4px 8px;
+    cursor: pointer;
+    font-weight: 400;
+    border-bottom: 2px solid transparent;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+
+    &--active {
+      font-weight: 600;
+      border-bottom-color: variables.$cyan-06;
+    }
+
+    &:hover {
+      border-bottom-color: variables.$grey-03;
+    }
+  }
 }
 
 .search-results {
@@ -54,5 +80,17 @@
     .selected {
       background-color: variables.$grey-01;
     }
+  }
+}
+
+.highlight {
+  font-size: 12px;
+  line-height: 1.4;
+  margin-bottom: 4px;
+
+  ::ng-deep em {
+    font-style: normal;
+    font-weight: 600;
+    background-color: rgba(255, 213, 0, 0.3);
   }
 }

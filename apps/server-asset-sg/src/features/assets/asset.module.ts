@@ -14,6 +14,7 @@ import { FileService } from '@/features/assets/files/file.service';
 import { FilesController } from '@/features/assets/files/files.controller';
 import { AssetGeometriesController } from '@/features/assets/geometries/asset-geometries.controller';
 import { AssetSearchController } from '@/features/assets/search/asset-search.controller';
+import { FileSearchController } from '@/features/assets/search/asset-search.controller';
 import { AssetSearchService } from '@/features/assets/search/asset-search.service';
 import { AssetSyncController } from '@/features/assets/sync/asset-sync.controller';
 import { AssetSyncService } from '@/features/assets/sync/asset-sync.service';
@@ -32,6 +33,7 @@ import { UsersModule } from '@/features/users/users.module';
     AssetsController,
     FilesController,
     AssetSearchController,
+    FileSearchController,
     FavoritesController,
     WorkflowController,
   ],
