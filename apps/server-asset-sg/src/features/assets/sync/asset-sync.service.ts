@@ -8,7 +8,7 @@ import { AtomicProgressService } from '@/features/assets/sync/atomic-progress.se
 const at2AM = '0 2 * * *';
 
 @Injectable()
-export class AssetSyncService extends AtomicProgressService {
+export class AssetSyncService extends AtomicProgressService<object> {
   protected override readonly logger = new Logger(AssetSyncService.name);
   protected override readonly syncFile = './asset-sync-progress.tmp.json';
 

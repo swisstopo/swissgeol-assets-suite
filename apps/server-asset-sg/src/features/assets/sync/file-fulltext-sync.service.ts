@@ -6,12 +6,14 @@ import { FileService } from '@/features/assets/files/file.service';
 import { AssetSearchService } from '@/features/assets/search/asset-search.service';
 import { AtomicProgressService } from '@/features/assets/sync/atomic-progress.service';
 
+interface FileFulltextSyncOptions {
+  reloadFromS3?: boolean;
+}
+
 @Injectable()
-export class FileFulltextSyncService extends AtomicProgressService {
+export class FileFulltextSyncService extends AtomicProgressService<FileFulltextSyncOptions> {
   protected override readonly logger = new Logger(FileFulltextSyncService.name);
   protected override readonly syncFile = './file-fulltext-sync-progress.tmp.json';
-
-  private reloadFromS3 = false;
 
   constructor(
     private readonly assetSearchService: AssetSearchService,
@@ -38,12 +40,14 @@ export class FileFulltextSyncService extends AtomicProgressService {
   }
 
   public async reloadFromS3AndStartSync(): Promise<void> {
-    this.reloadFromS3 = true;
-    await this.startSync();
+    await this.startSync({ reloadFromS3: true });
   }
 
-  protected override async sync(writeProgress: (progress: number) => Promise<void>): Promise<void> {
-    if (this.reloadFromS3) {
+  protected override async sync(
+    writeProgress: (progress: number) => Promise<void>,
+    options?: FileFulltextSyncOptions,
+  ): Promise<void> {
+    if (options?.reloadFromS3) {
       this.logger.log('Starting full text sync with reload from S3');
       await this.fileService.loadAllFulltextContentFromS3((progress: number) => writeProgress(progress * 0.5));
     }

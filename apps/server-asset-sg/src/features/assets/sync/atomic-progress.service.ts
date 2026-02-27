@@ -2,7 +2,7 @@ import fs, { rm } from 'fs/promises';
 import { Injectable, Logger } from '@nestjs/common';
 
 @Injectable()
-export abstract class AtomicProgressService {
+export abstract class AtomicProgressService<T> {
   /**
    * The file into which the progress of the current asset sync is written.
    * This allows the sync to be shared across all users and requests without requiring a database entry.
@@ -40,7 +40,7 @@ export abstract class AtomicProgressService {
       .catch(() => false);
   }
 
-  public async startSync(): Promise<void> {
+  public async startSync(options?: T): Promise<void> {
     if (await this.isSyncRunning()) {
       this.logger.debug('Sync already running.');
       return;
@@ -54,7 +54,7 @@ export abstract class AtomicProgressService {
 
     await writeProgress(0);
     setTimeout(async () => {
-      await this.sync(writeProgress);
+      await this.sync(writeProgress, options);
       await rm(this.syncFile);
     });
   }
@@ -62,9 +62,10 @@ export abstract class AtomicProgressService {
   /**
    * The actual sync process, which should call the provided writeProgress function with the current progress (between 0 and 1) whenever it changes. The sync is considered finished when this function resolves. After that, the sync file will be removed, so the progress will no longer be available.
    * @param writeProgress
+   * @param options
    * @protected
    */
-  protected abstract sync(writeProgress: (progress: number) => Promise<void>): Promise<void>;
+  protected abstract sync(writeProgress: (progress: number) => Promise<void>, options?: T): Promise<void>;
 }
 
 interface AssetSyncState {

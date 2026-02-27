@@ -1,4 +1,4 @@
-import { Controller, DefaultValuePipe, Get, HttpException, Param, ParseBoolPipe, Post, Res } from '@nestjs/common';
+import { Controller, DefaultValuePipe, Get, HttpException, ParseBoolPipe, Post, Query, Res } from '@nestjs/common';
 import { Response } from 'express';
 import { Authorize } from '@/core/decorators/authorize.decorator';
 import { AssetSyncService } from '@/features/assets/sync/asset-sync.service';
@@ -37,7 +37,7 @@ export class AssetSyncController {
   @Authorize.Admin()
   async startFullText(
     @Res() res: Response,
-    @Param('reloadFromS3', new DefaultValuePipe(false), new ParseBoolPipe()) reloadFromS3: boolean,
+    @Query('reloadFromS3', new DefaultValuePipe(false), new ParseBoolPipe()) reloadFromS3: boolean,
   ): Promise<void> {
     if (reloadFromS3) {
       await this.fileFulltextSyncService.reloadFromS3AndStartSync();
