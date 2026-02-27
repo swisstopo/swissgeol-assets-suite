@@ -1,4 +1,4 @@
-import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
+import { CanActivate, ExecutionContext, Injectable, InternalServerErrorException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { AuthorizationMetadata } from '@/core/decorators/authorize.decorator';
 import { JwtRequest } from '@/models/jwt-request';
@@ -14,7 +14,7 @@ export class AuthorizationGuard implements CanActivate {
     }
     const request = context.switchToHttp().getRequest() as JwtRequest;
     if (request.user == null) {
-      return false;
+      throw new InternalServerErrorException('AuthenticationGuard must be registered before AuthorizationGuard');
     }
     switch (auth.action) {
       case 'user-only':
