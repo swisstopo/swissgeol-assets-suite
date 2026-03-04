@@ -16,6 +16,7 @@ export * from './lib/models/asset-identifier';
 export * from './lib/models/contact';
 export * from './lib/models/elasticsearch-asset';
 export * from './lib/models/favorite';
+export * from './lib/models/fulltext-content';
 export * from './lib/models/localized-item';
 export * from './lib/models/reference-data';
 export * from './lib/models/geometry';
