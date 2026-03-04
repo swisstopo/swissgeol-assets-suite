@@ -96,10 +96,6 @@ export class S3DuplicateFilesCommand extends CommandRunner {
     }
   }
 
-  // ------------------------------------------------------------------
-  // Private helpers
-  // ------------------------------------------------------------------
-
   private async assetFileTableExists(): Promise<boolean> {
     const result = await this.prisma.$queryRawUnsafe<{ exists: boolean }[]>(
       `SELECT EXISTS (
