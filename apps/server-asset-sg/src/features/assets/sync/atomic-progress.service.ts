@@ -1,8 +1,8 @@
-import fs, { rm } from 'fs/promises';
+import fs, { rm } from 'node:fs/promises';
 import { Injectable, Logger } from '@nestjs/common';
 
 @Injectable()
-export abstract class AtomicProgressService<T> {
+export abstract class AtomicProgressService<T extends object> {
   /**
    * The file into which the progress of the current asset sync is written.
    * This allows the sync to be shared across all users and requests without requiring a database entry.
@@ -47,7 +47,7 @@ export abstract class AtomicProgressService<T> {
     }
 
     const writeProgress = (progress: number): Promise<void> => {
-      const state: AssetSyncState = { progress: parseFloat(progress.toFixed(3)) };
+      const state: AssetSyncState = { progress: Number.parseFloat(progress.toFixed(3)) };
       const data = JSON.stringify(state);
       return fs.writeFile(this.syncFile, data, { encoding: 'utf-8' });
     };
