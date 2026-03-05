@@ -1,6 +1,13 @@
 import { inject, Injectable, OnDestroy } from '@angular/core';
-import { getDocument, GlobalWorkerOptions, PageViewport, PDFDocumentLoadingTask, PDFDocumentProxy } from 'pdfjs-dist';
-import { PDFPageProxy } from 'pdfjs-dist/types/src/display/api';
+import {
+  getDocument,
+  GlobalWorkerOptions,
+  PageViewport,
+  PDFDocumentLoadingTask,
+  PDFDocumentProxy,
+  TextLayer,
+} from 'pdfjs-dist';
+import { PDFPageProxy, TextContent } from 'pdfjs-dist/types/src/display/api';
 import { SessionStorageService } from '../../services/session-storage.service';
 
 // Worker source for PDF JS. Note that this must match the path that is defined in the builder configuration
@@ -61,6 +68,7 @@ export class PdfViewerService implements OnDestroy {
 
   public async renderPageToCanvas(
     canvas: HTMLCanvasElement,
+    textLayerDiv: HTMLElement,
     pageNum: number,
     parentWidth: number,
     parentHeight: number,
@@ -78,6 +86,63 @@ export class PdfViewerService implements OnDestroy {
       throw new Error('Could not get 2d context from canvas');
     }
     await page.render({ canvasContext: context, viewport, canvas }).promise;
+    await this.renderTextLayer(page, textLayerDiv, viewport);
+  }
+
+  private async renderTextLayer(page: PDFPageProxy, textLayerDiv: HTMLElement, viewport: PageViewport) {
+    const textContent = await page.getTextContent({ disableNormalization: true });
+    await document.fonts.ready;
+
+    // These CSS variables must be set before constructing TextLayer, because the constructor
+    // calls setLayerDimensions which computes width/height from --total-scale-factor.
+    textLayerDiv.style.setProperty('--scale-factor', viewport.scale.toString());
+    textLayerDiv.style.setProperty('--total-scale-factor', viewport.scale.toString());
+    textLayerDiv.style.setProperty('--scale-round-x', '1px');
+    textLayerDiv.style.setProperty('--scale-round-y', '1px');
+    textLayerDiv.style.fontWeight = 'normal';
+
+    const textLayer = new TextLayer({
+      textContentSource: textContent,
+      container: textLayerDiv,
+      viewport,
+    });
+    await textLayer.render();
+    this.correctTextLayerScaleX(textLayer, textContent, viewport);
+  }
+
+  /**
+   * PDF.js TextLayer computes --scale-x per span using canvas 2D measureText(), which can produce
+   * different widths than the browser's CSS text layout engine for the same font. This causes spans
+   * to be wider or narrower than the actual rendered text on the canvas.
+   *
+   * This method recomputes --scale-x using actual DOM measurements (getBoundingClientRect) to match
+   * the CSS-rendered span widths to the expected PDF text widths.
+   */
+  private correctTextLayerScaleX(textLayer: TextLayer, textContent: TextContent, viewport: PageViewport) {
+    const textDivs = textLayer.textDivs;
+    const textItems = textContent.items.filter((item) => 'str' in item && 'width' in item);
+
+    for (let i = 0; i < textDivs.length && i < textItems.length; i++) {
+      const span = textDivs[i];
+      const item = textItems[i];
+      const pdfWidth = item.width;
+
+      if (!pdfWidth || !span.textContent) {
+        continue;
+      }
+
+      const expectedCssWidth = pdfWidth * viewport.scale;
+
+      // Temporarily remove transform to measure natural CSS text width
+      const savedTransform = span.style.transform;
+      span.style.transform = 'none';
+      const naturalWidth = span.getBoundingClientRect().width;
+      span.style.transform = savedTransform;
+
+      if (naturalWidth > 0) {
+        span.style.setProperty('--scale-x', (expectedCssWidth / naturalWidth).toString());
+      }
+    }
   }
 
   private prepareCanvas(canvas: HTMLCanvasElement, viewport: PageViewport) {

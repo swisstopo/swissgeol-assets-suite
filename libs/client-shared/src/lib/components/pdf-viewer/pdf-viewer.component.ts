@@ -323,7 +323,10 @@ export class PdfViewerComponent implements OnDestroy {
    * provided, the canvas wrapper is positioned absolutely at that center, which is useful for zooming operations to
    * ensure the zoom focuses on the right area.
    */
-  private createCanvasPlaceholder(pageNum: number, center?: PdfPageWrapperCenter): HTMLCanvasElement {
+  private createCanvasPlaceholder(
+    pageNum: number,
+    center?: PdfPageWrapperCenter,
+  ): { canvas: HTMLCanvasElement; textLayerDiv: HTMLDivElement } {
     const canvasWrapper = this.renderer.createElement('div');
     this.renderer.addClass(canvasWrapper, 'canvas-wrapper');
     if (center) {
@@ -339,18 +342,31 @@ export class PdfViewerComponent implements OnDestroy {
     this.renderer.setAttribute(canvas, DATA_PAGE_NUMBER_ID, pageNum.toString());
     this.renderer.setAttribute(canvas, DATA_PAGE_ROTATION_ID, this.rotation.toString());
     this.renderer.appendChild(canvasWrapper, canvas);
+
+    const textLayerDiv = this.renderer.createElement('div') as HTMLDivElement;
+    this.renderer.addClass(textLayerDiv, 'textLayer');
+    this.renderer.appendChild(canvasWrapper, textLayerDiv);
+
     this.renderer.appendChild(this.pdfElement().nativeElement, canvasWrapper);
 
     const dragHandler = this.cdkDragHandler.createDrag(canvasWrapper);
+    dragHandler.disabled = !this.isZoomed();
     this.dragHandlers.add(dragHandler);
-    return canvas;
+    return { canvas, textLayerDiv };
   }
 
   private async renderPageAndCache(pageNum: number, center?: PdfPageWrapperCenter) {
     const parentWidth = this.pdfElement().nativeElement.clientWidth * PDF_RENDERING_MARGIN;
     const parentHeight = this.pdfElement().nativeElement.clientHeight * PDF_RENDERING_MARGIN;
-    const canvas = this.createCanvasPlaceholder(pageNum, center);
-    await this.pdfViewerService.renderPageToCanvas(canvas, pageNum, parentWidth, parentHeight, this.zoom());
+    const { canvas, textLayerDiv } = this.createCanvasPlaceholder(pageNum, center);
+    await this.pdfViewerService.renderPageToCanvas(
+      canvas,
+      textLayerDiv,
+      pageNum,
+      parentWidth,
+      parentHeight,
+      this.zoom(),
+    );
     this.pdfCanvasElements.set(pageNum, canvas);
   }
 }
