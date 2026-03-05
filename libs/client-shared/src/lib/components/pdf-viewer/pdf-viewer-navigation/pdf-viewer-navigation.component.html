@@ -19,7 +19,17 @@
   </sgc-button>
   <span class="navigation__page-count">
     @if (currentPage() && pageCount()) {
-      {{ currentPage() }} / {{ pageCount() }}
+      <input
+        #pageInput
+        class="navigation__page-input"
+        type="text"
+        inputmode="numeric"
+        [value]="currentPage()"
+        (keydown.enter)="onPageInputSubmit(pageInput)"
+        (blur)="resetInputValue(pageInput)"
+        [disabled]="disableInteractions()"
+      />
+      <span>/ {{ pageCount() }}</span>
     } @else {
       - / -
     }
