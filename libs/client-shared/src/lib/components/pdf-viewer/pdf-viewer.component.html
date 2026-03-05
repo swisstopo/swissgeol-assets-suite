@@ -40,6 +40,7 @@
         [pageCount]="pageCount() >= 0 ? pageCount() : undefined"
         [disableInteractions]="isRendering()"
         (navigate)="handleNavigation($event)"
+        (goToPage)="navigateToPage($event)"
       ></asset-sg-pdf-viewer-navigation>
     </div>
     <div class="viewer__interaction">
