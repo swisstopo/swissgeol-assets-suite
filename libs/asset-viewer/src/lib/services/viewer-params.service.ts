@@ -108,9 +108,9 @@ export class ViewerParamsService {
     });
   }
 
-  private parseFavoritesOnlyFromUrl(): boolean {
+  private parseFavoritesOnlyFromUrl(): boolean | undefined {
     const url = document.location.pathname.split('/', 3);
-    return url.length === 3 && url[2] === 'favorites';
+    return url.length === 3 && url[2] === 'favorites' ? true : undefined;
   }
 }
 
