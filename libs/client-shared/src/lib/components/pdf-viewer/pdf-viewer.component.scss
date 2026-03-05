@@ -35,8 +35,21 @@
     justify-content: space-around;
     align-items: center;
 
+    .canvas-wrapper {
+      position: relative;
+    }
+
     canvas {
+      display: block;
+      cursor: text;
+    }
+
+    &.viewer__page-wrapper--is-dragging canvas {
       cursor: grab;
+    }
+
+    &.viewer__page-wrapper--is-dragging .textLayer {
+      pointer-events: none;
     }
   }
 
@@ -98,6 +111,93 @@
     &[data-pdf-page-rotation="270"] {
       transform: rotate(270deg);
       transform-origin: center center;
+    }
+  }
+
+  // PDF.js text layer styles for text selection.
+  // ::ng-deep is required because TextLayer creates child elements via DOM APIs, not Angular.
+  // These rules are a minimal subset of pdfjs-dist/web/pdf_viewer.css for the text layer only.
+  ::ng-deep .textLayer {
+    position: absolute;
+    text-align: initial;
+    inset: 0;
+    overflow: clip;
+    opacity: 1;
+    line-height: 1;
+    -webkit-text-size-adjust: none;
+    -moz-text-size-adjust: none;
+    text-size-adjust: none;
+    forced-color-adjust: none;
+    transform-origin: 0 0;
+    caret-color: CanvasText;
+    z-index: 0;
+
+    // Reset font-weight to match the canvas 2D context default (normal/400) used by TextLayer
+    // for measuring text widths. Without this, inherited font-weight (e.g. 500 from body)
+    // causes spans to render wider than their measured widths, with the error accumulating
+    // over longer text and being more visible at larger font sizes.
+    font-weight: normal;
+
+    // --scale-factor, --total-scale-factor, and --scale-round-x/y are set as inline styles
+    // by the service before TextLayer construction.
+    // --min-font-size is set inline by TextLayer itself.
+    --text-scale-factor: calc(var(--total-scale-factor) * var(--min-font-size));
+    --min-font-size-inv: calc(1 / var(--min-font-size));
+
+    :is(span, br) {
+      color: transparent;
+      position: absolute;
+      white-space: pre;
+      cursor: text;
+      transform-origin: 0% 0%;
+    }
+
+    > :not(.markedContent),
+    .markedContent span:not(.markedContent) {
+      z-index: 1;
+
+      --font-height: 0;
+      font-size: calc(var(--text-scale-factor) * var(--font-height));
+
+      --scale-x: 1;
+      --rotate: 0deg;
+      transform: rotate(var(--rotate)) scaleX(var(--scale-x)) scale(var(--min-font-size-inv));
+    }
+
+    .markedContent {
+      display: contents;
+    }
+
+    span[role="img"] {
+      user-select: none;
+      cursor: default;
+    }
+
+    ::-moz-selection {
+      background: rgba(0 0 255 / 0.25);
+      background: color-mix(in srgb, AccentColor, transparent 75%);
+    }
+
+    ::selection {
+      background: rgba(0 0 255 / 0.25);
+      background: color-mix(in srgb, AccentColor, transparent 75%);
+    }
+
+    br::-moz-selection {
+      background: transparent;
+    }
+
+    br::selection {
+      background: transparent;
+    }
+
+    .endOfContent {
+      display: block;
+      position: absolute;
+      inset: 100% 0 0;
+      z-index: 0;
+      cursor: default;
+      user-select: none;
     }
   }
 }
