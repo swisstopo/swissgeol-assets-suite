@@ -89,14 +89,14 @@ export class SyncExternService {
     const workgroupId = workgroup?.id ?? this.defaultWorkgroupId;
 
     const newAsset = await this.destinationPrisma.asset.create({
-      include: { assetFiles: { include: { file: true } }, assetContacts: { include: { contact: true } } },
+      include: { files: true, assetContacts: { include: { contact: true } } },
       data: {
         ...asset.asset,
         creatorId: this.syncAssignee,
         assetMainId: null, // this will be set afterwards
         isPublic: asset.asset.isPublic,
         restrictionDate: asset.asset.restrictionDate,
-        assetFiles: filesCreate,
+        files: filesCreate,
         assetContacts: contactsCreate.createData,
         workgroupId,
       },
@@ -108,7 +108,7 @@ export class SyncExternService {
       .forEach((c) => {
         this.existingContactIds.set(this.createUniqueContactKey(c), c.contactId);
       });
-    newAsset.assetFiles.map((a) => a.file).forEach((f) => this.existingFileIds.set(f.name, f.id));
+    newAsset.files.forEach((f) => this.existingFileIds.set(f.name, f.id));
 
     await this.destinationPrisma.assetContact.createMany({
       data: [...contactsCreate.assignAfterwards.entries()].flatMap(([uniqueKey, roles]) =>
@@ -234,11 +234,7 @@ export class SyncExternService {
               contact: true,
             },
           },
-          assetFiles: {
-            include: {
-              file: true,
-            },
-          },
+          files: true,
           workgroup: {
             select: { name: true },
           },
@@ -253,7 +249,7 @@ export class SyncExternService {
       const {
         assetId,
         sgsId,
-        assetFiles,
+        files,
         assetContacts,
         manCatLabelRefs,
         typeNatRels,
@@ -275,7 +271,7 @@ export class SyncExternService {
         typeNatRels,
         ids,
         assetContacts: assetContacts,
-        assetFiles: assetFiles.flatMap((a) => a.file),
+        assetFiles: files,
         originalAssetId: assetId,
         originalSgsId: sgsId,
         children: subordinateAssets,
@@ -343,23 +339,17 @@ export class SyncExternService {
    * Creates an input for asset files by either connecting to existing files (matched by name) or by creating a new file
    * entry.
    */
-  private async createFilesPayload(
-    assetFiles: File[],
-  ): Promise<Prisma.AssetFileUncheckedCreateNestedManyWithoutAssetInput> {
-    const create = assetFiles.map(({ id: _, ...file }) => {
+  private async createFilesPayload(assetFiles: File[]): Promise<Prisma.FileUncheckedCreateNestedManyWithoutAssetInput> {
+    const create = assetFiles.map(({ id: _, assetId: _assetId, ...file }) => {
       const match = this.existingFileIds.get(file.name);
 
       return match
-        ? { file: { connect: { id: match } } }
+        ? { ...file, id: match, pageRangeClassifications: file.pageRangeClassifications as Prisma.InputJsonValue }
         : ({
-            file: {
-              create: {
-                ...file,
-                pageRangeClassifications: file.pageRangeClassifications as Prisma.InputJsonValue,
-                fulltextContent: file.fulltextContent as Prisma.InputJsonValue,
-              },
-            },
-          } satisfies Prisma.AssetFileCreateWithoutAssetInput);
+            ...file,
+            pageRangeClassifications: file.pageRangeClassifications as Prisma.InputJsonValue,
+            fulltextContent: file.fulltextContent as Prisma.InputJsonValue,
+        } satisfies Prisma.FileCreateWithoutAssetInput);
     });
 
     return { create };
