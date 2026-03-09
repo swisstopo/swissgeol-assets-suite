@@ -22,6 +22,7 @@
       <input
         #pageInput
         class="navigation__page-input"
+        [class.navigation__page-input--invalid]="showError()"
         type="text"
         inputmode="numeric"
         [value]="currentPage()"
