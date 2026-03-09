@@ -23,6 +23,7 @@ import { Authorize } from '@/core/decorators/authorize.decorator';
 import { CurrentUser } from '@/core/decorators/current-user.decorator';
 import { ParseBody } from '@/core/decorators/parse.decorator';
 import { AssetSearchService } from '@/features/assets/search/asset-search.service';
+import { FileSearchService } from '@/features/assets/search/file-search.service';
 
 @Controller('/assets/search')
 @UseInterceptors(ClassSerializerInterceptor)
@@ -72,7 +73,7 @@ export class AssetSearchController {
 @Controller('/files/search')
 @UseInterceptors(ClassSerializerInterceptor)
 export class FileSearchController {
-  constructor(private readonly assetSearchService: AssetSearchService) {}
+  constructor(private readonly fileSearchService: FileSearchService) {}
 
   @Post('/')
   @Authorize.User()
@@ -90,7 +91,7 @@ export class FileSearchController {
     limit = limit == null ? limit : Number(limit);
     offset = offset == null ? offset : Number(offset);
     restrictQueryForUser(query, user);
-    return await this.assetSearchService.searchFiles(query, user, { limit, offset });
+    return await this.fileSearchService.searchFiles(query, user, { limit, offset });
   }
 
   @Post('/stats')
@@ -103,7 +104,7 @@ export class FileSearchController {
     @CurrentUser() user: User,
   ): Promise<AssetSearchStats> {
     restrictQueryForUser(query, user);
-    return await this.assetSearchService.aggregateFiles(query, user);
+    return await this.fileSearchService.aggregateFiles(query, user);
   }
 }
 

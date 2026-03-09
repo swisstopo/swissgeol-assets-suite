@@ -93,10 +93,7 @@ export const selectFileSearchResults = createSelector(
 
 export const selectFileSearchResultItems = createSelector(assetSearchFeature, (state) => state.fileResults.data);
 
-export const selectFileTotal = createSelector(
-  assetSearchFeature,
-  (state) => state.results.fileTotal ?? state.fileResults.fileTotal ?? 0,
-);
+export const selectFileTotal = createSelector(assetSearchFeature, (state) => state.fileResults.page.total ?? 0);
 
 export const selectIsLoadingFileResults = createSelector(assetSearchFeature, (state) => state.isLoadingFileResults);
 

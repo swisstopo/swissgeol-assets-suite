@@ -24,12 +24,10 @@ import { manCatLabelItems } from '../../../../../../test/data/man-cat-label-item
 import { clearPrismaAssets, setupDB } from '../../../../../../test/setup-db';
 
 import { AssetRepo } from '../asset.repo';
-import {
-  ASSET_ELASTIC_INDEX,
-  AssetSearchService,
-  escapeElasticQuery,
-  normalizeFieldQuery,
-} from './asset-search.service';
+import { ASSET_ELASTIC_INDEX } from './asset-search.constants';
+import { escapeElasticQuery, normalizeFieldQuery } from './asset-search.query';
+import { AssetSearchService } from './asset-search.service';
+import { SearchWriterService } from './search-writer.service';
 
 import { openElasticsearchClient } from '@/core/elasticsearch';
 import { PrismaService } from '@/core/prisma.service';
@@ -48,7 +46,8 @@ describe(AssetSearchService, () => {
   const geometryRepo = new GeometryRepo(prisma);
   const geometryDetailRepo = new GeometryDetailRepo(prisma);
   const userRepo = new UserRepo(prisma);
-  const service = new AssetSearchService(elastic, prisma, assetRepo, geometryRepo, geometryDetailRepo);
+  const service = new AssetSearchService(elastic);
+  const writerService = new SearchWriterService(elastic, prisma, assetRepo, geometryRepo, geometryDetailRepo);
 
   beforeAll(async () => {
     const existsIndex = await elastic.indices.exists({ index: ASSET_ELASTIC_INDEX });
@@ -74,7 +73,7 @@ describe(AssetSearchService, () => {
 
   const create = async (data: CreateAssetDataWithCreator): Promise<Asset> => {
     const asset = await assetRepo.create(data);
-    await service.register(asset);
+    await writerService.register(asset);
     return asset;
   };
 
@@ -118,7 +117,7 @@ describe(AssetSearchService, () => {
       });
 
       // When
-      await service.register(asset);
+      await writerService.register(asset);
 
       // Then
       const response = await elastic.search({
@@ -140,10 +139,10 @@ describe(AssetSearchService, () => {
         ...fakeCreateAssetData(),
         creatorId: (await userRepo.create(fakeUserData())).id,
       });
-      await service.register(asset);
+      await writerService.register(asset);
 
       // When
-      await service.deleteFromIndex(asset.id);
+      await writerService.deleteFromIndex(asset.id);
 
       const response = await elastic.search({
         index: ASSET_ELASTIC_INDEX,
@@ -508,7 +507,7 @@ describe(AssetSearchService, () => {
   describe('syncWithDatabase', () => {
     it('removes old documents', async () => {
       // When
-      await service.syncWithDatabase();
+      await writerService.syncWithDatabase();
 
       // Then
       const response = await elastic.search({
@@ -535,7 +534,7 @@ describe(AssetSearchService, () => {
       });
 
       // When
-      await service.syncWithDatabase();
+      await writerService.syncWithDatabase();
 
       // Then
       const response = await elastic.search({
@@ -561,7 +560,7 @@ describe(AssetSearchService, () => {
     it('reports final progress when no assets were synced', async () => {
       // When
       const progress: number[] = [];
-      await service.syncWithDatabase((percentage) => {
+      await writerService.syncWithDatabase((percentage) => {
         progress.push(percentage);
       });
 

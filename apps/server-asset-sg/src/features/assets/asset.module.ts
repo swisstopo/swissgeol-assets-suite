@@ -16,6 +16,8 @@ import { AssetGeometriesController } from '@/features/assets/geometries/asset-ge
 import { AssetSearchController } from '@/features/assets/search/asset-search.controller';
 import { FileSearchController } from '@/features/assets/search/asset-search.controller';
 import { AssetSearchService } from '@/features/assets/search/asset-search.service';
+import { FileSearchService } from '@/features/assets/search/file-search.service';
+import { SearchWriterService } from '@/features/assets/search/search-writer.service';
 import { AssetSyncController } from '@/features/assets/sync/asset-sync.controller';
 import { AssetSyncService } from '@/features/assets/sync/asset-sync.service';
 import { FileFulltextSyncService } from '@/features/assets/sync/file-fulltext-sync.service';
@@ -37,7 +39,17 @@ import { UsersModule } from '@/features/users/users.module';
     FavoritesController,
     WorkflowController,
   ],
-  exports: [AssetSearchService, AssetRepo, AssetService, WorkflowService, FileS3Service, FileService, FileRepo],
+  exports: [
+    AssetSearchService,
+    FileSearchService,
+    SearchWriterService,
+    AssetRepo,
+    AssetService,
+    WorkflowService,
+    FileS3Service,
+    FileService,
+    FileRepo,
+  ],
   imports: [UsersModule],
   providers: [
     provideElasticsearch,
@@ -48,6 +60,8 @@ import { UsersModule } from '@/features/users/users.module';
     PrismaService,
     AssetService,
     AssetSearchService,
+    FileSearchService,
+    SearchWriterService,
     FileOcrService,
     FileS3Service,
     FileService,

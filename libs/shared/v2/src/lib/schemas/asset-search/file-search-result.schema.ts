@@ -38,14 +38,6 @@ export class FileSearchResultSchema extends Schema implements FileSearchResult {
   page!: PageStats;
 
   @Expose()
-  @IsNumber()
-  assetTotal!: number;
-
-  @Expose()
-  @IsNumber()
-  fileTotal!: number;
-
-  @Expose()
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => FileSearchResultItemSchema)

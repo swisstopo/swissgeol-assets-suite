@@ -13,7 +13,6 @@ export interface FileSearchResultItem {
 
 export interface FileSearchResult {
   page: PageStats;
-  assetTotal: number;
   data: FileSearchResultItem[];
 }
 
@@ -23,6 +22,5 @@ export const makeEmptyFileSearchResults = (): FileSearchResult => ({
     offset: 0,
     total: 0,
   },
-  assetTotal: 0,
   data: [],
 });

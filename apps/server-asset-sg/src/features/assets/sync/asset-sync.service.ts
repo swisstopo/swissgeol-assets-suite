@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron, SchedulerRegistry } from '@nestjs/schedule';
 import { CronJob } from 'cron';
 import { AssetRepo } from '@/features/assets/asset.repo';
-import { AssetSearchService } from '@/features/assets/search/asset-search.service';
+import { SearchWriterService } from '@/features/assets/search/search-writer.service';
 import { AtomicProgressService } from '@/features/assets/sync/atomic-progress.service';
 
 const at2AM = '0 2 * * *';
@@ -13,7 +13,7 @@ export class AssetSyncService extends AtomicProgressService<object> {
   protected override readonly syncFile = './asset-sync-progress.tmp.json';
 
   constructor(
-    private readonly assetSearchService: AssetSearchService,
+    private readonly searchWriterService: SearchWriterService,
     private readonly schedulerRegistry: SchedulerRegistry,
     private readonly assetRepo: AssetRepo,
   ) {
@@ -45,12 +45,12 @@ export class AssetSyncService extends AtomicProgressService<object> {
   }
 
   protected override sync(writeProgress: (progress: number) => Promise<void>): Promise<void> {
-    return this.assetSearchService.syncWithDatabase(writeProgress);
+    return this.searchWriterService.syncWithDatabase(writeProgress);
   }
 
   private async startSyncIfIndexOutOfSync() {
     const numberOfAssets = await this.assetRepo.count();
-    const numberOfIndexedAssets = await this.assetSearchService.count();
+    const numberOfIndexedAssets = await this.searchWriterService.count();
     this.logger.debug('startSyncIfIndexOutOfSync', { assets: numberOfAssets, indexedAssets: numberOfIndexedAssets });
     if (numberOfAssets !== numberOfIndexedAssets) {
       await this.startSync();

@@ -5,7 +5,7 @@ import { CronJob } from 'cron';
 import { PrismaService } from '@/core/prisma.service';
 import { AssetRepo } from '@/features/assets/asset.repo';
 import { FileService } from '@/features/assets/files/file.service';
-import { AssetSearchService } from '@/features/assets/search/asset-search.service';
+import { SearchWriterService } from '@/features/assets/search/search-writer.service';
 import { AtomicProgressService } from '@/features/assets/sync/atomic-progress.service';
 
 interface FileFulltextSyncOptions {
@@ -18,7 +18,7 @@ export class FileFulltextSyncService extends AtomicProgressService<FileFulltextS
   protected override readonly syncFile = './file-fulltext-sync-progress.tmp.json';
 
   constructor(
-    private readonly assetSearchService: AssetSearchService,
+    private readonly searchWriterService: SearchWriterService,
     private readonly schedulerRegistry: SchedulerRegistry,
     private readonly assetRepo: AssetRepo,
     private readonly fileService: FileService,
@@ -65,7 +65,7 @@ export class FileFulltextSyncService extends AtomicProgressService<FileFulltextS
       return;
     }
 
-    const fileWriter = this.assetSearchService.getFileWriter({
+    const fileWriter = this.searchWriterService.getFileWriter({
       index: 'swissgeol_asset_file',
       isEager: true,
     });
@@ -93,7 +93,7 @@ export class FileFulltextSyncService extends AtomicProgressService<FileFulltextS
     const numberOfFilesWithContent = await this.prismaService.file.count({
       where: { fulltextContent: { not: Prisma.AnyNull } },
     });
-    const numberOfIndexedFiles = await this.assetSearchService.countFiles();
+    const numberOfIndexedFiles = await this.searchWriterService.countFiles();
     this.logger.debug('startSyncIfIndexOutOfSync', {
       filesWithContent: numberOfFilesWithContent,
       indexedFiles: numberOfIndexedFiles,
