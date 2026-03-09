@@ -62,11 +62,6 @@ export class AssetService {
       this.workflowService.updateSelectionByChanges(asset, updatedAsset, data.geometries),
     ]);
 
-    // Remove any files that are no longer referenced by any asset.
-    // This removes them both from the DB and from S3.
-    // We do this after the request so unrelated errors and wait times do not impact the response.
-    setTimeout(() => this.fileService.deleteOrphans());
-
     return syncedAsset;
   }
 

@@ -1,12 +1,4 @@
-import {
-  AssetFile,
-  AssetFileId,
-  AssetId,
-  FileProcessingStage,
-  FileProcessingState,
-  LegalDocCode,
-  User,
-} from '@asset-sg/shared/v2';
+import { AssetFile, AssetId, FileProcessingStage, FileProcessingState, LegalDocCode, User } from '@asset-sg/shared/v2';
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '@/core/prisma.service';
@@ -61,12 +53,6 @@ export class FileRepo implements Repo<AssetFile, FileIdentifier, CreateFileData,
     return await Promise.all(entries.map((it) => mapAssetFileFromPrisma(it)));
   }
 
-  async findOrphans(): Promise<AssetFile[]> {
-    // With the one-to-many relationship (assetId is NOT NULL on file),
-    // orphaned files should not exist. This method is kept for safety.
-    return [];
-  }
-
   async create(data: CreateFileData): Promise<AssetFile> {
     const { fileName, nameAlias } = await determineUniqueFilename(data.name, data.assetId, this.prisma);
     const lastModifiedAt = new Date();
@@ -100,28 +86,8 @@ export class FileRepo implements Repo<AssetFile, FileIdentifier, CreateFileData,
 
   async delete(file: FileIdentifier): Promise<boolean> {
     try {
-      // Verify the file belongs to the specified asset before deleting.
-      const existing = await this.prisma.file.findFirst({
+      await this.prisma.file.delete({
         where: { id: file.id, assetId: file.assetId },
-        select: { id: true },
-      });
-      if (existing == null) {
-        return false;
-      }
-      await this.prisma.file.delete({
-        where: { id: file.id },
-        select: { id: true },
-      });
-      return true;
-    } catch (e) {
-      return handlePrismaMutationError(e) ?? false;
-    }
-  }
-
-  async deleteUnused(id: AssetFileId): Promise<boolean> {
-    try {
-      await this.prisma.file.delete({
-        where: { id },
         select: { id: true },
       });
       return true;
