@@ -27,7 +27,7 @@ services:
     volumes:
       - ./init/db:/docker-entrypoint-initdb.d
       - ./init/dump.sql:/dump.sql
-      - db_data:/var/lib/postgresql/data
+      - ./volumes/db/data/postgres:/var/lib/postgresql/data
       - ./init/testing:/testing
 
     healthcheck:
@@ -50,7 +50,7 @@ services:
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
       PGADMIN_LISTEN_PORT: 5050
     volumes:
-      - pgadmin_data:/var/lib/pgadmin
+      - ./volumes/pgadmin/data:/var/lib/pgadmin
 
   elasticsearch:
     container_name: swissgeol-assets-elasticsearch
@@ -94,7 +94,7 @@ services:
     ports:
       - "5000:80"
     volumes:
-      - smtp4dev_data:/smtp4dev
+      - ./volumes/smtp4dev/data:/smtp4dev
     environment:
       - ServerOptions__HostName=smtp4dev
 
@@ -173,7 +173,7 @@ services:
       MINIO_ROOT_USER: ${STORAGE_USER}
       MINIO_ROOT_PASSWORD: ${STORAGE_PASSWORD}
     volumes:
-      - minio_data:/data
+      - ./volumes/minio/data:/data
     command: server --console-address ":9001" /data
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
@@ -185,7 +185,3 @@ services:
 volumes:
   elasticsearch_data:
   elasticsearch_logs:
-  db_data:
-  pgadmin_data:
-  smtp4dev_data:
-  minio_data:
