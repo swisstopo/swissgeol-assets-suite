@@ -81,13 +81,6 @@ export class FileService {
     return await this.fileS3Service.delete(file.name);
   }
 
-  async deleteOrphans(): Promise<void> {
-    const orphans = await this.fileRepo.findOrphans();
-    for (const orphan of orphans) {
-      await this.fileRepo.deleteUnused(orphan.id);
-    }
-  }
-
   async reanalyzeFile(id: FileIdentifier): Promise<AssetFile> {
     const record = await this.fileRepo.find(id);
     if (record === null) {
