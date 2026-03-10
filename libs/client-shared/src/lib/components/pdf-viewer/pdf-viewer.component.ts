@@ -1,4 +1,3 @@
-import { DragDrop, DragRef } from '@angular/cdk/drag-drop';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import {
@@ -8,6 +7,7 @@ import {
   ElementRef,
   inject,
   input,
+  NgZone,
   OnDestroy,
   output,
   Renderer2,
@@ -32,19 +32,22 @@ import { PdfViewerTocComponent } from './pdf-viewer-toc/pdf-viewer-toc.component
 import { PdfViewerZoomComponent, PdfZoomAction } from './pdf-viewer-zoom/pdf-viewer-zoom.component';
 import { PdfViewerService } from './pdf-viewer.service';
 
-type PdfPageWrapperCenter = {
-  x: number;
-  y: number;
-};
-
 export type PdfViewerFile = Pick<AssetFile, 'id' | 'pageRangeClassifications'> & {
   fileName: string;
 };
 
+interface PageSlot {
+  pageNum: number;
+  nativeWidth: number;
+  nativeHeight: number;
+  displayWidth: number;
+  displayHeight: number;
+  canvas: HTMLCanvasElement | null;
+  isRendering: boolean;
+}
+
 // data-attribute to identify the page number on the canvas elements
 const DATA_PAGE_NUMBER_ID = 'data-pdf-page-number';
-// data-attribute to identify the rotation of the canvas elements
-const DATA_PAGE_ROTATION_ID = 'data-pdf-page-rotation';
 // Define a margin to ensure the PDF fits well within the container; as a percentage
 const PDF_RENDERING_MARGIN = 0.95;
 // Defines the maximum zoom level allowed
@@ -53,13 +56,9 @@ const MAX_ZOOM_LEVEL = 5;
 const MIN_ZOOM_LEVEL = 1;
 // Defines the zoom step increment/decrement
 const ZOOM_STEP = 0.5;
+// Number of pages to prefetch around visible pages
+const PREFETCH_BUFFER = 2;
 
-/**
- * Component to display a PDF using the PdfJsLibrary. Uses a caching mechanism to store rendered pages in their
- * canvas to optimize performance when navigating between pages. This could leak memory if a large PDF is opened and
- * in that case, we could simplify the whole approach by only rendering one page at a time, without injecting the
- * canvas on the fly programmatically.
- */
 @Component({
   selector: 'asset-sg-pdf-viewer',
   imports: [
@@ -85,6 +84,7 @@ export class PdfViewerComponent implements OnDestroy {
   public readonly initialPdfId = input<number>();
   public readonly initialPageNumber = input<number>();
   public readonly exitViewer = output();
+
   protected readonly currentPage = signal(-1);
   protected readonly hasError = signal(false);
   protected readonly pageCount = signal(-1);
@@ -92,18 +92,23 @@ export class PdfViewerComponent implements OnDestroy {
   protected readonly zoom = signal(1);
   protected readonly isZoomed = computed(() => this.zoom() !== 1);
   protected readonly selectedPdf = signal<PdfViewerFile | undefined>(undefined);
-  protected readonly pdfViewerService = inject(PdfViewerService);
+  protected readonly pageSlots = signal<PageSlot[]>([]);
   protected readonly maxZoomLevel = MAX_ZOOM_LEVEL;
   protected readonly minZoomLevel = MIN_ZOOM_LEVEL;
+  protected readonly pdfViewerService = inject(PdfViewerService);
+
   private readonly pdfElement = viewChild.required<ElementRef<HTMLDivElement>>('pdf');
   private readonly renderer = inject(Renderer2);
-  private readonly pdfCanvasElements: Map<number, HTMLCanvasElement> = new Map();
   private readonly store = inject(Store);
   private readonly translateService = inject(TranslateService);
-  private rotation = 0;
-  private readonly cdkDragHandler = inject(DragDrop);
-  private readonly dragHandlers: Set<DragRef> = new Set();
   private readonly httpClient = inject(HttpClient);
+  private readonly ngZone = inject(NgZone);
+
+  private rotation = 0;
+  private intersectionObserver: IntersectionObserver | null = null;
+  private resizeObserver: ResizeObserver | null = null;
+  private visiblePages = new Set<number>();
+  private renderDebounceTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor() {
     this.setupInitialPdfEffect();
@@ -111,9 +116,11 @@ export class PdfViewerComponent implements OnDestroy {
     this.setupAssetPdfChangeEffect();
   }
 
-  public async ngOnDestroy() {
-    for (const dragHandler of this.dragHandlers) {
-      dragHandler.dispose();
+  public ngOnDestroy() {
+    this.intersectionObserver?.disconnect();
+    this.resizeObserver?.disconnect();
+    if (this.renderDebounceTimer) {
+      clearTimeout(this.renderDebounceTimer);
     }
   }
 
@@ -121,54 +128,64 @@ export class PdfViewerComponent implements OnDestroy {
     this.exitViewer.emit();
   }
 
-  protected async navigateToPage(pageNum: number) {
-    if (pageNum > 0 && pageNum <= this.pageCount()) {
-      await this.renderPage(pageNum);
+  protected navigateToPage(pageNum: number) {
+    if (pageNum >= 1 && pageNum <= this.pageCount()) {
+      this.scrollToPage(pageNum);
     }
   }
 
-  protected async handleNavigation($event: PdfNavigationAction) {
+  protected handleNavigation($event: PdfNavigationAction) {
     switch ($event) {
       case 'next':
-        await this.navigateToPage(this.currentPage() + 1);
+        this.navigateToPage(this.currentPage() + 1);
         break;
       case 'previous':
-        await this.navigateToPage(this.currentPage() - 1);
+        this.navigateToPage(this.currentPage() - 1);
         break;
       case 'start':
-        await this.navigateToPage(1);
+        this.navigateToPage(1);
         break;
       case 'end':
-        await this.navigateToPage(this.pageCount());
+        this.navigateToPage(this.pageCount());
         break;
     }
   }
 
-  protected handleRotation() {
+  protected async handleRotation() {
     this.rotation = (this.rotation + 90) % 360;
-    for (const canvas of this.pdfCanvasElements.values()) {
-      this.renderer.setAttribute(canvas, DATA_PAGE_ROTATION_ID, this.rotation.toString());
-    }
+
+    const scrollContainer = this.pdfElement().nativeElement;
+    const scrollRatio = scrollContainer.scrollHeight > 0 ? scrollContainer.scrollTop / scrollContainer.scrollHeight : 0;
+
+    await this.clearAndRerender(scrollContainer, scrollRatio);
   }
 
   protected async handleZoom($event: PdfZoomAction) {
-    let currentCenter: PdfPageWrapperCenter | undefined = undefined;
     switch ($event) {
       case 'in':
         this.zoom.update((val) => Math.min(MAX_ZOOM_LEVEL, val + ZOOM_STEP));
-        currentCenter = this.getCurrentPageCenter();
         break;
       case 'out':
         this.zoom.update((val) => Math.max(MIN_ZOOM_LEVEL, val - ZOOM_STEP));
-        currentCenter = this.getCurrentPageCenter();
         break;
       case 'reset':
         this.zoom.set(1);
         break;
     }
 
-    this.clearCanvases();
-    await this.renderPage(this.currentPage(), currentCenter);
+    const scrollContainer = this.pdfElement().nativeElement;
+    const scrollRatio = scrollContainer.scrollHeight > 0 ? scrollContainer.scrollTop / scrollContainer.scrollHeight : 0;
+
+    await this.clearAndRerender(scrollContainer, scrollRatio);
+  }
+
+  private async clearAndRerender(scrollContainer: HTMLElement, scrollRatio: number) {
+    this.clearAllCanvases();
+    this.recalculateSlotDimensions();
+
+    await this.waitForDom();
+    scrollContainer.scrollTop = scrollRatio * scrollContainer.scrollHeight;
+    this.renderVisiblePages();
   }
 
   protected onCloseViewer() {
@@ -183,10 +200,6 @@ export class PdfViewerComponent implements OnDestroy {
       });
   }
 
-  /**
-   * Effect that runs once to set the initial PDF once the assetPdfs are available. If no initialPdfId is provided, the
-   * first PDF in the list is selected.
-   */
   private setupInitialPdfEffect() {
     const effectRef = effect(
       () => {
@@ -204,10 +217,6 @@ export class PdfViewerComponent implements OnDestroy {
     );
   }
 
-  /**
-   * Because the list of assetPdfs could change while the viewer is open, we need to ensure that the selected PDF is
-   * still valid. If not, we reset it to the first available PDF.
-   */
   private setupAssetPdfChangeEffect() {
     effect(() => {
       const selectedPdf = untracked(() => this.selectedPdf());
@@ -231,11 +240,6 @@ export class PdfViewerComponent implements OnDestroy {
     });
   }
 
-  /**
-   * Effect that triggers PDF loading and rendering whenever the selected PDF changes. This also handles the initial
-   * load, since it only runs as soon as the pdfElement is available. If it's the first run, it uses the
-   * initialPageNumber input to navigate to that page, otherwise it defaults to page 1.
-   */
   private setupRenderingEffect() {
     let isFirstRun = true;
 
@@ -248,16 +252,56 @@ export class PdfViewerComponent implements OnDestroy {
     });
   }
 
-  private async loadPdf(pdfId: number, onPage = 1) {
-    this.clearCanvases();
+  private async loadPdf(pdfId: number, initialPage = 1) {
+    this.intersectionObserver?.disconnect();
+    this.resizeObserver?.disconnect();
+    this.visiblePages.clear();
+    this.pageSlots.set([]);
     this.isRendering.set(true);
     this.hasError.set(false);
     this.pageCount.set(-1);
     this.currentPage.set(-1);
+
     try {
-      const pageNum = await this.pdfViewerService.loadPdf(this.assetId(), pdfId);
-      this.pageCount.set(pageNum);
-      await this.renderPage(onPage);
+      const numPages = await this.pdfViewerService.loadPdf(this.assetId(), pdfId);
+      this.pageCount.set(numPages);
+
+      const containerWidth = this.pdfElement().nativeElement.clientWidth * PDF_RENDERING_MARGIN;
+      const containerHeight = this.pdfElement().nativeElement.clientHeight;
+
+      // Only fetch dimensions for page 1 — use as estimate for all pages.
+      // Actual dimensions are corrected lazily when each page is rendered.
+      const { width, height } = await this.pdfViewerService.getPageDimensions(1);
+      const { displayWidth, displayHeight } = this.computeDisplayDimensions(
+        width,
+        height,
+        containerWidth,
+        containerHeight,
+      );
+
+      const slots: PageSlot[] = [];
+      for (let i = 1; i <= numPages; i++) {
+        slots.push({
+          pageNum: i,
+          nativeWidth: width,
+          nativeHeight: height,
+          displayWidth,
+          displayHeight,
+          canvas: null,
+          isRendering: false,
+        });
+      }
+      this.pageSlots.set(slots);
+      this.isRendering.set(false);
+
+      // Wait for DOM to render slots, then set up observers and scroll
+      await this.waitForDom();
+      this.initializeIntersectionObserver();
+      this.initializeResizeObserver();
+
+      if (initialPage && initialPage > 1) {
+        this.scrollToPage(initialPage);
+      }
     } catch (e) {
       this.hasError.set(true);
       this.store.dispatch(
@@ -274,83 +318,284 @@ export class PdfViewerComponent implements OnDestroy {
     }
   }
 
-  private getCurrentPageCenter(): PdfPageWrapperCenter | undefined {
-    const canvas = this.pdfCanvasElements.get(this.currentPage());
-    if (!canvas?.parentElement) {
-      return undefined;
-    }
+  private initializeIntersectionObserver() {
+    this.intersectionObserver?.disconnect();
+    const scrollContainer = this.pdfElement().nativeElement;
 
-    const currentPageRect = canvas.parentElement.getBoundingClientRect();
-    const x = currentPageRect.left + currentPageRect.width / 2;
-    const y = currentPageRect.top + currentPageRect.height / 2;
-    return { x, y };
+    this.intersectionObserver = new IntersectionObserver(
+      (entries) => this.ngZone.run(() => this.handleIntersection(entries)),
+      {
+        root: scrollContainer,
+        rootMargin: '200% 0px',
+        threshold: [0, 0.5],
+      },
+    );
+
+    const slots = scrollContainer.querySelectorAll('.page-slot');
+    slots.forEach((slot) => this.intersectionObserver!.observe(slot));
   }
 
-  private async renderPage(pageNum: number, center?: PdfPageWrapperCenter) {
-    this.isRendering.set(true);
-    this.currentPage.set(pageNum);
-    for (const canvas of this.pdfCanvasElements.values()) {
-      this.renderer.setStyle(canvas.parentElement, 'display', 'none');
-    }
-
-    if (!this.useCachedPageIfExists(pageNum)) {
-      await this.renderPageAndCache(pageNum, center);
-    }
-
-    this.isRendering.set(false);
+  private initializeResizeObserver() {
+    this.resizeObserver?.disconnect();
+    this.resizeObserver = new ResizeObserver(() => {
+      this.ngZone.run(() => {
+        const scrollToPage = this.currentPage();
+        this.clearAllCanvases();
+        this.recalculateSlotDimensions();
+        if (scrollToPage > 0) {
+          this.scrollToPage(scrollToPage);
+        }
+      });
+    });
+    this.resizeObserver.observe(this.pdfElement().nativeElement);
   }
 
-  private useCachedPageIfExists(pageNum: number): boolean {
-    const existingPage = this.pdfCanvasElements.get(pageNum);
-    if (existingPage) {
-      this.renderer.setStyle(existingPage.parentElement, 'display', 'block');
-      return true;
+  private handleIntersection(entries: IntersectionObserverEntry[]) {
+    for (const entry of entries) {
+      const pageNum = parseInt(entry.target.getAttribute('data-page-num')!, 10);
+      if (entry.isIntersecting) {
+        this.visiblePages.add(pageNum);
+      } else {
+        this.visiblePages.delete(pageNum);
+      }
     }
 
-    return false;
+    this.updateCurrentPage();
+    this.scheduleRender();
   }
 
-  private clearCanvases() {
-    for (const canvas of this.pdfCanvasElements.values()) {
-      this.renderer.setStyle(canvas.parentElement, 'display', 'none');
-      this.renderer.removeChild(this.pdfElement().nativeElement, canvas.parentElement);
+  private scheduleRender() {
+    if (this.renderDebounceTimer) {
+      clearTimeout(this.renderDebounceTimer);
     }
-    this.pdfCanvasElements.clear();
+    this.renderDebounceTimer = setTimeout(() => {
+      this.renderDebounceTimer = null;
+      this.ngZone.run(() => this.renderVisiblePages());
+    }, 150);
   }
 
-  /**
-   * Creates a canvas placeholder for the given page number and appends it to the PDF container. If a center is
-   * provided, the canvas wrapper is positioned absolutely at that center, which is useful for zooming operations to
-   * ensure the zoom focuses on the right area.
-   */
-  private createCanvasPlaceholder(pageNum: number, center?: PdfPageWrapperCenter): HTMLCanvasElement {
-    const canvasWrapper = this.renderer.createElement('div');
-    this.renderer.addClass(canvasWrapper, 'canvas-wrapper');
-    if (center) {
-      const pageCenterX = center.x - this.pdfElement().nativeElement.getBoundingClientRect().left;
-      const pageCenterY = center.y - this.pdfElement().nativeElement.getBoundingClientRect().top;
-      this.renderer.setStyle(canvasWrapper, 'position', 'absolute');
-      this.renderer.setStyle(canvasWrapper, 'left', `${pageCenterX}px`);
-      this.renderer.setStyle(canvasWrapper, 'top', `${pageCenterY}px`);
-      this.renderer.setStyle(canvasWrapper, 'transform', 'translate(-50%, -50%)');
+  private renderVisiblePages() {
+    const pagesToRender = this.getPagesToRender();
+
+    for (const pageNum of pagesToRender) {
+      const slot = this.pageSlots()[pageNum - 1];
+      if (slot && !slot.canvas && !slot.isRendering) {
+        this.renderPageSlot(pageNum);
+      }
+    }
+
+    this.evictDistantPages(pagesToRender);
+  }
+
+  private updateCurrentPage() {
+    if (this.visiblePages.size === 0) {
+      return;
+    }
+
+    const scrollContainer = this.pdfElement().nativeElement;
+    const containerRect = scrollContainer.getBoundingClientRect();
+    const containerCenter = containerRect.top + containerRect.height / 2;
+
+    let closestDistance = Infinity;
+    let closestPage = this.currentPage();
+
+    for (const pageNum of this.visiblePages) {
+      const slotElement = scrollContainer.querySelector(`.page-slot[data-page-num="${pageNum}"]`);
+      if (slotElement) {
+        const rect = slotElement.getBoundingClientRect();
+        const slotCenter = rect.top + rect.height / 2;
+        const distance = Math.abs(slotCenter - containerCenter);
+        if (distance < closestDistance) {
+          closestDistance = distance;
+          closestPage = pageNum;
+        }
+      }
+    }
+
+    if (closestPage !== this.currentPage()) {
+      this.currentPage.set(closestPage);
+    }
+  }
+
+  private getPagesToRender(): Set<number> {
+    const result = new Set<number>();
+    for (const pageNum of this.visiblePages) {
+      for (let offset = -PREFETCH_BUFFER; offset <= PREFETCH_BUFFER; offset++) {
+        const p = pageNum + offset;
+        if (p >= 1 && p <= this.pageCount()) {
+          result.add(p);
+        }
+      }
+    }
+    return result;
+  }
+
+  private async renderPageSlot(pageNum: number) {
+    this.updateSlot(pageNum, { isRendering: true });
+
+    const slotElement = this.pdfElement().nativeElement.querySelector(
+      `.page-slot[data-page-num="${pageNum}"]`,
+    ) as HTMLElement;
+    if (!slotElement) {
+      return;
     }
 
     const canvas = this.renderer.createElement('canvas') as HTMLCanvasElement;
     this.renderer.setAttribute(canvas, DATA_PAGE_NUMBER_ID, pageNum.toString());
-    this.renderer.setAttribute(canvas, DATA_PAGE_ROTATION_ID, this.rotation.toString());
-    this.renderer.appendChild(canvasWrapper, canvas);
-    this.renderer.appendChild(this.pdfElement().nativeElement, canvasWrapper);
 
-    const dragHandler = this.cdkDragHandler.createDrag(canvasWrapper);
-    this.dragHandlers.add(dragHandler);
-    return canvas;
+    const containerWidth = this.pdfElement().nativeElement.clientWidth * PDF_RENDERING_MARGIN;
+    const containerHeight = this.pdfElement().nativeElement.clientHeight;
+    const slot = this.pageSlots()[pageNum - 1];
+
+    try {
+      const { nativeWidth, nativeHeight } = await this.pdfViewerService.renderPageToCanvas(
+        canvas,
+        pageNum,
+        slot.displayWidth,
+        slot.displayHeight,
+        1,
+        this.rotation,
+      );
+      // Check if slot was cleared (e.g., by zoom) while we were rendering
+      if (this.pageSlots()[pageNum - 1]?.isRendering) {
+        this.renderer.appendChild(slotElement, canvas);
+        // Correct slot dimensions with actual page size
+        const { displayWidth, displayHeight } = this.computeDisplayDimensions(
+          nativeWidth,
+          nativeHeight,
+          containerWidth,
+          containerHeight,
+        );
+        const oldDisplayHeight = this.pageSlots()[pageNum - 1].displayHeight;
+        this.updateSlot(pageNum, {
+          canvas,
+          isRendering: false,
+          nativeWidth,
+          nativeHeight,
+          displayWidth,
+          displayHeight,
+        });
+        this.compensateScrollPosition(slotElement, displayHeight - oldDisplayHeight);
+      }
+    } catch (e) {
+      console.error(`Failed to render page ${pageNum}`, e);
+      this.updateSlot(pageNum, { isRendering: false });
+    }
   }
 
-  private async renderPageAndCache(pageNum: number, center?: PdfPageWrapperCenter) {
-    const parentWidth = this.pdfElement().nativeElement.clientWidth * PDF_RENDERING_MARGIN;
-    const parentHeight = this.pdfElement().nativeElement.clientHeight * PDF_RENDERING_MARGIN;
-    const canvas = this.createCanvasPlaceholder(pageNum, center);
-    await this.pdfViewerService.renderPageToCanvas(canvas, pageNum, parentWidth, parentHeight, this.zoom());
-    this.pdfCanvasElements.set(pageNum, canvas);
+  private evictDistantPages(pagesToKeep: Set<number>) {
+    const slots = this.pageSlots();
+    for (const slot of slots) {
+      if (slot.canvas && !pagesToKeep.has(slot.pageNum)) {
+        this.evictPage(slot.pageNum);
+      }
+    }
+  }
+
+  private evictPage(pageNum: number) {
+    const slot = this.pageSlots()[pageNum - 1];
+    if (!slot?.canvas) {
+      return;
+    }
+
+    const slotElement = this.pdfElement().nativeElement.querySelector(`.page-slot[data-page-num="${pageNum}"]`);
+    if (slotElement) {
+      this.renderer.removeChild(slotElement, slot.canvas);
+    }
+    this.updateSlot(pageNum, { canvas: null });
+  }
+
+  private clearAllCanvases() {
+    const slots = this.pageSlots();
+    for (const slot of slots) {
+      if (slot.canvas) {
+        const slotElement = this.pdfElement().nativeElement.querySelector(
+          `.page-slot[data-page-num="${slot.pageNum}"]`,
+        );
+        if (slotElement) {
+          this.renderer.removeChild(slotElement, slot.canvas);
+        }
+      }
+    }
+    this.pageSlots.update((s) =>
+      s.map((slot) => ({
+        ...slot,
+        canvas: null,
+        isRendering: false,
+      })),
+    );
+  }
+
+  private recalculateSlotDimensions() {
+    const containerWidth = this.pdfElement().nativeElement.clientWidth * PDF_RENDERING_MARGIN;
+    const containerHeight = this.pdfElement().nativeElement.clientHeight;
+
+    this.pageSlots.update((slots) =>
+      slots.map((slot) => {
+        const { displayWidth, displayHeight } = this.computeDisplayDimensions(
+          slot.nativeWidth,
+          slot.nativeHeight,
+          containerWidth,
+          containerHeight,
+        );
+        return { ...slot, displayWidth, displayHeight };
+      }),
+    );
+  }
+
+  /**
+   * Computes display dimensions using a uniform scale that stays consistent across all rotations.
+   * This prevents the page from appearing larger/smaller when rotating 90°/270°.
+   * Scale = min(containerWidth, containerHeight) / max(nativeWidth, nativeHeight)
+   */
+  private computeDisplayDimensions(
+    nativeWidth: number,
+    nativeHeight: number,
+    containerWidth: number,
+    containerHeight: number,
+  ): { displayWidth: number; displayHeight: number } {
+    const isSwapped = this.rotation === 90 || this.rotation === 270;
+    const visualWidth = isSwapped ? nativeHeight : nativeWidth;
+    const visualHeight = isSwapped ? nativeWidth : nativeHeight;
+    const maxNative = Math.max(nativeWidth, nativeHeight);
+    const scale = Math.min(containerWidth / maxNative, containerHeight / maxNative) * this.zoom();
+    return {
+      displayWidth: visualWidth * scale,
+      displayHeight: visualHeight * scale,
+    };
+  }
+
+  /**
+   * If a slot above the current scroll position changes height, adjust scrollTop
+   * by the delta so the visible content doesn't jump.
+   */
+  private compensateScrollPosition(slotElement: HTMLElement, heightDelta: number) {
+    if (heightDelta === 0) {
+      return;
+    }
+    const scrollContainer = this.pdfElement().nativeElement;
+    const slotTop = slotElement.offsetTop;
+    if (slotTop < scrollContainer.scrollTop) {
+      scrollContainer.scrollTop += heightDelta;
+    }
+  }
+
+  private scrollToPage(pageNum: number) {
+    const slotElement = this.pdfElement().nativeElement.querySelector(`.page-slot[data-page-num="${pageNum}"]`);
+    if (slotElement) {
+      slotElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }
+
+  private updateSlot(pageNum: number, updates: Partial<PageSlot>) {
+    this.pageSlots.update((slots) => {
+      const updated = [...slots];
+      updated[pageNum - 1] = { ...updated[pageNum - 1], ...updates };
+      return updated;
+    });
+  }
+
+  private waitForDom(): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, 0));
   }
 }

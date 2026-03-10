@@ -31,12 +31,15 @@
   &__page-wrapper {
     width: 100%;
     height: 100%;
+    overflow-y: auto;
     display: flex;
-    justify-content: space-around;
+    flex-direction: column;
     align-items: center;
+    gap: 8px;
+    padding: 8px 0;
 
-    canvas {
-      cursor: grab;
+    &--is-zoomed {
+      overflow: auto;
     }
   }
 
@@ -86,18 +89,13 @@
 
   canvas {
     height: auto;
-
-    &[data-pdf-page-rotation="90"] {
-      transform: rotate(90deg);
-    }
-
-    &[data-pdf-page-rotation="180"] {
-      transform: rotate(180deg);
-    }
-
-    &[data-pdf-page-rotation="270"] {
-      transform: rotate(270deg);
-      transform-origin: center center;
-    }
   }
+}
+
+.page-slot {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: var(--sgc-color-secondary--400);
 }

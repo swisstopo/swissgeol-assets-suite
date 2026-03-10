@@ -59,25 +59,38 @@ export class PdfViewerService implements OnDestroy {
     }
   }
 
+  public async getPageDimensions(pageNum: number): Promise<{ width: number; height: number }> {
+    if (!this.pdfDoc) {
+      throw new Error('PDF document not loaded');
+    }
+    const page = await this.pdfDoc.getPage(pageNum);
+    const viewport = page.getViewport({ scale: 1 });
+    return { width: viewport.width, height: viewport.height };
+  }
+
   public async renderPageToCanvas(
     canvas: HTMLCanvasElement,
     pageNum: number,
     parentWidth: number,
     parentHeight: number,
     zoom: number,
-  ) {
+    rotation = 0,
+  ): Promise<{ nativeWidth: number; nativeHeight: number }> {
     if (!this.pdfDoc) {
       throw new Error('PDF document not loaded');
     }
 
     const page = await this.pdfDoc.getPage(pageNum);
-    const viewport = this.prepareViewport(page, parentWidth, parentHeight, zoom);
+    // Always store unrotated native dimensions for stable slot sizing
+    const unscaledViewport = page.getViewport({ scale: 1 });
+    const viewport = this.prepareViewport(page, parentWidth, parentHeight, zoom, rotation);
     this.prepareCanvas(canvas, viewport);
     const context = canvas.getContext('2d');
     if (!context) {
       throw new Error('Could not get 2d context from canvas');
     }
     await page.render({ canvasContext: context, viewport, canvas }).promise;
+    return { nativeWidth: unscaledViewport.width, nativeHeight: unscaledViewport.height };
   }
 
   private prepareCanvas(canvas: HTMLCanvasElement, viewport: PageViewport) {
@@ -94,11 +107,16 @@ export class PdfViewerService implements OnDestroy {
     }
   }
 
-  private prepareViewport(page: PDFPageProxy, parentWidth: number, parentHeight: number, zoom: number): PageViewport {
-    const unscaledViewport = page.getViewport({ scale: 1 });
+  private prepareViewport(
+    page: PDFPageProxy,
+    parentWidth: number,
+    parentHeight: number,
+    zoom: number,
+    rotation = 0,
+  ): PageViewport {
+    const unscaledViewport = page.getViewport({ scale: 1, rotation });
     const scale = Math.min(parentWidth / unscaledViewport.width, parentHeight / unscaledViewport.height) * zoom;
-
-    return page.getViewport({ scale });
+    return page.getViewport({ scale, rotation });
   }
 
   private async destroyPdfJsWorker() {
