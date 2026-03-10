@@ -12,7 +12,7 @@ import {
   WorkgroupId,
 } from '@asset-sg/shared/v2';
 import { Client as ElasticsearchClient } from '@elastic/elasticsearch';
-import { AggregationsAggregationContainer, SearchTotalHits } from '@elastic/elasticsearch/lib/api/types';
+import { AggregationsAggregationContainer } from '@elastic/elasticsearch/lib/api/types';
 import { Injectable } from '@nestjs/common';
 import { WorkflowStatus } from '@swissgeol/ui-core';
 import { FILE_ELASTIC_INDEX } from '@/features/assets/search/asset-search.constants';
@@ -27,8 +27,9 @@ export class FileSearchService {
   constructor(private readonly elastic: ElasticsearchClient) {}
 
   /**
-   * Searches for file pages matching the text query, with asset metadata filters applied.
-   * Returns file results with highlights.
+   * Searches for files matching the text query, with asset metadata filters applied.
+   * Results are grouped by file: each result item represents a single file
+   * and contains a list of matching pages with their highlights.
    */
   async searchFiles(
     query: AssetSearchQuery,
@@ -37,37 +38,73 @@ export class FileSearchService {
   ): Promise<FileSearchResult> {
     const elasticQuery = mapQueryToFileElasticDsl(query, user);
 
+    // Fetch enough page-level hits to fill the requested file-level page.
+    // We over-fetch because multiple page hits may collapse into the same file.
     const response = await this.elastic.search({
       index: FILE_ELASTIC_INDEX,
       query: elasticQuery,
-      size: limit,
-      from: offset,
-      highlight: {
-        fields: {
-          content: {
-            fragment_size: 150,
-            number_of_fragments: 3,
-            pre_tags: ['<em>'],
-            post_tags: ['</em>'],
+      size: 0,
+      _source: false,
+      track_total_hits: true,
+      aggs: {
+        files: {
+          terms: {
+            field: 'fileId',
+            size: 10_000,
+          },
+          aggs: {
+            top_pages: {
+              top_hits: {
+                size: 100,
+                _source: ['fileId', 'assetId', 'assetTitle', 'fileName', 'page'],
+                highlight: {
+                  fields: {
+                    content: {
+                      fragment_size: 150,
+                      number_of_fragments: 3,
+                      pre_tags: ['<em>'],
+                      post_tags: ['</em>'],
+                    },
+                  },
+                },
+                sort: [{ page: 'asc' }],
+              },
+            },
           },
         },
       },
-      _source: ['fileId', 'assetId', 'assetTitle', 'fileName', 'page'],
-      track_total_hits: true,
     });
 
-    const fileTotal = (response.hits.total as SearchTotalHits).value;
+    interface FileBucket {
+      key: string | number;
+      doc_count: number;
+      top_pages: {
+        hits: {
+          hits: Array<{
+            _source: Record<string, unknown>;
+            highlight?: Record<string, string[]>;
+          }>;
+        };
+      };
+    }
 
-    const data: FileSearchResultItem[] = response.hits.hits.map((hit) => {
-      const source = hit._source as Record<string, unknown>;
-      const highlights = hit.highlight?.['content'] ?? [];
+    const buckets = ((response.aggregations?.['files'] as Record<string, unknown>)?.['buckets'] ?? []) as FileBucket[];
+    const totalFiles = buckets.length;
+
+    // Apply offset and limit on the file-level buckets.
+    const paginatedBuckets = buckets.slice(offset, offset + limit);
+
+    const data: FileSearchResultItem[] = paginatedBuckets.map((bucket) => {
+      const firstHit = bucket.top_pages.hits.hits[0]._source;
       return {
-        fileId: source['fileId'] as number,
-        assetId: source['assetId'] as number,
-        assetTitle: source['assetTitle'] as string,
-        fileName: source['fileName'] as string,
-        page: source['page'] as number,
-        highlights,
+        fileId: Number(firstHit['fileId']),
+        assetId: Number(firstHit['assetId']),
+        assetTitle: firstHit['assetTitle'] as string,
+        fileName: firstHit['fileName'] as string,
+        pages: bucket.top_pages.hits.hits.map((hit) => ({
+          page: hit._source['page'] as number,
+          highlights: hit.highlight?.['content'] ?? [],
+        })),
       };
     });
 
@@ -75,97 +112,66 @@ export class FileSearchService {
       page: {
         offset,
         size: data.length,
-        total: fileTotal,
+        total: totalFiles,
       },
       data,
     };
   }
 
   /**
-   * Count file pages matching the query in the file index.
+   * Count distinct files matching the query in the file index.
    */
   async countFilesByQuery(query: AssetSearchQuery, user: User): Promise<number> {
     const elasticQuery = mapQueryToFileElasticDsl(query, user);
-    const response = await this.elastic.count({
+    const response = await this.elastic.search({
       index: FILE_ELASTIC_INDEX,
       query: elasticQuery,
+      size: 0,
+      track_total_hits: false,
       ignore_unavailable: true,
+      aggs: {
+        distinct_files: {
+          cardinality: {
+            field: 'fileId',
+          },
+        },
+      },
     });
-    return response.count;
+    return (response.aggregations?.['distinct_files'] as { value: number })?.value ?? 0;
   }
 
   /**
-   * Aggregates the stats over all file pages matching a specific {@link AssetSearchQuery}.
-   * Runs on the file index, which has the same denormalized metadata fields as the asset index.
+   * Aggregates the stats over the distinct assets for which there are file search results
+   * matching a specific {@link AssetSearchQuery}.
+   *
+   * The stats represent the asset-level facets (grouped by assetId), not the page-level counts.
    *
    * @param query The query to match with.
    * @param user The user that is executing the query.
    */
   async aggregateFiles(query: AssetSearchQuery, user: User): Promise<AssetSearchStats> {
-    type NestedAggResult<T> = {
-      [K in keyof T]: {
-        a: T[K];
-      };
-    };
-
-    interface Result {
-      minCreatedAt: { value: number };
-      maxCreatedAt: { value: number };
-      authorIds: {
-        buckets: AggregationBucket<ContactId>[];
-      };
-      kindCodes: {
-        buckets: AggregationBucket[];
-      };
-      languageCodes: {
-        buckets: AggregationBucket[];
-      };
-      geometryTypes: {
-        buckets: AggregationBucket<GeometryType | 'None'>[];
-      };
-      topicCodes: {
-        buckets: AggregationBucket[];
-      };
-      status: {
-        buckets: AggregationBucket<WorkflowStatus>[];
-      };
-      usageCodes: {
-        buckets: AggregationBucket<AssetSearchUsageCode>[];
-      };
-      workgroupIds: {
-        buckets: AggregationBucket<WorkgroupId>[];
-      };
-    }
-
     interface AggregationBucket<K = string> {
       key: K;
       doc_count: number;
+      distinct_assets: { value: number };
     }
-
-    const makeAggregation = (
-      operator: 'terms' | 'min' | 'max',
-      groupName: string,
-      fieldName?: string,
-    ): AggregationsAggregationContainer => {
-      const NUMBER_OF_BUCKETS = 10_000;
-      const { filter } = mapQueryToFileElasticDslParts({ ...query, [groupName]: undefined }, user);
-      const field: { field: string; size?: number } = { field: fieldName ?? groupName, size: NUMBER_OF_BUCKETS };
-      if (operator !== 'terms') {
-        delete field.size;
-      }
-      return { aggs: { a: { [operator]: field } }, filter: { bool: { filter } } };
-    };
 
     const { must, filter } = mapQueryToFileElasticDslParts(query, user);
 
-    const response = await this.elastic.search({
+    // First, get the total number of distinct assets matching the full query.
+    const totalResponse = await this.elastic.search({
       index: FILE_ELASTIC_INDEX,
       size: 0,
       query: { bool: { must, filter } },
       track_total_hits: true,
       ignore_unavailable: true,
+      aggs: {
+        distinct_assets: {
+          cardinality: { field: 'assetId' },
+        },
+      },
     });
-    const total = (response.hits.total as SearchTotalHits | undefined)?.value ?? 0;
+    const total = (totalResponse.aggregations?.['distinct_assets'] as { value: number })?.value ?? 0;
     if (total === 0) {
       return {
         total: 0,
@@ -181,36 +187,78 @@ export class FileSearchService {
       };
     }
 
-    const aggregateByQuery = async (aggs: Record<string, AggregationsAggregationContainer>) => {
-      return await this.elastic.search({
-        index: FILE_ELASTIC_INDEX,
-        size: 0,
-        query: { bool: { must } },
-        track_total_hits: true,
-        aggregations: aggs,
-        filter_path: ['aggregations.*.a.buckets.*', 'aggregations.*.a.value'],
-        ignore_unavailable: true,
-      });
+    // Build facet aggregations where each bucket counts distinct assets rather than pages.
+    const NUMBER_OF_BUCKETS = 10_000;
+
+    const makeAggregation = (
+      operator: 'terms' | 'min' | 'max',
+      groupName: string,
+      fieldName?: string,
+    ): AggregationsAggregationContainer => {
+      const { filter: facetFilter } = mapQueryToFileElasticDslParts({ ...query, [groupName]: undefined }, user);
+      const field = fieldName ?? groupName;
+
+      if (operator === 'terms') {
+        return {
+          filter: { bool: { filter: facetFilter } },
+          aggs: {
+            a: {
+              terms: { field, size: NUMBER_OF_BUCKETS },
+              aggs: {
+                distinct_assets: { cardinality: { field: 'assetId' } },
+              },
+            },
+          },
+        };
+      }
+      // min/max — these are per-asset, but since all pages of an asset share the same
+      // metadata values, min/max across pages is the same as min/max across assets.
+      return {
+        filter: { bool: { filter: facetFilter } },
+        aggs: { a: { [operator]: { field } } },
+      };
     };
 
-    const result = await aggregateByQuery({
-      authorIds: makeAggregation('terms', 'authorIds'),
-      languageCodes: makeAggregation('terms', 'languageCodes'),
-      geometryTypes: makeAggregation('terms', 'geometryTypes'),
-      kindCodes: makeAggregation('terms', 'kindCodes', 'kindCode'),
-      topicCodes: makeAggregation('terms', 'topicCodes'),
-      usageCodes: makeAggregation('terms', 'usageCodes', 'usageCode'),
-      workgroupIds: makeAggregation('terms', 'workgroupIds', 'workgroupId'),
-      minCreatedAt: makeAggregation('min', 'minCreatedAt', 'createdAt'),
-      maxCreatedAt: makeAggregation('max', 'maxCreatedAt', 'createdAt'),
-      status: makeAggregation('terms', 'status', 'status'),
+    const result = await this.elastic.search({
+      index: FILE_ELASTIC_INDEX,
+      size: 0,
+      query: { bool: { must } },
+      aggregations: {
+        authorIds: makeAggregation('terms', 'authorIds'),
+        languageCodes: makeAggregation('terms', 'languageCodes'),
+        geometryTypes: makeAggregation('terms', 'geometryTypes'),
+        kindCodes: makeAggregation('terms', 'kindCodes', 'kindCode'),
+        topicCodes: makeAggregation('terms', 'topicCodes'),
+        usageCodes: makeAggregation('terms', 'usageCodes', 'usageCode'),
+        workgroupIds: makeAggregation('terms', 'workgroupIds', 'workgroupId'),
+        minCreatedAt: makeAggregation('min', 'minCreatedAt', 'createdAt'),
+        maxCreatedAt: makeAggregation('max', 'maxCreatedAt', 'createdAt'),
+        status: makeAggregation('terms', 'status', 'status'),
+      },
+      filter_path: ['aggregations.*.a.buckets.*', 'aggregations.*.a.value'],
+      ignore_unavailable: true,
     });
+
+    type NestedAggResult<T> = { [K in keyof T]: { a: T[K] } };
+
+    interface Result {
+      minCreatedAt: { value: number };
+      maxCreatedAt: { value: number };
+      authorIds: { buckets: AggregationBucket<ContactId>[] };
+      kindCodes: { buckets: AggregationBucket[] };
+      languageCodes: { buckets: AggregationBucket[] };
+      geometryTypes: { buckets: AggregationBucket<GeometryType | 'None'>[] };
+      topicCodes: { buckets: AggregationBucket[] };
+      status: { buckets: AggregationBucket<WorkflowStatus>[] };
+      usageCodes: { buckets: AggregationBucket<AssetSearchUsageCode>[] };
+      workgroupIds: { buckets: AggregationBucket<WorkgroupId>[] };
+    }
 
     const aggs = result.aggregations as unknown as NestedAggResult<Result>;
 
     const mapBucket = <T>(bucket: AggregationBucket<T>): ValueCount<T> => ({
       value: bucket.key,
-      count: bucket.doc_count,
+      count: bucket.distinct_assets?.value ?? bucket.doc_count,
     });
 
     return {

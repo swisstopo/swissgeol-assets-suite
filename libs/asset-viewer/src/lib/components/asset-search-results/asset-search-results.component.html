@@ -109,15 +109,16 @@
               <th mat-header-cell *matHeaderCellDef>{{ "edit.tabs.references.assetTitlePublic" | translate }}</th>
               <td mat-cell *matCellDef="let file">{{ file.assetTitle }}</td>
             </ng-container>
-            <ng-container matColumnDef="page">
-              <th mat-header-cell *matHeaderCellDef>{{ "search.page" | translate }}</th>
-              <td mat-cell *matCellDef="let file">{{ file.page }}</td>
-            </ng-container>
-            <ng-container matColumnDef="highlights">
+            <ng-container matColumnDef="pages">
               <th mat-header-cell *matHeaderCellDef>{{ "search.textMatch" | translate }}</th>
               <td mat-cell *matCellDef="let file">
-                @for (highlight of file.highlights; track $index) {
-                  <div class="highlight" [innerHTML]="highlight"></div>
+                @for (entry of file.pages; track entry.page) {
+                  <div class="file-page-entry">
+                    <span class="file-page-number">{{ "search.page" | translate }} {{ entry.page }}</span>
+                    @for (highlight of entry.highlights; track $index) {
+                      <div class="highlight" [innerHTML]="highlight"></div>
+                    }
+                  </div>
                 }
               </td>
             </ng-container>

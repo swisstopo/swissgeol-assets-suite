@@ -3,8 +3,23 @@ import { IsArray, IsNumber, IsString, ValidateNested } from 'class-validator';
 import { AssetId } from '../../models/asset';
 import { AssetFileId } from '../../models/asset-file';
 import { PageStats } from '../../models/asset-search/asset-search-result';
-import { FileSearchResult, FileSearchResultItem } from '../../models/asset-search/file-search-result';
+import {
+  FileSearchResult,
+  FileSearchResultItem,
+  FileSearchResultPage,
+} from '../../models/asset-search/file-search-result';
 import { Schema } from '../base/schema';
+
+export class FileSearchResultPageSchema extends Schema implements FileSearchResultPage {
+  @Expose()
+  @IsNumber()
+  page!: number;
+
+  @Expose()
+  @IsArray()
+  @IsString({ each: true })
+  highlights!: string[];
+}
 
 export class FileSearchResultItemSchema extends Schema implements FileSearchResultItem {
   @Expose()
@@ -24,13 +39,10 @@ export class FileSearchResultItemSchema extends Schema implements FileSearchResu
   fileName!: string;
 
   @Expose()
-  @IsNumber()
-  page!: number;
-
-  @Expose()
   @IsArray()
-  @IsString({ each: true })
-  highlights!: string[];
+  @ValidateNested({ each: true })
+  @Type(() => FileSearchResultPageSchema)
+  pages!: FileSearchResultPage[];
 }
 
 export class FileSearchResultSchema extends Schema implements FileSearchResult {

@@ -45,7 +45,7 @@ export class AssetSearchResultsComponent implements OnInit, OnDestroy {
     'createDate',
   ];
 
-  protected readonly FILE_COLUMNS = ['fileName', 'assetTitle', 'page', 'highlights'];
+  protected readonly FILE_COLUMNS = ['fileName', 'assetTitle', 'pages'];
 
   public activeTab: 'assets' | 'files' = 'assets';
 
