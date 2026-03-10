@@ -1,6 +1,13 @@
 import { inject, Injectable, OnDestroy } from '@angular/core';
-import { getDocument, GlobalWorkerOptions, PageViewport, PDFDocumentLoadingTask, PDFDocumentProxy } from 'pdfjs-dist';
-import { PDFPageProxy } from 'pdfjs-dist/types/src/display/api';
+import {
+  getDocument,
+  GlobalWorkerOptions,
+  PageViewport,
+  PDFDocumentLoadingTask,
+  PDFDocumentProxy,
+  TextLayer,
+} from 'pdfjs-dist';
+import { PDFPageProxy, TextContent } from 'pdfjs-dist/types/src/display/api';
 import { SessionStorageService } from '../../services/session-storage.service';
 
 // Worker source for PDF JS. Note that this must match the path that is defined in the builder configuration
@@ -61,6 +68,7 @@ export class PdfViewerService implements OnDestroy {
 
   public async renderPageToCanvas(
     canvas: HTMLCanvasElement,
+    textLayerDiv: HTMLElement,
     pageNum: number,
     parentWidth: number,
     parentHeight: number,
@@ -78,6 +86,83 @@ export class PdfViewerService implements OnDestroy {
       throw new Error('Could not get 2d context from canvas');
     }
     await page.render({ canvasContext: context, viewport, canvas }).promise;
+    await this.renderTextLayer(page, textLayerDiv, viewport);
+  }
+
+  private async renderTextLayer(page: PDFPageProxy, textLayerDiv: HTMLElement, viewport: PageViewport) {
+    const textContent = await page.getTextContent({ disableNormalization: true });
+    await document.fonts.ready;
+
+    // These CSS variables must be set before constructing TextLayer, because the constructor
+    // calls setLayerDimensions which computes width/height from --total-scale-factor.
+    textLayerDiv.style.setProperty('--scale-factor', viewport.scale.toString());
+    textLayerDiv.style.setProperty('--total-scale-factor', viewport.scale.toString());
+    textLayerDiv.style.setProperty('--scale-round-x', '1px');
+    textLayerDiv.style.setProperty('--scale-round-y', '1px');
+
+    const textLayer = new TextLayer({
+      textContentSource: textContent,
+      container: textLayerDiv,
+      viewport,
+    });
+    await textLayer.render();
+    PdfViewerService.hidePdfjsMeasurementCanvas();
+    this.correctTextLayerScaleX(textLayer, textContent, viewport);
+  }
+
+  /**
+   * PDF.js TextLayer computes --scale-x per span using canvas 2D measureText(), which can produce
+   * different widths than the browser's CSS text layout engine for the same font. This causes spans
+   * to be wider or narrower than the actual rendered text on the canvas.
+   *
+   * This method recomputes --scale-x using actual DOM measurements (getBoundingClientRect) to match
+   * the CSS-rendered span widths to the expected PDF text widths.
+   */
+  private correctTextLayerScaleX(textLayer: TextLayer, textContent: TextContent, viewport: PageViewport) {
+    const textDivs = textLayer.textDivs;
+    const textItems = textContent.items.filter((item) => 'str' in item && 'width' in item);
+
+    const savedTransforms: string[] = [];
+    for (let i = 0; i < textDivs.length && i < textItems.length; i++) {
+      savedTransforms.push(textDivs[i].style.transform);
+      textDivs[i].style.transform = 'none';
+    }
+
+    const measurements: { span: HTMLElement; expectedCssWidth: number; naturalWidth: number }[] = [];
+    for (let i = 0; i < textDivs.length && i < textItems.length; i++) {
+      const item = textItems[i];
+      if (!item.width || !textDivs[i].textContent) {
+        continue;
+      }
+      measurements.push({
+        span: textDivs[i],
+        expectedCssWidth: item.width * viewport.scale,
+        naturalWidth: textDivs[i].getBoundingClientRect().width,
+      });
+    }
+
+    for (let i = 0; i < textDivs.length && i < textItems.length; i++) {
+      textDivs[i].style.transform = savedTransforms[i];
+    }
+    for (const { span, expectedCssWidth, naturalWidth } of measurements) {
+      if (naturalWidth > 0) {
+        span.style.setProperty('--scale-x', (expectedCssWidth / naturalWidth).toString());
+      }
+    }
+  }
+
+  /**
+   * pdfjs TextLayer appends a <canvas class="hiddenCanvasElement"> to document.body
+   * for font measurements. It is never removed. Without hiding it, it adds to the
+   * body's content height and can cause scrollbars.
+   */
+  private static hidePdfjsMeasurementCanvas() {
+    document.querySelectorAll<HTMLElement>('body > .hiddenCanvasElement').forEach((el) => {
+      el.style.position = 'absolute';
+      el.style.width = '0';
+      el.style.height = '0';
+      el.style.overflow = 'hidden';
+    });
   }
 
   private prepareCanvas(canvas: HTMLCanvasElement, viewport: PageViewport) {
