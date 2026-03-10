@@ -8,6 +8,25 @@
 
 ### Fixed
 
+## v.1.19.0
+
+### Added
+
+- Clipboard copy for direct link to asset
+- Copy shortlink url to asset
+- Status filter
+- Allow for direct input of page number via input field
+
+### Changed
+
+- Reset to draft when a user edits an asset
+
+### Fixed
+
+- Wrong plural for italian
+- Fix wrong calculation of z-parameter in URL when filters are removed and map is reset to default
+- Fix routing on language changes to avoid rerendering UI state
+
 ## v.1.18.0
 
 ### Added
