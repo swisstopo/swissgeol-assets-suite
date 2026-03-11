@@ -127,7 +127,7 @@ export const determineNextDevVersion = async (sourceBranch) => {
 export const determineNextRcVersionBySourceBranch = async (sourceBranch) => {
   // Merges from `develop` are "normal" release candidates.
   // They take their version from the latest dev release.
-  if (sourceBranch === "develop") {
+  if (sourceBranch === "develop" || sourceBranch.startsWith("release-candidate/")) {
     const tag = "rc";
 
     const devVersion = await findLatestDevVersion();
