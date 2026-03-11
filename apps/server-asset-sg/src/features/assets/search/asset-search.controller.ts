@@ -60,7 +60,7 @@ export class AssetSearchController {
   }
 }
 
-const restrictQueryForUser = (query: AssetSearchQuery, user: User) => {
+export const restrictQueryForUser = (query: AssetSearchQuery, user: User) => {
   if (user.isAdmin) {
     return;
   }
