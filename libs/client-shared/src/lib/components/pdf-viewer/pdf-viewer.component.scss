@@ -199,5 +199,9 @@
       cursor: default;
       user-select: none;
     }
+
+    &.selecting .endOfContent {
+      top: 0;
+    }
   }
 }
