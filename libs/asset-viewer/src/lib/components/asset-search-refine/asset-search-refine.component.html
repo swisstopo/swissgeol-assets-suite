@@ -159,6 +159,10 @@
           </button>
         </mat-form-field>
       </section>
+      <section>
+        <h4 translate>search.status</h4>
+        <asset-sg-asset-search-filter [filters]="statusFilters$ | push" />
+      </section>
     </section>
   </div>
   <div class="button-container">

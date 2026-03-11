@@ -26,6 +26,7 @@ import {
 } from '@elastic/elasticsearch/lib/api/types';
 import { Injectable, Logger } from '@nestjs/common';
 
+import { WorkflowStatus } from '@swissgeol/ui-core';
 import { plainToInstance } from 'class-transformer';
 
 // eslint-disable-next-line @nx/enforce-module-boundaries
@@ -235,6 +236,9 @@ export class AssetSearchService {
       topicCodes: {
         buckets: AggregationBucket[];
       };
+      status: {
+        buckets: AggregationBucket<WorkflowStatus>[];
+      };
       usageCodes: {
         buckets: AggregationBucket<AssetSearchUsageCode>[];
       };
@@ -293,6 +297,7 @@ export class AssetSearchService {
         topicCodes: [],
         usageCodes: [],
         workgroupIds: [],
+        status: [],
       };
     }
 
@@ -306,6 +311,7 @@ export class AssetSearchService {
       workgroupIds: makeAggregation('terms', 'workgroupIds', 'workgroupId'),
       minCreatedAt: makeAggregation('min', 'minCreatedAt', 'createdAt'),
       maxCreatedAt: makeAggregation('max', 'maxCreatedAt', 'createdAt'),
+      status: makeAggregation('terms', 'status', 'status'),
     });
 
     const aggs = result.aggregations as unknown as NestedAggResult<Result>;
@@ -314,6 +320,7 @@ export class AssetSearchService {
       value: bucket.key,
       count: bucket.doc_count,
     });
+
     return {
       total,
       kindCodes: aggs.kindCodes?.a?.buckets?.map(mapBucket) ?? [],
@@ -327,6 +334,7 @@ export class AssetSearchService {
         min: LocalDate.fromDate(new Date(aggs.minCreatedAt.a.value)),
         max: LocalDate.fromDate(new Date(aggs.maxCreatedAt.a.value)),
       },
+      status: aggs.status?.a?.buckets?.map(mapBucket) ?? [],
     };
   }
 
@@ -532,6 +540,9 @@ const mapQueryToElasticDslParts = (
   }
   if (query.geometryTypes != null) {
     filters.push(makeArrayFilter('geometryTypes', query.geometryTypes));
+  }
+  if (query.status != null) {
+    filters.push(makeArrayFilter('status', query.status));
   }
   if (query.workgroupIds != null) {
     filters.push({

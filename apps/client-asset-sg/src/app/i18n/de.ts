@@ -74,6 +74,8 @@ export const deTranslationMapping = {
     dragHandleLabel: 'Ziehgriff',
   },
   search: {
+    directLink: 'Direktlink',
+    directLinkCopied: 'Direktlink in die Zwischenablage kopiert',
     textSearchFieldPlaceholder: 'Suche nach...',
     searchInstructionsHeading: 'Asset-Suche',
     searchInstructions:

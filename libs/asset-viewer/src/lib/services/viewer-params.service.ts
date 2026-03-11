@@ -48,6 +48,7 @@ export class ViewerParamsService {
     query.geometryTypes = readArrayParam(params, QUERY_PARAM_MAPPING.geometryTypes);
     query.languageCodes = readArrayParam(params, QUERY_PARAM_MAPPING.languageCodes);
     query.workgroupIds = readArrayParam<number>(params, QUERY_PARAM_MAPPING.workgroupIds);
+    query.status = readArrayParam(params, QUERY_PARAM_MAPPING.status);
     query.favoritesOnly = this.parseFavoritesOnlyFromUrl();
     const ui: AssetSearchUiState = {
       filtersState:
@@ -88,6 +89,7 @@ export class ViewerParamsService {
     updateArrayParam(params, QUERY_PARAM_MAPPING.languageCodes, query.languageCodes);
     updateArrayParam(params, QUERY_PARAM_MAPPING.workgroupIds, query.workgroupIds);
     updatePlainParam(params, QUERY_PARAM_MAPPING.assetId, assetId);
+    updateArrayParam(params, QUERY_PARAM_MAPPING.status, query.status);
 
     updatePlainParam(params, UI_PARAM_MAPPING.scrollOffsetForResults, ui.scrollOffsetForResults, { defaultValue: 0 });
     updatePlainParam(params, UI_PARAM_MAPPING.filtersState, isPanelOpen(ui.filtersState), { defaultValue: true });
@@ -102,19 +104,32 @@ export class ViewerParamsService {
 
     await this.router.navigate([url[1], ...route], {
       queryParams: params,
-      queryParamsHandling: 'merge',
       replaceUrl: options.shouldReplaceUrl,
     });
   }
 
-  private parseFavoritesOnlyFromUrl(): boolean {
+  private parseFavoritesOnlyFromUrl(): boolean | undefined {
     const url = document.location.pathname.split('/', 3);
-    return url.length === 3 && url[2] === 'favorites';
+    return url.length === 3 && url[2] === 'favorites' ? true : undefined;
   }
 }
 
 export const isEmptyViewerParams = (params: ViewerParams): boolean =>
-  params.assetId == null && isEmptySearchQuery(params.query);
+  params.assetId == null &&
+  isEmptySearchQuery(params.query) &&
+  params.ui.map.x === DEFAULT_MAP_POSITION.x &&
+  params.ui.map.y === DEFAULT_MAP_POSITION.y &&
+  params.ui.map.z === DEFAULT_MAP_POSITION.z;
+
+export const areViewerParamsEqual = (a: ViewerParams, b: ViewerParams): boolean =>
+  a.assetId === b.assetId &&
+  JSON.stringify(a.query) === JSON.stringify(b.query) &&
+  a.ui.scrollOffsetForResults === b.ui.scrollOffsetForResults &&
+  isPanelOpen(a.ui.filtersState) === isPanelOpen(b.ui.filtersState) &&
+  isPanelOpen(a.ui.resultsState) === isPanelOpen(b.ui.resultsState) &&
+  a.ui.map.x === b.ui.map.x &&
+  a.ui.map.y === b.ui.map.y &&
+  a.ui.map.z === b.ui.map.z;
 
 export interface ViewerParams {
   query: AssetSearchQuery;
@@ -122,7 +137,7 @@ export interface ViewerParams {
   assetId: AssetId | null;
 }
 
-const QUERY_PARAM_MAPPING = {
+export const QUERY_PARAM_MAPPING = {
   text: 'search[text]',
   polygon: 'search[polygon]',
   authorId: 'search[author]',
@@ -138,6 +153,7 @@ const QUERY_PARAM_MAPPING = {
   assetId: 'assetId',
   workgroupIds: 'search[workgroup]',
   categories: 'search[categories]',
+  status: 'search[status]',
 };
 
 type ParamMapping<T> = {

@@ -7,7 +7,6 @@ import {
   FileProcessingState,
   fixtures,
   sleep,
-  User,
   WorkflowPublishData,
   WorkflowPublishDataSchema,
 } from '@asset-sg/shared/v2';
@@ -56,13 +55,14 @@ export class FixturesCreateCommand extends CommandRunner {
   }
 
   private async createUsers(): Promise<void> {
-    const createUser = async (user: User): Promise<void> => {
-      await this.userRepo.delete(user.id);
-      await this.userRepo.create({ ...user, oidcId: user.id });
-    };
     for (const user of Object.values(fixtures.users)) {
       this.logger.log(`Creating user`, { email: user.email });
-      await createUser(user);
+      await this.userRepo.delete(user.id);
+      const newUser = await this.userRepo.create({ ...user, oidcId: user.id });
+
+      if (user.isAdmin) {
+        await this.userRepo.update(newUser.id, { ...newUser, isAdmin: true });
+      }
     }
   }
 

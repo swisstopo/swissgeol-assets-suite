@@ -5,8 +5,54 @@
   align-items: center;
 
   &__page-count {
-    display: inline-block;
-    width: 100px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
     text-align: center;
+  }
+
+  &__page-input {
+    width: 40px;
+    text-align: center;
+    border: 1px solid var(--sgc-color-border--default, #ccc);
+    border-radius: 4px;
+    padding: 6px 4px;
+    font-size: inherit;
+    font-family: inherit;
+    background: var(--sgc-color-bg--white, #fff);
+
+    &:focus {
+      outline-offset: -1px;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    &--invalid {
+      border-color: var(--sgc-color-error);
+      background-color: var(--sgc-color-error-bg);
+      animation: shake 0.4s ease-in-out;
+    }
+  }
+}
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-4px);
+  }
+  40% {
+    transform: translateX(4px);
+  }
+  60% {
+    transform: translateX(-3px);
+  }
+  80% {
+    transform: translateX(3px);
   }
 }

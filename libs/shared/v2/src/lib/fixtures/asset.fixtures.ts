@@ -88,10 +88,12 @@ fileFixtures.register(hauteSorne2dSeismic2023AcquisitionAndProcessingReport, {
   lastModifiedAt: new Date('2025-09-11T16:18:00'),
   pageCount: 13,
   pageRangeClassifications: [
-    { to: 5, from: 1, languages: ['en'], categories: [PageCategory.Text] },
+    { to: 1, from: 1, languages: ['de'], categories: [PageCategory.Text] },
+    { to: 5, from: 2, languages: ['en'], categories: [PageCategory.Text] },
     { to: 8, from: 6, languages: ['en'], categories: [PageCategory.Unknown] },
     { to: 10, from: 9, languages: ['en'], categories: [PageCategory.Text] },
-    { to: 12, from: 11, languages: ['en'], categories: [PageCategory.Diagram] },
+    { to: 11, from: 11, languages: ['en'], categories: [PageCategory.Boreprofile] },
+    { to: 12, from: 12, languages: ['en'], categories: [PageCategory.Unknown] },
     { to: 13, from: 13, languages: ['en'], categories: [PageCategory.Text] },
   ],
 });

@@ -18,8 +18,17 @@ export const prefixPathWithLanguageGuard: CanMatchFn = (_route, segments) => {
 
   const router = inject(Router);
   const segmentStrings = segments.map((it) => it.path);
-  return new RedirectCommand(router.createUrlTree([languageService.language, ...segmentStrings]), {
-    replaceUrl: true,
-    info: 'prefixPathWithLanguageGuard',
-  });
+
+  const currentNavigation = router.currentNavigation();
+  const queryParams = currentNavigation?.extractedUrl.queryParams || {};
+
+  return new RedirectCommand(
+    router.createUrlTree([languageService.language, ...segmentStrings], {
+      queryParams: queryParams,
+    }),
+    {
+      replaceUrl: true,
+      info: 'prefixPathWithLanguageGuard',
+    },
+  );
 };

@@ -177,7 +177,8 @@ export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
   private initializeStoreBindings() {
     this.subscription.add(
       this.store.select(selectSearchQuery).subscribe((query) => {
-        this.controller.setShowHeatmap(isEmptySearchQuery(query));
+        const showHeatmap = isEmptySearchQuery(query) && !query.favoritesOnly;
+        this.controller.setShowHeatmap(showHeatmap);
       }),
     );
     this.subscription.add(

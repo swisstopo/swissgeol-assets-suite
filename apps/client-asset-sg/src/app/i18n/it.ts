@@ -76,6 +76,8 @@ export const itTranslationMapping: AppTranslationMapping = {
     dragHandleLabel: 'Maniglia di trascinamento',
   },
   search: {
+    directLink: 'Collegamento diretto',
+    directLinkCopied: 'Collegamento diretto copiato negli appunti',
     textSearchFieldPlaceholder: 'Cercare...',
     searchInstructionsHeading: 'Ricercare asset',
     searchInstructions: 'Cercare un asset utilizzando il campo di ricerca o disegnando un poligono sulla mappa.',

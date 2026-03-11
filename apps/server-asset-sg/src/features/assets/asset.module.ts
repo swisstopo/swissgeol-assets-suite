@@ -17,6 +17,7 @@ import { AssetSearchController } from '@/features/assets/search/asset-search.con
 import { AssetSearchService } from '@/features/assets/search/asset-search.service';
 import { AssetSyncController } from '@/features/assets/sync/asset-sync.controller';
 import { AssetSyncService } from '@/features/assets/sync/asset-sync.service';
+import { FileFulltextSyncService } from '@/features/assets/sync/file-fulltext-sync.service';
 import { WorkflowController } from '@/features/assets/workflow/workflow.controller';
 import { WorkflowRepo } from '@/features/assets/workflow/workflow.repo';
 import { WorkflowService } from '@/features/assets/workflow/workflow.service';
@@ -34,7 +35,7 @@ import { UsersModule } from '@/features/users/users.module';
     FavoritesController,
     WorkflowController,
   ],
-  exports: [AssetSearchService, AssetRepo, AssetService, WorkflowService, FileService, FileRepo],
+  exports: [AssetSearchService, AssetRepo, AssetService, WorkflowService, FileS3Service, FileService, FileRepo],
   imports: [UsersModule],
   providers: [
     provideElasticsearch,
@@ -51,6 +52,7 @@ import { UsersModule } from '@/features/users/users.module';
     FileExtractionService,
     FavoriteRepo,
     AssetSyncService,
+    FileFulltextSyncService,
     WorkflowRepo,
     WorkflowService,
   ],

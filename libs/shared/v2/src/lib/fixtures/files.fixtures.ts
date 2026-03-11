@@ -33,26 +33,32 @@ const registerSampleReport = (asset: Asset) =>
     size: 2_515_221,
     lastModifiedAt: new Date(),
     pageRangeClassifications: [
-      { to: 2, from: 1, languages: ['en'], categories: [PageCategory.Unknown] },
+      { to: 1, from: 1, languages: ['en'], categories: [PageCategory.Unknown] },
       {
-        to: 4,
-        from: 3,
+        to: 5,
+        from: 2,
         languages: ['en'],
         categories: [PageCategory.Text],
       },
       {
+        to: 6,
+        from: 6,
+        languages: ['de'],
+        categories: [PageCategory.Text],
+      },
+      {
         to: 8,
-        from: 5,
+        from: 7,
         languages: ['en'],
-        categories: [PageCategory.Unknown],
+        categories: [PageCategory.Text],
       },
       {
         to: 9,
         from: 9,
         languages: ['en'],
-        categories: [PageCategory.Text],
+        categories: [PageCategory.TitlePage],
       },
-      { to: 10, from: 10, languages: ['fr'], categories: [PageCategory.Unknown] },
+      { to: 10, from: 10, languages: ['en'], categories: [PageCategory.Unknown] },
     ],
   });
 

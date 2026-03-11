@@ -21,5 +21,7 @@
 <hr />
 <div mat-dialog-actions class="actions">
   <button asset-sg-secondary (click)="close()" translate>cancel</button>
-  <button asset-sg-primary (click)="updateWorkgroupsOfUser()" translate>admin.userPage.addWorkgroups</button>
+  <button asset-sg-primary (click)="updateWorkgroupsOfUser()" data-testid="confirm-add-workgroup" translate>
+    admin.userPage.addWorkgroups
+  </button>
 </div>

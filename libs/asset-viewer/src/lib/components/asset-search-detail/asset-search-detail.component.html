@@ -200,10 +200,15 @@
       }
     </div>
   </div>
+  <div class="footer" data-testid="assetFooter">
+    <sgc-button class="footer__button" (click)="copyDirectLinkToClipboard()" color="secondary">
+      <sgc-icon name="copy"></sgc-icon>
+      <span translate>search.directLink</span>
+    </sgc-button>
 
-  @if (canUpdate$ | async) {
-    <div class="footer" data-testid="assetFooter">
+    @if (canUpdate$ | async) {
       <sgc-button
+        class="footer__button"
         data-testid="edit-asset-button"
         *rxLet="language$; let language"
         (click)="navigateToEdit(language, asset.id)"
@@ -211,8 +216,8 @@
         <sgc-icon name="edit"></sgc-icon>
         <span translate>search.editAsset</span>
       </sgc-button>
-    </div>
-  }
+    }
+  </div>
 } @else {
   <div class="loading-spinner">
     <mat-progress-spinner mode="indeterminate" />

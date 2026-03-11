@@ -57,5 +57,6 @@ __pycache__
 
 # Asset sync progress file
 asset-sync-progress.tmp.json
+file-fulltext-sync-progress.tmp.json
 .cursor/rules/nx-rules.mdc
 .github/instructions/nx.instructions.md

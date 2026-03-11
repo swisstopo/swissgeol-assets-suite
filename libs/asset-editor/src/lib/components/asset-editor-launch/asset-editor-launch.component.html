@@ -4,7 +4,13 @@
     <asset-sg-drawer-panel widthPercentageOfViewPanel="0.3" [display]="true">
       <div class="flex flex-column pl-2 pt-4 drawer-panel">
         <h3 translate>edit.userManagementHeading</h3>
-        <a asset-sg-primary [routerLink]="'/admin/users' | localizePath" class="self-start" translate>
+        <a
+          asset-sg-primary
+          [routerLink]="'/admin/users' | localizePath"
+          class="self-start"
+          data-testid="user-management-button"
+          translate
+        >
           edit.userManagementButton
         </a>
 

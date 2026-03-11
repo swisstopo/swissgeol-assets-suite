@@ -28,6 +28,7 @@ export interface ElasticsearchAsset {
   favoredByUserIds: UserId[];
   data: AssetJSON;
   alternativeIds: string[];
+  status: string;
 }
 
 export interface ElasticsearchPoint {

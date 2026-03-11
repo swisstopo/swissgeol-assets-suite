@@ -1,3 +1,4 @@
+import { WorkflowStatus } from '@swissgeol/ui-core';
 import { Type } from 'class-transformer';
 
 import { IsArray, IsInt, IsObject } from 'class-validator';
@@ -44,4 +45,8 @@ export class AssetSearchStatsSchema extends Schema implements AssetSearchStats {
 
   @Type(() => LocalDateRangeSchema)
   createdAt!: LocalDateRangeSchema | null;
+
+  @IsArray()
+  @IsObject({ each: true })
+  status!: ValueCount<WorkflowStatus>[];
 }

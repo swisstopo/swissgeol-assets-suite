@@ -288,6 +288,7 @@ export class PdfViewerComponent implements OnDestroy {
 
   private async renderPage(pageNum: number, center?: PdfPageWrapperCenter) {
     this.isRendering.set(true);
+    this.currentPage.set(pageNum);
     for (const canvas of this.pdfCanvasElements.values()) {
       this.renderer.setStyle(canvas.parentElement, 'display', 'none');
     }
@@ -296,7 +297,6 @@ export class PdfViewerComponent implements OnDestroy {
       await this.renderPageAndCache(pageNum, center);
     }
 
-    this.currentPage.set(pageNum);
     this.isRendering.set(false);
   }
 

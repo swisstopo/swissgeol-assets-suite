@@ -6,7 +6,6 @@ import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { Store } from '@ngrx/store';
 import { combineLatest, filter, map, switchMap, take } from 'rxjs';
-
 import { AppSharedStateService } from './app-shared-state.service';
 import { AppState } from './app-state';
 
@@ -48,7 +47,7 @@ export class AppSharedStateEffects {
 
   loadUser$ = createEffect(() =>
     this.actions$.pipe(
-      ofType(appSharedStateActions.loadUser),
+      ofType(appSharedStateActions.loadUser, appSharedStateActions.updateUserOnAdminEdit),
       switchMap(() => this.authService.fetchUser()),
       map(appSharedStateActions.setUser),
     ),
@@ -56,7 +55,7 @@ export class AppSharedStateEffects {
 
   loadWorkgroups$ = createEffect(() =>
     this.actions$.pipe(
-      ofType(appSharedStateActions.loadWorkgroups),
+      ofType(appSharedStateActions.loadWorkgroups, appSharedStateActions.updateUserOnAdminEdit),
       switchMap(() => this.appSharedStateService.loadWorkgroups()),
       map((workgroups) => appSharedStateActions.setWorkgroups({ workgroups })),
     ),

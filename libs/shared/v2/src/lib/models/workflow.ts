@@ -18,6 +18,10 @@ export interface Workflow extends GenericWorkflow {
   workgroupId: WorkgroupId;
 }
 
+export interface WorkflowWithAsset extends Workflow {
+  asset: Asset;
+}
+
 export type WorkflowSelection = Omit<WorkflowSelectionFromPrisma, 'id'>;
 
 export enum WorkflowSelectionCategory {

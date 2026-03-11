@@ -41,7 +41,7 @@ import {
 } from '../state/asset-search/asset-search.selector';
 import { AssetSearchService } from './asset-search.service';
 import { GeometryService } from './geometry.service';
-import { isEmptyViewerParams, ViewerParams, ViewerParamsService } from './viewer-params.service';
+import { areViewerParamsEqual, isEmptyViewerParams, ViewerParams, ViewerParamsService } from './viewer-params.service';
 
 @Injectable({ providedIn: 'root' })
 export class ViewerControllerService {
@@ -100,6 +100,12 @@ export class ViewerControllerService {
     } else {
       params = paramsFromUrl;
     }
+
+    // Preserve the results panel state if it was manually toggled by the user
+    if (!isPanelAutomaticallyToggled(paramsFromStore.ui.resultsState)) {
+      params = { ...params, ui: { ...params.ui, resultsState: paramsFromStore.ui.resultsState } };
+    }
+
     loads.push(this.updateStoreByParams(params));
 
     const geometries = await firstValueFrom(this.store.select(selectGeometries));
@@ -132,7 +138,8 @@ export class ViewerControllerService {
     query: AssetSearchQuery,
     options: { force?: boolean; skipAssetReset?: boolean } = {},
   ): Promise<void> {
-    if (!options.force && isEmptySearchQuery(query)) {
+    // Always load results when favoritesOnly is true, even if other search criteria are empty
+    if (!options.force && isEmptySearchQuery(query) && !query.favoritesOnly) {
       this.store.dispatch(actions.setResults({ results: makeEmptyAssetSearchResults(), isLoading: false }));
       return;
     }
@@ -166,7 +173,8 @@ export class ViewerControllerService {
   }
 
   private async updateByQuery(query: AssetSearchQuery): Promise<void> {
-    if (isEmptySearchQuery(query)) {
+    // Only reset map position if the query is empty and not in favorites mode
+    if (isEmptySearchQuery(query) && !query.favoritesOnly) {
       this.store.dispatch(actions.setMapPosition({ position: DEFAULT_MAP_POSITION }));
     }
     await Promise.all([this.loadResults(query), this.loadStats(query)]);
@@ -241,6 +249,17 @@ export class ViewerControllerService {
         return;
       }
       const params = await this.viewerParamsService.readParamsFromUrl();
+
+      // Preserve the results panel state if it was manually toggled by the user
+      const currentResultsState = await firstValueFrom(this.store.select(selectResultsState));
+      if (!isPanelAutomaticallyToggled(currentResultsState)) {
+        params.ui.resultsState = currentResultsState;
+      }
+
+      const currentParams = await this.viewerParamsService.readParamsFromStore();
+      if (areViewerParamsEqual(params, currentParams)) {
+        return;
+      }
       this.isUpdatingStore = true;
       await this.updateStoreByParams(params);
       this.isUpdatingStore = false;

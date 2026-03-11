@@ -1,4 +1,4 @@
-import { AssetId, UserId, Workflow, WorkflowStatus } from '@asset-sg/shared/v2';
+import { AssetId, UserId, Workflow, WorkflowStatus, WorkflowWithAsset } from '@asset-sg/shared/v2';
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@/core/prisma.service';
 import { FindRepo } from '@/core/repo';
@@ -17,7 +17,7 @@ export class WorkflowRepo implements FindRepo<Workflow, AssetId> {
     return new WorkflowSelectionRepo(this.prisma, 'approvalWorkflow');
   }
 
-  async find(id: AssetId): Promise<Workflow | null> {
+  async find(id: AssetId): Promise<WorkflowWithAsset | null> {
     const entry = await this.prisma.workflow.findUnique({
       select: workflowSelection,
       where: { id },
@@ -26,7 +26,10 @@ export class WorkflowRepo implements FindRepo<Workflow, AssetId> {
     return entry == null ? null : parseWorkflowFromPrisma(entry);
   }
 
-  async change(id: AssetId, { creatorId, comment, from, to, hasRequestedChanges }: ChangeOptions): Promise<Workflow> {
+  async change(
+    id: AssetId,
+    { creatorId, comment, from, to, hasRequestedChanges }: ChangeOptions,
+  ): Promise<WorkflowWithAsset> {
     const entry = await this.prisma.workflow.update({
       where: { id },
       data: {
