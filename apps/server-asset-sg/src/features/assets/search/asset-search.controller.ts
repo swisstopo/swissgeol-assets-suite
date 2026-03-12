@@ -56,18 +56,11 @@ export class AssetSearchController {
     @CurrentUser() user: User,
   ): Promise<AssetSearchStats> {
     if (user.isAdmin) {
-      // For admins: get restricted stats (correct totals and filter counts),
-      // then overlay unrestricted workgroup counts for workgroup discovery.
-      const restrictedQuery = { ...query };
-      restrictQueryForUser(restrictedQuery, user);
-      const [restrictedStats, unrestrictedStats] = await Promise.all([
-        this.assetSearchService.aggregate(restrictedQuery, user),
-        this.assetSearchService.aggregate(query, user),
-      ]);
-      return {
-        ...restrictedStats,
-        workgroupIds: unrestrictedStats.workgroupIds,
-      };
+      // For admins: restrict stats to their workgroups, but keep workgroup
+      // counts unrestricted so they can discover all workgroups.
+      const unrestrictedWorkgroupQuery = { ...query };
+      restrictQueryForUser(query, user);
+      return await this.assetSearchService.aggregate(query, user, { unrestrictedWorkgroupQuery });
     }
     restrictQueryForUser(query, user);
     return await this.assetSearchService.aggregate(query, user);
