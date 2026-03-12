@@ -1,4 +1,4 @@
-import { inject, Injectable, OnDestroy } from '@angular/core';
+import { inject, Injectable, NgZone, OnDestroy } from '@angular/core';
 import {
   getDocument,
   GlobalWorkerOptions,
@@ -18,8 +18,11 @@ export class PdfViewerService implements OnDestroy {
   private loadingTask: PDFDocumentLoadingTask | undefined;
   private pdfDoc: PDFDocumentProxy | undefined;
   private readonly sessionStorageService = inject(SessionStorageService);
+  private readonly ngZone = inject(NgZone);
+  private selectionAbortController: AbortController | null = null;
 
   async ngOnDestroy() {
+    this.selectionAbortController?.abort();
     await this.destroyPdfJsWorker();
   }
 
@@ -107,6 +110,7 @@ export class PdfViewerService implements OnDestroy {
     });
     await textLayer.render();
     PdfViewerService.hidePdfjsMeasurementCanvas();
+    this.setupSelectionBehavior(textLayerDiv);
     this.correctTextLayerScaleX(textLayer, textContent, viewport);
   }
 
@@ -149,6 +153,142 @@ export class PdfViewerService implements OnDestroy {
         span.style.setProperty('--scale-x', (expectedCssWidth / naturalWidth).toString());
       }
     }
+  }
+
+  /**
+   * Replicates the pdfjs viewer's TextLayerBuilder selection behavior.
+   *
+   * The endOfContent div is dynamically repositioned next to the selection anchor during
+   * active selection, giving the browser a proper continuation target and preventing
+   * erratic jumps across absolutely-positioned spans.
+   *
+   * Adapted from pdfjs-dist/web/pdf_viewer.mjs TextLayerBuilder.#bindMouse
+   * and TextLayerBuilder.#enableGlobalSelectionListener.
+   */
+  private setupSelectionBehavior(textLayerDiv: HTMLElement) {
+    // Abort previous listeners (from prior page renders) before setting up new ones.
+    this.selectionAbortController?.abort();
+    this.selectionAbortController = new AbortController();
+    const { signal } = this.selectionAbortController;
+
+    const endOfContent = document.createElement('div');
+    endOfContent.className = 'endOfContent';
+    textLayerDiv.append(endOfContent);
+
+    const reset = () => {
+      textLayerDiv.append(endOfContent);
+      endOfContent.style.width = '';
+      endOfContent.style.height = '';
+      textLayerDiv.classList.remove('selecting');
+    };
+
+    let isPointerDown = false;
+    let prevRange: Range | null = null;
+
+    // Run outside Angular zone to avoid triggering change detection on every
+    // pointer/selection event — none of these modify Angular-managed state.
+    this.ngZone.runOutsideAngular(() => {
+      textLayerDiv.addEventListener(
+        'mousedown',
+        () => {
+          textLayerDiv.classList.add('selecting');
+        },
+        { signal },
+      );
+
+      document.addEventListener(
+        'pointerdown',
+        () => {
+          isPointerDown = true;
+        },
+        { signal },
+      );
+
+      document.addEventListener(
+        'pointerup',
+        () => {
+          isPointerDown = false;
+          reset();
+        },
+        { signal },
+      );
+
+      window.addEventListener(
+        'blur',
+        () => {
+          isPointerDown = false;
+          reset();
+        },
+        { signal },
+      );
+
+      document.addEventListener(
+        'keyup',
+        () => {
+          if (!isPointerDown) {
+            reset();
+          }
+        },
+        { signal },
+      );
+
+      document.addEventListener(
+        'selectionchange',
+        () => {
+          const selection = document.getSelection();
+          if (!selection || selection.rangeCount === 0) {
+            reset();
+            return;
+          }
+
+          const range = selection.getRangeAt(0);
+          if (!range.intersectsNode(textLayerDiv)) {
+            reset();
+            return;
+          }
+
+          textLayerDiv.classList.add('selecting');
+
+          const modifyStart =
+            prevRange &&
+            (range.compareBoundaryPoints(Range.END_TO_END, prevRange) === 0 ||
+              range.compareBoundaryPoints(Range.START_TO_END, prevRange) === 0);
+
+          let anchor = modifyStart ? range.startContainer : range.endContainer;
+          if (anchor.nodeType === Node.TEXT_NODE) {
+            anchor = anchor.parentNode!;
+          }
+
+          if (!modifyStart && range.endOffset === 0) {
+            let node: Node | null = anchor;
+            while (node) {
+              while (!node.previousSibling) {
+                node = node.parentNode;
+                if (!node) break;
+              }
+              if (!node) break;
+              node = node.previousSibling;
+              if (node?.childNodes.length) break;
+            }
+            if (node) anchor = node;
+          }
+
+          const parentTextLayer = (anchor as HTMLElement).parentElement?.closest('.textLayer');
+          if (parentTextLayer === textLayerDiv) {
+            endOfContent.style.width = textLayerDiv.style.width;
+            endOfContent.style.height = textLayerDiv.style.height;
+            endOfContent.style.userSelect = 'text';
+            (anchor as HTMLElement).parentElement!.insertBefore(
+              endOfContent,
+              modifyStart ? (anchor as Node) : (anchor as Node).nextSibling,
+            );
+          }
+
+          prevRange = range.cloneRange();
+        },
+        { signal },
+      );
+    });
   }
 
   /**
