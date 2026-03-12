@@ -33,13 +33,15 @@
     }
   </mat-chip-set>
   <div class="filters-container">
-    <div class="button-container section">
-      <button asset-sg-tertiary [class.active]="isDrawActive$ | async" (click)="toggleDrawPolygon()" translate>
+    <div class="section-container">
+      <asset-sg-search-input [value]="(searchQuery$ | async)!" (searchSubmit)="search($event)" />
+    </div>
+    <div class="section-container">
+      <button asset-sg-secondary [class.active]="isDrawActive$ | async" (click)="toggleDrawPolygon()" translate>
         <svg-icon key="polygon-draw"></svg-icon>
         search.drawPolygon
       </button>
-    </div>
-    <section class="filters section">
+      <asset-sg-separator></asset-sg-separator>
       <section>
         <h4 translate>search.workgroup</h4>
         <asset-sg-asset-search-filter [filters]="workgroupFilters$ | push" />
@@ -163,7 +165,7 @@
         <h4 translate>search.status</h4>
         <asset-sg-asset-search-filter [filters]="statusFilters$ | push" />
       </section>
-    </section>
+    </div>
   </div>
   <div class="button-container">
     <button asset-sg-primary translate (click)="resetSearch()">search.resetSearch</button>

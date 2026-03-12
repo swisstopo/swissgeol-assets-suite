@@ -69,7 +69,7 @@ During development, versions are identified by suffix labels.
 - When merging into `develop`, a _development version_ in the format `A.B.C-devX` is assigned.
   `A.B.C` is based on the current full release, with `B` incremented by one and `C` set to zero.
   `X` increments with every continuous merge where `A.B.C` doesn't change.
-- When merging `develop` into `main`, a _release candidate_ in the format `A.B.C-rcX` is assigned.
+- When merging `develop` OR `release-candidate/...` into `main`, a _release candidate_ in the format `A.B.C-rcX` is assigned.
   `A.B.C` is based on the development version that the merge is based on.
   `X` increments with every continuous merge where `A.B.C` doesn't change.
 - When releasing `main`, a _release version_ is created by stripping the label from the current release candidate.

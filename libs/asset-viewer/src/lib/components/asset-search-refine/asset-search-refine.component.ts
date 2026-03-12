@@ -62,6 +62,7 @@ export class AssetSearchRefineComponent implements OnInit, OnDestroy, AfterViewI
   readonly languageFilters$ = this.store.select(selectLanguageFilters);
   readonly assetKindFilters$ = this.store.select(selectAssetKindFilters);
   readonly workgroupFilters$ = this.store.select(selectWorkgroupFilters);
+  readonly searchQuery$ = this.store.select(selectSearchQuery).pipe(map((q) => q.text ?? ''));
 
   readonly activeFilters$ = this.store.select(selectActiveFilters);
   readonly isDrawActive$ = this.store.select(selectMapControlIsDrawing);
@@ -215,5 +216,9 @@ export class AssetSearchRefineComponent implements OnInit, OnDestroy, AfterViewI
 
   protected trackFilter(filter: Filter<string | number>): string {
     return `${filter.queryKey}:${filter.value}`;
+  }
+
+  protected search(text: string) {
+    this.store.dispatch(actions.updateSearchQuery({ query: { text } }));
   }
 }

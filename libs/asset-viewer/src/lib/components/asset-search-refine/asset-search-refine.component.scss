@@ -8,7 +8,6 @@
   display: flex;
   flex-direction: column;
   z-index: 1;
-  gap: 24px;
 }
 
 @include drawerPanel.draw-panel-header;
@@ -18,7 +17,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 2px solid #dee2e6;
+  border-bottom: 2px solid variables.$grey-03;
   padding: 21px 0;
   margin: 0;
 
@@ -39,11 +38,6 @@
   @include mixins.text-ellipsis;
 }
 
-.button-container {
-  display: flex;
-  flex-direction: column;
-}
-
 h4 {
   font-weight: 500;
   margin: 0;
@@ -54,21 +48,24 @@ h4 {
 
 .filters-container {
   display: flex;
+  gap: 16px;
   flex-direction: column;
-  gap: 24px;
   overflow-y: scroll;
 
-  .section {
-    background-color: white;
-    border-radius: 4px;
+  asset-sg-separator {
+    margin: 16px 0;
   }
 
-  .filters {
+  .section-container {
+    background-color: white;
+    border-radius: 4px;
     padding: 16px;
     display: flex;
     flex-direction: column;
-    gap: 30px;
 
+    section:not(:first-of-type) {
+      margin-top: 30px;
+    }
     section {
       display: flex;
       flex-direction: column;

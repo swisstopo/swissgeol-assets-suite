@@ -25,36 +25,6 @@ asset-sg-map {
   grid-area: map;
 }
 
-.search-input-wrapper {
-  position: relative;
-  margin-left: 160px;
-
-  & > svg-icon {
-    position: absolute;
-    left: 12px;
-    top: 0;
-    bottom: 0;
-    margin: auto 0;
-  }
-}
-
-.search-input {
-  padding: 8px 12px 8px 48px;
-  border: none;
-  outline: none;
-  width: 500px;
-  height: 56px;
-
-  border-bottom: 2px solid variables.$cyan-08;
-  color: variables.$grey-10;
-  background-color: #f8f9fa;
-  border-radius: 6px;
-
-  &::placeholder {
-    color: variables.$grey-10;
-  }
-}
-
 asset-sg-asset-picker {
   position: absolute;
   top: 0;
