@@ -210,8 +210,15 @@ export class AssetSearchService {
    *
    * @param query The query to match with.
    * @param user The user that is executing the query.
+   * @param options.unrestrictedWorkgroupQuery If provided, the workgroup aggregation will use this
+   *   query instead of the main query. This allows admins to see counts for all workgroups
+   *   while other stats remain restricted to their assigned workgroups.
    */
-  async aggregate(query: AssetSearchQuery, user: User): Promise<AssetSearchStats> {
+  async aggregate(
+    query: AssetSearchQuery,
+    user: User,
+    options?: { unrestrictedWorkgroupQuery?: AssetSearchQuery },
+  ): Promise<AssetSearchStats> {
     type NestedAggResult<T> = {
       [K in keyof T]: {
         a: T[K];
@@ -256,9 +263,11 @@ export class AssetSearchService {
       operator: 'terms' | 'min' | 'max',
       groupName: string,
       fieldName?: string,
+      queryOverride?: AssetSearchQuery,
     ): AggregationsAggregationContainer => {
       const NUMBER_OF_BUCKETS = 10_000;
-      const { filter } = mapQueryToElasticDslParts({ ...query, [groupName]: undefined }, user);
+      const baseQuery = queryOverride ?? query;
+      const { filter } = mapQueryToElasticDslParts({ ...baseQuery, [groupName]: undefined }, user);
       const field: { field: string; size?: number } = { field: fieldName ?? groupName, size: NUMBER_OF_BUCKETS };
       if (operator !== 'terms') {
         delete field.size;
@@ -308,7 +317,7 @@ export class AssetSearchService {
       kindCodes: makeAggregation('terms', 'kindCodes', 'kindCode'),
       topicCodes: makeAggregation('terms', 'topicCodes'),
       usageCodes: makeAggregation('terms', 'usageCodes', 'usageCode'),
-      workgroupIds: makeAggregation('terms', 'workgroupIds', 'workgroupId'),
+      workgroupIds: makeAggregation('terms', 'workgroupIds', 'workgroupId', options?.unrestrictedWorkgroupQuery),
       minCreatedAt: makeAggregation('min', 'minCreatedAt', 'createdAt'),
       maxCreatedAt: makeAggregation('max', 'maxCreatedAt', 'createdAt'),
       status: makeAggregation('terms', 'status', 'status'),

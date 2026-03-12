@@ -55,15 +55,22 @@ export class AssetSearchController {
     query: AssetSearchQuery,
     @CurrentUser() user: User,
   ): Promise<AssetSearchStats> {
+    if (user.isAdmin) {
+      // For admins: restrict stats to their workgroups, but keep workgroup
+      // counts unrestricted so they can discover all workgroups.
+      const unrestrictedWorkgroupQuery = { ...query };
+      restrictQueryForUser(query, user);
+      return await this.assetSearchService.aggregate(query, user, { unrestrictedWorkgroupQuery });
+    }
     restrictQueryForUser(query, user);
     return await this.assetSearchService.aggregate(query, user);
   }
 }
 
-const restrictQueryForUser = (query: AssetSearchQuery, user: User) => {
-  if (user.isAdmin) {
-    return;
-  }
+/**
+ * Restricts the search query to only include workgroups the user has explicit membership in.
+ */
+export const restrictQueryForUser = (query: AssetSearchQuery, user: User) => {
   query.workgroupIds =
     query.workgroupIds == null ? [...user.roles.keys()] : query.workgroupIds.filter((it) => user.roles.has(it));
 };

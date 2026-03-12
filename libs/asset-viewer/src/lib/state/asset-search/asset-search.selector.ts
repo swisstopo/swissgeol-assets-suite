@@ -83,6 +83,7 @@ const makeFilter = <T>(
     ...filter,
     count,
     queryKey,
+    isDisabled: filter.isDisabled ?? false,
 
     // For filters to be active, they need to have at least one asset that they apply to.
     // Also, if there are currently no filters selected (e.g. in the default search state),
@@ -122,9 +123,10 @@ export const selectFilters = <T extends string>(
 
 export const selectWorkgroupFilters = createSelector(
   fromAppShared.selectWorkgroups,
+  fromAppShared.selectUser,
   selectSearchQuery,
   selectSearchStats,
-  (workgroups, query, stats) => {
+  (workgroups, user, query, stats) => {
     // Create a mapping of workgroups by their id for easier and more performant lookup.
     const workgroupsById = new Map<WorkgroupId, SimpleWorkgroup>();
     for (const workgroup of workgroups) {
@@ -142,6 +144,7 @@ export const selectWorkgroupFilters = createSelector(
       configs.push({
         name: workgroup.name,
         value: workgroup.id,
+        isDisabled: user != null && user.isAdmin && !user.roles.has(workgroup.id),
       });
     }
 
@@ -150,6 +153,7 @@ export const selectWorkgroupFilters = createSelector(
       configs.push({
         name: workgroup.name,
         value: workgroup.id,
+        isDisabled: user != null && user.isAdmin && !user.roles.has(workgroup.id),
       });
     }
 
@@ -250,9 +254,15 @@ export interface Filter<T = string> {
   isActive: boolean;
 
   /**
+   * Whether the filter is disabled and cannot be toggled.
+   * Used for workgroup filters where the admin can see the count but not access the assets.
+   */
+  isDisabled: boolean;
+
+  /**
    * The field of {@link AssetSearchQuery} that contains this filter's values.
    */
   queryKey: keyof AssetSearchQuery;
 }
 
-type FilterConfig<T> = Pick<Filter<T>, 'name' | 'value'>;
+type FilterConfig<T> = Pick<Filter<T>, 'name' | 'value'> & { isDisabled?: boolean };
