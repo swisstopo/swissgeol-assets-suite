@@ -210,12 +210,6 @@ export class AssetSearchService {
    *
    * @param query The query to match with.
    * @param user The user that is executing the query.
-   */
-  /**
-   * Aggregates the stats over all assets matching a specific {@link AssetSearchQuery}.
-   *
-   * @param query The query to match with.
-   * @param user The user that is executing the query.
    * @param options.unrestrictedWorkgroupQuery If provided, the workgroup aggregation will use this
    *   query instead of the main query. This allows admins to see counts for all workgroups
    *   while other stats remain restricted to their assigned workgroups.
