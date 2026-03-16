@@ -160,6 +160,8 @@ export class ExportToViewService {
     let result = await this.destinationPrisma.asset.createMany({ data: filteredAssets.assets });
     log(`Created ${result.count} assets.`, 'batch');
 
+    await this.exportWorkflows(assetIds);
+
     result = await this.destinationPrisma.assetContact.createMany({ data: filteredAssets.assetContacts });
     log(`Created ${result.count} assetContacts.`, 'batch');
 
@@ -174,6 +176,24 @@ export class ExportToViewService {
       await this.exportGeometries(batch, 'study_trace');
       log(`Finished batch #${idx + 1} of geometries`, 'batch');
     }
+  }
+
+  /**
+   * Export workflows for the given asset ids.
+   * Copies the WorkflowSelection records (review + approval) first, then the Workflow records,
+   * so that foreign key constraints are satisfied.
+   */
+  private async exportWorkflows(assetIds: number[]) {
+    const workflows = await this.sourcePrisma.workflow.findMany({
+      where: { id: { in: assetIds } },
+      select: { id: true, status: true, hasRequestedChanges: true, reviewId: true, approvalId: true },
+    });
+
+    const selectionIds = workflows.flatMap((w) => [w.reviewId, w.approvalId]);
+    await this.export('workflowSelection', 'id', selectionIds, true);
+
+    const result = await this.destinationPrisma.workflow.createMany({ data: workflows });
+    log(`Created ${result.count} workflows.`, 'batch');
   }
 
   /**
