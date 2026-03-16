@@ -284,3 +284,38 @@ Merges to develop will either increase the minor version or the prerelease versi
 Merges to main from develop will increase the minor version if it is not the same as the minor version on develop, otherwise the prerelease version is increased.
 Merges to main from hotfix branches will increase the patch version.
 Releases to prod will remove the prerelease tag from the release candidate.
+
+## Setting up a new environment
+
+> [!NOTE]
+> Currently, this describes the process for setting up a new environment **on an existing cluster**, e.g. setting up `VIEW` on the existing `INT` cluster. Setting up a completely new cluster requires more setup, which is currently not documented.
+
+Setting up a new environment requires multiple steps.
+
+1. Order the necessary infrastructure (e.g. AWS resources, Vault secrets, etc.) via a ticket to the Cloudteam (see e.g. [this ticket](https://jira.swisstopo.ch/browse/IGI_SB-4434) as a guideline).
+2. Create all necessary secrets in the vault, consider existing environments for reference
+   - Create folder for the new environment, e.g. `assets-ext` (**Important:** Depending on which environment you are setting up, you might implicitly set up multiple environments, as e.g. `VIEW` directly also requires `SYNC-VIEW`).
+   - Create the `namespace` secret, containing the namespace you are deploying
+   - Create the `helm_secrets` secret (see ./k8s secrets for reference)
+     - As for elastic encryption - key is identical within environments and can be reused if existing
+     - For elastic password, generate a secure one with enough chars and use this in the actual apps
+   - Create the `helm_values` secret (see ./k8s secrets for reference)
+     - Oauth settings can be easily found in the AWS console
+     - Lots of settings are identical between e.g. PROD and INT; if copypasting, be very aware that they sometimes differ in suffixes only
+3. Make sure to store ALL secrets you get in step 1 and use in step 2 in Keepass as well
+4. Except for VIEW, populate the following tables _once_ by dumping them from INT and importing them into the new environment: `legal_item_code`, `nat_rel_item`, `man_cat_label_item`, `contact_kind_item`, `language_item`, `asset_format_item`, `asset_kind_item`
+5. Except for VIEW, copy all existing contacts from a reference environment (if there is one) to the new environment, if desired
+6. Make sure that there are no Github action conditions that prevent the new environment from being deployed, e.g. by adding the new environment to the condition in the deploy action
+7. If everything is set, run `Deploy k8s` for the given cluster
+8. If the action succeeds, check if everything runs smoothly:
+   - Access via browser, login
+   - Make yourself admin in the database directly
+   - **First: Trigger an elasticsearch sync to make sure the search index is populated!**
+   - Try uploading a file and check its processing chain
+9. Trigger a cronjob manually via k8s to see if all sync jobs run properly
+10. If everything works, notify the customer and test in action.
+
+### Known obstacles
+
+- Service accounts do not have proper permissions for S3 buckets; evident by cheking logs of OCR or Dataextraction services
+  - Solution: Inform cloud team
