@@ -1,10 +1,10 @@
 import { AssetId } from './asset';
 import { AssetFileId } from './asset-file';
-import { AssetSearchUsageCode } from './asset-search/asset-search-query';
 import { ContactId } from './contact';
 import { ElasticsearchLocalDate } from './elasticsearch-asset';
 import { GeometryType } from './geometry';
 import { LocalizedItemCode } from './localized-item';
+import { AssetSearchUsageCode } from './search/search-query';
 import { UserId } from './user';
 
 /**

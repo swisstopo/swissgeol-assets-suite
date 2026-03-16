@@ -5,10 +5,10 @@ export * from './lib/models/base/localized-string';
 export * from './lib/models/base/local-date';
 export * from './lib/models/base/local-date-range';
 
-export * from './lib/models/asset-search/asset-search-query';
-export * from './lib/models/asset-search/asset-search-stats';
-export * from './lib/models/asset-search/asset-search-result';
-export * from './lib/models/asset-search/file-search-result';
+export * from './lib/models/search/search-query';
+export * from './lib/models/search/asset-search-stats';
+export * from './lib/models/search/asset-search-result';
+export * from './lib/models/search/file-search-result';
 
 export * from './lib/models/app-config';
 export * from './lib/models/asset';
@@ -34,10 +34,10 @@ export * from './lib/policies/favorite.policy';
 export * from './lib/policies/workflow.policy';
 export * from './lib/policies/workgroup.policy';
 
-export * from './lib/schemas/asset-search/asset-search-query.schema';
-export * from './lib/schemas/asset-search/asset-search-stats.schema';
-export * from './lib/schemas/asset-search/asset-search-result.schema';
-export * from './lib/schemas/asset-search/file-search-result.schema';
+export * from './lib/schemas/search/search-query.schema';
+export * from './lib/schemas/search/asset-search-stats.schema';
+export * from './lib/schemas/search/asset-search-result.schema';
+export * from './lib/schemas/search/file-search-result.schema';
 export * from './lib/schemas/base/schema';
 export * from './lib/schemas/asset.schema';
 export * from './lib/schemas/asset-file.schema';

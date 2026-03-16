@@ -1,18 +1,18 @@
-import { AssetSearchQuery, AssetSearchResult, AssetSearchStats, FileSearchResult, Geometry } from '@asset-sg/shared/v2';
+import { AssetSearchResult, AssetSearchStats, FileSearchResult, Geometry, SearchQueries } from '@asset-sg/shared/v2';
 import { createAction, props } from '@ngrx/store';
 import { MapPosition } from '../../components/map/map-controller';
 
 export const setQuery = createAction(
   '[Asset Search] Set Query',
   props<{
-    query: Partial<AssetSearchQuery>;
+    query: SearchQueries;
   }>(),
 );
 
 export const updateSearchQuery = createAction(
   '[Asset Search] Update Query',
   props<{
-    query: Partial<AssetSearchQuery>;
+    query: Partial<SearchQueries>;
   }>(),
 );
 
@@ -35,14 +35,6 @@ export const setFileResults = createAction(
   '[Asset Search] Set File Results',
   props<{
     fileResults?: FileSearchResult;
-    isLoading?: boolean;
-  }>(),
-);
-
-export const setFileStats = createAction(
-  '[Asset Search] Set File Stats',
-  props<{
-    fileStats?: AssetSearchStats;
     isLoading?: boolean;
   }>(),
 );

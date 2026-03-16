@@ -32,10 +32,6 @@ import {
   SearchState,
 } from '@/features/assets/search/asset-search.query';
 
-// Re-export constants and helpers for backwards compatibility
-export { ASSET_ELASTIC_INDEX, FILE_ELASTIC_INDEX } from '@/features/assets/search/asset-search.constants';
-export { escapeElasticQuery, normalizeFieldQuery } from '@/features/assets/search/asset-search.query';
-
 @Injectable()
 export class AssetSearchService {
   constructor(private readonly elastic: ElasticsearchClient) {}

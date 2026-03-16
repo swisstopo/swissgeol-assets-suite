@@ -2,12 +2,8 @@ import { Expose, Type } from 'class-transformer';
 import { IsArray, IsNumber, IsString, ValidateNested } from 'class-validator';
 import { AssetId } from '../../models/asset';
 import { AssetFileId } from '../../models/asset-file';
-import { PageStats } from '../../models/asset-search/asset-search-result';
-import {
-  FileSearchResult,
-  FileSearchResultItem,
-  FileSearchResultPage,
-} from '../../models/asset-search/file-search-result';
+import { PageStats } from '../../models/search/asset-search-result';
+import { FileSearchResult, FileSearchResultItem, FileSearchResultPage } from '../../models/search/file-search-result';
 import { Schema } from '../base/schema';
 
 export class FileSearchResultPageSchema extends Schema implements FileSearchResultPage {

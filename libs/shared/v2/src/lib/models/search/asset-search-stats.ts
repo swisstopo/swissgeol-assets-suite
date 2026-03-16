@@ -4,7 +4,7 @@ import { ContactId } from '../contact';
 import { GeometryType } from '../geometry';
 import { LocalizedItemCode } from '../localized-item';
 import { WorkgroupId } from '../workgroup';
-import { AssetSearchUsageCode } from './asset-search-query';
+import { AssetSearchUsageCode } from './search-query';
 
 export interface AssetSearchStats {
   total: number;

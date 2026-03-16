@@ -35,7 +35,7 @@ asset-sg-asset-picker {
 }
 
 asset-sg-asset-search-refine {
-  background: variables.$grey-00;
+  background: variables.$grey-01;
   grid-area: search-filter;
   padding-left: 16px;
   padding-top: 0;
@@ -43,14 +43,14 @@ asset-sg-asset-search-refine {
 }
 
 asset-sg-asset-search-results {
-  background: variables.$grey-00;
+  background: variables.$grey-01;
   grid-area: search-results;
   overflow: hidden;
   width: 100%;
 }
 
 asset-sg-asset-search-detail {
-  background: variables.$grey-00;
+  background: variables.$grey-01;
   grid-area: search-detail;
   overflow-y: auto;
   width: 550px;

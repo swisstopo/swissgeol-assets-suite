@@ -1,4 +1,4 @@
-import { AssetId, AssetJSON, AssetSearchQuery, User } from '@asset-sg/shared/v2';
+import { AssetId, AssetJSON, AssetSearchQuery, SearchQueries, User } from '@asset-sg/shared/v2';
 import { QueryDslDateRangeQuery, QueryDslQueryContainer } from '@elastic/elasticsearch/lib/api/types';
 import { SEARCHABLE_FIELDS } from '@/features/assets/search/asset-search.constants';
 import { mapLv95ToElastic } from '@/features/assets/search/asset-search.utils';
@@ -34,7 +34,7 @@ export interface SearchState {
   totalCount: number | null;
 }
 
-export const mapQueryToElasticDsl = (query: AssetSearchQuery, user: User): QueryDslQueryContainer => {
+export const mapQueryToElasticDsl = (query: SearchQueries, user: User): QueryDslQueryContainer => {
   const { must, filter } = mapQueryToElasticDslParts(query, user);
   return {
     bool: {
@@ -45,7 +45,7 @@ export const mapQueryToElasticDsl = (query: AssetSearchQuery, user: User): Query
 };
 
 export const mapQueryToElasticDslParts = (
-  query: AssetSearchQuery,
+  query: SearchQueries,
   user: User,
 ): { must: QueryDslQueryContainer[]; filter: QueryDslQueryContainer[] } => {
   const scope = SEARCHABLE_FIELDS;

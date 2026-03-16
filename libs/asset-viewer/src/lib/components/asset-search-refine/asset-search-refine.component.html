@@ -11,7 +11,7 @@
         <span class="ellipsis">{{ selectedAuthor.value.name }}</span>
       </asset-sg-chip>
     }
-    @if (assetSearchQuery.polygon) {
+    @if (searchQuery.polygon) {
       <asset-sg-chip (click)="removePolygon()" icon="cancel">
         <svg-icon key="polygon-draw"></svg-icon>
       </asset-sg-chip>
@@ -34,10 +34,26 @@
   </mat-chip-set>
   <div class="filters-container">
     <div class="section-container">
-      <asset-sg-search-input [value]="(searchQuery$ | async)!" (searchSubmit)="search($event)" />
+      <asset-sg-search-input [value]="(searchQuery$ | push).text ?? ''" (searchSubmit)="search($event)" />
+      <button
+        asset-sg-secondary
+        [class.active]="(searchQuery$ | push).type !== SearchType.File"
+        (click)="activateAssetsSearch()"
+        translate
+      >
+        search.searchAssets
+      </button>
+      <button
+        asset-sg-secondary
+        [class.active]="(searchQuery$ | push).type === SearchType.File"
+        (click)="activateFileSearch()"
+        translate
+      >
+        search.searchFiles
+      </button>
     </div>
     <div class="section-container">
-      <button asset-sg-secondary [class.active]="isDrawActive$ | async" (click)="toggleDrawPolygon()" translate>
+      <button asset-sg-secondary [class.active]="isDrawActive$ | push" (click)="toggleDrawPolygon()" translate>
         <svg-icon key="polygon-draw"></svg-icon>
         search.drawPolygon
       </button>

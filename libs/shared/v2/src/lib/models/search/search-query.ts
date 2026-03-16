@@ -5,8 +5,18 @@ import { GeometryType } from '../geometry';
 import { LocalizedItemCode } from '../localized-item';
 import { WorkgroupId } from '../workgroup';
 
-export interface AssetSearchQuery {
+export enum SearchType {
+  Asset = 'asset',
+  File = 'file',
+  AssetFavorite = 'assetFavorite',
+}
+
+export interface SearchQuery {
+  type: SearchType;
   text?: string;
+}
+
+export interface AssetFilters {
   polygon?: Polygon;
   authorId?: number;
   usageCodes?: AssetSearchUsageCode[];
@@ -20,6 +30,21 @@ export interface AssetSearchQuery {
   status?: Array<WorkflowStatus>;
 }
 
+export type SearchQueries = AssetSearchQuery | AssetFavoriteSearchQuery | FileSearchQuery;
+export type AssetSearchQueries = AssetSearchQuery | AssetFavoriteSearchQuery;
+
+export interface AssetSearchQuery extends SearchQuery, AssetFilters {
+  type: SearchType.Asset;
+}
+
+export interface AssetFavoriteSearchQuery extends SearchQuery, AssetFilters {
+  type: SearchType.AssetFavorite;
+}
+
+export interface FileSearchQuery extends SearchQuery, AssetFilters {
+  type: SearchType.File;
+}
+
 export enum AssetSearchUsageCode {
   Public = 'public',
   Internal = 'internal',
@@ -27,5 +52,5 @@ export enum AssetSearchUsageCode {
 
 export type Polygon = LV95[];
 
-export const isEmptySearchQuery = ({ favoritesOnly: _ignore, ...query }: AssetSearchQuery): boolean =>
+export const isEmptySearchQuery = ({ favoritesOnly: _ignore, type: _ignoreToo, ...query }: SearchQueries): boolean =>
   Object.values(query).every((value) => value === undefined);

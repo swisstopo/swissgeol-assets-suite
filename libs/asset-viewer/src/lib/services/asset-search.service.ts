@@ -4,15 +4,18 @@ import {
   Asset,
   AssetId,
   AssetSchema,
+  AssetSearchQueries,
   AssetSearchQuery,
   AssetSearchResult,
   AssetSearchResultSchema,
   AssetSearchStats,
   AssetSearchStatsSchema,
+  FileSearchQuery,
   FileSearchResult,
   FileSearchResultSchema,
   GeometryDetail,
   GeometryDetailSchema,
+  SearchQueries,
 } from '@asset-sg/shared/v2';
 import { plainToInstance } from 'class-transformer';
 import { map, Observable } from 'rxjs';
@@ -21,19 +24,19 @@ import { map, Observable } from 'rxjs';
 export class AssetSearchService {
   private readonly httpClient = inject(HttpClient);
 
-  public search(searchQuery: AssetSearchQuery): Observable<AssetSearchResult> {
+  public search(searchQuery: AssetSearchQueries): Observable<AssetSearchResult> {
     return this.httpClient
       .post('/api/assets/search?limit=1000', searchQuery)
       .pipe(map((res) => plainToInstance(AssetSearchResultSchema, res)));
   }
 
-  public searchStats(searchQuery: AssetSearchQuery): Observable<AssetSearchStats> {
+  public searchStats(searchQuery: SearchQueries): Observable<AssetSearchStats> {
     return this.httpClient
       .post('/api/assets/search/stats', searchQuery)
       .pipe(map((res) => plainToInstance(AssetSearchStatsSchema, res)));
   }
 
-  public searchFiles(searchQuery: AssetSearchQuery, limit = 100, offset = 0): Observable<FileSearchResult> {
+  public searchFiles(searchQuery: FileSearchQuery, limit = 100, offset = 0): Observable<FileSearchResult> {
     return this.httpClient
       .post(`/api/files/search?limit=${limit}&offset=${offset}`, searchQuery)
       .pipe(map((res) => plainToInstance(FileSearchResultSchema, res)));

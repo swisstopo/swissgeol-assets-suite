@@ -55,7 +55,7 @@ jobs:
         run: |
           content=$(awk '
             BEGIN { found = 0 }
-            /^## \[/ {
+            /^## / {
               if (found++) exit
             }
             found { print }

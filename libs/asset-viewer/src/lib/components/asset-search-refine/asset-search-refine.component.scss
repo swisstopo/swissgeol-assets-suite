@@ -8,6 +8,7 @@
   display: flex;
   flex-direction: column;
   z-index: 1;
+  overflow: hidden;
 }
 
 @include drawerPanel.draw-panel-header;
@@ -29,13 +30,19 @@
 .content {
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+  flex: 1;
   gap: 12px;
-  height: calc(100vh - 88px - 80px - 24px - 24px);
 }
 
 .ellipsis {
   max-width: 150px;
   @include mixins.text-ellipsis;
+}
+
+.button-container {
+  display: flex;
+  flex-direction: column;
 }
 
 h4 {

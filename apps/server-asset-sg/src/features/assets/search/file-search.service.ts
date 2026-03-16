@@ -1,8 +1,12 @@
 import {
   AssetSearchQuery,
+  AssetSearchResult,
+  AssetSearchResultItem,
+  AssetSearchResultItemSchema,
   AssetSearchStats,
   AssetSearchUsageCode,
   ContactId,
+  FileSearchQuery,
   FileSearchResult,
   FileSearchResultItem,
   GeometryType,
@@ -15,6 +19,7 @@ import { Client as ElasticsearchClient } from '@elastic/elasticsearch';
 import { AggregationsAggregationContainer } from '@elastic/elasticsearch/lib/api/types';
 import { Injectable } from '@nestjs/common';
 import { WorkflowStatus } from '@swissgeol/ui-core';
+import { plainToInstance } from 'class-transformer';
 import { FILE_ELASTIC_INDEX } from '@/features/assets/search/asset-search.constants';
 import {
   mapQueryToFileElasticDsl,
@@ -27,14 +32,54 @@ export class FileSearchService {
   constructor(private readonly elastic: ElasticsearchClient) {}
 
   /**
+   * Searches for assets using a {@link AssetSearchQuery}.
+   *
+   * @param query The query to match with.
+   * @param user The user that is executing the query.
+   * @param limit The maximum amount of assets to load. Defaults to `100`.
+   * @param offset The amount of assets being skipped before loading the assets.
+   * @param decode Whether to decode the assets. If this is set to `false`, the assets should be decoded via
+   *   `Asset` before accessing them. This option primarily exists so that the assets are not decoded and
+   *   directly re-encoded when returning them via API.
+   */
+  async search(
+    query: AssetSearchQuery,
+    user: User,
+    { limit = 100, offset = 0, decode: shouldDecode = true }: PageOptions & { decode?: boolean } = {},
+  ): Promise<AssetSearchResult> {
+    // Apply the query to find all matching ids.
+    const [serializedAssets, total] = await this.searchAssetsByQuery(query, user, { limit, offset });
+
+    // Load the matched assets from the database.
+    const data: AssetSearchResultItem[] = [];
+    for (const serializedAsset of serializedAssets.values()) {
+      const encodedAsset = JSON.parse(serializedAsset);
+      data.push(
+        shouldDecode
+          ? plainToInstance(AssetSearchResultItemSchema, encodedAsset, { excludeExtraneousValues: true })
+          : encodedAsset,
+      );
+    }
+
+    // Return the matched data in a paginated format.
+    return {
+      page: {
+        offset,
+        size: data.length,
+        total,
+      },
+      data,
+    };
+  }
+  /**
    * Searches for files matching the text query, with asset metadata filters applied.
    * Results are grouped by file: each result item represents a single file
    * and contains a list of matching pages with their highlights.
    */
   async searchFiles(
-    query: AssetSearchQuery,
+    query: FileSearchQuery,
     user: User,
-    { limit = 100, offset = 0 }: PageOptions = {},
+    { limit = 100, offset = 0, decode: shouldDecode = true }: PageOptions & { decode?: boolean } = {},
   ): Promise<FileSearchResult> {
     const elasticQuery = mapQueryToFileElasticDsl(query, user);
 
@@ -121,7 +166,7 @@ export class FileSearchService {
   /**
    * Count distinct files matching the query in the file index.
    */
-  async countFilesByQuery(query: AssetSearchQuery, user: User): Promise<number> {
+  async countFilesByQuery(query: FileSearchQuery, user: User): Promise<number> {
     const elasticQuery = mapQueryToFileElasticDsl(query, user);
     const response = await this.elastic.search({
       index: FILE_ELASTIC_INDEX,
@@ -142,14 +187,14 @@ export class FileSearchService {
 
   /**
    * Aggregates the stats over the distinct assets for which there are file search results
-   * matching a specific {@link AssetSearchQuery}.
+   * matching a specific {@link FileSearchQuery}.
    *
    * The stats represent the asset-level facets (grouped by assetId), not the page-level counts.
    *
    * @param query The query to match with.
    * @param user The user that is executing the query.
    */
-  async aggregateFiles(query: AssetSearchQuery, user: User): Promise<AssetSearchStats> {
+  async aggregateFiles(query: FileSearchQuery, user: User): Promise<AssetSearchStats> {
     interface AggregationBucket<K = string> {
       key: K;
       doc_count: number;

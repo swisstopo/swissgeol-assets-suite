@@ -1,4 +1,4 @@
-import { ElasticsearchPoint } from '@asset-sg/shared/v2';
+import { AssetFilters, ElasticsearchPoint, User } from '@asset-sg/shared/v2';
 import proj4 from 'proj4';
 
 const lv95Projection =
@@ -8,4 +8,12 @@ const wgs84Projection = proj4.WGS84;
 export const mapLv95ToElastic = (lv95: { x: number; y: number }): ElasticsearchPoint => {
   const wgs = proj4(lv95Projection, wgs84Projection, [lv95.x as number, lv95.y as number]);
   return { lat: wgs[1], lon: wgs[0] };
+};
+
+export const restrictQueryForUser = (query: AssetFilters, user: User) => {
+  if (user.isAdmin) {
+    return;
+  }
+  query.workgroupIds =
+    query.workgroupIds == null ? [...user.roles.keys()] : query.workgroupIds.filter((it) => user.roles.has(it));
 };

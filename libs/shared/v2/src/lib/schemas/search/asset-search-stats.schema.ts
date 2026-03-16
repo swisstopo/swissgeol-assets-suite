@@ -2,11 +2,11 @@ import { WorkflowStatus } from '@swissgeol/ui-core';
 import { Type } from 'class-transformer';
 
 import { IsArray, IsInt, IsObject } from 'class-validator';
-import { AssetSearchUsageCode } from '../../models/asset-search/asset-search-query';
-import { AssetSearchStats, ValueCount } from '../../models/asset-search/asset-search-stats';
 import { ContactId } from '../../models/contact';
 import { GeometryType } from '../../models/geometry';
 import { LocalizedItemCode } from '../../models/localized-item';
+import { AssetSearchStats, ValueCount } from '../../models/search/asset-search-stats';
+import { AssetSearchUsageCode } from '../../models/search/search-query';
 import { WorkgroupId } from '../../models/workgroup';
 import { LocalDateRangeSchema } from '../base/local-date-range.schema';
 import { Schema } from '../base/schema';

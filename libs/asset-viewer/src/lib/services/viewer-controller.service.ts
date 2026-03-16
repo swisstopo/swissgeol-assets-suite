@@ -3,11 +3,11 @@ import { NavigationEnd, Router } from '@angular/router';
 import { appSharedStateActions, fromAppShared } from '@asset-sg/client-shared';
 import {
   AssetId,
-  AssetSearchQuery,
   isEmptySearchQuery,
   makeEmptyAssetSearchResults,
-  makeEmptyAssetSearchStats,
   makeEmptyFileSearchResults,
+  SearchQueries,
+  SearchType,
 } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
 import {
@@ -38,13 +38,13 @@ import {
 import { AppStateWithAssetSearch } from '../state/asset-search/asset-search.reducer';
 import {
   selectFiltersState,
+  selectGeometries,
   selectIsResultsOpen,
   selectMapPosition,
   selectResultsState,
   selectScrollOffsetForResults,
   selectSearchQuery,
   selectSearchResults,
-  selectGeometries,
 } from '../state/asset-search/asset-search.selector';
 import { AssetSearchService } from './asset-search.service';
 import { GeometryService } from './geometry.service';
@@ -142,7 +142,7 @@ export class ViewerControllerService {
   }
 
   private async loadResults(
-    query: AssetSearchQuery,
+    query: SearchQueries,
     options: { force?: boolean; skipAssetReset?: boolean } = {},
   ): Promise<void> {
     // Always load results when favoritesOnly is true, even if other search criteria are empty
@@ -152,44 +152,24 @@ export class ViewerControllerService {
       return;
     }
     this.store.dispatch(actions.setResults({ isLoading: true }));
-    const results = await firstValueFrom(this.assetSearchService.search(query));
-    this.store.dispatch(actions.setResults({ results, isLoading: false }));
-    if (results.data.length === 1) {
-      await this.loadAsset(results.data[0].id);
-    } else if (!options.skipAssetReset) {
-      this.store.dispatch(appSharedStateActions.setCurrentAsset({ asset: null, isLoading: false }));
-    }
-  }
 
-  private async loadFileResults(query: AssetSearchQuery): Promise<void> {
-    const hasTextFilter = query.text != null && query.text.length > 0;
-    if (!hasTextFilter) {
-      this.store.dispatch(actions.setFileResults({ fileResults: makeEmptyFileSearchResults(), isLoading: false }));
-      return;
-    }
-    this.store.dispatch(actions.setFileResults({ isLoading: true }));
-    const fileResults = await firstValueFrom(this.assetSearchService.searchFiles(query));
-    this.store.dispatch(actions.setFileResults({ fileResults, isLoading: false }));
-  }
-
-  private async loadStats(query: AssetSearchQuery): Promise<void> {
-    const hasTextFilter = query.text != null && query.text.length > 0;
-    this.store.dispatch(actions.setStats({ isLoading: true }));
-
-    if (hasTextFilter) {
-      // When a text filter is present, load both asset stats and file stats in parallel.
-      // The file stats ensure that filters reflect file content matches.
-      const [assetStats, fileStats] = await Promise.all([
-        firstValueFrom(this.assetSearchService.searchStats(query)),
-        firstValueFrom(this.assetSearchService.searchFileStats(query)),
-      ]);
-      this.store.dispatch(actions.setStats({ stats: assetStats, isLoading: false }));
-      this.store.dispatch(actions.setFileStats({ fileStats, isLoading: false }));
+    if (query.type === SearchType.File) {
+      const results = await firstValueFrom(this.assetSearchService.searchFiles(query));
     } else {
-      const stats = await firstValueFrom(this.assetSearchService.searchStats(query));
-      this.store.dispatch(actions.setStats({ stats, isLoading: false }));
-      this.store.dispatch(actions.setFileStats({ fileStats: makeEmptyAssetSearchStats(), isLoading: false }));
+      const results = await firstValueFrom(this.assetSearchService.search(query));
+      this.store.dispatch(actions.setResults({ results, isLoading: false }));
+      if (results.data.length === 1) {
+        await this.loadAsset(results.data[0].id);
+      } else if (!options.skipAssetReset) {
+        this.store.dispatch(appSharedStateActions.setCurrentAsset({ asset: null, isLoading: false }));
+      }
     }
+  }
+
+  private async loadStats(query: SearchQueries): Promise<void> {
+    this.store.dispatch(actions.setStats({ isLoading: true }));
+    const stats = await firstValueFrom(this.assetSearchService.searchStats(query));
+    this.store.dispatch(actions.setStats({ stats, isLoading: false }));
   }
 
   private async loadAsset(id: AssetId | null): Promise<void> {
@@ -205,12 +185,12 @@ export class ViewerControllerService {
     this.store.dispatch(appSharedStateActions.setCurrentAsset({ asset: { asset, geometries }, isLoading: false }));
   }
 
-  private async updateByQuery(query: AssetSearchQuery): Promise<void> {
+  private async updateByQuery(query: SearchQueries): Promise<void> {
     // Only reset map position if the query is empty and not in favorites mode
     if (isEmptySearchQuery(query) && !query.favoritesOnly) {
       this.store.dispatch(actions.setMapPosition({ position: DEFAULT_MAP_POSITION }));
     }
-    await Promise.all([this.loadResults(query), this.loadStats(query), this.loadFileResults(query)]);
+    await Promise.all([this.loadResults(query), this.loadStats(query)]);
     const results = await firstValueFrom(this.store.select(selectSearchResults));
     this.store.dispatch(
       actions.setResultsState({
