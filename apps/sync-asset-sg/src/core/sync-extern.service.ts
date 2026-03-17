@@ -159,11 +159,25 @@ export class SyncExternService {
       where: { assetXId: { in: this.assetsToSync.map((a) => a.originalAssetId) } },
     });
     const allSynchronisations = await this.destinationPrisma.assetSynchronization.findMany();
+
+    // Fetch workgroupId for all synced assets on destination to prevent cross-workgroup references
+    const syncedAssetIds = allSynchronisations.map((s) => s.assetId);
+    const assetWorkgroups = new Map(
+      (
+        await this.destinationPrisma.asset.findMany({
+          where: { assetId: { in: syncedAssetIds } },
+          select: { assetId: true, workgroupId: true },
+        })
+      ).map((a) => [a.assetId, a.workgroupId]),
+    );
+
     for (const asset of this.assetsToSync) {
       const newAssetId = assetSynchronizations.find((n) => n.originalAssetId === asset.originalAssetId);
       if (newAssetId === undefined) {
         throw new Error(`Could not find new asset id for asset ${asset.originalAssetId}`);
       }
+
+      const currentWorkgroupId = assetWorkgroups.get(newAssetId.assetId);
 
       const assetMainLink = allSynchronisations.find((n) => n.originalAssetId === asset.asset.assetMainId);
       const originalAssetXSiblings = existingSiblings
@@ -173,16 +187,49 @@ export class SyncExternService {
         .filter((n) => originalAssetXSiblings.includes(n.originalAssetId))
         .map((n) => n.assetId);
 
+      // Filter siblings to only include assets in the same workgroup
+      const sameWorkgroupSiblings = newAssetSiblings.filter((siblingId) => {
+        const siblingWorkgroupId = assetWorkgroups.get(siblingId);
+        if (siblingWorkgroupId !== currentWorkgroupId) {
+          log(
+            `Skipping cross-workgroup sibling: asset ${newAssetId.assetId} (wg ${currentWorkgroupId}) -> asset ${siblingId} (wg ${siblingWorkgroupId})`,
+          );
+          return false;
+        }
+        return true;
+      });
+
+      // Only set assetMainId if the parent is in the same workgroup
+      const parentId = assetMainLink?.assetId;
+      const parentWorkgroupId = parentId != null ? assetWorkgroups.get(parentId) : undefined;
+      let safeAssetMainId: number | null | undefined = undefined;
+      if (parentId != null && parentWorkgroupId !== currentWorkgroupId) {
+        log(
+          `Skipping cross-workgroup parent: asset ${newAssetId.assetId} (wg ${currentWorkgroupId}) -> parent ${parentId} (wg ${parentWorkgroupId})`,
+        );
+        safeAssetMainId = null;
+      } else {
+        safeAssetMainId = assetMainLink?.assetId;
+      }
+
       await this.destinationPrisma.asset.update({
         where: { assetId: newAssetId.assetId },
         data: {
-          assetMainId: assetMainLink?.assetId,
-          siblingXAssets: { create: newAssetSiblings.map((n) => ({ assetYId: n })) },
+          assetMainId: safeAssetMainId,
+          siblingXAssets: { create: sameWorkgroupSiblings.map((n) => ({ assetYId: n })) },
         },
       });
       for (const child of asset.children) {
         const syncedChildAsset = allSynchronisations.find((n) => n.originalAssetId === child.assetId);
         if (syncedChildAsset) {
+          // Only set assetMainId on child if it shares the workgroup with the parent
+          const childWorkgroupId = assetWorkgroups.get(syncedChildAsset.assetId);
+          if (childWorkgroupId !== currentWorkgroupId) {
+            log(
+              `Skipping cross-workgroup child: parent ${newAssetId.assetId} (wg ${currentWorkgroupId}) -> child ${syncedChildAsset.assetId} (wg ${childWorkgroupId})`,
+            );
+            continue;
+          }
           await this.destinationPrisma.asset.update({
             where: { assetId: syncedChildAsset.assetId },
             data: {
