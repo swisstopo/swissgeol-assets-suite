@@ -295,7 +295,7 @@ export class AssetSearchService {
       track_total_hits: true,
     });
     const total = (response.hits.total as SearchTotalHits).value;
-    if (total === 0) {
+    if (total === 0 && options?.unrestrictedWorkgroupQuery === undefined) {
       return {
         total: 0,
         kindCodes: [],
@@ -339,10 +339,13 @@ export class AssetSearchService {
       topicCodes: aggs.topicCodes?.a?.buckets?.map(mapBucket) ?? [],
       usageCodes: aggs.usageCodes?.a?.buckets?.map(mapBucket) ?? [],
       workgroupIds: aggs.workgroupIds?.a?.buckets?.map(mapBucket) ?? [],
-      createdAt: {
-        min: LocalDate.fromDate(new Date(aggs.minCreatedAt.a.value)),
-        max: LocalDate.fromDate(new Date(aggs.maxCreatedAt.a.value)),
-      },
+      createdAt:
+        aggs.minCreatedAt != null && aggs.maxCreatedAt != null
+          ? {
+              min: LocalDate.fromDate(new Date(aggs.minCreatedAt.a.value)),
+              max: LocalDate.fromDate(new Date(aggs.maxCreatedAt.a.value)),
+            }
+          : null,
       status: aggs.status?.a?.buckets?.map(mapBucket) ?? [],
     };
   }
