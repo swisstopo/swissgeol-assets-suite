@@ -1,4 +1,6 @@
 import { inject, Injectable, NgZone, OnDestroy } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { Store } from '@ngrx/store';
 import {
   getDocument,
   GlobalWorkerOptions,
@@ -9,6 +11,7 @@ import {
 } from 'pdfjs-dist';
 import { PDFPageProxy, TextContent } from 'pdfjs-dist/types/src/display/api';
 import { SessionStorageService } from '../../services/session-storage.service';
+import { selectIsAnonymousMode } from '../../state/app-shared-state.selectors';
 
 // Worker source for PDF JS. Note that this must match the path that is defined in the builder configuration
 GlobalWorkerOptions.workerSrc = 'assets/pdfjs/pdf.worker.min.mjs';
@@ -20,6 +23,8 @@ export class PdfViewerService implements OnDestroy {
   private readonly sessionStorageService = inject(SessionStorageService);
   private readonly ngZone = inject(NgZone);
   private selectionAbortController: AbortController | null = null;
+  private readonly store = inject(Store);
+  private readonly isViewApp = toSignal(this.store.select(selectIsAnonymousMode));
 
   async ngOnDestroy() {
     this.selectionAbortController?.abort();
@@ -44,9 +49,7 @@ export class PdfViewerService implements OnDestroy {
 
     this.loadingTask = getDocument({
       url: `/api/assets/${assetId}/files/${pdfId}`,
-      httpHeaders: {
-        Authorization: `Bearer ${this.sessionStorageService.get('access_token')}`,
-      },
+      httpHeaders: this.getAuthorizationHeader(),
       disableAutoFetch: true,
       disableStream: true,
     });
@@ -329,5 +332,17 @@ export class PdfViewerService implements OnDestroy {
   private async destroyPdfJsWorker() {
     await this.loadingTask?.destroy();
     await this.pdfDoc?.destroy();
+  }
+
+  private getAuthorizationHeader(): Record<string, string> {
+    const accessToken = this.sessionStorageService.get('access_token');
+
+    if (this.isViewApp() || !accessToken) {
+      return {};
+    }
+
+    return {
+      Authorization: `Bearer ${accessToken}`,
+    };
   }
 }
