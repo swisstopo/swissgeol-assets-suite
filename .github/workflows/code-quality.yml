@@ -35,11 +35,17 @@ jobs:
           # https://github.com/advisories/GHSA-5j98-mcp5-4vw2
           # Shouldn't be relevant/dangerous to us, and blocks our CI/CD.
 
+          # https://github.com/advisories/GHSA-8gc5-j5rx-235r
+          # https://github.com/advisories/GHSA-jp2q-39xq-3w4g
+          # Both of these are in fast-xml-parser in aws packages. The risk would be ddos attacks - we will fix it by updating the packages soon. We never experienced issues related to this, so it should be safe to ignore for now.
+
           allow-ghsas: >-
             GHSA-67mh-4wv8-2f99,
             GHSA-x2rg-q646-7m2v,
             GHSA-mh29-5h37-fv8m,
-            GHSA-5j98-mcp5-4vw2
+            GHSA-5j98-mcp5-4vw2,
+            GHSA-8gc5-j5rx-235r,
+            GHSA-jp2q-39xq-3w4g
 
   install:
     # Don't check the build if we are merging from develop to main.
