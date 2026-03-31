@@ -4,9 +4,18 @@
 
 ### Added
 
+- Publiccode.yml so that the repository will be found and listed in the [swiss federal OSS-Catalogue](https://www.opensource.admin.ch/).
+- An ext and a view (behind basic Auth) instance to INT so that features can be tested without having to deploy to prod
+- Pdf text is now selectable
+
 ### Changed
 
+- Let admins see the filters stats of all workgroups even if they are not a member, but not the corresponding assets
+
 ### Fixed
+
+- Handle edge case if results for admins are found only in workgroups they dont have access to
+- Check for workgroup of previously synced linked assets when assigning new synced Relations
 
 ## v.1.19.0
 
