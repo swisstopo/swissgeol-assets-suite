@@ -3,7 +3,6 @@ name: assets.swissgeol.ch
 applicationSuite: swissgeol.ch
 url: https://github.com/swisstopo/swissgeol-assets-suite
 landingURL: https://www.swissgeol.ch/
-softwareVersion: 1.19.0
 releaseDate: 2026-03-17
 platforms:
   - web
