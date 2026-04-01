@@ -159,7 +159,11 @@ const loadS3ClientCredentials = (): S3ClientConfig['credentials'] => {
   const secretAccessKey = readEnv('S3_SECRET_ACCESS_KEY');
 
   if (accessKeyId !== null && secretAccessKey !== null) {
-    return { accessKeyId, secretAccessKey };
+    return {
+      accessKeyId,
+      secretAccessKey,
+      sessionToken: '<REPLACEWITHSESSIONTOKEN>',
+    };
   } else if (accessKeyId === secretAccessKey) {
     return undefined;
   }

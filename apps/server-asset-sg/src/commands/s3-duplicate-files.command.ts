@@ -24,7 +24,7 @@ import { FileS3Service } from '@/features/assets/files/file-s3.service';
 })
 export class S3DuplicateFilesCommand extends CommandRunner {
   private readonly logger = new Logger(S3DuplicateFilesCommand.name);
-  private dryRun = false;
+  private dryRun = true;
 
   constructor(
     private readonly prisma: PrismaService,
@@ -42,7 +42,7 @@ export class S3DuplicateFilesCommand extends CommandRunner {
   }
 
   async run(_passedParams: string[], options?: { dryRun?: boolean }): Promise<void> {
-    this.dryRun = options?.dryRun ?? false;
+    this.dryRun = false; // TODO: Manually activate dry run mode to preview run results
 
     if (this.dryRun) {
       this.logger.log('=== DRY RUN MODE - No changes will be made ===');
@@ -179,8 +179,11 @@ export class S3DuplicateFilesCommand extends CommandRunner {
     }
 
     // 1. Copy the S3 object.
-    this.logger.log(`  Copying S3 object "${shared.fileName}" -> "${newFileName}" for asset ${targetAssetId}...`);
-    await this.copyS3Object(shared.fileName, newFileName);
+    this.logger.log(
+      `  Skipping copying S3 object "${shared.fileName}" -> "${newFileName}" for asset ${targetAssetId}...`,
+    );
+    // this.logger.log(`  Copying S3 object "${shared.fileName}" -> "${newFileName}" for asset ${targetAssetId}...`);
+    // await this.copyS3Object(shared.fileName, newFileName);
 
     // 2. Insert a new file row that is a clone of the original (with the new name).
     const newFileId = await this.cloneFileRecord(shared.fileId, newFileName, shared.fileName);
