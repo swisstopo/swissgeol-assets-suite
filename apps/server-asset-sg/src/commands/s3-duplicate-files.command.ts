@@ -1,5 +1,5 @@
 import { Logger } from '@nestjs/common';
-import { Command, CommandRunner } from 'nest-commander';
+import { Command, CommandRunner, Option } from 'nest-commander';
 import { PrismaService } from '@/core/prisma.service';
 import { FileS3Service } from '@/features/assets/files/file-s3.service';
 
@@ -24,6 +24,7 @@ import { FileS3Service } from '@/features/assets/files/file-s3.service';
 })
 export class S3DuplicateFilesCommand extends CommandRunner {
   private readonly logger = new Logger(S3DuplicateFilesCommand.name);
+  private dryRun = false;
 
   constructor(
     private readonly prisma: PrismaService,
@@ -32,7 +33,21 @@ export class S3DuplicateFilesCommand extends CommandRunner {
     super();
   }
 
-  async run(): Promise<void> {
+  @Option({
+    flags: '--dry-run',
+    description: 'Display all changes to be made without executing them',
+  })
+  parseDryRun(): boolean {
+    return true;
+  }
+
+  async run(_passedParams: string[], options?: { dryRun?: boolean }): Promise<void> {
+    this.dryRun = options?.dryRun ?? false;
+
+    if (this.dryRun) {
+      this.logger.log('=== DRY RUN MODE - No changes will be made ===');
+    }
+
     this.logger.log('Starting S3 file duplication for shared files...');
 
     // ----------------------------------------------------------------
@@ -87,12 +102,15 @@ export class S3DuplicateFilesCommand extends CommandRunner {
     }
 
     this.logger.log(
-      `Done. Duplicated: ${duplicatedCount}, Skipped (already done): ${skippedCount}, Errors: ${errorCount}.`,
+      `Done. ${this.dryRun ? 'Would duplicate' : 'Duplicated'}: ${duplicatedCount}, Skipped (already done): ${skippedCount}, Errors: ${errorCount}.`,
     );
     if (errorCount > 0) {
       this.logger.error(
-        'Some files could not be duplicated. Fix the errors and re-run this command before applying the migration.',
+        `Some files could not be ${this.dryRun ? 'checked' : 'duplicated'}. Fix the errors and re-run this command before applying the migration.`,
       );
+    }
+    if (this.dryRun) {
+      this.logger.log('=== DRY RUN MODE - No changes were made ===');
     }
   }
 
@@ -149,6 +167,15 @@ export class S3DuplicateFilesCommand extends CommandRunner {
       );
 
       return false;
+    }
+
+    if (this.dryRun) {
+      this.logger.log(
+        `  [DRY RUN] Would copy S3 object "${shared.fileName}" -> "${newFileName}" for asset ${targetAssetId}`,
+      );
+      this.logger.log(`  [DRY RUN] Would create new file record (clone of id=${shared.fileId}) name="${newFileName}"`);
+      this.logger.log(`  [DRY RUN] Would update asset_file: asset ${targetAssetId} would point to new file`);
+      return true;
     }
 
     // 1. Copy the S3 object.
