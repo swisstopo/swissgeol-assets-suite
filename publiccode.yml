@@ -1,0 +1,64 @@
+publiccodeYmlVersion: 0.5.0
+name: assets.swissgeol.ch
+applicationSuite: swissgeol.ch
+url: https://github.com/swisstopo/swissgeol-assets-suite
+landingURL: https://www.swissgeol.ch/
+releaseDate: 2026-03-17
+platforms:
+  - web
+categories:
+  - data-collection
+  - geographic-information-systems
+  - document-management
+  - data-visualization
+usedBy:
+  - swisstopo
+developmentStatus: stable
+softwareType: standalone/web
+organisation:
+  uri: https://ld.admin.ch/office/IV.1.5a
+  name: Bundesamt für Landestopografie (swisstopo)
+description:
+  en:
+    localisedName: assets.swissgeol.ch
+    shortDescription: Web application enabling the simple, structured, and
+      harmonized recording and management of geological assets.
+    longDescription: >-
+      The open-source platform assets.swissgeol.ch provides access to and
+      enables the management of swisstopo’s digital archive of geological
+      documents. It supports the structured, standardized, and harmonized
+      capture and maintenance of metadata, including both tabular and spatial
+      information.
+
+
+      By applying common data models and controlled vocabularies, the platform
+      ensures interoperability and facilitates the integration and reuse of
+      geological information across systems and stakeholders. Core
+      functionalities include advanced querying, the creation and editing of
+      metadata, and the consistent linking of metadata with documents stored in
+      the underlying archive system.
+
+
+      This approach enhances data consistency, accessibility, and long-term
+      usability, contributing to a sustainable and interoperable geological data
+      ecosystem.
+    documentation: https://www.swissgeol.ch/
+    features:
+      - data access
+      - data querying
+      - web mapping
+      - document management
+legal:
+  license: MIT
+maintenance:
+  type: internal
+  contacts:
+    - name: team swissgeol
+      email: swissgeol@swisstopo.ch
+localisation:
+  localisationReady: true
+  availableLanguages:
+    - en
+    - de
+    - fr
+    - it

@@ -8,3 +8,7 @@ ul {
   padding: 0;
   list-style: none;
 }
+
+button.disabled-with-count {
+  opacity: 0.5;
+}

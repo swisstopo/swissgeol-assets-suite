@@ -10,12 +10,20 @@ spec:
     - kind: Rule
       match: Host(`{{ .Values.host }}`)
       priority: 100
+      {{- if .Values.basicAuthEnabled }}
+      middlewares:
+        - name: {{ .Release.Name }}-basic-auth
+      {{- end }}
       services:
         - name: {{ .Release.Name }}-app
           port: 80
     - kind: Rule
       match: Host(`{{ .Values.host }}`) && PathPrefix(`/api`)
       priority: 120
+      {{- if .Values.basicAuthEnabled }}
+      middlewares:
+        - name: {{ .Release.Name }}-basic-auth
+      {{- end }}
       services:
         - name: {{ .Release.Name }}-api
           port: 3333
