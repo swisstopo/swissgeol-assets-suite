@@ -1,5 +1,4 @@
 import {
-  CopyObjectCommand,
   DeleteObjectCommand,
   GetObjectCommand,
   HeadObjectCommand,
@@ -79,21 +78,6 @@ export class FileS3Service {
     }
   }
 
-  async copy(sourceName: string, destinationName: string): Promise<boolean> {
-    try {
-      await this.client.send(
-        new CopyObjectCommand({
-          CopySource: `${this.bucket}/${this.getKey(sourceName)}`,
-          Key: this.getKey(destinationName),
-          Bucket: this.bucket,
-        }),
-      );
-      return true;
-    } catch (e) {
-      return handleS3Error(e) ?? false;
-    }
-  }
-
   async delete(name: string): Promise<boolean> {
     try {
       await this.client.send(
@@ -159,11 +143,7 @@ const loadS3ClientCredentials = (): S3ClientConfig['credentials'] => {
   const secretAccessKey = readEnv('S3_SECRET_ACCESS_KEY');
 
   if (accessKeyId !== null && secretAccessKey !== null) {
-    return {
-      accessKeyId,
-      secretAccessKey,
-      sessionToken: '<REPLACEWITHSESSIONTOKEN>',
-    };
+    return { accessKeyId, secretAccessKey };
   } else if (accessKeyId === secretAccessKey) {
     return undefined;
   }
