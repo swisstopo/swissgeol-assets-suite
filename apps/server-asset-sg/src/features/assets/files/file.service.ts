@@ -12,7 +12,7 @@ import { BadRequestException, Injectable, Logger, NotFoundException } from '@nes
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Prisma } from '@prisma/client';
 import { getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs';
-import { PDFDocumentProxy } from 'pdfjs-dist/types/src/display/api';
+import { PDFDocumentProxy, TextItem, TextMarkedContent } from 'pdfjs-dist/types/src/display/api';
 import { EVENTS } from '@/core/events';
 import { PrismaService } from '@/core/prisma.service';
 import { FileS3Service, SaveFileS3Options } from '@/features/assets/files/file-s3.service';
@@ -171,8 +171,8 @@ export class FileService {
         const page = await doc?.getPage(i);
         const textContent = await page.getTextContent();
         const text = textContent.items
-          .filter((item: any) => 'str' in item)
-          .map((item: any) => item.str)
+          .filter((item: TextItem | TextMarkedContent) => 'str' in item)
+          .map((item: { str: string }) => item.str)
           .join(' ');
         page.cleanup();
         yield { pageNumber: i, text };

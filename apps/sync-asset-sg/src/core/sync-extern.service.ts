@@ -391,7 +391,12 @@ export class SyncExternService {
       const match = this.existingFileIds.get(file.name);
 
       return match
-        ? { ...file, id: match, pageRangeClassifications: file.pageRangeClassifications as Prisma.InputJsonValue }
+        ? {
+            ...file,
+            id: match,
+            pageRangeClassifications: file.pageRangeClassifications as Prisma.InputJsonValue,
+            fulltextContent: file.fulltextContent as Prisma.InputJsonValue,
+          }
         : ({
             ...file,
             pageRangeClassifications: file.pageRangeClassifications as Prisma.InputJsonValue,

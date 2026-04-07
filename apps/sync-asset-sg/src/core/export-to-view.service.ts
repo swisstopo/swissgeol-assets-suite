@@ -376,14 +376,22 @@ export class ExportToViewService {
         filteredFiles.push(
           ...files
             .filter((f) => f.type === 'Legal')
-            .map((f) => ({ ...f, pageRangeClassifications: f.pageRangeClassifications as Prisma.InputJsonValue })),
+            .map((f) => ({
+              ...f,
+              pageRangeClassifications: f.pageRangeClassifications as Prisma.InputJsonValue,
+              fulltextContent: f.fulltextContent as Prisma.InputJsonValue,
+            })),
         );
       }
       if (publishData.normalFiles) {
         filteredFiles.push(
           ...files
             .filter((f) => f.type === 'Normal')
-            .map((f) => ({ ...f, pageRangeClassifications: f.pageRangeClassifications as Prisma.InputJsonValue })),
+            .map((f) => ({
+              ...f,
+              pageRangeClassifications: f.pageRangeClassifications as Prisma.InputJsonValue,
+              fulltextContent: f.fulltextContent as Prisma.InputJsonValue,
+            })),
         );
       }
 
