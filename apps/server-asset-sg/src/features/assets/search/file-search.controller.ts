@@ -56,6 +56,13 @@ export class FileSearchController {
     query: FileSearchQuery,
     @CurrentUser() user: User,
   ): Promise<AssetSearchStats> {
+    if (user.isAdmin) {
+      // For admins: restrict stats to their workgroups, but keep workgroup
+      // counts unrestricted so they can discover all workgroups.
+      const unrestrictedWorkgroupQuery = { ...query };
+      restrictQueryForUser(query, user);
+      return await this.fileSearchService.aggregateFiles(query, user, { unrestrictedWorkgroupQuery });
+    }
     restrictQueryForUser(query, user);
     return await this.fileSearchService.aggregateFiles(query, user);
   }

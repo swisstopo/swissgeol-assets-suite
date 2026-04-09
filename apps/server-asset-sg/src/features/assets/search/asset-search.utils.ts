@@ -11,9 +11,6 @@ export const mapLv95ToElastic = (lv95: { x: number; y: number }): ElasticsearchP
 };
 
 export const restrictQueryForUser = (query: AssetFilters, user: User) => {
-  if (user.isAdmin) {
-    return;
-  }
   query.workgroupIds =
     query.workgroupIds == null ? [...user.roles.keys()] : query.workgroupIds.filter((it) => user.roles.has(it));
 };
