@@ -4,7 +4,6 @@ import { Equals, IsBoolean, IsIn, IsNumber, IsOptional, IsString, ValidateNested
 import { GeometryType } from '../../models/geometry';
 import { LocalizedItemCode } from '../../models/localized-item';
 import {
-  AssetFavoriteSearchQuery,
   AssetFilters,
   AssetSearchQuery,
   AssetSearchUsageCode,
@@ -66,15 +65,6 @@ export class AssetFiltersSchema extends Schema implements AssetFilters {
 export class AssetSearchQuerySchema extends AssetFiltersSchema implements AssetSearchQuery {
   @Equals(SearchType.Asset)
   type: SearchType.Asset = SearchType.Asset;
-
-  @IsString()
-  @IsOptional()
-  text?: string;
-}
-
-export class AssetFavoriteSearchQuerySchema extends AssetFiltersSchema implements AssetFavoriteSearchQuery {
-  @Equals(SearchType.AssetFavorite)
-  type: SearchType.AssetFavorite = SearchType.AssetFavorite;
 
   @IsString()
   @IsOptional()

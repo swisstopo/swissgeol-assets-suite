@@ -4,6 +4,7 @@ export const ASSET_ELASTIC_INDEX = 'swissgeol_asset_asset';
 export const FILE_ELASTIC_INDEX = 'swissgeol_asset_file';
 
 export const SEARCH_BATCH_SIZE = 10_000;
+export const AGGREGATION_NUMBER_OF_BUCKETS = 10_000;
 
 /**
  * Fields that are searchable via specific field queries (e.g. id:1234).

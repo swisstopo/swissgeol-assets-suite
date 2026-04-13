@@ -4,7 +4,6 @@ import {
   Asset,
   AssetId,
   AssetSchema,
-  AssetSearchQueries,
   AssetSearchQuery,
   AssetSearchResult,
   AssetSearchResultSchema,
@@ -24,7 +23,7 @@ import { map, Observable } from 'rxjs';
 export class AssetSearchService {
   private readonly httpClient = inject(HttpClient);
 
-  public search(searchQuery: AssetSearchQueries): Observable<AssetSearchResult> {
+  public search(searchQuery: AssetSearchQuery): Observable<AssetSearchResult> {
     return this.httpClient
       .post('/api/assets/search?limit=1000', searchQuery)
       .pipe(map((res) => plainToInstance(AssetSearchResultSchema, res)));

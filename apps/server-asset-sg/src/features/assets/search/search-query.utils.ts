@@ -1,5 +1,9 @@
-import { AssetId, AssetJSON, AssetSearchQuery, SearchQueries, User } from '@asset-sg/shared/v2';
-import { QueryDslDateRangeQuery, QueryDslQueryContainer } from '@elastic/elasticsearch/lib/api/types';
+import { ElasticsearchAsset, SearchQueries, SearchType, User } from '@asset-sg/shared/v2';
+import {
+  AggregationsAggregationContainer,
+  QueryDslDateRangeQuery,
+  QueryDslQueryContainer,
+} from '@elastic/elasticsearch/lib/api/types';
 import { SEARCHABLE_FIELDS } from '@/features/assets/search/asset-search.constants';
 import { mapLv95ToElastic } from '@/features/assets/search/asset-search.utils';
 
@@ -8,63 +12,63 @@ export interface PageOptions {
   offset?: number;
 }
 
-/**
- * The state of a multistep asset search.
- */
-export interface SearchState {
-  /**
-   * The assets that match the search.
-   * This is a mapping from the assets' id to their serialized JSON string.
-   */
-  matchedAssets: Map<AssetId, AssetJSON>;
-
-  /**
-   * The id of the last asset that has been matched.
-   * This is used to enable paginated search results with Elasticsearch.
-   *
-   * This is `null` if no query has been executed yet.
-   */
-  lastAssetId: number | null;
-
-  /**
-   * The total number of assets, including the ones that were skipped due to offset and limit.
-   *
-   * This is `null` if no query has been executed yet.
-   */
-  totalCount: number | null;
-}
-
 export const mapQueryToElasticDsl = (query: SearchQueries, user: User): QueryDslQueryContainer => {
   const { must, filter } = mapQueryToElasticDslParts(query, user);
-  return {
-    bool: {
-      must,
-      filter,
-    },
-  };
+  return { bool: { must, filter } };
 };
 
 export const mapQueryToElasticDslParts = (
   query: SearchQueries,
   user: User,
-): { must: QueryDslQueryContainer[]; filter: QueryDslQueryContainer[] } => {
+): {
+  must: QueryDslQueryContainer[];
+  filter: QueryDslQueryContainer[];
+  aggs: Record<string, AggregationsAggregationContainer>;
+} => {
   const scope = SEARCHABLE_FIELDS;
   const queries: QueryDslQueryContainer[] = [];
   const filters: QueryDslQueryContainer[] = [];
+  const aggs: Record<string, AggregationsAggregationContainer> = {};
+
+  if (query.type === SearchType.File) {
+    aggs['distinct_assets'] = {
+      cardinality: { field: 'assetId' },
+    };
+  }
 
   if (query.text != null && query.text.length > 0) {
-    queries.push({
-      bool: {
-        should: [
-          {
-            query_string: {
+    let textQuery: QueryDslQueryContainer | undefined = undefined;
+
+    switch (query.type) {
+      case SearchType.Asset:
+        textQuery = {
+          bool: {
+            should: [
+              {
+                query_string: {
+                  query: escapeElasticQuery(normalizeFieldQuery(query.text)),
+                  fields: scope,
+                },
+              },
+            ],
+          },
+        };
+        break;
+      case SearchType.File:
+        textQuery = {
+          match: {
+            content: {
               query: escapeElasticQuery(normalizeFieldQuery(query.text)),
-              fields: scope,
+              operator: 'and',
             },
           },
-        ],
-      },
-    });
+        };
+        break;
+    }
+
+    if (textQuery) {
+      queries.push(textQuery);
+    }
   }
 
   if (query.authorId != null) {
@@ -84,11 +88,7 @@ export const mapQueryToElasticDslParts = (
     if (query.createdAt.max != null) {
       createdAtFilter.lte = query.createdAt.max.toString();
     }
-    filters.push({
-      range: {
-        createdAt: createdAtFilter,
-      },
-    });
+    filters.push({ range: { createdAt: createdAtFilter } });
   }
   if (query.topicCodes != null) {
     filters.push(makeArrayFilter('topicCodes', query.topicCodes));
@@ -135,6 +135,7 @@ export const mapQueryToElasticDslParts = (
   return {
     must: queries,
     filter: filters,
+    aggs,
   };
 };
 
@@ -148,7 +149,10 @@ export const mapQueryToElasticDslParts = (
  * @param field The field to match.
  * @param query The set of allowed values.
  */
-export const makeArrayFilter = <T extends string | number>(field: string, query: T[]): QueryDslQueryContainer => {
+export const makeArrayFilter = <T extends string | number>(
+  field: keyof ElasticsearchAsset,
+  query: T[],
+): QueryDslQueryContainer => {
   if (query.length === 0) {
     return { bool: { must_not: { exists: { field } } } };
   }
@@ -157,80 +161,6 @@ export const makeArrayFilter = <T extends string | number>(field: string, query:
       should: query.map((term) => ({ term: { [field]: term } })),
     },
   };
-};
-
-/**
- * Maps the shared filter parts of an {@link AssetSearchQuery} to Elasticsearch filter clauses.
- * These filters apply to both asset and file indices (which share the same denormalized metadata fields).
- */
-export const mapSharedFilterParts = (query: AssetSearchQuery, user: User): QueryDslQueryContainer[] => {
-  const filters: QueryDslQueryContainer[] = [];
-
-  if (query.authorId != null) {
-    filters.push({ term: { authorIds: query.authorId } });
-  }
-  if (query.createdAt != null && Object.keys(query.createdAt).length > 0) {
-    const createdAtFilter: QueryDslDateRangeQuery = { format: 'yyyy-MM-dd' };
-    if (query.createdAt.min != null) {
-      createdAtFilter.gte = query.createdAt.min.toString();
-    }
-    if (query.createdAt.max != null) {
-      createdAtFilter.lte = query.createdAt.max.toString();
-    }
-    filters.push({ range: { createdAt: createdAtFilter } });
-  }
-  if (query.topicCodes != null) {
-    filters.push(makeArrayFilter('topicCodes', query.topicCodes));
-  }
-  if (query.kindCodes != null) {
-    filters.push(makeArrayFilter('kindCode', query.kindCodes));
-  }
-  if (query.usageCodes != null) {
-    filters.push(makeArrayFilter('usageCode', query.usageCodes));
-  }
-  if (query.languageCodes != null) {
-    filters.push(makeArrayFilter('languageCodes', query.languageCodes));
-  }
-  if (query.geometryTypes != null) {
-    filters.push(makeArrayFilter('geometryTypes', query.geometryTypes));
-  }
-  if (query.status != null) {
-    filters.push(makeArrayFilter('status', query.status));
-  }
-  if (query.workgroupIds != null) {
-    filters.push({ terms: { workgroupId: query.workgroupIds } });
-  }
-  if (query.favoritesOnly) {
-    filters.push({ terms: { favoredByUserIds: [user.id] } });
-  }
-
-  return filters;
-};
-
-export const mapQueryToFileElasticDsl = (query: AssetSearchQuery, user: User): QueryDslQueryContainer => {
-  const { must, filter } = mapQueryToFileElasticDslParts(query, user);
-  return { bool: { must, filter } };
-};
-
-export const mapQueryToFileElasticDslParts = (
-  query: AssetSearchQuery,
-  user: User,
-): { must: QueryDslQueryContainer[]; filter: QueryDslQueryContainer[] } => {
-  const queries: QueryDslQueryContainer[] = [];
-  const filters = mapSharedFilterParts(query, user);
-
-  if (query.text != null && query.text.length > 0) {
-    queries.push({
-      match: {
-        content: {
-          query: query.text,
-          operator: 'and',
-        },
-      },
-    });
-  }
-
-  return { must: queries, filter: filters };
 };
 
 export const getDateTimeString = (): string => {

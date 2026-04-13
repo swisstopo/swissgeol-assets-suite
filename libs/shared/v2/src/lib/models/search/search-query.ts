@@ -8,7 +8,6 @@ import { WorkgroupId } from '../workgroup';
 export enum SearchType {
   Asset = 'asset',
   File = 'file',
-  AssetFavorite = 'assetFavorite',
 }
 
 export interface SearchQuery {
@@ -30,15 +29,10 @@ export interface AssetFilters {
   status?: Array<WorkflowStatus>;
 }
 
-export type SearchQueries = AssetSearchQuery | AssetFavoriteSearchQuery | FileSearchQuery;
-export type AssetSearchQueries = AssetSearchQuery | AssetFavoriteSearchQuery;
+export type SearchQueries = AssetSearchQuery | FileSearchQuery;
 
 export interface AssetSearchQuery extends SearchQuery, AssetFilters {
   type: SearchType.Asset;
-}
-
-export interface AssetFavoriteSearchQuery extends SearchQuery, AssetFilters {
-  type: SearchType.AssetFavorite;
 }
 
 export interface FileSearchQuery extends SearchQuery, AssetFilters {
