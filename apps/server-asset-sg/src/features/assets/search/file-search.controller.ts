@@ -44,7 +44,7 @@ export class FileSearchController {
     limit = limit == null ? limit : Number(limit);
     offset = offset == null ? offset : Number(offset);
     restrictQueryForUser(query, user);
-    return await this.fileSearchService.search(query, user, { limit, offset, decode: false });
+    return await this.fileSearchService.search(query, user, { limit, offset });
   }
 
   @Post('/stats')

@@ -37,14 +37,15 @@ export class AssetSearchService {
     { limit = 100, offset = 0, decode: shouldDecode = true }: PageOptions & { decode?: boolean } = {},
   ): Promise<AssetSearchResult> {
     const elasticQuery = mapQueryToElasticDsl(query, user);
-    const { results: serializedAssets, total } = await this.searchService.search(elasticQuery, {
-      limit,
-      offset,
-    });
+    const { results, total } = await this.searchService.search(
+      elasticQuery,
+      { limit, offset },
+      { storedFields: ['id', 'data'] },
+    );
 
     const data: AssetSearchResultItem[] = [];
-    for (const serializedAsset of serializedAssets.values()) {
-      const encodedAsset = JSON.parse(serializedAsset);
+    for (const hit of results.values()) {
+      const encodedAsset = JSON.parse(hit.fields?.['data']?.[0] as string);
       data.push(
         shouldDecode
           ? plainToInstance(AssetSearchResultItemSchema, encodedAsset, { excludeExtraneousValues: true })

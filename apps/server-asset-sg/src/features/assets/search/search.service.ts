@@ -1,6 +1,5 @@
 import {
   AssetFilters,
-  AssetJSON,
   AssetSearchStats,
   AssetSearchUsageCode,
   ContactId,
@@ -22,34 +21,46 @@ import {
   PageOptions,
 } from '@/features/assets/search/search-query.utils';
 
+export interface SearchConfig {
+  /** The document field used as entity ID and default sort field. Defaults to 'id'. */
+  entityIdField?: string;
+  /** Collapse results by a field for grouping (e.g., by fileId). Works with search_after pagination. */
+  collapse?: {
+    field: string;
+    innerHits?: {
+      name: string;
+      size: number;
+      sourceFields?: string[];
+      highlight?: Record<string, object>;
+      sort?: Array<Record<string, string>>;
+    };
+  };
+  /** Fields to retrieve from _source. */
+  sourceFields?: string[];
+  /** Stored fields to retrieve (e.g., ['id', 'data'] for asset search). */
+  storedFields?: string[];
+}
+
+export interface SearchHitData {
+  fields?: Record<string, unknown[]>;
+  source?: Record<string, unknown>;
+  innerHits?: Record<
+    string,
+    Array<{
+      source: Record<string, unknown>;
+      highlight?: Record<string, string[]>;
+    }>
+  >;
+}
+
 export interface PaginatedSearchResult<EntityId extends number | string> {
-  results: Map<EntityId, string>;
+  results: Map<EntityId, SearchHitData>;
   total: number;
 }
 
-/**
- * The state of a multistep search.
- */
 interface SearchState<EntityId extends number | string> {
-  /**
-   * The entities that match the search.
-   * This is a mapping from the entities' id to their serialized JSON string.
-   */
-  matchedEntities: Map<EntityId, string>;
-
-  /**
-   * The id of the last entity that has been matched.
-   * This is used to enable paginated search results with Elasticsearch.
-   *
-   * This is `null` if no query has been executed yet.
-   */
+  matchedEntities: Map<EntityId, SearchHitData>;
   lastEntityId: EntityId | null;
-
-  /**
-   * The total number of entities, including the ones that were skipped due to offset and limit.
-   *
-   * This is `null` if no query has been executed yet.
-   */
   totalCount: number | null;
 }
 
@@ -61,18 +72,23 @@ export class SearchService<EntityId extends number | string> {
 
   /**
    * Searches the query and returns the matched entities in a paginated format.
-   * @param query
-   * @param page
+   * @param query The Elasticsearch query.
+   * @param page Pagination options (offset, limit).
+   * @param config Optional search configuration for controlling fields, sorting, and collapse.
    */
-  public async search(query: QueryDslQueryContainer, page: PageOptions = {}): Promise<PaginatedSearchResult<EntityId>> {
+  public async search(
+    query: QueryDslQueryContainer,
+    page: PageOptions = {},
+    config?: SearchConfig,
+  ): Promise<PaginatedSearchResult<EntityId>> {
     const state: SearchState<EntityId> = {
-      matchedEntities: new Map<EntityId, string>(),
+      matchedEntities: new Map(),
       lastEntityId: null,
       totalCount: null,
     };
-    const hasOffset = await this.findOffsetForSearch(query, page, state);
+    const hasOffset = await this.findOffsetForSearch(query, page, state, config);
     if (hasOffset) {
-      await this.doSearchByOffset(query, page, state);
+      await this.doSearchByOffset(query, page, state, config);
     }
     return { results: state.matchedEntities, total: state.totalCount ?? 0 };
   }
@@ -82,7 +98,6 @@ export class SearchService<EntityId extends number | string> {
    *
    * @param query The query to match with.
    * @param user The user that is executing the query.
-   * @param makeAggregation
    * @param options
    * @param options.unrestrictedWorkgroupQuery If provided, the workgroup aggregation will use this
    *   query instead of the main query. This allows admins to see counts for all workgroups
@@ -157,24 +172,11 @@ export class SearchService<EntityId extends number | string> {
     };
   }
 
-  /**
-   * Find which entities need to be skipped when paginating with an offset.
-   *
-   * Elasticsearch only supports offset by id/cursor, but not by a fixed number.
-   * This means that we need to execute search queries for all skipped entities as well.
-   *
-   * This method will update {@link state.totalCount} and {@link state.lastEntityId}.
-   *
-   * @param elasticQuery The query to search with.
-   * @param page The page options.
-   * @param state The state of the current search.
-   * @return Whether there are any more entities after the offset.
-   * @private
-   */
   private async findOffsetForSearch(
     elasticQuery: QueryDslQueryContainer,
     page: PageOptions,
     state: SearchState<EntityId>,
+    config?: SearchConfig,
   ): Promise<boolean> {
     const offset = page.offset ?? 0;
     let remainingOffset = offset;
@@ -185,7 +187,8 @@ export class SearchService<EntityId extends number | string> {
       }
       const response = await this.executeSearchQuery(elasticQuery, state, {
         limit: remainingLimit,
-        fields: ['id'],
+        fetchData: false,
+        config,
       });
       if (state.lastEntityId == null && state.totalCount != null && state.totalCount < offset) {
         return false;
@@ -194,25 +197,16 @@ export class SearchService<EntityId extends number | string> {
         return false;
       }
       remainingOffset -= response.hits.hits.length;
-      state.lastEntityId = response.hits.hits[response.hits.hits.length - 1].fields?.['id'][0] as EntityId;
+      state.lastEntityId = response.hits.hits[response.hits.hits.length - 1].sort?.[0] as EntityId;
     }
     return state.totalCount == null || state.totalCount > offset;
   }
 
-  /**
-   * Execute a search for assets after a specific offset has already been determined via {@link findOffsetForSearch}.
-   *
-   * This method will update {@link state.totalCount}, {@link state.lastAssetId} and {@link state.matchedAssets}.
-   *
-   * @param elasticQuery The query to search with.
-   * @param page The page options.
-   * @param state The state of the current search.
-   * @private
-   */
   private async doSearchByOffset(
     elasticQuery: QueryDslQueryContainer,
     page: PageOptions,
     state: SearchState<EntityId>,
+    config?: SearchConfig,
   ) {
     for (;;) {
       const remainingLimit =
@@ -222,16 +216,32 @@ export class SearchService<EntityId extends number | string> {
       }
       const response = await this.executeSearchQuery(elasticQuery, state, {
         limit: remainingLimit,
-        fields: ['id', 'data'],
+        fetchData: true,
+        config,
       });
       if (response.hits.hits.length === 0) {
         return;
       }
       for (const hit of response.hits.hits) {
-        const id = hit.fields?.['id'][0] as EntityId;
-        const data = hit.fields?.['data'][0] as AssetJSON;
-        state.matchedEntities.set(id, data);
-        state.lastEntityId = id;
+        const entityId = hit.sort?.[0] as EntityId;
+        const hitData: SearchHitData = {};
+        if (hit.fields) {
+          hitData.fields = hit.fields as Record<string, unknown[]>;
+        }
+        if (hit._source) {
+          hitData.source = hit._source as Record<string, unknown>;
+        }
+        if (hit.inner_hits) {
+          hitData.innerHits = {};
+          for (const [name, innerHitResult] of Object.entries(hit.inner_hits)) {
+            hitData.innerHits[name] = innerHitResult.hits.hits.map((ih) => ({
+              source: ih._source as Record<string, unknown>,
+              highlight: ih.highlight as Record<string, string[]> | undefined,
+            }));
+          }
+        }
+        state.matchedEntities.set(entityId, hitData);
+        state.lastEntityId = entityId;
       }
       if (state.totalCount != null && state.totalCount <= (page.offset ?? 0) + state.matchedEntities.size) {
         return;
@@ -240,36 +250,75 @@ export class SearchService<EntityId extends number | string> {
   }
 
   /**
-   * Execute an elastic query in the context of a {@link SearchState}.
-   *
-   * This method will update {@link state.totalCount}.
-   *
-   * @param elasticQuery The query to execute.
-   * @param state The search state.
-   * @param options Describes how to execute the query.
-   * @param options.limit How many documents will be queried at most.
-   * @param options.fields The document fields that will be included in the response.
-   * @returns The Elasticsearch response.
-   * @private
+   * Execute an Elasticsearch query in the context of a {@link SearchState}.
+   * Supports configurable sort field, field collapse, source/stored fields, and inner hits.
    */
   private async executeSearchQuery(
     elasticQuery: QueryDslQueryContainer,
     state: SearchState<EntityId>,
-    options: { limit: number; fields: string[] },
+    options: { limit: number; fetchData: boolean; config?: SearchConfig },
   ): Promise<SearchResponse> {
-    const response = await this.elastic.search({
+    const entityIdField = options.config?.entityIdField ?? 'id';
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const searchParams: Record<string, any> = {
       index: this.index,
       query: elasticQuery,
       size: options.limit,
-      fields: options.fields,
-      sort: {
-        id: 'desc',
-      },
-      _source: false,
+      sort: { [entityIdField]: 'desc' },
+      _source: false as boolean | string[],
       track_total_hits: state.totalCount == null,
-      search_after: state.lastEntityId == null ? undefined : [state.lastEntityId],
-    });
-    state.totalCount ??= (response.hits.total as SearchTotalHits).value as number;
+    };
+
+    if (state.lastEntityId != null) {
+      searchParams['search_after'] = [state.lastEntityId];
+    }
+
+    // Collapse configuration for grouping results (e.g., pages by fileId).
+    if (options.config?.collapse) {
+      const collapseParam: Record<string, unknown> = {
+        field: options.config.collapse.field,
+      };
+      if (options.fetchData && options.config.collapse.innerHits) {
+        const ih = options.config.collapse.innerHits;
+        collapseParam['inner_hits'] = {
+          name: ih.name,
+          size: ih.size,
+          _source: ih.sourceFields ?? true,
+          ...(ih.highlight ? { highlight: { fields: ih.highlight, highlight_query: elasticQuery } } : {}),
+          ...(ih.sort ? { sort: ih.sort } : {}),
+        };
+      }
+      searchParams['collapse'] = collapseParam;
+      // With collapse, hits.total counts uncollapsed docs. Use cardinality for accurate total.
+      if (state.totalCount == null) {
+        searchParams['aggs'] = {
+          total_collapsed: { cardinality: { field: options.config.collapse.field } },
+        };
+      }
+    }
+
+    // Include data fields only when fetching results (not during offset-finding).
+    if (options.fetchData) {
+      if (options.config?.storedFields) {
+        searchParams['fields'] = options.config.storedFields;
+      }
+      if (options.config?.sourceFields) {
+        searchParams['_source'] = options.config.sourceFields;
+      }
+    }
+
+    const response = await this.elastic.search(searchParams);
+
+    if (state.totalCount == null) {
+      if (options.config?.collapse) {
+        state.totalCount =
+          (response.aggregations?.['total_collapsed'] as { value: number } | undefined)?.value ??
+          (response.hits.total as SearchTotalHits).value;
+      } else {
+        state.totalCount = (response.hits.total as SearchTotalHits).value;
+      }
+    }
+
     return response;
   }
 }
