@@ -10,9 +10,10 @@ import fileIndexMapping from '../../../../../../development/init/elasticsearch/m
 import { PrismaService } from '@/core/prisma.service';
 import { AssetRepo } from '@/features/assets/asset.repo';
 import { ASSET_ELASTIC_INDEX, FILE_ELASTIC_INDEX } from '@/features/assets/search/asset-search.constants';
-import { AssetSearchWriter, AssetSearchWriterOptions } from '@/features/assets/search/asset-search.writer';
-import { FileSearchWriter, FileSearchWriterOptions } from '@/features/assets/search/file-search.writer';
+import { AssetSearchWriter } from '@/features/assets/search/asset-search.writer';
+import { FileSearchWriter } from '@/features/assets/search/file-search.writer';
 import { getDateTimeString } from '@/features/assets/search/search-query.utils';
+import { SearchWriterOptions } from '@/features/assets/search/search-writer.utils';
 import { GeometryDetailRepo } from '@/features/geometries/geometry-detail.repo';
 import { GeometryRepo } from '@/features/geometries/geometry.repo';
 
@@ -32,7 +33,7 @@ export class SearchWriterService {
     await Promise.all([this.getWriter().write(asset), this.getFileWriter().writeAssetFiles(asset)]);
   }
 
-  getWriter(options?: AssetSearchWriterOptions): AssetSearchWriter {
+  getWriter(options?: SearchWriterOptions): AssetSearchWriter {
     return new AssetSearchWriter(
       this.elastic,
       this.prisma,
@@ -42,7 +43,7 @@ export class SearchWriterService {
     );
   }
 
-  getFileWriter(options?: FileSearchWriterOptions): FileSearchWriter {
+  getFileWriter(options?: SearchWriterOptions): FileSearchWriter {
     return new FileSearchWriter(
       this.elastic,
       this.prisma,

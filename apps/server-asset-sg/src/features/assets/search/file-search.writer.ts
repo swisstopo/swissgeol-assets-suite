@@ -7,26 +7,28 @@ import {
   ContactId,
   ElasticsearchFilePage,
   ElasticsearchLocalDate,
-  ElasticsearchPoint,
   FulltextContent,
-  GeometryType,
   LocalDate,
-  UserId,
 } from '@asset-sg/shared/v2';
 import { Client as ElasticsearchClient } from '@elastic/elasticsearch';
 import { BulkOperationContainer } from '@elastic/elasticsearch/lib/api/types';
 import { Prisma, PrismaClient } from '@prisma/client';
-import { mapLv95ToElastic } from '@/features/assets/search/asset-search.utils';
+import {
+  buildFavoritesMap,
+  buildGeometryMetadataMap,
+  fetchContactNamesForAsset,
+  fetchFavoredByUserIdsForAsset,
+  fetchGeometryMetadataForAsset,
+  fetchSharedEagerData,
+  SearchWriterOptions,
+  SharedEagerData,
+} from '@/features/assets/search/search-writer.utils';
 import { GeometryRepo } from '@/features/geometries/geometry.repo';
 import { ProcessQueue } from '@/utils/process-queue';
 
 const QUEUE_SIZE = 10;
 
-export interface FileSearchWriterOptions {
-  index: string;
-  shouldRefresh?: boolean;
-  isEager?: boolean;
-}
+export { SearchWriterOptions as FileSearchWriterOptions };
 
 export class FileSearchWriter {
   private readonly eager: Promise<FileEager | null>;
@@ -35,7 +37,7 @@ export class FileSearchWriter {
     private readonly elastic: ElasticsearchClient,
     private readonly prisma: PrismaClient,
     private readonly geometryRepo: GeometryRepo,
-    private readonly options: FileSearchWriterOptions,
+    private readonly options: SearchWriterOptions,
   ) {
     this.eager = options.isEager ? this.fetchEager() : Promise.resolve(null);
   }
@@ -98,26 +100,8 @@ export class FileSearchWriter {
       }),
     ]);
 
-    const geometryMetadataByAsset = new Map<AssetId, GeometryMetadata>();
-    for (const geo of geometries) {
-      let metadata = geometryMetadataByAsset.get(geo.assetId);
-      if (metadata == null) {
-        metadata = { types: new Set(), locations: [] };
-        geometryMetadataByAsset.set(geo.assetId, metadata);
-      }
-      metadata.types.add(geo.type);
-      metadata.locations.push(mapLv95ToElastic(geo.center));
-    }
-
-    const favoritesByAsset = new Map<AssetId, UserId[]>();
-    for (const { assetId, userId } of favoriteRecords) {
-      const userIds = favoritesByAsset.get(assetId);
-      if (userIds === undefined) {
-        favoritesByAsset.set(assetId, [userId]);
-      } else {
-        userIds.push(userId);
-      }
-    }
+    const geometryMetadataByAsset = buildGeometryMetadataMap(geometries);
+    const favoritesByAsset = buildFavoritesMap(favoriteRecords);
 
     const contactNameById = new Map<ContactId, string>();
     for (const { contactId, name } of contactRecords) {
@@ -148,8 +132,7 @@ export class FileSearchWriter {
       const languageCodes =
         asset.assetLanguages.length === 0 ? ['None'] : asset.assetLanguages.map((l) => l.languageItemCode);
       const geoMetadata = geometryMetadataByAsset.get(file.assetId);
-      const geometryTypes: GeometryType[] | ['None'] =
-        geoMetadata != null && geoMetadata.types.size > 0 ? [...geoMetadata.types] : ['None'];
+      const geometryTypes = geoMetadata?.types ?? ['None'];
       const locations = geoMetadata?.locations ?? [];
       const favoredByUserIds = favoritesByAsset.get(file.assetId) ?? [];
 
@@ -255,18 +238,19 @@ export class FileSearchWriter {
   private async mapAssetFilesToElastic(asset: Asset): Promise<Array<BulkOperationContainer | ElasticsearchFilePage>> {
     const operations: Array<BulkOperationContainer | ElasticsearchFilePage> = [];
 
-    // Fetch fulltext content for all files of this asset
     const filesWithContent = await this.fetchFulltextContentForAsset(asset);
     if (filesWithContent.length === 0) {
       return operations;
     }
 
-    // Fetch shared asset metadata
+    const eagerData = await this.eager;
     const authorIds = asset.contacts.filter((it) => it.role === AssetContactRole.Author).map((it) => it.id);
-    const contactNames = await this.fetchContactNamesForAsset(asset);
+    const [contactNames, favoredByUserIds, geometryMetadata] = await Promise.all([
+      fetchContactNamesForAsset(asset, eagerData, this.prisma),
+      fetchFavoredByUserIdsForAsset(asset, eagerData, this.prisma),
+      fetchGeometryMetadataForAsset(asset, eagerData, this.geometryRepo),
+    ]);
     const languageCodes = asset.languageCodes.length === 0 ? ['None'] : asset.languageCodes;
-    const geometryMetadata = await this.fetchGeometryMetadataForAsset(asset);
-    const favoredByUserIds = await this.fetchFavoredByUserIdsForAsset(asset);
 
     for (const { fileId, fileName, pages } of filesWithContent) {
       for (const page of pages) {
@@ -348,69 +332,14 @@ export class FileSearchWriter {
       }));
   }
 
-  private async fetchGeometryMetadataForAsset(
-    asset: Asset,
-  ): Promise<{ types: GeometryType[] | ['None']; locations: ElasticsearchPoint[] }> {
-    const eager = await this.eager;
-    if (eager !== null) {
-      return eager.assetIdToGeometryMetadata.get(asset.id) ?? { types: ['None'], locations: [] };
-    }
-    const geometries = await this.geometryRepo.list({ assetIds: [asset.id] });
-    if (geometries.length === 0) {
-      return { types: ['None'], locations: [] };
-    }
-    const types = new Set<GeometryType>();
-    const locations: ElasticsearchPoint[] = [];
-    for (const geometry of geometries) {
-      types.add(geometry.type);
-      locations.push(mapLv95ToElastic(geometry.center));
-    }
-    return { types: [...types], locations };
-  }
-
-  private async fetchContactNamesForAsset(asset: Asset): Promise<string[]> {
-    const eager = await this.eager;
-    if (eager !== null) {
-      const names: string[] = [];
-      for (const contact of asset.contacts) {
-        const name = eager.contactIdToName.get(contact.id);
-        if (name !== undefined) {
-          names.push(name);
-        }
-      }
-      return names;
-    }
-    const contacts = await this.prisma.contact.findMany({
-      select: { name: true },
-      where: { contactId: { in: asset.contacts.map((it) => it.id) } },
-    });
-    return contacts.map((it) => it.name);
-  }
-
-  private async fetchFavoredByUserIdsForAsset(asset: Asset): Promise<string[]> {
-    const eager = await this.eager;
-    if (eager !== null) {
-      return eager.assetIdToFavoredByUserId.get(asset.id) ?? [];
-    }
-    const favoredByUsers = await this.prisma.assetUser.findMany({
-      select: { id: true },
-      where: { favorites: { some: { assetId: asset.id } } },
-    });
-    return favoredByUsers.map(({ id }) => id);
-  }
-
   private async fetchEager(): Promise<FileEager> {
-    const [fulltextContent, favorites, geometryMetadata, contactNames] = await Promise.all([
+    const [sharedData, fulltextContent] = await Promise.all([
+      fetchSharedEagerData(this.prisma, this.geometryRepo),
       this.fetchEagerFulltextContent(),
-      this.fetchEagerFavorites(),
-      this.fetchEagerGeometryMetadata(),
-      this.fetchEagerContactNames(),
-    ] as const);
+    ]);
     return {
+      ...sharedData,
       fileIdToFulltextContent: fulltextContent,
-      assetIdToFavoredByUserId: favorites,
-      assetIdToGeometryMetadata: geometryMetadata,
-      contactIdToName: contactNames,
     };
   }
 
@@ -435,63 +364,8 @@ export class FileSearchWriter {
     }
     return mapping;
   }
-
-  private async fetchEagerFavorites(): Promise<Map<AssetId, UserId[]>> {
-    const favorites = await this.prisma.favorite.findMany({
-      select: { assetId: true, userId: true },
-    });
-    const mapping = new Map<AssetId, UserId[]>();
-    for (const { assetId, userId } of favorites) {
-      const userIds = mapping.get(assetId);
-      if (userIds === undefined) {
-        mapping.set(assetId, [userId]);
-      } else {
-        userIds.push(userId);
-      }
-    }
-    return mapping;
-  }
-
-  private async fetchEagerGeometryMetadata(): Promise<
-    Map<AssetId, { types: GeometryType[] | ['None']; locations: ElasticsearchPoint[] }>
-  > {
-    const geometries = await this.geometryRepo.list({});
-    const mapping = new Map<AssetId, { types: Set<GeometryType>; locations: ElasticsearchPoint[] }>();
-    for (const geometry of geometries) {
-      if (!mapping.has(geometry.assetId)) {
-        mapping.set(geometry.assetId, { types: new Set(), locations: [] });
-      }
-      const entry = mapping.get(geometry.assetId)!;
-      entry.types.add(geometry.type);
-      entry.locations.push(mapLv95ToElastic(geometry.center));
-    }
-    const result = new Map<AssetId, { types: GeometryType[] | ['None']; locations: ElasticsearchPoint[] }>();
-    for (const [assetId, { types, locations }] of mapping) {
-      result.set(assetId, { types: types.size > 0 ? [...types] : ['None'], locations });
-    }
-    return result;
-  }
-
-  private async fetchEagerContactNames(): Promise<Map<ContactId, string>> {
-    const contacts = await this.prisma.contact.findMany({
-      select: { contactId: true, name: true },
-    });
-    const mapping = new Map<ContactId, string>();
-    for (const { contactId, name } of contacts) {
-      mapping.set(contactId, name);
-    }
-    return mapping;
-  }
 }
 
-interface FileEager {
+interface FileEager extends SharedEagerData {
   fileIdToFulltextContent: Map<number, { fileName: string; pages: FulltextContent[] }>;
-  assetIdToFavoredByUserId: Map<AssetId, UserId[]>;
-  assetIdToGeometryMetadata: Map<AssetId, { types: GeometryType[] | ['None']; locations: ElasticsearchPoint[] }>;
-  contactIdToName: Map<ContactId, string>;
-}
-
-interface GeometryMetadata {
-  types: Set<GeometryType>;
-  locations: ElasticsearchPoint[];
 }

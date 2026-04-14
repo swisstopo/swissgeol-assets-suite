@@ -4,18 +4,12 @@ import {
   FileSearchQuery,
   FileSearchResult,
   FileSearchResultItem,
-  SearchQueries,
   User,
 } from '@asset-sg/shared/v2';
 import { Client as ElasticsearchClient } from '@elastic/elasticsearch';
-import { AggregationsAggregationContainer } from '@elastic/elasticsearch/lib/api/types';
 import { Injectable } from '@nestjs/common';
-import { AGGREGATION_NUMBER_OF_BUCKETS, FILE_ELASTIC_INDEX } from '@/features/assets/search/asset-search.constants';
-import {
-  mapQueryToElasticDsl,
-  mapQueryToElasticDslParts,
-  PageOptions,
-} from '@/features/assets/search/search-query.utils';
+import { FILE_ELASTIC_INDEX } from '@/features/assets/search/asset-search.constants';
+import { mapQueryToElasticDsl, PageOptions } from '@/features/assets/search/search-query.utils';
 import { SearchService } from '@/features/assets/search/search.service';
 
 interface FileBucket {
@@ -136,35 +130,6 @@ export class FileSearchService {
     user: User,
     options?: { unrestrictedWorkgroupQuery?: FileSearchQuery },
   ): Promise<AssetSearchStats> {
-    const makeAggregation = (
-      operator: 'terms' | 'min' | 'max',
-      groupName: string,
-      fieldName?: string,
-      queryOverride?: SearchQueries,
-    ): AggregationsAggregationContainer => {
-      const baseQuery = queryOverride ?? query;
-      const { filter, aggs } = mapQueryToElasticDslParts({ ...baseQuery, [groupName]: undefined }, user);
-      const field = fieldName ?? groupName;
-
-      if (operator === 'terms') {
-        return {
-          filter: { bool: { filter } },
-          aggs: {
-            a: {
-              terms: { field, size: AGGREGATION_NUMBER_OF_BUCKETS },
-              aggs,
-            },
-          },
-        };
-      }
-      // min/max — these are per-asset, but since all pages of an asset share the same
-      // metadata values, min/max across pages is the same as min/max across assets.
-      return {
-        filter: { bool: { filter } },
-        aggs: { a: { [operator]: { field } } },
-      };
-    };
-
-    return await this.searchService.aggregate(query, user, makeAggregation, options);
+    return await this.searchService.aggregate(query, user, options);
   }
 }

@@ -7,22 +7,20 @@ import {
   GeometryType,
   LocalDate,
   makeEmptyAssetSearchStats,
-  SearchQueries,
   SearchQuery,
   User,
   ValueCount,
   WorkgroupId,
 } from '@asset-sg/shared/v2';
 import { Client as ElasticsearchClient } from '@elastic/elasticsearch';
-import {
-  AggregationsAggregationContainer,
-  QueryDslQueryContainer,
-  SearchResponse,
-  SearchTotalHits,
-} from '@elastic/elasticsearch/lib/api/types';
+import { QueryDslQueryContainer, SearchResponse, SearchTotalHits } from '@elastic/elasticsearch/lib/api/types';
 import { WorkflowStatus } from '@swissgeol/ui-core';
 import { SEARCH_BATCH_SIZE } from '@/features/assets/search/asset-search.constants';
-import { mapQueryToElasticDslParts, PageOptions } from '@/features/assets/search/search-query.utils';
+import {
+  createMakeAggregation,
+  mapQueryToElasticDslParts,
+  PageOptions,
+} from '@/features/assets/search/search-query.utils';
 
 export interface PaginatedSearchResult<EntityId extends number | string> {
   results: Map<EntityId, string>;
@@ -93,7 +91,6 @@ export class SearchService<EntityId extends number | string> {
   async aggregate<TQuery extends AssetFilters & SearchQuery>(
     query: TQuery,
     user: User,
-    makeAggregation: MakeAggregationFunction,
     options?: { unrestrictedWorkgroupQuery?: TQuery },
   ): Promise<AssetSearchStats> {
     const { must, filter, aggs } = mapQueryToElasticDslParts(query, user);
@@ -115,6 +112,7 @@ export class SearchService<EntityId extends number | string> {
       return makeEmptyAssetSearchStats();
     }
 
+    const makeAggregation = createMakeAggregation(query, user);
     const aggregations = {
       authorIds: makeAggregation('terms', 'authorIds'),
       languageCodes: makeAggregation('terms', 'languageCodes'),
@@ -275,13 +273,6 @@ export class SearchService<EntityId extends number | string> {
     return response;
   }
 }
-
-export type MakeAggregationFunction = (
-  operator: 'terms' | 'min' | 'max',
-  groupName: string,
-  fieldName?: string,
-  queryOverride?: SearchQueries,
-) => AggregationsAggregationContainer;
 
 const mapBucket = <T>(bucket: AggregationBucket<T>): ValueCount<T> => ({
   value: bucket.key,

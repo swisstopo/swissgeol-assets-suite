@@ -10,13 +10,9 @@ import {
 import { Client as ElasticsearchClient } from '@elastic/elasticsearch';
 import { Injectable } from '@nestjs/common';
 import { plainToInstance } from 'class-transformer';
-import { AGGREGATION_NUMBER_OF_BUCKETS, ASSET_ELASTIC_INDEX } from '@/features/assets/search/asset-search.constants';
-import {
-  mapQueryToElasticDsl,
-  mapQueryToElasticDslParts,
-  PageOptions,
-} from '@/features/assets/search/search-query.utils';
-import { MakeAggregationFunction, SearchService } from '@/features/assets/search/search.service';
+import { ASSET_ELASTIC_INDEX } from '@/features/assets/search/asset-search.constants';
+import { mapQueryToElasticDsl, PageOptions } from '@/features/assets/search/search-query.utils';
+import { SearchService } from '@/features/assets/search/search.service';
 
 @Injectable()
 export class AssetSearchService {
@@ -81,23 +77,6 @@ export class AssetSearchService {
     user: User,
     options?: { unrestrictedWorkgroupQuery?: AssetSearchQuery },
   ): Promise<AssetSearchStats> {
-    const makeAggregation: MakeAggregationFunction = (
-      operator: 'terms' | 'min' | 'max',
-      groupName: string,
-      fieldName?: string,
-    ) => {
-      const baseQuery = options?.unrestrictedWorkgroupQuery ?? query;
-      const { filter } = mapQueryToElasticDslParts({ ...baseQuery, [groupName]: undefined }, user);
-      const field: { field: string; size?: number } = {
-        field: fieldName ?? groupName,
-        size: AGGREGATION_NUMBER_OF_BUCKETS,
-      };
-      if (operator !== 'terms') {
-        delete field.size;
-      }
-      return { aggs: { a: { [operator]: field } }, filter: { bool: { filter } } };
-    };
-
-    return await this.searchService.aggregate(query, user, makeAggregation, options);
+    return await this.searchService.aggregate(query, user, options);
   }
 }

@@ -4,7 +4,7 @@ import {
   QueryDslDateRangeQuery,
   QueryDslQueryContainer,
 } from '@elastic/elasticsearch/lib/api/types';
-import { SEARCHABLE_FIELDS } from '@/features/assets/search/asset-search.constants';
+import { AGGREGATION_NUMBER_OF_BUCKETS, SEARCHABLE_FIELDS } from '@/features/assets/search/asset-search.constants';
 import { mapLv95ToElastic } from '@/features/assets/search/asset-search.utils';
 
 export interface PageOptions {
@@ -209,3 +209,39 @@ export const normalizeFieldQuery = (query: string): string =>
     .replace(/contact(_*)name:/gi, 'contactNames:')
     .replace(/asset(_*)id:/gi, 'id:')
     .replace(/sgs(_*)id:/gi, 'sgsId:');
+
+export type MakeAggregationFunction = (
+  operator: 'terms' | 'min' | 'max',
+  groupName: string,
+  fieldName?: string,
+  queryOverride?: SearchQueries,
+) => AggregationsAggregationContainer;
+
+/**
+ * Creates a {@link MakeAggregationFunction} that builds filtered aggregation containers.
+ *
+ * Each aggregation bucket excludes its own field from the query filter so that
+ * selecting a value in one facet doesn't collapse that facet's own counts.
+ *
+ * When the caller passes a `queryOverride` (e.g. for the unrestricted workgroup bucket),
+ * that override is used as the base query instead of the default.
+ */
+export const createMakeAggregation = (query: SearchQueries, user: User): MakeAggregationFunction => {
+  return (operator, groupName, fieldName, queryOverride) => {
+    const baseQuery = queryOverride ?? query;
+    const { filter, aggs } = mapQueryToElasticDslParts({ ...baseQuery, [groupName]: undefined } as SearchQueries, user);
+    const field = fieldName ?? groupName;
+    if (operator === 'terms') {
+      return {
+        filter: { bool: { filter } },
+        aggs: {
+          a: { terms: { field, size: AGGREGATION_NUMBER_OF_BUCKETS }, aggs },
+        },
+      };
+    }
+    return {
+      filter: { bool: { filter } },
+      aggs: { a: { [operator]: { field } } },
+    };
+  };
+};
