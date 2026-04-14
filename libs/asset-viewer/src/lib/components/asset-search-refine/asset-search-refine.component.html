@@ -1,3 +1,5 @@
+@let searchQuery = searchQuery$ | push;
+
 <div class="header">
   <h2 translate>menuBar.filters</h2>
   <button asset-sg-tertiary isIcon (click)="closeFilters()">
@@ -34,23 +36,14 @@
   </mat-chip-set>
   <div class="filters-container">
     <div class="section-container">
-      <asset-sg-search-input [value]="(searchQuery$ | push).text ?? ''" (searchSubmit)="search($event)" />
-      <button
-        asset-sg-secondary
-        [class.active]="(searchQuery$ | push).type !== SearchType.File"
-        (click)="activateAssetsSearch()"
-        translate
-      >
-        search.searchAssets
-      </button>
-      <button
-        asset-sg-secondary
-        [class.active]="(searchQuery$ | push).type === SearchType.File"
-        (click)="activateFileSearch()"
-        translate
-      >
-        search.searchFiles
-      </button>
+      <asset-sg-search-input [value]="searchQuery.text ?? ''" (searchSubmit)="search($event)" />
+      <asset-sg-toggle-button
+        class="toggle-search-type"
+        activeTranslationKey="search.searchFiles"
+        inactiveTranslationKey="search.searchAssets"
+        [isActive]="searchQuery.type === SearchType.File"
+        (toggleIsActive)="toggleSearchType(searchQuery.type)"
+      />
     </div>
     <div class="section-container">
       <button asset-sg-secondary [class.active]="isDrawActive$ | push" (click)="toggleDrawPolygon()" translate>

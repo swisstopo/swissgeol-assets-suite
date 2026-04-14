@@ -44,6 +44,7 @@ import {
   SeparatorComponent,
   SmartTranslatePipe,
   StatusChipComponent,
+  ToggleButtonComponent,
   ZoomControlsComponent,
 } from '@asset-sg/client-shared';
 import { FavoritesModule } from '@asset-sg/favorites';
@@ -160,6 +161,7 @@ const routes: Routes = [
     MatChip,
     MatButton,
     SearchInputComponent,
+    ToggleButtonComponent,
   ],
   providers: [
     TranslatePipe,

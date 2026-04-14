@@ -2,5 +2,5 @@
   {{ inactiveTranslationKey }}
 </button>
 <button asset-sg-tertiary [class.active]="isActive" (click)="onToggleIsActive()" translate>
-  {{ activeTranslationKey }}
+  {{ activeTranslationKey | translate }}
 </button>

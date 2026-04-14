@@ -73,10 +73,15 @@ h4 {
     section:not(:first-of-type) {
       margin-top: 30px;
     }
+
     section {
       display: flex;
       flex-direction: column;
       gap: 8px;
+    }
+
+    .toggle-search-type {
+      margin-top: 16px;
     }
   }
 }

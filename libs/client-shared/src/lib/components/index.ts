@@ -27,6 +27,6 @@ export * from './tab/tab.component';
 export * from './tabs/tabs.component';
 export * from './text-area/text-area.component';
 export * from './text-input';
-export * from './toggle-status';
+export * from './toggle-button';
 export * from './username/username.component';
 export * from './view-child-marker';

@@ -7,7 +7,6 @@ import {
   ContactId,
   LocalDate,
   LocalDateRange,
-  SearchQueries,
   SearchType,
   ValueCount,
 } from '@asset-sg/shared/v2';
@@ -56,8 +55,6 @@ export class AssetSearchRefineComponent implements OnInit, OnDestroy, AfterViewI
   public minDate?: Date;
   public maxDate?: Date;
   public isFiltersOpen = false;
-
-  public searchQuery!: SearchQueries;
 
   public activeFilters: Filter<string | number>[] = [];
   private readonly createDateRange$ = this.store.select(selectCreatedAt);
@@ -192,11 +189,6 @@ export class AssetSearchRefineComponent implements OnInit, OnDestroy, AfterViewI
   private initSubscriptions() {
     this.subscriptions.add(this.isFiltersOpen$.subscribe((isOpen) => (this.isFiltersOpen = isOpen)));
     this.subscriptions.add(this.activeFilters$.subscribe((activeFilter) => (this.activeFilters = activeFilter)));
-    this.subscriptions.add(
-      this.store.select(selectSearchQuery).subscribe((query) => {
-        this.searchQuery = query;
-      }),
-    );
 
     this.subscriptions.add(
       this.createDateRange$.subscribe((dateRange) => {
@@ -237,6 +229,14 @@ export class AssetSearchRefineComponent implements OnInit, OnDestroy, AfterViewI
 
   protected activateFileSearch() {
     this.store.dispatch(actions.updateSearchQuery({ query: { type: SearchType.File } }));
+  }
+
+  protected toggleSearchType(currentType: SearchType) {
+    if (currentType === SearchType.Asset) {
+      this.activateFileSearch();
+    } else {
+      this.activateAssetsSearch();
+    }
   }
 
   protected readonly SearchType = SearchType;
