@@ -361,6 +361,10 @@ export const enTranslationMapping: AppTranslationMapping = {
       'Equalises the state of Elasticsearch with the local database.' +
       ' This ensures that the search includes all existing assets.',
     adminInstructionsSyncElasticAssetsStart: 'Start synchronisation',
+    adminInstructionsSyncFileContentFromStorageHeading: 'Renew full-text search',
+    adminInstructionsSyncFileContentFromStorage:
+      'Reloads the full texts of the files from the file storage and updates the corresponding index.',
+    adminInstructionsSyncFileContentFromStorageHeadingStart: 'Start full-text synchronization',
   },
   admin: {
     users: 'Users',

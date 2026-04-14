@@ -96,7 +96,7 @@ export const assetSearchReducer = createReducer(
     }),
   ),
   on(
-    actions.setResults,
+    actions.setAssetsResults,
     (state, { results, isLoading }): AssetSearchState => ({
       ...state,
       results: results ?? state.results,

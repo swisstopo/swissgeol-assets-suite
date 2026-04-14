@@ -366,6 +366,10 @@ export const frTranslationMapping: AppTranslationMapping = {
       "Synchronise l'état d'Elasticsearch avec la base de données." +
       'Cela garantit que la recherche inclut tous les assets existants.',
     adminInstructionsSyncElasticAssetsStart: 'Démarrer la synchronisation',
+    adminInstructionsSyncFileContentFromStorageHeading: 'Renouveler la recherche en texte intégral',
+    adminInstructionsSyncFileContentFromStorage:
+      "Recharge les textes intégraux des fichiers à partir du stockage de fichiers et met à jour l'index correspondant.",
+    adminInstructionsSyncFileContentFromStorageHeadingStart: 'Démarrer la synchronisation du texte intégral',
   },
   admin: {
     users: 'Utilisateurs',

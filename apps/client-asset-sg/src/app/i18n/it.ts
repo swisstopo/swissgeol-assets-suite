@@ -363,6 +363,10 @@ export const itTranslationMapping: AppTranslationMapping = {
       'Sincronizza lo stato di Elasticsearch con il database.' +
       'In questo modo si garantisce che la ricerca includa tutti gli assets disponibili.',
     adminInstructionsSyncElasticAssetsStart: 'Avviare sincronizzazione',
+    adminInstructionsSyncFileContentFromStorageHeading: 'Rinnovare la ricerca full-text',
+    adminInstructionsSyncFileContentFromStorage:
+      "Ricarica i testi completi dei file dalla memorizzazione file e aggiorna l'indice corrispondente.",
+    adminInstructionsSyncFileContentFromStorageHeadingStart: 'Avviare la sincronizzazione del testo completo',
   },
   admin: {
     users: 'Utenti',

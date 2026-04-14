@@ -9,3 +9,7 @@ Newly added Keys (since 22.01.2026)
 - pdfNoLongerAvailable
 - directLink
 - directLinkCopied
+
+- adminInstructionsSyncFileContentFromStorageHeading
+- adminInstructionsSyncFileContentFromStorage
+- adminInstructionsSyncFileContentFromStorageHeadingStart

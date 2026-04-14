@@ -3,6 +3,7 @@ import { NavigationEnd, Router } from '@angular/router';
 import { appSharedStateActions, fromAppShared } from '@asset-sg/client-shared';
 import {
   AssetId,
+  AssetSearchStats,
   isEmptySearchQuery,
   makeEmptyAssetSearchResults,
   makeEmptyFileSearchResults,
@@ -147,17 +148,19 @@ export class ViewerControllerService {
   ): Promise<void> {
     // Always load results when favoritesOnly is true, even if other search criteria are empty
     if (!options.force && isEmptySearchQuery(query) && !query.favoritesOnly) {
-      this.store.dispatch(actions.setResults({ results: makeEmptyAssetSearchResults(), isLoading: false }));
+      this.store.dispatch(actions.setAssetsResults({ results: makeEmptyAssetSearchResults(), isLoading: false }));
       this.store.dispatch(actions.setFileResults({ fileResults: makeEmptyFileSearchResults(), isLoading: false }));
       return;
     }
-    this.store.dispatch(actions.setResults({ isLoading: true }));
 
     if (query.type === SearchType.File) {
-      const results = await firstValueFrom(this.assetSearchService.searchFiles(query));
+      this.store.dispatch(actions.setFileResults({ isLoading: true }));
+      const fileResults = await firstValueFrom(this.assetSearchService.searchFiles(query));
+      this.store.dispatch(actions.setFileResults({ fileResults, isLoading: false }));
     } else {
+      this.store.dispatch(actions.setAssetsResults({ isLoading: true }));
       const results = await firstValueFrom(this.assetSearchService.search(query));
-      this.store.dispatch(actions.setResults({ results, isLoading: false }));
+      this.store.dispatch(actions.setAssetsResults({ results, isLoading: false }));
       if (results.data.length === 1) {
         await this.loadAsset(results.data[0].id);
       } else if (!options.skipAssetReset) {
@@ -168,8 +171,15 @@ export class ViewerControllerService {
 
   private async loadStats(query: SearchQueries): Promise<void> {
     this.store.dispatch(actions.setStats({ isLoading: true }));
-    const stats = await firstValueFrom(this.assetSearchService.searchStats(query));
-    this.store.dispatch(actions.setStats({ stats, isLoading: false }));
+    let stats: AssetSearchStats | undefined;
+    if (query.type === SearchType.File) {
+      stats = await firstValueFrom(this.assetSearchService.searchFileStats(query));
+    } else if (query.type === SearchType.Asset) {
+      stats = await firstValueFrom(this.assetSearchService.searchStats(query));
+    }
+    if (stats) {
+      this.store.dispatch(actions.setStats({ stats, isLoading: false }));
+    }
   }
 
   private async loadAsset(id: AssetId | null): Promise<void> {

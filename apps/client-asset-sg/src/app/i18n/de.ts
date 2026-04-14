@@ -363,6 +363,10 @@ export const deTranslationMapping = {
       'Gleicht den Zustand von Elasticsearch mit der Datenbank ab.' +
       ' Damit wird sichergestellt, dass die Suche alle vorhandenen Assets miteinbezieht.',
     adminInstructionsSyncElasticAssetsStart: 'Synchronisation starten',
+    adminInstructionsSyncFileContentFromStorageHeading: 'Volltextsuche erneuern',
+    adminInstructionsSyncFileContentFromStorage:
+      'Lädt die Volltexte der Dateien erneut aus der Filestorage und erneuert den entsprechenden Index.',
+    adminInstructionsSyncFileContentFromStorageHeadingStart: 'Volltext-Synchronisation starten',
   },
   admin: {
     users: 'Benutzer',

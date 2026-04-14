@@ -16,13 +16,14 @@ export const updateSearchQuery = createAction(
   }>(),
 );
 
-export const setResults = createAction(
-  '[Asset Search] Set Results',
+export const setAssetsResults = createAction(
+  '[Asset Search] Set Assets Results',
   props<{
     results?: AssetSearchResult;
     isLoading?: boolean;
   }>(),
 );
+
 export const setStats = createAction(
   '[Asset Search] Set Stats',
   props<{
