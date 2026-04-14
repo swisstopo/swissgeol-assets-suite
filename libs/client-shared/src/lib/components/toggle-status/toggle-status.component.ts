@@ -10,6 +10,9 @@ import { ButtonComponent } from '../button';
 })
 export class ToggleStatusComponent {
   @Input() public isActive = false;
+  @Input() public inactiveTranslationKey = '';
+  @Input() public activeTranslationKey = '';
+
   @Output() toggleIsActive = new EventEmitter();
 
   onToggleIsActive() {

@@ -29,7 +29,7 @@ export class SearchWriterService {
   ) {}
 
   async register(asset: Asset): Promise<void> {
-    await Promise.all([this.getWriter().write(asset), this.getFileWriter().write(asset)]);
+    await Promise.all([this.getWriter().write(asset), this.getFileWriter().writeAssetFiles(asset)]);
   }
 
   getWriter(options?: AssetSearchWriterOptions): AssetSearchWriter {
@@ -118,7 +118,7 @@ export class SearchWriterService {
       if (records.length === 0) {
         break;
       }
-      await Promise.all([writer.write(records), fileWriter.write(records)]);
+      await Promise.all([writer.write(records), fileWriter.writeAssetFiles(records)]);
       offset += records.length;
       if (onProgress != null) {
         await onProgress(Math.min(offset / total, 1));

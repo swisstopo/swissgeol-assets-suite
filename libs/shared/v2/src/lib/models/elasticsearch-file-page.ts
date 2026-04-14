@@ -1,7 +1,7 @@
 import { AssetId } from './asset';
 import { AssetFileId } from './asset-file';
 import { ContactId } from './contact';
-import { ElasticsearchLocalDate } from './elasticsearch-asset';
+import { ElasticsearchLocalDate, ElasticsearchPoint } from './elasticsearch-asset';
 import { GeometryType } from './geometry';
 import { LocalizedItemCode } from './localized-item';
 import { AssetSearchUsageCode } from './search/search-query';
@@ -13,21 +13,27 @@ import { UserId } from './user';
  * Each document represents a single page of a file's fulltext content,
  * with denormalized asset metadata fields for filtering.
  */
-export interface ElasticsearchFile {
+export interface ElasticsearchFilePage {
+  id: string;
   fileId: AssetFileId;
   assetId: AssetId;
-  assetTitle: string;
   fileName: string;
   page: number;
   content: string;
-  workgroupId: number;
+  title: string;
+  originalTitle: string | null;
+  sgsId: number | null;
+  createdAt: ElasticsearchLocalDate;
   usageCode: AssetSearchUsageCode;
   kindCode: LocalizedItemCode;
-  status: string;
   languageCodes: LocalizedItemCode[];
+  authorIds: ContactId[];
+  contactNames: string[];
   topicCodes: LocalizedItemCode[];
   geometryTypes: GeometryType[] | ['None'];
-  authorIds: ContactId[];
+  locations: ElasticsearchPoint[];
+  workgroupId: number;
   favoredByUserIds: UserId[];
-  createdAt: ElasticsearchLocalDate;
+  alternativeIds: string[];
+  status: string;
 }

@@ -1,17 +1,22 @@
 import {
   Asset,
   AssetContactRole,
+  AssetFile,
   AssetId,
   AssetSearchUsageCode,
-  ElasticsearchFile,
+  ContactId,
+  ElasticsearchFilePage,
   ElasticsearchLocalDate,
+  ElasticsearchPoint,
   FulltextContent,
   GeometryType,
+  LocalDate,
   UserId,
 } from '@asset-sg/shared/v2';
 import { Client as ElasticsearchClient } from '@elastic/elasticsearch';
 import { BulkOperationContainer } from '@elastic/elasticsearch/lib/api/types';
 import { Prisma, PrismaClient } from '@prisma/client';
+import { mapLv95ToElastic } from '@/features/assets/search/asset-search.utils';
 import { GeometryRepo } from '@/features/geometries/geometry.repo';
 import { ProcessQueue } from '@/utils/process-queue';
 
@@ -35,12 +40,181 @@ export class FileSearchWriter {
     this.eager = options.isEager ? this.fetchEager() : Promise.resolve(null);
   }
 
-  async write(oneOrMore: Asset | Asset[]): Promise<void> {
+  async write(oneOrMore: AssetFile | AssetFile[]): Promise<void> {
+    const files = Array.isArray(oneOrMore) ? oneOrMore : [oneOrMore];
+    if (files.length === 0) {
+      return;
+    }
+
+    const fileIds = files.map((f) => f.id);
+
+    // Fetch file records with their parent asset's metadata.
+    const fileRecords = await this.prisma.file.findMany({
+      where: { id: { in: fileIds } },
+      select: {
+        id: true,
+        name: true,
+        nameAlias: true,
+        assetId: true,
+        fulltextContent: true,
+        asset: {
+          select: {
+            titlePublic: true,
+            titleOriginal: true,
+            sgsId: true,
+            isPublic: true,
+            workgroupId: true,
+            assetKindItemCode: true,
+            createDate: true,
+            assetLanguages: { select: { languageItemCode: true } },
+            manCatLabelRefs: { select: { manCatLabelItemCode: true } },
+            assetContacts: { select: { contactId: true, role: true } },
+            ids: { select: { id: true } },
+            workflow: { select: { status: true } },
+          },
+        },
+      },
+    });
+
+    if (fileRecords.length === 0) {
+      return;
+    }
+
+    const assetIds = [...new Set(fileRecords.map((f) => f.assetId))];
+
+    // Collect all unique contact IDs across all files' assets.
+    const allContactIds = [...new Set(fileRecords.flatMap((f) => f.asset.assetContacts.map((c) => c.contactId)))];
+
+    // Fetch geometry metadata, favorites, and contact names for all involved assets.
+    const [geometries, favoriteRecords, contactRecords] = await Promise.all([
+      this.geometryRepo.list({ assetIds }),
+      this.prisma.favorite.findMany({
+        where: { assetId: { in: assetIds } },
+        select: { assetId: true, userId: true },
+      }),
+      this.prisma.contact.findMany({
+        where: { contactId: { in: allContactIds } },
+        select: { contactId: true, name: true },
+      }),
+    ]);
+
+    const geometryMetadataByAsset = new Map<AssetId, GeometryMetadata>();
+    for (const geo of geometries) {
+      let metadata = geometryMetadataByAsset.get(geo.assetId);
+      if (metadata == null) {
+        metadata = { types: new Set(), locations: [] };
+        geometryMetadataByAsset.set(geo.assetId, metadata);
+      }
+      metadata.types.add(geo.type);
+      metadata.locations.push(mapLv95ToElastic(geo.center));
+    }
+
+    const favoritesByAsset = new Map<AssetId, UserId[]>();
+    for (const { assetId, userId } of favoriteRecords) {
+      const userIds = favoritesByAsset.get(assetId);
+      if (userIds === undefined) {
+        favoritesByAsset.set(assetId, [userId]);
+      } else {
+        userIds.push(userId);
+      }
+    }
+
+    const contactNameById = new Map<ContactId, string>();
+    for (const { contactId, name } of contactRecords) {
+      contactNameById.set(contactId, name);
+    }
+
+    // Remove existing ES documents for these files before re-indexing.
+    await this.elastic.deleteByQuery({
+      index: this.options.index,
+      query: { terms: { fileId: fileIds } },
+      refresh: false,
+      ignore_unavailable: true,
+    });
+
+    const operations: Array<BulkOperationContainer | ElasticsearchFilePage> = [];
+
+    for (const file of fileRecords) {
+      const pages = file.fulltextContent as unknown as FulltextContent[] | null;
+      if (pages == null || pages.length === 0) {
+        continue;
+      }
+
+      const asset = file.asset;
+      const authorIds = asset.assetContacts.filter((c) => c.role === AssetContactRole.Author).map((c) => c.contactId);
+      const contactNames = asset.assetContacts
+        .map((c) => contactNameById.get(c.contactId))
+        .filter((name): name is string => name !== undefined);
+      const languageCodes =
+        asset.assetLanguages.length === 0 ? ['None'] : asset.assetLanguages.map((l) => l.languageItemCode);
+      const geoMetadata = geometryMetadataByAsset.get(file.assetId);
+      const geometryTypes: GeometryType[] | ['None'] =
+        geoMetadata != null && geoMetadata.types.size > 0 ? [...geoMetadata.types] : ['None'];
+      const locations = geoMetadata?.locations ?? [];
+      const favoredByUserIds = favoritesByAsset.get(file.assetId) ?? [];
+
+      for (const page of pages) {
+        if (!page.content || page.content.trim().length === 0) {
+          continue;
+        }
+        const docId = `${file.id}_${page.page}`;
+        const doc: ElasticsearchFilePage = {
+          id: docId,
+          fileId: file.id,
+          assetId: file.assetId,
+          title: asset.titlePublic,
+          originalTitle: asset.titleOriginal,
+          sgsId: asset.sgsId,
+          fileName: file.nameAlias ?? file.name,
+          page: page.page,
+          content: page.content,
+          workgroupId: asset.workgroupId,
+          usageCode: asset.isPublic ? AssetSearchUsageCode.Public : AssetSearchUsageCode.Internal,
+          kindCode: asset.assetKindItemCode,
+          status: asset.workflow?.status ?? 'Draft',
+          languageCodes,
+          topicCodes: asset.manCatLabelRefs.map((m) => m.manCatLabelItemCode),
+          geometryTypes,
+          locations,
+          authorIds,
+          contactNames,
+          favoredByUserIds,
+          alternativeIds: asset.ids.map((it) => it.id),
+          createdAt: LocalDate.fromDate(asset.createDate).toString() as ElasticsearchLocalDate,
+        };
+        operations.push({ index: { _index: this.options.index, _id: docId } });
+        operations.push(doc);
+      }
+    }
+
+    if (operations.length === 0) {
+      return;
+    }
+
+    await this.elastic.bulk({
+      index: this.options.index,
+      refresh: this.options.shouldRefresh,
+      operations,
+    });
+  }
+
+  async writeAssetFiles(oneOrMore: Asset | Asset[]): Promise<void> {
     const assets = Array.isArray(oneOrMore) ? oneOrMore : [oneOrMore];
-    const allOperations: Array<BulkOperationContainer | ElasticsearchFile> = [];
+
+    // Remove existing ES documents for these assets to clean up orphaned pages
+    // (e.g., when files are removed or page counts decrease).
+    const assetIds = assets.map((a) => a.id);
+    await this.elastic.deleteByQuery({
+      index: this.options.index,
+      query: { terms: { assetId: assetIds } },
+      refresh: false,
+      ignore_unavailable: true,
+    });
+
+    const allOperations: Array<BulkOperationContainer | ElasticsearchFilePage> = [];
 
     const processQueue = new ProcessQueue(QUEUE_SIZE);
-    const operationsByAsset: Array<Array<BulkOperationContainer | ElasticsearchFile>> = Array(assets.length);
+    const operationsByAsset: Array<Array<BulkOperationContainer | ElasticsearchFilePage>> = Array(assets.length);
 
     for (let j = 0; j < assets.length; j++) {
       const i = j;
@@ -78,8 +252,8 @@ export class FileSearchWriter {
     });
   }
 
-  private async mapAssetFilesToElastic(asset: Asset): Promise<Array<BulkOperationContainer | ElasticsearchFile>> {
-    const operations: Array<BulkOperationContainer | ElasticsearchFile> = [];
+  private async mapAssetFilesToElastic(asset: Asset): Promise<Array<BulkOperationContainer | ElasticsearchFilePage>> {
+    const operations: Array<BulkOperationContainer | ElasticsearchFilePage> = [];
 
     // Fetch fulltext content for all files of this asset
     const filesWithContent = await this.fetchFulltextContentForAsset(asset);
@@ -89,8 +263,9 @@ export class FileSearchWriter {
 
     // Fetch shared asset metadata
     const authorIds = asset.contacts.filter((it) => it.role === AssetContactRole.Author).map((it) => it.id);
+    const contactNames = await this.fetchContactNamesForAsset(asset);
     const languageCodes = asset.languageCodes.length === 0 ? ['None'] : asset.languageCodes;
-    const geometryTypes = await this.fetchGeometryTypesForAsset(asset);
+    const geometryMetadata = await this.fetchGeometryMetadataForAsset(asset);
     const favoredByUserIds = await this.fetchFavoredByUserIdsForAsset(asset);
 
     for (const { fileId, fileName, pages } of filesWithContent) {
@@ -99,10 +274,13 @@ export class FileSearchWriter {
           continue;
         }
         const docId = `${fileId}_${page.page}`;
-        const doc: ElasticsearchFile = {
+        const doc: ElasticsearchFilePage = {
+          id: docId,
           fileId,
           assetId: asset.id,
-          assetTitle: asset.title,
+          title: asset.title,
+          originalTitle: asset.originalTitle,
+          sgsId: asset.legacyData?.sgsId ?? null,
           fileName,
           page: page.page,
           content: page.content,
@@ -112,9 +290,12 @@ export class FileSearchWriter {
           status: asset.workflowStatus,
           languageCodes,
           topicCodes: asset.topicCodes,
-          geometryTypes,
+          geometryTypes: geometryMetadata.types,
+          locations: geometryMetadata.locations,
           authorIds,
+          contactNames,
           favoredByUserIds,
+          alternativeIds: asset.identifiers.map((id) => id.value),
           createdAt: asset.createdAt.toString() as ElasticsearchLocalDate,
         };
         operations.push({ index: { _index: this.options.index, _id: docId } });
@@ -167,20 +348,43 @@ export class FileSearchWriter {
       }));
   }
 
-  private async fetchGeometryTypesForAsset(asset: Asset): Promise<GeometryType[] | ['None']> {
+  private async fetchGeometryMetadataForAsset(
+    asset: Asset,
+  ): Promise<{ types: GeometryType[] | ['None']; locations: ElasticsearchPoint[] }> {
     const eager = await this.eager;
     if (eager !== null) {
-      return eager.assetIdToGeometryTypes.get(asset.id) ?? ['None'];
+      return eager.assetIdToGeometryMetadata.get(asset.id) ?? { types: ['None'], locations: [] };
     }
     const geometries = await this.geometryRepo.list({ assetIds: [asset.id] });
     if (geometries.length === 0) {
-      return ['None'];
+      return { types: ['None'], locations: [] };
     }
     const types = new Set<GeometryType>();
+    const locations: ElasticsearchPoint[] = [];
     for (const geometry of geometries) {
       types.add(geometry.type);
+      locations.push(mapLv95ToElastic(geometry.center));
     }
-    return [...types];
+    return { types: [...types], locations };
+  }
+
+  private async fetchContactNamesForAsset(asset: Asset): Promise<string[]> {
+    const eager = await this.eager;
+    if (eager !== null) {
+      const names: string[] = [];
+      for (const contact of asset.contacts) {
+        const name = eager.contactIdToName.get(contact.id);
+        if (name !== undefined) {
+          names.push(name);
+        }
+      }
+      return names;
+    }
+    const contacts = await this.prisma.contact.findMany({
+      select: { name: true },
+      where: { contactId: { in: asset.contacts.map((it) => it.id) } },
+    });
+    return contacts.map((it) => it.name);
   }
 
   private async fetchFavoredByUserIdsForAsset(asset: Asset): Promise<string[]> {
@@ -196,15 +400,17 @@ export class FileSearchWriter {
   }
 
   private async fetchEager(): Promise<FileEager> {
-    const [fulltextContent, favorites, geometryTypes] = await Promise.all([
+    const [fulltextContent, favorites, geometryMetadata, contactNames] = await Promise.all([
       this.fetchEagerFulltextContent(),
       this.fetchEagerFavorites(),
-      this.fetchEagerGeometryTypes(),
+      this.fetchEagerGeometryMetadata(),
+      this.fetchEagerContactNames(),
     ] as const);
     return {
       fileIdToFulltextContent: fulltextContent,
       assetIdToFavoredByUserId: favorites,
-      assetIdToGeometryTypes: geometryTypes,
+      assetIdToGeometryMetadata: geometryMetadata,
+      contactIdToName: contactNames,
     };
   }
 
@@ -246,25 +452,46 @@ export class FileSearchWriter {
     return mapping;
   }
 
-  private async fetchEagerGeometryTypes(): Promise<Map<AssetId, GeometryType[] | ['None']>> {
+  private async fetchEagerGeometryMetadata(): Promise<
+    Map<AssetId, { types: GeometryType[] | ['None']; locations: ElasticsearchPoint[] }>
+  > {
     const geometries = await this.geometryRepo.list({});
-    const mapping = new Map<AssetId, Set<GeometryType>>();
+    const mapping = new Map<AssetId, { types: Set<GeometryType>; locations: ElasticsearchPoint[] }>();
     for (const geometry of geometries) {
       if (!mapping.has(geometry.assetId)) {
-        mapping.set(geometry.assetId, new Set());
+        mapping.set(geometry.assetId, { types: new Set(), locations: [] });
       }
-      mapping.get(geometry.assetId)!.add(geometry.type);
+      const entry = mapping.get(geometry.assetId)!;
+      entry.types.add(geometry.type);
+      entry.locations.push(mapLv95ToElastic(geometry.center));
     }
-    const result = new Map<AssetId, GeometryType[] | ['None']>();
-    for (const [assetId, types] of mapping) {
-      result.set(assetId, types.size > 0 ? [...types] : ['None']);
+    const result = new Map<AssetId, { types: GeometryType[] | ['None']; locations: ElasticsearchPoint[] }>();
+    for (const [assetId, { types, locations }] of mapping) {
+      result.set(assetId, { types: types.size > 0 ? [...types] : ['None'], locations });
     }
     return result;
+  }
+
+  private async fetchEagerContactNames(): Promise<Map<ContactId, string>> {
+    const contacts = await this.prisma.contact.findMany({
+      select: { contactId: true, name: true },
+    });
+    const mapping = new Map<ContactId, string>();
+    for (const { contactId, name } of contacts) {
+      mapping.set(contactId, name);
+    }
+    return mapping;
   }
 }
 
 interface FileEager {
   fileIdToFulltextContent: Map<number, { fileName: string; pages: FulltextContent[] }>;
   assetIdToFavoredByUserId: Map<AssetId, UserId[]>;
-  assetIdToGeometryTypes: Map<AssetId, GeometryType[] | ['None']>;
+  assetIdToGeometryMetadata: Map<AssetId, { types: GeometryType[] | ['None']; locations: ElasticsearchPoint[] }>;
+  contactIdToName: Map<ContactId, string>;
+}
+
+interface GeometryMetadata {
+  types: Set<GeometryType>;
+  locations: ElasticsearchPoint[];
 }

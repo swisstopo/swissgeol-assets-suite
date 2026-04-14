@@ -20,6 +20,8 @@
       <svg-icon key="delete"></svg-icon>
     </button>
     <asset-sg-toggle-status
+      inactiveTranslationKey="admin.workgroupPage.isDisabled"
+      activeTranslationKey="admin.workgroupPage.isActive"
       [isActive]="!workgroup.disabledAt"
       (toggleIsActive)="toggleActiveStatus(workgroup)"
     ></asset-sg-toggle-status>

@@ -81,7 +81,7 @@ export class FileFulltextSyncService extends AtomicProgressService<FileFulltextS
       if (records.length === 0) {
         break;
       }
-      await fileWriter.write(records);
+      await fileWriter.writeAssetFiles(records);
       offset += records.length;
       await writeProgress(progressOffset + Math.min(offset / total, 1) * progressScale);
     }

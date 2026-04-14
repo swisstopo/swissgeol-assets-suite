@@ -9,6 +9,7 @@ import {
   ProcessableFile,
 } from '@/features/assets/files/file-processors/abstract-processing.service';
 import { FileS3Service } from '@/features/assets/files/file-s3.service';
+import { FileService } from '@/features/assets/files/file.service';
 import { requireEnv } from '@/utils/requireEnv';
 
 @Injectable()
@@ -20,6 +21,7 @@ export class FileOcrService extends AbstractProcessingService<[]> {
 
   constructor(
     protected readonly fileS3Service: FileS3Service,
+    protected readonly fileService: FileService,
     protected readonly prisma: PrismaService,
     protected readonly eventEmitter: EventEmitter2,
   ) {
@@ -48,6 +50,8 @@ export class FileOcrService extends AbstractProcessingService<[]> {
       data,
       where: { id: file.id },
     });
+
+    await this.fileService.loadFulltextContentFromS3(file.id);
 
     if (data.fileProcessingState !== FileProcessingState.Error) {
       this.eventEmitter.emit(EVENTS.FILE_START_EXTRACT, file);

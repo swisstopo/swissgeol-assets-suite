@@ -1,47 +1,44 @@
 {
   "properties": {
-    "fileId": {
+    "id": {
       "type": "keyword"
     },
     "assetId": {
       "type": "keyword"
     },
-    "assetTitle": {
-      "type": "text",
-      "fields": {
-        "keyword": {
-          "type": "keyword",
-          "ignore_above": 256
-        }
-      }
+    "fileId": {
+      "type": "keyword"
     },
-    "fileName": {
-      "type": "text",
-      "fields": {
-        "keyword": {
-          "type": "keyword",
-          "ignore_above": 256
-        }
-      }
-    },
-    "page": {
-      "type": "integer"
-    },
-    "content": {
-      "type": "text",
-      "term_vector": "with_positions_offsets"
-    },
-    "workgroupId": {
-      "type": "integer"
-    },
-    "usageCode": {
+    "status": {
       "type": "keyword"
     },
     "kindCode": {
       "type": "keyword"
     },
-    "status": {
-      "type": "keyword"
+    "authorIds": {
+      "type": "integer"
+    },
+    "contactNames": {
+      "type": "text",
+      "fields": {
+        "keyword": {
+          "type": "keyword",
+          "ignore_above": 256
+        }
+      }
+    },
+    "alternativeIds": {
+      "type": "text",
+      "fields": {
+        "keyword": {
+          "type": "keyword",
+          "ignore_above": 256
+        }
+      }
+    },
+    "createdAt": {
+      "type": "date",
+      "format": "yyyy-MM-dd"
     },
     "languageCodes": {
       "type": "keyword"
@@ -52,15 +49,54 @@
     "geometryTypes": {
       "type": "keyword"
     },
-    "authorIds": {
-      "type": "integer"
+    "sgsId": {
+      "type": "keyword"
+    },
+    "originalTitle": {
+      "type": "text",
+      "fields": {
+        "keyword": {
+          "type": "keyword",
+          "ignore_above": 256
+        }
+      }
+    },
+    "title": {
+      "type": "text",
+      "fields": {
+        "keyword": {
+          "type": "keyword",
+          "ignore_above": 256
+        }
+      }
+    },
+    "usageCode": {
+      "type": "keyword"
+    },
+    "locations": {
+      "type": "geo_point"
     },
     "favoredByUserIds": {
       "type": "keyword"
     },
-    "createdAt": {
-      "type": "date",
-      "format": "yyyy-MM-dd"
+    "workgroupId": {
+      "type": "integer"
+    },
+    "page": {
+      "type": "integer"
+    },
+    "fileName": {
+      "type": "text",
+      "fields": {
+        "keyword": {
+          "type": "keyword",
+          "ignore_above": 256
+        }
+      }
+    },
+    "content": {
+      "type": "text",
+      "term_vector": "with_positions_offsets"
     }
   }
 }

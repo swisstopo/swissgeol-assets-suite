@@ -105,7 +105,11 @@ export class SearchService<EntityId extends number | string> {
       track_total_hits: true,
       aggs,
     });
-    const totalHits = (totalHitsResponse.hits.total as SearchTotalHits).value;
+    const rawHitCount = (totalHitsResponse.hits.total as SearchTotalHits).value;
+    // When a `distinct_assets` cardinality aggregation is present (e.g. file search),
+    // use its value instead of the raw hit count, which counts individual pages rather than assets.
+    const totalHits =
+      (totalHitsResponse.aggregations?.['distinct_assets'] as { value: number } | undefined)?.value ?? rawHitCount;
     const isNotAdminEdgecase = options?.unrestrictedWorkgroupQuery === undefined;
     if (totalHits === 0 && isNotAdminEdgecase) {
       return makeEmptyAssetSearchStats();
@@ -281,7 +285,7 @@ export type MakeAggregationFunction = (
 
 const mapBucket = <T>(bucket: AggregationBucket<T>): ValueCount<T> => ({
   value: bucket.key,
-  count: bucket.doc_count,
+  count: bucket.distinct_assets?.value ?? bucket.doc_count,
 });
 
 interface AssetAggResult {
@@ -322,4 +326,5 @@ type NestedAggResult<T> = {
 interface AggregationBucket<K = string> {
   key: K;
   doc_count: number;
+  distinct_assets?: { value: number };
 }

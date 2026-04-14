@@ -67,7 +67,7 @@ export class FileSearchService {
             top_pages: {
               top_hits: {
                 size: 100,
-                _source: ['fileId', 'assetId', 'assetTitle', 'fileName', 'page'],
+                _source: ['fileId', 'assetId', 'title', 'fileName', 'page'],
                 highlight: {
                   fields: {
                     content: {
@@ -99,7 +99,7 @@ export class FileSearchService {
       return {
         fileId: Number(firstHit['fileId']),
         assetId: Number(firstHit['assetId']),
-        assetTitle: firstHit['assetTitle'] as string,
+        assetTitle: firstHit['title'] as string,
         fileName: firstHit['fileName'] as string,
         pages: bucket.top_pages.hits.hits.map((hit) => ({
           page: hit._source['page'] as number,
@@ -136,33 +136,6 @@ export class FileSearchService {
     user: User,
     options?: { unrestrictedWorkgroupQuery?: FileSearchQuery },
   ): Promise<AssetSearchStats> {
-    const { must, filter, aggs } = mapQueryToElasticDslParts(query, user);
-
-    // First, get the total number of distinct assets matching the full query.
-    const totalResponse = await this.elastic.search({
-      index: FILE_ELASTIC_INDEX,
-      size: 0,
-      query: { bool: { must, filter } },
-      track_total_hits: true,
-      ignore_unavailable: true,
-      aggs,
-    });
-    const total = (totalResponse.aggregations?.['distinct_assets'] as { value: number })?.value ?? 0;
-    if (total === 0) {
-      return {
-        total: 0,
-        kindCodes: [],
-        authorIds: [],
-        createdAt: null,
-        languageCodes: [],
-        geometryTypes: [],
-        topicCodes: [],
-        usageCodes: [],
-        workgroupIds: [],
-        status: [],
-      };
-    }
-
     const makeAggregation = (
       operator: 'terms' | 'min' | 'max',
       groupName: string,
