@@ -127,6 +127,8 @@ export class SearchService<EntityId extends number | string> {
     // use its value instead of the raw hit count, which counts individual pages rather than assets.
     const totalHits =
       (totalHitsResponse.aggregations?.['distinct_assets'] as { value: number } | undefined)?.value ?? rawHitCount;
+    const totalFiles =
+      (totalHitsResponse.aggregations?.['distinct_files'] as { value: number } | undefined)?.value ?? 0;
     const isNotAdminEdgecase = options?.unrestrictedWorkgroupQuery === undefined;
     if (totalHits === 0 && isNotAdminEdgecase) {
       return makeEmptyAssetSearchStats();
@@ -159,6 +161,7 @@ export class SearchService<EntityId extends number | string> {
 
     return {
       total: totalHits,
+      totalFiles,
       kindCodes: aggResults.kindCodes?.a?.buckets?.map(mapBucket) ?? [],
       authorIds: aggResults.authorIds?.a?.buckets?.map(mapBucket) ?? [],
       languageCodes: aggResults.languageCodes?.a?.buckets?.map(mapBucket) ?? [],

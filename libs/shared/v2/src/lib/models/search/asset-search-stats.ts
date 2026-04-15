@@ -8,6 +8,7 @@ import { AssetSearchUsageCode } from './search-query';
 
 export interface AssetSearchStats {
   total: number;
+  totalFiles: number;
   authorIds: ValueCount<ContactId>[];
   kindCodes: ValueCount<LocalizedItemCode>[];
   languageCodes: ValueCount<LocalizedItemCode>[];
@@ -26,6 +27,7 @@ export interface ValueCount<T> {
 
 export const makeEmptyAssetSearchStats = (): AssetSearchStats => ({
   total: 0,
+  totalFiles: 0,
   authorIds: [],
   kindCodes: [],
   languageCodes: [],

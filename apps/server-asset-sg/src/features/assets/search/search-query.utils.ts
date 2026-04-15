@@ -34,6 +34,9 @@ export const mapQueryToElasticDslParts = (
     aggs['distinct_assets'] = {
       cardinality: { field: 'assetId' },
     };
+    aggs['distinct_files'] = {
+      cardinality: { field: 'fileId' },
+    };
   }
 
   if (query.text != null && query.text.length > 0) {

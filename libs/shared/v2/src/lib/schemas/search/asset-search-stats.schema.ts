@@ -15,6 +15,9 @@ export class AssetSearchStatsSchema extends Schema implements AssetSearchStats {
   @IsInt()
   total!: number;
 
+  @IsInt()
+  totalFiles!: number;
+
   @IsArray()
   @IsObject({ each: true })
   authorIds!: ValueCount<ContactId>[];
