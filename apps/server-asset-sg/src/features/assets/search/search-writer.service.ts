@@ -30,10 +30,10 @@ export class SearchWriterService {
   ) {}
 
   async register(asset: Asset): Promise<void> {
-    await Promise.all([this.getWriter().write(asset), this.getFileWriter().writeAssetFiles(asset)]);
+    await Promise.all([this.getAssetWriter().write(asset), this.getFileWriter().writeAssetFiles(asset)]);
   }
 
-  getWriter(options?: SearchWriterOptions): AssetSearchWriter {
+  getAssetWriter(options?: SearchWriterOptions): AssetSearchWriter {
     return new AssetSearchWriter(
       this.elastic,
       this.prisma,
@@ -106,7 +106,7 @@ export class SearchWriterService {
     await this.elastic.indices.create({ index: FILE_SYNC_INDEX });
     await this.elastic.indices.putMapping({ index: FILE_SYNC_INDEX, ...fileIndexMapping });
 
-    const writer = this.getWriter({ index: SYNC_INDEX, isEager: true });
+    const writer = this.getAssetWriter({ index: SYNC_INDEX, isEager: true });
     const fileWriter = this.getFileWriter({ index: FILE_SYNC_INDEX, isEager: true });
     let offset = 0;
     for (;;) {

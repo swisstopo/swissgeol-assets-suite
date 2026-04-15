@@ -1,7 +1,7 @@
 import {
   Asset,
   AssetContactRole,
-  AssetFile,
+  AssetFileId,
   AssetId,
   AssetSearchUsageCode,
   ContactId,
@@ -42,13 +42,11 @@ export class FileSearchWriter {
     this.eager = options.isEager ? this.fetchEager() : Promise.resolve(null);
   }
 
-  async write(oneOrMore: AssetFile | AssetFile[]): Promise<void> {
-    const files = Array.isArray(oneOrMore) ? oneOrMore : [oneOrMore];
-    if (files.length === 0) {
+  async write(oneOrMore: AssetFileId | AssetFileId[]): Promise<void> {
+    const fileIds = Array.isArray(oneOrMore) ? oneOrMore : [oneOrMore];
+    if (fileIds.length === 0) {
       return;
     }
-
-    const fileIds = files.map((f) => f.id);
 
     // Fetch file records with their parent asset's metadata.
     const fileRecords = await this.prisma.file.findMany({

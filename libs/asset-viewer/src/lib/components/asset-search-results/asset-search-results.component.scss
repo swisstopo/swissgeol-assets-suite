@@ -84,6 +84,10 @@
     .file-page-cell {
       max-height: 100px;
       overflow-y: auto;
+
+      .file-page-entry:hover {
+        background-color: variables.$grey-02;
+      }
     }
 
     .action-buttons {
