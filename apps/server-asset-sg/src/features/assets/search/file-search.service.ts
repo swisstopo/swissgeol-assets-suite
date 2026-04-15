@@ -23,7 +23,7 @@ export class FileSearchService {
     { limit = 100, offset = 0 }: PageOptions = {},
   ): Promise<FileSearchResult> {
     const elasticQuery = mapQueryToElasticDsl(query, user);
-    const { results, total } = await this.searchService.search(
+    const { results, total, counts } = await this.searchService.search(
       elasticQuery,
       { limit, offset },
       {
@@ -46,6 +46,7 @@ export class FileSearchService {
             sort: [{ page: 'asc' }],
           },
         },
+        countAggs: { totalAssets: { field: 'assetId' } },
       },
     );
 
@@ -69,6 +70,7 @@ export class FileSearchService {
         size: data.length,
         total,
       },
+      totalAssets: counts['totalAssets'] ?? 0,
       data,
     };
   }

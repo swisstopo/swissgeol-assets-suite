@@ -1,15 +1,18 @@
 import { Component, ElementRef, EventEmitter, inject, OnDestroy, OnInit, Output, ViewChild } from '@angular/core';
-import { fromAppShared } from '@asset-sg/client-shared';
+import { fromAppShared, PdfOverlayService } from '@asset-sg/client-shared';
 import {
   AssetContact,
   AssetContactRole,
   AssetSearchResultItem,
   FileSearchResultItem,
+  FileSearchResultPage,
+  SearchType,
   sleep,
   tick,
 } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
 import { BehaviorSubject, combineLatestWith, firstValueFrom, map, Subject, Subscription, switchMap, take } from 'rxjs';
+import { AssetSearchService } from '../../services/asset-search.service';
 import { ViewerControllerService } from '../../services/viewer-controller.service';
 import * as actions from '../../state/asset-search/asset-search.actions';
 import { PanelState, setScrollOffsetForResults } from '../../state/asset-search/asset-search.actions';
@@ -19,6 +22,7 @@ import {
   selectFileTotal,
   selectIsResultsOpen,
   selectScrollOffsetForResults,
+  selectSearchQuery,
   selectSearchResultItems,
   selectSearchStats,
 } from '../../state/asset-search/asset-search.selector';
@@ -45,7 +49,7 @@ export class AssetSearchResultsComponent implements OnInit, OnDestroy {
     'createDate',
   ];
 
-  protected readonly FILE_COLUMNS = ['fileName', 'assetTitle', 'pages'];
+  protected readonly FILE_COLUMNS = ['fileName', 'assetTitle', 'pages', 'actions'];
 
   public activeTab: 'assets' | 'files' = 'assets';
 
@@ -58,6 +62,8 @@ export class AssetSearchResultsComponent implements OnInit, OnDestroy {
 
   private readonly store = inject(Store<AppStateWithAssetSearch>);
   private readonly viewerControllerService = inject(ViewerControllerService);
+  private readonly pdfOverlayService = inject(PdfOverlayService);
+  private readonly assetSearchService = inject(AssetSearchService);
   public readonly isResultsOpen$ = this.store.select(selectIsResultsOpen);
   public readonly assets$ = this.store.select(selectSearchResultItems);
   public readonly fileResults$ = this.store.select(selectFileSearchResultItems);
@@ -65,6 +71,7 @@ export class AssetSearchResultsComponent implements OnInit, OnDestroy {
   public readonly fileTotal$ = this.store.select(selectFileTotal);
   public readonly currentAsset$ = this.store.select(fromAppShared.selectCurrentAsset);
   public readonly scrollOffset$ = this.store.select(selectScrollOffsetForResults);
+  public readonly searchQuery$ = this.store.select(selectSearchQuery);
 
   private readonly subscriptions: Subscription = new Subscription();
 
@@ -196,6 +203,27 @@ export class AssetSearchResultsComponent implements OnInit, OnDestroy {
     );
   }
 
+  protected async openPdf(file: FileSearchResultItem, initialPageNumber?: number): Promise<void> {
+    const asset = await firstValueFrom(this.assetSearchService.fetchAsset(file.assetId));
+    initialPageNumber ??= file.pages.length > 0 ? file.pages[0].page : undefined;
+    this.pdfOverlayService.openPdfOverlay({
+      assetId: file.assetId,
+      initialPdfId: file.fileId,
+      initialPageNumber,
+      assetPdfs: asset.files
+        .filter((f) => f.name.endsWith('.pdf'))
+        .map((f) => ({
+          id: f.id,
+          fileName: f.alias ?? f.name,
+          pageRangeClassifications: f.pageRangeClassifications,
+        })),
+    });
+  }
+
+  protected pagesWithContent(pages: FileSearchResultPage[]) {
+    return pages.filter((p) => p.highlights.length > 0);
+  }
+
   private get allResults(): AssetSearchResultItem[] {
     return this.allResults$.value;
   }
@@ -205,4 +233,5 @@ export class AssetSearchResultsComponent implements OnInit, OnDestroy {
   }
 
   protected readonly AssetContactRole = AssetContactRole;
+  protected readonly SearchType = SearchType;
 }

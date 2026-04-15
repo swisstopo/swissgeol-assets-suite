@@ -80,6 +80,28 @@
     .selected {
       background-color: variables.$grey-01;
     }
+
+    .file-page-cell {
+      max-height: 100px;
+      overflow-y: auto;
+    }
+
+    .action-buttons {
+      display: flex;
+      flex-direction: row;
+      gap: 8px;
+
+      button {
+        width: 36px;
+        height: 36px;
+        padding: 8px;
+
+        svg-icon svg {
+          width: 20px;
+          height: 20px;
+        }
+      }
+    }
   }
 }
 

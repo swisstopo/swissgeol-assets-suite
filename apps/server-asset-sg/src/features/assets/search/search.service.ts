@@ -39,6 +39,8 @@ export interface SearchConfig {
   sourceFields?: string[];
   /** Stored fields to retrieve (e.g., ['id', 'data'] for asset search). */
   storedFields?: string[];
+  /** Additional cardinality aggregations to compute alongside the search. */
+  countAggs?: Record<string, { field: string }>;
 }
 
 export interface SearchHitData {
@@ -56,12 +58,14 @@ export interface SearchHitData {
 export interface PaginatedSearchResult<EntityId extends number | string> {
   results: Map<EntityId, SearchHitData>;
   total: number;
+  counts: Record<string, number>;
 }
 
 interface SearchState<EntityId extends number | string> {
   matchedEntities: Map<EntityId, SearchHitData>;
   lastEntityId: EntityId | null;
   totalCount: number | null;
+  counts: Record<string, number>;
 }
 
 export class SearchService<EntityId extends number | string> {
@@ -85,12 +89,13 @@ export class SearchService<EntityId extends number | string> {
       matchedEntities: new Map(),
       lastEntityId: null,
       totalCount: null,
+      counts: {},
     };
     const hasOffset = await this.findOffsetForSearch(query, page, state, config);
     if (hasOffset) {
       await this.doSearchByOffset(query, page, state, config);
     }
-    return { results: state.matchedEntities, total: state.totalCount ?? 0 };
+    return { results: state.matchedEntities, total: state.totalCount ?? 0, counts: state.counts };
   }
 
   /**
@@ -289,11 +294,22 @@ export class SearchService<EntityId extends number | string> {
         };
       }
       searchParams['collapse'] = collapseParam;
-      // With collapse, hits.total counts uncollapsed docs. Use cardinality for accurate total.
-      if (state.totalCount == null) {
-        searchParams['aggs'] = {
-          total_collapsed: { cardinality: { field: options.config.collapse.field } },
-        };
+    }
+
+    // Add cardinality aggregations on the first query for accurate counts.
+    if (state.totalCount == null) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const aggs: Record<string, any> = {};
+      if (options.config?.collapse) {
+        aggs['total_collapsed'] = { cardinality: { field: options.config.collapse.field } };
+      }
+      if (options.config?.countAggs) {
+        for (const [name, { field }] of Object.entries(options.config.countAggs)) {
+          aggs[name] = { cardinality: { field } };
+        }
+      }
+      if (Object.keys(aggs).length > 0) {
+        searchParams['aggs'] = aggs;
       }
     }
 
@@ -316,6 +332,11 @@ export class SearchService<EntityId extends number | string> {
           (response.hits.total as SearchTotalHits).value;
       } else {
         state.totalCount = (response.hits.total as SearchTotalHits).value;
+      }
+      if (options.config?.countAggs && response.aggregations) {
+        for (const name of Object.keys(options.config.countAggs)) {
+          state.counts[name] = (response.aggregations[name] as { value: number } | undefined)?.value ?? 0;
+        }
       }
     }
 

@@ -39,8 +39,10 @@
       <asset-sg-search-input [value]="searchQuery.text ?? ''" (searchSubmit)="search($event)" />
       <asset-sg-toggle-button
         class="toggle-search-type"
-        activeTranslationKey="search.searchFiles"
-        inactiveTranslationKey="search.searchAssets"
+        activeTranslationKey="search.files"
+        activeTranslationIcon="document"
+        inactiveTranslationKey="search.assets"
+        inactiveTranslationIcon="info"
         [isActive]="searchQuery.type === SearchType.File"
         (toggleIsActive)="toggleSearchType(searchQuery.type)"
       />
