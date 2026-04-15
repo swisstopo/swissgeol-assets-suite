@@ -48,6 +48,7 @@ export class SearchWriterService {
       this.elastic,
       this.prisma,
       this.geometryRepo,
+      this.geometryDetailRepo,
       options ?? { index: FILE_ELASTIC_INDEX, shouldRefresh: true },
     );
   }

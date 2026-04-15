@@ -3,6 +3,8 @@ import {
   AssetContactRole,
   AssetFileId,
   AssetId,
+  AssetSearchResultItem,
+  AssetSearchResultItemSchema,
   AssetSearchUsageCode,
   ContactId,
   ElasticsearchFilePage,
@@ -14,6 +16,7 @@ import { transformJsonToFulltextContent } from '@asset-sg/shared/v2';
 import { Client as ElasticsearchClient } from '@elastic/elasticsearch';
 import { BulkOperationContainer } from '@elastic/elasticsearch/lib/api/types';
 import { Prisma, PrismaClient } from '@prisma/client';
+import { plainToInstance } from 'class-transformer';
 import {
   buildFavoritesMap,
   buildGeometryMetadataMap,
@@ -24,6 +27,7 @@ import {
   SearchWriterOptions,
   SharedEagerData,
 } from '@/features/assets/search/search-writer.utils';
+import { GeometryDetailRepo } from '@/features/geometries/geometry-detail.repo';
 import { GeometryRepo } from '@/features/geometries/geometry.repo';
 import { ProcessQueue } from '@/utils/process-queue';
 
@@ -36,6 +40,7 @@ export class FileSearchWriterService {
     private readonly elastic: ElasticsearchClient,
     private readonly prisma: PrismaClient,
     private readonly geometryRepo: GeometryRepo,
+    private readonly geometryDetailRepo: GeometryDetailRepo,
     private readonly options: SearchWriterOptions,
   ) {}
 
@@ -71,6 +76,7 @@ export class FileSearchWriterService {
             isPublic: true,
             workgroupId: true,
             assetKindItemCode: true,
+            assetFormatItemCode: true,
             createDate: true,
             assetLanguages: { select: { languageItemCode: true } },
             manCatLabelRefs: { select: { manCatLabelItemCode: true } },
@@ -91,9 +97,10 @@ export class FileSearchWriterService {
     // Collect all unique contact IDs across all files' assets.
     const allContactIds = [...new Set(fileRecords.flatMap((f) => f.asset.assetContacts.map((c) => c.contactId)))];
 
-    // Fetch geometry metadata, favorites, and contact names for all involved assets.
-    const [geometries, favoriteRecords, contactRecords] = await Promise.all([
+    // Fetch geometry metadata, geometry details, favorites, and contact names for all involved assets.
+    const [geometries, geometryDetails, favoriteRecords, contactRecords] = await Promise.all([
       this.geometryRepo.list({ assetIds }),
+      this.geometryDetailRepo.list({ assetIds }),
       this.prisma.favorite.findMany({
         where: { assetId: { in: assetIds } },
         select: { assetId: true, userId: true },
@@ -106,6 +113,21 @@ export class FileSearchWriterService {
 
     const geometryMetadataByAsset = buildGeometryMetadataMap(geometries);
     const favoritesByAsset = buildFavoritesMap(favoriteRecords);
+
+    // Group geometry details by asset ID for building the `data` JSON blob.
+    const geometryIdToAssetId = new Map<string, AssetId>();
+    for (const g of geometries) {
+      geometryIdToAssetId.set(g.id, g.assetId);
+    }
+    const geometryDetailsByAsset = new Map<AssetId, typeof geometryDetails>();
+    for (const detail of geometryDetails) {
+      const assetId = geometryIdToAssetId.get(detail.id);
+      if (assetId != null) {
+        const existing = geometryDetailsByAsset.get(assetId) ?? [];
+        existing.push(detail);
+        geometryDetailsByAsset.set(assetId, existing);
+      }
+    }
 
     const contactNameById = new Map<ContactId, string>();
     for (const { contactId, name } of contactRecords) {
@@ -139,6 +161,21 @@ export class FileSearchWriterService {
       const geometryTypes = geoMetadata?.types ?? ['None'];
       const locations = geoMetadata?.locations ?? [];
       const favoredByUserIds = favoritesByAsset.get(file.assetId) ?? [];
+      const assetGeometryDetails = geometryDetailsByAsset.get(file.assetId) ?? [];
+
+      const data = JSON.stringify(
+        plainToInstance(AssetSearchResultItemSchema, {
+          id: file.assetId,
+          title: asset.titlePublic,
+          isPublic: asset.isPublic,
+          kindCode: asset.assetKindItemCode,
+          formatCode: asset.assetFormatItemCode,
+          topicCodes: asset.manCatLabelRefs.map((m) => m.manCatLabelItemCode),
+          contacts: asset.assetContacts.map((c) => ({ id: c.contactId, role: c.role as AssetContactRole })),
+          geometries: assetGeometryDetails,
+          createdAt: LocalDate.fromDate(asset.createDate),
+        } satisfies AssetSearchResultItem),
+      );
 
       for (const page of pages) {
         if (!page.content || page.content.trim().length === 0) {
@@ -168,6 +205,7 @@ export class FileSearchWriterService {
           favoredByUserIds,
           alternativeIds: asset.ids.map((it) => it.id),
           createdAt: LocalDate.fromDate(asset.createDate).toString() as ElasticsearchLocalDate,
+          data,
         };
         operations.push({ index: { _index: this.options.index, _id: docId } }, doc);
       }
@@ -245,12 +283,27 @@ export class FileSearchWriterService {
 
     const eagerData = await this.getEager();
     const authorIds = asset.contacts.filter((it) => it.role === AssetContactRole.Author).map((it) => it.id);
-    const [contactNames, favoredByUserIds, geometryMetadata] = await Promise.all([
+    const [contactNames, favoredByUserIds, geometryMetadata, assetGeometryDetails] = await Promise.all([
       fetchContactNamesForAsset(asset, eagerData, this.prisma),
       fetchFavoredByUserIdsForAsset(asset, eagerData, this.prisma),
       fetchGeometryMetadataForAsset(asset, eagerData, this.geometryRepo),
+      this.geometryDetailRepo.list({ assetIds: [asset.id] }),
     ]);
     const languageCodes = asset.languageCodes.length === 0 ? ['None'] : asset.languageCodes;
+
+    const data = JSON.stringify(
+      plainToInstance(AssetSearchResultItemSchema, {
+        id: asset.id,
+        title: asset.title,
+        isPublic: asset.isPublic,
+        kindCode: asset.kindCode,
+        formatCode: asset.formatCode,
+        topicCodes: asset.topicCodes,
+        contacts: asset.contacts,
+        geometries: assetGeometryDetails,
+        createdAt: asset.createdAt,
+      } satisfies AssetSearchResultItem),
+    );
 
     for (const { fileId, fileName, pages } of filesWithContent) {
       for (const page of pages) {
@@ -281,6 +334,7 @@ export class FileSearchWriterService {
           favoredByUserIds,
           alternativeIds: asset.identifiers.map((id) => id.value),
           createdAt: asset.createdAt.toString() as ElasticsearchLocalDate,
+          data,
         };
         operations.push({ index: { _index: this.options.index, _id: docId } }, doc);
       }

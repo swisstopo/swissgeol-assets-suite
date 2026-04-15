@@ -36,4 +36,5 @@ export interface ElasticsearchFilePage {
   favoredByUserIds: UserId[];
   alternativeIds: string[];
   status: string;
+  data: string;
 }

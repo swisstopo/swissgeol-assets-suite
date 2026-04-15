@@ -37,6 +37,7 @@ import {
 } from '../state/asset-search/asset-search.actions';
 import { AppStateWithAssetSearch } from '../state/asset-search/asset-search.reducer';
 import {
+  selectFileSearchResults,
   selectFiltersState,
   selectGeometries,
   selectIsResultsOpen,
@@ -167,8 +168,16 @@ export class ViewerControllerService {
       }
       case SearchType.File: {
         this.store.dispatch(actions.setFileResults({ isLoading: true }));
+        this.store.dispatch(actions.setAssetsResults({ isLoading: true }));
         const fileResults = await firstValueFrom(this.assetSearchService.searchFiles(query));
         this.store.dispatch(actions.setFileResults({ fileResults, isLoading: false }));
+
+        // Use the asset data embedded in the file search response for map rendering.
+        const results = {
+          page: { offset: 0, size: fileResults.assets.length, total: fileResults.assets.length },
+          data: fileResults.assets,
+        };
+        this.store.dispatch(actions.setAssetsResults({ results, isLoading: false }));
         break;
       }
       default:
@@ -215,10 +224,16 @@ export class ViewerControllerService {
       this.store.dispatch(actions.setMapPosition({ position: DEFAULT_MAP_POSITION }));
     }
     await Promise.all([this.loadResults(query), this.loadStats(query)]);
-    const results = await firstValueFrom(this.store.select(selectSearchResults));
+
+    // Use file results total for file search, asset results total for asset search.
+    const total =
+      query.type === SearchType.File
+        ? (await firstValueFrom(this.store.select(selectFileSearchResults))).page.total
+        : (await firstValueFrom(this.store.select(selectSearchResults))).page.total;
+
     this.store.dispatch(
       actions.setResultsState({
-        state: results.page.total === 0 ? PanelState.ClosedAutomatically : PanelState.OpenedAutomatically,
+        state: total === 0 ? PanelState.ClosedAutomatically : PanelState.OpenedAutomatically,
       }),
     );
   }

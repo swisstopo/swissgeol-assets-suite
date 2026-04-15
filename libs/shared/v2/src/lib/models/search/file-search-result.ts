@@ -1,6 +1,6 @@
 import { AssetId } from '../asset';
 import { AssetFileId } from '../asset-file';
-import { PageStats } from './asset-search-result';
+import { AssetSearchResultItem, PageStats } from './asset-search-result';
 
 export interface FileSearchResultPage {
   page: number;
@@ -19,6 +19,7 @@ export interface FileSearchResult {
   page: PageStats;
   totalAssets: number;
   data: FileSearchResultItem[];
+  assets: AssetSearchResultItem[];
 }
 
 export const makeEmptyFileSearchResults = (): FileSearchResult => ({
@@ -29,4 +30,5 @@ export const makeEmptyFileSearchResults = (): FileSearchResult => ({
   },
   totalAssets: 0,
   data: [],
+  assets: [],
 });

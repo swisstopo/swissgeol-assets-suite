@@ -2,9 +2,10 @@ import { Expose, Type } from 'class-transformer';
 import { IsArray, IsNumber, IsString, ValidateNested } from 'class-validator';
 import { AssetId } from '../../models/asset';
 import { AssetFileId } from '../../models/asset-file';
-import { PageStats } from '../../models/search/asset-search-result';
+import { AssetSearchResultItem, PageStats } from '../../models/search/asset-search-result';
 import { FileSearchResult, FileSearchResultItem, FileSearchResultPage } from '../../models/search/file-search-result';
 import { Schema } from '../base/schema';
+import { AssetSearchResultItemSchema } from './asset-search-result.schema';
 
 export class FileSearchResultPageSchema extends Schema implements FileSearchResultPage {
   @Expose()
@@ -54,4 +55,10 @@ export class FileSearchResultSchema extends Schema implements FileSearchResult {
   @ValidateNested({ each: true })
   @Type(() => FileSearchResultItemSchema)
   data!: FileSearchResultItem[];
+
+  @Expose()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => AssetSearchResultItemSchema)
+  assets!: AssetSearchResultItem[];
 }

@@ -1,6 +1,15 @@
-import { AssetSearchStats, FileSearchQuery, FileSearchResult, FileSearchResultItem, User } from '@asset-sg/shared/v2';
+import {
+  AssetSearchResultItem,
+  AssetSearchResultItemSchema,
+  AssetSearchStats,
+  FileSearchQuery,
+  FileSearchResult,
+  FileSearchResultItem,
+  User,
+} from '@asset-sg/shared/v2';
 import { Client as ElasticsearchClient } from '@elastic/elasticsearch';
 import { Injectable } from '@nestjs/common';
+import { plainToInstance } from 'class-transformer';
 import { FILE_ELASTIC_INDEX } from '@/features/assets/search/asset-search.constants';
 import { mapQueryToElasticDsl, PageOptions } from '@/features/assets/search/search-query.utils';
 import { SearchService } from '@/features/assets/search/search.service';
@@ -28,7 +37,7 @@ export class FileSearchService {
       { limit, offset },
       {
         entityIdField: 'fileId',
-        sourceFields: ['fileId', 'assetId', 'title', 'fileName'],
+        sourceFields: ['fileId', 'assetId', 'title', 'fileName', 'data'],
         collapse: {
           field: 'fileId',
           innerHits: {
@@ -51,10 +60,12 @@ export class FileSearchService {
     );
 
     const data: FileSearchResultItem[] = [];
+    const assetsById = new Map<number, AssetSearchResultItem>();
     for (const hit of results.values()) {
+      const assetId = Number(hit.source?.['assetId']);
       data.push({
         fileId: Number(hit.source?.['fileId']),
-        assetId: Number(hit.source?.['assetId']),
+        assetId,
         assetTitle: hit.source?.['title'] as string,
         fileName: hit.source?.['fileName'] as string,
         pages: (hit.innerHits?.['pages'] ?? []).map((p) => ({
@@ -62,6 +73,15 @@ export class FileSearchService {
           highlights: p.highlight?.['content'] ?? [],
         })),
       });
+
+      // Deduplicate asset data by assetId for map rendering.
+      if (!assetsById.has(assetId) && hit.source?.['data'] != null) {
+        const encodedAsset = JSON.parse(hit.source['data'] as string);
+        assetsById.set(
+          assetId,
+          plainToInstance(AssetSearchResultItemSchema, encodedAsset, { excludeExtraneousValues: true }),
+        );
+      }
     }
 
     return {
@@ -72,6 +92,7 @@ export class FileSearchService {
       },
       totalAssets: counts['totalAssets'] ?? 0,
       data,
+      assets: [...assetsById.values()],
     };
   }
 

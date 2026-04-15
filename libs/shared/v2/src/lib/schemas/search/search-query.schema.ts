@@ -1,6 +1,7 @@
 import { WorkflowStatus } from '@swissgeol/ui-core';
 import { Type } from 'class-transformer';
 import { Equals, IsBoolean, IsIn, IsNumber, IsOptional, IsString, ValidateNested } from 'class-validator';
+import { AssetId } from '../../models/asset';
 import { GeometryType } from '../../models/geometry';
 import { LocalizedItemCode } from '../../models/localized-item';
 import {
@@ -17,6 +18,10 @@ import { PartialDateRangeSchema } from '../base/local-date-range.schema';
 import { Schema } from '../base/schema';
 
 export class AssetFiltersSchema extends Schema implements AssetFilters {
+  @IsNumber({}, { each: true })
+  @IsOptional()
+  assetIds?: AssetId[];
+
   @IsOptional()
   polygon?: Polygon;
 

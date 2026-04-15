@@ -63,6 +63,7 @@ export const mapQueryToElasticDslParts = (
             content: {
               query: query.text,
               operator: 'and',
+              fuzziness: 'AUTO',
             },
           },
         };
@@ -124,6 +125,11 @@ export const mapQueryToElasticDslParts = (
         favoredByUserIds: [user.id],
       },
     });
+  }
+
+  if (query.assetIds != null && query.assetIds.length > 0) {
+    const field = query.type === SearchType.File ? 'assetId' : 'id';
+    filters.push({ terms: { [field]: query.assetIds } });
   }
 
   if (query.polygon != null) {

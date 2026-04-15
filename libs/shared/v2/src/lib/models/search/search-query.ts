@@ -1,5 +1,6 @@
 import { LV95 } from '@asset-sg/shared';
 import { WorkflowStatus } from '@swissgeol/ui-core';
+import { AssetId } from '../asset';
 import { LocalDateRange } from '../base/local-date-range';
 import { GeometryType } from '../geometry';
 import { LocalizedItemCode } from '../localized-item';
@@ -16,6 +17,7 @@ export interface SearchQuery {
 }
 
 export interface AssetFilters {
+  assetIds?: AssetId[];
   polygon?: Polygon;
   authorId?: number;
   usageCodes?: AssetSearchUsageCode[];
