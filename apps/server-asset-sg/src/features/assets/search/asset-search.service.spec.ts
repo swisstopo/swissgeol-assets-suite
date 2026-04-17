@@ -9,6 +9,7 @@ import {
   LanguageCode,
   LocalDate,
   PageStats,
+  SearchType,
 } from '@asset-sg/shared/v2';
 import { faker } from '@faker-js/faker';
 
@@ -25,8 +26,8 @@ import { clearPrismaAssets, setupDB } from '../../../../../../test/setup-db';
 
 import { AssetRepo } from '../asset.repo';
 import { ASSET_ELASTIC_INDEX } from './asset-search.constants';
-import { escapeElasticQuery, normalizeFieldQuery } from './asset-search.query';
 import { AssetSearchService } from './asset-search.service';
+import { escapeElasticQuery, normalizeFieldQuery } from './search-query.utils';
 import { SearchWriterService } from './search-writer.service';
 
 import { openElasticsearchClient } from '@/core/elasticsearch';
@@ -177,7 +178,13 @@ describe(AssetSearchService, () => {
         await createItem({ ...fakeCreateAssetData(), creatorId: user.id });
 
         // When
-        const result = await service.search({ text: `${text}` }, user);
+        const result = await service.search(
+          {
+            type: SearchType.Asset,
+            text: `${text}`,
+          },
+          user,
+        );
 
         // Then
         assertSingleResult(result, asset);
@@ -232,6 +239,7 @@ describe(AssetSearchService, () => {
       // When
       const result = await service.search(
         {
+          type: SearchType.Asset,
           createdAt: {
             min: LocalDate.fromDate(new Date(asset.createdAt.toDate().getTime() - millisPerDay)),
           },
@@ -256,6 +264,7 @@ describe(AssetSearchService, () => {
       // When
       const result = await service.search(
         {
+          type: SearchType.Asset,
           createdAt: {
             max: LocalDate.fromDate(new Date(asset.createdAt.toDate().getTime() + millisPerDay)),
           },
@@ -288,6 +297,7 @@ describe(AssetSearchService, () => {
       // When
       const result = await service.search(
         {
+          type: SearchType.Asset,
           createdAt: {
             min: LocalDate.fromDate(new Date(asset.createdAt.toDate().getTime() - millisPerDay)),
             max: LocalDate.fromDate(new Date(asset.createdAt.toDate().getTime() + millisPerDay)),
@@ -323,7 +333,13 @@ describe(AssetSearchService, () => {
       const user = await userRepo.create(fakeUserData());
 
       // When
-      const result = await service.search({ languageCodes: [code1] }, user);
+      const result = await service.search(
+        {
+          type: SearchType.Asset,
+          languageCodes: [code1],
+        },
+        user,
+      );
 
       // Then
       assertSingleResult(result, asset);
@@ -344,7 +360,13 @@ describe(AssetSearchService, () => {
       await createItem({ ...fakeCreateAssetData(), kindCode: code3, creatorId: user.id });
 
       // When
-      const result = await service.search({ kindCodes: [code1] }, user);
+      const result = await service.search(
+        {
+          type: SearchType.Asset,
+          kindCodes: [code1],
+        },
+        user,
+      );
 
       // Then
       assertSingleResult(result, asset);
@@ -365,7 +387,13 @@ describe(AssetSearchService, () => {
       await createItem({ ...fakeCreateAssetData(), topicCodes: [code3], creatorId: user.id });
 
       // When
-      const result = await service.search({ topicCodes: [code1] }, user);
+      const result = await service.search(
+        {
+          type: SearchType.Asset,
+          topicCodes: [code1],
+        },
+        user,
+      );
 
       // Then
       assertSingleResult(result, asset);
@@ -387,7 +415,13 @@ describe(AssetSearchService, () => {
       });
 
       // When
-      const result = await service.search({ usageCodes: [usageCode] }, user);
+      const result = await service.search(
+        {
+          type: SearchType.Asset,
+          usageCodes: [usageCode],
+        },
+        user,
+      );
 
       // Then
       assertSingleResult(result, asset);
@@ -429,7 +463,13 @@ describe(AssetSearchService, () => {
       });
 
       // When
-      const result = await service.search({ authorId: contact1.contactId }, user);
+      const result = await service.search(
+        {
+          type: SearchType.Asset,
+          authorId: contact1.contactId,
+        },
+        user,
+      );
 
       // Then
       assertSingleResult(result, asset);
@@ -479,7 +519,12 @@ describe(AssetSearchService, () => {
       const user = await userRepo.create(fakeUserData());
 
       // When
-      const result = await service.aggregate({}, user);
+      const result = await service.aggregate(
+        {
+          type: SearchType.Asset,
+        },
+        user,
+      );
 
       // Then
       expect(result.total).toEqual(0);
@@ -497,7 +542,12 @@ describe(AssetSearchService, () => {
       const asset = await create({ ...fakeCreateAssetData(), creatorId: user.id });
 
       // When
-      const result = await service.aggregate({}, user);
+      const result = await service.aggregate(
+        {
+          type: SearchType.Asset,
+        },
+        user,
+      );
 
       // Then
       assertSingleStats(result, asset);
