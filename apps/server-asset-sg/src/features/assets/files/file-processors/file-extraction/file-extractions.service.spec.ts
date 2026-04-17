@@ -75,7 +75,7 @@ describe('FileExtractionService', () => {
     });
 
     it('should ignore non-existing categories', () => {
-      const loggerWarnSpy = jest.spyOn<any, any>(service['logger'], 'warn').mockImplementation();
+      const loggerWarnSpy = jest.spyOn(Logger.prototype, 'warn').mockImplementation();
       const nonExistingCategoryName = 'NewNonExistingCategory';
       const result: PredictionSchema = {
         filename: 'test.pdf',

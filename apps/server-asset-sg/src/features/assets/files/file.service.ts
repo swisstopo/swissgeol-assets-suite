@@ -12,7 +12,7 @@ import { BadRequestException, Injectable, Logger, NotFoundException } from '@nes
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Prisma } from '@prisma/client';
 import { getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs';
-import { PDFDocumentProxy } from 'pdfjs-dist/types/src/display/api';
+import { PDFDocumentProxy, TextItem, TextMarkedContent } from 'pdfjs-dist/types/src/display/api';
 import { EVENTS } from '@/core/events';
 import { PrismaService } from '@/core/prisma.service';
 import { FileS3Service, SaveFileS3Options } from '@/features/assets/files/file-s3.service';
@@ -74,22 +74,11 @@ export class FileService {
     }
     const isDbOk = await this.fileRepo.delete(id);
     if (!isDbOk) {
-      // The connection between the asset and the file has been deleted,
-      // but the file is still linked to other assets.
-      // We still want to communicate that the file was successfully deleted,
-      // as by the viewpoint of the API, the deletion has been successful.
-      return true;
+      return false;
     }
 
-    // Remove the file from S3, as no asset refers to it anymore.
+    // Remove the file from S3.
     return await this.fileS3Service.delete(file.name);
-  }
-
-  async deleteOrphans(): Promise<void> {
-    const orphans = await this.fileRepo.findOrphans();
-    for (const orphan of orphans) {
-      await this.fileRepo.deleteUnused(orphan.id);
-    }
   }
 
   async reanalyzeFile(id: FileIdentifier): Promise<AssetFile> {
@@ -182,8 +171,8 @@ export class FileService {
         const page = await doc?.getPage(i);
         const textContent = await page.getTextContent();
         const text = textContent.items
-          .filter((item: any) => 'str' in item)
-          .map((item: any) => item.str)
+          .filter((item: TextItem | TextMarkedContent) => 'str' in item)
+          .map((item: { str: string }) => item.str)
           .join(' ');
         page.cleanup();
         yield { pageNumber: i, text };

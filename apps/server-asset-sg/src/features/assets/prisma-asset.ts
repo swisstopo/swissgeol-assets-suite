@@ -68,12 +68,8 @@ export const assetSelection = {
       description: true,
     },
   },
-  assetFiles: {
-    select: {
-      file: {
-        select: assetFileSelection,
-      },
-    },
+  files: {
+    select: assetFileSelection,
   },
   assetContacts: {
     select: {
@@ -131,7 +127,7 @@ export const parseAssetFromPrisma = (data: SelectedAsset): Asset => ({
     value: it.id,
     description: it.description,
   })),
-  files: data.assetFiles.map((it) => mapAssetFileFromPrisma(it.file)),
+  files: data.files.map((it) => mapAssetFileFromPrisma(it)),
   contacts: data.assetContacts.map((it) => ({
     id: it.contactId,
     role: it.role as AssetContactRole,
@@ -328,30 +324,20 @@ export const mapAssetDataToPrismaUpdate = (id: AssetId, data: UpdateAssetData): 
       },
     })),
   },
-  assetFiles: {
+  files: {
     deleteMany: {
       assetId: id,
-      fileId: {
+      id: {
         notIn: data.files.map((it) => it.id),
       },
     },
-    connectOrCreate: data.files.map((it) => ({
-      where: { assetId_fileId: { assetId: id, fileId: it.id } },
-      create: {
-        fileId: it.id,
-      },
-    })),
-    update: data.files.map((it) => ({
-      where: { assetId_fileId: { assetId: id, fileId: it.id } },
+    updateMany: data.files.map((it) => ({
+      where: { id: it.id, assetId: id },
       data: {
-        file: {
-          update: {
-            legalDocItemCode: it.legalDocCode,
-            pageRangeClassifications: it.pageRangeClassifications
-              ? (it.pageRangeClassifications as unknown as Prisma.JsonArray)
-              : Prisma.JsonNull,
-          },
-        },
+        legalDocItemCode: it.legalDocCode,
+        pageRangeClassifications: it.pageRangeClassifications
+          ? (it.pageRangeClassifications as unknown as Prisma.JsonArray)
+          : Prisma.JsonNull,
       },
     })),
   },

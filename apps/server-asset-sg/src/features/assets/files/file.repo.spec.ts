@@ -7,7 +7,10 @@ import { fakeCreateAssetData, fakeUserData } from '@/features/assets/asset.fake'
 import { AssetRepo } from '@/features/assets/asset.repo';
 import { fakeFile } from '@/features/assets/files/file.fake';
 import { determineUniqueFilename, FileRepo, UniqueFileName } from '@/features/assets/files/file.repo';
+import { mapAssetDataToPrismaCreate } from '@/features/assets/prisma-asset';
 import { UserRepo } from '@/features/users/user.repo';
+
+const MAX_SAFE_INT32 = 2_147_483_647;
 
 describe(FileRepo, () => {
   const prisma = new PrismaService();
@@ -26,7 +29,7 @@ describe(FileRepo, () => {
   describe('determineUniqueFilename', () => {
     it("prepends the assetId to the file's name", async () => {
       // Given
-      const assetId = faker.number.int({ min: 1 });
+      const assetId = faker.number.int({ min: 1, max: MAX_SAFE_INT32 });
       const original = 'my_file.name.exe';
 
       // When
@@ -42,7 +45,7 @@ describe(FileRepo, () => {
 
     it('uses the name as-is if it is already prefixed with the assetId', async () => {
       // Given
-      const assetId = faker.number.int({ min: 1 });
+      const assetId = faker.number.int({ min: 1, max: MAX_SAFE_INT32 });
       const original = `a${assetId}_some-Other.filename.123`;
 
       // When
@@ -61,16 +64,18 @@ describe(FileRepo, () => {
       const fileName = 'name';
       const fileExt = 'txt';
       const fullFileName = `${fileName}.${fileExt}`;
-      const assetId = faker.number.int({ min: 1 });
+      const assetId = faker.number.int({ min: 1, max: MAX_SAFE_INT32 });
+      const user = await userRepo.create(fakeUserData());
 
       // When
       await prisma.file.create({
         data: {
           name: `a${assetId}_${fullFileName}`,
-          size: faker.number.int({ min: 0 }),
+          size: faker.number.int({ min: 0, max: MAX_SAFE_INT32 }),
           lastModifiedAt: faker.date.past(),
           type: faker.helpers.arrayElement(['Normal', 'Legal']),
           fileProcessingState: FileProcessingState.WillNotBeProcessed,
+          asset: { create: { ...mapAssetDataToPrismaCreate({ ...fakeCreateAssetData(), creatorId: user.id }) } },
         },
       });
       const actual = await determineUniqueFilename(fullFileName, assetId, prisma);
