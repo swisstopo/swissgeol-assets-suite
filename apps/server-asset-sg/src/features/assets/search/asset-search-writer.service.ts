@@ -27,7 +27,7 @@ const QUEUE_SIZE = 10;
 
 export { SearchWriterOptions as AssetSearchWriterOptions };
 
-export class AssetSearchWriter {
+export class AssetSearchWriterService {
   private readonly eager: Promise<SharedEagerData | null>;
 
   constructor(

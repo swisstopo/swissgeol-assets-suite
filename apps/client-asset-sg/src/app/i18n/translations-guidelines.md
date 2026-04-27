@@ -13,3 +13,8 @@ Newly added Keys (since 22.01.2026)
 - adminInstructionsSyncFileContentFromStorageHeading
 - adminInstructionsSyncFileContentFromStorage
 - adminInstructionsSyncFileContentFromStorageHeadingStart
+- search.assets
+- search.files
+- search.fileName
+- search.page
+- search.textMatch

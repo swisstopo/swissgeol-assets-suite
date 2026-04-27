@@ -8,3 +8,5 @@ export const isPersisted = <T extends Model<unknown>>(value: T | Data<T>): value
   'id' in value && value.id !== undefined;
 
 export const isNotPersisted = <T extends Model<unknown>>(value: T | Data<T>): value is Data<T> => !isPersisted(value);
+
+export const standardDateFormat = 'yyyy-MM-dd';

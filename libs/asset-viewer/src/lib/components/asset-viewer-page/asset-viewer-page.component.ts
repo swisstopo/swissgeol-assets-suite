@@ -31,11 +31,7 @@ import { ViewerControllerService } from '../../services/viewer-controller.servic
 import * as actions from '../../state/asset-search/asset-search.actions';
 import { PanelState } from '../../state/asset-search/asset-search.actions';
 import { AppStateWithAssetSearch, AssetSearchState } from '../../state/asset-search/asset-search.reducer';
-import {
-  selectIsFiltersOpen,
-  selectSearchQuery,
-  selectSearchResults,
-} from '../../state/asset-search/asset-search.selector';
+import { selectIsFiltersOpen, selectSearchResults } from '../../state/asset-search/asset-search.selector';
 
 @UntilDestroy()
 @Component({
@@ -74,7 +70,6 @@ export class AssetViewerPageComponent implements OnInit, OnDestroy {
   public hasCurrentAsset$ = this.store.select(fromAppShared.selectHasCurrentAsset);
 
   public isFiltersOpen$ = this.store.select(selectIsFiltersOpen);
-  public searchQuery$ = this.store.select(selectSearchQuery).pipe(map((q) => q.text ?? ''));
 
   public assetClicked$ = new Subject<number[]>();
   public assetsForPicker$: Observable<AssetSearchResultItem[]>;

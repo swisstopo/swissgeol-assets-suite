@@ -60,7 +60,7 @@ import {
   ViewChildMarker,
 } from '@asset-sg/client-shared';
 import { isNotNull } from '@asset-sg/core';
-import { AssetEditPolicy } from '@asset-sg/shared/v2';
+import { AssetEditPolicy, standardDateFormat } from '@asset-sg/shared/v2';
 import { SvgIconComponent } from '@ngneat/svg-icon';
 import { EffectsModule } from '@ngrx/effects';
 import { Store, StoreModule } from '@ngrx/store';
@@ -247,10 +247,10 @@ const routes: Routes = [
       provide: MAT_DATE_FORMATS,
       useValue: {
         parse: {
-          dateInput: 'yyyy-MM-dd',
+          dateInput: standardDateFormat,
         },
         display: {
-          dateInput: 'yyyy-MM-dd',
+          dateInput: standardDateFormat,
           monthYearLabel: 'LLL uuuu',
           dateA11yLabel: 'PP',
           monthYearA11yLabel: 'LLLL uuuu',

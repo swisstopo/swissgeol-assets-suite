@@ -5,6 +5,7 @@ import { CronJob } from 'cron';
 import { PrismaService } from '@/core/prisma.service';
 import { AssetRepo } from '@/features/assets/asset.repo';
 import { FileService } from '@/features/assets/files/file.service';
+import { FILE_ELASTIC_INDEX } from '@/features/assets/search/asset-search.constants';
 import { SearchWriterService } from '@/features/assets/search/search-writer.service';
 import { AtomicProgressService } from '@/features/assets/sync/atomic-progress.service';
 
@@ -66,12 +67,12 @@ export class FileFulltextSyncService extends AtomicProgressService<FileFulltextS
     }
 
     const fileWriter = this.searchWriterService.getFileWriter({
-      index: 'swissgeol_asset_file',
+      index: FILE_ELASTIC_INDEX,
       isEager: true,
     });
 
     let offset = 0;
-    for (;;) {
+    while (true) {
       this.logger.debug('Indexing file fulltext content.', {
         total,
         offset,

@@ -12,7 +12,13 @@ import {
   WorkgroupId,
 } from '@asset-sg/shared/v2';
 import { Client as ElasticsearchClient } from '@elastic/elasticsearch';
-import { QueryDslQueryContainer, SearchResponse, SearchTotalHits } from '@elastic/elasticsearch/lib/api/types';
+import {
+  QueryDslQueryContainer,
+  SearchFieldCollapse,
+  SearchRequest,
+  SearchResponse,
+  SearchTotalHits,
+} from '@elastic/elasticsearch/lib/api/types';
 import { WorkflowStatus } from '@swissgeol/ui-core';
 import { SEARCH_BATCH_SIZE } from '@/features/assets/search/asset-search.constants';
 import {
@@ -32,7 +38,7 @@ export interface SearchConfig {
       size: number;
       sourceFields?: string[];
       highlight?: Record<string, object>;
-      sort?: Array<Record<string, string>>;
+      sort?: Record<string, string>[];
     };
   };
   /** Fields to retrieve from _source. */
@@ -48,10 +54,10 @@ export interface SearchHitData {
   source?: Record<string, unknown>;
   innerHits?: Record<
     string,
-    Array<{
+    {
       source: Record<string, unknown>;
       highlight?: Record<string, string[]>;
-    }>
+    }[]
   >;
 }
 
@@ -157,7 +163,10 @@ export class SearchService<EntityId extends number | string> {
         aggregations,
         filter_path: ['aggregations.*.a.buckets.*', 'aggregations.*.a.value'],
       })
-    ).aggregations as unknown as NestedAggResult<AssetAggResult>;
+    ).aggregations as NestedAggResult<AssetAggResult> | undefined;
+    if (!aggResults) {
+      return makeEmptyAssetSearchStats();
+    }
 
     return {
       total: totalHits,
@@ -216,7 +225,7 @@ export class SearchService<EntityId extends number | string> {
     state: SearchState<EntityId>,
     config?: SearchConfig,
   ) {
-    for (;;) {
+    while (true) {
       const remainingLimit =
         page.limit == null ? SEARCH_BATCH_SIZE : Math.min(SEARCH_BATCH_SIZE, page.limit - state.matchedEntities.size);
       if (remainingLimit <= 0 && state.totalCount != null) {
@@ -267,8 +276,8 @@ export class SearchService<EntityId extends number | string> {
     options: { limit: number; fetchData: boolean; config?: SearchConfig },
   ): Promise<SearchResponse> {
     const entityIdField = options.config?.entityIdField ?? 'id';
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const searchParams: Record<string, any> = {
+
+    const searchParams: SearchRequest = {
       index: this.index,
       query: elasticQuery,
       size: options.limit,
@@ -283,7 +292,7 @@ export class SearchService<EntityId extends number | string> {
 
     // Collapse configuration for grouping results (e.g., pages by fileId).
     if (options.config?.collapse) {
-      const collapseParam: Record<string, unknown> = {
+      const collapseParam: SearchFieldCollapse = {
         field: options.config.collapse.field,
       };
       if (options.fetchData && options.config.collapse.innerHits) {
@@ -301,8 +310,7 @@ export class SearchService<EntityId extends number | string> {
 
     // Add cardinality aggregations on the first query for accurate counts.
     if (state.totalCount == null) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const aggs: Record<string, any> = {};
+      const aggs: Record<string, Record<string, { field: string }>> = {};
       if (options.config?.collapse) {
         aggs['total_collapsed'] = { cardinality: { field: options.config.collapse.field } };
       }

@@ -51,8 +51,6 @@ export class AssetSearchResultsComponent implements OnInit, OnDestroy {
 
   protected readonly FILE_COLUMNS = ['fileName', 'assetTitle', 'pages', 'actions'];
 
-  public activeTab: 'assets' | 'files' = 'assets';
-
   public allResults$ = new BehaviorSubject<AssetSearchResultItem[]>([]);
 
   public resultsToDisplay: AssetSearchResultItem[] = [];
@@ -100,10 +98,6 @@ export class AssetSearchResultsComponent implements OnInit, OnDestroy {
     } else {
       this.store.dispatch(actions.setResultsState({ state: PanelState.OpenedManually }));
     }
-  }
-
-  public setActiveTab(tab: 'assets' | 'files'): void {
-    this.activeTab = tab;
   }
 
   public onScroll(event: Event): void {

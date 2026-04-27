@@ -9,9 +9,9 @@ import fileIndexMapping from '../../../../../../development/init/elasticsearch/m
 
 import { PrismaService } from '@/core/prisma.service';
 import { AssetRepo } from '@/features/assets/asset.repo';
+import { AssetSearchWriterService } from '@/features/assets/search/asset-search-writer.service';
 import { ASSET_ELASTIC_INDEX, FILE_ELASTIC_INDEX } from '@/features/assets/search/asset-search.constants';
-import { AssetSearchWriter } from '@/features/assets/search/asset-search.writer';
-import { FileSearchWriter } from '@/features/assets/search/file-search.writer';
+import { FileSearchWriterService } from '@/features/assets/search/file-search-writer.service';
 import { getDateTimeString } from '@/features/assets/search/search-query.utils';
 import { SearchWriterOptions } from '@/features/assets/search/search-writer.utils';
 import { GeometryDetailRepo } from '@/features/geometries/geometry-detail.repo';
@@ -35,6 +35,8 @@ export class SearchWriterService {
 
   getAssetWriter(options?: SearchWriterOptions): AssetSearchWriter {
     return new AssetSearchWriter(
+  getAssetWriter(options?: SearchWriterOptions): AssetSearchWriterService {
+    return new AssetSearchWriterService(
       this.elastic,
       this.prisma,
       this.geometryRepo,
@@ -43,8 +45,8 @@ export class SearchWriterService {
     );
   }
 
-  getFileWriter(options?: SearchWriterOptions): FileSearchWriter {
-    return new FileSearchWriter(
+  getFileWriter(options?: SearchWriterOptions): FileSearchWriterService {
+    return new FileSearchWriterService(
       this.elastic,
       this.prisma,
       this.geometryRepo,

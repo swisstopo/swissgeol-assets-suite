@@ -1,4 +1,4 @@
-import { ElasticsearchAsset, SearchQueries, SearchType, User } from '@asset-sg/shared/v2';
+import { ElasticsearchAsset, SearchQueries, SearchType, standardDateFormat, User } from '@asset-sg/shared/v2';
 import {
   AggregationsAggregationContainer,
   QueryDslDateRangeQuery,
@@ -83,7 +83,7 @@ export const mapQueryToElasticDslParts = (
   }
   if (query.createdAt != null && Object.keys(query.createdAt).length > 0) {
     const createdAtFilter: QueryDslDateRangeQuery = {
-      format: 'yyyy-MM-dd',
+      format: standardDateFormat,
     };
     if (query.createdAt.min != null) {
       createdAtFilter.gte = query.createdAt.min.toString();
@@ -213,7 +213,7 @@ export const normalizeFieldQuery = (query: string): string =>
     .replace(/asset(_*)id:/gi, 'id:')
     .replace(/sgs(_*)id:/gi, 'sgsId:');
 
-export type MakeAggregationFunction = (
+type MakeAggregationFunction = (
   operator: 'terms' | 'min' | 'max',
   groupName: string,
   fieldName?: string,
@@ -232,7 +232,7 @@ export type MakeAggregationFunction = (
 export const createMakeAggregation = (query: SearchQueries, user: User): MakeAggregationFunction => {
   return (operator, groupName, fieldName, queryOverride) => {
     const baseQuery = queryOverride ?? query;
-    const { filter, aggs } = mapQueryToElasticDslParts({ ...baseQuery, [groupName]: undefined } as SearchQueries, user);
+    const { filter, aggs } = mapQueryToElasticDslParts({ ...baseQuery, [groupName]: undefined }, user);
     const field = fieldName ?? groupName;
     if (operator === 'terms') {
       return {

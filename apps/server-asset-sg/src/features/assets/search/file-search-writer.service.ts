@@ -10,6 +10,7 @@ import {
   FulltextContent,
   LocalDate,
 } from '@asset-sg/shared/v2';
+import { transformJsonToFulltextContent } from '@asset-sg/shared/v2';
 import { Client as ElasticsearchClient } from '@elastic/elasticsearch';
 import { BulkOperationContainer } from '@elastic/elasticsearch/lib/api/types';
 import { Prisma, PrismaClient } from '@prisma/client';
@@ -28,9 +29,7 @@ import { ProcessQueue } from '@/utils/process-queue';
 
 const QUEUE_SIZE = 10;
 
-export { SearchWriterOptions as FileSearchWriterOptions };
-
-export class FileSearchWriter {
+export class FileSearchWriterService {
   private readonly eager: Promise<FileEager | null>;
 
   constructor(
@@ -117,7 +116,7 @@ export class FileSearchWriter {
     const operations: Array<BulkOperationContainer | ElasticsearchFilePage> = [];
 
     for (const file of fileRecords) {
-      const pages = file.fulltextContent as unknown as FulltextContent[] | null;
+      const pages = transformJsonToFulltextContent(file.fulltextContent);
       if (pages == null || pages.length === 0) {
         continue;
       }
@@ -197,14 +196,11 @@ export class FileSearchWriter {
     const processQueue = new ProcessQueue(QUEUE_SIZE);
     const operationsByAsset: Array<Array<BulkOperationContainer | ElasticsearchFilePage>> = Array(assets.length);
 
-    for (let j = 0; j < assets.length; j++) {
-      const i = j;
+    for (let i = 0; i < assets.length; i++) {
       const asset = assets[i];
-      processQueue
-        .add(async () => {
-          operationsByAsset[i] = await this.mapAssetFilesToElastic(asset);
-        })
-        .then();
+      await processQueue.add(async () => {
+        operationsByAsset[i] = await this.mapAssetFilesToElastic(asset);
+      });
     }
     await processQueue.waitForIdle();
 
@@ -326,7 +322,7 @@ export class FileSearchWriter {
       .map((f) => ({
         fileId: f.id,
         fileName: f.nameAlias ?? f.name,
-        pages: f.fulltextContent as unknown as FulltextContent[],
+        pages: transformJsonToFulltextContent(f.fulltextContent),
       }));
   }
 
@@ -356,7 +352,7 @@ export class FileSearchWriter {
       if (file.fulltextContent != null) {
         mapping.set(file.id, {
           fileName: file.nameAlias ?? file.name,
-          pages: file.fulltextContent as unknown as FulltextContent[],
+          pages: transformJsonToFulltextContent(file.fulltextContent),
         });
       }
     }

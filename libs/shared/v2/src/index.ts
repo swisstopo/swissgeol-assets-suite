@@ -52,6 +52,7 @@ export * from './lib/schemas/workgroup.schema';
 export * from './lib/utils/class-validator/is-nullable.decorator';
 export * from './lib/utils/functions';
 export * from './lib/utils/is-deep-equal';
+export * from './lib/utils/transform-json-to-fulltextcontent';
 export * from './lib/utils/transform-pages-to-ranges';
 export * from './lib/utils/object';
 export * from './lib/utils/sleep';
