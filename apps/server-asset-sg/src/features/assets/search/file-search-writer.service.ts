@@ -30,16 +30,14 @@ import { ProcessQueue } from '@/utils/process-queue';
 const QUEUE_SIZE = 10;
 
 export class FileSearchWriterService {
-  private readonly eager: Promise<SharedEagerData | null>;
+  private eager?: Promise<SharedEagerData | null>;
 
   constructor(
     private readonly elastic: ElasticsearchClient,
     private readonly prisma: PrismaClient,
     private readonly geometryRepo: GeometryRepo,
     private readonly options: SearchWriterOptions,
-  ) {
-    this.eager = options.isEager ? this.fetchEager() : Promise.resolve(null);
-  }
+  ) {}
 
   async clearIndex(): Promise<void> {
     await this.elastic.deleteByQuery({
@@ -171,8 +169,7 @@ export class FileSearchWriterService {
           alternativeIds: asset.ids.map((it) => it.id),
           createdAt: LocalDate.fromDate(asset.createDate).toString() as ElasticsearchLocalDate,
         };
-        operations.push({ index: { _index: this.options.index, _id: docId } });
-        operations.push(doc);
+        operations.push({ index: { _index: this.options.index, _id: docId } }, doc);
       }
     }
 
@@ -203,7 +200,7 @@ export class FileSearchWriterService {
     const allOperations: Array<BulkOperationContainer | ElasticsearchFilePage> = [];
 
     const processQueue = new ProcessQueue(QUEUE_SIZE);
-    const operationsByAsset: Array<Array<BulkOperationContainer | ElasticsearchFilePage>> = Array(assets.length);
+    const operationsByAsset: Array<Array<BulkOperationContainer | ElasticsearchFilePage>> = new Array(assets.length);
 
     for (let i = 0; i < assets.length; i++) {
       const asset = assets[i];
@@ -246,7 +243,7 @@ export class FileSearchWriterService {
       return operations;
     }
 
-    const eagerData = await this.eager;
+    const eagerData = await this.getEager();
     const authorIds = asset.contacts.filter((it) => it.role === AssetContactRole.Author).map((it) => it.id);
     const [contactNames, favoredByUserIds, geometryMetadata] = await Promise.all([
       fetchContactNamesForAsset(asset, eagerData, this.prisma),
@@ -285,8 +282,7 @@ export class FileSearchWriterService {
           alternativeIds: asset.identifiers.map((id) => id.value),
           createdAt: asset.createdAt.toString() as ElasticsearchLocalDate,
         };
-        operations.push({ index: { _index: this.options.index, _id: docId } });
-        operations.push(doc);
+        operations.push({ index: { _index: this.options.index, _id: docId } }, doc);
       }
     }
 
@@ -323,10 +319,10 @@ export class FileSearchWriterService {
       }));
   }
 
-  private async fetchEager(): Promise<SharedEagerData> {
-    const [sharedData] = await Promise.all([fetchSharedEagerData(this.prisma, this.geometryRepo)]);
-    return {
-      ...sharedData,
-    };
+  private getEager() {
+    if (this.eager === undefined && this.options.isEager) {
+      this.eager = fetchSharedEagerData(this.prisma, this.geometryRepo);
+    }
+    return this.eager;
   }
 }

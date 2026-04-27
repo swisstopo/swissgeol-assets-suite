@@ -25,10 +25,8 @@ import { ProcessQueue } from '@/utils/process-queue';
 
 const QUEUE_SIZE = 10;
 
-export { SearchWriterOptions as AssetSearchWriterOptions };
-
 export class AssetSearchWriterService {
-  private readonly eager: Promise<SharedEagerData | null>;
+  private eager?: Promise<SharedEagerData | null>;
 
   constructor(
     private readonly elastic: ElasticsearchClient,
@@ -36,9 +34,7 @@ export class AssetSearchWriterService {
     private readonly geometryRepo: GeometryRepo,
     private readonly geometryDetailRepo: GeometryDetailRepo,
     private readonly options: SearchWriterOptions,
-  ) {
-    this.eager = options.isEager ? fetchSharedEagerData(prisma, geometryRepo) : Promise.resolve(null);
-  }
+  ) {}
 
   async write(oneOrMore: Asset | Asset[]): Promise<void> {
     const assets = Array.isArray(oneOrMore) ? oneOrMore : [oneOrMore];
@@ -65,7 +61,7 @@ export class AssetSearchWriterService {
   }
 
   private async mapAssetToElastic(asset: Asset): Promise<ElasticsearchAsset> {
-    const eagerData = await this.eager;
+    const eagerData = await this.getEager();
     const [contactNames, favoredByUserIds, geometryMetadata, geometries] = await Promise.all([
       fetchContactNamesForAsset(asset, eagerData, this.prisma),
       fetchFavoredByUserIdsForAsset(asset, eagerData, this.prisma),
@@ -107,5 +103,12 @@ export class AssetSearchWriterService {
         } satisfies AssetSearchResultItem),
       ),
     };
+  }
+
+  private getEager() {
+    if (this.eager === undefined && this.options.isEager) {
+      this.eager = fetchSharedEagerData(this.prisma, this.geometryRepo);
+    }
+    return this.eager;
   }
 }

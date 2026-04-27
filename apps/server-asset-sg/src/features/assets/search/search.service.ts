@@ -159,7 +159,7 @@ export class SearchService<EntityId extends number | string> {
         index: this.index,
         size: 0,
         query: { bool: { must } },
-        track_total_hits: true, // TODO: necessary?
+        track_total_hits: true,
         aggregations,
         filter_path: ['aggregations.*.a.buckets.*', 'aggregations.*.a.value'],
       })

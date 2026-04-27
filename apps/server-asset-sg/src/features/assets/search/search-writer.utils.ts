@@ -22,10 +22,10 @@ export interface SharedEagerData {
 
 export async function fetchContactNamesForAsset(
   asset: Asset,
-  eagerData: SharedEagerData | null,
+  eagerData: SharedEagerData | null | undefined,
   prisma: PrismaClient,
 ): Promise<string[]> {
-  if (eagerData !== null) {
+  if (eagerData != null) {
     const names: string[] = [];
     for (const contact of asset.contacts) {
       const name = eagerData.contactIdToName.get(contact.id);
@@ -44,10 +44,10 @@ export async function fetchContactNamesForAsset(
 
 export async function fetchFavoredByUserIdsForAsset(
   asset: Asset,
-  eagerData: SharedEagerData | null,
+  eagerData: SharedEagerData | null | undefined,
   prisma: PrismaClient,
 ): Promise<string[]> {
-  if (eagerData !== null) {
+  if (eagerData != null) {
     return eagerData.assetIdToFavoredByUserId.get(asset.id) ?? [];
   }
   const favoredByUsers = await prisma.assetUser.findMany({
@@ -59,10 +59,10 @@ export async function fetchFavoredByUserIdsForAsset(
 
 export async function fetchGeometryMetadataForAsset(
   asset: Asset,
-  eagerData: SharedEagerData | null,
+  eagerData: SharedEagerData | null | undefined,
   geometryRepo: GeometryRepo,
 ): Promise<GeometryMetadata> {
-  if (eagerData !== null) {
+  if (eagerData != null) {
     return eagerData.assetIdToGeometryMetadata.get(asset.id) ?? { types: ['None'], locations: [] };
   }
   const geometries = await geometryRepo.list({ assetIds: [asset.id] });
