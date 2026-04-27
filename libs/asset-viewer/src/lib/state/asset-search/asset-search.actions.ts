@@ -24,6 +24,15 @@ export const setAssetsResults = createAction(
   }>(),
 );
 
+export const setAssetsAndFileResults = createAction(
+  '[Asset Search] Set Assets Results',
+  props<{
+    results?: AssetSearchResult;
+    fileResults?: FileSearchResult;
+    isLoading?: boolean;
+  }>(),
+);
+
 export const setStats = createAction(
   '[Asset Search] Set Stats',
   props<{

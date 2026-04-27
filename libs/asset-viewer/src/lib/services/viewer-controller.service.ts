@@ -6,7 +6,6 @@ import {
   AssetSearchStats,
   isEmptySearchQuery,
   makeEmptyAssetSearchResults,
-  makeEmptyFileSearchResults,
   SearchQueries,
   SearchType,
 } from '@asset-sg/shared/v2';
@@ -148,35 +147,50 @@ export class ViewerControllerService {
   ): Promise<void> {
     // Always load results when favoritesOnly is true, even if other search criteria are empty
     if (!options.force && isEmptySearchQuery(query) && !query.favoritesOnly) {
-      this.store.dispatch(actions.setAssetsResults({ results: makeEmptyAssetSearchResults(), isLoading: false }));
-      this.store.dispatch(actions.setFileResults({ fileResults: makeEmptyFileSearchResults(), isLoading: false }));
+      this.store.dispatch(
+        actions.setAssetsAndFileResults({ results: makeEmptyAssetSearchResults(), isLoading: false }),
+      );
       return;
     }
 
-    if (query.type === SearchType.File) {
-      this.store.dispatch(actions.setFileResults({ isLoading: true }));
-      const fileResults = await firstValueFrom(this.assetSearchService.searchFiles(query));
-      this.store.dispatch(actions.setFileResults({ fileResults, isLoading: false }));
-    } else {
-      this.store.dispatch(actions.setAssetsResults({ isLoading: true }));
-      const results = await firstValueFrom(this.assetSearchService.search(query));
-      this.store.dispatch(actions.setAssetsResults({ results, isLoading: false }));
-      if (results.data.length === 1) {
-        await this.loadAsset(results.data[0].id);
-      } else if (!options.skipAssetReset) {
-        this.store.dispatch(appSharedStateActions.setCurrentAsset({ asset: null, isLoading: false }));
+    switch (query.type) {
+      case SearchType.Asset: {
+        this.store.dispatch(actions.setAssetsResults({ isLoading: true }));
+        const results = await firstValueFrom(this.assetSearchService.search(query));
+        this.store.dispatch(actions.setAssetsResults({ results, isLoading: false }));
+        if (results.data.length === 1) {
+          await this.loadAsset(results.data[0].id);
+        } else if (!options.skipAssetReset) {
+          this.store.dispatch(appSharedStateActions.setCurrentAsset({ asset: null, isLoading: false }));
+        }
+        break;
       }
+      case SearchType.File: {
+        this.store.dispatch(actions.setFileResults({ isLoading: true }));
+        const fileResults = await firstValueFrom(this.assetSearchService.searchFiles(query));
+        this.store.dispatch(actions.setFileResults({ fileResults, isLoading: false }));
+        break;
+      }
+      default:
+        console.warn(`Unsupported search type: ${query}`);
     }
   }
 
   private async loadStats(query: SearchQueries): Promise<void> {
     this.store.dispatch(actions.setStats({ isLoading: true }));
     let stats: AssetSearchStats | undefined;
-    if (query.type === SearchType.File) {
-      stats = await firstValueFrom(this.assetSearchService.searchFileStats(query));
-    } else if (query.type === SearchType.Asset) {
-      stats = await firstValueFrom(this.assetSearchService.searchStats(query));
+
+    switch (query.type) {
+      case SearchType.Asset:
+        stats = await firstValueFrom(this.assetSearchService.searchStats(query));
+        break;
+      case SearchType.File:
+        stats = await firstValueFrom(this.assetSearchService.searchFileStats(query));
+        break;
+      default:
+        console.warn(`Unsupported search type: ${query}`);
     }
+
     if (stats) {
       this.store.dispatch(actions.setStats({ stats, isLoading: false }));
     }

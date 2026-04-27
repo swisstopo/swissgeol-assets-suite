@@ -120,6 +120,15 @@ export const assetSearchReducer = createReducer(
     }),
   ),
   on(
+    actions.setAssetsAndFileResults,
+    (state, { results, fileResults, isLoading }): AssetSearchState => ({
+      ...state,
+      results: results ?? state.results,
+      fileResults: fileResults ?? state.fileResults,
+      isLoadingFileResults: isLoading ?? state.isLoadingFileResults,
+    }),
+  ),
+  on(
     actions.setFiltersState,
     (state, { state: filtersState }): AssetSearchState => ({
       ...state,
