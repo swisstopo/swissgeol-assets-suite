@@ -30,7 +30,7 @@ import { ProcessQueue } from '@/utils/process-queue';
 const QUEUE_SIZE = 10;
 
 export class FileSearchWriterService {
-  private readonly eager: Promise<FileEager | null>;
+  private readonly eager: Promise<SharedEagerData | null>;
 
   constructor(
     private readonly elastic: ElasticsearchClient,
@@ -292,18 +292,6 @@ export class FileSearchWriterService {
       return [];
     }
 
-    const eager = await this.eager;
-    if (eager !== null) {
-      const results: Array<{ fileId: number; fileName: string; pages: FulltextContent[] }> = [];
-      for (const fileId of fileIds) {
-        const entry = eager.fileIdToFulltextContent.get(fileId);
-        if (entry != null && entry.pages.length > 0) {
-          results.push({ fileId, fileName: entry.fileName, pages: entry.pages });
-        }
-      }
-      return results;
-    }
-
     const files = await this.prisma.file.findMany({
       where: {
         id: { in: fileIds },
@@ -326,40 +314,10 @@ export class FileSearchWriterService {
       }));
   }
 
-  private async fetchEager(): Promise<FileEager> {
-    const [sharedData, fulltextContent] = await Promise.all([
-      fetchSharedEagerData(this.prisma, this.geometryRepo),
-      this.fetchEagerFulltextContent(),
-    ]);
+  private async fetchEager(): Promise<SharedEagerData> {
+    const [sharedData] = await Promise.all([fetchSharedEagerData(this.prisma, this.geometryRepo)]);
     return {
       ...sharedData,
-      fileIdToFulltextContent: fulltextContent,
     };
   }
-
-  private async fetchEagerFulltextContent(): Promise<Map<number, { fileName: string; pages: FulltextContent[] }>> {
-    const files = await this.prisma.file.findMany({
-      where: { fulltextContent: { not: Prisma.AnyNull } },
-      select: {
-        id: true,
-        name: true,
-        nameAlias: true,
-        fulltextContent: true,
-      },
-    });
-    const mapping = new Map<number, { fileName: string; pages: FulltextContent[] }>();
-    for (const file of files) {
-      if (file.fulltextContent != null) {
-        mapping.set(file.id, {
-          fileName: file.nameAlias ?? file.name,
-          pages: transformJsonToFulltextContent(file.fulltextContent),
-        });
-      }
-    }
-    return mapping;
-  }
-}
-
-interface FileEager extends SharedEagerData {
-  fileIdToFulltextContent: Map<number, { fileName: string; pages: FulltextContent[] }>;
 }
