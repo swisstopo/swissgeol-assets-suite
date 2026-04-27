@@ -61,7 +61,7 @@ export const mapQueryToElasticDslParts = (
         textQuery = {
           match: {
             content: {
-              query: escapeElasticQuery(normalizeFieldQuery(query.text)),
+              query: query.text,
               operator: 'and',
             },
           },

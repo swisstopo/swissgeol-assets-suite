@@ -53,10 +53,10 @@ export class FileOcrService extends AbstractProcessingService<[]> {
       where: { id: file.id },
     });
 
-    await this.fileService.loadFulltextContentFromS3(file.id);
-    await this.searchWriter.getFileWriter().write(file.id);
-
     if (data.fileProcessingState !== FileProcessingState.Error) {
+      await this.fileService.loadFulltextContentFromS3(file.id);
+      await this.searchWriter.getFileWriter().write(file.id);
+
       this.eventEmitter.emit(EVENTS.FILE_START_EXTRACT, file);
     }
   }

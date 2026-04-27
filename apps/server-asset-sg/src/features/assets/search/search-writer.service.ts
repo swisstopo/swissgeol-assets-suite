@@ -33,8 +33,6 @@ export class SearchWriterService {
     await Promise.all([this.getAssetWriter().write(asset), this.getFileWriter().writeAssetFiles(asset)]);
   }
 
-  getAssetWriter(options?: SearchWriterOptions): AssetSearchWriter {
-    return new AssetSearchWriter(
   getAssetWriter(options?: SearchWriterOptions): AssetSearchWriterService {
     return new AssetSearchWriterService(
       this.elastic,
@@ -92,7 +90,6 @@ export class SearchWriterService {
     // Initialize temporary sync indices.
     const SYNC_INDEX = `sync-${ASSET_ELASTIC_INDEX}-${getDateTimeString()}`;
     const FILE_SYNC_INDEX = `sync-${FILE_ELASTIC_INDEX}-${getDateTimeString()}`;
-
     const existsSyncIndex = await this.elastic.indices.exists({ index: SYNC_INDEX });
     if (existsSyncIndex) {
       throw new Error(`can't sync to '${SYNC_INDEX}', index already exists`);
@@ -102,57 +99,63 @@ export class SearchWriterService {
       throw new Error(`can't sync to '${FILE_SYNC_INDEX}', index already exists`);
     }
 
-    await this.elastic.indices.create({ index: SYNC_INDEX });
-    await this.elastic.indices.putMapping({ index: SYNC_INDEX, ...indexMapping });
+    try {
+      await this.elastic.indices.create({ index: SYNC_INDEX });
+      await this.elastic.indices.putMapping({ index: SYNC_INDEX, ...indexMapping });
 
-    await this.elastic.indices.create({ index: FILE_SYNC_INDEX });
-    await this.elastic.indices.putMapping({ index: FILE_SYNC_INDEX, ...fileIndexMapping });
+      await this.elastic.indices.create({ index: FILE_SYNC_INDEX });
+      await this.elastic.indices.putMapping({ index: FILE_SYNC_INDEX, ...fileIndexMapping });
 
-    const writer = this.getAssetWriter({ index: SYNC_INDEX, isEager: true });
-    const fileWriter = this.getFileWriter({ index: FILE_SYNC_INDEX, isEager: true });
-    let offset = 0;
-    for (;;) {
-      this.logger.debug('Syncing assets.', {
-        total,
-        offset,
-        progress: Number((offset / total).toFixed(2)),
+      const writer = this.getAssetWriter({ index: SYNC_INDEX, isEager: true });
+      const fileWriter = this.getFileWriter({ index: FILE_SYNC_INDEX, isEager: true });
+      let offset = 0;
+      while (true) {
+        this.logger.debug('Syncing assets.', {
+          total,
+          offset,
+          progress: Number((offset / total).toFixed(2)),
+        });
+        const records = await this.assetRepo.list({ limit: 1000, offset });
+        if (records.length === 0) {
+          break;
+        }
+        await Promise.all([writer.write(records), fileWriter.writeAssetFiles(records)]);
+        offset += records.length;
+        if (onProgress != null) {
+          await onProgress(Math.min(offset / total, 1));
+        }
+      }
+      this.logger.debug('Done syncing assets.', { total });
+
+      // Delete existing indices and recreate them.
+      await this.elastic.indices.delete({ index: ASSET_ELASTIC_INDEX, ignore_unavailable: true });
+      await this.elastic.indices.create({ index: ASSET_ELASTIC_INDEX });
+      await this.elastic.indices.putMapping({ index: ASSET_ELASTIC_INDEX, ...indexMapping });
+
+      await this.elastic.indices.delete({ index: FILE_ELASTIC_INDEX, ignore_unavailable: true });
+      await this.elastic.indices.create({ index: FILE_ELASTIC_INDEX });
+      await this.elastic.indices.putMapping({ index: FILE_ELASTIC_INDEX, ...fileIndexMapping });
+
+      // Refresh and reindex sync indices into live indices.
+      await this.elastic.indices.refresh({ index: SYNC_INDEX });
+      await this.elastic.reindex({
+        source: { index: SYNC_INDEX },
+        dest: { index: ASSET_ELASTIC_INDEX },
       });
-      const records = await this.assetRepo.list({ limit: 1000, offset });
-      if (records.length === 0) {
-        break;
-      }
-      await Promise.all([writer.write(records), fileWriter.writeAssetFiles(records)]);
-      offset += records.length;
-      if (onProgress != null) {
-        await onProgress(Math.min(offset / total, 1));
-      }
+      await this.elastic.indices.refresh({ index: ASSET_ELASTIC_INDEX });
+
+      await this.elastic.indices.refresh({ index: FILE_SYNC_INDEX });
+      await this.elastic.reindex({
+        source: { index: FILE_SYNC_INDEX },
+        dest: { index: FILE_ELASTIC_INDEX },
+      });
+      await this.elastic.indices.refresh({ index: FILE_ELASTIC_INDEX });
+    } catch (error) {
+      this.logger.error('Failed to sync search index with database', error);
+      throw error;
+    } finally {
+      await this.elastic.indices.delete({ index: SYNC_INDEX });
+      await this.elastic.indices.delete({ index: FILE_SYNC_INDEX });
     }
-    this.logger.debug('Done syncing assets.', { total });
-
-    // Delete existing indices and recreate them.
-    await this.elastic.indices.delete({ index: ASSET_ELASTIC_INDEX, ignore_unavailable: true });
-    await this.elastic.indices.create({ index: ASSET_ELASTIC_INDEX });
-    await this.elastic.indices.putMapping({ index: ASSET_ELASTIC_INDEX, ...indexMapping });
-
-    await this.elastic.indices.delete({ index: FILE_ELASTIC_INDEX, ignore_unavailable: true });
-    await this.elastic.indices.create({ index: FILE_ELASTIC_INDEX });
-    await this.elastic.indices.putMapping({ index: FILE_ELASTIC_INDEX, ...fileIndexMapping });
-
-    // Refresh and reindex sync indices into live indices.
-    await this.elastic.indices.refresh({ index: SYNC_INDEX });
-    await this.elastic.reindex({
-      source: { index: SYNC_INDEX },
-      dest: { index: ASSET_ELASTIC_INDEX },
-    });
-    await this.elastic.indices.refresh({ index: ASSET_ELASTIC_INDEX });
-    await this.elastic.indices.delete({ index: SYNC_INDEX });
-
-    await this.elastic.indices.refresh({ index: FILE_SYNC_INDEX });
-    await this.elastic.reindex({
-      source: { index: FILE_SYNC_INDEX },
-      dest: { index: FILE_ELASTIC_INDEX },
-    });
-    await this.elastic.indices.refresh({ index: FILE_ELASTIC_INDEX });
-    await this.elastic.indices.delete({ index: FILE_SYNC_INDEX });
   }
 }
