@@ -71,6 +71,9 @@ export class FileFulltextSyncService extends AtomicProgressService<FileFulltextS
       isEager: true,
     });
 
+    this.logger.debug('Clearing existing file index before reindexing');
+    await fileWriter.clearIndex();
+
     let offset = 0;
     while (true) {
       this.logger.debug('Indexing file fulltext content.', {

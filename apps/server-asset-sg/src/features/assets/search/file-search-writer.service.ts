@@ -41,6 +41,15 @@ export class FileSearchWriterService {
     this.eager = options.isEager ? this.fetchEager() : Promise.resolve(null);
   }
 
+  async clearIndex(): Promise<void> {
+    await this.elastic.deleteByQuery({
+      index: this.options.index,
+      query: { match_all: {} },
+      refresh: true,
+      ignore_unavailable: true,
+    });
+  }
+
   async write(oneOrMore: AssetFileId | AssetFileId[]): Promise<void> {
     const fileIds = Array.isArray(oneOrMore) ? oneOrMore : [oneOrMore];
     if (fileIds.length === 0) {
