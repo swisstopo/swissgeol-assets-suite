@@ -7,6 +7,7 @@ import { AssetsController } from '@/features/assets/assets.controller';
 import { FavoriteRepo } from '@/features/assets/favorites/favorite.repo';
 import { FavoritesController } from '@/features/assets/favorites/favorites.controller';
 import { FileExtractionService } from '@/features/assets/files/file-processors/file-extraction/file-extraction.service';
+import { FileExtractionService as FileExtractionServiceV2 } from '@/features/assets/files/file-processors/file-extraction/v2/file-extraction.service';
 import { FileOcrService } from '@/features/assets/files/file-processors/file-ocr/file-ocr.service';
 import { FileS3Service } from '@/features/assets/files/file-s3.service';
 import { FileRepo } from '@/features/assets/files/file.repo';
@@ -50,6 +51,7 @@ import { UsersModule } from '@/features/users/users.module';
     FileS3Service,
     FileService,
     FileExtractionService,
+    FileExtractionServiceV2,
     FavoriteRepo,
     AssetSyncService,
     FileFulltextSyncService,
