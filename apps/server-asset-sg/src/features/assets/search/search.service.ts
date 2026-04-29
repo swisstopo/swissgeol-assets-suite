@@ -287,7 +287,7 @@ export class SearchService<EntityId extends number | string> {
     };
 
     if (state.lastEntityId != null) {
-      searchParams['search_after'] = [state.lastEntityId];
+      searchParams.search_after = [state.lastEntityId];
     }
 
     // Collapse configuration for grouping results (e.g., pages by fileId).
@@ -305,7 +305,7 @@ export class SearchService<EntityId extends number | string> {
           ...(ih.sort ? { sort: ih.sort } : {}),
         };
       }
-      searchParams['collapse'] = collapseParam;
+      searchParams.collapse = collapseParam;
     }
 
     // Add cardinality aggregations on the first query for accurate counts.
@@ -320,17 +320,17 @@ export class SearchService<EntityId extends number | string> {
         }
       }
       if (Object.keys(aggs).length > 0) {
-        searchParams['aggs'] = aggs;
+        searchParams.aggs = aggs;
       }
     }
 
     // Include data fields only when fetching results (not during offset-finding).
     if (options.fetchData) {
       if (options.config?.storedFields) {
-        searchParams['fields'] = options.config.storedFields;
+        searchParams.fields = options.config.storedFields;
       }
       if (options.config?.sourceFields) {
-        searchParams['_source'] = options.config.sourceFields;
+        searchParams._source = options.config.sourceFields;
       }
     }
 
