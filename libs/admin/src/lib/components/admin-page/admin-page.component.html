@@ -19,10 +19,12 @@
       admin.workgroupPage.delete
       <svg-icon key="delete"></svg-icon>
     </button>
-    <asset-sg-toggle-status
+    <asset-sg-toggle-button
+      inactiveTranslationKey="admin.workgroupPage.isDisabled"
+      activeTranslationKey="admin.workgroupPage.isActive"
       [isActive]="!workgroup.disabledAt"
       (toggleIsActive)="toggleActiveStatus(workgroup)"
-    ></asset-sg-toggle-status>
+    ></asset-sg-toggle-button>
   } @else if (isUsersPage && user) {
     <h2>{{ user.email }}</h2>
     <asset-sg-chip type="secondary"><span translate>admin.user</span></asset-sg-chip>

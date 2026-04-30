@@ -1,7 +1,14 @@
 import { inject, Injectable } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
 import { appSharedStateActions, fromAppShared } from '@asset-sg/client-shared';
-import { AssetId, AssetSearchQuery, isEmptySearchQuery, makeEmptyAssetSearchResults } from '@asset-sg/shared/v2';
+import {
+  AssetId,
+  AssetSearchStats,
+  isEmptySearchQuery,
+  makeEmptyAssetSearchResults,
+  SearchQueries,
+  SearchType,
+} from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
 import {
   distinctUntilChanged,
@@ -30,14 +37,15 @@ import {
 } from '../state/asset-search/asset-search.actions';
 import { AppStateWithAssetSearch } from '../state/asset-search/asset-search.reducer';
 import {
+  selectFileSearchResults,
   selectFiltersState,
+  selectGeometries,
   selectIsResultsOpen,
   selectMapPosition,
   selectResultsState,
   selectScrollOffsetForResults,
   selectSearchQuery,
   selectSearchResults,
-  selectGeometries,
 } from '../state/asset-search/asset-search.selector';
 import { AssetSearchService } from './asset-search.service';
 import { GeometryService } from './geometry.service';
@@ -135,28 +143,66 @@ export class ViewerControllerService {
   }
 
   private async loadResults(
-    query: AssetSearchQuery,
+    query: SearchQueries,
     options: { force?: boolean; skipAssetReset?: boolean } = {},
   ): Promise<void> {
     // Always load results when favoritesOnly is true, even if other search criteria are empty
     if (!options.force && isEmptySearchQuery(query) && !query.favoritesOnly) {
-      this.store.dispatch(actions.setResults({ results: makeEmptyAssetSearchResults(), isLoading: false }));
+      this.store.dispatch(
+        actions.setAssetsAndFileResults({ results: makeEmptyAssetSearchResults(), isLoading: false }),
+      );
       return;
     }
-    this.store.dispatch(actions.setResults({ isLoading: true }));
-    const results = await firstValueFrom(this.assetSearchService.search(query));
-    this.store.dispatch(actions.setResults({ results, isLoading: false }));
-    if (results.data.length === 1) {
-      await this.loadAsset(results.data[0].id);
-    } else if (!options.skipAssetReset) {
-      this.store.dispatch(appSharedStateActions.setCurrentAsset({ asset: null, isLoading: false }));
+
+    switch (query.type) {
+      case SearchType.Asset: {
+        this.store.dispatch(actions.setAssetsResults({ isLoading: true }));
+        const results = await firstValueFrom(this.assetSearchService.search(query));
+        this.store.dispatch(actions.setAssetsResults({ results, isLoading: false }));
+        if (results.data.length === 1) {
+          await this.loadAsset(results.data[0].id);
+        } else if (!options.skipAssetReset) {
+          this.store.dispatch(appSharedStateActions.setCurrentAsset({ asset: null, isLoading: false }));
+        }
+        break;
+      }
+      case SearchType.File: {
+        this.store.dispatch(actions.setFileResults({ isLoading: true }));
+        this.store.dispatch(actions.setAssetsResults({ isLoading: true }));
+        const fileResults = await firstValueFrom(this.assetSearchService.searchFiles(query));
+        this.store.dispatch(actions.setFileResults({ fileResults, isLoading: false }));
+
+        // Use the asset data embedded in the file search response for map rendering.
+        const results = {
+          page: { offset: 0, size: fileResults.assets.length, total: fileResults.assets.length },
+          data: fileResults.assets,
+        };
+        this.store.dispatch(actions.setAssetsResults({ results, isLoading: false }));
+        break;
+      }
+      default:
+        console.warn(`Unsupported search type: ${query}`);
     }
   }
 
-  private async loadStats(query: AssetSearchQuery): Promise<void> {
+  private async loadStats(query: SearchQueries): Promise<void> {
     this.store.dispatch(actions.setStats({ isLoading: true }));
-    const stats = await firstValueFrom(this.assetSearchService.searchStats(query));
-    this.store.dispatch(actions.setStats({ stats, isLoading: false }));
+    let stats: AssetSearchStats | undefined;
+
+    switch (query.type) {
+      case SearchType.Asset:
+        stats = await firstValueFrom(this.assetSearchService.searchStats(query));
+        break;
+      case SearchType.File:
+        stats = await firstValueFrom(this.assetSearchService.searchFileStats(query));
+        break;
+      default:
+        console.warn(`Unsupported search type: ${query}`);
+    }
+
+    if (stats) {
+      this.store.dispatch(actions.setStats({ stats, isLoading: false }));
+    }
   }
 
   private async loadAsset(id: AssetId | null): Promise<void> {
@@ -172,16 +218,22 @@ export class ViewerControllerService {
     this.store.dispatch(appSharedStateActions.setCurrentAsset({ asset: { asset, geometries }, isLoading: false }));
   }
 
-  private async updateByQuery(query: AssetSearchQuery): Promise<void> {
+  private async updateByQuery(query: SearchQueries): Promise<void> {
     // Only reset map position if the query is empty and not in favorites mode
     if (isEmptySearchQuery(query) && !query.favoritesOnly) {
       this.store.dispatch(actions.setMapPosition({ position: DEFAULT_MAP_POSITION }));
     }
     await Promise.all([this.loadResults(query), this.loadStats(query)]);
-    const results = await firstValueFrom(this.store.select(selectSearchResults));
+
+    // Use file results total for file search, asset results total for asset search.
+    const total =
+      query.type === SearchType.File
+        ? (await firstValueFrom(this.store.select(selectFileSearchResults))).page.total
+        : (await firstValueFrom(this.store.select(selectSearchResults))).page.total;
+
     this.store.dispatch(
       actions.setResultsState({
-        state: results.page.total === 0 ? PanelState.ClosedAutomatically : PanelState.OpenedAutomatically,
+        state: total === 0 ? PanelState.ClosedAutomatically : PanelState.OpenedAutomatically,
       }),
     );
   }

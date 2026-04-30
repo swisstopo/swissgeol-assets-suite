@@ -8,10 +8,10 @@ import {
   User,
 } from '@asset-sg/shared/v2';
 import { Controller, Get } from '@nestjs/common';
+import { restrictQueryForUser } from '../assets/search/asset-search.utils';
 import { Authorize } from '@/core/decorators/authorize.decorator';
 import { CurrentUser } from '@/core/decorators/current-user.decorator';
 import { ParseBody } from '@/core/decorators/parse.decorator';
-import { restrictQueryForUser } from '@/features/assets/search/asset-search.controller';
 import { AssetSearchService } from '@/features/assets/search/asset-search.service';
 
 @Controller('/geometries')

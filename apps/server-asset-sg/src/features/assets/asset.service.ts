@@ -13,7 +13,7 @@ import { forwardRef, HttpException, HttpStatus, Inject, Injectable } from '@nest
 import { PrismaService } from '@/core/prisma.service';
 import { AssetRepo } from '@/features/assets/asset.repo';
 import { FileService } from '@/features/assets/files/file.service';
-import { AssetSearchService } from '@/features/assets/search/asset-search.service';
+import { SearchWriterService } from '@/features/assets/search/search-writer.service';
 import { WorkflowService } from '@/features/assets/workflow/workflow.service';
 import { GeometryDetailRepo } from '@/features/geometries/geometry-detail.repo';
 
@@ -21,7 +21,7 @@ import { GeometryDetailRepo } from '@/features/geometries/geometry-detail.repo';
 export class AssetService {
   constructor(
     private readonly assetRepo: AssetRepo,
-    private readonly assetSearchService: AssetSearchService,
+    private readonly searchWriterService: SearchWriterService,
     @Inject(forwardRef(() => WorkflowService)) private readonly workflowService: WorkflowService,
     private readonly geometryDetailRepo: GeometryDetailRepo,
     private readonly fileService: FileService,
@@ -39,7 +39,7 @@ export class AssetService {
   async create(data: CreateAssetData, user: User): Promise<Asset> {
     await this.validateData(user, data);
     const asset = await this.assetRepo.create({ ...data, creatorId: user.id });
-    await this.assetSearchService.register(asset);
+    await this.searchWriterService.register(asset);
     return asset;
   }
 
@@ -66,7 +66,7 @@ export class AssetService {
   }
 
   async delete(id: AssetId): Promise<boolean> {
-    const [ok] = await Promise.all([this.assetRepo.delete(id), this.assetSearchService.deleteFromIndex(id)]);
+    const [ok] = await Promise.all([this.assetRepo.delete(id), this.searchWriterService.deleteFromIndex(id)]);
     return ok;
   }
 

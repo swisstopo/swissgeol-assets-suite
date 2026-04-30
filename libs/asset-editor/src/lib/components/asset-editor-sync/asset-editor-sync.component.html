@@ -6,3 +6,12 @@
   <div class="progress">{{ syncProgress }}%</div>
 </div>
 <p translate class="mt-2">edit.adminInstructionsSyncElasticAssets</p>
+
+<h3 translate class="mt-8">edit.adminInstructionsSyncFileContentFromStorageHeading</h3>
+<div class="asset-sync" [class.active]="fileSyncProgress !== null">
+  <button type="button" asset-sg-primary class="self-start" translate (click)="synchronizeFilesToElastic()">
+    edit.adminInstructionsSyncFileContentFromStorageHeadingStart
+  </button>
+  <div class="progress">{{ fileSyncProgress }}%</div>
+</div>
+<p translate class="mt-2">edit.adminInstructionsSyncFileContentFromStorage</p>

@@ -18,7 +18,7 @@ import { PrismaService } from '@/core/prisma.service';
 import { AssetRepo } from '@/features/assets/asset.repo';
 import { FileRepo } from '@/features/assets/files/file.repo';
 import { FileService } from '@/features/assets/files/file.service';
-import { AssetSearchService } from '@/features/assets/search/asset-search.service';
+import { SearchWriterService } from '@/features/assets/search/search-writer.service';
 import { WorkflowService } from '@/features/assets/workflow/workflow.service';
 import { ContactRepo } from '@/features/contacts/contact.repo';
 import { UserRepo } from '@/features/users/user.repo';
@@ -33,7 +33,7 @@ export class FixturesCreateCommand extends CommandRunner {
     private readonly fileService: FileService,
     private readonly fileRepo: FileRepo,
     private readonly userRepo: UserRepo,
-    private readonly assetSearchService: AssetSearchService,
+    private readonly searchWriterService: SearchWriterService,
     private readonly workflowService: WorkflowService,
     private readonly prismaService: PrismaService,
   ) {
@@ -97,7 +97,7 @@ export class FixturesCreateCommand extends CommandRunner {
       await this.prismaService.asset.update({ where: { assetId: createdAssetId }, data: { assetId: asset.id } });
 
       // Write the asset to Elasticsearch.
-      await this.assetSearchService.register(asset);
+      await this.searchWriterService.register(asset);
 
       // Remove the creator if the fixture doesn't specify one.
       // We need to pass a default value to `assetRepo.create`, which will be removed here.

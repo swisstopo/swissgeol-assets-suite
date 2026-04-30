@@ -21,6 +21,9 @@ import { asyncScheduler, observeOn } from 'rxjs';
   standalone: false,
 })
 export class AssetEditorLaunchComponent implements OnDestroy {
+  // @TODO: VEJ 13.04.2025 This component is the launcher for the admin module. It is wrongly named and located.
+  //  It should be deleted and the options should be moved to the admin page directly.
+
   @ViewChild('templateDrawerPortalContent') _templateDrawerPortalContent!: TemplateRef<unknown>;
 
   private readonly lc = inject(LifecycleHooks);
