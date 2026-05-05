@@ -14,7 +14,7 @@ import {
   WorkflowWithAsset,
 } from '@asset-sg/shared/v2';
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { AssetSearchService } from '../search/asset-search.service';
+import { SearchWriterService } from '../search/search-writer.service';
 import { WorkflowRepo } from '@/features/assets/workflow/workflow.repo';
 import { UserRepo } from '@/features/users/user.repo';
 
@@ -23,7 +23,7 @@ export class WorkflowService {
   constructor(
     private readonly workflowRepo: WorkflowRepo,
     private readonly userRepo: UserRepo,
-    private readonly assetSearchService: AssetSearchService,
+    private readonly searchWriterService: SearchWriterService,
   ) {}
 
   async find(assetId: AssetId): Promise<WorkflowWithAsset> {
@@ -168,7 +168,7 @@ export class WorkflowService {
    * latest asset in AssetSeachService.register().
    */
   private async registerAssetForChange(asset: Asset) {
-    await this.assetSearchService.register(asset);
+    await this.searchWriterService.register(asset);
   }
 }
 

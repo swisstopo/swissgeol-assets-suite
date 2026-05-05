@@ -1,16 +1,19 @@
 import { appSharedStateActions, AppState } from '@asset-sg/client-shared';
 import {
-  AssetSearchQuery,
   AssetSearchResult,
   AssetSearchStats,
   Coordinate,
+  FileSearchResult,
   Geometry,
   GeometryAccessType,
   GeometryDetail,
   GeometryType,
   makeEmptyAssetSearchResults,
   makeEmptyAssetSearchStats,
+  makeEmptyFileSearchResults,
   run,
+  SearchQueries,
+  SearchType,
 } from '@asset-sg/shared/v2';
 import { createReducer, on } from '@ngrx/store';
 
@@ -21,11 +24,14 @@ import * as actions from './asset-search.actions';
 import { PanelState } from './asset-search.actions';
 
 export interface AssetSearchState {
-  query: AssetSearchQuery;
+  query: SearchQueries;
   results: AssetSearchResult;
   stats: AssetSearchStats;
   geometries: Geometry[];
   ui: AssetSearchUiState;
+
+  fileResults: FileSearchResult;
+  isLoadingFileResults: boolean;
 
   isLoadingGeometries: boolean;
   isLoadingResults: boolean;
@@ -44,9 +50,10 @@ export interface AppStateWithAssetSearch extends AppState {
 }
 
 const initialState: AssetSearchState = {
-  query: {},
+  query: { type: SearchType.Asset },
   geometries: [],
   results: makeEmptyAssetSearchResults(),
+  fileResults: makeEmptyFileSearchResults(),
   stats: makeEmptyAssetSearchStats(),
   ui: {
     filtersState: PanelState.OpenedAutomatically,
@@ -57,6 +64,7 @@ const initialState: AssetSearchState = {
 
   isLoadingGeometries: false,
   isLoadingResults: false,
+  isLoadingFileResults: false,
   isLoadingStats: false,
 };
 
@@ -88,7 +96,7 @@ export const assetSearchReducer = createReducer(
     }),
   ),
   on(
-    actions.setResults,
+    actions.setAssetsResults,
     (state, { results, isLoading }): AssetSearchState => ({
       ...state,
       results: results ?? state.results,
@@ -101,6 +109,23 @@ export const assetSearchReducer = createReducer(
       ...state,
       stats: stats ?? state.stats,
       isLoadingStats: isLoading ?? state.isLoadingStats,
+    }),
+  ),
+  on(
+    actions.setFileResults,
+    (state, { fileResults, isLoading }): AssetSearchState => ({
+      ...state,
+      fileResults: fileResults ?? state.fileResults,
+      isLoadingFileResults: isLoading ?? state.isLoadingFileResults,
+    }),
+  ),
+  on(
+    actions.setAssetsAndFileResults,
+    (state, { results, fileResults, isLoading }): AssetSearchState => ({
+      ...state,
+      results: results ?? state.results,
+      fileResults: fileResults ?? state.fileResults,
+      isLoadingFileResults: isLoading ?? state.isLoadingFileResults,
     }),
   ),
   on(
@@ -133,7 +158,7 @@ export const assetSearchReducer = createReducer(
     actions.resetSearch,
     (state): AssetSearchState => ({
       ...state,
-      query: {},
+      query: { type: state.query.type },
       ui: {
         ...state.ui,
         resultsState: PanelState.OpenedManually,

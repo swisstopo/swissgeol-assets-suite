@@ -18,6 +18,32 @@
   padding: 16px;
   margin: 0;
   font-weight: 400;
+
+  &__tabs {
+    display: flex;
+    gap: 16px;
+  }
+
+  &__tab {
+    background: none;
+    border: none;
+    padding: 4px 8px;
+    cursor: pointer;
+    font-weight: 400;
+    border-bottom: 2px solid transparent;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+
+    &--active {
+      font-weight: 600;
+      border-bottom-color: variables.$cyan-06;
+    }
+
+    &:hover {
+      border-bottom-color: variables.$grey-03;
+    }
+  }
 }
 
 .search-results {
@@ -54,5 +80,59 @@
     .selected {
       background-color: variables.$grey-01;
     }
+
+    .file-page-cell {
+      max-height: 100px;
+      overflow-y: auto;
+
+      .file-page-entry:hover {
+        background-color: variables.$grey-02;
+      }
+    }
+
+    .action-buttons {
+      display: flex;
+      flex-direction: row;
+      gap: 8px;
+
+      button {
+        width: 36px;
+        height: 36px;
+        padding: 8px;
+
+        svg-icon svg {
+          width: 20px;
+          height: 20px;
+        }
+      }
+    }
   }
+}
+
+.highlight {
+  font-size: 12px;
+  line-height: 1.4;
+  margin-bottom: 4px;
+
+  ::ng-deep em {
+    font-style: normal;
+    font-weight: 600;
+    background-color: rgba(255, 213, 0, 0.3);
+  }
+}
+
+.file-page-entry {
+  margin-bottom: 8px;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.file-page-number {
+  font-size: 11px;
+  font-weight: 600;
+  color: variables.$grey-05;
+  display: block;
+  margin-bottom: 2px;
 }

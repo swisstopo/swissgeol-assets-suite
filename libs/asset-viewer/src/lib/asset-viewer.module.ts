@@ -40,11 +40,15 @@ import {
   DrawerPanelComponent,
   FileNamePipe,
   ReferencePipe,
+  SearchInputComponent,
+  SeparatorComponent,
   SmartTranslatePipe,
   StatusChipComponent,
+  ToggleButtonComponent,
   ZoomControlsComponent,
 } from '@asset-sg/client-shared';
 import { FavoritesModule } from '@asset-sg/favorites';
+import { standardDateFormat } from '@asset-sg/shared/v2';
 import { SvgIconComponent } from '@ngneat/svg-icon';
 import { StoreModule } from '@ngrx/store';
 import { TranslateModule, TranslatePipe } from '@ngx-translate/core';
@@ -148,6 +152,7 @@ const routes: Routes = [
     FileNamePipe,
     ReferencePipe,
     MatDivider,
+    SeparatorComponent,
     StatusChipComponent,
     SgcCard,
     SgcIcon,
@@ -156,6 +161,8 @@ const routes: Routes = [
     CdkAccordionItem,
     MatChip,
     MatButton,
+    SearchInputComponent,
+    ToggleButtonComponent,
   ],
   providers: [
     TranslatePipe,
@@ -167,10 +174,10 @@ const routes: Routes = [
       provide: MAT_DATE_FORMATS,
       useValue: {
         parse: {
-          dateInput: 'yyyy-MM-dd',
+          dateInput: standardDateFormat,
         },
         display: {
-          dateInput: 'yyyy-MM-dd',
+          dateInput: standardDateFormat,
           monthYearLabel: 'LLL uuuu',
           dateA11yLabel: 'PP',
           monthYearA11yLabel: 'LLLL uuuu',

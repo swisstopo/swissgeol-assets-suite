@@ -3,7 +3,7 @@ import { Params, Router } from '@angular/router';
 import { AppSharedState } from '@asset-sg/client-shared';
 import { isNotNull } from '@asset-sg/core';
 import { LV95 } from '@asset-sg/shared';
-import { AssetId, AssetSearchQuery, isEmptySearchQuery, LocalDate, Polygon } from '@asset-sg/shared/v2';
+import { AssetId, isEmptySearchQuery, LocalDate, Polygon, SearchQueries, SearchType } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
 import { firstValueFrom, map } from 'rxjs';
 import { DEFAULT_MAP_POSITION } from '../components/map/map-controller';
@@ -34,7 +34,9 @@ export class ViewerParamsService {
 
   async readParamsFromUrl(): Promise<ViewerParams> {
     const { queryParams: params } = this.router.routerState.snapshot.root;
-    const query: AssetSearchQuery = {};
+    const type =
+      parseStringEnumValue(SearchType, readStringParam(params, QUERY_PARAM_MAPPING.type)) ?? SearchType.Asset;
+    const query: SearchQueries = { type };
     const assetId = readNumberParam(params, QUERY_PARAM_MAPPING.assetId) ?? null;
     query.text = readStringParam(params, QUERY_PARAM_MAPPING.text);
     query.polygon = readPolygonParam(params, QUERY_PARAM_MAPPING.polygon);
@@ -73,6 +75,7 @@ export class ViewerParamsService {
     const { query, ui, assetId } = viewerParams;
 
     const params: Params = {};
+    updatePlainParam(params, QUERY_PARAM_MAPPING.type, query.type);
     updatePlainParam(params, QUERY_PARAM_MAPPING.text, query.text);
     updateArrayParam(
       params,
@@ -132,12 +135,13 @@ export const areViewerParamsEqual = (a: ViewerParams, b: ViewerParams): boolean 
   a.ui.map.z === b.ui.map.z;
 
 export interface ViewerParams {
-  query: AssetSearchQuery;
+  query: SearchQueries;
   ui: AssetSearchUiState;
   assetId: AssetId | null;
 }
 
 export const QUERY_PARAM_MAPPING = {
+  type: 'search[type]',
   text: 'search[text]',
   polygon: 'search[polygon]',
   authorId: 'search[author]',
@@ -190,6 +194,16 @@ const updateArrayParam = (params: Params, name: string, value: Array<string | nu
 };
 
 const readStringParam = (params: Params, name: string): string | undefined => params[name];
+
+export function parseStringEnumValue<const E extends Record<string, string>>(
+  enumObj: E,
+  value: unknown,
+  fallback?: E[keyof E],
+): E[keyof E] | undefined {
+  if (typeof value !== 'string') return fallback;
+  const values = Object.values(enumObj) as string[];
+  return values.includes(value) ? (value as E[keyof E]) : fallback;
+}
 
 const readNumberParam = (params: Params, name: string): number | undefined => {
   const stringValue = readStringParam(params, name);

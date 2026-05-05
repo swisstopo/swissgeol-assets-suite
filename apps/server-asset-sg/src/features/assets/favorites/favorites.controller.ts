@@ -16,14 +16,14 @@ import { Authorize } from '@/core/decorators/authorize.decorator';
 import { CurrentUser } from '@/core/decorators/current-user.decorator';
 import { AssetRepo } from '@/features/assets/asset.repo';
 import { FavoriteRepo } from '@/features/assets/favorites/favorite.repo';
-import { AssetSearchService } from '@/features/assets/search/asset-search.service';
+import { SearchWriterService } from '@/features/assets/search/search-writer.service';
 
 @Controller('/assets/favorites')
 export class FavoritesController {
   constructor(
     private readonly favoriteRepo: FavoriteRepo,
     private readonly assetRepo: AssetRepo,
-    private readonly assetSearchService: AssetSearchService,
+    private readonly searchWriterService: SearchWriterService,
   ) {}
 
   @Get('/ids')
@@ -42,7 +42,7 @@ export class FavoritesController {
       throw new HttpException('not found', HttpStatus.NOT_FOUND);
     }
     await this.favoriteRepo.create({ userId: user.id, assetId });
-    await this.assetSearchService.register(asset);
+    await this.searchWriterService.register(asset);
   }
 
   @Delete('/:assetId')
@@ -56,6 +56,6 @@ export class FavoritesController {
     const favorite = { userId: user.id, assetId };
     authorize(FavoritePolicy, user).canDelete(favorite);
     await this.favoriteRepo.delete(favorite);
-    await this.assetSearchService.register(asset);
+    await this.searchWriterService.register(asset);
   }
 }

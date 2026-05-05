@@ -1,11 +1,11 @@
 import {
-  User,
   AssetSearchQuery,
+  AssetSearchQuerySchema,
+  AssetSearchResult,
+  AssetSearchResultSchema,
   AssetSearchStats,
   AssetSearchStatsSchema,
-  AssetSearchQuerySchema,
-  AssetSearchResultSchema,
-  AssetSearchResult,
+  User,
 } from '@asset-sg/shared/v2';
 import {
   ClassSerializerInterceptor,
@@ -21,6 +21,7 @@ import { Authorize } from '@/core/decorators/authorize.decorator';
 import { CurrentUser } from '@/core/decorators/current-user.decorator';
 import { ParseBody } from '@/core/decorators/parse.decorator';
 import { AssetSearchService } from '@/features/assets/search/asset-search.service';
+import { restrictQueryForUser } from '@/features/assets/search/asset-search.utils';
 
 @Controller('/assets/search')
 @UseInterceptors(ClassSerializerInterceptor)
@@ -66,11 +67,3 @@ export class AssetSearchController {
     return await this.assetSearchService.aggregate(query, user);
   }
 }
-
-/**
- * Restricts the search query to only include workgroups the user has explicit membership in.
- */
-export const restrictQueryForUser = (query: AssetSearchQuery, user: User) => {
-  query.workgroupIds =
-    query.workgroupIds == null ? [...user.roles.keys()] : query.workgroupIds.filter((it) => user.roles.has(it));
-};

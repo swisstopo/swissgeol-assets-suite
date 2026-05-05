@@ -15,6 +15,7 @@ import { chevronRightIcon } from './chevron-right';
 import { closeIcon } from './close';
 import { closeNavIcon } from './close-nav';
 import { deleteIcon } from './delete';
+import { documentIcon } from './document';
 import { downloadIcon } from './download';
 import { editIcon } from './edit';
 import { errorIcon } from './error';
@@ -69,6 +70,7 @@ export const icons = [
   closeIcon,
   closeNavIcon,
   deleteIcon,
+  documentIcon,
   downloadIcon,
   editIcon,
   errorIcon,

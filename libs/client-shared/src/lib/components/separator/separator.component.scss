@@ -1,0 +1,12 @@
+@use "../../styles/variables";
+
+:host {
+  background-color: variables.$grey-02;
+
+  &.horizontal {
+    height: 1px;
+  }
+  &.vertical {
+    width: 1px;
+  }
+}

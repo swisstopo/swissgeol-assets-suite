@@ -45,7 +45,7 @@ import {
   TabComponent,
   TabsComponent,
   TextInputComponent,
-  ToggleStatusComponent,
+  ToggleButtonComponent,
   ViewChildMarker,
 } from '@asset-sg/client-shared';
 import { SvgIconComponent } from '@ngneat/svg-icon';
@@ -143,7 +143,7 @@ import { adminReducer } from './state/admin.reducer';
     ChipComponent,
     DetailSectionComponent,
     SearchAndFilterComponent,
-    ToggleStatusComponent,
+    ToggleButtonComponent,
     FormsModule,
     SelectComponent,
     PageHeaderComponent,

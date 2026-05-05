@@ -1,17 +1,17 @@
 import { Expose, Type } from 'class-transformer';
 import { IsArray, IsBoolean, IsEnum, IsNumber, IsString, ValidateNested } from 'class-validator';
 import { AssetId } from '../../models/asset';
+import { LocalDate } from '../../models/base/local-date';
+import { AssetContactRole, ContactId } from '../../models/contact';
+import { GeometryDetail, GeometryId } from '../../models/geometry';
+import { LocalizedItemCode } from '../../models/localized-item';
 import {
   AssetSearchResult,
   AssetSearchResultContact,
   AssetSearchResultGeometry,
   AssetSearchResultItem,
   PageStats,
-} from '../../models/asset-search/asset-search-result';
-import { LocalDate } from '../../models/base/local-date';
-import { AssetContactRole, ContactId } from '../../models/contact';
-import { GeometryDetail, GeometryId } from '../../models/geometry';
-import { LocalizedItemCode } from '../../models/localized-item';
+} from '../../models/search/asset-search-result';
 import { Schema, TransformLocalDate } from '../base/schema';
 import { GeometryDetailSchema } from '../geometry.schema';
 
