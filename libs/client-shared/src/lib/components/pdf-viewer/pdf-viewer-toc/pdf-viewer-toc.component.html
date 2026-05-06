@@ -20,7 +20,7 @@
                 <span
                   class="pdf-viewer-toc__content__item__content__category"
                   [class.pdf-viewer-toc__content__item__content__category--active]="isActive"
-                  >{{ categoryTitle }} {{ $index + 1 }}</span
+                  >{{ classification.label ?? categoryTitle + "" + ($index + 1) }}</span
                 >
                 <span class="pdf-viewer-toc__content__item__content__page-range">
                   @if (classification.from === classification.to) {
