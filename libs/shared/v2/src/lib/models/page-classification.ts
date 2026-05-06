@@ -44,6 +44,7 @@ export interface PageClassification {
 export interface PageRangeClassification extends Omit<PageClassification, 'page'> {
   from: number;
   to: number;
+  label?: string | null;
 }
 
 type GroupedPageClassification = {
