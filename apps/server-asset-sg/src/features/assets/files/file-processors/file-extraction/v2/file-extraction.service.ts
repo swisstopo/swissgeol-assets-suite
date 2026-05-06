@@ -98,6 +98,7 @@ export class FileExtractionService extends AbstractProcessingService<ProcessorDo
         to: entity.page_end,
         categories: [category ?? PageCategory.Unknown],
         languages,
+        label: entity.title,
       };
     });
   }
