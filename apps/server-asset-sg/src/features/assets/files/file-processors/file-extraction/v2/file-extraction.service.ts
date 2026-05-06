@@ -126,7 +126,6 @@ export class FileExtractionService extends AbstractProcessingService<ProcessorDo
       { languages: result.languages.filter((l) => this.isSupportedPageLanguage(l)) },
     ]);
 
-    // TODO consider handlling duplicated code
     const file = await this.prisma.file.findUnique({
       where: { id: fileId },
       select: { assetId: true },
