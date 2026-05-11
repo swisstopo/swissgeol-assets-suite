@@ -83,6 +83,7 @@ export class PdfViewerService implements OnDestroy {
 
   public async renderPageToCanvas(
     canvas: HTMLCanvasElement,
+    textLayerDiv: HTMLElement,
     pageNum: number,
     parentWidth: number,
     parentHeight: number,
@@ -103,7 +104,7 @@ export class PdfViewerService implements OnDestroy {
       throw new Error('Could not get 2d context from canvas');
     }
     await page.render({ canvasContext: context, viewport, canvas }).promise;
-    // await this.renderTextLayer(page, textLayerDiv, viewport);
+    await this.renderTextLayer(page, textLayerDiv, viewport);
     return { nativeWidth: unscaledViewport.width, nativeHeight: unscaledViewport.height };
   }
 

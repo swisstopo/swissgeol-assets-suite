@@ -58,6 +58,16 @@
         pointer-events: none;
       }
     }
+
+    &--is-dragging {
+      canvas {
+        cursor: grab;
+      }
+
+      .textLayer {
+        pointer-events: none;
+      }
+    }
   }
 
   &__button-container {
@@ -110,6 +120,7 @@
 }
 
 .page-slot {
+  position: relative;
   flex-shrink: 0;
   display: flex;
   justify-content: center;

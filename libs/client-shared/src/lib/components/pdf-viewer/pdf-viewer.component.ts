@@ -44,6 +44,7 @@ interface PageSlot {
   displayWidth: number;
   displayHeight: number;
   canvas: HTMLCanvasElement | null;
+  textLayerDiv: HTMLDivElement | null;
   isRendering: boolean;
 }
 
@@ -318,6 +319,7 @@ export class PdfViewerComponent implements OnDestroy {
           displayWidth,
           displayHeight,
           canvas: null,
+          textLayerDiv: null,
           isRendering: false,
         });
       }
@@ -472,6 +474,9 @@ export class PdfViewerComponent implements OnDestroy {
     const canvas = this.renderer.createElement('canvas') as HTMLCanvasElement;
     this.renderer.setAttribute(canvas, DATA_PAGE_NUMBER_ID, pageNum.toString());
 
+    const textLayerDiv = this.renderer.createElement('div') as HTMLDivElement;
+    this.renderer.addClass(textLayerDiv, 'textLayer');
+
     const containerWidth = this.pdfElement().nativeElement.clientWidth * PDF_RENDERING_MARGIN;
     const containerHeight = this.pdfElement().nativeElement.clientHeight;
     const slot = this.pageSlots()[pageNum - 1];
@@ -479,6 +484,7 @@ export class PdfViewerComponent implements OnDestroy {
     try {
       const { nativeWidth, nativeHeight } = await this.pdfViewerService.renderPageToCanvas(
         canvas,
+        textLayerDiv,
         pageNum,
         slot.displayWidth,
         slot.displayHeight,
@@ -488,6 +494,7 @@ export class PdfViewerComponent implements OnDestroy {
       // Check if slot was cleared (e.g., by zoom) while we were rendering
       if (this.pageSlots()[pageNum - 1]?.isRendering) {
         this.renderer.appendChild(slotElement, canvas);
+        this.renderer.appendChild(slotElement, textLayerDiv);
         // Correct slot dimensions with actual page size
         const { displayWidth, displayHeight } = this.computeDisplayDimensions(
           nativeWidth,
@@ -498,6 +505,7 @@ export class PdfViewerComponent implements OnDestroy {
         const oldDisplayHeight = this.pageSlots()[pageNum - 1].displayHeight;
         this.updateSlot(pageNum, {
           canvas,
+          textLayerDiv,
           isRendering: false,
           nativeWidth,
           nativeHeight,
@@ -529,20 +537,26 @@ export class PdfViewerComponent implements OnDestroy {
 
     const slotElement = this.pdfElement().nativeElement.querySelector(`.page-slot[data-page-num="${pageNum}"]`);
     if (slotElement) {
-      this.renderer.removeChild(slotElement, slot.canvas);
+      if (slot.canvas) {
+        this.renderer.removeChild(slotElement, slot.canvas);
+      }
+      if (slot.textLayerDiv) {
+        this.renderer.removeChild(slotElement, slot.textLayerDiv);
+      }
     }
-    this.updateSlot(pageNum, { canvas: null });
+    this.updateSlot(pageNum, { canvas: null, textLayerDiv: null });
   }
 
   private clearAllCanvases() {
     const slots = this.pageSlots();
     for (const slot of slots) {
-      if (slot.canvas) {
-        const slotElement = this.pdfElement().nativeElement.querySelector(
-          `.page-slot[data-page-num="${slot.pageNum}"]`,
-        );
-        if (slotElement) {
+      const slotElement = this.pdfElement().nativeElement.querySelector(`.page-slot[data-page-num="${slot.pageNum}"]`);
+      if (slotElement) {
+        if (slot.canvas) {
           this.renderer.removeChild(slotElement, slot.canvas);
+        }
+        if (slot.textLayerDiv) {
+          this.renderer.removeChild(slotElement, slot.textLayerDiv);
         }
       }
     }
@@ -550,6 +564,7 @@ export class PdfViewerComponent implements OnDestroy {
       s.map((slot) => ({
         ...slot,
         canvas: null,
+        textLayerDiv: null,
         isRendering: false,
       })),
     );
