@@ -1,10 +1,11 @@
+import { DragRef } from '@angular/cdk/drag-drop';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import {
   Component,
-  computed,
   effect,
   ElementRef,
+  HostListener,
   inject,
   input,
   NgZone,
@@ -90,7 +91,7 @@ export class PdfViewerComponent implements OnDestroy {
   protected readonly pageCount = signal(-1);
   protected readonly isRendering = signal(true);
   protected readonly zoom = signal(1);
-  protected readonly isZoomed = computed(() => this.zoom() !== 1);
+  protected readonly isDragMode = signal(false);
   protected readonly selectedPdf = signal<PdfViewerFile | undefined>(undefined);
   protected readonly pageSlots = signal<PageSlot[]>([]);
   protected readonly maxZoomLevel = MAX_ZOOM_LEVEL;
@@ -110,6 +111,8 @@ export class PdfViewerComponent implements OnDestroy {
   private visiblePages = new Set<number>();
   private renderDebounceTimer: ReturnType<typeof setTimeout> | null = null;
 
+  private readonly dragHandlers: Set<DragRef> = new Set();
+
   constructor() {
     this.setupInitialPdfEffect();
     this.setupRenderingEffect();
@@ -121,6 +124,33 @@ export class PdfViewerComponent implements OnDestroy {
     this.resizeObserver?.disconnect();
     if (this.renderDebounceTimer) {
       clearTimeout(this.renderDebounceTimer);
+    }
+    for (const dragHandler of this.dragHandlers) {
+      dragHandler.dispose();
+    }
+  }
+
+  @HostListener('window:keydown.space', ['$event'])
+  onKeyDown(event: KeyboardEvent) {
+    if (this.isDragMode()) {
+      return;
+    }
+    event.preventDefault();
+    this.setDragMode(true);
+  }
+
+  @HostListener('window:keyup.space')
+  onKeyUp() {
+    if (!this.isDragMode()) {
+      return;
+    }
+    this.setDragMode(false);
+  }
+
+  private setDragMode(enabled: boolean) {
+    this.isDragMode.set(enabled);
+    for (const dragHandler of this.dragHandlers) {
+      dragHandler.disabled = !enabled;
     }
   }
 
@@ -429,7 +459,6 @@ export class PdfViewerComponent implements OnDestroy {
     }
     return result;
   }
-
   private async renderPageSlot(pageNum: number) {
     this.updateSlot(pageNum, { isRendering: true });
 

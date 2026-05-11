@@ -21,3 +21,6 @@ ocr_service_account_role:
 dataextraction_service_account_role:
 cognito_pool_id:
 cognito_group:
+
+# Basic auth settings for additional authentication via middleware. If true, set secret values for basicAuthUsername and basicAuthPassword.
+basicAuthEnabled: false

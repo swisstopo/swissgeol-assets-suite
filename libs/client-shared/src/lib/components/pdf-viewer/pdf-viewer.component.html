@@ -33,7 +33,7 @@
       </div>
     }
 
-    <div #pdf class="viewer__page-wrapper" [class.viewer__page-wrapper--is-zoomed]="isZoomed()">
+    <div #pdf class="viewer__page-wrapper" [class.viewer__page-wrapper--is-dragging]="isDragMode()">
       @for (slot of pageSlots(); track slot.pageNum) {
         <div
           class="page-slot"

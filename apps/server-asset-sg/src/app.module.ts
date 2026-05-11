@@ -8,7 +8,6 @@ import { ScheduleModule } from '@nestjs/schedule';
 
 import { AppController } from '@/app.controller';
 import { FixturesCreateCommand } from '@/commands/fixtures-create.command';
-import { S3DuplicateFilesCommand } from '@/commands/s3-duplicate-files.command';
 import { AuthorizationGuard } from '@/core/guards/authorization-guard.service';
 import { JwtMiddleware } from '@/core/middleware/jwt.middleware';
 import { PrismaService } from '@/core/prisma.service';
@@ -43,7 +42,6 @@ import { WorkgroupsController } from '@/features/workgroups/workgroups.controlle
   ],
   providers: [
     FixturesCreateCommand,
-    S3DuplicateFilesCommand,
 
     ContactRepo,
     PrismaService,

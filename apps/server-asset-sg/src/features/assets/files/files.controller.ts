@@ -18,6 +18,7 @@ import {
   HttpCode,
   HttpException,
   HttpStatus,
+  Logger,
   Param,
   ParseBoolPipe,
   ParseIntPipe,
@@ -41,6 +42,8 @@ import { parseEnumFromRequest } from '@/utils/request';
 
 @Controller('/assets/:assetId/files')
 export class FilesController {
+  private readonly logger = new Logger(FilesController.name);
+
   constructor(
     private readonly fileRepo: FileRepo,
     private readonly assetRepo: AssetRepo,
@@ -107,6 +110,11 @@ export class FilesController {
     } else {
       res.status(HttpStatus.OK);
     }
+
+    fileStream.content.on('error', (err) => {
+      this.logger.warn('Error streaming file from S3', { error: err, fileName: file.name });
+    });
+
     fileStream.content.pipe(res);
   }
 

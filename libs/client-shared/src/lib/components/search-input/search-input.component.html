@@ -1,0 +1,7 @@
+<svg-icon key="search" />
+<input
+  [(ngModel)]="value"
+  class="search-input"
+  (keydown)="onKeydown($event)"
+  [placeholder]="placeholderTranslationKey() | translate"
+/>

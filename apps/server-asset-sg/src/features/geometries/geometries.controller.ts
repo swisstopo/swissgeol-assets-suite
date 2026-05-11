@@ -8,6 +8,7 @@ import {
   User,
 } from '@asset-sg/shared/v2';
 import { Controller, Get } from '@nestjs/common';
+import { restrictQueryForUser } from '../assets/search/asset-search.utils';
 import { Authorize } from '@/core/decorators/authorize.decorator';
 import { CurrentUser } from '@/core/decorators/current-user.decorator';
 import { ParseBody } from '@/core/decorators/parse.decorator';
@@ -24,6 +25,7 @@ export class GeometriesController {
     query: AssetSearchQuery,
     @CurrentUser() user: User,
   ): Promise<string> {
+    restrictQueryForUser(query, user);
     const geometries = await this.assetSearchService.search(query, user, { limit: 100_000_000, decode: false });
     const mappedGeometries = mapToGeometry(geometries);
 

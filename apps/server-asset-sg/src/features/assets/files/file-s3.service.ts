@@ -1,5 +1,4 @@
 import {
-  CopyObjectCommand,
   DeleteObjectCommand,
   GetObjectCommand,
   HeadObjectCommand,
@@ -79,21 +78,6 @@ export class FileS3Service {
     }
   }
 
-  async copy(sourceName: string, destinationName: string): Promise<boolean> {
-    try {
-      await this.client.send(
-        new CopyObjectCommand({
-          CopySource: `${this.bucket}/${this.getKey(sourceName)}`,
-          Key: this.getKey(destinationName),
-          Bucket: this.bucket,
-        }),
-      );
-      return true;
-    } catch (e) {
-      return handleS3Error(e) ?? false;
-    }
-  }
-
   async delete(name: string): Promise<boolean> {
     try {
       await this.client.send(
@@ -145,6 +129,12 @@ const loadS3ClientConfig = (): S3ClientConfig => {
 
     // Disables the client automatically appending the hostname to the bucket name.
     forcePathStyle: true,
+    requestHandler: {
+      // Reduces the default socket timeout to prevent hanging connections in case of network issues or client
+      // disconnects if a request is terminated prematurely. If left out, aborted requests leave sockets occupied
+      // without returning them, leading to an exhaustion of sockets after the default (50 sockets) are taken.
+      socketTimeout: 5000,
+    },
   };
 };
 

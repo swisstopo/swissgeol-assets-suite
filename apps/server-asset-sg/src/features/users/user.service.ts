@@ -78,7 +78,7 @@ export class UserService {
   private async listKnownUserIds(): Promise<Set<UserId>> {
     let nextToken: string | undefined = undefined;
     const ids = new Set<UserId>();
-    for (;;) {
+    while (true) {
       const response: ListUsersInGroupCommandOutput = await this.client.send(
         new ListUsersInGroupCommand({
           UserPoolId: this.poolId,

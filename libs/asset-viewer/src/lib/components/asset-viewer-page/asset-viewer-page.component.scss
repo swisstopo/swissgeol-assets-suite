@@ -25,36 +25,6 @@ asset-sg-map {
   grid-area: map;
 }
 
-.search-input-wrapper {
-  position: relative;
-  margin-left: 160px;
-
-  & > svg-icon {
-    position: absolute;
-    left: 12px;
-    top: 0;
-    bottom: 0;
-    margin: auto 0;
-  }
-}
-
-.search-input {
-  padding: 8px 12px 8px 48px;
-  border: none;
-  outline: none;
-  width: 500px;
-  height: 56px;
-
-  border-bottom: 2px solid variables.$cyan-08;
-  color: variables.$grey-10;
-  background-color: #f8f9fa;
-  border-radius: 6px;
-
-  &::placeholder {
-    color: variables.$grey-10;
-  }
-}
-
 asset-sg-asset-picker {
   position: absolute;
   top: 0;
@@ -65,7 +35,7 @@ asset-sg-asset-picker {
 }
 
 asset-sg-asset-search-refine {
-  background: variables.$grey-00;
+  background: variables.$grey-01;
   grid-area: search-filter;
   padding-left: 16px;
   padding-top: 0;
@@ -73,14 +43,14 @@ asset-sg-asset-search-refine {
 }
 
 asset-sg-asset-search-results {
-  background: variables.$grey-00;
+  background: variables.$grey-01;
   grid-area: search-results;
   overflow: hidden;
   width: 100%;
 }
 
 asset-sg-asset-search-detail {
-  background: variables.$grey-00;
+  background: variables.$grey-01;
   grid-area: search-detail;
   overflow-y: auto;
   width: 550px;

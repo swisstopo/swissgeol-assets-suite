@@ -24,7 +24,6 @@ export class SyncExternService {
   private readonly config: SyncConfig;
   private readonly existingContactIds: Map<string, number> = new Map();
   private readonly relationSqls: RelationSqls = { ids: [], assetLanguages: [], manCatLabelRefs: [], typeNatRels: [] };
-  private readonly existingFileIds: Map<string, number> = new Map();
   private readonly assetsToSync: AssetToSync[] = [];
   private readonly newAssetToOriginalAsset: Map<number, { originalAssetId: number; originalSgsId: number | null }> =
     new Map();
@@ -80,7 +79,7 @@ export class SyncExternService {
 
   private async synchronizeAsset(asset: AssetToSync) {
     const contactsCreate = await this.createContactsPayload(asset.assetContacts);
-    const filesCreate = await this.createFilesPayload(asset.assetFiles);
+    const filesCreate = await this.createFilesPayload(asset.files);
 
     const workgroup = await this.destinationPrisma.workgroup.findFirst({
       where: { name: { equals: asset.workgroupName } },
@@ -89,14 +88,14 @@ export class SyncExternService {
     const workgroupId = workgroup?.id ?? this.defaultWorkgroupId;
 
     const newAsset = await this.destinationPrisma.asset.create({
-      include: { assetFiles: { include: { file: true } }, assetContacts: { include: { contact: true } } },
+      include: { assetContacts: { include: { contact: true } } },
       data: {
         ...asset.asset,
         creatorId: this.syncAssignee,
         assetMainId: null, // this will be set afterwards
         isPublic: asset.asset.isPublic,
         restrictionDate: asset.asset.restrictionDate,
-        assetFiles: filesCreate,
+        files: filesCreate,
         assetContacts: contactsCreate.createData,
         workgroupId,
       },
@@ -108,7 +107,6 @@ export class SyncExternService {
       .forEach((c) => {
         this.existingContactIds.set(this.createUniqueContactKey(c), c.contactId);
       });
-    newAsset.assetFiles.map((a) => a.file).forEach((f) => this.existingFileIds.set(f.name, f.id));
 
     await this.destinationPrisma.assetContact.createMany({
       data: [...contactsCreate.assignAfterwards.entries()].flatMap(([uniqueKey, roles]) =>
@@ -159,11 +157,25 @@ export class SyncExternService {
       where: { assetXId: { in: this.assetsToSync.map((a) => a.originalAssetId) } },
     });
     const allSynchronisations = await this.destinationPrisma.assetSynchronization.findMany();
+
+    // Fetch workgroupId for all synced assets on destination to prevent cross-workgroup references
+    const syncedAssetIds = allSynchronisations.map((s) => s.assetId);
+    const assetWorkgroups = new Map(
+      (
+        await this.destinationPrisma.asset.findMany({
+          where: { assetId: { in: syncedAssetIds } },
+          select: { assetId: true, workgroupId: true },
+        })
+      ).map((a) => [a.assetId, a.workgroupId]),
+    );
+
     for (const asset of this.assetsToSync) {
       const newAssetId = assetSynchronizations.find((n) => n.originalAssetId === asset.originalAssetId);
       if (newAssetId === undefined) {
         throw new Error(`Could not find new asset id for asset ${asset.originalAssetId}`);
       }
+
+      const currentWorkgroupId = assetWorkgroups.get(newAssetId.assetId);
 
       const assetMainLink = allSynchronisations.find((n) => n.originalAssetId === asset.asset.assetMainId);
       const originalAssetXSiblings = existingSiblings
@@ -173,16 +185,49 @@ export class SyncExternService {
         .filter((n) => originalAssetXSiblings.includes(n.originalAssetId))
         .map((n) => n.assetId);
 
+      // Filter siblings to only include assets in the same workgroup
+      const sameWorkgroupSiblings = newAssetSiblings.filter((siblingId) => {
+        const siblingWorkgroupId = assetWorkgroups.get(siblingId);
+        if (siblingWorkgroupId !== currentWorkgroupId) {
+          log(
+            `Skipping cross-workgroup sibling: asset ${newAssetId.assetId} (wg ${currentWorkgroupId}) -> asset ${siblingId} (wg ${siblingWorkgroupId})`,
+          );
+          return false;
+        }
+        return true;
+      });
+
+      // Only set assetMainId if the parent is in the same workgroup
+      const parentId = assetMainLink?.assetId;
+      const parentWorkgroupId = parentId != null ? assetWorkgroups.get(parentId) : undefined;
+      let safeAssetMainId: number | null | undefined = undefined;
+      if (parentId != null && parentWorkgroupId !== currentWorkgroupId) {
+        log(
+          `Skipping cross-workgroup parent: asset ${newAssetId.assetId} (wg ${currentWorkgroupId}) -> parent ${parentId} (wg ${parentWorkgroupId})`,
+        );
+        safeAssetMainId = null;
+      } else {
+        safeAssetMainId = assetMainLink?.assetId;
+      }
+
       await this.destinationPrisma.asset.update({
         where: { assetId: newAssetId.assetId },
         data: {
-          assetMainId: assetMainLink?.assetId,
-          siblingXAssets: { create: newAssetSiblings.map((n) => ({ assetYId: n })) },
+          assetMainId: safeAssetMainId,
+          siblingXAssets: { create: sameWorkgroupSiblings.map((n) => ({ assetYId: n })) },
         },
       });
       for (const child of asset.children) {
         const syncedChildAsset = allSynchronisations.find((n) => n.originalAssetId === child.assetId);
         if (syncedChildAsset) {
+          // Only set assetMainId on child if it shares the workgroup with the parent
+          const childWorkgroupId = assetWorkgroups.get(syncedChildAsset.assetId);
+          if (childWorkgroupId !== currentWorkgroupId) {
+            log(
+              `Skipping cross-workgroup child: parent ${newAssetId.assetId} (wg ${currentWorkgroupId}) -> child ${syncedChildAsset.assetId} (wg ${childWorkgroupId})`,
+            );
+            continue;
+          }
           await this.destinationPrisma.asset.update({
             where: { assetId: syncedChildAsset.assetId },
             data: {
@@ -205,8 +250,6 @@ export class SyncExternService {
     (await this.destinationPrisma.contact.findMany()).forEach((c) =>
       this.existingContactIds.set(this.createUniqueContactKey(c), c.contactId),
     );
-
-    (await this.destinationPrisma.file.findMany()).forEach((f) => this.existingFileIds.set(f.name, f.id));
 
     const alreadySyncedIds = (
       await this.destinationPrisma.assetSynchronization.findMany({
@@ -234,11 +277,7 @@ export class SyncExternService {
               contact: true,
             },
           },
-          assetFiles: {
-            include: {
-              file: true,
-            },
-          },
+          files: true,
           workgroup: {
             select: { name: true },
           },
@@ -253,7 +292,7 @@ export class SyncExternService {
       const {
         assetId,
         sgsId,
-        assetFiles,
+        files,
         assetContacts,
         manCatLabelRefs,
         typeNatRels,
@@ -275,7 +314,7 @@ export class SyncExternService {
         typeNatRels,
         ids,
         assetContacts: assetContacts,
-        assetFiles: assetFiles.flatMap((a) => a.file),
+        files,
         originalAssetId: assetId,
         originalSgsId: sgsId,
         children: subordinateAssets,
@@ -340,27 +379,18 @@ export class SyncExternService {
   }
 
   /**
-   * Creates an input for asset files by either connecting to existing files (matched by name) or by creating a new file
-   * entry.
+   * Creates an input for asset files  by creating a new file entry. Historically this could also connect to existing
+   * files, but this is not possible anymore.
    */
-  private async createFilesPayload(
-    assetFiles: File[],
-  ): Promise<Prisma.AssetFileUncheckedCreateNestedManyWithoutAssetInput> {
-    const create = assetFiles.map(({ id: _, ...file }) => {
-      const match = this.existingFileIds.get(file.name);
-
-      return match
-        ? { file: { connect: { id: match } } }
-        : ({
-            file: {
-              create: {
-                ...file,
-                pageRangeClassifications: file.pageRangeClassifications as Prisma.InputJsonValue,
-                fulltextContent: file.fulltextContent as Prisma.InputJsonValue,
-              },
-            },
-          } satisfies Prisma.AssetFileCreateWithoutAssetInput);
-    });
+  private async createFilesPayload(assetFiles: File[]): Promise<Prisma.FileUncheckedCreateNestedManyWithoutAssetInput> {
+    const create = assetFiles.map(
+      ({ id: _, assetId: _assetId, ...file }) =>
+        ({
+          ...file,
+          pageRangeClassifications: file.pageRangeClassifications as Prisma.InputJsonValue,
+          fulltextContent: file.fulltextContent as Prisma.InputJsonValue,
+        }) satisfies Prisma.FileCreateWithoutAssetInput,
+    );
 
     return { create };
   }
@@ -565,7 +595,7 @@ interface AssetToSync {
   workgroupName: string;
   originalAssetId: Asset['assetId'];
   originalSgsId: Asset['sgsId'];
-  assetFiles: File[];
+  files: File[];
   assetContacts: (AssetContact & { contact: Contact })[];
   manCatLabelRefs: Pick<ManCatLabelRef, 'manCatLabelItemCode'>[];
   typeNatRels: Pick<TypeNatRel, 'natRelItemCode'>[];
