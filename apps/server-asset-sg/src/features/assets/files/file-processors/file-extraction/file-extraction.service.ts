@@ -62,8 +62,8 @@ export class FileExtractionService extends AbstractProcessingService<PredictionS
   }
 
   /** @deprecated Handled by v2/FileExtractionService. Remove once v2 is confirmed stable. */
-  protected async handleStartEvent(_payload: ProcessableFile): Promise<void> {
-    // no-op: event ownership transferred to v2/file-extraction.service.ts
+  protected async handleStartEvent(payload: ProcessableFile): Promise<void> {
+    void this.process(payload);
   }
 
   protected async postProcess(file: ProcessableFile, result: PredictionSchema[]): Promise<void> {
