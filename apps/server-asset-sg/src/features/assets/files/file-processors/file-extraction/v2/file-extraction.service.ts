@@ -66,7 +66,7 @@ export class FileExtractionService extends AbstractProcessingService<ProcessorDo
       entityCount: result?.entities?.length ?? 0,
     });
 
-    if (result == null || !Array.isArray(result.entities)) {
+    if (result == null || !Array.isArray(result.entities) || result.entities.length === 0) {
       this.logger.error('[EXTRACT-V2] Extraction API returned no valid result.');
       await this.updateStatus(file, FileProcessingState.Error);
       return;
