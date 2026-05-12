@@ -7,7 +7,7 @@ import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { AppLogger } from '@/app.logger';
 import { PrismaExceptionFilter } from '@/core/exception-filters/prisma.exception-filter';
-import { FileExtractionService } from '@/features/assets/files/file-processors/file-extraction/file-extraction.service';
+import { FileExtractionService } from '@/features/assets/files/file-processors/file-extraction/v2/file-extraction.service';
 import { FileOcrService } from '@/features/assets/files/file-processors/file-ocr/file-ocr.service';
 import { AssetSyncService } from '@/features/assets/sync/asset-sync.service';
 import { FileFulltextSyncService } from '@/features/assets/sync/file-fulltext-sync.service';
