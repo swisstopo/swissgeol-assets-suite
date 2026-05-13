@@ -11,9 +11,8 @@ import {
   transformPagesToRanges,
 } from '@asset-sg/shared/v2';
 import { Injectable, Logger } from '@nestjs/common';
-import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Prisma } from '@prisma/client';
-import { EVENTS } from '@/core/events';
 import { PrismaService } from '@/core/prisma.service';
 import {
   AbstractProcessingService,
@@ -42,6 +41,9 @@ const externalToInternalCategoryMap: CategoryMap = {
   Table: PageCategory.Table,
 };
 
+/**
+ * @deprecated Use the v2 FileExtractionService instead (`v2/file-extraction.service.ts`). Remove once v2 is confirmed stable.
+ */
 @Injectable()
 export class FileExtractionService extends AbstractProcessingService<PredictionSchema[]> {
   // todo: why array
@@ -59,7 +61,7 @@ export class FileExtractionService extends AbstractProcessingService<PredictionS
     super();
   }
 
-  @OnEvent(EVENTS.FILE_START_EXTRACT)
+  /** @deprecated Handled by v2/FileExtractionService. Remove once v2 is confirmed stable. */
   protected async handleStartEvent(payload: ProcessableFile): Promise<void> {
     void this.process(payload);
   }

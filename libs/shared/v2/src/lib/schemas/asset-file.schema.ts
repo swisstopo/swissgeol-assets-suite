@@ -27,6 +27,9 @@ class PageRangeClassificationSchema implements PageRangeClassification {
   languages!: SupportedPageLanguage[];
   @IsEnum(PageCategory, { each: true })
   categories!: PageCategory[];
+  @IsNullable()
+  @IsString()
+  label?: string | null;
 }
 
 export class AssetFileSchema extends Schema implements AssetFile {

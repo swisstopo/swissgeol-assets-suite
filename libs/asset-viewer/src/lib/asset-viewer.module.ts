@@ -163,6 +163,7 @@ const routes: Routes = [
     MatButton,
     SearchInputComponent,
     ToggleButtonComponent,
+    TranslatePipe,
   ],
   providers: [
     TranslatePipe,
