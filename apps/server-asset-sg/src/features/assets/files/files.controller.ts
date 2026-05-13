@@ -7,6 +7,7 @@ import {
   AssetPolicy,
   convert,
   LegalDocCode,
+  PageDimension,
   User,
 } from '@asset-sg/shared/v2';
 import {
@@ -30,14 +31,17 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { Prisma } from '@prisma/client';
 import { plainToInstance } from 'class-transformer';
 import { Response } from 'express';
 import { authorize } from '@/core/authorize';
 import { CurrentUser } from '@/core/decorators/current-user.decorator';
+import { PrismaService } from '@/core/prisma.service';
 import { AssetRepo } from '@/features/assets/asset.repo';
 import { FileS3Service } from '@/features/assets/files/file-s3.service';
 import { FileRepo } from '@/features/assets/files/file.repo';
 import { FileService } from '@/features/assets/files/file.service';
+import { PdfMetadataService } from '@/features/assets/files/pdf-metadata.service';
 import { parseEnumFromRequest } from '@/utils/request';
 
 @Controller('/assets/:assetId/files')
@@ -49,6 +53,8 @@ export class FilesController {
     private readonly assetRepo: AssetRepo,
     private readonly fileS3Service: FileS3Service,
     private readonly fileService: FileService,
+    private readonly pdfMetadataService: PdfMetadataService,
+    private readonly prismaService: PrismaService,
   ) {}
 
   @Get('/')
@@ -77,6 +83,81 @@ export class FilesController {
     const url = await this.fileS3Service.getPresignedUrl(file.name, file.alias, download);
 
     return plainToInstance(AssetFileSignedUrlSchema, { url });
+  }
+
+  @Get('/:id/metadata')
+  async getMetadata(
+    @Param('assetId', ParseIntPipe) assetId: number,
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: User,
+  ): Promise<AssetFileMetadataResponse> {
+    const asset = await this.findAssetOrThrow(assetId);
+    authorize(AssetPolicy, user).canShow(asset);
+
+    const file = await this.fileRepo.find({ id, assetId: asset.id });
+    if (file == null) {
+      throw new HttpException('not found', HttpStatus.NOT_FOUND);
+    }
+
+    // Only PDFs have meaningful page dimensions
+    if (!file.name.toLowerCase().endsWith('.pdf')) {
+      throw new HttpException('Metadata is only available for PDF files', HttpStatus.BAD_REQUEST);
+    }
+
+    // Check if dimensions are already cached in database
+    if (file.pageDimensions && file.pageDimensions.length > 0) {
+      this.logger.debug('Returning cached page dimensions', {
+        fileId: file.id,
+        fileName: file.name,
+        pageCount: file.pageCount,
+      });
+
+      return {
+        pageCount: file.pageCount ?? file.pageDimensions.length,
+        pageDimensions: file.pageDimensions,
+      };
+    }
+
+    // Dimensions not cached - extract them now (lazy extraction)
+    this.logger.log('Page dimensions not cached, extracting from PDF', {
+      fileId: file.id,
+      fileName: file.name,
+    });
+
+    try {
+      // Get pre-signed URL to access the file
+      const presignedUrl = await this.fileS3Service.getPresignedUrl(file.name, file.alias, false);
+
+      // Extract metadata from PDF
+      const metadata = await this.pdfMetadataService.extractMetadata(presignedUrl);
+
+      // Store dimensions in database for future requests
+      await this.prismaService.file.update({
+        where: { id: file.id },
+        data: {
+          pageDimensions: metadata.pageDimensions as unknown as Prisma.JsonArray,
+          // Also update pageCount if it's missing
+          ...(file.pageCount === null && { pageCount: metadata.pageCount }),
+        },
+      });
+
+      this.logger.log('Successfully extracted and cached page dimensions', {
+        fileId: file.id,
+        fileName: file.name,
+        pageCount: metadata.pageCount,
+        dimensionsCount: metadata.pageDimensions.length,
+      });
+
+      return metadata;
+    } catch (error) {
+      this.logger.error('Failed to extract PDF metadata', {
+        fileId: file.id,
+        fileName: file.name,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+
+      throw new HttpException('Failed to extract PDF metadata', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
   }
 
   @Get('/:id')
@@ -176,4 +257,9 @@ export class FilesController {
   private decodeFilename(fileName: string): string {
     return Buffer.from(fileName, 'latin1').toString('utf8');
   }
+}
+
+export interface AssetFileMetadataResponse {
+  pageCount: number;
+  pageDimensions: PageDimension[];
 }

@@ -81,6 +81,7 @@ export class FileRepo implements Repo<AssetFile, FileIdentifier, CreateFileData,
       fileProcessingStage: data.fileProcessingStage,
       fileProcessingState: data.fileProcessingState,
       pageRangeClassifications: null, // this is filled (if at all) by postprocessing via Extraction
+      pageDimensions: null, // this is filled (if at all) lazily when metadata endpoint is called
     };
   }
 

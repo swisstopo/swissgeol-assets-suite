@@ -53,6 +53,13 @@ export interface AssetFile {
    * DB: `page_range_classifications`
    */
   pageRangeClassifications: PageRangeClassification[] | null;
+
+  /**
+   * DB: `page_dimensions`
+   * Array of page dimensions extracted from PDF
+   * Populated lazily when metadata endpoint is first called
+   */
+  pageDimensions: PageDimension[] | null;
 }
 
 export type AssetFileId = number;
@@ -99,4 +106,13 @@ export enum FileProcessingState {
   Success = 'Success',
   Error = 'Error',
   WillNotBeProcessed = 'WillNotBeProcessed',
+}
+
+/**
+ * Represents the dimensions of a single PDF page
+ */
+export interface PageDimension {
+  page: number;
+  width: number;
+  height: number;
 }

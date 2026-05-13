@@ -23,6 +23,7 @@ const register = (asset: Asset, options: RegisterFileOptions): void => {
     fileProcessingState: FileProcessingState.Success,
     fileProcessingStage: FileProcessingStage.Extraction,
     pageRangeClassifications: options.pageRangeClassifications,
+    pageDimensions: null, // Populated lazily when metadata endpoint is called
   });
 };
 
