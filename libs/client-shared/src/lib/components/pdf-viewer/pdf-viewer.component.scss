@@ -17,7 +17,7 @@
   align-items: center;
 
   &__header {
-    z-index: 2; ///note: should be above toc
+    z-index: 2;
   }
 
   &__toc {
@@ -32,42 +32,45 @@
     width: 100%;
     height: 100%;
     overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 0;
+    overflow-x: auto;
+    scrollbar-gutter: stable;
 
-    &--is-zoomed {
-      overflow: auto;
+    &--space-pan {
+      cursor: grab;
+      touch-action: none;
+      user-select: none;
 
-      .canvas-wrapper {
-        position: relative;
-      }
-
-      canvas {
-        display: block;
-        cursor: text;
-      }
-
-      &.viewer__page-wrapper--is-dragging canvas {
-        cursor: grab;
-      }
-
-      &.viewer__page-wrapper--is-dragging .textLayer {
-        pointer-events: none;
-      }
-    }
-
-    &--is-dragging {
+      .canvas-wrapper,
       canvas {
         cursor: grab;
       }
 
       .textLayer {
         pointer-events: none;
+        user-select: none;
       }
     }
+
+    &--is-panning {
+      cursor: grabbing;
+      touch-action: none;
+
+      .canvas-wrapper,
+      canvas {
+        cursor: grabbing;
+        user-select: none;
+      }
+
+      .textLayer {
+        pointer-events: none;
+        user-select: none;
+      }
+    }
+  }
+
+  &__virtual-spacer {
+    position: relative;
+    min-width: 100%;
   }
 
   &__button-container {
@@ -116,20 +119,112 @@
 
   canvas {
     height: auto;
+    display: block;
   }
 }
 
 .page-slot {
-  position: relative;
-  flex-shrink: 0;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
   background-color: var(--sgc-color-secondary--400);
+  --skeleton-strong: #e3e3e3;
+  --skeleton-mid: #ececec;
+  --skeleton-soft: #f4f4f4;
 
-  &[data-pdf-page-rotation="270"] {
-    transform: rotate(270deg);
-    transform-origin: center center;
+  &::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: var(--page-width, min(95%, 860px));
+    height: var(--page-height, min(95%, 1200px));
+    transform: translate(-50%, -50%);
+    border-radius: 10px;
+    border: 1px solid #e4e4e4;
+    background:
+      linear-gradient(90deg, rgb(240 240 240 / 0) 0%, rgb(255 255 255 / 0.75) 48%, rgb(240 240 240 / 0) 100%), #fbfbfb;
+    background-size: 200% 100%;
+    box-shadow:
+      0 12px 28px rgb(0 0 0 / 0.08),
+      0 2px 6px rgb(0 0 0 / 0.06);
+    animation: page-skeleton-shimmer 1.6s ease-in-out infinite;
+  }
+
+  &::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: calc(var(--page-width, 860px) * 0.76);
+    height: calc(var(--page-height, 1200px) * 0.76);
+    transform: translate(-50%, -50%);
+    background:
+      linear-gradient(var(--skeleton-strong), var(--skeleton-strong)) 0 0 / 30% 4.5% no-repeat,
+      radial-gradient(circle, var(--skeleton-mid) 0 60%, transparent 62%) 6% 18% / 14% 14% no-repeat,
+      linear-gradient(var(--skeleton-mid), var(--skeleton-mid)) 25% 13% / 62% 2.5% no-repeat,
+      linear-gradient(var(--skeleton-mid), var(--skeleton-mid)) 25% 20% / 72% 2.5% no-repeat,
+      linear-gradient(var(--skeleton-mid), var(--skeleton-mid)) 25% 27% / 56% 2.5% no-repeat,
+      linear-gradient(var(--skeleton-soft), var(--skeleton-soft)) 0 40% / 100% 1px no-repeat,
+      linear-gradient(var(--skeleton-strong), var(--skeleton-strong)) 0 48% / 28% 4% no-repeat,
+      linear-gradient(var(--skeleton-mid), var(--skeleton-mid)) 0 59% / 43% 2.4% no-repeat,
+      linear-gradient(var(--skeleton-mid), var(--skeleton-mid)) 0 66% / 38% 2.4% no-repeat,
+      linear-gradient(var(--skeleton-mid), var(--skeleton-mid)) 0 73% / 47% 2.4% no-repeat,
+      linear-gradient(var(--skeleton-mid), var(--skeleton-mid)) 57% 59% / 39% 2.4% no-repeat,
+      linear-gradient(var(--skeleton-mid), var(--skeleton-mid)) 57% 66% / 44% 2.4% no-repeat,
+      linear-gradient(var(--skeleton-mid), var(--skeleton-mid)) 57% 73% / 34% 2.4% no-repeat,
+      linear-gradient(var(--skeleton-soft), var(--skeleton-soft)) 0 88% / 46% 10% no-repeat,
+      linear-gradient(var(--skeleton-soft), var(--skeleton-soft)) 54% 88% / 46% 10% no-repeat;
+    opacity: 0.95;
+  }
+
+  &:nth-child(3n + 2)::after {
+    width: calc(var(--page-width, 860px) * 0.72);
+    height: calc(var(--page-height, 1200px) * 0.72);
+    background:
+      linear-gradient(var(--skeleton-strong), var(--skeleton-strong)) 0 0 / 34% 5% no-repeat,
+      linear-gradient(var(--skeleton-soft), var(--skeleton-soft)) 0 15% / 46% 28% no-repeat,
+      radial-gradient(circle, var(--skeleton-mid) 0 58%, transparent 60%) 13% 21% / 15% 15% no-repeat,
+      linear-gradient(var(--skeleton-mid), var(--skeleton-mid)) 25% 24% / 18% 2.5% no-repeat,
+      linear-gradient(var(--skeleton-mid), var(--skeleton-mid)) 25% 31% / 22% 2.5% no-repeat,
+      linear-gradient(var(--skeleton-mid), var(--skeleton-mid)) 57% 17% / 43% 2.5% no-repeat,
+      linear-gradient(var(--skeleton-mid), var(--skeleton-mid)) 57% 26% / 36% 2.5% no-repeat,
+      linear-gradient(var(--skeleton-mid), var(--skeleton-mid)) 57% 35% / 41% 2.5% no-repeat,
+      linear-gradient(var(--skeleton-soft), var(--skeleton-soft)) 0 55% / 100% 1px no-repeat,
+      linear-gradient(var(--skeleton-strong), var(--skeleton-strong)) 0 65% / 26% 4% no-repeat,
+      linear-gradient(var(--skeleton-mid), var(--skeleton-mid)) 0 76% / 88% 2.4% no-repeat,
+      linear-gradient(var(--skeleton-mid), var(--skeleton-mid)) 0 84% / 68% 2.4% no-repeat,
+      linear-gradient(var(--skeleton-mid), var(--skeleton-mid)) 0 92% / 78% 2.4% no-repeat;
+  }
+
+  &:nth-child(3n)::after {
+    width: calc(var(--page-width, 860px) * 0.7);
+    height: calc(var(--page-height, 1200px) * 0.78);
+    background:
+      linear-gradient(var(--skeleton-strong), var(--skeleton-strong)) 0 0 / 42% 4.8% no-repeat,
+      linear-gradient(var(--skeleton-mid), var(--skeleton-mid)) 0 12% / 96% 2.2% no-repeat,
+      linear-gradient(var(--skeleton-mid), var(--skeleton-mid)) 0 19% / 78% 2.2% no-repeat,
+      linear-gradient(var(--skeleton-mid), var(--skeleton-mid)) 0 31% / 100% 2.2% no-repeat,
+      linear-gradient(var(--skeleton-mid), var(--skeleton-mid)) 0 38% / 84% 2.2% no-repeat,
+      linear-gradient(var(--skeleton-soft), var(--skeleton-soft)) 8% 52% / 84% 24% no-repeat,
+      radial-gradient(circle, var(--skeleton-mid) 0 56%, transparent 58%) 14% 59% / 12% 12% no-repeat,
+      linear-gradient(var(--skeleton-mid), var(--skeleton-mid)) 30% 59% / 42% 2.4% no-repeat,
+      linear-gradient(var(--skeleton-mid), var(--skeleton-mid)) 30% 67% / 52% 2.4% no-repeat,
+      linear-gradient(var(--skeleton-mid), var(--skeleton-mid)) 0 88% / 90% 2.2% no-repeat,
+      linear-gradient(var(--skeleton-mid), var(--skeleton-mid)) 0 95% / 62% 2.2% no-repeat;
+  }
+
+  &--loaded::before,
+  &--loaded::after {
+    display: none;
+  }
+
+  .canvas-wrapper {
+    position: relative;
   }
 
   // PDF.js text layer styles for text selection.
@@ -149,16 +244,8 @@
     transform-origin: 0 0;
     caret-color: CanvasText;
     z-index: 0;
-
-    // Reset font-weight to match the canvas 2D context default (normal/400) used by TextLayer
-    // for measuring text widths. Without this, inherited font-weight (e.g. 500 from body)
-    // causes spans to render wider than their measured widths, with the error accumulating
-    // over longer text and being more visible at larger font sizes.
     font-weight: normal;
 
-    // --scale-factor, --total-scale-factor, and --scale-round-x/y are set as inline styles
-    // by the service before TextLayer construction.
-    // --min-font-size is set inline by TextLayer itself.
     --text-scale-factor: calc(var(--total-scale-factor) * var(--min-font-size));
     --min-font-size-inv: calc(1 / var(--min-font-size));
 
@@ -221,5 +308,14 @@
     &.selecting .endOfContent {
       top: 0;
     }
+  }
+}
+
+@keyframes page-skeleton-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
   }
 }
