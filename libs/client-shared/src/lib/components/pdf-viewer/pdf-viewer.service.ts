@@ -22,12 +22,12 @@ export class PdfViewerService implements OnDestroy {
   private pdfDoc: PDFDocumentProxy | undefined;
   private readonly sessionStorageService = inject(SessionStorageService);
   private readonly ngZone = inject(NgZone);
-  private selectionAbortController: AbortController | null = null;
+  private readonly selectionAbortControllers = new Map<HTMLElement, AbortController>();
   private readonly store = inject(Store);
   private readonly isViewApp = toSignal(this.store.select(selectIsAnonymousMode));
 
   async ngOnDestroy() {
-    this.selectionAbortController?.abort();
+    this.cleanupTextLayerSelections();
     await this.destroyPdfJsWorker();
   }
 
@@ -108,6 +108,18 @@ export class PdfViewerService implements OnDestroy {
     return { nativeWidth: unscaledViewport.width, nativeHeight: unscaledViewport.height };
   }
 
+  public cleanupTextLayerSelection(textLayerDiv: HTMLElement): void {
+    this.selectionAbortControllers.get(textLayerDiv)?.abort();
+    this.selectionAbortControllers.delete(textLayerDiv);
+  }
+
+  public cleanupTextLayerSelections(): void {
+    for (const controller of this.selectionAbortControllers.values()) {
+      controller.abort();
+    }
+    this.selectionAbortControllers.clear();
+  }
+
   private async renderTextLayer(page: PDFPageProxy, textLayerDiv: HTMLElement, viewport: PageViewport) {
     const textContent = await page.getTextContent({ disableNormalization: true });
     await document.fonts.ready;
@@ -182,10 +194,10 @@ export class PdfViewerService implements OnDestroy {
    * and TextLayerBuilder.#enableGlobalSelectionListener.
    */
   private setupSelectionBehavior(textLayerDiv: HTMLElement) {
-    // Abort previous listeners (from prior page renders) before setting up new ones.
-    this.selectionAbortController?.abort();
-    this.selectionAbortController = new AbortController();
-    const { signal } = this.selectionAbortController;
+    this.cleanupTextLayerSelection(textLayerDiv);
+    const abortController = new AbortController();
+    this.selectionAbortControllers.set(textLayerDiv, abortController);
+    const { signal } = abortController;
 
     const endOfContent = document.createElement('div');
     endOfContent.className = 'endOfContent';
