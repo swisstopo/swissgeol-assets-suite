@@ -12,6 +12,7 @@
     display: flex;
     justify-self: flex-end;
     box-shadow: 4px 4px 2px 0 #0000001f;
+
     height: 44px;
     width: 44px;
 
@@ -52,6 +53,7 @@
         display: flex;
         padding: 0 16px 0 54px;
         justify-content: space-between;
+        overflow: hidden;
         width: 100%;
         font-weight: variables.$font-normal;
         font-size: 14px;
@@ -71,10 +73,17 @@
         }
 
         &__category {
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          overflow: hidden;
           &--active {
             color: var(--sgc-color-primary);
             font-weight: variables.$font-bold;
           }
+        }
+
+        &__page-range {
+          line-height: 0.8;
         }
       }
     }
