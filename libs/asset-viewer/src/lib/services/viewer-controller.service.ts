@@ -18,6 +18,7 @@ import {
   map,
   merge,
   Observable,
+  pairwise,
   ReplaySubject,
   skip,
   Subscription,
@@ -118,7 +119,7 @@ export class ViewerControllerService {
 
     const geometries = await firstValueFrom(this.store.select(selectGeometries));
     if (geometries.length === 0) {
-      loads.push(this.loadGeometries());
+      loads.push(this.loadGeometries(params.query.type));
     }
     loads.push(
       this.loadResults(params.query, {
@@ -132,13 +133,18 @@ export class ViewerControllerService {
     this.subscription.add(this.syncUrlParams());
     this.subscription.add(this.loadResultsWhenPanelIsOpened());
     this.subscription.add(this.reactToNavigation());
-    this.subscription.add(this.store.select(selectSearchQuery).pipe(skip(1)).subscribe(this.updateByQuery.bind(this)));
+    this.subscription.add(
+      this.store
+        .select(selectSearchQuery)
+        .pipe(pairwise())
+        .subscribe(async ([previousQuery, currentQuery]) => await this.updateByQuery(currentQuery, previousQuery)),
+    );
     this.viewerReadySubject.next();
   }
 
-  private async loadGeometries(): Promise<void> {
+  private async loadGeometries(type: SearchType): Promise<void> {
     this.store.dispatch(actions.setGeometries({ isLoading: true }));
-    const geometries = await firstValueFrom(this.geometryService.fetchAll());
+    const geometries = await firstValueFrom(this.geometryService.fetchAll(type));
     this.store.dispatch(actions.setGeometries({ geometries, isLoading: false }));
   }
 
@@ -218,12 +224,25 @@ export class ViewerControllerService {
     this.store.dispatch(appSharedStateActions.setCurrentAsset({ asset: { asset, geometries }, isLoading: false }));
   }
 
-  private async updateByQuery(query: SearchQueries): Promise<void> {
-    // Only reset map position if the query is empty and not in favorites mode
+  private async updateByQuery(query: SearchQueries, previousQuery?: SearchQueries): Promise<void> {
+    if (!previousQuery) {
+      return;
+    }
+    const currentResultsState = await firstValueFrom(this.store.select(selectResultsState));
+    console.log(currentResultsState);
     if (isEmptySearchQuery(query) && !query.favoritesOnly) {
+      // Only reset map position if the query is empty and not in favorites mode
       this.store.dispatch(actions.setMapPosition({ position: DEFAULT_MAP_POSITION }));
     }
-    await Promise.all([this.loadResults(query), this.loadStats(query)]);
+
+    // Load results and stats in parallel, plus geometries if search type changed
+    await Promise.all([
+      this.loadResults(query, {
+        force: !isPanelAutomaticallyToggled(currentResultsState) && isPanelOpen(currentResultsState),
+      }),
+      this.loadStats(query),
+      ...(previousQuery?.type !== query.type ? [this.loadGeometries(query.type)] : []),
+    ]);
 
     // Use file results total for file search, asset results total for asset search.
     const total =
@@ -231,11 +250,13 @@ export class ViewerControllerService {
         ? (await firstValueFrom(this.store.select(selectFileSearchResults))).page.total
         : (await firstValueFrom(this.store.select(selectSearchResults))).page.total;
 
-    this.store.dispatch(
-      actions.setResultsState({
-        state: total === 0 ? PanelState.ClosedAutomatically : PanelState.OpenedAutomatically,
-      }),
-    );
+    if (isPanelAutomaticallyToggled(currentResultsState)) {
+      this.store.dispatch(
+        actions.setResultsState({
+          state: total === 0 ? PanelState.ClosedAutomatically : PanelState.OpenedAutomatically,
+        }),
+      );
+    }
   }
 
   private syncUrlParams(): Subscription {
