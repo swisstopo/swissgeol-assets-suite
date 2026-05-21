@@ -48,12 +48,12 @@ export class PdfViewerRendererService {
   private readonly pdfViewerService = inject(PdfViewerService);
 
   private renderedPages = new Map<number, RenderedPage>();
-  private renderingPages = new Map<number, RenderingPage>();
-  private renderQueue = new Map<number, QueueEntry>();
+  private readonly renderingPages = new Map<number, RenderingPage>();
+  private readonly renderQueue = new Map<number, QueueEntry>();
   private activePageRenderCount = 0;
   private latestRenderablePages = new Set<number>();
   private renderOptions: QueueVisiblePageRendersOptions | null = null;
-  private textLayerTimers = new Map<number, () => void>();
+  private readonly textLayerTimers = new Map<number, () => void>();
   private lastLoggedCurrentPage: number | null = null;
   private reprioritizationSection = 0;
   /** Page number currently occupying the fast-lane slot, or null if idle. */
@@ -90,17 +90,17 @@ export class PdfViewerRendererService {
 
   evictPagesOutside(items: PdfViewerVirtualItem[], scrollElement: HTMLDivElement, renderer: Renderer2): void {
     const visiblePages = new Set(items.map((item) => item.index + 1));
-    for (const pageNum of [...this.renderingPages.keys()]) {
+    for (const pageNum of this.renderingPages.keys()) {
       if (!visiblePages.has(pageNum)) {
         this.cancelRenderingPage(pageNum);
       }
     }
-    for (const pageNum of [...this.renderQueue.keys()]) {
+    for (const pageNum of this.renderQueue.keys()) {
       if (!visiblePages.has(pageNum)) {
         this.renderQueue.delete(pageNum);
       }
     }
-    for (const pageNum of [...this.renderedPages.keys()]) {
+    for (const pageNum of this.renderedPages.keys()) {
       if (!visiblePages.has(pageNum)) {
         this.evictPage(pageNum, scrollElement, renderer);
       }
@@ -158,7 +158,7 @@ export class PdfViewerRendererService {
       Math.abs(baseScale - expectedBaseScale) < BASE_SCALE_EPSILON;
 
     // 1. Drop queue entries that are no longer visible OR whose params went stale.
-    for (const [pageNum, entry] of [...this.renderQueue]) {
+    for (const [pageNum, entry] of this.renderQueue) {
       if (!visiblePageSet.has(pageNum) || !paramsMatch(entry.zoom, entry.rotation, entry.baseScale)) {
         this.renderQueue.delete(pageNum);
       }
@@ -167,7 +167,7 @@ export class PdfViewerRendererService {
     // 2. Cancel in-flight renders that are no longer visible OR whose params went stale.
     //    Crucially, an in-flight render whose params still match a still-visible page is
     //    left running — this is what prevents duplicate byte-range fetches on scroll.
-    for (const [pageNum, rendering] of [...this.renderingPages]) {
+    for (const [pageNum, rendering] of this.renderingPages) {
       if (!visiblePageSet.has(pageNum) || !paramsMatch(rendering.zoom, rendering.rotation, rendering.baseScale)) {
         this.cancelRenderingPage(pageNum);
       }
@@ -624,7 +624,7 @@ export class PdfViewerRendererService {
   }
 
   private cancelAllRenderingPages(): void {
-    for (const pageNum of [...this.renderingPages.keys()]) {
+    for (const pageNum of this.renderingPages.keys()) {
       this.cancelRenderingPage(pageNum);
     }
   }
@@ -641,7 +641,7 @@ export class PdfViewerRendererService {
     this.cancelTextLayerTimer(pageNum);
     this.disposeRenderedPage(pageNum, rendered);
     if (slotElement && rendered.wrapper.parentNode === slotElement) {
-      slotElement.removeChild(rendered.wrapper);
+      rendered.wrapper.remove();
       renderer.removeClass(slotElement, 'page-slot--loaded');
     }
 

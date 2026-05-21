@@ -102,7 +102,7 @@ export class AssetFileSignedUrlSchema extends Schema implements AssetFileSignedU
   @IsUrl()
   url!: string;
 }
-// TODO: do we need this?
+
 export class AssetFileMetadataSchema extends Schema {
   @IsInt()
   pageCount!: number;

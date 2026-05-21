@@ -319,7 +319,7 @@ export class PdfViewerService implements OnDestroy {
             endOfContent.style.width = textLayerDiv.style.width;
             endOfContent.style.height = textLayerDiv.style.height;
             endOfContent.style.userSelect = 'text';
-            anchorParent.insertBefore(endOfContent, modifyStart ? (anchor as Node) : (anchor as Node).nextSibling);
+            anchorParent.insertBefore(endOfContent, modifyStart ? anchor : anchor.nextSibling);
           }
 
           prevRange = range.cloneRange();

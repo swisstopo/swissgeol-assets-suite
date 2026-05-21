@@ -49,16 +49,16 @@ export class PdfViewerInputService {
 
     this.ngZone.runOutsideAngular(() => {
       scrollElement.addEventListener('scroll', onScroll, { passive: true });
-      window.addEventListener('keydown', onKeyDown, true);
-      window.addEventListener('keyup', onKeyUp, true);
-      window.addEventListener('blur', onBlur, true);
+      globalThisaddEventListener('keydown', onKeyDown, true);
+      globalThisaddEventListener('keyup', onKeyUp, true);
+      globalThisaddEventListener('blur', onBlur, true);
     });
 
     this.inputCleanup = () => {
       scrollElement.removeEventListener('scroll', onScroll);
-      window.removeEventListener('keydown', onKeyDown, true);
-      window.removeEventListener('keyup', onKeyUp, true);
-      window.removeEventListener('blur', onBlur, true);
+      globalThisremoveEventListener('keydown', onKeyDown, true);
+      globalThisremoveEventListener('keyup', onKeyUp, true);
+      globalThisremoveEventListener('blur', onBlur, true);
       this.finishPanDrag();
     };
   }
