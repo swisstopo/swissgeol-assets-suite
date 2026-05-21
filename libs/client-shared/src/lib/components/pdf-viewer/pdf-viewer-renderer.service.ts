@@ -47,7 +47,7 @@ interface QueueEntry {
 export class PdfViewerRendererService {
   private readonly pdfViewerService = inject(PdfViewerService);
 
-  private renderedPages = new Map<number, RenderedPage>();
+  private readonly renderedPages = new Map<number, RenderedPage>();
   private readonly renderingPages = new Map<number, RenderingPage>();
   private readonly renderQueue = new Map<number, QueueEntry>();
   private activePageRenderCount = 0;
@@ -112,19 +112,13 @@ export class PdfViewerRendererService {
     this.cancelAllRenderingPages();
     this.cancelTextLayerTimers();
     for (const [pageNum, rendered] of this.renderedPages) {
-      const slot = scrollElement?.querySelector(`.page-slot[data-page-num="${pageNum}"]`);
-      this.pdfViewerService.cleanupTextLayerSelection(rendered.textLayerDiv);
-      if (slot && rendered.wrapper.parentNode === slot) {
-        renderer.removeChild(slot, rendered.wrapper);
-        renderer.removeClass(slot, 'page-slot--loaded');
-      }
+      this.clearRenderedPageSlot(pageNum, rendered, scrollElement, renderer);
     }
     this.renderedPages.clear();
   }
 
   queueVisiblePageRenders(options: QueueVisiblePageRendersOptions): void {
-    const { items, expectedZoom, expectedRotation } = options;
-    const expectedBaseScale = options.baseScale;
+    const { items } = options;
 
     if (items.length === 0) {
       this.latestRenderablePages.clear();
@@ -137,79 +131,23 @@ export class PdfViewerRendererService {
     if (!firstItem) return;
 
     const current = options.currentPage > 0 ? options.currentPage : firstItem.index + 1;
-
-    // In zoom mode we only ever want to draw the current page; everything else is held
-    // back until the post-zoom 'settle' pass to keep CPU/network low while zooming.
-    let visiblePageNums: number[];
-    if (options.renderMode === 'zoom') {
-      const itemsContainCurrent = items.some((item) => item.index + 1 === current);
-      visiblePageNums = itemsContainCurrent ? [current] : [firstItem.index + 1];
-    } else {
-      visiblePageNums = items.map((item) => item.index + 1);
-    }
+    const visiblePageNums = this.resolveVisiblePageNums(items, current, options.renderMode);
     const visiblePageSet = new Set(visiblePageNums);
 
     this.renderOptions = options;
     this.latestRenderablePages = visiblePageSet;
 
-    const paramsMatch = (zoom: number, rotation: number, baseScale: number): boolean =>
-      zoom === expectedZoom &&
-      rotation === expectedRotation &&
-      Math.abs(baseScale - expectedBaseScale) < BASE_SCALE_EPSILON;
-
     // 1. Drop queue entries that are no longer visible OR whose params went stale.
-    for (const [pageNum, entry] of this.renderQueue) {
-      if (!visiblePageSet.has(pageNum) || !paramsMatch(entry.zoom, entry.rotation, entry.baseScale)) {
-        this.renderQueue.delete(pageNum);
-      }
-    }
+    this.pruneStaleQueueEntries(visiblePageSet, options);
 
     // 2. Cancel in-flight renders that are no longer visible OR whose params went stale.
     //    Crucially, an in-flight render whose params still match a still-visible page is
     //    left running — this is what prevents duplicate byte-range fetches on scroll.
-    for (const [pageNum, rendering] of this.renderingPages) {
-      if (!visiblePageSet.has(pageNum) || !paramsMatch(rendering.zoom, rendering.rotation, rendering.baseScale)) {
-        this.cancelRenderingPage(pageNum);
-      }
-    }
+    this.cancelStaleInFlightRenders(visiblePageSet, options);
 
     // 3. For each visible page, ensure it is either already rendered, already rendering
     //    with matching params, or queued with current params + priority.
-    for (const pageNum of visiblePageNums) {
-      const priority = getPageRenderPriority(pageNum, current);
-
-      const rendered = this.renderedPages.get(pageNum);
-      if (rendered && paramsMatch(rendered.zoom, rendered.rotation, rendered.baseScale)) {
-        const needsTextLayer =
-          options.renderMode !== 'zoom' &&
-          pageNum === current &&
-          !rendered.textLayerRendered &&
-          !!rendered.page &&
-          !!rendered.viewport;
-        if (needsTextLayer) {
-          // Run renderPageSlot once so the text layer can be scheduled.
-          this.upsertQueueEntry(pageNum, priority, expectedZoom, expectedRotation, expectedBaseScale);
-        } else {
-          // Already drawn correctly and nothing else to do; make sure no pending entry lingers.
-          this.renderQueue.delete(pageNum);
-        }
-        if (options.renderMode === 'zoom' && pageNum === current) {
-          options.onCurrentPageRendered?.();
-        }
-        continue;
-      }
-
-      const rendering = this.renderingPages.get(pageNum);
-      if (rendering && paramsMatch(rendering.zoom, rendering.rotation, rendering.baseScale)) {
-        // Render is already running for the right params: keep it and remove any duplicate
-        // queue entry. No cancel, no requeue — this is the no-op scroll path.
-        this.renderQueue.delete(pageNum);
-        continue;
-      }
-
-      // Either not rendering yet or rendering with stale params (and just cancelled above).
-      this.upsertQueueEntry(pageNum, priority, expectedZoom, expectedRotation, expectedBaseScale);
-    }
+    this.reconcilePageRenderState(visiblePageNums, current, options);
 
     // 4. Refresh priorities for any retained entries against the (possibly new) current page.
     for (const entry of this.renderQueue.values()) {
@@ -229,6 +167,104 @@ export class PdfViewerRendererService {
     }
 
     this.processRenderQueue();
+  }
+
+  private paramsMatch(
+    zoom: number,
+    rotation: number,
+    baseScale: number,
+    options: QueueVisiblePageRendersOptions,
+  ): boolean {
+    return (
+      zoom === options.expectedZoom &&
+      rotation === options.expectedRotation &&
+      Math.abs(baseScale - options.baseScale) < BASE_SCALE_EPSILON
+    );
+  }
+
+  private resolveVisiblePageNums(items: PdfViewerVirtualItem[], current: number, renderMode: PdfRenderMode): number[] {
+    if (renderMode === 'zoom') {
+      // In zoom mode we only ever want to draw the current page; everything else is held
+      // back until the post-zoom 'settle' pass to keep CPU/network low while zooming.
+      const itemsContainCurrent = items.some((item) => item.index + 1 === current);
+      return itemsContainCurrent ? [current] : [items[0].index + 1];
+    }
+    return items.map((item) => item.index + 1);
+  }
+
+  private pruneStaleQueueEntries(visiblePageSet: Set<number>, options: QueueVisiblePageRendersOptions): void {
+    for (const [pageNum, entry] of this.renderQueue) {
+      if (!visiblePageSet.has(pageNum) || !this.paramsMatch(entry.zoom, entry.rotation, entry.baseScale, options)) {
+        this.renderQueue.delete(pageNum);
+      }
+    }
+  }
+
+  private cancelStaleInFlightRenders(visiblePageSet: Set<number>, options: QueueVisiblePageRendersOptions): void {
+    for (const [pageNum, rendering] of this.renderingPages) {
+      if (
+        !visiblePageSet.has(pageNum) ||
+        !this.paramsMatch(rendering.zoom, rendering.rotation, rendering.baseScale, options)
+      ) {
+        this.cancelRenderingPage(pageNum);
+      }
+    }
+  }
+
+  private reconcilePageRenderState(
+    visiblePageNums: number[],
+    current: number,
+    options: QueueVisiblePageRendersOptions,
+  ): void {
+    for (const pageNum of visiblePageNums) {
+      const priority = getPageRenderPriority(pageNum, current);
+
+      const rendered = this.renderedPages.get(pageNum);
+      if (rendered && this.paramsMatch(rendered.zoom, rendered.rotation, rendered.baseScale, options)) {
+        const needsTextLayer =
+          options.renderMode !== 'zoom' &&
+          pageNum === current &&
+          !rendered.textLayerRendered &&
+          !!rendered.page &&
+          !!rendered.viewport;
+        if (needsTextLayer) {
+          // Run renderPageSlot once so the text layer can be scheduled.
+          this.upsertQueueEntry(pageNum, priority, options.expectedZoom, options.expectedRotation, options.baseScale);
+        } else {
+          // Already drawn correctly and nothing else to do; make sure no pending entry lingers.
+          this.renderQueue.delete(pageNum);
+        }
+        if (options.renderMode === 'zoom' && pageNum === current) {
+          options.onCurrentPageRendered?.();
+        }
+        continue;
+      }
+
+      const rendering = this.renderingPages.get(pageNum);
+      if (rendering && this.paramsMatch(rendering.zoom, rendering.rotation, rendering.baseScale, options)) {
+        // Render is already running for the right params: keep it and remove any duplicate
+        // queue entry. No cancel, no requeue — this is the no-op scroll path.
+        this.renderQueue.delete(pageNum);
+        continue;
+      }
+
+      // Either not rendering yet or rendering with stale params (and just cancelled above).
+      this.upsertQueueEntry(pageNum, priority, options.expectedZoom, options.expectedRotation, options.baseScale);
+    }
+  }
+
+  private clearRenderedPageSlot(
+    pageNum: number,
+    rendered: RenderedPage,
+    scrollElement: HTMLDivElement | undefined,
+    renderer: Renderer2,
+  ): void {
+    const slot = scrollElement?.querySelector(`.page-slot[data-page-num="${pageNum}"]`);
+    this.pdfViewerService.cleanupTextLayerSelection(rendered.textLayerDiv);
+    if (slot && rendered.wrapper.parentNode === slot) {
+      renderer.removeChild(slot, rendered.wrapper);
+      renderer.removeClass(slot, 'page-slot--loaded');
+    }
   }
 
   private logReprioritizationSection(currentPage: number, renderMode: PdfRenderMode): void {
@@ -269,7 +305,13 @@ export class PdfViewerRendererService {
       existing.baseScale = baseScale;
       return;
     }
-    this.renderQueue.set(pageNum, { pageNum, priority, zoom, rotation, baseScale });
+    this.renderQueue.set(pageNum, {
+      pageNum,
+      priority,
+      zoom,
+      rotation,
+      baseScale,
+    });
   }
 
   /**
@@ -301,21 +343,13 @@ export class PdfViewerRendererService {
       const entry = this.popHighestPriority();
       if (!entry) break;
       if (!this.latestRenderablePages.has(entry.pageNum)) continue;
-
       if (entry.zoom !== options.getZoom() || entry.rotation !== options.getRotation()) {
         continue;
       }
-
       console.log(
         `[pdf-queue] dispatch render page=${entry.pageNum} priority=${entry.priority} active=${this.activePageRenderCount + 1}/${maxConcurrentPageLoads}`,
       );
-      this.activePageRenderCount++;
-      const renderEpoch = options.getViewportEpoch();
-      void this.renderPageSlot(entry.pageNum, entry.zoom, entry.rotation, renderEpoch, options).finally(() => {
-        this.activePageRenderCount = Math.max(0, this.activePageRenderCount - 1);
-        this.processRenderQueue();
-        this.maybeCompleteSettle();
-      });
+      this.dispatchRenderEntry(entry, options);
     }
 
     // --- Fast-lane: current page gets one extra slot when normal slots are full ---
@@ -324,45 +358,52 @@ export class PdfViewerRendererService {
       this.activePageRenderCount >= maxConcurrentPageLoads &&
       this.fastLanePageNum === null
     ) {
-      const currentPageEntry = this.renderQueue.get(options.currentPage);
-      const isCurrentPageInFlight = this.renderingPages.has(options.currentPage);
-      if (currentPageEntry && !isCurrentPageInFlight) {
-        this.renderQueue.delete(options.currentPage);
-        if (
-          this.latestRenderablePages.has(currentPageEntry.pageNum) &&
-          currentPageEntry.zoom === options.getZoom() &&
-          currentPageEntry.rotation === options.getRotation()
-        ) {
-          this.fastLanePageNum = currentPageEntry.pageNum;
-          console.log(
-            `[pdf-queue] fast-lane dispatch page=${currentPageEntry.pageNum} active=${this.activePageRenderCount + 1}/${maxConcurrentPageLoads}+1`,
-          );
-          this.activePageRenderCount++;
-          const renderEpoch = options.getViewportEpoch();
-          void this.renderPageSlot(
-            currentPageEntry.pageNum,
-            currentPageEntry.zoom,
-            currentPageEntry.rotation,
-            renderEpoch,
-            options,
-          ).finally(() => {
-            this.activePageRenderCount = Math.max(0, this.activePageRenderCount - 1);
-            if (this.fastLanePageNum === currentPageEntry.pageNum) {
-              this.fastLanePageNum = null;
-            }
-            this.processRenderQueue();
-            this.maybeCompleteSettle();
-          });
-        }
-      }
+      this.dispatchFastLaneRender(options, maxConcurrentPageLoads);
     }
 
     this.maybeCompleteSettle();
   }
 
+  private dispatchRenderEntry(
+    entry: QueueEntry,
+    options: QueueVisiblePageRendersOptions,
+    onComplete?: () => void,
+  ): void {
+    this.activePageRenderCount++;
+    const renderEpoch = options.getViewportEpoch();
+    void this.renderPageSlot(entry.pageNum, entry.zoom, entry.rotation, renderEpoch, options).finally(() => {
+      this.activePageRenderCount = Math.max(0, this.activePageRenderCount - 1);
+      onComplete?.();
+      this.processRenderQueue();
+      this.maybeCompleteSettle();
+    });
+  }
+
+  private dispatchFastLaneRender(options: QueueVisiblePageRendersOptions, maxConcurrent: number): void {
+    const currentPageEntry = this.renderQueue.get(options.currentPage);
+    const isCurrentPageInFlight = this.renderingPages.has(options.currentPage);
+    if (!currentPageEntry || isCurrentPageInFlight) return;
+
+    this.renderQueue.delete(options.currentPage);
+    if (!this.latestRenderablePages.has(currentPageEntry.pageNum)) return;
+    if (currentPageEntry.zoom !== options.getZoom() || currentPageEntry.rotation !== options.getRotation()) {
+      return;
+    }
+
+    this.fastLanePageNum = currentPageEntry.pageNum;
+    console.log(
+      `[pdf-queue] fast-lane dispatch page=${currentPageEntry.pageNum} active=${this.activePageRenderCount + 1}/${maxConcurrent}+1`,
+    );
+    this.dispatchRenderEntry(currentPageEntry, options, () => {
+      if (this.fastLanePageNum === currentPageEntry.pageNum) {
+        this.fastLanePageNum = null;
+      }
+    });
+  }
+
   private maybeCompleteSettle(): void {
     const options = this.renderOptions;
-    if (!options || options.renderMode !== 'settle') return;
+    if (options?.renderMode !== 'settle') return;
     if (this.renderQueue.size > 0 || this.activePageRenderCount > 0) return;
     options.onSettleRenderComplete?.();
   }
@@ -376,10 +417,9 @@ export class PdfViewerRendererService {
   ): Promise<void> {
     const existingRendered = this.renderedPages.get(pageNum);
     if (
-      existingRendered &&
-      existingRendered.zoom === zoomAtStart &&
-      existingRendered.rotation === rotationAtStart &&
-      Math.abs(existingRendered.baseScale - options.baseScale) < 0.0001
+      existingRendered?.zoom === zoomAtStart &&
+      existingRendered?.rotation === rotationAtStart &&
+      Math.abs(existingRendered?.baseScale - options.baseScale) < 0.0001
     ) {
       if (
         pageNum === options.currentPage &&
