@@ -380,6 +380,7 @@ export class ExportToViewService {
               ...f,
               pageRangeClassifications: f.pageRangeClassifications as Prisma.InputJsonValue,
               fulltextContent: f.fulltextContent as Prisma.InputJsonValue,
+              pageDimensions: f.pageDimensions as Prisma.InputJsonValue,
             })),
         );
       }
@@ -391,6 +392,7 @@ export class ExportToViewService {
               ...f,
               pageRangeClassifications: f.pageRangeClassifications as Prisma.InputJsonValue,
               fulltextContent: f.fulltextContent as Prisma.InputJsonValue,
+              pageDimensions: f.pageDimensions as Prisma.InputJsonValue,
             })),
         );
       }

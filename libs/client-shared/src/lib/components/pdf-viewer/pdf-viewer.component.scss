@@ -190,62 +190,16 @@
     position: absolute;
     top: 50%;
     left: 50%;
-    width: calc(var(--page-width, 860px) * 0.76);
-    height: calc(var(--page-height, 1200px) * 0.76);
+    width: calc(var(--page-width, 860px) * 0.75);
+    height: calc(var(--page-height, 1200px) * 0.75);
     transform: translate(-50%, -50%);
     background:
-      linear-gradient(var(--skeleton-strong), var(--skeleton-strong)) 0 0 / 30% 4.5% no-repeat,
-      radial-gradient(circle, var(--skeleton-mid) 0 60%, transparent 62%) 6% 18% / 14% 14% no-repeat,
-      linear-gradient(var(--skeleton-mid), var(--skeleton-mid)) 25% 13% / 62% 2.5% no-repeat,
-      linear-gradient(var(--skeleton-mid), var(--skeleton-mid)) 25% 20% / 72% 2.5% no-repeat,
-      linear-gradient(var(--skeleton-mid), var(--skeleton-mid)) 25% 27% / 56% 2.5% no-repeat,
-      linear-gradient(var(--skeleton-soft), var(--skeleton-soft)) 0 40% / 100% 1px no-repeat,
-      linear-gradient(var(--skeleton-strong), var(--skeleton-strong)) 0 48% / 28% 4% no-repeat,
-      linear-gradient(var(--skeleton-mid), var(--skeleton-mid)) 0 59% / 43% 2.4% no-repeat,
-      linear-gradient(var(--skeleton-mid), var(--skeleton-mid)) 0 66% / 38% 2.4% no-repeat,
-      linear-gradient(var(--skeleton-mid), var(--skeleton-mid)) 0 73% / 47% 2.4% no-repeat,
-      linear-gradient(var(--skeleton-mid), var(--skeleton-mid)) 57% 59% / 39% 2.4% no-repeat,
-      linear-gradient(var(--skeleton-mid), var(--skeleton-mid)) 57% 66% / 44% 2.4% no-repeat,
-      linear-gradient(var(--skeleton-mid), var(--skeleton-mid)) 57% 73% / 34% 2.4% no-repeat,
-      linear-gradient(var(--skeleton-soft), var(--skeleton-soft)) 0 88% / 46% 10% no-repeat,
-      linear-gradient(var(--skeleton-soft), var(--skeleton-soft)) 54% 88% / 46% 10% no-repeat;
+      linear-gradient(var(--skeleton-strong), var(--skeleton-strong)) 0 0 / 35% 4% no-repeat,
+      linear-gradient(var(--skeleton-mid), var(--skeleton-mid)) 0 15% / 80% 2% no-repeat,
+      linear-gradient(var(--skeleton-mid), var(--skeleton-mid)) 0 22% / 65% 2% no-repeat,
+      linear-gradient(var(--skeleton-soft), var(--skeleton-soft)) 0 40% / 75% 25% no-repeat,
+      linear-gradient(var(--skeleton-mid), var(--skeleton-mid)) 0 75% / 70% 2% no-repeat;
     opacity: 0.95;
-  }
-
-  &:nth-child(3n + 2)::after {
-    width: calc(var(--page-width, 860px) * 0.72);
-    height: calc(var(--page-height, 1200px) * 0.72);
-    background:
-      linear-gradient(var(--skeleton-strong), var(--skeleton-strong)) 0 0 / 34% 5% no-repeat,
-      linear-gradient(var(--skeleton-soft), var(--skeleton-soft)) 0 15% / 46% 28% no-repeat,
-      radial-gradient(circle, var(--skeleton-mid) 0 58%, transparent 60%) 13% 21% / 15% 15% no-repeat,
-      linear-gradient(var(--skeleton-mid), var(--skeleton-mid)) 25% 24% / 18% 2.5% no-repeat,
-      linear-gradient(var(--skeleton-mid), var(--skeleton-mid)) 25% 31% / 22% 2.5% no-repeat,
-      linear-gradient(var(--skeleton-mid), var(--skeleton-mid)) 57% 17% / 43% 2.5% no-repeat,
-      linear-gradient(var(--skeleton-mid), var(--skeleton-mid)) 57% 26% / 36% 2.5% no-repeat,
-      linear-gradient(var(--skeleton-mid), var(--skeleton-mid)) 57% 35% / 41% 2.5% no-repeat,
-      linear-gradient(var(--skeleton-soft), var(--skeleton-soft)) 0 55% / 100% 1px no-repeat,
-      linear-gradient(var(--skeleton-strong), var(--skeleton-strong)) 0 65% / 26% 4% no-repeat,
-      linear-gradient(var(--skeleton-mid), var(--skeleton-mid)) 0 76% / 88% 2.4% no-repeat,
-      linear-gradient(var(--skeleton-mid), var(--skeleton-mid)) 0 84% / 68% 2.4% no-repeat,
-      linear-gradient(var(--skeleton-mid), var(--skeleton-mid)) 0 92% / 78% 2.4% no-repeat;
-  }
-
-  &:nth-child(3n)::after {
-    width: calc(var(--page-width, 860px) * 0.7);
-    height: calc(var(--page-height, 1200px) * 0.78);
-    background:
-      linear-gradient(var(--skeleton-strong), var(--skeleton-strong)) 0 0 / 42% 4.8% no-repeat,
-      linear-gradient(var(--skeleton-mid), var(--skeleton-mid)) 0 12% / 96% 2.2% no-repeat,
-      linear-gradient(var(--skeleton-mid), var(--skeleton-mid)) 0 19% / 78% 2.2% no-repeat,
-      linear-gradient(var(--skeleton-mid), var(--skeleton-mid)) 0 31% / 100% 2.2% no-repeat,
-      linear-gradient(var(--skeleton-mid), var(--skeleton-mid)) 0 38% / 84% 2.2% no-repeat,
-      linear-gradient(var(--skeleton-soft), var(--skeleton-soft)) 8% 52% / 84% 24% no-repeat,
-      radial-gradient(circle, var(--skeleton-mid) 0 56%, transparent 58%) 14% 59% / 12% 12% no-repeat,
-      linear-gradient(var(--skeleton-mid), var(--skeleton-mid)) 30% 59% / 42% 2.4% no-repeat,
-      linear-gradient(var(--skeleton-mid), var(--skeleton-mid)) 30% 67% / 52% 2.4% no-repeat,
-      linear-gradient(var(--skeleton-mid), var(--skeleton-mid)) 0 88% / 90% 2.2% no-repeat,
-      linear-gradient(var(--skeleton-mid), var(--skeleton-mid)) 0 95% / 62% 2.2% no-repeat;
   }
 
   &--loaded::before,
