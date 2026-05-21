@@ -170,6 +170,9 @@
     "@nx/nx-linux-x64-musl": "~21.0.3",
     "@nx/nx-win32-x64-msvc": "~21.0.3"
   },
+  "overrides": {
+    "@tootallnate/once": "^3.0.0"
+  },
   "prisma": {
     "schema": "libs/persistence/prisma/schema.prisma"
   }
