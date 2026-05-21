@@ -49,12 +49,14 @@
         @for (item of virtualItems(); track item.key) {
           <div
             class="page-slot"
-            [attr.data-page-num]="item.index + 1"
+            [attr.data-page-num]="item.pageNum"
             [style.height.px]="item.size"
             [style.--page-height.px]="item.size"
-            [style.--page-width.px]="getPageWidth(item.index + 1)"
-            [style.transform]="'translateY(' + item.start + 'px)'"
-          ></div>
+            [style.--page-width.px]="item.pageWidth"
+            [style.transform]="item.transform"
+          >
+            <div class="page-slot__shimmer"></div>
+          </div>
         }
       </div>
     </div>

@@ -56,6 +56,29 @@ export function getPageLayout(
   return { start, size };
 }
 
+export function findPageAtScrollOffset(
+  offset: number,
+  pageCount: number,
+  pageDimensions: PageDimension[],
+  baseScale: number,
+  zoom: number,
+  rotation: number,
+): (PageLayout & { pageNum: number }) | null {
+  if (pageCount <= 0) return null;
+
+  let start = VIRTUAL_PADDING;
+  for (let pageNum = 1; pageNum <= pageCount; pageNum++) {
+    const size = getPageHeight(pageNum, pageDimensions, baseScale, zoom, rotation);
+    const end = start + size;
+    if (offset < end || pageNum === pageCount) {
+      return { pageNum, start, size };
+    }
+    start = end + VIRTUAL_GAP;
+  }
+
+  return null;
+}
+
 export function getDocumentHeight(
   pageCount: number,
   pageDimensions: PageDimension[],

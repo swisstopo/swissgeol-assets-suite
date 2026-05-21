@@ -131,10 +131,15 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: var(--sgc-color-secondary--400);
+  background-color: var(--sgc-color-primary--400);
+
+  contain: layout style paint;
+
   --skeleton-strong: #e3e3e3;
   --skeleton-mid: #ececec;
   --skeleton-soft: #f4f4f4;
+
+  overflow: hidden;
 
   &::before {
     content: "";
@@ -146,13 +151,38 @@
     transform: translate(-50%, -50%);
     border-radius: 10px;
     border: 1px solid #e4e4e4;
-    background:
-      linear-gradient(90deg, rgb(240 240 240 / 0) 0%, rgb(255 255 255 / 0.75) 48%, rgb(240 240 240 / 0) 100%), #fbfbfb;
-    background-size: 200% 100%;
+    background: #fbfbfb;
     box-shadow:
       0 12px 28px rgb(0 0 0 / 0.08),
       0 2px 6px rgb(0 0 0 / 0.06);
-    animation: page-skeleton-shimmer 1.6s ease-in-out infinite;
+  }
+
+  // GPU-composited shimmer overlay: only transform is animated (no CPU repaint).
+  // Sized and centered to match the ::before skeleton card exactly.
+  &__shimmer {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: var(--page-width, min(95%, 860px));
+    height: var(--page-height, min(95%, 1200px));
+    transform: translate(-50%, -50%);
+    border-radius: 10px;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 1;
+
+    // Inner sliding highlight — animates via transform (GPU-composited).
+    &::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent 0%, rgb(255 255 255 / 0.65) 48%, transparent 100%);
+      animation: page-skeleton-shimmer 1.6s ease-in-out infinite;
+      will-change: transform;
+    }
   }
 
   &::after {
@@ -219,7 +249,8 @@
   }
 
   &--loaded::before,
-  &--loaded::after {
+  &--loaded::after,
+  &--loaded &__shimmer {
     display: none;
   }
 
@@ -311,11 +342,12 @@
   }
 }
 
+// GPU-composited shimmer: only transform is animated (no repaint).
 @keyframes page-skeleton-shimmer {
   0% {
-    background-position: 200% 0;
+    transform: translateX(0);
   }
   100% {
-    background-position: -200% 0;
+    transform: translateX(200%);
   }
 }

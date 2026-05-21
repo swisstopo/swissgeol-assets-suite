@@ -20,7 +20,7 @@ import { MatProgressBar } from '@angular/material/progress-bar';
 import { AssetFileSignedUrl, PageDimension } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
 import { TranslateService } from '@ngx-translate/core';
-import { VirtualItem, injectVirtualizer } from '@tanstack/angular-virtual';
+import { injectVirtualizer, VirtualItem } from '@tanstack/angular-virtual';
 import { firstValueFrom } from 'rxjs';
 import { showAlert } from '../../state/alert/alert.actions';
 import { AlertType } from '../../state/alert/alert.model';
@@ -28,6 +28,7 @@ import { triggerDownload } from '../../utils';
 import { PdfViewerHeaderComponent } from './pdf-viewer-header/pdf-viewer-header.component';
 import { PdfViewerInputService } from './pdf-viewer-input.service';
 import {
+  findPageAtScrollOffset,
   getBaseScale,
   getConfiguredInteger,
   getDocumentHeight,
@@ -48,12 +49,12 @@ import {
   CURRENT_PAGE_CHANGE_RENDER_DELAY_MS,
   DEFAULT_MAX_CONCURRENT_PAGE_LOADS,
   DEFAULT_OVERSCAN,
-  DOM_RENDER_SETTLE_DELAY_MS,
   MAX_ZOOM_LEVEL,
   MIN_ZOOM_LEVEL,
   PDF_RENDERING_MARGIN,
   PdfViewerFile,
-  RENDER_REFRESH_DELAY_MS,
+  PdfRenderMode,
+  PdfViewerVirtualItem,
   ScrollAnchor,
   VIRTUAL_GAP,
   VIRTUAL_PADDING,
@@ -98,7 +99,7 @@ export class PdfViewerComponent implements OnDestroy {
   protected readonly zoom = signal(1);
   protected readonly rotation = signal(0);
   protected readonly selectedPdf = signal<PdfViewerFile | undefined>(undefined);
-  protected readonly virtualItems = signal<VirtualItem[]>([]);
+  protected readonly virtualItems = signal<PdfViewerVirtualItem[]>([]);
   protected readonly virtualTotalSize = signal(0);
   protected readonly virtualContentWidth = signal(0);
   protected readonly pageDimensions = signal<PageDimension[]>([]);
@@ -117,8 +118,9 @@ export class PdfViewerComponent implements OnDestroy {
   private readonly pdfViewerRendererService = inject(PdfViewerRendererService);
 
   private resizeObserver: ResizeObserver | null = null;
-  private renderDebounceTimer: ReturnType<typeof setTimeout> | null = null;
   private currentPageChangeRenderTimer: ReturnType<typeof setTimeout> | null = null;
+  private scrollAnimationFrame: number | null = null;
+  private zoomAnimationFrame: number | null = null;
 
   private renderPassInFlight = false;
   private renderPassQueued = false;
@@ -129,6 +131,12 @@ export class PdfViewerComponent implements OnDestroy {
   private viewportEpoch = 0;
 
   private loadGeneration = 0;
+  private lastVirtualItemsSignature = '';
+  private renderMode: PdfRenderMode = 'normal';
+  private pendingZoomTarget: number | null = null;
+  private pendingZoomAnchor: ScrollAnchor | null = null;
+  private programmaticScrollDepth = 0;
+  private pinnedPageNumber: number | null = null;
 
   // estimateSize must read plain fields, not signals.
   private _estimateZoom = 1;
@@ -162,11 +170,14 @@ export class PdfViewerComponent implements OnDestroy {
   public ngOnDestroy() {
     this.resizeObserver?.disconnect();
     this.pdfViewerInputService.destroy();
-    if (this.renderDebounceTimer) {
-      clearTimeout(this.renderDebounceTimer);
-    }
     if (this.currentPageChangeRenderTimer) {
       clearTimeout(this.currentPageChangeRenderTimer);
+    }
+    if (this.scrollAnimationFrame !== null) {
+      cancelAnimationFrame(this.scrollAnimationFrame);
+    }
+    if (this.zoomAnimationFrame !== null) {
+      cancelAnimationFrame(this.zoomAnimationFrame);
     }
     this.pdfViewerRendererService.clearRenderQueue();
   }
@@ -209,12 +220,16 @@ export class PdfViewerComponent implements OnDestroy {
   protected handleRotation() {
     const activePage = this.currentPage() > 0 ? this.currentPage() : 1;
     this.rotation.update((value) => (value + 90) % 360);
+    this.viewportEpoch++;
     this.scheduleVirtualRefresh({ pageNum: activePage, ratio: 0, align: 'start' }, this.captureHorizontalScrollRatio());
   }
 
   protected handleZoom(action: PdfZoomAction) {
-    const anchor = this.captureViewportAnchor();
-    const current = this.zoom();
+    this.ngZone.runOutsideAngular(() => this.scheduleZoom(action));
+  }
+
+  private scheduleZoom(action: PdfZoomAction): void {
+    const current = this.pendingZoomTarget ?? this.zoom();
     let target = current;
     switch (action) {
       case 'in':
@@ -228,7 +243,32 @@ export class PdfViewerComponent implements OnDestroy {
         break;
     }
 
+    const clampedTarget = this.normalizeZoom(target);
+    if (Math.abs(clampedTarget - this.zoom()) < 0.0001 && this.pendingZoomTarget === null) return;
+
+    this.pendingZoomTarget = clampedTarget;
+    this.pendingZoomAnchor ??= this.captureViewportAnchor();
+    if (this.zoomAnimationFrame !== null) return;
+
+    this.zoomAnimationFrame = requestAnimationFrame(() => {
+      this.zoomAnimationFrame = null;
+      this.commitPendingZoom();
+    });
+  }
+
+  private commitPendingZoom(): void {
+    const target = this.pendingZoomTarget;
+    if (target === null) return;
+
+    const anchor = this.pendingZoomAnchor;
+    this.pendingZoomTarget = null;
+    this.pendingZoomAnchor = null;
+
     if (!this.setZoom(target)) return;
+
+    this.renderMode = 'zoom';
+    this.viewportEpoch++;
+    this.pdfViewerRendererService.prepareForZoomRender();
     this.scheduleVirtualRefresh(anchor, 0.5);
   }
 
@@ -262,16 +302,32 @@ export class PdfViewerComponent implements OnDestroy {
 
   private handleViewerScroll(): void {
     if (this.pageCount() === 0) return;
-    this.viewportEpoch++;
-    if (this.renderDebounceTimer) {
-      clearTimeout(this.renderDebounceTimer);
-      this.renderDebounceTimer = null;
+    if (this.renderMode === 'zoom') return;
+    if (this.programmaticScrollDepth > 0) return;
+    if (this.scrollAnimationFrame !== null) return;
+    this.scrollAnimationFrame = requestAnimationFrame(() => {
+      this.scrollAnimationFrame = null;
+      this.processViewerScroll();
+    });
+  }
+
+  private processViewerScroll(): void {
+    if (this.pageCount() === 0) return;
+    if (this.renderMode === 'settle') {
+      this.renderMode = 'normal';
     }
+    this.pinnedPageNumber = null;
     const previousPage = this.currentPage();
     const items = this.syncVirtualViewport();
     this.updateCurrentPage(items);
+    // Visibility filter must reflect the new viewport so processRenderQueue skips
+    // entries that just scrolled off-screen. We deliberately do NOT bump viewportEpoch
+    // or clear the render queue here: render parameters (zoom/rotation/baseScale)
+    // have not changed, so any in-flight render whose page is still visible should
+    // keep running. Off-screen pages are evicted (and their queue entries dropped) by
+    // evictPagesOutside below, and the next runRenderPass / queueVisiblePageRenders
+    // re-prioritizes the queue against the new currentPage.
     this.pdfViewerRendererService.setLatestRenderablePages(items);
-    this.pdfViewerRendererService.clearRenderQueue();
     this.evictPagesOutside(items);
     if (this.currentPage() !== previousPage) {
       this.scheduleCurrentPageChangeRender();
@@ -353,12 +409,23 @@ export class PdfViewerComponent implements OnDestroy {
     this.pendingCanvasRefresh = false;
     this.pendingAnchor = null;
     this.pendingHorizontalScrollRatio = null;
+    this.lastVirtualItemsSignature = '';
+    this.renderMode = 'normal';
+    this.pendingZoomTarget = null;
+    this.pendingZoomAnchor = null;
+    this.programmaticScrollDepth = 0;
+    this.pinnedPageNumber = null;
+    if (this.zoomAnimationFrame !== null) {
+      cancelAnimationFrame(this.zoomAnimationFrame);
+      this.zoomAnimationFrame = null;
+    }
 
     this._estimateZoom = 1;
     this._estimateScale = 1;
     this._estimateRotation = 0;
     this._estimateDims = [];
 
+    this.viewportEpoch++;
     const generation = ++this.loadGeneration;
 
     try {
@@ -453,6 +520,7 @@ export class PdfViewerComponent implements OnDestroy {
         const anchor = this.captureViewportAnchor();
         const horizontalRatio = this.captureHorizontalScrollRatio();
         this.baseScale.set(nextScale);
+        this.viewportEpoch++;
         this.scheduleVirtualRefresh(anchor, horizontalRatio);
       });
     });
@@ -466,6 +534,7 @@ export class PdfViewerComponent implements OnDestroy {
   private scheduleVirtualRefresh(anchor: ScrollAnchor | null = null, horizontalRatio: number | null = null) {
     if (anchor) {
       this.pendingAnchor = anchor;
+      this.pinnedPageNumber = anchor.pageNum;
     }
     if (horizontalRatio !== null) {
       this.pendingHorizontalScrollRatio = horizontalRatio;
@@ -476,13 +545,7 @@ export class PdfViewerComponent implements OnDestroy {
   }
 
   private scheduleRender() {
-    this.ngZone.runOutsideAngular(() => {
-      if (this.renderDebounceTimer) return;
-      this.renderDebounceTimer = setTimeout(() => {
-        this.renderDebounceTimer = null;
-        this.runRenderPass();
-      }, RENDER_REFRESH_DELAY_MS);
-    });
+    this.ngZone.runOutsideAngular(() => this.runRenderPass());
   }
 
   private scheduleCurrentPageChangeRender() {
@@ -526,43 +589,103 @@ export class PdfViewerComponent implements OnDestroy {
     }
 
     if (this.pendingCanvasRefresh) {
-      this.pdfViewerRendererService.clearRenderedPages(this.pdfElement()?.nativeElement, this.renderer);
+      // Keep old bitmaps visible until replacement canvases have finished rendering.
       this.pendingCanvasRefresh = false;
     }
 
-    let items = this.syncVirtualViewport();
-    this.updateCurrentPage(items);
-
-    await this.waitForDom();
-
+    // Apply vertical anchor before reading virtual items at the new layout size.
     if (this.pendingAnchor) {
       this.applyScrollAnchor(this.pendingAnchor);
       this.pendingAnchor = null;
     }
+
+    this.syncVirtualViewport();
+    await this.waitForDom();
+
     if (this.pendingHorizontalScrollRatio !== null) {
       this.applyHorizontalScrollRatio(this.pendingHorizontalScrollRatio);
       this.pendingHorizontalScrollRatio = null;
     }
 
-    items = this.syncVirtualViewport();
-    this.updateCurrentPage(items);
-    const renderEpoch = ++this.viewportEpoch;
+    const items = this.syncVirtualViewport();
+    this.syncCurrentPage(items);
+    // viewportEpoch is bumped only on real render-parameter changes (zoom commit,
+    // rotation, resize, document load). A render pass triggered by scroll alone keeps
+    // the existing epoch so still-visible in-flight renders are not cancelled.
+    const renderEpoch = this.viewportEpoch;
 
-    this.evictPagesOutside(items);
+    if (this.renderMode === 'normal') {
+      this.evictPagesOutside(items);
+    }
+
+    await this.waitForDom();
 
     const expectedZoom = this.zoom();
     const expectedRotation = this.rotation();
-    this.queueVisiblePageRenders(items, expectedZoom, expectedRotation, renderEpoch);
+    const renderMode = this.renderMode;
+    this.queueVisiblePageRenders(items, expectedZoom, expectedRotation, renderEpoch, renderMode);
+    this.releasePagePinIfIdle(items);
   }
 
-  private syncVirtualViewport(): VirtualItem[] {
-    const items = this.virtualizer.getVirtualItems();
-    this.virtualItems.set(items);
-    this.virtualTotalSize.set(this.virtualizer.getTotalSize());
+  private syncCurrentPage(items: PdfViewerVirtualItem[]): void {
+    if (this.pinnedPageNumber !== null) {
+      if (this.currentPage() !== this.pinnedPageNumber) {
+        this.currentPage.set(this.pinnedPageNumber);
+      }
+      return;
+    }
+
+    this.updateCurrentPage(items);
+  }
+
+  private getEffectiveCurrentPage(fallbackPageNum: number): number {
+    if (this.pinnedPageNumber !== null) {
+      return this.pinnedPageNumber;
+    }
+    return this.currentPage() > 0 ? this.currentPage() : fallbackPageNum;
+  }
+
+  private releasePagePinIfIdle(items: PdfViewerVirtualItem[]): void {
+    if (this.renderMode !== 'normal' || this.pinnedPageNumber === null) return;
+
+    this.pinnedPageNumber = null;
+    this.updateCurrentPage(items);
+  }
+
+  private syncVirtualViewport(): PdfViewerVirtualItem[] {
+    const items = this.virtualizer.getVirtualItems().map((item) => this.toPdfViewerVirtualItem(item));
+    const totalSize = this.virtualizer.getTotalSize();
+    const signature = this.getVirtualItemsSignature(items);
+
+    if (signature !== this.lastVirtualItemsSignature) {
+      this.virtualItems.set(items);
+      this.lastVirtualItemsSignature = signature;
+    }
+    if (totalSize !== this.virtualTotalSize()) {
+      this.virtualTotalSize.set(totalSize);
+    }
     return items;
   }
 
-  private evictPagesOutside(items: VirtualItem[]): void {
+  private toPdfViewerVirtualItem(item: VirtualItem): PdfViewerVirtualItem {
+    const pageNum = item.index + 1;
+    return {
+      index: item.index,
+      key: item.key,
+      start: item.start,
+      end: item.end,
+      size: item.size,
+      pageNum,
+      pageWidth: this.getPageWidth(pageNum),
+      transform: `translateY(${item.start}px)`,
+    };
+  }
+
+  private getVirtualItemsSignature(items: PdfViewerVirtualItem[]): string {
+    return items.map((item) => `${item.key}:${item.start}:${item.size}:${item.pageWidth}`).join('|');
+  }
+
+  private evictPagesOutside(items: PdfViewerVirtualItem[]): void {
     const scrollEl = this.pdfElement()?.nativeElement;
     if (!scrollEl) return;
 
@@ -570,10 +693,11 @@ export class PdfViewerComponent implements OnDestroy {
   }
 
   private queueVisiblePageRenders(
-    items: VirtualItem[],
+    items: PdfViewerVirtualItem[],
     expectedZoom: number,
     expectedRotation: number,
     renderEpoch: number,
+    renderMode: PdfRenderMode,
   ): void {
     if (items.length === 0) {
       this.pdfViewerRendererService.setLatestRenderablePages(items);
@@ -586,10 +710,9 @@ export class PdfViewerComponent implements OnDestroy {
 
     this.pdfViewerRendererService.queueVisiblePageRenders({
       items,
-      currentPage: this.currentPage(),
+      currentPage: this.getEffectiveCurrentPage(items[0]?.pageNum ?? 1),
       expectedZoom,
       expectedRotation,
-      renderEpoch,
       maxConcurrentPageLoads: this.getConfiguredMaxConcurrentPageLoads(),
       scrollElement: scrollEl,
       renderer: this.renderer,
@@ -601,10 +724,23 @@ export class PdfViewerComponent implements OnDestroy {
       getZoom: () => this.zoom(),
       getRotation: () => this.rotation(),
       scheduleVirtualRefresh: () => this.scheduleVirtualRefresh(),
+      renderMode,
+      onCurrentPageRendered:
+        renderMode === 'zoom' ? () => this.handleZoomCurrentPageRendered(expectedZoom, renderEpoch) : undefined,
+      onSettleRenderComplete: renderMode === 'settle' ? () => this.handleSettleRenderComplete() : undefined,
     });
   }
 
-  private updateCurrentPage(items: VirtualItem[]) {
+  private handleSettleRenderComplete(): void {
+    if (this.renderMode !== 'settle') return;
+    this.renderMode = 'normal';
+    this.pinnedPageNumber = null;
+
+    const items = this.syncVirtualViewport();
+    this.updateCurrentPage(items);
+  }
+
+  private updateCurrentPage(items: PdfViewerVirtualItem[]) {
     if (items.length === 0) return;
     const el = this.pdfElement()?.nativeElement;
     if (!el) return;
@@ -644,13 +780,19 @@ export class PdfViewerComponent implements OnDestroy {
     const el = this.pdfElement()?.nativeElement;
     if (!el || this.pageCount() <= 0) return null;
 
-    const pageNum = this.currentPage() > 0 ? this.currentPage() : 1;
-    const layout = this.getPageLayout(pageNum);
-    if (!layout || layout.size <= 0) return null;
-
     const viewportCenter = el.scrollTop + el.clientHeight / 2;
-    const ratio = this.clamp((viewportCenter - layout.start) / layout.size, 0, 1);
-    return { pageNum, ratio };
+    const pageAtCenter = findPageAtScrollOffset(
+      viewportCenter,
+      this.pageCount(),
+      this.pageDimensions(),
+      this.baseScale(),
+      this.zoom(),
+      this.rotation(),
+    );
+    if (!pageAtCenter || pageAtCenter.size <= 0) return null;
+
+    const ratio = this.clamp((viewportCenter - pageAtCenter.start) / pageAtCenter.size, 0, 1);
+    return { pageNum: pageAtCenter.pageNum, ratio };
   }
 
   private applyScrollAnchor(anchor: ScrollAnchor): void {
@@ -662,13 +804,15 @@ export class PdfViewerComponent implements OnDestroy {
 
     const totalHeight = this.getDocumentHeight();
     const maxScrollTop = Math.max(0, totalHeight - el.clientHeight);
-    if (anchor.align === 'start') {
-      el.scrollTop = this.clamp(layout.start, 0, maxScrollTop);
-      return;
-    }
+    this.runProgrammaticScroll(() => {
+      if (anchor.align === 'start') {
+        el.scrollTop = this.clamp(layout.start, 0, maxScrollTop);
+        return;
+      }
 
-    const desiredCenter = layout.start + anchor.ratio * layout.size;
-    el.scrollTop = this.clamp(desiredCenter - el.clientHeight / 2, 0, maxScrollTop);
+      const desiredCenter = layout.start + anchor.ratio * layout.size;
+      el.scrollTop = this.clamp(desiredCenter - el.clientHeight / 2, 0, maxScrollTop);
+    });
   }
 
   private getPageLayout(pageNum: number): { start: number; size: number } | null {
@@ -720,7 +864,20 @@ export class PdfViewerComponent implements OnDestroy {
     if (!el) return;
 
     const maxScrollLeft = Math.max(0, el.scrollWidth - el.clientWidth);
-    el.scrollLeft = this.clamp(ratio, 0, 1) * maxScrollLeft;
+    this.runProgrammaticScroll(() => {
+      el.scrollLeft = this.clamp(ratio, 0, 1) * maxScrollLeft;
+    });
+  }
+
+  private runProgrammaticScroll(update: () => void): void {
+    this.programmaticScrollDepth++;
+    try {
+      update();
+    } finally {
+      requestAnimationFrame(() => {
+        this.programmaticScrollDepth = Math.max(0, this.programmaticScrollDepth - 1);
+      });
+    }
   }
 
   private syncEstimateFields() {
@@ -730,15 +887,39 @@ export class PdfViewerComponent implements OnDestroy {
     this._estimateDims = this.pageDimensions();
   }
 
+  private handleZoomCurrentPageRendered(expectedZoom: number, renderEpoch: number): void {
+    if (this.renderMode !== 'zoom') return;
+    if (Math.abs(this.zoom() - expectedZoom) >= 0.0001) return;
+    if (this.viewportEpoch !== renderEpoch) return;
+
+    this.scheduleZoomSettle();
+  }
+
+  private scheduleZoomSettle(): void {
+    // Keep zoom mode active while another zoom commit is already queued.
+    if (this.pendingZoomTarget !== null || this.zoomAnimationFrame !== null) return;
+    if (this.renderMode !== 'zoom') return;
+
+    this.renderMode = 'settle';
+    this.scheduleRender();
+  }
+
   private setZoom(target: number): boolean {
-    const clamped = Math.max(MIN_ZOOM_LEVEL, Math.min(MAX_ZOOM_LEVEL, target));
+    const clamped = this.normalizeZoom(target);
     if (Math.abs(clamped - this.zoom()) < 0.0001) return false;
-    this.zoom.set(Math.round(clamped * 1000) / 1000);
+    this.zoom.set(clamped);
     return true;
   }
 
+  private normalizeZoom(target: number): number {
+    const clamped = Math.max(MIN_ZOOM_LEVEL, Math.min(MAX_ZOOM_LEVEL, target));
+    return Math.round(clamped * 1000) / 1000;
+  }
+
   private waitForDom(): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, DOM_RENDER_SETTLE_DELAY_MS));
+    return new Promise((resolve) => {
+      requestAnimationFrame(() => resolve());
+    });
   }
 
   private clamp(value: number, min: number, max: number): number {

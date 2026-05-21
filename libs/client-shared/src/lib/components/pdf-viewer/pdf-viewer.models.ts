@@ -1,8 +1,17 @@
 import { AssetFile } from '@asset-sg/shared/v2';
+import { PageViewport } from 'pdfjs-dist';
+import { PDFPageProxy } from 'pdfjs-dist/types/src/display/api';
 
 export type PdfViewerFile = Pick<AssetFile, 'id' | 'pageRangeClassifications'> & {
   fileName: string;
 };
+
+export interface PdfRenderTask {
+  promise: Promise<void>;
+  cancel(): void;
+}
+
+export type PdfRenderMode = 'normal' | 'zoom' | 'settle';
 
 export interface RenderedPage {
   wrapper: HTMLDivElement;
@@ -10,12 +19,19 @@ export interface RenderedPage {
   textLayerDiv: HTMLDivElement;
   zoom: number;
   rotation: number;
+  baseScale: number;
+  textLayerRendered: boolean;
+  page?: PDFPageProxy;
+  viewport?: PageViewport;
 }
 
 export interface RenderingPage {
   epoch: number;
   zoom: number;
   rotation: number;
+  baseScale: number;
+  renderTask?: PdfRenderTask;
+  cancelled?: boolean;
 }
 
 export interface ScrollAnchor {
@@ -31,6 +47,13 @@ export interface PageLayout {
 
 export interface PdfViewerVirtualItem {
   index: number;
+  key: string | number | bigint;
+  start: number;
+  end: number;
+  size: number;
+  pageNum: number;
+  pageWidth: number;
+  transform: string;
 }
 
 // Fit rendered pages slightly inside the available viewer width.
@@ -43,12 +66,17 @@ export const ZOOM_STEP = 0.5;
 export const VIRTUAL_PADDING = 8;
 export const VIRTUAL_GAP = 8;
 // Default number of pages kept in the virtual range before/after the viewport.
-export const DEFAULT_OVERSCAN = 4;
-// Default maximum number of PDF.js page render tasks allowed at the same time.
-export const DEFAULT_MAX_CONCURRENT_PAGE_LOADS = 4;
-// Debounce for non-scroll render refreshes such as zoom, rotation, resize, and initial load.
-export const RENDER_REFRESH_DELAY_MS = 60;
+export const DEFAULT_OVERSCAN = 6;
+/**
+ * Maximum number of PDF.js page render tasks (and therefore concurrent network/byte-range
+ * fetches) the priority queue may run in parallel during normal scrolling. Lower values
+ * reduce simultaneous overlapping requests; higher values fill the viewport faster at the
+ * cost of more concurrent CPU/memory/network usage.
+ *
+ * Zoom and post-zoom settle modes always force this to 1 to keep the current page snappy.
+ *
+ * Configurable per component via the `maxConcurrentPageLoads` input.
+ */
+export const DEFAULT_MAX_CONCURRENT_PAGE_LOADS = 2;
 // Delay expensive page rendering only while the active page is changing quickly.
 export const CURRENT_PAGE_CHANGE_RENDER_DELAY_MS = 60;
-// Defers work until Angular has flushed the virtual page-slot DOM updates.
-export const DOM_RENDER_SETTLE_DELAY_MS = 0;
