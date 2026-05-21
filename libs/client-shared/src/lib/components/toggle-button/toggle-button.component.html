@@ -1,10 +1,10 @@
-<button asset-sg-tertiary [class.active]="!isActive" (click)="onToggleIsActive()" translate>
+<button asset-sg-tertiary [class.active]="!isActive" (click)="onInactiveClick()" translate>
   @if (inactiveTranslationIcon) {
     <svg-icon [key]="inactiveTranslationIcon"></svg-icon>
   }
   {{ inactiveTranslationKey }}
 </button>
-<button asset-sg-tertiary [class.active]="isActive" (click)="onToggleIsActive()" translate>
+<button asset-sg-tertiary [class.active]="isActive" (click)="onActiveClick()" translate>
   @if (activeTranslationIcon) {
     <svg-icon [key]="activeTranslationIcon"></svg-icon>
   }

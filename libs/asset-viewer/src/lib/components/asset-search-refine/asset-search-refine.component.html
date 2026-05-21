@@ -44,7 +44,7 @@
         inactiveTranslationKey="search.assets"
         inactiveTranslationIcon="info"
         [isActive]="searchQuery.type === SearchType.File"
-        (toggleIsActive)="toggleSearchType(searchQuery.type)"
+        (isActiveChange)="setSearchType($event ? SearchType.File : SearchType.Asset)"
       />
     </div>
     <div class="section-container">
