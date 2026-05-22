@@ -1,7 +1,13 @@
 import { inject, Injectable, Renderer2 } from '@angular/core';
 import { PageDimension } from '@asset-sg/shared/v2';
 import { getPageRenderPriority, isRotationSwapped } from './pdf-viewer-layout.helper';
-import { PdfRenderMode, PdfViewerVirtualItem, RenderedPage, RenderingPage } from './pdf-viewer.models';
+import {
+  PDF_VIEWER_DEBUG,
+  PdfRenderMode,
+  PdfViewerVirtualItem,
+  RenderedPage,
+  RenderingPage,
+} from './pdf-viewer.models';
 import { PdfViewerService } from './pdf-viewer.service';
 
 const BASE_SCALE_EPSILON = 0.0001;
@@ -58,10 +64,13 @@ export class PdfViewerRendererService {
   private reprioritizationSection = 0;
   /** Page number currently occupying the fast-lane slot, or null if idle. */
   private fastLanePageNum: number | null = null;
+  /** When true, `processRenderQueue` skips fast-lane dispatch until the next `queueVisiblePageRenders` call. */
+  private fastLaneSuppressed = false;
 
   resetPages(): void {
     this.pdfViewerService.cleanupTextLayerSelections();
     this.cancelFastLane();
+    this.fastLaneSuppressed = false;
     this.cancelAllRenderingPages();
     this.cancelTextLayerTimers();
     this.renderingPages.clear();
@@ -81,6 +90,7 @@ export class PdfViewerRendererService {
     this.clearRenderQueue();
     this.cancelAllRenderingPages();
     this.cancelFastLane();
+    this.fastLaneSuppressed = false;
     this.cancelTextLayerTimers();
   }
 
@@ -136,6 +146,7 @@ export class PdfViewerRendererService {
 
     this.renderOptions = options;
     this.latestRenderablePages = visiblePageSet;
+    this.fastLaneSuppressed = false;
 
     // 1. Drop queue entries that are no longer visible OR whose params went stale.
     this.pruneStaleQueueEntries(visiblePageSet, options);
@@ -154,16 +165,19 @@ export class PdfViewerRendererService {
       entry.priority = getPageRenderPriority(entry.pageNum, current);
     }
 
-    // 5. If the active page changed, cancel any fast-lane render for the previous page.
-    if (this.fastLanePageNum !== null && this.fastLanePageNum !== current) {
-      console.log(`[pdf-queue] fast-lane cancelled for page=${this.fastLanePageNum} (active page → ${current})`);
-      this.cancelRenderingPage(this.fastLanePageNum);
-      this.fastLanePageNum = null;
-    }
-
-    if (this.lastLoggedCurrentPage !== current) {
+    // 4a. Log a reprioritization section whenever the active page changes.
+    if (current !== this.lastLoggedCurrentPage) {
       this.lastLoggedCurrentPage = current;
       this.logReprioritizationSection(current, options.renderMode);
+    }
+
+    // 5. If the active page changed, cancel any fast-lane render for the previous page.
+    if (this.fastLanePageNum !== null && this.fastLanePageNum !== current) {
+      if (PDF_VIEWER_DEBUG) {
+        console.log(`[pdf-queue] fast-lane cancelled for page=${this.fastLanePageNum} (active page → ${current})`);
+      }
+      this.cancelRenderingPage(this.fastLanePageNum);
+      this.fastLanePageNum = null;
     }
 
     this.processRenderQueue();
@@ -282,17 +296,19 @@ export class PdfViewerRendererService {
     }
   }
 
-  private logReprioritizationSection(currentPage: number, renderMode: PdfRenderMode): void {
+  public logReprioritizationSection(currentPage: number, renderMode: PdfRenderMode): void {
     this.reprioritizationSection++;
     const prioritizedLabels = this.getPrioritizedPageLabels(20);
-    console.log(
-      `%c[pdf-queue]%c[section ${this.reprioritizationSection}] active page changed to ${currentPage} (${renderMode})`,
-      'background: #28a745; color: white; padding: 4px; border-radius: 4px;',
-      'color: #28a745; font-weight: bold;',
-    );
-    console.log(
-      `[pdf-queue] next prioritized pages: ${prioritizedLabels.length > 0 ? prioritizedLabels.join(', ') : 'none'}`,
-    );
+    if (PDF_VIEWER_DEBUG) {
+      console.log(
+        `%c[pdf-queue]%c[section ${this.reprioritizationSection}] active page changed to ${currentPage} (${renderMode}) after scroll`,
+        'background: #28a745; color: white; padding: 4px; border-radius: 4px;',
+        'color: #28a745; font-weight: bold;',
+      );
+      console.log(
+        `[pdf-queue] next prioritized pages: ${prioritizedLabels.length > 0 ? prioritizedLabels.join(', ') : 'none'}`,
+      );
+    }
     console.groupEnd();
   }
 
@@ -363,9 +379,12 @@ export class PdfViewerRendererService {
       if (entry.zoom !== options.getZoom() || entry.rotation !== options.getRotation()) {
         continue;
       }
-      console.log(
-        `[pdf-queue] dispatch render page=${entry.pageNum} priority=${entry.priority} active=${this.activePageRenderCount + 1}/${maxConcurrentPageLoads}`,
-      );
+
+      if (PDF_VIEWER_DEBUG) {
+        console.log(
+          `[pdf-queue] dispatch render page=${entry.pageNum} priority=${entry.priority} active=${this.activePageRenderCount + 1}/${maxConcurrentPageLoads}`,
+        );
+      }
       this.dispatchRenderEntry(entry, options);
     }
 
@@ -373,7 +392,8 @@ export class PdfViewerRendererService {
     if (
       options.renderMode === 'normal' &&
       this.activePageRenderCount >= maxConcurrentPageLoads &&
-      this.fastLanePageNum === null
+      this.fastLanePageNum === null &&
+      !this.fastLaneSuppressed
     ) {
       this.dispatchFastLaneRender(options, maxConcurrentPageLoads);
     }
@@ -408,9 +428,11 @@ export class PdfViewerRendererService {
     }
 
     this.fastLanePageNum = currentPageEntry.pageNum;
-    console.log(
-      `[pdf-queue] fast-lane dispatch page=${currentPageEntry.pageNum} active=${this.activePageRenderCount + 1}/${maxConcurrent}+1`,
-    );
+    if (PDF_VIEWER_DEBUG) {
+      console.log(
+        `[pdf-queue] fast-lane dispatch page=${currentPageEntry.pageNum} active=${this.activePageRenderCount + 1}/${maxConcurrent}+1`,
+      );
+    }
     this.dispatchRenderEntry(currentPageEntry, options, () => {
       if (this.fastLanePageNum === currentPageEntry.pageNum) {
         this.fastLanePageNum = null;
@@ -766,6 +788,23 @@ export class PdfViewerRendererService {
 
     this.renderedPages.delete(pageNum);
     this.renderingPages.delete(pageNum);
+  }
+
+  /**
+   * Cancels the in-flight fast-lane render if it targets a page other than `currentPage`
+   * and suppresses further fast-lane dispatches until the next `queueVisiblePageRenders`
+   * call. Called eagerly from processViewerScroll() so stale fast-lane fetches are stopped
+   * immediately — without waiting for the debounced render pass.
+   */
+  cancelFastLaneIfStale(currentPage: number): void {
+    if (this.fastLanePageNum !== null && this.fastLanePageNum !== currentPage) {
+      if (PDF_VIEWER_DEBUG) {
+        console.log(`[pdf-queue] fast-lane cancelled for page=${this.fastLanePageNum} (active page → ${currentPage})`);
+      }
+      this.cancelRenderingPage(this.fastLanePageNum);
+      this.fastLanePageNum = null;
+    }
+    this.fastLaneSuppressed = true;
   }
 
   private cancelFastLane(): void {

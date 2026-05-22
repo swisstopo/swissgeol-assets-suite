@@ -77,6 +77,8 @@ export const DEFAULT_OVERSCAN = 6;
  *
  * Configurable per component via the `maxConcurrentPageLoads` input.
  */
-export const DEFAULT_MAX_CONCURRENT_PAGE_LOADS = 2;
+export const DEFAULT_MAX_CONCURRENT_PAGE_LOADS = 3;
 // Delay expensive page rendering only while the active page is changing quickly.
 export const CURRENT_PAGE_CHANGE_RENDER_DELAY_MS = 60;
+/** Set to `true` to enable verbose PDF-viewer diagnostic logs in the browser console. */
+export const PDF_VIEWER_DEBUG = false;

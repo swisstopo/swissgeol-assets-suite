@@ -71,7 +71,8 @@ export class FilesController {
     @Param('assetId', ParseIntPipe) assetId: number,
     @Param('id', ParseIntPipe) id: number,
     @CurrentUser() user: User,
-    @Query('download', new DefaultValuePipe(false), new ParseBoolPipe()) download: boolean,
+    @Query('download', new DefaultValuePipe(false), new ParseBoolPipe())
+    download: boolean,
   ): Promise<AssetFileSignedUrlSchema> {
     const asset = await this.findAssetOrThrow(assetId);
     authorize(AssetPolicy, user).canShow(asset);
@@ -129,7 +130,7 @@ export class FilesController {
       const presignedUrl = await this.fileS3Service.getPresignedUrl(file.name, file.alias, false);
 
       // Extract metadata from PDF
-      const metadata = await this.pdfMetadataService.extractMetadata(presignedUrl);
+      const metadata: AssetFileMetadataResponse = await this.pdfMetadataService.extractMetadata(presignedUrl);
 
       // Store dimensions in database for future requests
       await this.prismaService.file.update({
@@ -193,7 +194,10 @@ export class FilesController {
     }
 
     fileStream.content.on('error', (err) => {
-      this.logger.warn('Error streaming file from S3', { error: err, fileName: file.name });
+      this.logger.warn('Error streaming file from S3', {
+        error: err,
+        fileName: file.name,
+      });
     });
 
     fileStream.content.pipe(res);

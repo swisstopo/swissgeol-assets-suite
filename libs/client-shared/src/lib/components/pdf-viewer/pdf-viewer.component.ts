@@ -86,7 +86,9 @@ export class PdfViewerComponent implements OnDestroy {
   public readonly assetPdfs = input.required<PdfViewerFile[]>();
   public readonly initialPdfId = input<number>();
   public readonly initialPageNumber = input<number>();
-  public readonly overscan = input(DEFAULT_OVERSCAN, { transform: numberAttribute });
+  public readonly overscan = input(DEFAULT_OVERSCAN, {
+    transform: numberAttribute,
+  });
   public readonly maxConcurrentPageLoads = input(DEFAULT_MAX_CONCURRENT_PAGE_LOADS, { transform: numberAttribute });
   public readonly exitViewer = output();
 
@@ -118,7 +120,7 @@ export class PdfViewerComponent implements OnDestroy {
   private readonly pdfViewerRendererService = inject(PdfViewerRendererService);
 
   private resizeObserver: ResizeObserver | null = null;
-  private currentPageChangeRenderTimer: ReturnType<typeof setTimeout> | null = null;
+  private scrollRenderTimer: ReturnType<typeof setTimeout> | null = null;
   private scrollAnimationFrame: number | null = null;
   private zoomAnimationFrame: number | null = null;
 
@@ -170,8 +172,8 @@ export class PdfViewerComponent implements OnDestroy {
   public ngOnDestroy() {
     this.resizeObserver?.disconnect();
     this.pdfViewerInputService.destroy();
-    if (this.currentPageChangeRenderTimer) {
-      clearTimeout(this.currentPageChangeRenderTimer);
+    if (this.scrollRenderTimer) {
+      clearTimeout(this.scrollRenderTimer);
     }
     if (this.scrollAnimationFrame !== null) {
       cancelAnimationFrame(this.scrollAnimationFrame);
@@ -320,20 +322,20 @@ export class PdfViewerComponent implements OnDestroy {
     const previousPage = this.currentPage();
     const items = this.syncVirtualViewport();
     this.updateCurrentPage(items);
-    // Visibility filter must reflect the new viewport so processRenderQueue skips
-    // entries that just scrolled off-screen. We deliberately do NOT bump viewportEpoch
-    // or clear the render queue here: render parameters (zoom/rotation/baseScale)
-    // have not changed, so any in-flight render whose page is still visible should
-    // keep running. Off-screen pages are evicted (and their queue entries dropped) by
-    // evictPagesOutside below, and the next runRenderPass / queueVisiblePageRenders
-    // re-prioritizes the queue against the new currentPage.
+    // Update visibility and evict off-screen pages on every scroll frame.
+    // Clear the render queue so that .finally() callbacks from in-flight renders
+    // cannot cascade into new dispatches while scrolling is active. On page change
+    // we also cancel in-flight renders since they target stale pages.
+    // Rendering itself is debounced: only when scrolling settles (no scroll event
+    // for CURRENT_PAGE_CHANGE_RENDER_DELAY_MS) does the render pass fire.
     this.pdfViewerRendererService.setLatestRenderablePages(items);
     this.evictPagesOutside(items);
     if (this.currentPage() !== previousPage) {
-      this.scheduleCurrentPageChangeRender();
-    } else if (!this.currentPageChangeRenderTimer) {
-      this.runRenderPass();
+      this.pdfViewerRendererService.cancelPendingRenders();
+    } else {
+      this.pdfViewerRendererService.clearRenderQueue();
     }
+    this.scheduleScrollRender();
   }
 
   private setupInitialPdfEffect() {
@@ -497,9 +499,10 @@ export class PdfViewerComponent implements OnDestroy {
     pdfId: number,
   ): Promise<{ pageCount: number; pageDimensions: PageDimension[] }> {
     return firstValueFrom(
-      this.httpClient.get<{ pageCount: number; pageDimensions: PageDimension[] }>(
-        `/api/assets/${assetId}/files/${pdfId}/metadata`,
-      ),
+      this.httpClient.get<{
+        pageCount: number;
+        pageDimensions: PageDimension[];
+      }>(`/api/assets/${assetId}/files/${pdfId}/metadata`),
     );
   }
 
@@ -548,13 +551,13 @@ export class PdfViewerComponent implements OnDestroy {
     this.ngZone.runOutsideAngular(() => this.runRenderPass());
   }
 
-  private scheduleCurrentPageChangeRender() {
+  private scheduleScrollRender() {
     this.ngZone.runOutsideAngular(() => {
-      if (this.currentPageChangeRenderTimer) {
-        clearTimeout(this.currentPageChangeRenderTimer);
+      if (this.scrollRenderTimer) {
+        clearTimeout(this.scrollRenderTimer);
       }
-      this.currentPageChangeRenderTimer = setTimeout(() => {
-        this.currentPageChangeRenderTimer = null;
+      this.scrollRenderTimer = setTimeout(() => {
+        this.scrollRenderTimer = null;
         this.runRenderPass();
       }, CURRENT_PAGE_CHANGE_RENDER_DELAY_MS);
     });
@@ -770,7 +773,7 @@ export class PdfViewerComponent implements OnDestroy {
   private scrollToPage(pageNum: number, behavior: ScrollBehavior = 'smooth') {
     this.virtualizer.scrollToIndex(pageNum - 1, { align: 'start', behavior });
     if (behavior === 'smooth') {
-      this.scheduleCurrentPageChangeRender();
+      this.scheduleScrollRender();
     } else {
       this.scheduleRender();
     }
