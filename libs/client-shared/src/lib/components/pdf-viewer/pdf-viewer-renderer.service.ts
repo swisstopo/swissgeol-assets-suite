@@ -35,6 +35,13 @@ interface QueueVisiblePageRendersOptions {
   onSettleRenderComplete?: () => void;
 }
 
+interface RenderSlotElements {
+  textLayerDiv: HTMLDivElement;
+  canvas: HTMLCanvasElement;
+  parentWidth: number;
+  parentHeight: number;
+}
+
 @Injectable()
 export class PdfViewerRendererService {
   private readonly pdfViewerService = inject(PdfViewerService);
@@ -192,22 +199,13 @@ export class PdfViewerRendererService {
     }
 
     // In zoom mode, restrict to only the current page.
-    if (renderMode === 'zoom') {
-      const idx = candidates.indexOf(currentPage);
-      if (idx === -1) {
-        candidates.length = 0;
-      } else {
-        const page = candidates[idx];
-        candidates.length = 0;
-        candidates.push(page);
-      }
-    }
+    const filtered = this.filterCandidatesForMode(candidates, renderMode, currentPage);
 
     // Sort by dynamic priority: current page first, then nearest neighbors.
-    candidates.sort((a, b) => getPageRenderPriority(a, currentPage) - getPageRenderPriority(b, currentPage));
+    filtered.sort((a, b) => getPageRenderPriority(a, currentPage) - getPageRenderPriority(b, currentPage));
 
     // Dispatch to fill slots.
-    for (const pageNum of candidates) {
+    for (const pageNum of filtered) {
       if (this.renderingPages.size >= maxConcurrent) break;
 
       const priority = getPageRenderPriority(pageNum, currentPage);
@@ -220,6 +218,12 @@ export class PdfViewerRendererService {
     }
 
     this.maybeCompleteSettle();
+  }
+
+  private filterCandidatesForMode(candidates: number[], renderMode: PdfRenderMode, currentPage: number): number[] {
+    if (renderMode !== 'zoom') return candidates;
+    const idx = candidates.indexOf(currentPage);
+    return idx === -1 ? [] : [candidates[idx]];
   }
 
   private dispatchRender(
@@ -353,15 +357,13 @@ export class PdfViewerRendererService {
     options.renderer.appendChild(wrapper, canvas);
     options.renderer.appendChild(wrapper, textLayerDiv);
 
+    const elements: RenderSlotElements = { textLayerDiv, canvas, parentWidth, parentHeight };
     const pageResult = await this.tryExecuteRender(
       pageNum,
       renderEpoch,
       zoomAtStart,
       rotationAtStart,
-      textLayerDiv,
-      canvas,
-      parentWidth,
-      parentHeight,
+      elements,
       options,
     );
     if (pageResult === null) return;
@@ -438,10 +440,7 @@ export class PdfViewerRendererService {
     renderEpoch: number,
     zoomAtStart: number,
     rotationAtStart: number,
-    textLayerDiv: HTMLDivElement,
-    canvas: HTMLCanvasElement,
-    parentWidth: number,
-    parentHeight: number,
+    { textLayerDiv, canvas, parentWidth, parentHeight }: RenderSlotElements,
     options: QueueVisiblePageRendersOptions,
   ) {
     try {
