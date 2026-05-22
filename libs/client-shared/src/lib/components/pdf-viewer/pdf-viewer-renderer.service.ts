@@ -219,26 +219,7 @@ export class PdfViewerRendererService {
     for (const pageNum of visiblePageNums) {
       const priority = getPageRenderPriority(pageNum, current);
 
-      const rendered = this.renderedPages.get(pageNum);
-      if (rendered && this.paramsMatch(rendered.zoom, rendered.rotation, rendered.baseScale, options)) {
-        const needsTextLayer =
-          options.renderMode !== 'zoom' &&
-          pageNum === current &&
-          !rendered.textLayerRendered &&
-          !!rendered.page &&
-          !!rendered.viewport;
-        if (needsTextLayer) {
-          // Run renderPageSlot once so the text layer can be scheduled.
-          this.upsertQueueEntry(pageNum, priority, options.expectedZoom, options.expectedRotation, options.baseScale);
-        } else {
-          // Already drawn correctly and nothing else to do; make sure no pending entry lingers.
-          this.renderQueue.delete(pageNum);
-        }
-        if (options.renderMode === 'zoom' && pageNum === current) {
-          options.onCurrentPageRendered?.();
-        }
-        continue;
-      }
+      if (this.tryHandleRenderedEntry(pageNum, priority, current, options)) continue;
 
       const rendering = this.renderingPages.get(pageNum);
       if (rendering && this.paramsMatch(rendering.zoom, rendering.rotation, rendering.baseScale, options)) {
@@ -251,6 +232,40 @@ export class PdfViewerRendererService {
       // Either not rendering yet or rendering with stale params (and just cancelled above).
       this.upsertQueueEntry(pageNum, priority, options.expectedZoom, options.expectedRotation, options.baseScale);
     }
+  }
+
+  /**
+   * Handles the case where a page is already rendered with matching params.
+   * Queues a text-layer pass if needed, fires the zoom callback, and returns
+   * `true` so the caller can `continue` to the next page.
+   */
+  private tryHandleRenderedEntry(
+    pageNum: number,
+    priority: number,
+    current: number,
+    options: QueueVisiblePageRendersOptions,
+  ): boolean {
+    const rendered = this.renderedPages.get(pageNum);
+    if (!rendered || !this.paramsMatch(rendered.zoom, rendered.rotation, rendered.baseScale, options)) {
+      return false;
+    }
+    const needsTextLayer =
+      options.renderMode !== 'zoom' &&
+      pageNum === current &&
+      !rendered.textLayerRendered &&
+      !!rendered.page &&
+      !!rendered.viewport;
+    if (needsTextLayer) {
+      // Run renderPageSlot once so the text layer can be scheduled.
+      this.upsertQueueEntry(pageNum, priority, options.expectedZoom, options.expectedRotation, options.baseScale);
+    } else {
+      // Already drawn correctly and nothing else to do; make sure no pending entry lingers.
+      this.renderQueue.delete(pageNum);
+    }
+    if (options.renderMode === 'zoom' && pageNum === current) {
+      options.onCurrentPageRendered?.();
+    }
+    return true;
   }
 
   private clearRenderedPageSlot(
@@ -270,8 +285,10 @@ export class PdfViewerRendererService {
   private logReprioritizationSection(currentPage: number, renderMode: PdfRenderMode): void {
     this.reprioritizationSection++;
     const prioritizedLabels = this.getPrioritizedPageLabels(20);
-    console.groupCollapsed(
-      `[pdf-queue][section ${this.reprioritizationSection}] active page changed to ${currentPage} (${renderMode})`,
+    console.log(
+      `%c[pdf-queue]%c[section ${this.reprioritizationSection}] active page changed to ${currentPage} (${renderMode})`,
+      'background: #28a745; color: white; padding: 4px; border-radius: 4px;',
+      'color: #28a745; font-weight: bold;',
     );
     console.log(
       `[pdf-queue] next prioritized pages: ${prioritizedLabels.length > 0 ? prioritizedLabels.join(', ') : 'none'}`,
@@ -415,35 +432,7 @@ export class PdfViewerRendererService {
     renderEpoch: number,
     options: QueueVisiblePageRendersOptions,
   ): Promise<void> {
-    const existingRendered = this.renderedPages.get(pageNum);
-    if (
-      existingRendered?.zoom === zoomAtStart &&
-      existingRendered?.rotation === rotationAtStart &&
-      Math.abs(existingRendered?.baseScale - options.baseScale) < 0.0001
-    ) {
-      if (
-        pageNum === options.currentPage &&
-        !existingRendered.textLayerRendered &&
-        existingRendered.page &&
-        existingRendered.viewport
-      ) {
-        this.scheduleTextLayerRender(pageNum, existingRendered);
-      }
-      if (options.renderMode === 'zoom' && pageNum === options.currentPage) {
-        options.onCurrentPageRendered?.();
-      }
-      return;
-    }
-
-    const rendering = this.renderingPages.get(pageNum);
-    if (
-      rendering?.epoch === renderEpoch &&
-      rendering.zoom === zoomAtStart &&
-      rendering.rotation === rotationAtStart &&
-      Math.abs(rendering.baseScale - options.baseScale) < 0.0001
-    ) {
-      return;
-    }
+    if (this.isPageAlreadyUpToDate(pageNum, renderEpoch, zoomAtStart, rotationAtStart, options)) return;
 
     this.renderingPages.set(pageNum, {
       epoch: renderEpoch,
@@ -461,11 +450,13 @@ export class PdfViewerRendererService {
     ) as HTMLElement | null;
     const dim = options.pageDimensions[pageNum - 1];
 
-    if (!slotElement || !dim) {
+    if (!slotElement) {
       this.finishPageRender(pageNum, renderEpoch, zoomAtStart, rotationAtStart);
-      if (!slotElement) {
-        options.scheduleVirtualRefresh();
-      }
+      options.scheduleVirtualRefresh();
+      return;
+    }
+    if (!dim) {
+      this.finishPageRender(pageNum, renderEpoch, zoomAtStart, rotationAtStart);
       return;
     }
     if (renderEpoch !== options.getViewportEpoch()) {
@@ -486,59 +477,21 @@ export class PdfViewerRendererService {
     options.renderer.appendChild(wrapper, canvas);
     options.renderer.appendChild(wrapper, textLayerDiv);
 
-    let pageResult;
-    try {
-      if (renderEpoch !== options.getViewportEpoch()) {
-        this.finishPageRender(pageNum, renderEpoch, zoomAtStart, rotationAtStart);
-        this.pdfViewerService.cleanupTextLayerSelection(textLayerDiv);
-        return;
-      }
-      pageResult = await this.pdfViewerService.renderPageToCanvas(
-        canvas,
-        pageNum,
-        parentWidth,
-        parentHeight,
-        zoomAtStart,
-        rotationAtStart,
-        (renderTask) => {
-          const currentRendering = this.renderingPages.get(pageNum);
-          if (
-            currentRendering?.epoch === renderEpoch &&
-            currentRendering.zoom === zoomAtStart &&
-            currentRendering.rotation === rotationAtStart &&
-            Math.abs(currentRendering.baseScale - options.baseScale) < 0.0001 &&
-            !currentRendering.cancelled
-          ) {
-            currentRendering.renderTask = renderTask;
-          } else {
-            renderTask.cancel();
-          }
-        },
-      );
-    } catch (error) {
-      this.finishPageRender(pageNum, renderEpoch, zoomAtStart, rotationAtStart);
-      this.pdfViewerService.cleanupTextLayerSelection(textLayerDiv);
-      if (!this.isRenderCancelled(error)) {
-        console.error(`Failed to render page ${pageNum}`, error);
-      }
-      return;
-    }
+    const pageResult = await this.tryExecuteRender(
+      pageNum,
+      renderEpoch,
+      zoomAtStart,
+      rotationAtStart,
+      textLayerDiv,
+      canvas,
+      parentWidth,
+      parentHeight,
+      options,
+    );
+    if (pageResult === null) return;
 
     this.finishPageRender(pageNum, renderEpoch, zoomAtStart, rotationAtStart);
-
-    if (options.getLoadGeneration() !== options.loadGeneration) {
-      this.pdfViewerService.cleanupTextLayerSelection(textLayerDiv);
-      return;
-    }
-    if (renderEpoch !== options.getViewportEpoch()) {
-      this.pdfViewerService.cleanupTextLayerSelection(textLayerDiv);
-      return;
-    }
-    if (options.getZoom() !== zoomAtStart || options.getRotation() !== rotationAtStart) {
-      this.pdfViewerService.cleanupTextLayerSelection(textLayerDiv);
-      options.scheduleVirtualRefresh();
-      return;
-    }
+    if (this.cleanupIfStaleAfterRender(renderEpoch, zoomAtStart, rotationAtStart, textLayerDiv, options)) return;
 
     const currentSlot = options.scrollElement.querySelector(
       `.page-slot[data-page-num="${pageNum}"]`,
@@ -560,13 +513,139 @@ export class PdfViewerRendererService {
       viewport: pageResult.viewport,
     };
     this.swapRenderedPage(pageNum, rendered, slotElement, options.renderer);
+    this.notifyPageRendered(pageNum, rendered, options);
+  }
 
-    if (pageNum === options.currentPage) {
-      if (options.renderMode === 'zoom') {
-        options.onCurrentPageRendered?.();
-      } else {
-        this.scheduleTextLayerRender(pageNum, rendered);
+  /** Returns `true` when the page is already drawn (or already rendering) with the current params. */
+  private isPageAlreadyUpToDate(
+    pageNum: number,
+    renderEpoch: number,
+    zoomAtStart: number,
+    rotationAtStart: number,
+    options: QueueVisiblePageRendersOptions,
+  ): boolean {
+    const existingRendered = this.renderedPages.get(pageNum);
+    if (
+      existingRendered?.zoom === zoomAtStart &&
+      existingRendered?.rotation === rotationAtStart &&
+      Math.abs(existingRendered?.baseScale - options.baseScale) < BASE_SCALE_EPSILON
+    ) {
+      if (
+        pageNum === options.currentPage &&
+        !existingRendered.textLayerRendered &&
+        existingRendered.page &&
+        existingRendered.viewport
+      ) {
+        this.scheduleTextLayerRender(pageNum, existingRendered);
       }
+      if (options.renderMode === 'zoom' && pageNum === options.currentPage) {
+        options.onCurrentPageRendered?.();
+      }
+      return true;
+    }
+
+    const rendering = this.renderingPages.get(pageNum);
+    if (
+      rendering?.epoch === renderEpoch &&
+      rendering.zoom === zoomAtStart &&
+      rendering.rotation === rotationAtStart &&
+      Math.abs(rendering.baseScale - options.baseScale) < BASE_SCALE_EPSILON
+    ) {
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * Runs the actual PDF.js render inside a try/catch.
+   * Returns the page result on success, or `null` when the render was cancelled or stale
+   * (in which case `finishPageRender` and `cleanupTextLayerSelection` are already called).
+   */
+  private async tryExecuteRender(
+    pageNum: number,
+    renderEpoch: number,
+    zoomAtStart: number,
+    rotationAtStart: number,
+    textLayerDiv: HTMLDivElement,
+    canvas: HTMLCanvasElement,
+    parentWidth: number,
+    parentHeight: number,
+    options: QueueVisiblePageRendersOptions,
+  ) {
+    try {
+      if (renderEpoch !== options.getViewportEpoch()) {
+        this.finishPageRender(pageNum, renderEpoch, zoomAtStart, rotationAtStart);
+        this.pdfViewerService.cleanupTextLayerSelection(textLayerDiv);
+        return null;
+      }
+      return await this.pdfViewerService.renderPageToCanvas(
+        canvas,
+        pageNum,
+        parentWidth,
+        parentHeight,
+        zoomAtStart,
+        rotationAtStart,
+        (renderTask) => {
+          const currentRendering = this.renderingPages.get(pageNum);
+          if (
+            currentRendering?.epoch === renderEpoch &&
+            currentRendering.zoom === zoomAtStart &&
+            currentRendering.rotation === rotationAtStart &&
+            Math.abs(currentRendering.baseScale - options.baseScale) < BASE_SCALE_EPSILON &&
+            !currentRendering.cancelled
+          ) {
+            currentRendering.renderTask = renderTask;
+          } else {
+            renderTask.cancel();
+          }
+        },
+      );
+    } catch (error) {
+      this.finishPageRender(pageNum, renderEpoch, zoomAtStart, rotationAtStart);
+      this.pdfViewerService.cleanupTextLayerSelection(textLayerDiv);
+      if (!this.isRenderCancelled(error)) {
+        console.error(`Failed to render page ${pageNum}`, error);
+      }
+      return null;
+    }
+  }
+
+  /**
+   * Checks whether the render result is outdated after the async canvas paint.
+   * Cleans up the text-layer element and, where appropriate, schedules a virtual refresh.
+   * Returns `true` if the result should be discarded.
+   */
+  private cleanupIfStaleAfterRender(
+    renderEpoch: number,
+    zoomAtStart: number,
+    rotationAtStart: number,
+    textLayerDiv: HTMLDivElement,
+    options: QueueVisiblePageRendersOptions,
+  ): boolean {
+    if (options.getLoadGeneration() !== options.loadGeneration) {
+      this.pdfViewerService.cleanupTextLayerSelection(textLayerDiv);
+      return true;
+    }
+    if (renderEpoch !== options.getViewportEpoch()) {
+      this.pdfViewerService.cleanupTextLayerSelection(textLayerDiv);
+      return true;
+    }
+    if (options.getZoom() !== zoomAtStart || options.getRotation() !== rotationAtStart) {
+      this.pdfViewerService.cleanupTextLayerSelection(textLayerDiv);
+      options.scheduleVirtualRefresh();
+      return true;
+    }
+    return false;
+  }
+
+  /** Fires the post-render callback or schedules the text-layer for the current page. */
+  private notifyPageRendered(pageNum: number, rendered: RenderedPage, options: QueueVisiblePageRendersOptions): void {
+    if (pageNum !== options.currentPage) return;
+    if (options.renderMode === 'zoom') {
+      options.onCurrentPageRendered?.();
+    } else {
+      this.scheduleTextLayerRender(pageNum, rendered);
     }
   }
 
