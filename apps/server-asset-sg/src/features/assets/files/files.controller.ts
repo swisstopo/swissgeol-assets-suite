@@ -2,12 +2,12 @@ import {
   Asset,
   AssetEditPolicy,
   AssetFile,
+  AssetFileMetadataResponse,
   AssetFileSchema,
   AssetFileSignedUrlSchema,
   AssetPolicy,
   convert,
   LegalDocCode,
-  PageDimension,
   User,
 } from '@asset-sg/shared/v2';
 import {
@@ -261,9 +261,4 @@ export class FilesController {
   private decodeFilename(fileName: string): string {
     return Buffer.from(fileName, 'latin1').toString('utf8');
   }
-}
-
-export interface AssetFileMetadataResponse {
-  pageCount: number;
-  pageDimensions: PageDimension[];
 }

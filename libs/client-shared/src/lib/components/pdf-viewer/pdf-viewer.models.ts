@@ -60,8 +60,9 @@ export interface PdfViewerVirtualItem {
 export const PDF_RENDERING_MARGIN = 0.95;
 // Zoom bounds and button step size.
 export const MAX_ZOOM_LEVEL = 5;
-export const MIN_ZOOM_LEVEL = 1;
+export const MIN_ZOOM_LEVEL = 0.2;
 export const ZOOM_STEP = 0.5;
+export const ZOOM_STEP_FINE = 0.1;
 // Virtual document spacing used by TanStack Virtual and manual scroll anchoring.
 export const VIRTUAL_PADDING = 8;
 export const VIRTUAL_GAP = 8;
@@ -79,6 +80,6 @@ export const DEFAULT_OVERSCAN = 6;
  */
 export const DEFAULT_MAX_CONCURRENT_PAGE_LOADS = 3;
 // Delay expensive page rendering only while the active page is changing quickly.
-export const CURRENT_PAGE_CHANGE_RENDER_DELAY_MS = 60;
+export const CURRENT_PAGE_CHANGE_RENDER_DELAY_MS = 16;
 /** Set to `true` to enable verbose PDF-viewer diagnostic logs in the browser console. */
 export const PDF_VIEWER_DEBUG = false;

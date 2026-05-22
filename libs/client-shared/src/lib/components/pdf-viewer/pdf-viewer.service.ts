@@ -82,7 +82,6 @@ export class PdfViewerService implements OnDestroy {
     const viewport = page.getViewport({ scale: 1 });
     return { width: viewport.width, height: viewport.height };
   }
-
   public async renderPageToCanvas(
     canvas: HTMLCanvasElement,
     pageNum: number,
@@ -120,7 +119,11 @@ export class PdfViewerService implements OnDestroy {
     await renderTask.promise;
     const timeElapsed = performance.now() - timeStart;
     if (PDF_VIEWER_DEBUG) {
-      console.log(`loaded page with num ${pageNum} in ${timeElapsed.toFixed(2)}`);
+      console.log(
+        `%c[pdf-queue] %cloaded page with num ${pageNum} in ${timeElapsed.toFixed(2)}`,
+        'background: #28a745; color: white; padding: 4px; border-radius: 4px;',
+        'font-weight: bold;',
+      );
     }
     return {
       page,

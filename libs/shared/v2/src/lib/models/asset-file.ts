@@ -116,3 +116,8 @@ export interface PageDimension {
   width: number;
   height: number;
 }
+
+export interface AssetFileMetadataResponse {
+  pageCount: number;
+  pageDimensions: PageDimension[];
+}

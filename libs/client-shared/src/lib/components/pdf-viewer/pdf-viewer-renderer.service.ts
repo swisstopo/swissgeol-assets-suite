@@ -27,26 +27,12 @@ interface QueueVisiblePageRendersOptions {
   getLoadGeneration: () => number;
   getZoom: () => number;
   getRotation: () => number;
+  getCurrentPage: () => number;
+  getRenderMode: () => PdfRenderMode;
   scheduleVirtualRefresh: () => void;
   renderMode: PdfRenderMode;
   onCurrentPageRendered?: () => void;
   onSettleRenderComplete?: () => void;
-}
-
-/**
- * A pending render request held in the priority queue. Entries survive scroll events:
- * they are inserted/updated/dropped incrementally rather than the queue being rebuilt
- * on every viewport change. This is what stops in-flight renders for still-visible
- * pages from being cancelled and re-fetched on scroll.
- */
-interface QueueEntry {
-  pageNum: number;
-  /** Lower is rendered sooner; computed from `getPageRenderPriority(pageNum, currentPage)`. */
-  priority: number;
-  /** Render parameters captured at queue time; used to detect stale entries. */
-  zoom: number;
-  rotation: number;
-  baseScale: number;
 }
 
 @Injectable()
@@ -55,61 +41,38 @@ export class PdfViewerRendererService {
 
   private readonly renderedPages = new Map<number, RenderedPage>();
   private readonly renderingPages = new Map<number, RenderingPage>();
-  private readonly renderQueue = new Map<number, QueueEntry>();
-  private activePageRenderCount = 0;
   private latestRenderablePages = new Set<number>();
   private renderOptions: QueueVisiblePageRendersOptions | null = null;
   private readonly textLayerTimers = new Map<number, () => void>();
-  private lastLoggedCurrentPage: number | null = null;
-  private reprioritizationSection = 0;
-  /** Page number currently occupying the fast-lane slot, or null if idle. */
-  private fastLanePageNum: number | null = null;
-  /** When true, `processRenderQueue` skips fast-lane dispatch until the next `queueVisiblePageRenders` call. */
-  private fastLaneSuppressed = false;
+  private drainTimer: ReturnType<typeof setTimeout> | null = null;
 
   resetPages(): void {
     this.pdfViewerService.cleanupTextLayerSelections();
-    this.cancelFastLane();
-    this.fastLaneSuppressed = false;
     this.cancelAllRenderingPages();
     this.cancelTextLayerTimers();
+    this.cancelDrainTimer();
     this.renderingPages.clear();
     this.renderedPages.clear();
     this.latestRenderablePages.clear();
     this.renderOptions = null;
-    this.lastLoggedCurrentPage = null;
-    this.reprioritizationSection = 0;
-    this.clearRenderQueue();
-  }
-
-  clearRenderQueue(): void {
-    this.renderQueue.clear();
   }
 
   prepareForZoomRender(): void {
-    this.clearRenderQueue();
     this.cancelAllRenderingPages();
-    this.cancelFastLane();
-    this.fastLaneSuppressed = false;
     this.cancelTextLayerTimers();
+    this.cancelDrainTimer();
   }
 
-  setLatestRenderablePages(items: PdfViewerVirtualItem[]): void {
+  /**
+   * Lightweight scroll-frame handler: updates the visible page set so that
+   * the `.finally()` cascade in `drainSlots()` picks the right pages.
+   */
+  updateVisiblePages(items: PdfViewerVirtualItem[]): void {
     this.latestRenderablePages = new Set(items.map((item) => item.index + 1));
   }
 
   evictPagesOutside(items: PdfViewerVirtualItem[], scrollElement: HTMLDivElement, renderer: Renderer2): void {
     const visiblePages = new Set(items.map((item) => item.index + 1));
-    for (const pageNum of this.renderingPages.keys()) {
-      if (!visiblePages.has(pageNum)) {
-        this.cancelRenderingPage(pageNum);
-      }
-    }
-    for (const pageNum of this.renderQueue.keys()) {
-      if (!visiblePages.has(pageNum)) {
-        this.renderQueue.delete(pageNum);
-      }
-    }
     for (const pageNum of this.renderedPages.keys()) {
       if (!visiblePages.has(pageNum)) {
         this.evictPage(pageNum, scrollElement, renderer);
@@ -118,7 +81,6 @@ export class PdfViewerRendererService {
   }
 
   clearRenderedPages(scrollElement: HTMLDivElement | undefined, renderer: Renderer2): void {
-    this.clearRenderQueue();
     this.cancelAllRenderingPages();
     this.cancelTextLayerTimers();
     for (const [pageNum, rendered] of this.renderedPages) {
@@ -130,156 +92,61 @@ export class PdfViewerRendererService {
   queueVisiblePageRenders(options: QueueVisiblePageRendersOptions): void {
     const { items } = options;
 
+    this.renderOptions = options;
+
     if (items.length === 0) {
       this.latestRenderablePages.clear();
-      this.clearRenderQueue();
-      this.renderOptions = options;
       return;
     }
 
-    const firstItem = items[0];
-    if (!firstItem) return;
+    this.latestRenderablePages = new Set(items.map((item) => item.index + 1));
 
-    const current = options.currentPage > 0 ? options.currentPage : firstItem.index + 1;
-    const visiblePageNums = this.resolveVisiblePageNums(items, current, options.renderMode);
-    const visiblePageSet = new Set(visiblePageNums);
+    // Handle text layer for already-rendered visible pages.
+    const currentPage = options.getCurrentPage();
+    this.scheduleTextLayerIfNeeded(options);
 
-    this.renderOptions = options;
-    this.latestRenderablePages = visiblePageSet;
-    this.fastLaneSuppressed = false;
-
-    // 1. Drop queue entries that are no longer visible OR whose params went stale.
-    this.pruneStaleQueueEntries(visiblePageSet, options);
-
-    // 2. Cancel in-flight renders that are no longer visible OR whose params went stale.
-    //    Crucially, an in-flight render whose params still match a still-visible page is
-    //    left running — this is what prevents duplicate byte-range fetches on scroll.
-    this.cancelStaleInFlightRenders(visiblePageSet, options);
-
-    // 3. For each visible page, ensure it is either already rendered, already rendering
-    //    with matching params, or queued with current params + priority.
-    this.reconcilePageRenderState(visiblePageNums, current, options);
-
-    // 4. Refresh priorities for any retained entries against the (possibly new) current page.
-    for (const entry of this.renderQueue.values()) {
-      entry.priority = getPageRenderPriority(entry.pageNum, current);
-    }
-
-    // 4a. Log a reprioritization section whenever the active page changes.
-    if (current !== this.lastLoggedCurrentPage) {
-      this.lastLoggedCurrentPage = current;
-      this.logReprioritizationSection(current, options.renderMode);
-    }
-
-    // 5. If the active page changed, cancel any fast-lane render for the previous page.
-    if (this.fastLanePageNum !== null && this.fastLanePageNum !== current) {
-      if (PDF_VIEWER_DEBUG) {
-        console.log(`[pdf-queue] fast-lane cancelled for page=${this.fastLanePageNum} (active page → ${current})`);
-      }
-      this.cancelRenderingPage(this.fastLanePageNum);
-      this.fastLanePageNum = null;
-    }
-
-    this.processRenderQueue();
-  }
-
-  private paramsMatch(
-    zoom: number,
-    rotation: number,
-    baseScale: number,
-    options: QueueVisiblePageRendersOptions,
-  ): boolean {
-    return (
-      zoom === options.expectedZoom &&
-      rotation === options.expectedRotation &&
-      Math.abs(baseScale - options.baseScale) < BASE_SCALE_EPSILON
-    );
-  }
-
-  private resolveVisiblePageNums(items: PdfViewerVirtualItem[], current: number, renderMode: PdfRenderMode): number[] {
-    if (renderMode === 'zoom') {
-      // In zoom mode we only ever want to draw the current page; everything else is held
-      // back until the post-zoom 'settle' pass to keep CPU/network low while zooming.
-      const itemsContainCurrent = items.some((item) => item.index + 1 === current);
-      return itemsContainCurrent ? [current] : [items[0].index + 1];
-    }
-    return items.map((item) => item.index + 1);
-  }
-
-  private pruneStaleQueueEntries(visiblePageSet: Set<number>, options: QueueVisiblePageRendersOptions): void {
-    for (const [pageNum, entry] of this.renderQueue) {
-      if (!visiblePageSet.has(pageNum) || !this.paramsMatch(entry.zoom, entry.rotation, entry.baseScale, options)) {
-        this.renderQueue.delete(pageNum);
-      }
-    }
-  }
-
-  private cancelStaleInFlightRenders(visiblePageSet: Set<number>, options: QueueVisiblePageRendersOptions): void {
-    for (const [pageNum, rendering] of this.renderingPages) {
+    // Handle zoom callback if current page is already rendered.
+    if (options.renderMode === 'zoom') {
+      const rendered = this.renderedPages.get(currentPage);
       if (
-        !visiblePageSet.has(pageNum) ||
-        !this.paramsMatch(rendering.zoom, rendering.rotation, rendering.baseScale, options)
+        rendered &&
+        this.isPageRenderedWithCurrentParams(
+          currentPage,
+          options.expectedZoom,
+          options.expectedRotation,
+          options.baseScale,
+        )
       ) {
-        this.cancelRenderingPage(pageNum);
+        options.onCurrentPageRendered?.();
+        return;
       }
     }
+
+    if (PDF_VIEWER_DEBUG) {
+      console.log(
+        `%c[pdf-queue] %cqueueVisiblePageRenders: ${this.latestRenderablePages.size} visible pages, currentPage=${currentPage}, mode=${options.renderMode}`,
+        'background: #336699; color: white; padding: 4px; border-radius: 4px;',
+        'font-weight: bold;',
+      );
+    }
+
+    this.drainSlots();
   }
 
-  private reconcilePageRenderState(
-    visiblePageNums: number[],
-    current: number,
-    options: QueueVisiblePageRendersOptions,
-  ): void {
-    for (const pageNum of visiblePageNums) {
-      const priority = getPageRenderPriority(pageNum, current);
-
-      if (this.tryHandleRenderedEntry(pageNum, priority, current, options)) continue;
-
-      const rendering = this.renderingPages.get(pageNum);
-      if (rendering && this.paramsMatch(rendering.zoom, rendering.rotation, rendering.baseScale, options)) {
-        // Render is already running for the right params: keep it and remove any duplicate
-        // queue entry. No cancel, no requeue — this is the no-op scroll path.
-        this.renderQueue.delete(pageNum);
-        continue;
+  private scheduleTextLayerIfNeeded(options: QueueVisiblePageRendersOptions): void {
+    if (options.renderMode === 'zoom') return;
+    for (const pageNum of this.latestRenderablePages) {
+      const rendered = this.renderedPages.get(pageNum);
+      if (
+        rendered &&
+        !rendered.textLayerRendered &&
+        rendered.page &&
+        rendered.viewport &&
+        this.isPageRenderedWithCurrentParams(pageNum, options.expectedZoom, options.expectedRotation, options.baseScale)
+      ) {
+        this.scheduleTextLayerRender(pageNum, rendered);
       }
-
-      // Either not rendering yet or rendering with stale params (and just cancelled above).
-      this.upsertQueueEntry(pageNum, priority, options.expectedZoom, options.expectedRotation, options.baseScale);
     }
-  }
-
-  /**
-   * Handles the case where a page is already rendered with matching params.
-   * Queues a text-layer pass if needed, fires the zoom callback, and returns
-   * `true` so the caller can `continue` to the next page.
-   */
-  private tryHandleRenderedEntry(
-    pageNum: number,
-    priority: number,
-    current: number,
-    options: QueueVisiblePageRendersOptions,
-  ): boolean {
-    const rendered = this.renderedPages.get(pageNum);
-    if (!rendered || !this.paramsMatch(rendered.zoom, rendered.rotation, rendered.baseScale, options)) {
-      return false;
-    }
-    const needsTextLayer =
-      options.renderMode !== 'zoom' &&
-      pageNum === current &&
-      !rendered.textLayerRendered &&
-      !!rendered.page &&
-      !!rendered.viewport;
-    if (needsTextLayer) {
-      // Run renderPageSlot once so the text layer can be scheduled.
-      this.upsertQueueEntry(pageNum, priority, options.expectedZoom, options.expectedRotation, options.baseScale);
-    } else {
-      // Already drawn correctly and nothing else to do; make sure no pending entry lingers.
-      this.renderQueue.delete(pageNum);
-    }
-    if (options.renderMode === 'zoom' && pageNum === current) {
-      options.onCurrentPageRendered?.();
-    }
-    return true;
   }
 
   private clearRenderedPageSlot(
@@ -296,154 +163,138 @@ export class PdfViewerRendererService {
     }
   }
 
-  public logReprioritizationSection(currentPage: number, renderMode: PdfRenderMode): void {
-    this.reprioritizationSection++;
-    const prioritizedLabels = this.getPrioritizedPageLabels(20);
-    if (PDF_VIEWER_DEBUG) {
-      console.log(
-        `%c[pdf-queue]%c[section ${this.reprioritizationSection}] active page changed to ${currentPage} (${renderMode}) after scroll`,
-        'background: #28a745; color: white; padding: 4px; border-radius: 4px;',
-        'color: #28a745; font-weight: bold;',
-      );
-      console.log(
-        `[pdf-queue] next prioritized pages: ${prioritizedLabels.length > 0 ? prioritizedLabels.join(', ') : 'none'}`,
-      );
-    }
-    console.groupEnd();
-  }
-
-  private getPrioritizedPageLabels(limit: number): string[] {
-    const queued = [...this.renderQueue.values()].sort((a, b) => a.priority - b.priority);
-    const queuedPageSet = new Set(queued.map((entry) => entry.pageNum));
-    const inFlightPages = [...this.renderingPages.keys()];
-    const labels = queued.map((entry) =>
-      this.renderingPages.has(entry.pageNum) ? `${entry.pageNum}(in-flight)` : `${entry.pageNum}`,
-    );
-
-    for (const pageNum of inFlightPages) {
-      if (!queuedPageSet.has(pageNum)) {
-        labels.push(`${pageNum}(in-flight)`);
-      }
-    }
-
-    return labels.slice(0, limit);
-  }
-
-  private upsertQueueEntry(pageNum: number, priority: number, zoom: number, rotation: number, baseScale: number): void {
-    const existing = this.renderQueue.get(pageNum);
-    if (existing) {
-      existing.priority = priority;
-      existing.zoom = zoom;
-      existing.rotation = rotation;
-      existing.baseScale = baseScale;
-      return;
-    }
-    this.renderQueue.set(pageNum, {
-      pageNum,
-      priority,
-      zoom,
-      rotation,
-      baseScale,
-    });
-  }
-
   /**
-   * Linear scan over queue entries returning (and removing) the entry with the smallest
-   * priority. With ~10–20 visible pages this is cheap and avoids rebuilding/sorting an
-   * array on every scroll tick.
+   * Fills available concurrency slots by computing the best candidates on the fly.
+   * Called after every render completion (via `.finally()`) and after `queueVisiblePageRenders()`.
+   *
+   * Instead of popping from a stored queue, it:
+   * 1. Takes `latestRenderablePages` (the ~13 pages TanStack Virtual currently shows)
+   * 2. Filters out pages already rendered or rendering with current params
+   * 3. Sorts by distance to `getCurrentPage()` — computed fresh every time
+   * 4. Dispatches the top entries to fill concurrency slots
    */
-  private popHighestPriority(): QueueEntry | undefined {
-    let best: QueueEntry | undefined;
-    for (const entry of this.renderQueue.values()) {
-      if (!best || entry.priority < best.priority) {
-        best = entry;
-      }
-    }
-    if (!best) return undefined;
-    this.renderQueue.delete(best.pageNum);
-    return best;
-  }
-
-  private processRenderQueue(): void {
+  private drainSlots(): void {
     const options = this.renderOptions;
     if (!options) return;
 
-    const maxConcurrentPageLoads =
-      options.renderMode === 'zoom' || options.renderMode === 'settle' ? 1 : options.maxConcurrentPageLoads;
+    const renderMode = options.getRenderMode();
+    const maxConcurrent = renderMode === 'zoom' || renderMode === 'settle' ? 1 : options.maxConcurrentPageLoads;
+    const currentZoom = options.getZoom();
+    const currentRotation = options.getRotation();
+    const currentPage = options.getCurrentPage();
 
-    // --- Normal queue dispatch ---
-    while (this.activePageRenderCount < maxConcurrentPageLoads && this.renderQueue.size > 0) {
-      const entry = this.popHighestPriority();
-      if (!entry) break;
-      if (!this.latestRenderablePages.has(entry.pageNum)) continue;
-      if (entry.zoom !== options.getZoom() || entry.rotation !== options.getRotation()) {
-        continue;
-      }
-
-      if (PDF_VIEWER_DEBUG) {
-        console.log(
-          `[pdf-queue] dispatch render page=${entry.pageNum} priority=${entry.priority} active=${this.activePageRenderCount + 1}/${maxConcurrentPageLoads}`,
-        );
-      }
-      this.dispatchRenderEntry(entry, options);
+    // Build candidate list: visible pages that are not yet rendered or rendering with matching params.
+    const candidates: number[] = [];
+    for (const pageNum of this.latestRenderablePages) {
+      if (this.isPageRenderedWithCurrentParams(pageNum, currentZoom, currentRotation, options.baseScale)) continue;
+      if (this.isPageRenderingWithCurrentParams(pageNum, currentZoom, currentRotation, options.baseScale)) continue;
+      candidates.push(pageNum);
     }
 
-    // --- Fast-lane: current page gets one extra slot when normal slots are full ---
-    if (
-      options.renderMode === 'normal' &&
-      this.activePageRenderCount >= maxConcurrentPageLoads &&
-      this.fastLanePageNum === null &&
-      !this.fastLaneSuppressed
-    ) {
-      this.dispatchFastLaneRender(options, maxConcurrentPageLoads);
+    // In zoom mode, restrict to only the current page.
+    if (renderMode === 'zoom') {
+      const idx = candidates.indexOf(currentPage);
+      if (idx === -1) {
+        candidates.length = 0;
+      } else {
+        const page = candidates[idx];
+        candidates.length = 0;
+        candidates.push(page);
+      }
+    }
+
+    // Sort by dynamic priority: current page first, then nearest neighbors.
+    candidates.sort((a, b) => getPageRenderPriority(a, currentPage) - getPageRenderPriority(b, currentPage));
+
+    // Dispatch to fill slots.
+    for (const pageNum of candidates) {
+      if (this.renderingPages.size >= maxConcurrent) break;
+
+      const priority = getPageRenderPriority(pageNum, currentPage);
+      if (PDF_VIEWER_DEBUG) {
+        console.log(
+          `[pdf-queue] dispatch render page=${pageNum} priority=${priority} active=${this.renderingPages.size + 1}/${maxConcurrent}`,
+        );
+      }
+      this.dispatchRender(pageNum, currentZoom, currentRotation, options);
     }
 
     this.maybeCompleteSettle();
   }
 
-  private dispatchRenderEntry(
-    entry: QueueEntry,
+  private dispatchRender(
+    pageNum: number,
+    zoom: number,
+    rotation: number,
     options: QueueVisiblePageRendersOptions,
-    onComplete?: () => void,
   ): void {
-    this.activePageRenderCount++;
     const renderEpoch = options.getViewportEpoch();
-    void this.renderPageSlot(entry.pageNum, entry.zoom, entry.rotation, renderEpoch, options).finally(() => {
-      this.activePageRenderCount = Math.max(0, this.activePageRenderCount - 1);
-      onComplete?.();
-      this.processRenderQueue();
-      this.maybeCompleteSettle();
+    void this.renderPageSlot(pageNum, zoom, rotation, renderEpoch, options).finally(() => {
+      // Deferred to a macrotask so that early-bail renders (where the promise
+      // resolves synchronously as a microtask) don't create an infinite
+      // microtask chain that locks the browser. Multiple .finally() callbacks
+      // coalesce into a single drain call.
+      this.scheduleDrain();
     });
   }
 
-  private dispatchFastLaneRender(options: QueueVisiblePageRendersOptions, maxConcurrent: number): void {
-    const currentPageEntry = this.renderQueue.get(options.currentPage);
-    const isCurrentPageInFlight = this.renderingPages.has(options.currentPage);
-    if (!currentPageEntry || isCurrentPageInFlight) return;
+  /**
+   * Schedules a single coalesced `drainSlots()` call via `setTimeout(0)`.
+   * Multiple `.finally()` callbacks that fire in the same tick collapse
+   * into one drain, and the macrotask boundary prevents infinite loops
+   * when `renderPageSlot` bails before its first `await`.
+   */
+  private scheduleDrain(): void {
+    if (this.drainTimer !== null) return;
+    this.drainTimer = setTimeout(() => {
+      this.drainTimer = null;
+      this.drainSlots();
+      this.maybeCompleteSettle();
+    }, 0);
+  }
 
-    this.renderQueue.delete(options.currentPage);
-    if (!this.latestRenderablePages.has(currentPageEntry.pageNum)) return;
-    if (currentPageEntry.zoom !== options.getZoom() || currentPageEntry.rotation !== options.getRotation()) {
-      return;
+  private cancelDrainTimer(): void {
+    if (this.drainTimer !== null) {
+      clearTimeout(this.drainTimer);
+      this.drainTimer = null;
     }
+  }
 
-    this.fastLanePageNum = currentPageEntry.pageNum;
-    if (PDF_VIEWER_DEBUG) {
-      console.log(
-        `[pdf-queue] fast-lane dispatch page=${currentPageEntry.pageNum} active=${this.activePageRenderCount + 1}/${maxConcurrent}+1`,
-      );
-    }
-    this.dispatchRenderEntry(currentPageEntry, options, () => {
-      if (this.fastLanePageNum === currentPageEntry.pageNum) {
-        this.fastLanePageNum = null;
-      }
-    });
+  private isPageRenderedWithCurrentParams(pageNum: number, zoom: number, rotation: number, baseScale: number): boolean {
+    const rendered = this.renderedPages.get(pageNum);
+    return (
+      !!rendered &&
+      rendered.zoom === zoom &&
+      rendered.rotation === rotation &&
+      Math.abs(rendered.baseScale - baseScale) < BASE_SCALE_EPSILON
+    );
+  }
+
+  private isPageRenderingWithCurrentParams(
+    pageNum: number,
+    zoom: number,
+    rotation: number,
+    baseScale: number,
+  ): boolean {
+    const rendering = this.renderingPages.get(pageNum);
+    return (
+      !!rendering &&
+      rendering.zoom === zoom &&
+      rendering.rotation === rotation &&
+      Math.abs(rendering.baseScale - baseScale) < BASE_SCALE_EPSILON
+    );
   }
 
   private maybeCompleteSettle(): void {
     const options = this.renderOptions;
-    if (options?.renderMode !== 'settle') return;
-    if (this.renderQueue.size > 0 || this.activePageRenderCount > 0) return;
+    if (options?.getRenderMode() !== 'settle') return;
+    if (this.renderingPages.size > 0) return;
+    // All visible pages rendered — check if any candidates remain.
+    const currentZoom = options.getZoom();
+    const currentRotation = options.getRotation();
+    for (const pageNum of this.latestRenderablePages) {
+      if (!this.isPageRenderedWithCurrentParams(pageNum, currentZoom, currentRotation, options.baseScale)) return;
+    }
     options.onSettleRenderComplete?.();
   }
 
@@ -456,6 +307,9 @@ export class PdfViewerRendererService {
   ): Promise<void> {
     if (this.isPageAlreadyUpToDate(pageNum, renderEpoch, zoomAtStart, rotationAtStart, options)) return;
 
+    // Register in renderingPages so that renderingPages.size reflects the true
+    // concurrency count. This runs synchronously before the first await, so
+    // drainSlots sees the correct count when it dispatches the next entry.
     this.renderingPages.set(pageNum, {
       epoch: renderEpoch,
       zoom: zoomAtStart,
@@ -552,12 +406,7 @@ export class PdfViewerRendererService {
       existingRendered?.rotation === rotationAtStart &&
       Math.abs(existingRendered?.baseScale - options.baseScale) < BASE_SCALE_EPSILON
     ) {
-      if (
-        pageNum === options.currentPage &&
-        !existingRendered.textLayerRendered &&
-        existingRendered.page &&
-        existingRendered.viewport
-      ) {
+      if (!existingRendered.textLayerRendered && existingRendered.page && existingRendered.viewport) {
         this.scheduleTextLayerRender(pageNum, existingRendered);
       }
       if (options.renderMode === 'zoom' && pageNum === options.currentPage) {
@@ -661,11 +510,12 @@ export class PdfViewerRendererService {
     return false;
   }
 
-  /** Fires the post-render callback or schedules the text-layer for the current page. */
+  /** Fires the post-render callback or schedules the text-layer for visible pages. */
   private notifyPageRendered(pageNum: number, rendered: RenderedPage, options: QueueVisiblePageRendersOptions): void {
-    if (pageNum !== options.currentPage) return;
     if (options.renderMode === 'zoom') {
-      options.onCurrentPageRendered?.();
+      if (pageNum === options.currentPage) {
+        options.onCurrentPageRendered?.();
+      }
     } else {
       this.scheduleTextLayerRender(pageNum, rendered);
     }
@@ -787,30 +637,5 @@ export class PdfViewerRendererService {
     }
 
     this.renderedPages.delete(pageNum);
-    this.renderingPages.delete(pageNum);
-  }
-
-  /**
-   * Cancels the in-flight fast-lane render if it targets a page other than `currentPage`
-   * and suppresses further fast-lane dispatches until the next `queueVisiblePageRenders`
-   * call. Called eagerly from processViewerScroll() so stale fast-lane fetches are stopped
-   * immediately — without waiting for the debounced render pass.
-   */
-  cancelFastLaneIfStale(currentPage: number): void {
-    if (this.fastLanePageNum !== null && this.fastLanePageNum !== currentPage) {
-      if (PDF_VIEWER_DEBUG) {
-        console.log(`[pdf-queue] fast-lane cancelled for page=${this.fastLanePageNum} (active page → ${currentPage})`);
-      }
-      this.cancelRenderingPage(this.fastLanePageNum);
-      this.fastLanePageNum = null;
-    }
-    this.fastLaneSuppressed = true;
-  }
-
-  private cancelFastLane(): void {
-    if (this.fastLanePageNum !== null) {
-      this.cancelRenderingPage(this.fastLanePageNum);
-      this.fastLanePageNum = null;
-    }
   }
 }

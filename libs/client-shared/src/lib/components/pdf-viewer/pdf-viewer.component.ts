@@ -17,7 +17,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { MatProgressBar } from '@angular/material/progress-bar';
-import { AssetFileSignedUrl, PageDimension } from '@asset-sg/shared/v2';
+import { AssetFileMetadataResponse, AssetFileSignedUrl, PageDimension } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
 import { TranslateService } from '@ngx-translate/core';
 import { injectVirtualizer, VirtualItem } from '@tanstack/angular-virtual';
@@ -59,6 +59,7 @@ import {
   VIRTUAL_GAP,
   VIRTUAL_PADDING,
   ZOOM_STEP,
+  ZOOM_STEP_FINE,
 } from './pdf-viewer.models';
 import { PdfViewerService } from './pdf-viewer.service';
 
@@ -181,7 +182,6 @@ export class PdfViewerComponent implements OnDestroy {
     if (this.zoomAnimationFrame !== null) {
       cancelAnimationFrame(this.zoomAnimationFrame);
     }
-    this.pdfViewerRendererService.clearRenderQueue();
   }
 
   protected onViewerMouseDown(event: MouseEvent) {
@@ -233,12 +233,13 @@ export class PdfViewerComponent implements OnDestroy {
   private scheduleZoom(action: PdfZoomAction): void {
     const current = this.pendingZoomTarget ?? this.zoom();
     let target = current;
+    const step = current < 1 ? ZOOM_STEP_FINE : ZOOM_STEP;
     switch (action) {
       case 'in':
-        target = current + ZOOM_STEP;
+        target = current + step;
         break;
       case 'out':
-        target = current - ZOOM_STEP;
+        target = current - step;
         break;
       case 'reset':
         target = 1;
@@ -304,7 +305,7 @@ export class PdfViewerComponent implements OnDestroy {
 
   private handleViewerScroll(): void {
     if (this.pageCount() === 0) return;
-    if (this.renderMode === 'zoom') return;
+    if (this.renderMode === 'zoom' || this.renderMode === 'settle') return;
     if (this.programmaticScrollDepth > 0) return;
     if (this.scrollAnimationFrame !== null) return;
     this.scrollAnimationFrame = requestAnimationFrame(() => {
@@ -315,27 +316,21 @@ export class PdfViewerComponent implements OnDestroy {
 
   private processViewerScroll(): void {
     if (this.pageCount() === 0) return;
-    if (this.renderMode === 'settle') {
-      this.renderMode = 'normal';
-    }
     this.pinnedPageNumber = null;
     const previousPage = this.currentPage();
     const items = this.syncVirtualViewport();
     this.updateCurrentPage(items);
-    // Update visibility and evict off-screen pages on every scroll frame.
-    // Clear the render queue so that .finally() callbacks from in-flight renders
-    // cannot cascade into new dispatches while scrolling is active. On page change
-    // we also cancel in-flight renders since they target stale pages.
-    // Rendering itself is debounced: only when scrolling settles (no scroll event
-    // for CURRENT_PAGE_CHANGE_RENDER_DELAY_MS) does the render pass fire.
-    this.pdfViewerRendererService.setLatestRenderablePages(items);
-    this.evictPagesOutside(items);
+    // Update which pages the render service considers visible so the
+    // .finally() cascade in drainSlots() picks pages from the current viewport.
+    this.pdfViewerRendererService.updateVisiblePages(items);
     if (this.currentPage() !== previousPage) {
-      this.pdfViewerRendererService.cancelPendingRenders();
-    } else {
-      this.pdfViewerRendererService.clearRenderQueue();
+      // Page changed — debounce so rapid page changes don't flood renders.
+      this.scheduleScrollRender();
+    } else if (!this.scrollRenderTimer) {
+      // Same page and no pending page-change debounce — render immediately
+      // so slow scrolling fills in visible pages.
+      this.scheduleRender();
     }
-    this.scheduleScrollRender();
   }
 
   private setupInitialPdfEffect() {
@@ -494,15 +489,9 @@ export class PdfViewerComponent implements OnDestroy {
     }
   }
 
-  private async fetchMetadata(
-    assetId: number,
-    pdfId: number,
-  ): Promise<{ pageCount: number; pageDimensions: PageDimension[] }> {
+  private fetchMetadata(assetId: number, pdfId: number): Promise<AssetFileMetadataResponse> {
     return firstValueFrom(
-      this.httpClient.get<{
-        pageCount: number;
-        pageDimensions: PageDimension[];
-      }>(`/api/assets/${assetId}/files/${pdfId}/metadata`),
+      this.httpClient.get<AssetFileMetadataResponse>(`/api/assets/${assetId}/files/${pdfId}/metadata`),
     );
   }
 
@@ -561,6 +550,13 @@ export class PdfViewerComponent implements OnDestroy {
         this.runRenderPass();
       }, CURRENT_PAGE_CHANGE_RENDER_DELAY_MS);
     });
+  }
+
+  private cancelScrollRenderTimer() {
+    if (this.scrollRenderTimer) {
+      clearTimeout(this.scrollRenderTimer);
+      this.scrollRenderTimer = null;
+    }
   }
 
   private runRenderPass() {
@@ -703,8 +699,7 @@ export class PdfViewerComponent implements OnDestroy {
     renderMode: PdfRenderMode,
   ): void {
     if (items.length === 0) {
-      this.pdfViewerRendererService.setLatestRenderablePages(items);
-      this.pdfViewerRendererService.clearRenderQueue();
+      this.pdfViewerRendererService.updateVisiblePages([]);
       return;
     }
 
@@ -726,6 +721,8 @@ export class PdfViewerComponent implements OnDestroy {
       getLoadGeneration: () => this.loadGeneration,
       getZoom: () => this.zoom(),
       getRotation: () => this.rotation(),
+      getCurrentPage: () => this.getEffectiveCurrentPage(items[0]?.pageNum ?? 1),
+      getRenderMode: () => this.renderMode,
       scheduleVirtualRefresh: () => this.scheduleVirtualRefresh(),
       renderMode,
       onCurrentPageRendered:
@@ -741,6 +738,8 @@ export class PdfViewerComponent implements OnDestroy {
 
     const items = this.syncVirtualViewport();
     this.updateCurrentPage(items);
+    // Trigger a normal render pass so any newly visible pages (e.g. after zooming out) get loaded.
+    this.scheduleRender();
   }
 
   private updateCurrentPage(items: PdfViewerVirtualItem[]) {
@@ -748,16 +747,21 @@ export class PdfViewerComponent implements OnDestroy {
     const el = this.pdfElement()?.nativeElement;
     if (!el) return;
 
-    const viewportCenter = el.scrollTop + el.clientHeight / 2;
     const firstItem = items[0];
     if (!firstItem) return;
+
+    // When multiple pages fit in the viewport (zoomed out), pick the page whose
+    // top edge is closest to the scroll top — consistent with align:'start' navigation.
+    // When a single large page fills the viewport, use its center instead.
+    const multiPageMode = firstItem.size < el.clientHeight;
+    const reference = multiPageMode ? el.scrollTop : el.scrollTop + el.clientHeight / 2;
 
     let closest = firstItem;
     let distance = Infinity;
 
     for (const item of items) {
-      const itemCenter = (item.start + item.end) / 2;
-      const itemDistance = Math.abs(itemCenter - viewportCenter);
+      const itemRef = multiPageMode ? item.start : (item.start + item.end) / 2;
+      const itemDistance = Math.abs(itemRef - reference);
       if (itemDistance < distance) {
         distance = itemDistance;
         closest = item;

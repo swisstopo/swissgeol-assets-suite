@@ -21,7 +21,7 @@ export function getPageHeight(
   if (!dim) return 300;
 
   const nativeHeight = isRotationSwapped(rotation) ? dim.width : dim.height;
-  return Math.round(nativeHeight * baseScale * zoom);
+  return Math.max(1, Math.round(nativeHeight * baseScale * zoom));
 }
 
 export function getPageWidth(
@@ -35,7 +35,7 @@ export function getPageWidth(
   if (!dim) return 300;
 
   const nativeWidth = isRotationSwapped(rotation) ? dim.height : dim.width;
-  return Math.round(nativeWidth * baseScale * zoom);
+  return Math.max(1, Math.round(nativeWidth * baseScale * zoom));
 }
 
 export function getPageLayout(
