@@ -32,7 +32,6 @@ interface QueueVisiblePageRendersOptions {
   scheduleVirtualRefresh: () => void;
   renderMode: PdfRenderMode;
   onCurrentPageRendered?: () => void;
-  onSettleRenderComplete?: () => void;
 }
 
 interface RenderSlotElements {
@@ -185,7 +184,7 @@ export class PdfViewerRendererService {
     if (!options) return;
 
     const renderMode = options.getRenderMode();
-    const maxConcurrent = renderMode === 'zoom' || renderMode === 'settle' ? 1 : options.maxConcurrentPageLoads;
+    const maxConcurrent = renderMode === 'zoom' ? 1 : options.maxConcurrentPageLoads;
     const currentZoom = options.getZoom();
     const currentRotation = options.getRotation();
     const currentPage = options.getCurrentPage();
@@ -216,8 +215,6 @@ export class PdfViewerRendererService {
       }
       this.dispatchRender(pageNum, currentZoom, currentRotation, options);
     }
-
-    this.maybeCompleteSettle();
   }
 
   private filterCandidatesForMode(candidates: number[], renderMode: PdfRenderMode, currentPage: number): number[] {
@@ -253,7 +250,6 @@ export class PdfViewerRendererService {
     this.drainTimer = setTimeout(() => {
       this.drainTimer = null;
       this.drainSlots();
-      this.maybeCompleteSettle();
     }, 0);
   }
 
@@ -287,19 +283,6 @@ export class PdfViewerRendererService {
       rendering.rotation === rotation &&
       Math.abs(rendering.baseScale - baseScale) < BASE_SCALE_EPSILON
     );
-  }
-
-  private maybeCompleteSettle(): void {
-    const options = this.renderOptions;
-    if (options?.getRenderMode() !== 'settle') return;
-    if (this.renderingPages.size > 0) return;
-    // All visible pages rendered — check if any candidates remain.
-    const currentZoom = options.getZoom();
-    const currentRotation = options.getRotation();
-    for (const pageNum of this.latestRenderablePages) {
-      if (!this.isPageRenderedWithCurrentParams(pageNum, currentZoom, currentRotation, options.baseScale)) return;
-    }
-    options.onSettleRenderComplete?.();
   }
 
   private async renderPageSlot(

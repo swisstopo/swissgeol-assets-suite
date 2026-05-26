@@ -11,7 +11,7 @@ export interface PdfRenderTask {
   cancel(): void;
 }
 
-export type PdfRenderMode = 'normal' | 'zoom' | 'settle';
+export type PdfRenderMode = 'normal' | 'zoom';
 
 export interface RenderedPage {
   wrapper: HTMLDivElement;
@@ -32,12 +32,6 @@ export interface RenderingPage {
   baseScale: number;
   renderTask?: PdfRenderTask;
   cancelled?: boolean;
-}
-
-export interface ScrollAnchor {
-  pageNum: number;
-  ratio: number;
-  align?: 'start';
 }
 
 export interface PageLayout {
@@ -70,13 +64,11 @@ export const VIRTUAL_GAP = 8;
 export const DEFAULT_OVERSCAN = 6;
 /**
  * Maximum number of PDF.js page render tasks (and therefore concurrent network/byte-range
- * fetches) the priority queue may run in parallel during normal scrolling. Lower values
- * reduce simultaneous overlapping requests; higher values fill the viewport faster at the
+ * fetches). Lower values reduce simultaneous overlapping requests; higher values fill the viewport faster at the
  * cost of more concurrent CPU/memory/network usage.
  *
- * Zoom and post-zoom settle modes always force this to 1 to keep the current page snappy.
- *
- * Configurable per component via the `maxConcurrentPageLoads` input.
+ * Zoom mode forces this to 1 to keep the current page snappy.
+ * Normal mode uses the configured value.
  */
 export const DEFAULT_MAX_CONCURRENT_PAGE_LOADS = 3;
 // Delay expensive page rendering only while the active page is changing quickly.
