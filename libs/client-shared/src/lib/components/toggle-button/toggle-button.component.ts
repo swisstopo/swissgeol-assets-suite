@@ -17,8 +17,15 @@ export class ToggleButtonComponent {
   @Input() public inactiveTranslationIcon: SvgIcons | undefined;
 
   @Output() toggleIsActive = new EventEmitter();
+  @Output() isActiveChange = new EventEmitter<boolean>();
 
-  onToggleIsActive() {
+  onInactiveClick() {
     this.toggleIsActive.emit();
+    this.isActiveChange.emit(false);
+  }
+
+  onActiveClick() {
+    this.toggleIsActive.emit();
+    this.isActiveChange.emit(true);
   }
 }
