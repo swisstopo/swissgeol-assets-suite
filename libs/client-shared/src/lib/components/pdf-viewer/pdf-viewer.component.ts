@@ -899,8 +899,8 @@ export class PdfViewerComponent implements OnDestroy {
 
     const el = this.pdfElement()?.nativeElement;
     const items = this.virtualizer.getVirtualItems();
-    const firstPage = items[0]?.index != null ? items[0].index + 1 : null;
-    const lastPage = items[items.length - 1]?.index != null ? items[items.length - 1].index + 1 : null;
+    const firstPage = items[0]?.index == null ? null : items[0].index + 1;
+    const lastPage = items[items.length - 1]?.index == null ? null : items[items.length - 1].index + 1;
     const virtualRange = firstPage !== null && lastPage !== null ? `${firstPage}-${lastPage}` : 'none';
 
     console.log(
