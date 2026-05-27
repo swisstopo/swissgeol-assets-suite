@@ -158,10 +158,9 @@ export const assetSearchReducer = createReducer(
     actions.resetSearch,
     (state): AssetSearchState => ({
       ...state,
-      query: { type: state.query.type },
+      query: { type: state.query.type, favoritesOnly: state.query.favoritesOnly },
       ui: {
         ...state.ui,
-        resultsState: PanelState.OpenedManually,
       },
     }),
   ),
