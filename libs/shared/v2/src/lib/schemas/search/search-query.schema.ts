@@ -1,6 +1,6 @@
 import { WorkflowStatus } from '@swissgeol/ui-core';
 import { Type } from 'class-transformer';
-import { Equals, IsBoolean, IsIn, IsNumber, IsOptional, IsString, ValidateNested } from 'class-validator';
+import { Equals, IsBoolean, IsEnum, IsIn, IsNumber, IsOptional, IsString, ValidateNested } from 'class-validator';
 import { AssetId } from '../../models/asset';
 import { GeometryType } from '../../models/geometry';
 import { LocalizedItemCode } from '../../models/localized-item';
@@ -83,4 +83,9 @@ export class FileSearchQuerySchema extends AssetFiltersSchema implements FileSea
   @IsString()
   @IsOptional()
   text?: string;
+}
+
+export class SearchQuerySchema extends Schema {
+  @IsEnum(SearchType)
+  type: SearchType = SearchType.Asset;
 }

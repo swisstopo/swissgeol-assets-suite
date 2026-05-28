@@ -223,20 +223,8 @@ export class AssetSearchRefineComponent implements OnInit, OnDestroy, AfterViewI
     this.store.dispatch(actions.updateSearchQuery({ query: { text } }));
   }
 
-  protected activateAssetsSearch() {
-    this.store.dispatch(actions.updateSearchQuery({ query: { type: SearchType.Asset } }));
-  }
-
-  protected activateFileSearch() {
-    this.store.dispatch(actions.updateSearchQuery({ query: { type: SearchType.File } }));
-  }
-
-  protected toggleSearchType(currentType: SearchType) {
-    if (currentType === SearchType.Asset) {
-      this.activateFileSearch();
-    } else {
-      this.activateAssetsSearch();
-    }
+  protected setSearchType(type: SearchType) {
+    this.store.dispatch(actions.updateSearchQuery({ query: { type } }));
   }
 
   protected readonly SearchType = SearchType;
