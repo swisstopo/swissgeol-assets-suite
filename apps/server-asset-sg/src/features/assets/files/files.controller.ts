@@ -131,10 +131,7 @@ export class FilesController {
     }
 
     fileStream.content.on('error', (err) => {
-      this.logger.warn('Error streaming file from S3', {
-        error: err,
-        fileName: file.name,
-      });
+      this.logger.warn('Error streaming file from S3', { error: err, fileName: file.name });
     });
 
     fileStream.content.pipe(res);
