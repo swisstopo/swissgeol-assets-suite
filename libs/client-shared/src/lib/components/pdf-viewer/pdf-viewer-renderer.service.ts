@@ -77,6 +77,75 @@ export class PdfViewerRendererService {
     this.latestRenderablePages = new Set(items.map((item) => item.index + 1));
   }
 
+  evictPagesOutside(items: PdfViewerVirtualItem[], scrollElement: HTMLDivElement, renderer: Renderer2): void {
+    const visiblePages = new Set(items.map((item) => item.index + 1));
+    for (const pageNum of this.renderedPages.keys()) {
+      if (!visiblePages.has(pageNum)) {
+        this.evictPage(pageNum, scrollElement, renderer);
+      }
+    }
+  }
+
+  private scheduleTextLayerIfNeeded(options: QueueVisiblePageRendersOptions): void {
+    if (options.renderMode === 'zoom') return;
+    for (const pageNum of this.latestRenderablePages) {
+      const rendered = this.renderedPages.get(pageNum);
+      if (
+        rendered &&
+        !rendered.textLayerRendered &&
+        rendered.page &&
+        rendered.viewport &&
+        this.isPageRenderedWithCurrentParams(pageNum, options.expectedZoom, options.expectedRotation, options.baseScale)
+      ) {
+        this.scheduleTextLayerRender(pageNum, rendered);
+      }
+    }
+  }
+
+  queueVisiblePageRenders(options: QueueVisiblePageRendersOptions): void {
+    const { items } = options;
+
+    this.renderOptions = options;
+
+    if (items.length === 0) {
+      this.latestRenderablePages.clear();
+      return;
+    }
+
+    this.latestRenderablePages = new Set(items.map((item) => item.index + 1));
+
+    // Handle text layer for already-rendered visible pages.
+    const currentPage = options.getCurrentPage();
+    this.scheduleTextLayerIfNeeded(options);
+
+    // Handle zoom callback if current page is already rendered.
+    if (options.renderMode === 'zoom') {
+      const rendered = this.renderedPages.get(currentPage);
+      if (
+        rendered &&
+        this.isPageRenderedWithCurrentParams(
+          currentPage,
+          options.expectedZoom,
+          options.expectedRotation,
+          options.baseScale,
+        )
+      ) {
+        options.onCurrentPageRendered?.();
+        return;
+      }
+    }
+
+    if (PDF_VIEWER_DEBUG) {
+      console.log(
+        `%c[pdf-queue] %cqueueVisiblePageRenders: ${this.latestRenderablePages.size} visible pages, currentPage=${currentPage}, mode=${options.renderMode}`,
+        'background: #336699; color: white; padding: 4px; border-radius: 4px;',
+        'font-weight: bold;',
+      );
+    }
+
+    this.drainSlots();
+  }
+
   /**
    * Fills available concurrency slots by computing the best candidates on the fly.
    * Called after every render completion (via `.finally()`) and after `queueVisiblePageRenders()`.
