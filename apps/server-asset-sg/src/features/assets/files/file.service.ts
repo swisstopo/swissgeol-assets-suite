@@ -1,6 +1,7 @@
 import {
   Asset,
   AssetFile,
+  AssetFileMetadataResponse,
   AssetId,
   FileProcessingStage,
   FileProcessingState,
@@ -8,7 +9,13 @@ import {
   getLanguageCodesOfPages,
   LanguageCode,
 } from '@asset-sg/shared/v2';
-import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Prisma } from '@prisma/client';
 import { getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs';
@@ -17,6 +24,7 @@ import { EVENTS } from '@/core/events';
 import { PrismaService } from '@/core/prisma.service';
 import { FileS3Service, SaveFileS3Options } from '@/features/assets/files/file-s3.service';
 import { CreateFileData, FileIdentifier, FileRepo } from '@/features/assets/files/file.repo';
+import { PdfMetadataService } from '@/features/assets/files/pdf-metadata.service';
 import { mapAssetLanguagesToPrismaUpdate } from '@/features/assets/prisma-asset';
 
 @Injectable()
@@ -28,6 +36,7 @@ export class FileService {
     private readonly fileS3Service: FileS3Service,
     private readonly eventEmitter: EventEmitter2,
     private readonly prismaService: PrismaService,
+    private readonly pdfMetadataService: PdfMetadataService,
   ) {}
 
   async create(data: UploadFileData): Promise<AssetFile> {
@@ -104,6 +113,58 @@ export class FileService {
 
     this.eventEmitter.emit(EVENTS.FILE_START_OCR, updatedAsset);
     return updatedAsset;
+  }
+
+  async getOrExtractMetadata(file: AssetFile): Promise<AssetFileMetadataResponse> {
+    if (!file.name.toLowerCase().endsWith('.pdf')) {
+      throw new BadRequestException('Metadata is only available for PDF files');
+    }
+
+    if (file.pageDimensions && file.pageDimensions.length > 0) {
+      this.logger.debug('Returning cached page dimensions', {
+        fileId: file.id,
+        fileName: file.name,
+        pageCount: file.pageCount,
+      });
+      return {
+        pageCount: file.pageCount ?? file.pageDimensions.length,
+        pageDimensions: file.pageDimensions,
+      };
+    }
+
+    this.logger.log('Page dimensions not cached, extracting from PDF', {
+      fileId: file.id,
+      fileName: file.name,
+    });
+
+    try {
+      const presignedUrl = await this.fileS3Service.getPresignedUrl(file.name, file.alias, false);
+      const metadata = await this.pdfMetadataService.extractMetadata(presignedUrl);
+
+      await this.prismaService.file.update({
+        where: { id: file.id },
+        data: {
+          pageDimensions: metadata.pageDimensions as unknown as Prisma.JsonArray,
+          ...(file.pageCount === null && { pageCount: metadata.pageCount }),
+        },
+      });
+
+      this.logger.log('Successfully extracted and cached page dimensions', {
+        fileId: file.id,
+        fileName: file.name,
+        pageCount: metadata.pageCount,
+        dimensionsCount: metadata.pageDimensions.length,
+      });
+
+      return metadata;
+    } catch (error) {
+      this.logger.error('Failed to extract PDF metadata', {
+        fileId: file.id,
+        fileName: file.name,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+      throw new InternalServerErrorException('Failed to extract PDF metadata');
+    }
   }
 
   async loadAllFulltextContentFromS3(writeProgress?: (progress: number) => Promise<void>): Promise<void> {
