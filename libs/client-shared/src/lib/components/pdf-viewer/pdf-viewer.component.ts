@@ -1,5 +1,4 @@
 import { CommonModule } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
 import {
   afterNextRender,
   Component,
@@ -17,14 +16,14 @@ import {
   viewChild,
 } from '@angular/core';
 import { MatProgressBar } from '@angular/material/progress-bar';
-import { AssetFileMetadataResponse, AssetFileSignedUrl, PageDimension } from '@asset-sg/shared/v2';
+import { PageDimension } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
 import { TranslateService } from '@ngx-translate/core';
 import { injectVirtualizer, VirtualItem } from '@tanstack/angular-virtual';
-import { firstValueFrom } from 'rxjs';
 import { showAlert } from '../../state/alert/alert.actions';
 import { AlertType } from '../../state/alert/alert.model';
 import { triggerDownload } from '../../utils';
+import { PdfViewerApiService } from './pdf-viewer-api.service';
 import { PdfViewerHeaderComponent } from './pdf-viewer-header/pdf-viewer-header.component';
 import { PdfViewerInputService } from './pdf-viewer-input.service';
 import {
@@ -112,7 +111,7 @@ export class PdfViewerComponent implements OnDestroy {
   private readonly renderer = inject(Renderer2);
   private readonly store = inject(Store);
   private readonly translateService = inject(TranslateService);
-  private readonly httpClient = inject(HttpClient);
+  private readonly pdfViewerApiService = inject(PdfViewerApiService);
   private readonly ngZone = inject(NgZone);
   private readonly pdfViewerInputService = inject(PdfViewerInputService);
   private readonly pdfViewerRendererService = inject(PdfViewerRendererService);
@@ -287,11 +286,9 @@ export class PdfViewerComponent implements OnDestroy {
   }
 
   protected downloadPdf() {
-    this.httpClient
-      .get<AssetFileSignedUrl>(`/api/assets/${this.assetId()}/files/${this.selectedPdf()?.id}/presigned?download=true`)
-      .subscribe(({ url }) => {
-        triggerDownload(url, true);
-      });
+    this.pdfViewerApiService
+      .fetchPresignedDownloadUrl(this.assetId(), this.selectedPdf()!.id)
+      .then(({ url }) => triggerDownload(url, true));
   }
 
   private setupInputHandlers(): void {
@@ -436,7 +433,7 @@ export class PdfViewerComponent implements OnDestroy {
     try {
       const [numPages, metadata] = await Promise.all([
         this.pdfViewerService.loadPdf(this.assetId(), pdfId),
-        this.fetchMetadata(this.assetId(), pdfId),
+        this.pdfViewerApiService.fetchMetadata(this.assetId(), pdfId),
       ]);
 
       if (this.loadGeneration !== generation) return;
@@ -495,12 +492,6 @@ export class PdfViewerComponent implements OnDestroy {
       );
       throw e;
     }
-  }
-
-  private fetchMetadata(assetId: number, pdfId: number): Promise<AssetFileMetadataResponse> {
-    return firstValueFrom(
-      this.httpClient.get<AssetFileMetadataResponse>(`/api/assets/${assetId}/files/${pdfId}/metadata`),
-    );
   }
 
   private initializeResizeObserver() {
