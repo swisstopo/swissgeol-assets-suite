@@ -127,6 +127,7 @@ export class PdfViewerComponent implements OnDestroy {
   private pendingVirtualMeasure = false;
   private pendingCanvasRefresh = false;
   private pendingHorizontalScrollRatio: number | null = null;
+  private pendingInitialPage: number | null = null;
   private viewportEpoch = 0;
 
   private loadGeneration = 0;
@@ -411,6 +412,7 @@ export class PdfViewerComponent implements OnDestroy {
     this.pendingVirtualMeasure = false;
     this.pendingCanvasRefresh = false;
     this.pendingHorizontalScrollRatio = null;
+    this.pendingInitialPage = null;
     this.lastVirtualItemsSignature = '';
     this.renderMode = 'normal';
     this.pendingZoomTarget = null;
@@ -474,7 +476,7 @@ export class PdfViewerComponent implements OnDestroy {
       this.initializeResizeObserver();
 
       if (initialPage && initialPage > 1) {
-        this.scrollToPage(initialPage, 'auto');
+        this.pendingInitialPage = initialPage;
       }
 
       this.pendingCanvasRefresh = true;
@@ -610,6 +612,17 @@ export class PdfViewerComponent implements OnDestroy {
     if (this.pendingHorizontalScrollRatio !== null) {
       this.applyHorizontalScrollRatio(this.pendingHorizontalScrollRatio);
       this.pendingHorizontalScrollRatio = null;
+    }
+
+    if (this.pendingInitialPage !== null) {
+      const page = this.pendingInitialPage;
+      this.pendingInitialPage = null;
+      this.runProgrammaticScroll(() => {
+        this.virtualizer.scrollToIndex(page - 1, { align: 'start', behavior: 'auto' });
+      });
+      // Wait an extra frame so the browser scroll event fires and TanStack Virtual
+      // updates its internal scrollOffset before we read virtual items.
+      await this.waitForDom();
     }
 
     const items = this.syncVirtualViewport();
