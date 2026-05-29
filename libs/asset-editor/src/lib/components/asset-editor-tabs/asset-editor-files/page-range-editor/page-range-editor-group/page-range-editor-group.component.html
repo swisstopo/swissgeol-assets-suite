@@ -70,10 +70,10 @@
         />
       </div>
 
-      @if (group().hasError("toLessThanFrom")) {
+      @if (hasRangeError) {
         <div class="page-range-editor__row__error" translate>edit.tabs.files.pageRanges.toLessThanFromError</div>
       }
-      @if (group().controls.label.hasError("maxlength")) {
+      @if (hasLabelLengthError) {
         <div class="page-range-editor__row__error" translate>edit.tabs.files.pageRanges.labelTooLong</div>
       }
     </div>
