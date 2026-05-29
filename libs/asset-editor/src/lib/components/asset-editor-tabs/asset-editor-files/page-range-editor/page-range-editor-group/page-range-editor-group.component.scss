@@ -24,7 +24,24 @@
   justify-content: space-between;
   gap: 16px;
   padding: 12px 16px;
+}
+
+.page-range-editor__row__toggle,
+.page-range-editor__row__chevron-toggle {
+  border: none;
+  background: transparent;
+  color: inherit;
+  padding: 0;
   cursor: pointer;
+}
+
+.page-range-editor__row__toggle {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  text-align: left;
 }
 
 .page-range-editor__row__summary {
@@ -67,16 +84,23 @@
   align-self: center;
 }
 
+.page-range-editor__row__chevron-toggle {
+  display: inline-flex;
+  align-items: center;
+}
+
+.page-range-editor__row__toggle:focus-visible,
+.page-range-editor__row__chevron-toggle:focus-visible {
+  outline: 2px solid variables.$grey-07;
+  outline-offset: 2px;
+}
+
 .page-range-editor__row__body {
   border-top: 1px solid variables.$grey-04;
   padding: 16px;
   display: flex;
   flex-direction: column;
   gap: 12px;
-}
-
-.page-range-editor__row__title-row {
-  display: block;
 }
 
 .page-range-editor__row__title-row > label {
@@ -88,7 +112,7 @@
   width: 100%;
 
   ::ng-deep .mat-mdc-text-field-wrapper {
-    border: 1px solid black;
+    border: 1px solid variables.$grey-07;
   }
 
   ::ng-deep .mdc-text-field--filled {

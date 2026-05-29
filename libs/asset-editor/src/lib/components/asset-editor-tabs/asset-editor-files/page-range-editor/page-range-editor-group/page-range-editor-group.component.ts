@@ -27,11 +27,14 @@ import type { PageClassificationFormGroup, SelectOption } from '../page-range-ed
   styleUrl: './page-range-editor-group.component.scss',
 })
 export class PageRangeEditorGroupComponent {
+  private static nextLabelInputId = 0;
+
   public readonly group = input.required<PageClassificationFormGroup>();
   public readonly categories = input.required<SelectOption<PageCategory>[]>();
   public readonly languages = input.required<SelectOption<SupportedPageLanguage>[]>();
   public readonly availablePages = input.required<number[]>();
   public readonly expanded = input.required<boolean>();
+  protected readonly labelInputId = `page-range-label-${PageRangeEditorGroupComponent.nextLabelInputId++}`;
 
   public readonly toggled = output<void>();
   public readonly removed = output<void>();

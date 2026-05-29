@@ -1,11 +1,13 @@
 ﻿<div class="page-range-editor__row__content" [class.page-range-editor__row__content--expanded]="expanded()">
-  <div class="page-range-editor__row__header" role="button" (click)="toggleGroup()">
-    <div class="page-range-editor__row__summary">
-      <span class="page-range-editor__row__summary-label">{{ getHeaderLabel() }}</span>
-      <span class="page-range-editor__row__tag">{{ getTypeSummary() }}</span>
-      <span class="page-range-editor__row__tag">{{ getLanguageSummary() }}</span>
-      <span class="page-range-editor__row__tag">{{ getPageSummary() }}</span>
-    </div>
+  <div class="page-range-editor__row__header">
+    <button type="button" class="page-range-editor__row__toggle" (click)="toggleGroup()">
+      <div class="page-range-editor__row__summary">
+        <span class="page-range-editor__row__summary-label">{{ getHeaderLabel() }}</span>
+        <span class="page-range-editor__row__tag">{{ getTypeSummary() }}</span>
+        <span class="page-range-editor__row__tag">{{ getLanguageSummary() }}</span>
+        <span class="page-range-editor__row__tag">{{ getPageSummary() }}</span>
+      </div>
+    </button>
 
     <div class="page-range-editor__row__actions">
       <sgc-button
@@ -18,20 +20,27 @@
       >
         <sgc-icon name="trash"></sgc-icon>
       </sgc-button>
-      <sgc-icon
-        name="chevronDown"
-        class="page-range-editor__row__chevron"
-        [class.page-range-editor__row__chevron--expanded]="expanded()"
-      ></sgc-icon>
+
+      <button type="button" class="page-range-editor__row__chevron-toggle" (click)="toggleGroup()">
+        <sgc-icon
+          name="chevronDown"
+          class="page-range-editor__row__chevron"
+          [class.page-range-editor__row__chevron--expanded]="expanded()"
+        ></sgc-icon>
+      </button>
     </div>
   </div>
 
   @if (expanded()) {
     <div class="page-range-editor__row__body" [formGroup]="group()">
       <div class="page-range-editor__row__title-row">
-        <label [title]="'edit.tabs.files.pageRanges.label' | translate" asset-sg-form-item-wrapper>
+        <label
+          [title]="'edit.tabs.files.pageRanges.label' | translate"
+          [attr.for]="labelInputId"
+          asset-sg-form-item-wrapper
+        >
           <mat-form-field appearance="fill" subscriptSizing="dynamic" class="page-range-editor__row__title-field">
-            <input matInput formControlName="label" />
+            <input [id]="labelInputId" matInput formControlName="label" />
           </mat-form-field>
         </label>
       </div>
