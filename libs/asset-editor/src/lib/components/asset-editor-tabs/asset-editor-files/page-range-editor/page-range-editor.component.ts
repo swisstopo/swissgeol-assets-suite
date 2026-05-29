@@ -203,7 +203,6 @@ export class PageRangeEditorComponent {
   protected submit() {
     const classifications = this.form.getRawValue().classifications.map((classification) => ({
       ...classification,
-      // Empty strings should fall back to translated category labels in the viewer.
       label: classification.label?.trim() ? classification.label.trim() : null,
     }));
     this.dialogRef.close(classifications);
