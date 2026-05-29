@@ -33,6 +33,14 @@
       align-items: center;
       justify-content: space-between;
       gap: 16px;
+      background: variables.$grey-01;
+
+      &__update-order {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 12px;
+      }
     }
 
     & .form-wrapper {
