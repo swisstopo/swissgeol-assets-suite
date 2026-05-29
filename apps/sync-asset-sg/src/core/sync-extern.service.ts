@@ -389,6 +389,7 @@ export class SyncExternService {
           ...file,
           pageRangeClassifications: file.pageRangeClassifications as Prisma.InputJsonValue,
           fulltextContent: file.fulltextContent as Prisma.InputJsonValue,
+          pageDimensions: file.pageDimensions as Prisma.InputJsonValue,
         }) satisfies Prisma.FileCreateWithoutAssetInput,
     );
 

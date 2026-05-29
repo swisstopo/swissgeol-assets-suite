@@ -102,7 +102,6 @@ model AssetXAssetY {
   @@map("asset_x_asset_y")
 }
 
-
 enum FileProcessingStage {
   Ocr
   Extraction
@@ -140,7 +139,8 @@ model File {
   legalDocItem     LegalDocItem? @relation(fields: [legalDocItemCode], references: [legalDocItemCode])
 
   pageRangeClassifications Json? @map("page_range_classifications")
-  fulltextContent Json? @map("fulltext_content")
+  fulltextContent          Json? @map("fulltext_content")
+  pageDimensions           Json? @map("page_dimensions")
 
   assetId Int   @map("asset_id")
   asset   Asset @relation(fields: [assetId], references: [assetId], onDelete: Cascade)

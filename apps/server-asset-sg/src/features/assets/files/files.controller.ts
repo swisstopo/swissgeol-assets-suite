@@ -2,6 +2,7 @@ import {
   Asset,
   AssetEditPolicy,
   AssetFile,
+  AssetFileMetadataResponse,
   AssetFileSchema,
   AssetFileSignedUrlSchema,
   AssetPolicy,
@@ -65,7 +66,8 @@ export class FilesController {
     @Param('assetId', ParseIntPipe) assetId: number,
     @Param('id', ParseIntPipe) id: number,
     @CurrentUser() user: User,
-    @Query('download', new DefaultValuePipe(false), new ParseBoolPipe()) download: boolean,
+    @Query('download', new DefaultValuePipe(false), new ParseBoolPipe())
+    download: boolean,
   ): Promise<AssetFileSignedUrlSchema> {
     const asset = await this.findAssetOrThrow(assetId);
     authorize(AssetPolicy, user).canShow(asset);
@@ -77,6 +79,23 @@ export class FilesController {
     const url = await this.fileS3Service.getPresignedUrl(file.name, file.alias, download);
 
     return plainToInstance(AssetFileSignedUrlSchema, { url });
+  }
+
+  @Get('/:id/metadata')
+  async getMetadata(
+    @Param('assetId', ParseIntPipe) assetId: number,
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: User,
+  ): Promise<AssetFileMetadataResponse> {
+    const asset = await this.findAssetOrThrow(assetId);
+    authorize(AssetPolicy, user).canShow(asset);
+
+    const file = await this.fileRepo.find({ id, assetId: asset.id });
+    if (file == null) {
+      throw new HttpException('not found', HttpStatus.NOT_FOUND);
+    }
+
+    return this.fileService.getOrExtractMetadata(file);
   }
 
   @Get('/:id')

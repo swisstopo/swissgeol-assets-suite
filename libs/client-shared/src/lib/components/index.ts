@@ -16,6 +16,7 @@ export * from './ol-zoom-controls';
 export * from './page-header';
 export * from './pdf-viewer/pdf-overlay/pdf-overlay.service';
 export * from './pdf-viewer/pdf-viewer.component';
+export * from './pdf-viewer/pdf-viewer.models';
 export * from './search-and-filter';
 export * from './search-input/search-input.component';
 export * from './select';

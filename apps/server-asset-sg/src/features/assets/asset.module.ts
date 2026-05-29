@@ -12,6 +12,7 @@ import { FileS3Service } from '@/features/assets/files/file-s3.service';
 import { FileRepo } from '@/features/assets/files/file.repo';
 import { FileService } from '@/features/assets/files/file.service';
 import { FilesController } from '@/features/assets/files/files.controller';
+import { PdfMetadataService } from '@/features/assets/files/pdf-metadata.service';
 import { AssetGeometriesController } from '@/features/assets/geometries/asset-geometries.controller';
 import { AssetSearchController } from '@/features/assets/search/asset-search.controller';
 import { AssetSearchService } from '@/features/assets/search/asset-search.service';
@@ -66,6 +67,7 @@ import { UsersModule } from '@/features/users/users.module';
     FileS3Service,
     FileService,
     FileExtractionService,
+    PdfMetadataService,
     FavoriteRepo,
     AssetSyncService,
     FileFulltextSyncService,
