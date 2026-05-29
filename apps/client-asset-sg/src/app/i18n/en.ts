@@ -222,10 +222,12 @@ export const enTranslationMapping: AppTranslationMapping = {
           recalculateRanges: 'Recalculate page ranges',
           type: 'Type',
           language: 'Language',
+          label: 'Title',
           pageFrom: 'Page from',
           pageTo: 'Page to',
           save: 'Finish editing',
           toLessThanFromError: '"To" must be greater than or equal to "From".',
+          labelTooLong: 'The title must not exceed 120 characters.',
           reanalyze: 'Reanalyse',
           recalculateSuccess: 'The page classes have been successfully recalculated.',
           confirmReanalyze:

@@ -222,10 +222,12 @@ export const itTranslationMapping: AppTranslationMapping = {
           recalculateRanges: 'Riorganizzare nuovamente le classi',
           type: 'Tipo',
           language: 'Lingua',
+          label: 'Titolo',
           pageFrom: 'Pagina da',
           pageTo: 'Pagina a',
           save: 'Termina modifica',
           toLessThanFromError: '"Pagina da" deve essere minore o uguale a "Pagina a".',
+          labelTooLong: 'Il titolo non deve superare i 120 caratteri.',
           reanalyze: 'Rianalizzare',
           recalculateSuccess: 'Le classi di pagine sono state riorganizzate.',
           confirmReanalyze:
