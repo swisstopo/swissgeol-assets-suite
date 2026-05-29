@@ -103,6 +103,30 @@
     margin: 0;
     background-color: #fff;
     box-shadow: 0 -6px 16px rgba(0, 0, 0, 0.12);
+
+    &__unsaved {
+      margin-right: auto;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--sgc-color-error);
+      font-weight: 600;
+    }
+
+    &__unsaved-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 18px;
+      height: 18px;
+      border: 1px solid currentColor;
+      border-radius: 50%;
+      line-height: 0;
+
+      & sgc-icon {
+        display: inline-flex;
+      }
+    }
   }
 
   @media (max-width: 1440px) {

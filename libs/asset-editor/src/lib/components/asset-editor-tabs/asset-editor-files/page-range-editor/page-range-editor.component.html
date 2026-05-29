@@ -36,6 +36,14 @@
     ></asset-sg-pdf-viewer>
   </div>
   <div class="actions" mat-dialog-actions>
+    @if (hasUnsavedChanges()) {
+      <div class="actions__unsaved">
+        <span class="actions__unsaved-icon">
+          <sgc-icon name="cross" size="small"></sgc-icon>
+        </span>
+        <span translate>edit.unsavedChanges</span>
+      </div>
+    }
     <sgc-button (click)="cancel()" color="secondary" translate>cancel</sgc-button>
     <sgc-button (click)="submit()" [isDisabled]="!form.valid" color="primary" data-testid="save-page-ranges" translate>
       edit.tabs.files.pageRanges.save

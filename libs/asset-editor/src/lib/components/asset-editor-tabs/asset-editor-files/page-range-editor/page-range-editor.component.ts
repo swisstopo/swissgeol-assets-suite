@@ -73,6 +73,7 @@ export class PageRangeEditorComponent {
   protected readonly categories: SelectOption<PageCategory>[];
   protected readonly languages: SelectOption<SupportedPageLanguage>[];
   protected expandedClassificationIndices = new Set<number>();
+  private readonly initialClassificationsHash: string;
 
   private readonly dialogRef = inject(MatDialogRef<PageRangeEditorComponent, PageRangeClassification[]>);
   private readonly fb: FormBuilder = inject(FormBuilder);
@@ -96,6 +97,12 @@ export class PageRangeEditorComponent {
       classifications: this.fb.array<PageClassificationFormGroup>(initialValues),
     });
     this.expandedClassificationIndices = new Set();
+    this.initialClassificationsHash = this.serializeClassifications(this.initialData.classifications ?? []);
+  }
+
+  protected hasUnsavedChanges(): boolean {
+    const current = this.form.getRawValue().classifications;
+    return this.serializeClassifications(current) !== this.initialClassificationsHash;
   }
 
   protected addClassification() {
@@ -189,6 +196,18 @@ export class PageRangeEditorComponent {
         label: this.fb.control(pc.label ?? null, [Validators.maxLength(120)]),
       },
       { validators: this.toGreaterOrEqualFromValidator() },
+    );
+  }
+
+  private serializeClassifications(classifications: PageRangeClassification[]): string {
+    return JSON.stringify(
+      classifications.map((classification) => ({
+        from: classification.from,
+        to: classification.to,
+        categories: classification.categories,
+        languages: classification.languages,
+        label: classification.label?.trim() ? classification.label.trim() : null,
+      })),
     );
   }
 }
