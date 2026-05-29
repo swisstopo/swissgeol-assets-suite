@@ -3,6 +3,10 @@
   <div class="editor">
     <div class="header">
       <h2 translate>edit.tabs.files.pageRanges.title</h2>
+      <sgc-button (click)="updateOrder()" color="secondary" size="small" translate>
+        edit.tabs.files.pageRanges.updateOrder
+        <sgc-icon name="repeat"></sgc-icon>
+      </sgc-button>
     </div>
     <hr />
     <div class="form-wrapper" mat-dialog-content>
@@ -39,7 +43,7 @@
     @if (hasUnsavedChanges()) {
       <div class="actions__unsaved">
         <span class="actions__unsaved-icon">
-          <sgc-icon name="cross" size="small"></sgc-icon>
+          <sgc-icon name="cross" size="normal"></sgc-icon>
         </span>
         <span translate>edit.unsavedChanges</span>
       </div>

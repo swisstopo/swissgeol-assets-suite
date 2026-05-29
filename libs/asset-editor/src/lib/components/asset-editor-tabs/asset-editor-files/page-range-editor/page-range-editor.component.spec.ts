@@ -107,4 +107,66 @@ describe('PageRangeEditorComponent', () => {
       ]),
     );
   });
+
+  it('sorts groups by page range when updateOrder is called', () => {
+    const groups = (component as any).form.controls.classifications;
+    groups.clear();
+    groups.push(
+      (component as any).createFormGroup({
+        from: 5,
+        to: 5,
+        categories: [PageCategory.Text],
+        languages: ['de'],
+        label: 'Z',
+      }),
+    );
+    groups.push(
+      (component as any).createFormGroup({
+        from: 2,
+        to: 3,
+        categories: [PageCategory.Boreprofile],
+        languages: ['fr'],
+        label: 'A',
+      }),
+    );
+
+    (component as any).updateOrder();
+
+    const values = (component as any).form.getRawValue().classifications;
+    expect(values.map((it: PageRangeClassification) => [it.from, it.to])).toEqual([
+      [2, 3],
+      [5, 5],
+    ]);
+  });
+
+  it('keeps expanded state mapped to the same group after sorting', () => {
+    const groups = (component as any).form.controls.classifications;
+    groups.clear();
+    groups.push(
+      (component as any).createFormGroup({
+        from: 5,
+        to: 5,
+        categories: [PageCategory.Text],
+        languages: ['de'],
+        label: 'First',
+      }),
+    );
+    groups.push(
+      (component as any).createFormGroup({
+        from: 1,
+        to: 1,
+        categories: [PageCategory.Boreprofile],
+        languages: ['fr'],
+        label: 'Second',
+      }),
+    );
+    (component as any).expandedClassificationIndices = new Set([0]);
+
+    (component as any).updateOrder();
+
+    const values = (component as any).form.getRawValue().classifications;
+    expect(values[1].label).toBe('First');
+    expect((component as any).isClassificationExpanded(1)).toBe(true);
+    expect((component as any).isClassificationExpanded(0)).toBe(false);
+  });
 });

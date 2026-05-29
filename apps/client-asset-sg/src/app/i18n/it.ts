@@ -219,7 +219,7 @@ export const itTranslationMapping: AppTranslationMapping = {
         pageRanges: {
           title: 'Classificazione',
           edit: 'Modifica classificazione',
-          recalculateRanges: 'Riorganizzare nuovamente le classi',
+          updateOrder: 'Aggiorna ordine',
           type: 'Tipo',
           language: 'Lingua',
           label: 'Titolo',

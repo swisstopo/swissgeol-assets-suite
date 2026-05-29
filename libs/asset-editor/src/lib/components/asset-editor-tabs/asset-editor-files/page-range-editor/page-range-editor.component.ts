@@ -126,6 +126,56 @@ export class PageRangeEditorComponent {
     }
   }
 
+  protected updateOrder() {
+    const controls = this.form.controls.classifications.controls;
+    const indexed = controls.map((control, index) => ({
+      control,
+      index,
+      value: control.getRawValue(),
+    }));
+
+    indexed.sort((a, b) => {
+      if (a.value.from !== b.value.from) {
+        return a.value.from - b.value.from;
+      }
+      if (a.value.to !== b.value.to) {
+        return a.value.to - b.value.to;
+      }
+
+      const categoriesA = a.value.categories.join(',');
+      const categoriesB = b.value.categories.join(',');
+      if (categoriesA !== categoriesB) {
+        return categoriesA.localeCompare(categoriesB);
+      }
+
+      const languagesA = a.value.languages.join(',');
+      const languagesB = b.value.languages.join(',');
+      if (languagesA !== languagesB) {
+        return languagesA.localeCompare(languagesB);
+      }
+
+      const labelA = (a.value.label ?? '').trim();
+      const labelB = (b.value.label ?? '').trim();
+      if (labelA !== labelB) {
+        return labelA.localeCompare(labelB);
+      }
+
+      // Stable sort fallback for identical values.
+      return a.index - b.index;
+    });
+
+    const sortedControls = indexed.map((item) => item.control);
+    const expanded = new Set<number>();
+    indexed.forEach((item, newIndex) => {
+      if (this.expandedClassificationIndices.has(item.index)) {
+        expanded.add(newIndex);
+      }
+    });
+
+    this.form.setControl('classifications', this.fb.array(sortedControls));
+    this.expandedClassificationIndices = expanded;
+  }
+
   protected removeClassification(index: number) {
     this.form.controls.classifications.removeAt(index);
     const updatedExpandedIndices = new Set<number>();
