@@ -2,7 +2,11 @@
 
 .wrapper {
   display: grid;
-  grid-template: "content pdf-preview" / minmax(850px, 925px) 560px;
+  grid-template-areas:
+    "content pdf-preview"
+    "actions actions";
+  grid-template-columns: minmax(850px, 925px) 560px;
+  grid-template-rows: minmax(0, 1fr) auto;
   height: 100%;
   overflow: hidden;
 
@@ -32,7 +36,7 @@
       min-height: 0;
 
       & form {
-        flex: 1;
+        flex: 0 1 auto;
         min-height: 0;
         overflow: auto;
 
@@ -65,13 +69,6 @@
         }
       }
     }
-
-    & .actions {
-      display: flex;
-      justify-content: flex-end;
-      gap: 16px;
-      padding: 24px;
-    }
   }
 
   & .pdf-preview {
@@ -84,5 +81,18 @@
       flex: 1;
       min-height: 0;
     }
+  }
+
+  & .actions {
+    grid-area: actions;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 24px;
+    min-height: 0;
+    margin: 0;
+    background-color: #fff;
+    box-shadow: 0 -6px 16px rgba(0, 0, 0, 0.12);
   }
 }
