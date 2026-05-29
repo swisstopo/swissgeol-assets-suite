@@ -40,10 +40,6 @@ export class PageRangeEditorGroupComponent {
     return !!this.group().errors?.['toLessThanFrom'];
   }
 
-  protected get hasLabelLengthError(): boolean {
-    return !!this.group().controls.label.errors?.['maxlength'];
-  }
-
   protected getHeaderLabel(): string {
     const label = this.group().controls.label.value?.trim();
     if (label) {
