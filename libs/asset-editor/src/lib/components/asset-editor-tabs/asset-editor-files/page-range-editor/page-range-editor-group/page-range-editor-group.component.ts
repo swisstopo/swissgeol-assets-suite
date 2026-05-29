@@ -3,7 +3,7 @@ import { Component, input, output } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { SelectComponent } from '@asset-sg/client-shared';
+import { FormItemWrapperComponent, SelectComponent } from '@asset-sg/client-shared';
 import { PageCategory, SupportedPageLanguage } from '@asset-sg/shared/v2';
 import { TranslateDirective, TranslatePipe } from '@ngx-translate/core';
 import { SgcButton, SgcIcon } from '@swissgeol/ui-core-angular';
@@ -16,6 +16,7 @@ import type { PageClassificationFormGroup, SelectOption } from '../page-range-ed
     ReactiveFormsModule,
     TranslateDirective,
     TranslatePipe,
+    FormItemWrapperComponent,
     MatFormFieldModule,
     MatInputModule,
     SelectComponent,

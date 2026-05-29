@@ -29,10 +29,11 @@
   @if (expanded()) {
     <div class="page-range-editor__row__body" [formGroup]="group()">
       <div class="page-range-editor__row__title-row">
-        <mat-form-field subscriptSizing="dynamic" class="page-range-editor__row__title-field">
-          <mat-label translate>edit.tabs.files.pageRanges.label</mat-label>
-          <input matInput formControlName="label" />
-        </mat-form-field>
+        <label [title]="'edit.tabs.files.pageRanges.label' | translate" asset-sg-form-item-wrapper>
+          <mat-form-field appearance="fill" subscriptSizing="dynamic" class="page-range-editor__row__title-field">
+            <input matInput formControlName="label" />
+          </mat-form-field>
+        </label>
       </div>
 
       <div class="page-range-editor__row__inputs">
