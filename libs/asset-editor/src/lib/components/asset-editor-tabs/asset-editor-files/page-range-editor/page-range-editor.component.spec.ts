@@ -111,24 +111,26 @@ describe('PageRangeEditorComponent', () => {
   it('sorts groups by page range when updateOrder is called', () => {
     const groups = (component as any).form.controls.classifications;
     groups.clear();
-    groups.push(
-      (component as any).createFormGroup({
+    const unsortedClassifications: PageRangeClassification[] = [
+      {
         from: 5,
         to: 5,
         categories: [PageCategory.Text],
         languages: ['de'],
         label: 'Z',
-      }),
-    );
-    groups.push(
-      (component as any).createFormGroup({
+      },
+      {
         from: 2,
         to: 3,
         categories: [PageCategory.Boreprofile],
         languages: ['fr'],
         label: 'A',
-      }),
-    );
+      },
+    ];
+
+    for (const classification of unsortedClassifications) {
+      groups.push((component as any).createFormGroup(classification));
+    }
 
     (component as any).updateOrder();
 
@@ -142,24 +144,27 @@ describe('PageRangeEditorComponent', () => {
   it('keeps expanded state mapped to the same group after sorting', () => {
     const groups = (component as any).form.controls.classifications;
     groups.clear();
-    groups.push(
-      (component as any).createFormGroup({
+    const unsortedClassifications: PageRangeClassification[] = [
+      {
         from: 5,
         to: 5,
         categories: [PageCategory.Text],
         languages: ['de'],
         label: 'First',
-      }),
-    );
-    groups.push(
-      (component as any).createFormGroup({
+      },
+      {
         from: 1,
         to: 1,
         categories: [PageCategory.Boreprofile],
         languages: ['fr'],
         label: 'Second',
-      }),
-    );
+      },
+    ];
+
+    for (const classification of unsortedClassifications) {
+      groups.push((component as any).createFormGroup(classification));
+    }
+
     (component as any).expandedClassificationIndices = new Set([0]);
 
     (component as any).updateOrder();
