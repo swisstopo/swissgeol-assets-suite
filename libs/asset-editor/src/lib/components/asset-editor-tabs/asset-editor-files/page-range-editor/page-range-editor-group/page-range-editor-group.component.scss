@@ -3,10 +3,11 @@
 
 :host {
   display: block;
+  color: variables.$grey-10;
 }
 
 .page-range-editor__row__content {
-  border: 1px solid variables.$grey-04;
+  border: 1px solid variables.$grey-07;
   border-radius: 6px;
   overflow: hidden;
 }
@@ -39,8 +40,9 @@
 }
 
 .page-range-editor__row__tag {
-  border: 1px solid variables.$grey-04;
-  border-radius: 999px;
+  border: 1.4px solid variables.$grey-02;
+  background: variables.$white;
+  border-radius: 6px;
   padding: 2px 8px;
   font-size: 12px;
   white-space: nowrap;
