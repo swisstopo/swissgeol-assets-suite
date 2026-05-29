@@ -1,5 +1,4 @@
 @use "../../../../styles/variables";
-@use "../../../../styles/mixins";
 
 .wrapper {
   display: grid;
@@ -18,19 +17,7 @@
     & .header {
       padding: 24px 24px 16px 24px;
       display: flex;
-      justify-content: space-between;
-      gap: 24px;
       align-items: center;
-
-      &__title {
-        @include mixins.text-ellipsis;
-        flex: 1;
-        min-width: 0;
-      }
-
-      &__reclassify {
-        flex-shrink: 0;
-      }
     }
 
     & .form-wrapper {
@@ -41,55 +28,11 @@
 
       & form {
         overflow: auto;
-        //padding-bottom: 20px;
 
         & .page-range-editor {
           display: flex;
           flex-direction: column;
-          gap: 36px;
-
-          &__row {
-            display: grid;
-            grid-template-columns: 36px minmax(0, 1fr);
-            gap: 12px;
-            align-items: center;
-
-            &__content {
-              border: 1px solid variables.$grey-04;
-              border-radius: 6px;
-              padding: 16px;
-              display: flex;
-              flex-direction: column;
-              gap: 12px;
-            }
-
-            &__title-row {
-              display: block;
-            }
-
-            &__title-field {
-              width: 100%;
-            }
-
-            &__delete {
-              align-self: center;
-            }
-
-            &__inputs {
-              display: grid;
-              width: 100%;
-              grid-template-columns: 360px minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
-              gap: 16px;
-              align-items: end;
-            }
-
-            &__error {
-              color: var(--sgc-color-error);
-              font-size: 12px;
-              display: flex;
-              justify-content: end;
-            }
-          }
+          gap: 24px;
         }
       }
 

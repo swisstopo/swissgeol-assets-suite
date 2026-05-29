@@ -7,73 +7,17 @@
     <hr />
     <div class="form-wrapper" mat-dialog-content>
       <form #formElement [formGroup]="form">
-        <div class="page-range-editor" formArrayName="classifications">
+        <div class="page-range-editor">
           @for (group of this.form.controls.classifications.controls; track group) {
-            <div [formGroupName]="$index" class="page-range-editor__row">
-              <sgc-button
-                size="normal"
-                variant="icon"
-                color="tertiary"
-                [isTransparent]="true"
-                (click)="removeClassification($index)"
-                class="page-range-editor__row__delete"
-              >
-                <sgc-icon name="trash"></sgc-icon>
-              </sgc-button>
-
-              <div class="page-range-editor__row__content">
-                <div class="page-range-editor__row__title-row">
-                  <mat-form-field subscriptSizing="dynamic" class="page-range-editor__row__title-field">
-                    <mat-label translate>edit.tabs.files.pageRanges.label</mat-label>
-                    <input matInput formControlName="label" />
-                  </mat-form-field>
-                </div>
-
-                <div class="page-range-editor__row__inputs">
-                  <asset-sg-select
-                    formControlName="categories"
-                    [title]="'edit.tabs.files.pageRanges.type' | translate"
-                    [values]="categories"
-                    [bindKey]="'value'"
-                    [bindLabel]="'label'"
-                    multiple
-                    isRequired
-                  />
-
-                  <asset-sg-select
-                    formControlName="languages"
-                    [title]="'edit.tabs.files.pageRanges.language' | translate"
-                    [values]="languages"
-                    [bindKey]="'value'"
-                    [bindLabel]="'label'"
-                    multiple
-                  />
-
-                  <asset-sg-select
-                    formControlName="from"
-                    [title]="'edit.tabs.files.pageRanges.pageFrom' | translate"
-                    [values]="availablePages"
-                    skipTranslate
-                  />
-
-                  <asset-sg-select
-                    formControlName="to"
-                    [title]="'edit.tabs.files.pageRanges.pageTo' | translate"
-                    [values]="availablePages"
-                    skipTranslate
-                  />
-                </div>
-
-                @if (group.hasError("toLessThanFrom")) {
-                  <div class="page-range-editor__row__error" translate>
-                    edit.tabs.files.pageRanges.toLessThanFromError
-                  </div>
-                }
-                @if (group.controls.label.hasError("maxlength")) {
-                  <div class="page-range-editor__row__error" translate>edit.tabs.files.pageRanges.labelTooLong</div>
-                }
-              </div>
-            </div>
+            <asset-sg-page-range-editor-group
+              [group]="group"
+              [categories]="categories"
+              [languages]="languages"
+              [availablePages]="availablePages"
+              [expanded]="isClassificationExpanded($index)"
+              (toggled)="toggleClassification($index)"
+              (removed)="removeClassification($index)"
+            />
           }
         </div>
       </form>

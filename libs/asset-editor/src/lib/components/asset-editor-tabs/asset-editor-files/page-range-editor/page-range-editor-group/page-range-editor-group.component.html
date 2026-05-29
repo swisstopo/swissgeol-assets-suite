@@ -1,0 +1,81 @@
+﻿<div class="page-range-editor__row__content" [class.page-range-editor__row__content--expanded]="expanded()">
+  <div class="page-range-editor__row__header" role="button" (click)="toggleGroup()">
+    <div class="page-range-editor__row__summary">
+      <span class="page-range-editor__row__summary-label">{{ getHeaderLabel() }}</span>
+      <span class="page-range-editor__row__tag">{{ getTypeSummary() }}</span>
+      <span class="page-range-editor__row__tag">{{ getLanguageSummary() }}</span>
+      <span class="page-range-editor__row__tag">{{ getPageSummary() }}</span>
+    </div>
+
+    <div class="page-range-editor__row__actions">
+      <sgc-button
+        size="normal"
+        variant="icon"
+        color="tertiary"
+        [isTransparent]="true"
+        (click)="removeGroup($event)"
+        class="page-range-editor__row__delete"
+      >
+        <sgc-icon name="trash"></sgc-icon>
+      </sgc-button>
+      <sgc-icon
+        name="chevronDown"
+        class="page-range-editor__row__chevron"
+        [class.page-range-editor__row__chevron--expanded]="expanded()"
+      ></sgc-icon>
+    </div>
+  </div>
+
+  @if (expanded()) {
+    <div class="page-range-editor__row__body" [formGroup]="group()">
+      <div class="page-range-editor__row__title-row">
+        <mat-form-field subscriptSizing="dynamic" class="page-range-editor__row__title-field">
+          <mat-label translate>edit.tabs.files.pageRanges.label</mat-label>
+          <input matInput formControlName="label" />
+        </mat-form-field>
+      </div>
+
+      <div class="page-range-editor__row__inputs">
+        <asset-sg-select
+          formControlName="categories"
+          [title]="'edit.tabs.files.pageRanges.type' | translate"
+          [values]="categories()"
+          [bindKey]="'value'"
+          [bindLabel]="'label'"
+          multiple
+          isRequired
+        />
+
+        <asset-sg-select
+          formControlName="languages"
+          [title]="'edit.tabs.files.pageRanges.language' | translate"
+          [values]="languages()"
+          [bindKey]="'value'"
+          [bindLabel]="'label'"
+          multiple
+        />
+
+        <asset-sg-select
+          formControlName="from"
+          [title]="'edit.tabs.files.pageRanges.pageFrom' | translate"
+          [values]="availablePages()"
+          skipTranslate
+        />
+
+        <asset-sg-select
+          formControlName="to"
+          [title]="'edit.tabs.files.pageRanges.pageTo' | translate"
+          [values]="availablePages()"
+          skipTranslate
+        />
+      </div>
+
+      @if (group().hasError("toLessThanFrom")) {
+        <div class="page-range-editor__row__error" translate>edit.tabs.files.pageRanges.toLessThanFromError</div>
+      }
+      @if (group().controls.label.hasError("maxlength")) {
+        <div class="page-range-editor__row__error" translate>edit.tabs.files.pageRanges.labelTooLong</div>
+      }
+    </div>
+  }
+</div>

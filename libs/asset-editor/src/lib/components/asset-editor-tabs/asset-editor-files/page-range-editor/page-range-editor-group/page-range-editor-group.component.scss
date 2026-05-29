@@ -1,0 +1,97 @@
+﻿@use "../../../../../styles/variables";
+@use "../../../../../styles/mixins";
+
+:host {
+  display: block;
+}
+
+.page-range-editor__row__content {
+  border: 1px solid variables.$grey-04;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.page-range-editor__row__content--expanded {
+  .page-range-editor__row__header {
+    background-color: variables.$grey-02;
+  }
+}
+
+.page-range-editor__row__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 16px;
+  cursor: pointer;
+}
+
+.page-range-editor__row__summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.page-range-editor__row__summary-label {
+  font-weight: 600;
+  @include mixins.text-ellipsis;
+}
+
+.page-range-editor__row__tag {
+  border: 1px solid variables.$grey-04;
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.page-range-editor__row__actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.page-range-editor__row__chevron {
+  transition: transform 0.15s ease-in-out;
+}
+
+.page-range-editor__row__chevron--expanded {
+  transform: rotate(180deg);
+}
+
+.page-range-editor__row__delete {
+  align-self: center;
+}
+
+.page-range-editor__row__body {
+  border-top: 1px solid variables.$grey-04;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.page-range-editor__row__title-row {
+  display: block;
+}
+
+.page-range-editor__row__title-field {
+  width: 100%;
+}
+
+.page-range-editor__row__inputs {
+  display: grid;
+  width: 100%;
+  grid-template-columns: 360px minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: end;
+}
+
+.page-range-editor__row__error {
+  color: var(--sgc-color-error);
+  font-size: 12px;
+  display: flex;
+  justify-content: end;
+}

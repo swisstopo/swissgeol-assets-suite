@@ -13,17 +13,16 @@ import {
   Validators,
 } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogActions, MatDialogContent, MatDialogRef } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { PdfViewerComponent, PdfViewerFile, SelectComponent } from '@asset-sg/client-shared';
+import { PdfViewerComponent, PdfViewerFile } from '@asset-sg/client-shared';
 import {
   PageCategory,
   PageRangeClassification,
   SupportedPageLanguage,
   SupportedPageLanguages,
 } from '@asset-sg/shared/v2';
-import { TranslateDirective, TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { TranslateDirective, TranslateService } from '@ngx-translate/core';
 import { SgcButton, SgcIcon } from '@swissgeol/ui-core-angular';
+import { PageRangeEditorGroupComponent } from './page-range-editor-group/page-range-editor-group.component';
 
 export type PageRangeEditorData = {
   classifications: PageRangeClassification[] | null;
@@ -32,7 +31,7 @@ export type PageRangeEditorData = {
   assetFile: PdfViewerFile;
 };
 
-type PageClassificationFormGroup = FormGroup<{
+export type PageClassificationFormGroup = FormGroup<{
   from: FormControl<number>;
   to: FormControl<number>;
   languages: FormControl<SupportedPageLanguage[]>;
@@ -44,7 +43,7 @@ type PageClassificationForm = FormGroup<{
   classifications: FormArray<PageClassificationFormGroup>;
 }>;
 
-type SelectOption<T> = {
+export type SelectOption<T> = {
   label: string;
   value: T;
 };
@@ -59,12 +58,9 @@ type SelectOption<T> = {
     ReactiveFormsModule,
     TranslateDirective,
     SgcButton,
-    SelectComponent,
-    TranslatePipe,
     SgcIcon,
     PdfViewerComponent,
-    MatFormFieldModule,
-    MatInputModule,
+    PageRangeEditorGroupComponent,
   ],
   templateUrl: './page-range-editor.component.html',
   styleUrl: './page-range-editor.component.scss',
@@ -76,6 +72,7 @@ export class PageRangeEditorComponent {
   protected form: PageClassificationForm;
   protected readonly categories: SelectOption<PageCategory>[];
   protected readonly languages: SelectOption<SupportedPageLanguage>[];
+  protected expandedClassificationIndices = new Set<number>();
 
   private readonly dialogRef = inject(MatDialogRef<PageRangeEditorComponent, PageRangeClassification[]>);
   private readonly fb: FormBuilder = inject(FormBuilder);
@@ -98,6 +95,7 @@ export class PageRangeEditorComponent {
     this.form = this.fb.group({
       classifications: this.fb.array<PageClassificationFormGroup>(initialValues),
     });
+    this.expandedClassificationIndices = new Set();
   }
 
   protected addClassification() {
@@ -109,6 +107,7 @@ export class PageRangeEditorComponent {
       label: null,
     });
     this.form.controls.classifications.push(group);
+    this.expandedClassificationIndices.add(this.form.controls.classifications.length - 1);
 
     if (this.formWrapper) {
       setTimeout(() => {
@@ -122,6 +121,26 @@ export class PageRangeEditorComponent {
 
   protected removeClassification(index: number) {
     this.form.controls.classifications.removeAt(index);
+    const updatedExpandedIndices = new Set<number>();
+    this.expandedClassificationIndices.forEach((expandedIndex) => {
+      if (expandedIndex === index) {
+        return;
+      }
+      updatedExpandedIndices.add(expandedIndex > index ? expandedIndex - 1 : expandedIndex);
+    });
+    this.expandedClassificationIndices = updatedExpandedIndices;
+  }
+
+  protected toggleClassification(index: number) {
+    if (this.expandedClassificationIndices.has(index)) {
+      this.expandedClassificationIndices.delete(index);
+      return;
+    }
+    this.expandedClassificationIndices.add(index);
+  }
+
+  protected isClassificationExpanded(index: number): boolean {
+    return this.expandedClassificationIndices.has(index);
   }
 
   protected submit() {
