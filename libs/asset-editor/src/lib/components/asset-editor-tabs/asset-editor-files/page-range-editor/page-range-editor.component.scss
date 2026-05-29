@@ -49,10 +49,36 @@
           gap: 36px;
 
           &__row {
+            display: grid;
+            grid-template-columns: 36px minmax(0, 1fr);
+            gap: 12px;
+            align-items: center;
+
+            &__content {
+              border: 1px solid variables.$grey-04;
+              border-radius: 6px;
+              padding: 16px;
+              display: flex;
+              flex-direction: column;
+              gap: 12px;
+            }
+
+            &__title-row {
+              display: block;
+            }
+
+            &__title-field {
+              width: 100%;
+            }
+
+            &__delete {
+              align-self: center;
+            }
+
             &__inputs {
               display: grid;
               width: 100%;
-              grid-template-columns: 36px 465px minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
+              grid-template-columns: 360px minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
               gap: 16px;
               align-items: end;
             }
