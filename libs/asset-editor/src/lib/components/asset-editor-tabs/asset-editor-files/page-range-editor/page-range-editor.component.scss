@@ -4,10 +4,14 @@
   display: grid;
   grid-template: "content pdf-preview" / minmax(850px, 925px) 560px;
   height: 100%;
+  overflow: hidden;
 
   & .editor {
     grid-area: content;
     min-width: 850px;
+    min-height: 0;
+    display: grid;
+    grid-template-rows: auto auto minmax(0, 1fr) auto auto;
 
     h2,
     hr {
@@ -25,8 +29,11 @@
       flex-direction: column;
       overflow: hidden;
       gap: 16px;
+      min-height: 0;
 
       & form {
+        flex: 1;
+        min-height: 0;
         overflow: auto;
 
         & .page-range-editor {
@@ -39,31 +46,22 @@
       & .page-range-editor__add-row {
         display: flex;
         flex-shrink: 0;
+        align-items: center;
         justify-content: center;
+        gap: 8px;
         width: 100%;
         border: 1px dashed variables.$cyan-08;
         padding: 12px 0;
-
-        &__icon {
-          background-color: var(--sgc-color-primary);
-          color: white;
-          padding: 10.5px;
-          border-radius: 50%;
-          display: flex;
-        }
+        color: var(--sgc-color-primary);
+        font-weight: 600;
 
         &:hover {
           cursor: pointer;
-
-          & .page-range-editor__add-row__icon {
-            background-color: var(--sgc-color-primary--hovered);
-          }
+          color: var(--sgc-color-primary--hovered);
         }
 
         &:active {
-          & .page-range-editor__add-row__icon {
-            background-color: var(--sgc-color-primary--pressed);
-          }
+          color: var(--sgc-color-primary--pressed);
         }
       }
     }
@@ -78,5 +76,13 @@
 
   & .pdf-preview {
     grid-area: pdf-preview;
+    min-height: 0;
+    display: flex;
+    overflow: hidden;
+
+    & asset-sg-pdf-viewer {
+      flex: 1;
+      min-height: 0;
+    }
   }
 }
