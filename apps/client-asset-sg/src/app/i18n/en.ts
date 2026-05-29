@@ -223,6 +223,7 @@ export const enTranslationMapping: AppTranslationMapping = {
           type: 'Type',
           language: 'Language',
           label: 'Title',
+          addSection: 'Add section',
           pageFrom: 'Page from',
           pageTo: 'Page to',
           save: 'Finish editing',

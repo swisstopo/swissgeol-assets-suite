@@ -225,6 +225,7 @@ export const frTranslationMapping: AppTranslationMapping = {
           type: 'Type',
           language: 'Langue',
           label: 'Titre',
+          addSection: 'Ajouter une section',
           pageFrom: 'Page de',
           pageTo: 'Page à',
           save: 'Terminer la modification',

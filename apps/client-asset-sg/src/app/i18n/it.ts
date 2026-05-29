@@ -223,6 +223,7 @@ export const itTranslationMapping: AppTranslationMapping = {
           type: 'Tipo',
           language: 'Lingua',
           label: 'Titolo',
+          addSection: 'Aggiungi sezione',
           pageFrom: 'Pagina da',
           pageTo: 'Pagina a',
           save: 'Termina modifica',

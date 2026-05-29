@@ -222,6 +222,7 @@ export const deTranslationMapping = {
           type: 'Typ',
           language: 'Sprache',
           label: 'Titel',
+          addSection: 'Abschnitt hinzufügen',
           pageFrom: 'Seite von',
           pageTo: 'Seite bis',
           save: 'Bearbeitung beenden',
