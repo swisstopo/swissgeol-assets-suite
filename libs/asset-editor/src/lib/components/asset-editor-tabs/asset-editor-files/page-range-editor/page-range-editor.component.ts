@@ -243,7 +243,7 @@ export class PageRangeEditorComponent {
           Validators.required,
           Validators.minLength(1),
         ]),
-        label: this.fb.control(pc.label ?? null, [Validators.maxLength(120)]),
+        label: this.fb.control(pc.label ?? null),
       },
       { validators: this.toGreaterOrEqualFromValidator() },
     );
