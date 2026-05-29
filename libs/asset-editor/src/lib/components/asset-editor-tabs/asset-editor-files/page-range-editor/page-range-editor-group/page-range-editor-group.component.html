@@ -39,6 +39,9 @@
           [attr.for]="labelInputId"
           asset-sg-form-item-wrapper
         >
+          <span class="page-range-editor__row__visually-hidden">{{
+            "edit.tabs.files.pageRanges.label" | translate
+          }}</span>
           <mat-form-field appearance="fill" subscriptSizing="dynamic" class="page-range-editor__row__title-field">
             <input [id]="labelInputId" matInput formControlName="label" />
           </mat-form-field>
