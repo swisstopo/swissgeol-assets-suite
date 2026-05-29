@@ -13,16 +13,15 @@ import {
   Validators,
 } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogActions, MatDialogContent, MatDialogRef } from '@angular/material/dialog';
-import { AlertType, PdfViewerComponent, PdfViewerFile, SelectComponent, showAlert } from '@asset-sg/client-shared';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { PdfViewerComponent, PdfViewerFile, SelectComponent } from '@asset-sg/client-shared';
 import {
   PageCategory,
-  PageClassification,
   PageRangeClassification,
   SupportedPageLanguage,
   SupportedPageLanguages,
-  transformPagesToRanges,
 } from '@asset-sg/shared/v2';
-import { Store } from '@ngrx/store';
 import { TranslateDirective, TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { SgcButton, SgcIcon } from '@swissgeol/ui-core-angular';
 
@@ -38,6 +37,7 @@ type PageClassificationFormGroup = FormGroup<{
   to: FormControl<number>;
   languages: FormControl<SupportedPageLanguage[]>;
   categories: FormControl<PageCategory[]>;
+  label: FormControl<string | null>;
 }>;
 
 type PageClassificationForm = FormGroup<{
@@ -63,6 +63,8 @@ type SelectOption<T> = {
     TranslatePipe,
     SgcIcon,
     PdfViewerComponent,
+    MatFormFieldModule,
+    MatInputModule,
   ],
   templateUrl: './page-range-editor.component.html',
   styleUrl: './page-range-editor.component.scss',
@@ -78,7 +80,6 @@ export class PageRangeEditorComponent {
   private readonly dialogRef = inject(MatDialogRef<PageRangeEditorComponent, PageRangeClassification[]>);
   private readonly fb: FormBuilder = inject(FormBuilder);
   private readonly translateService = inject(TranslateService);
-  private readonly store = inject(Store);
 
   constructor() {
     this.availablePages = Array.from({ length: this.initialData.pageCount }, (_, i) => i + 1);
@@ -99,43 +100,14 @@ export class PageRangeEditorComponent {
     });
   }
 
-  public handleManualRecalculation() {
-    this.recalculateClassification();
-
-    this.store.dispatch(
-      showAlert({
-        alert: {
-          id: `recalculation-${Date.now()}`,
-          text: this.translateService.instant('edit.tabs.files.pageRanges.recalculateSuccess'),
-          type: AlertType.Success,
-        },
-      }),
-    );
-  }
-
-  private recalculateClassification() {
-    const pageRangeClassifications: PageRangeClassification[] = this.form.getRawValue().classifications;
-
-    const pageClassifications: PageClassification[] = [];
-    pageRangeClassifications.forEach(({ to, from, categories, languages }) => {
-      Array.from({ length: to - from + 1 }, (_, i) => from + i).forEach((page) =>
-        pageClassifications.push({
-          page,
-          categories: categories,
-          languages: languages,
-        }),
-      );
-    });
-
-    const newFormArray = this.fb.array<PageClassificationFormGroup>(
-      transformPagesToRanges(pageClassifications).map((pc) => this.createFormGroup(pc)),
-    );
-
-    this.form.setControl('classifications', newFormArray);
-  }
-
   protected addClassification() {
-    const group: PageClassificationFormGroup = this.createFormGroup({ categories: [], from: 1, to: 1, languages: [] });
+    const group: PageClassificationFormGroup = this.createFormGroup({
+      categories: [],
+      from: 1,
+      to: 1,
+      languages: [],
+      label: null,
+    });
     this.form.controls.classifications.push(group);
 
     if (this.formWrapper) {
@@ -153,8 +125,12 @@ export class PageRangeEditorComponent {
   }
 
   protected submit() {
-    this.recalculateClassification();
-    this.dialogRef.close(this.form.getRawValue().classifications);
+    const classifications = this.form.getRawValue().classifications.map((classification) => ({
+      ...classification,
+      // Empty strings should fall back to translated category labels in the viewer.
+      label: classification.label?.trim() ? classification.label.trim() : null,
+    }));
+    this.dialogRef.close(classifications);
   }
 
   protected cancel() {
@@ -191,6 +167,7 @@ export class PageRangeEditorComponent {
           Validators.required,
           Validators.minLength(1),
         ]),
+        label: this.fb.control(pc.label ?? null, [Validators.maxLength(120)]),
       },
       { validators: this.toGreaterOrEqualFromValidator() },
     );
