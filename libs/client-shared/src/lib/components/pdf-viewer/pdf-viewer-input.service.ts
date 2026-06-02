@@ -7,7 +7,7 @@ interface PdfViewerInputHandlers {
   navigateToPage: (pageNum: number) => void;
   setSpacePanMode: (enabled: boolean) => void;
   setPanning: (enabled: boolean) => void;
-  onWheelZoom: (accumulatedDeltaY: number, mouseClientY: number) => void;
+  onWheelZoom: (accumulatedDeltaY: number, mouseClientY: number, mouseClientX: number) => void;
 }
 
 @Injectable()
@@ -28,6 +28,7 @@ export class PdfViewerInputService {
   // CTRL+wheel zoom accumulation — batched per animation frame.
   private wheelDeltaAccum = 0;
   private wheelMouseClientY = 0;
+  private wheelMouseClientX = 0;
   private wheelRafId: number | null = null;
 
   setup(scrollElement: HTMLDivElement, handlers: PdfViewerInputHandlers): void {
@@ -67,14 +68,16 @@ export class PdfViewerInputService {
       event.preventDefault();
       this.wheelDeltaAccum += event.deltaY;
       this.wheelMouseClientY = event.clientY;
+      this.wheelMouseClientX = event.clientX;
       if (this.wheelRafId === null) {
         this.wheelRafId = requestAnimationFrame(() => {
           this.wheelRafId = null;
           const delta = this.wheelDeltaAccum;
           const clientY = this.wheelMouseClientY;
+          const clientX = this.wheelMouseClientX;
           this.wheelDeltaAccum = 0;
           if (delta !== 0) {
-            this.handlers?.onWheelZoom(delta, clientY);
+            this.handlers?.onWheelZoom(delta, clientY, clientX);
           }
         });
       }
