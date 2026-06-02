@@ -1,4 +1,5 @@
 export * from './can';
+export * from './consent-cookie';
 export * from './custom-property';
 export * from './map';
 export * from './map-styles';

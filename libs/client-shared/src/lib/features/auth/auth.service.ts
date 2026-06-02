@@ -11,6 +11,7 @@ import { DisclaimerDialogComponent } from '../../components/disclaimer-dialog/di
 import { ConfigService } from '../../services';
 import { SessionStorageService } from '../../services/session-storage.service';
 import { appSharedStateActions, AppState } from '../../state';
+import { readConsentCookie } from '../../utils/consent-cookie';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -58,13 +59,19 @@ export class AuthService {
 
   private finalize(config: AppConfig): void {
     const isLoggedIn = isAnonymous(config) || this.subjectForState.value === AuthState.Success;
-    if (isLoggedIn && !this.configService.getHideDisclaimer()) {
-      this.dialogService.open(DisclaimerDialogComponent, {
-        width: '960px',
-        disableClose: true,
-        autoFocus: false,
-      });
+    if (!isLoggedIn || this.configService.getHideDisclaimer()) {
+      return;
     }
+    const storedConsent = readConsentCookie();
+    if (storedConsent !== null) {
+      this.store.dispatch(appSharedStateActions.setTrackingConsent({ hasConsented: storedConsent.analytics }));
+      return;
+    }
+    this.dialogService.open(DisclaimerDialogComponent, {
+      width: '960px',
+      disableClose: true,
+      autoFocus: false,
+    });
   }
 
   async signIn(): Promise<void> {
