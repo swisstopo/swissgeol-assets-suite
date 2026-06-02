@@ -27,9 +27,11 @@ import { PdfViewerApiService } from './pdf-viewer-api.service';
 import { PdfViewerHeaderComponent } from './pdf-viewer-header/pdf-viewer-header.component';
 import { PdfViewerInputService } from './pdf-viewer-input.service';
 import {
+  findPageAtScrollOffset,
   getBaseScale,
   getConfiguredInteger,
   getDocumentWidth,
+  getPageLayout,
   getPageWidth,
   isRotationSwapped,
 } from './pdf-viewer-layout.helper';
@@ -135,6 +137,8 @@ export class PdfViewerComponent implements OnDestroy {
   private pendingZoomTarget: number | null = null;
   private zoomAnchorPageNumber: number | null = null;
   private pendingZoomReanchorPageNumber: number | null = null;
+  private pendingZoomScrollTop: number | null = null;
+  private pendingWheelZoomMouseOffsetY: number | null = null;
   private programmaticScrollDepth = 0;
   private pinnedPageNumber: number | null = null;
 
@@ -226,6 +230,28 @@ export class PdfViewerComponent implements OnDestroy {
     this.ngZone.runOutsideAngular(() => this.scheduleZoom(action));
   }
 
+  private handleWheelZoom(accumulatedDeltaY: number, mouseClientY: number): void {
+    const scrollEl = this.pdfElement()?.nativeElement;
+    if (!scrollEl) return;
+    const rect = scrollEl.getBoundingClientRect();
+    // Store cursor offset relative to the scroll container top for cursor-centred zoom.
+    this.pendingWheelZoomMouseOffsetY = mouseClientY - rect.top;
+    this.ngZone.runOutsideAngular(() => {
+      // Always use ZOOM_STEP_FINE for wheel zoom so each scroll notch is a small
+      // increment — prevents large jumps when zoom is above 1.
+      const current = this.pendingZoomTarget ?? this.zoom();
+      const target = accumulatedDeltaY > 0 ? current - ZOOM_STEP_FINE : current + ZOOM_STEP_FINE;
+      const clamped = this.normalizeZoom(target);
+      if (Math.abs(clamped - this.zoom()) < 0.0001 && this.pendingZoomTarget === null) return;
+      this.pendingZoomTarget = clamped;
+      if (this.zoomAnimationFrame !== null) return;
+      this.zoomAnimationFrame = requestAnimationFrame(() => {
+        this.zoomAnimationFrame = null;
+        this.commitPendingZoom();
+      });
+    });
+  }
+
   private scheduleZoom(action: PdfZoomAction): void {
     const current = this.pendingZoomTarget ?? this.zoom();
     let target = current;
@@ -268,13 +294,56 @@ export class PdfViewerComponent implements OnDestroy {
 
     this.pendingZoomTarget = null;
 
+    // Capture pre-zoom state so we can compute an exact scroll position after zoom.
+    const oldZoom = this.zoom();
+    const scrollEl = this.pdfElement()?.nativeElement;
+    const scrollTop = scrollEl?.scrollTop ?? 0;
+    const mouseOffsetY = this.pendingWheelZoomMouseOffsetY;
+    this.pendingWheelZoomMouseOffsetY = null;
+
     if (!this.setZoom(target)) return;
+
+    const newZoom = this.zoom();
+    const pageDims = this.pageDimensions();
+    const pageCount = this.pageCount();
+    const baseScl = this.baseScale();
+    const rotation = this.rotation();
 
     const zoomAnchorPage = this.zoomAnchorPageNumber ?? this.pinnedPageNumber ?? this.getCurrentPageFromVirtualizer();
     this.zoomAnchorPageNumber = zoomAnchorPage;
     this.pendingZoomReanchorPageNumber = zoomAnchorPage;
     this.pinnedPageNumber = zoomAnchorPage;
     this.logJumpDebug('commit-zoom-anchor-page', { zoomAnchorPage });
+
+    // Compute the new scrollTop that keeps the visual anchor point in place.
+    if (scrollEl && pageDims.length > 0) {
+      if (mouseOffsetY !== null) {
+        // Cursor-centred zoom: the document point under the cursor stays at the same
+        // screen position after zoom.  cursorDocY is the scroll-space Y of that point.
+        const cursorDocY = scrollTop + mouseOffsetY;
+        const pageAtCursor = findPageAtScrollOffset(cursorDocY, pageCount, pageDims, baseScl, oldZoom, rotation);
+        if (pageAtCursor) {
+          const ratio = pageAtCursor.size > 0 ? (cursorDocY - pageAtCursor.start) / pageAtCursor.size : 0;
+          const newPageLayout = getPageLayout(pageAtCursor.pageNum, pageCount, pageDims, baseScl, newZoom, rotation);
+          if (newPageLayout) {
+            const newDocY = newPageLayout.start + ratio * newPageLayout.size;
+            this.pendingZoomScrollTop = Math.max(0, newDocY - mouseOffsetY);
+          }
+        }
+      } else {
+        // Button zoom: preserve the relative position within the anchor page so
+        // the viewport does not jump to the top or bottom of the page.
+        const anchorLayout = getPageLayout(zoomAnchorPage, pageCount, pageDims, baseScl, oldZoom, rotation);
+        if (anchorLayout && anchorLayout.size > 0) {
+          const ratio = (scrollTop - anchorLayout.start) / anchorLayout.size;
+          const newAnchorLayout = getPageLayout(zoomAnchorPage, pageCount, pageDims, baseScl, newZoom, rotation);
+          if (newAnchorLayout) {
+            this.pendingZoomScrollTop = Math.max(0, newAnchorLayout.start + ratio * newAnchorLayout.size);
+          }
+        }
+      }
+    }
+
     this.renderMode = 'zoom';
     this.viewportEpoch++;
     this.pdfViewerRendererService.prepareForZoomRender();
@@ -304,6 +373,7 @@ export class PdfViewerComponent implements OnDestroy {
       navigateToPage: (pageNum) => this.navigateToPage(pageNum),
       setSpacePanMode: (enabled) => this.isSpacePanMode.set(enabled),
       setPanning: (enabled) => this.isPanning.set(enabled),
+      onWheelZoom: (deltaY, mouseClientY) => this.handleWheelZoom(deltaY, mouseClientY),
     });
   }
 
@@ -415,6 +485,8 @@ export class PdfViewerComponent implements OnDestroy {
     this.pendingZoomTarget = null;
     this.zoomAnchorPageNumber = null;
     this.pendingZoomReanchorPageNumber = null;
+    this.pendingZoomScrollTop = null;
+    this.pendingWheelZoomMouseOffsetY = null;
     this.programmaticScrollDepth = 0;
     this.pinnedPageNumber = null;
     if (this.zoomAnimationFrame !== null) {
@@ -574,21 +646,37 @@ export class PdfViewerComponent implements OnDestroy {
   }
 
   private async renderVisiblePages() {
+    let virtualSizesChanged = false;
     if (this.pendingVirtualMeasure) {
       this.syncEstimateFields();
       this.updateVirtualContentWidth();
       this.virtualizer.measure();
       this.pendingVirtualMeasure = false;
+      virtualSizesChanged = true;
     }
 
     if (this.pendingZoomReanchorPageNumber !== null) {
       const zoomAnchorPage = this.pendingZoomReanchorPageNumber;
       this.pendingZoomReanchorPageNumber = null;
+      const pendingScrollTop = this.pendingZoomScrollTop;
+      this.pendingZoomScrollTop = null;
       if (zoomAnchorPage >= 1 && zoomAnchorPage <= this.pageCount()) {
-        this.runProgrammaticScroll(() => {
-          this.virtualizer.scrollToIndex(zoomAnchorPage - 1, { align: 'auto', behavior: 'auto' });
-        });
-        this.logJumpDebug('zoom-pass-scroll-to-anchor', { zoomAnchorPage });
+        const scrollEl = this.pdfElement()?.nativeElement;
+        if (scrollEl) {
+          if (pendingScrollTop !== null) {
+            // Set the exact scroll position computed in commitPendingZoom() so the
+            // anchor point stays visually stable across zoom changes.
+            this.runProgrammaticScroll(() => {
+              scrollEl.scrollTop = pendingScrollTop;
+            });
+          } else {
+            // Fallback: align to page start (avoids the 'auto' jump-to-bottom bug).
+            this.runProgrammaticScroll(() => {
+              this.virtualizer.scrollToIndex(zoomAnchorPage - 1, { align: 'start', behavior: 'auto' });
+            });
+          }
+        }
+        this.logJumpDebug('zoom-pass-scroll-to-anchor', { zoomAnchorPage, pendingScrollTop });
       }
     }
 
@@ -599,6 +687,14 @@ export class PdfViewerComponent implements OnDestroy {
 
     this.syncVirtualViewport();
     await this.waitForDom();
+
+    if (virtualSizesChanged) {
+      // After a zoom/rotation/resize the virtual window may contain new page slots
+      // that Angular hasn't rendered yet.  Running outside NgZone means Angular
+      // schedules its change-detection via requestAnimationFrame; a second rAF
+      // here ensures those DOM elements exist before we try to query them.
+      await this.waitForDom();
+    }
 
     if (this.pendingHorizontalScrollRatio !== null) {
       this.applyHorizontalScrollRatio(this.pendingHorizontalScrollRatio);
