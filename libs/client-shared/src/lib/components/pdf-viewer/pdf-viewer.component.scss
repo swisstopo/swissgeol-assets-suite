@@ -210,6 +210,19 @@
 
   .canvas-wrapper {
     position: relative;
+
+    // Subtle fade-in whenever a freshly rendered canvas is inserted into a slot.
+    // The animation name changes when --appearing is added, re-triggering the effect.
+    &--appearing {
+      animation: canvas-appear 0.15s ease-out both;
+    }
+
+    // Stale placeholder: the previous canvas, CSS-scaled to the new slot dimensions
+    // while a fresh PDF.js render is in progress. Pointer events are disabled so
+    // text-selection on the stale layer cannot interfere.
+    &--stale {
+      pointer-events: none;
+    }
   }
 
   // PDF.js text layer styles for text selection.
@@ -303,5 +316,15 @@
   }
   100% {
     transform: translateX(200%);
+  }
+}
+
+// Fade-in applied to a freshly rendered canvas wrapper replacing a stale placeholder.
+@keyframes canvas-appear {
+  from {
+    opacity: 0.5;
+  }
+  to {
+    opacity: 1;
   }
 }

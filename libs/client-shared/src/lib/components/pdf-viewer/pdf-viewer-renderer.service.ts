@@ -308,6 +308,11 @@ export class PdfViewerRendererService {
     const parentWidth = (isSwapped ? dim.height : dim.width) * options.baseScale;
     const parentHeight = (isSwapped ? dim.width : dim.height) * options.baseScale;
 
+    // While we wait for the fresh PDF.js render, scale the existing stale canvas
+    // wrapper to roughly match the new slot dimensions. This eliminates the blank
+    // flash during zoom changes without requiring a separate snapshot cache.
+    this.scaleStalePreview(pageNum, zoomAtStart, rotationAtStart, options.baseScale);
+
     const canvas = options.renderer.createElement('canvas') as HTMLCanvasElement;
     const textLayerDiv = options.renderer.createElement('div') as HTMLDivElement;
     options.renderer.addClass(textLayerDiv, 'textLayer');
@@ -498,6 +503,9 @@ export class PdfViewerRendererService {
       this.disposeRenderedPage(pageNum, previous);
     }
 
+    // Mark the incoming wrapper so CSS can play a short fade-in.
+    rendered.wrapper.classList.add('canvas-wrapper--appearing');
+
     if (rendered.wrapper.parentNode === slotElement) {
       // Already in the DOM — class may already be set; skip the DOM read (classList.contains)
       // to avoid forcing a style recalculation.
@@ -514,6 +522,29 @@ export class PdfViewerRendererService {
     }
     renderer.addClass(slotElement, 'page-slot--loaded');
     this.renderedPages.set(pageNum, rendered);
+  }
+
+  /**
+   * Scales the existing stale canvas wrapper to visually match the upcoming
+   * render's dimensions so it acts as an in-place placeholder while PDF.js
+   * re-renders at the new zoom/baseScale level.
+   *
+   * Only applied when the rotation is unchanged; a rotated canvas would appear
+   * in the wrong orientation and look worse than the shimmer.
+   */
+  private scaleStalePreview(pageNum: number, newZoom: number, newRotation: number, newBaseScale: number): void {
+    const existing = this.renderedPages.get(pageNum);
+    if (!existing) return;
+    if (existing.rotation !== newRotation) return;
+
+    // PDF.js viewport size scales linearly with both zoom and baseScale, so
+    // the CSS display size of the canvas changes by their combined ratio.
+    const scale = (newZoom * newBaseScale) / (existing.zoom * existing.baseScale);
+    if (Math.abs(scale - 1) < 0.0001) return; // Already at the right size — nothing to do.
+
+    existing.wrapper.style.transformOrigin = 'center center';
+    existing.wrapper.style.transform = `scale(${scale})`;
+    existing.wrapper.classList.add('canvas-wrapper--stale');
   }
 
   private disposeRenderedPage(pageNum: number, rendered: RenderedPage): void {
