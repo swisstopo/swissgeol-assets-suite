@@ -339,11 +339,14 @@ export class PdfViewerComponent implements OnDestroy {
             this.pendingZoomScrollTop = Math.max(0, newDocY - mouseOffsetY);
           }
         }
-        // Horizontal — keep the document point under the cursor at the same screen X.
-        const newDocX = (scrollLeft + mouseOffsetX) * (newZoom / oldZoom);
-        const newScrollLeft = Math.max(0, newDocX - mouseOffsetX);
-        const newDocWidth = getDocumentWidth(pageDims, containerWidth, baseScl, newZoom, rotation);
-        const newMaxScrollLeft = Math.max(0, newDocWidth - containerWidth);
+        // Horizontal — pages are CSS-centred inside the virtual spacer, so we must
+        // anchor to the distance from the page centre, not from scroll origin 0.
+        // contentWidthOld/New accounts for the min-width clamping at zoom < 1.
+        const contentWidthOld = getDocumentWidth(pageDims, containerWidth, baseScl, oldZoom, rotation);
+        const contentWidthNew = getDocumentWidth(pageDims, containerWidth, baseScl, newZoom, rotation);
+        const dX = scrollLeft + mouseOffsetX - contentWidthOld / 2;
+        const newScrollLeft = Math.max(0, contentWidthNew / 2 + dX * (newZoom / oldZoom) - mouseOffsetX);
+        const newMaxScrollLeft = Math.max(0, contentWidthNew - containerWidth);
         horizontalRatio = newMaxScrollLeft > 0 ? newScrollLeft / newMaxScrollLeft : 0;
       } else {
         // Button zoom: preserve the relative position within the anchor page (vertical)
@@ -357,8 +360,11 @@ export class PdfViewerComponent implements OnDestroy {
           }
         }
         // Horizontal: preserve the current proportional position.
+        // When there is no overflow (zoom ≤ 1) the only sensible starting position
+        // is the centre (0.5), so crossing into zoom > 1 stays centred rather than
+        // snapping to the left edge.
         const maxScrollLeft = Math.max(0, scrollEl.scrollWidth - containerWidth);
-        horizontalRatio = maxScrollLeft > 0 ? scrollLeft / maxScrollLeft : 0;
+        horizontalRatio = maxScrollLeft > 0 ? scrollLeft / maxScrollLeft : 0.5;
       }
     }
 
