@@ -10,6 +10,7 @@ import { map } from 'rxjs';
 import { LanguageService } from '../../services';
 import { setTrackingConsent } from '../../state/app-shared-state.actions';
 import { AppState } from '../../state/index';
+import { writeConsentCookie } from '../../utils/consent-cookie';
 import { ButtonComponent } from '../button/button.component';
 import { LanguageSelectorComponent } from '../language-selector/language-selector.component';
 
@@ -52,6 +53,7 @@ export class DisclaimerDialogComponent implements AfterViewInit {
   }
 
   public close() {
+    writeConsentCookie(this.hasConsented);
     this.store.dispatch(setTrackingConsent({ hasConsented: this.hasConsented }));
     this.dialogRef.close();
   }
