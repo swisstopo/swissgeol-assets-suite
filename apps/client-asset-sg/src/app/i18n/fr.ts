@@ -230,7 +230,6 @@ export const frTranslationMapping: AppTranslationMapping = {
           pageTo: 'Page à',
           save: 'Terminer la modification',
           toLessThanFromError: "La 'Page de' doit être inférieure ou égale à la 'Page à'.",
-          labelTooLong: 'Le titre ne doit pas dépasser 120 caractères.',
           reanalyze: 'Réanalyser',
           recalculateSuccess: 'Les classes de pages ont été regroupées.',
           confirmReanalyze:

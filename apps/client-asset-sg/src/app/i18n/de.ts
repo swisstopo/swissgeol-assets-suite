@@ -227,7 +227,6 @@ export const deTranslationMapping = {
           pageTo: 'Seite bis',
           save: 'Bearbeitung beenden',
           toLessThanFromError: '"Seite von" muss kleiner oder gleich "Seite bis" sein.',
-          labelTooLong: 'Der Titel darf maximal 120 Zeichen lang sein.',
           reanalyze: 'Neu analysieren',
           recalculateSuccess: 'Die Seitenklassen wurden zusammengefasst.',
           confirmReanalyze:
