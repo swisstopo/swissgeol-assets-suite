@@ -13,14 +13,18 @@
  * Steps performed:
  *   1. Query the configured database for the list of files belonging to the specified workgroup(s),
  *      or all workgroups if none are specified.
- *   2. Optionally delete ALL objects under the INT (destination) S3 path (opt-in via --delete-dest-files).
- *   3. Scan all file sizes via HeadObject (20 concurrent) and group them into
+ *   2. Pre-flight S3 access check — writes and deletes a tiny sentinel object on the destination
+ *      to verify credentials are valid and permissions are in place before doing anything destructive.
+ *   3. Optionally delete ALL objects under the destination S3 path (opt-in via --delete-dest-files).
+ *      Requires explicit confirmation before any data is removed.
+ *   4. Scan all file sizes via HeadObject (20 concurrent) and group them into
  *      single (≤ 5 GB) and multipart (> 5 GB) lists, printing an overview with
- *      exact GB totals per group before any copy starts.
- *   4. Copy in two phases (no data flows through this machine):
+ *      exact GB totals and the individual large-file list before any copy starts.
+ *      Requires confirmation to proceed.
+ *   5. Copy in two phases (server-side — no data flows through this machine):
  *      Phase 1 — single files:    worker pool of 20, CopyObject.
- *      Phase 2 — multipart files: sequential, multipart copy API.
- *      Both phases use byte-accurate ETA (all sizes are known from step 3).
+ *      Phase 2 — multipart files: sequential, multipart copy API with per-chunk progress.
+ *      Both phases show byte-accurate ETA (all sizes are known from step 4).
  *      Source tags are stripped (TaggingDirective=REPLACE) to avoid
  *      PutObjectTagging permission errors.
  *
@@ -47,14 +51,7 @@
  *     [--region     <aws-region>] \
  *     [--dry-run]
  *
- * PROD → INT example (fill in the actual DB credentials):
- * node swissgeol-assets-s3-sync.mjs \                                                                                        ─╯
- *     --src-bucket  swissgeol-assets-swisstopo \
- *     --src-path  asset/asset_files/ \
- *     --dest-bucket swissgeol-assets-int-swisstopo \
- *     --dest-path asset/TEST/ \
- *     --db "postgresql://asset-swissgeol@asset-swissgeol-prod.db.swissgeol.ch:5432/asset-swissgeol" \
- *     --workgroups  "Swisstopo" \
+ * PROD → INT example can be found in --help
  *
  * Passwords with special characters might be problematic on command line
  *
@@ -217,15 +214,15 @@ AUTHENTICATION
   Uses the AWS default credential provider chain — identical to the AWS CLI.
   No separate configuration needed if the CLI is already set up.
 
-PROD → INT EXAMPLE (with Password stored in $PGPASSWORD)
-  node swissgeol-assets-s3-sync.mjs \\                                                                                        ─╯
+PROD → INT EXAMPLE (with password stored in $PGPASSWORD)
+  node swissgeol-assets-s3-sync.mjs \\                                                                                           ─╯
     --src-bucket  swissgeol-assets-swisstopo \\
     --src-path  asset/asset_files/ \\
     --dest-bucket swissgeol-assets-int-swisstopo \\
-    --dest-path asset/TEST/ \\
-    --db "postgresql://asset-swissgeol@asset-swissgeol-prod.db.swissgeol.ch:5432/asset-swissgeol" \\
-    --workgroups  "Swisstopo" \\
-    --dry-run
+    --dest-path asset/asset_files/ \\
+    --workgroups "Swisstopo" \\
+    --delete-dest-files \\
+    --db "postgresql://asset-swissgeol@asset-swissgeol-prod.db.swissgeol.ch:5432/asset-swissgeol"
 
   If the password contains special characters, URL-encode it:
     node -e "process.stdout.write(encodeURIComponent('yourpassword'))"
@@ -344,13 +341,16 @@ class TerminalUI {
   }
 }
 
-function makeProgressBar(done, total) {
+function makeProgressBar(done, total, bytesMode = false) {
   const cols = process.stdout.columns ?? 80;
   const barWidth = Math.max(20, Math.min(50, cols - 32));
   const pct = total > 0 ? done / total : 0;
   const filled = Math.round(pct * barWidth);
   const bar = "█".repeat(filled) + "░".repeat(barWidth - filled);
-  return `[${bar}] ${done}/${total} (${Math.round(pct * 100)}%)`;
+  const label = bytesMode
+    ? `${(done / 1024 ** 3).toFixed(2)}/${(total / 1024 ** 3).toFixed(2)} GB`
+    : `${done}/${total}`;
+  return `[${bar}] ${label} (${Math.round(pct * 100)}%)`;
 }
 
 function fmtMs(ms) {
@@ -469,9 +469,7 @@ async function deleteAllInPath(s3, bucket, path, dryRun) {
     return;
   }
 
-  const answer = dryRun
-    ? true
-    : await prompt(`  ⚠️  Permanently delete ${keys.length} object(s) from s3://${bucket}/${path}? [y/N] `);
+  const answer = await prompt(`  ⚠️  Permanently delete ${keys.length} object(s) from s3://${bucket}/${path}? [y/N] `);
   if (answer.trim().toLowerCase() !== "y") {
     console.log("  Deletion skipped.");
     return;
@@ -516,7 +514,7 @@ async function copySingleObject(s3, srcBucket, srcKey, destBucket, destKey) {
   );
 }
 
-async function copyMultipart(s3, srcBucket, srcKey, destBucket, destKey, contentLength) {
+async function copyMultipart(s3, srcBucket, srcKey, destBucket, destKey, contentLength, onPartCopied) {
   const { UploadId } = await s3.send(
     new CreateMultipartUploadCommand({
       Bucket: destBucket,
@@ -544,8 +542,10 @@ async function copyMultipart(s3, srcBucket, srcKey, destBucket, destKey, content
         }),
       );
       parts.push({ PartNumber: partNumber, ETag: CopyPartResult.ETag });
+      const partBytes = end - byteOffset + 1;
       byteOffset = end + 1;
       partNumber++;
+      if (onPartCopied) onPartCopied(partBytes);
     }
 
     await s3.send(
@@ -765,8 +765,9 @@ async function copyFiles(s3, singleFiles, multiFiles, srcBucket, srcPath, destBu
       const lines = [];
       if (active.size > 0) {
         lines.push(`  Active:`);
-        for (const [name, sizeMb] of active) {
-          lines.push(`    ⋯ [multipart]  ${trunc(name, 52)}  ${sizeMb} MB`);
+        for (const [name, info] of active) {
+          const pct = info.totalBytes > 0 ? ` ${Math.round((info.bytesDone / info.totalBytes) * 100)}%` : "";
+          lines.push(`    ⋯ [multipart]  ${trunc(name, 48)}  ${info.sizeMb} MB${pct}`);
         }
       }
       lines.push("");
@@ -777,7 +778,9 @@ async function copyFiles(s3, singleFiles, multiFiles, srcBucket, srcPath, destBu
         const rem = totalBytes - bytesCopied;
         etaStr = rem > 0 ? `~${fmtMs(Math.round(rem / (bytesCopied / elapsed)))}` : "finishing…";
       }
-      lines.push(`  ${makeProgressBar(copied + copyErrors, multiFiles.length)}  ETA ${etaStr}`);
+      // Progress bar based on bytes, not file count — reflects chunk progress mid-file.
+      const bytesDone = bytesCopied; // already includes per-part increments
+      lines.push(`  ${makeProgressBar(bytesDone, totalBytes, true)}  ETA ${etaStr}`);
       ui.setStatus(lines);
     };
 
@@ -786,7 +789,8 @@ async function copyFiles(s3, singleFiles, multiFiles, srcBucket, srcPath, destBu
     for (const { fileName, contentLength } of multiFiles) {
       const sizeMb = (contentLength / 1024 ** 2).toFixed(0);
       const t0 = Date.now();
-      active.set(fileName, sizeMb);
+      const activeInfo = { sizeMb, totalBytes: contentLength, bytesDone: 0 };
+      active.set(fileName, activeInfo);
       redraw();
       try {
         await copyMultipart(
@@ -796,16 +800,23 @@ async function copyFiles(s3, singleFiles, multiFiles, srcBucket, srcPath, destBu
           destBucket,
           `${destPath}${fileName}`,
           contentLength,
+          (partBytes) => {
+            bytesCopied += partBytes;
+            activeInfo.bytesDone += partBytes;
+            redraw();
+          },
         );
         const ms = Date.now() - t0;
         copied++;
         totalMs += ms;
-        bytesCopied += contentLength;
+        // bytesCopied already fully incremented via per-part callback
         active.delete(fileName);
         ui.log(`  ✓  ${trunc(fileName, 58)}  ${sizeMb} MB  ${fmtMs(ms)}`);
         redraw();
       } catch (err) {
         const ms = Date.now() - t0;
+        // Subtract any partial bytes already counted for this file
+        bytesCopied -= activeInfo.bytesDone;
         active.delete(fileName);
         copyErrors++;
         const detail = [err.Code ?? err.code ?? err.name, err.message, err.cause?.message].filter(Boolean).join(" — ");
