@@ -29,7 +29,7 @@
           </dt>
           @for (classification of group.classifications; track classification) {
             <dd>
-              <button (click)="this.openPdfOnPage(classification.from)" [title]="classification.label">
+              <button (click)="this.openPdfOnPage(classification.from)" [attr.title]="classification.label || null">
                 {{ classification.label ?? "pageClassificationCodes." + group.category | translate }}
               </button>
               @if (classification.languages.length > 0) {
