@@ -229,8 +229,8 @@ export class ViewerControllerService {
       return;
     }
     const currentResultsState = await firstValueFrom(this.store.select(selectResultsState));
-    console.log(currentResultsState);
-    if (isEmptySearchQuery(query) && !query.favoritesOnly) {
+    const isSearchQueryEmpty = isEmptySearchQuery(query);
+    if (isSearchQueryEmpty && !query.favoritesOnly) {
       // Only reset map position if the query is empty and not in favorites mode
       this.store.dispatch(actions.setMapPosition({ position: DEFAULT_MAP_POSITION }));
     }
@@ -250,7 +250,14 @@ export class ViewerControllerService {
         ? (await firstValueFrom(this.store.select(selectFileSearchResults))).page.total
         : (await firstValueFrom(this.store.select(selectSearchResults))).page.total;
 
-    if (isPanelAutomaticallyToggled(currentResultsState)) {
+    if (isSearchQueryEmpty) {
+      // If the query is empty, we ALWAYS close the results
+      this.store.dispatch(
+        actions.setResultsState({
+          state: PanelState.ClosedAutomatically,
+        }),
+      );
+    } else if (isPanelAutomaticallyToggled(currentResultsState)) {
       this.store.dispatch(
         actions.setResultsState({
           state: total === 0 ? PanelState.ClosedAutomatically : PanelState.OpenedAutomatically,
