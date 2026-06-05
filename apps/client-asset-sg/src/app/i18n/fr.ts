@@ -221,9 +221,11 @@ export const frTranslationMapping: AppTranslationMapping = {
         pageRanges: {
           title: 'Classification',
           edit: 'Modifier la classification',
-          recalculateRanges: 'Recalculer la classification',
+          updateOrder: "Actualiser l'ordre",
           type: 'Type',
           language: 'Langue',
+          label: 'Titre',
+          addSection: 'Ajouter une section',
           pageFrom: 'Page de',
           pageTo: 'Page à',
           save: 'Terminer la modification',
