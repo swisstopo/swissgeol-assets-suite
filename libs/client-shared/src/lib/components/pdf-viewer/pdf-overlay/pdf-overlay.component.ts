@@ -1,6 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogContent, MatDialogRef } from '@angular/material/dialog';
-import { PdfViewerComponent, PdfViewerFile } from '../pdf-viewer.component';
+import { PdfViewerComponent } from '../pdf-viewer.component';
+import { PdfViewerFile } from '../pdf-viewer.models';
 
 export interface PdfOverlayData {
   assetId: number;

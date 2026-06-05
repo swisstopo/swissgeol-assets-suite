@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, input, model, output } from '@angular/core';
 import { SgcButton, SgcIcon, SgcSelect } from '@swissgeol/ui-core-angular';
-import { PdfViewerFile } from '../pdf-viewer.component';
+import { PdfViewerFile } from '../pdf-viewer.models';
 
 @Component({
   selector: 'asset-sg-pdf-viewer-header',

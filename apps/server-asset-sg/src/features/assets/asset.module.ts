@@ -6,15 +6,19 @@ import { AssetService } from '@/features/assets/asset.service';
 import { AssetsController } from '@/features/assets/assets.controller';
 import { FavoriteRepo } from '@/features/assets/favorites/favorite.repo';
 import { FavoritesController } from '@/features/assets/favorites/favorites.controller';
-import { FileExtractionService } from '@/features/assets/files/file-processors/file-extraction/file-extraction.service';
+import { FileExtractionService } from '@/features/assets/files/file-processors/file-extraction/v2/file-extraction.service';
 import { FileOcrService } from '@/features/assets/files/file-processors/file-ocr/file-ocr.service';
 import { FileS3Service } from '@/features/assets/files/file-s3.service';
 import { FileRepo } from '@/features/assets/files/file.repo';
 import { FileService } from '@/features/assets/files/file.service';
 import { FilesController } from '@/features/assets/files/files.controller';
+import { PdfMetadataService } from '@/features/assets/files/pdf-metadata.service';
 import { AssetGeometriesController } from '@/features/assets/geometries/asset-geometries.controller';
 import { AssetSearchController } from '@/features/assets/search/asset-search.controller';
 import { AssetSearchService } from '@/features/assets/search/asset-search.service';
+import { FileSearchController } from '@/features/assets/search/file-search.controller';
+import { FileSearchService } from '@/features/assets/search/file-search.service';
+import { SearchWriterService } from '@/features/assets/search/search-writer.service';
 import { AssetSyncController } from '@/features/assets/sync/asset-sync.controller';
 import { AssetSyncService } from '@/features/assets/sync/asset-sync.service';
 import { FileFulltextSyncService } from '@/features/assets/sync/file-fulltext-sync.service';
@@ -32,10 +36,21 @@ import { UsersModule } from '@/features/users/users.module';
     AssetsController,
     FilesController,
     AssetSearchController,
+    FileSearchController,
     FavoritesController,
     WorkflowController,
   ],
-  exports: [AssetSearchService, AssetRepo, AssetService, WorkflowService, FileS3Service, FileService, FileRepo],
+  exports: [
+    AssetSearchService,
+    FileSearchService,
+    SearchWriterService,
+    AssetRepo,
+    AssetService,
+    WorkflowService,
+    FileS3Service,
+    FileService,
+    FileRepo,
+  ],
   imports: [UsersModule],
   providers: [
     provideElasticsearch,
@@ -46,10 +61,13 @@ import { UsersModule } from '@/features/users/users.module';
     PrismaService,
     AssetService,
     AssetSearchService,
+    FileSearchService,
+    SearchWriterService,
     FileOcrService,
     FileS3Service,
     FileService,
     FileExtractionService,
+    PdfMetadataService,
     FavoriteRepo,
     AssetSyncService,
     FileFulltextSyncService,

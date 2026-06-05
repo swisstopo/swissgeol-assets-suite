@@ -64,6 +64,9 @@
         }
       }
     },
+    "workgroupId": {
+      "type": "integer"
+    },
     "usageCode": {
       "type": "keyword"
     },

@@ -39,6 +39,9 @@
           text-transform: none;
           cursor: pointer;
           font-size: inherit;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
         }
 
         span:not(.range-divider) {

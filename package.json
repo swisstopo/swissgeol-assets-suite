@@ -19,7 +19,8 @@
     "cypress:open": "cypress open --config-file cypress/cypress.config.ts",
     "cypress:run": "cypress run --config-file cypress/cypress.config.ts",
     "prepare": "husky",
-    "generate-interfaces:data-extraction": "npx swagger-typescript-api generate --path http://localhost:1337/v1/openapi.json --output ./apps/server-asset-sg/src/features/assets/files/file-processors/file-extraction --name extraction-service-generated.interfaces.ts --no-client"
+    "generate-interfaces:data-extraction": "npx swagger-typescript-api generate --path http://localhost:1337/v1/openapi.json --output ./apps/server-asset-sg/src/features/assets/files/file-processors/file-extraction --name extraction-service-generated.interfaces.ts --no-client",
+    "generate-interfaces:data-extraction-v2": "npx swagger-typescript-api generate --path http://localhost:1337/v2/openapi.json --output ./apps/server-asset-sg/src/features/assets/files/file-processors/file-extraction/v2 --name extraction-service-generated.interfaces.ts --no-client"
   },
   "private": true,
   "dependencies": {
@@ -62,6 +63,7 @@
     "@rx-angular/template": "^20.0.0",
     "@swissgeol/ui-core": "1.7.0-dev5",
     "@swissgeol/ui-core-angular": "1.7.0-dev5",
+    "@tanstack/angular-virtual": "^5.0.0",
     "@turf/boolean-within": "^7.2.0",
     "@turf/buffer": "^7.2.0",
     "@turf/helpers": "^7.2.0",
@@ -167,6 +169,9 @@
     "@nx/nx-linux-x64-gnu": "~21.0.3",
     "@nx/nx-linux-x64-musl": "~21.0.3",
     "@nx/nx-win32-x64-msvc": "~21.0.3"
+  },
+  "overrides": {
+    "@tootallnate/once": "^3.0.0"
   },
   "prisma": {
     "schema": "libs/persistence/prisma/schema.prisma"

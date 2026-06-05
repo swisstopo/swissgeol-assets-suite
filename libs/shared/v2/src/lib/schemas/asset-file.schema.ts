@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsDate, IsEnum, IsIn, IsInt, IsString, IsUrl, ValidateNested } from 'class-validator';
+import { IsDate, IsEnum, IsIn, IsInt, IsNumber, IsString, IsUrl, ValidateNested } from 'class-validator';
 import {
   AssetFile,
   AssetFileId,
@@ -7,6 +7,7 @@ import {
   FileProcessingStage,
   FileProcessingState,
   LegalDocCode,
+  PageDimension,
   UpdateAssetFileData,
 } from '../models/asset-file';
 import {
@@ -18,6 +19,17 @@ import {
 import { IsNullable } from '../utils/class-validator/is-nullable.decorator';
 import { Schema } from './base/schema';
 
+class PageDimensionSchema implements PageDimension {
+  @IsInt()
+  page!: number;
+
+  @IsNumber()
+  width!: number;
+
+  @IsNumber()
+  height!: number;
+}
+
 class PageRangeClassificationSchema implements PageRangeClassification {
   @IsInt()
   to!: number;
@@ -27,6 +39,9 @@ class PageRangeClassificationSchema implements PageRangeClassification {
   languages!: SupportedPageLanguage[];
   @IsEnum(PageCategory, { each: true })
   categories!: PageCategory[];
+  @IsNullable()
+  @IsString()
+  label?: string | null;
 }
 
 export class AssetFileSchema extends Schema implements AssetFile {
@@ -64,6 +79,11 @@ export class AssetFileSchema extends Schema implements AssetFile {
   @Type(() => PageRangeClassificationSchema)
   @ValidateNested({ each: true })
   pageRangeClassifications!: PageRangeClassificationSchema[] | null;
+
+  @IsNullable()
+  @Type(() => PageDimensionSchema)
+  @ValidateNested({ each: true })
+  pageDimensions!: PageDimension[] | null;
 }
 
 export class UpdateAssetFileDataSchema extends Schema implements UpdateAssetFileData {
@@ -81,4 +101,13 @@ export class UpdateAssetFileDataSchema extends Schema implements UpdateAssetFile
 export class AssetFileSignedUrlSchema extends Schema implements AssetFileSignedUrl {
   @IsUrl()
   url!: string;
+}
+
+export class AssetFileMetadataSchema extends Schema {
+  @IsInt()
+  pageCount!: number;
+
+  @ValidateNested({ each: true })
+  @Type(() => PageDimensionSchema)
+  pageDimensions!: PageDimension[];
 }

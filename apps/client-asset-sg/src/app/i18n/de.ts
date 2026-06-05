@@ -83,7 +83,11 @@ export const deTranslationMapping = {
     closeInstructions: 'Anleitung schliessen',
     searchControl: 'Suchsteuerung',
     refineSearch: 'Suche verfeinern',
-    searchResults: 'Assets',
+    assets: 'Assets',
+    files: 'Dokumente',
+    fileName: 'Dateiname',
+    page: 'Seite',
+    textMatch: 'Textübereinstimmung',
     author: 'Autor',
     documentDate: 'Dokumentdatum',
     usage: 'Nutzung',
@@ -214,9 +218,11 @@ export const deTranslationMapping = {
         pageRanges: {
           title: 'Klassifizierung',
           edit: 'Klassifizierung bearbeiten',
-          recalculateRanges: 'Klassen neu zusammenfassen',
+          updateOrder: 'Reihenfolge aktualisieren',
           type: 'Typ',
           language: 'Sprache',
+          label: 'Titel',
+          addSection: 'Abschnitt hinzufügen',
           pageFrom: 'Seite von',
           pageTo: 'Seite bis',
           save: 'Bearbeitung beenden',
@@ -359,6 +365,10 @@ export const deTranslationMapping = {
       'Gleicht den Zustand von Elasticsearch mit der Datenbank ab.' +
       ' Damit wird sichergestellt, dass die Suche alle vorhandenen Assets miteinbezieht.',
     adminInstructionsSyncElasticAssetsStart: 'Synchronisation starten',
+    adminInstructionsSyncFileContentFromStorageHeading: 'Volltextsuche erneuern',
+    adminInstructionsSyncFileContentFromStorage:
+      'Lädt die Volltexte der Dateien erneut aus der Filestorage und erneuert den entsprechenden Index.',
+    adminInstructionsSyncFileContentFromStorageHeadingStart: 'Volltext-Synchronisation starten',
   },
   admin: {
     users: 'Benutzer',

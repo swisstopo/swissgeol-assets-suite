@@ -17,7 +17,7 @@
   align-items: center;
 
   &__header {
-    z-index: 2; ///note: should be above toc
+    z-index: 2;
   }
 
   &__toc {
@@ -31,26 +31,46 @@
   &__page-wrapper {
     width: 100%;
     height: 100%;
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
+    overflow-y: auto;
+    overflow-x: auto;
+    scrollbar-gutter: stable;
 
-    .canvas-wrapper {
-      position: relative;
-    }
-
-    canvas {
-      display: block;
-      cursor: text;
-    }
-
-    &.viewer__page-wrapper--is-dragging canvas {
+    &--space-pan {
       cursor: grab;
+      touch-action: none;
+      user-select: none;
+
+      .canvas-wrapper,
+      canvas {
+        cursor: grab;
+      }
+
+      .textLayer {
+        pointer-events: none;
+        user-select: none;
+      }
     }
 
-    &.viewer__page-wrapper--is-dragging .textLayer {
-      pointer-events: none;
+    &--is-panning {
+      cursor: grabbing;
+      touch-action: none;
+
+      .canvas-wrapper,
+      canvas {
+        cursor: grabbing;
+        user-select: none;
+      }
+
+      .textLayer {
+        pointer-events: none;
+        user-select: none;
+      }
     }
+  }
+
+  &__virtual-spacer {
+    position: relative;
+    min-width: 100%;
   }
 
   &__button-container {
@@ -99,19 +119,97 @@
 
   canvas {
     height: auto;
+    display: block;
+  }
+}
 
-    &[data-pdf-page-rotation="90"] {
-      transform: rotate(90deg);
-    }
+.page-slot {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: var(--sgc-color-primary--400);
 
-    &[data-pdf-page-rotation="180"] {
-      transform: rotate(180deg);
-    }
+  contain: layout style paint;
 
-    &[data-pdf-page-rotation="270"] {
-      transform: rotate(270deg);
-      transform-origin: center center;
+  --skeleton-strong: #e3e3e3;
+  --skeleton-mid: #ececec;
+  --skeleton-soft: #f4f4f4;
+
+  overflow: hidden;
+
+  &::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: var(--page-width, min(95%, 860px));
+    height: var(--page-height, min(95%, 1200px));
+    transform: translate(-50%, -50%);
+    border-radius: 10px;
+    border: 1px solid #e4e4e4;
+    background: #fbfbfb;
+    box-shadow:
+      0 12px 28px rgb(0 0 0 / 0.08),
+      0 2px 6px rgb(0 0 0 / 0.06);
+  }
+
+  // GPU-composited shimmer overlay: only transform is animated (no CPU repaint).
+  // Sized and centered to match the ::before skeleton card exactly.
+  &__shimmer {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: var(--page-width, min(95%, 860px));
+    height: var(--page-height, min(95%, 1200px));
+    transform: translate(-50%, -50%);
+    border-radius: 10px;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 1;
+
+    // Inner sliding highlight — animates via transform (GPU-composited).
+    &::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent 0%, rgb(255 255 255 / 0.65) 48%, transparent 100%);
+      animation: page-skeleton-shimmer 1.6s ease-in-out infinite;
+      will-change: transform;
     }
+  }
+
+  &::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: calc(var(--page-width, 860px) * 0.75);
+    height: calc(var(--page-height, 1200px) * 0.75);
+    transform: translate(-50%, -50%);
+    background:
+      linear-gradient(var(--skeleton-strong), var(--skeleton-strong)) 0 0 / 35% 4% no-repeat,
+      linear-gradient(var(--skeleton-mid), var(--skeleton-mid)) 0 15% / 80% 2% no-repeat,
+      linear-gradient(var(--skeleton-mid), var(--skeleton-mid)) 0 22% / 65% 2% no-repeat,
+      linear-gradient(var(--skeleton-soft), var(--skeleton-soft)) 0 40% / 75% 25% no-repeat,
+      linear-gradient(var(--skeleton-mid), var(--skeleton-mid)) 0 75% / 70% 2% no-repeat;
+    opacity: 0.95;
+  }
+
+  &--loaded::before,
+  &--loaded::after,
+  &--loaded &__shimmer {
+    display: none;
+  }
+
+  .canvas-wrapper {
+    position: relative;
   }
 
   // PDF.js text layer styles for text selection.
@@ -131,16 +229,8 @@
     transform-origin: 0 0;
     caret-color: CanvasText;
     z-index: 0;
-
-    // Reset font-weight to match the canvas 2D context default (normal/400) used by TextLayer
-    // for measuring text widths. Without this, inherited font-weight (e.g. 500 from body)
-    // causes spans to render wider than their measured widths, with the error accumulating
-    // over longer text and being more visible at larger font sizes.
     font-weight: normal;
 
-    // --scale-factor, --total-scale-factor, and --scale-round-x/y are set as inline styles
-    // by the service before TextLayer construction.
-    // --min-font-size is set inline by TextLayer itself.
     --text-scale-factor: calc(var(--total-scale-factor) * var(--min-font-size));
     --min-font-size-inv: calc(1 / var(--min-font-size));
 
@@ -203,5 +293,15 @@
     &.selecting .endOfContent {
       top: 0;
     }
+  }
+}
+
+// GPU-composited shimmer: only transform is animated (no repaint).
+@keyframes page-skeleton-shimmer {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(200%);
   }
 }

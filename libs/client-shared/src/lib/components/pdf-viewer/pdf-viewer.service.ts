@@ -12,6 +12,7 @@ import {
 import { PDFPageProxy, TextContent } from 'pdfjs-dist/types/src/display/api';
 import { SessionStorageService } from '../../services/session-storage.service';
 import { selectIsAnonymousMode } from '../../state/app-shared-state.selectors';
+import { PdfRenderTask, PDF_VIEWER_DEBUG } from './pdf-viewer.models';
 
 // Worker source for PDF JS. Note that this must match the path that is defined in the builder configuration
 GlobalWorkerOptions.workerSrc = 'assets/pdfjs/pdf.worker.min.mjs';
@@ -22,12 +23,12 @@ export class PdfViewerService implements OnDestroy {
   private pdfDoc: PDFDocumentProxy | undefined;
   private readonly sessionStorageService = inject(SessionStorageService);
   private readonly ngZone = inject(NgZone);
-  private selectionAbortController: AbortController | null = null;
+  private readonly selectionAbortControllers = new Map<HTMLElement, AbortController>();
   private readonly store = inject(Store);
   private readonly isViewApp = toSignal(this.store.select(selectIsAnonymousMode));
 
   async ngOnDestroy() {
-    this.selectionAbortController?.abort();
+    this.cleanupTextLayerSelections();
     await this.destroyPdfJsWorker();
   }
 
@@ -68,35 +69,86 @@ export class PdfViewerService implements OnDestroy {
        * since recovery behaviour is not yet defined.
        */
       console.log('Error rendering PDF');
+
       throw e;
     }
   }
 
+  public async getPageDimensions(pageNum: number): Promise<{ width: number; height: number }> {
+    if (!this.pdfDoc) {
+      throw new Error('PDF document not loaded');
+    }
+    const page = await this.pdfDoc.getPage(pageNum);
+    const viewport = page.getViewport({ scale: 1 });
+    return { width: viewport.width, height: viewport.height };
+  }
   public async renderPageToCanvas(
     canvas: HTMLCanvasElement,
-    textLayerDiv: HTMLElement,
     pageNum: number,
     parentWidth: number,
     parentHeight: number,
     zoom: number,
-  ) {
+    rotation = 0,
+    onRenderTask?: (renderTask: PdfRenderTask) => void,
+  ): Promise<{
+    page: PDFPageProxy;
+    viewport: PageViewport;
+    nativeWidth: number;
+    nativeHeight: number;
+  }> {
     if (!this.pdfDoc) {
       throw new Error('PDF document not loaded');
     }
 
+    const timeStart = performance.now();
     const page = await this.pdfDoc.getPage(pageNum);
-    const viewport = this.prepareViewport(page, parentWidth, parentHeight, zoom);
+    // Always store unrotated native dimensions for stable slot sizing
+    const unscaledViewport = page.getViewport({ scale: 1 });
+    const viewport = this.prepareViewport(page, parentWidth, parentHeight, zoom, rotation);
     this.prepareCanvas(canvas, viewport);
     const context = canvas.getContext('2d');
     if (!context) {
       throw new Error('Could not get 2d context from canvas');
     }
-    await page.render({ canvasContext: context, viewport, canvas }).promise;
-    await this.renderTextLayer(page, textLayerDiv, viewport);
+    const renderTask = page.render({
+      canvasContext: context,
+      viewport,
+      canvas,
+    });
+    onRenderTask?.(renderTask);
+    await renderTask.promise;
+    const timeElapsed = performance.now() - timeStart;
+    if (PDF_VIEWER_DEBUG) {
+      console.log(
+        `%c[pdf-queue] %cloaded page with num ${pageNum} in ${timeElapsed.toFixed(2)}`,
+        'background: #28a745; color: white; padding: 4px; border-radius: 4px;',
+        'font-weight: bold;',
+      );
+    }
+    return {
+      page,
+      viewport,
+      nativeWidth: unscaledViewport.width,
+      nativeHeight: unscaledViewport.height,
+    };
   }
 
-  private async renderTextLayer(page: PDFPageProxy, textLayerDiv: HTMLElement, viewport: PageViewport) {
-    const textContent = await page.getTextContent({ disableNormalization: true });
+  public cleanupTextLayerSelection(textLayerDiv: HTMLElement): void {
+    this.selectionAbortControllers.get(textLayerDiv)?.abort();
+    this.selectionAbortControllers.delete(textLayerDiv);
+  }
+
+  public cleanupTextLayerSelections(): void {
+    for (const controller of this.selectionAbortControllers.values()) {
+      controller.abort();
+    }
+    this.selectionAbortControllers.clear();
+  }
+
+  public async renderTextLayer(page: PDFPageProxy, textLayerDiv: HTMLElement, viewport: PageViewport) {
+    const textContent = await page.getTextContent({
+      disableNormalization: true,
+    });
     await document.fonts.ready;
 
     // These CSS variables must be set before constructing TextLayer, because the constructor
@@ -124,36 +176,45 @@ export class PdfViewerService implements OnDestroy {
    *
    * This method recomputes --scale-x using actual DOM measurements (getBoundingClientRect) to match
    * the CSS-rendered span widths to the expected PDF text widths.
+   *
+   * Writes and reads are batched to avoid O(n) forced reflows (layout thrashing).
    */
   private correctTextLayerScaleX(textLayer: TextLayer, textContent: TextContent, viewport: PageViewport) {
     const textDivs = textLayer.textDivs;
     const textItems = textContent.items.filter((item) => 'str' in item && 'width' in item);
 
+    // --- Batch write: remove transforms so natural widths can be measured ---
     const savedTransforms: string[] = [];
     for (let i = 0; i < textDivs.length && i < textItems.length; i++) {
       savedTransforms.push(textDivs[i].style.transform);
       textDivs[i].style.transform = 'none';
     }
 
-    const measurements: { span: HTMLElement; expectedCssWidth: number; naturalWidth: number }[] = [];
+    // --- Batch read: measure all natural widths in one pass (single reflow) ---
+    const measurements: {
+      index: number;
+      expectedCssWidth: number;
+      naturalWidth: number;
+    }[] = [];
     for (let i = 0; i < textDivs.length && i < textItems.length; i++) {
       const item = textItems[i];
       if (!item.width || !textDivs[i].textContent) {
         continue;
       }
       measurements.push({
-        span: textDivs[i],
+        index: i,
         expectedCssWidth: item.width * viewport.scale,
         naturalWidth: textDivs[i].getBoundingClientRect().width,
       });
     }
 
+    // --- Batch write: restore transforms and apply corrected --scale-x ---
     for (let i = 0; i < textDivs.length && i < textItems.length; i++) {
       textDivs[i].style.transform = savedTransforms[i];
     }
-    for (const { span, expectedCssWidth, naturalWidth } of measurements) {
+    for (const { index, expectedCssWidth, naturalWidth } of measurements) {
       if (naturalWidth > 0) {
-        span.style.setProperty('--scale-x', (expectedCssWidth / naturalWidth).toString());
+        textDivs[index].style.setProperty('--scale-x', (expectedCssWidth / naturalWidth).toString());
       }
     }
   }
@@ -169,10 +230,10 @@ export class PdfViewerService implements OnDestroy {
    * and TextLayerBuilder.#enableGlobalSelectionListener.
    */
   private setupSelectionBehavior(textLayerDiv: HTMLElement) {
-    // Abort previous listeners (from prior page renders) before setting up new ones.
-    this.selectionAbortController?.abort();
-    this.selectionAbortController = new AbortController();
-    const { signal } = this.selectionAbortController;
+    this.cleanupTextLayerSelection(textLayerDiv);
+    const abortController = new AbortController();
+    this.selectionAbortControllers.set(textLayerDiv, abortController);
+    const { signal } = abortController;
 
     const endOfContent = document.createElement('div');
     endOfContent.className = 'endOfContent';
@@ -259,7 +320,8 @@ export class PdfViewerService implements OnDestroy {
 
           let anchor = modifyStart ? range.startContainer : range.endContainer;
           if (anchor.nodeType === Node.TEXT_NODE) {
-            anchor = anchor.parentNode!;
+            if (!anchor.parentNode) return;
+            anchor = anchor.parentNode;
           }
 
           if (!modifyStart && range.endOffset === 0) {
@@ -278,13 +340,12 @@ export class PdfViewerService implements OnDestroy {
 
           const parentTextLayer = (anchor as HTMLElement).parentElement?.closest('.textLayer');
           if (parentTextLayer === textLayerDiv) {
+            const anchorParent = (anchor as HTMLElement).parentElement;
+            if (!anchorParent) return;
             endOfContent.style.width = textLayerDiv.style.width;
             endOfContent.style.height = textLayerDiv.style.height;
             endOfContent.style.userSelect = 'text';
-            (anchor as HTMLElement).parentElement!.insertBefore(
-              endOfContent,
-              modifyStart ? (anchor as Node) : (anchor as Node).nextSibling,
-            );
+            anchorParent.insertBefore(endOfContent, modifyStart ? anchor : anchor.nextSibling);
           }
 
           prevRange = range.cloneRange();
@@ -322,11 +383,16 @@ export class PdfViewerService implements OnDestroy {
     }
   }
 
-  private prepareViewport(page: PDFPageProxy, parentWidth: number, parentHeight: number, zoom: number): PageViewport {
-    const unscaledViewport = page.getViewport({ scale: 1 });
+  private prepareViewport(
+    page: PDFPageProxy,
+    parentWidth: number,
+    parentHeight: number,
+    zoom: number,
+    rotation = 0,
+  ): PageViewport {
+    const unscaledViewport = page.getViewport({ scale: 1, rotation });
     const scale = Math.min(parentWidth / unscaledViewport.width, parentHeight / unscaledViewport.height) * zoom;
-
-    return page.getViewport({ scale });
+    return page.getViewport({ scale, rotation });
   }
 
   private async destroyPdfJsWorker() {

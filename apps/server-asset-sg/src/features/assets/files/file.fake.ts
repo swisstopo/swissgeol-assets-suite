@@ -15,4 +15,5 @@ export const fakeFile = (): AssetFile => ({
   fileProcessingStage: faker.helpers.enumValue(FileProcessingStage),
   fileProcessingState: faker.helpers.enumValue(FileProcessingState),
   pageRangeClassifications: null,
+  pageDimensions: null,
 });

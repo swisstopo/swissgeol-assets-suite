@@ -1,16 +1,30 @@
-<ng-container *rxLet="isResultsOpen$; let isResultsOpen">
-  <div class="header">
-    <div>
-      <asset-sg-animate-number [nextValue]="(total$ | async) ?? 0" data-testid="assetCount" />
-      {{ "search.searchResults" | translate }}
-    </div>
-    <button asset-sg-tertiary (click)="toggleResultsOpen()">
-      <span> {{ (isResultsOpen ? "search.hideTable" : "search.showTable") | translate }} </span>
-      <svg-icon [key]="isResultsOpen ? 'arrow-down' : 'arrow-up'"></svg-icon>
-    </button>
+@let searchQuery = searchQuery$ | push;
+@let isResultsOpen = isResultsOpen$ | push;
+<div class="header">
+  <div class="header__tabs">
+    @if (searchQuery.type === SearchType.Asset) {
+      <div>
+        <asset-sg-animate-number [nextValue]="(total$ | async) ?? 0" data-testid="assetCount" />
+        {{ "search.assets" | translate }}
+      </div>
+    }
+    @if (searchQuery.type === SearchType.File) {
+      <div>
+        <asset-sg-animate-number [nextValue]="(fileTotal$ | async) ?? 0" data-testid="fileCount" />
+        {{ "search.files" | translate }}
+        (<asset-sg-animate-number [nextValue]="(total$ | async) ?? 0" data-testid="assetCount" />
+        {{ "search.assets" | translate }})
+      </div>
+    }
   </div>
-  @if (isResultsOpen) {
-    <div class="search-results">
+  <button asset-sg-tertiary (click)="toggleResultsOpen()">
+    <span> {{ (isResultsOpen ? "search.hideTable" : "search.showTable") | translate }} </span>
+    <svg-icon [key]="isResultsOpen ? 'arrow-down' : 'arrow-up'"></svg-icon>
+  </button>
+</div>
+@if (isResultsOpen) {
+  <div class="search-results">
+    @if (searchQuery.type === SearchType.Asset) {
       <div class="table-container" (scroll)="onScroll($event)" #scrollContainer>
         <table mat-table [dataSource]="resultsToDisplay" class="mat-elevation-z8 table">
           <ng-container matColumnDef="favourites">
@@ -21,58 +35,69 @@
           </ng-container>
           <ng-container matColumnDef="titlePublic">
             <th mat-header-cell *matHeaderCellDef translate>{{ "edit.tabs.references.assetTitlePublic" }}</th>
-            <td mat-cell *matCellDef="let asset">{{ asset.title }}</td>
+            <td mat-cell *matCellDef="let asset">
+              <div class="clamped-cell-content">
+                {{ asset.title }}
+              </div>
+            </td>
           </ng-container>
           <ng-container matColumnDef="assetFormat">
             <th mat-header-cell *matHeaderCellDef translate>{{ "search.kind" }}</th>
             <td mat-cell *matCellDef="let asset">
-              {{ asset.kindCode | reference: "assetKinds" }} &ndash; {{ asset.formatCode | reference: "assetFormats" }}
+              {{ asset.kindCode | reference: "assetKinds" }} &ndash;
+              {{ asset.formatCode | reference: "assetFormats" }}
             </td>
           </ng-container>
           <ng-container matColumnDef="manCatLabel">
             <th mat-header-cell *matHeaderCellDef translate>{{ "search.topic" }}</th>
             <td mat-cell *matCellDef="let asset">
               @for (topicCode of asset.topicCodes; track topicCode) {
-                <div>
-                  {{ topicCode | reference: "assetTopics" }}
-                </div>
+                <div>{{ topicCode | reference: "assetTopics" }}</div>
               }
             </td>
           </ng-container>
           <ng-container matColumnDef="authors">
             <th mat-header-cell *matHeaderCellDef translate>{{ "contactRoles.author" }}</th>
             <td mat-cell *matCellDef="let asset">
-              @for (contact of asset.contacts; track trackContact(contact)) {
-                @if (contact.role === AssetContactRole.Author) {
-                  <div>{{ contact.id | reference: "contacts" }}</div>
+              <div class="clamped-cell-content">
+                @for (contact of asset.contacts; track trackContact(contact)) {
+                  @if (contact.role === AssetContactRole.Author) {
+                    <div>{{ contact.id | reference: "contacts" }}</div>
+                  }
                 }
-              }
+              </div>
             </td>
           </ng-container>
           <ng-container matColumnDef="initiators">
             <th mat-header-cell *matHeaderCellDef translate>{{ "contactRoles.initiator" }}</th>
             <td mat-cell *matCellDef="let asset">
-              @for (contact of asset.contacts; track trackContact(contact)) {
-                @if (contact.role === AssetContactRole.Initiator) {
-                  <div>{{ contact.id | reference: "contacts" }}</div>
+              <div class="clamped-cell-content">
+                @for (contact of asset.contacts; track trackContact(contact)) {
+                  @if (contact.role === AssetContactRole.Initiator) {
+                    <div>{{ contact.id | reference: "contacts" }}</div>
+                  }
                 }
-              }
+              </div>
             </td>
           </ng-container>
           <ng-container matColumnDef="suppliers">
             <th mat-header-cell *matHeaderCellDef translate>{{ "contactRoles.supplier" }}</th>
             <td mat-cell *matCellDef="let asset">
-              @for (contact of asset.contacts; track trackContact(contact)) {
-                @if (contact.role === AssetContactRole.Supplier) {
-                  <div>{{ contact.id | reference: "contacts" }}</div>
+              <div class="clamped-cell-content">
+                @for (contact of asset.contacts; track trackContact(contact)) {
+                  @if (contact.role === AssetContactRole.Supplier) {
+                    <div>{{ contact.id | reference: "contacts" }}</div>
+                  }
                 }
-              }
+              </div>
             </td>
           </ng-container>
           <ng-container matColumnDef="createDate">
             <th mat-header-cell *matHeaderCellDef translate>{{ "search.createdDate" }}</th>
             <td mat-cell *matCellDef="let asset">
-              {{ asset.createdAt | assetSgDate }}
+              <div class="clamped-cell-content">
+                {{ asset.createdAt | assetSgDate }}
+              </div>
             </td>
           </ng-container>
           <tr mat-header-row *matHeaderRowDef="COLUMNS; sticky: true" class="table__header"></tr>
@@ -87,6 +112,61 @@
           ></tr>
         </table>
       </div>
-    </div>
-  }
-</ng-container>
+    }
+    @if (searchQuery.type === SearchType.File) {
+      <div class="table-container">
+        <table mat-table [dataSource]="fileResultsToDisplay" class="mat-elevation-z8 table">
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef></th>
+            <td mat-cell *matCellDef="let file">
+              <div class="action-buttons">
+                <button asset-sg-primary isIcon (click)="searchForAsset(file.assetId); $event.stopPropagation()">
+                  <svg-icon key="info"></svg-icon>
+                </button>
+              </div>
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="fileName">
+            <th mat-header-cell *matHeaderCellDef>{{ "search.fileName" | translate }}</th>
+            <td mat-cell *matCellDef="let file">
+              <div class="clamped-cell-content">
+                {{ file.fileName }}
+              </div>
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="assetTitle">
+            <th mat-header-cell *matHeaderCellDef>{{ "edit.tabs.references.assetTitlePublic" | translate }}</th>
+            <td mat-cell *matCellDef="let file">
+              <div class="clamped-cell-content">
+                {{ file.assetTitle }}
+              </div>
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="pages">
+            <th mat-header-cell *matHeaderCellDef>{{ "search.textMatch" | translate }}</th>
+            <td mat-cell *matCellDef="let file">
+              <div class="file-page-cell">
+                @for (page of pagesWithContent(file.pages); track page.page) {
+                  <div class="file-page-entry" (click)="openPdf(file, page.page); $event.stopPropagation()">
+                    <span class="file-page-number">{{ "search.page" | translate }} {{ page.page }}</span>
+                    @for (highlight of page.highlights; track $index) {
+                      <div class="highlight" [innerHTML]="highlight"></div>
+                    }
+                  </div>
+                }
+              </div>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="FILE_COLUMNS; sticky: true" class="table__header"></tr>
+          <tr
+            clickable
+            mat-row
+            *matRowDef="let row; columns: FILE_COLUMNS"
+            (click)="openPdf(row); $event.stopPropagation()"
+          ></tr>
+        </table>
+      </div>
+    }
+  </div>
+}

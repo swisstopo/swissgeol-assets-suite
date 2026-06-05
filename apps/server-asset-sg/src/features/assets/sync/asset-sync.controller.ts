@@ -33,6 +33,21 @@ export class AssetSyncController {
     res.status(200).end();
   }
 
+  @Get('/full-text')
+  @Authorize.Admin()
+  async showFullTextState(@Res() res: Response): Promise<{ progress: number } | void> {
+    try {
+      const state = await this.fileFulltextSyncService.show();
+      if (state === null) {
+        res.status(204).end();
+        return;
+      }
+      res.status(200).json({ progress: state.progress }).end();
+    } catch (e) {
+      throw new HttpException(`${e}`, 500);
+    }
+  }
+
   @Post('/full-text')
   @Authorize.Admin()
   async startFullText(

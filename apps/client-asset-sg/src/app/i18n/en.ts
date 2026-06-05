@@ -84,7 +84,11 @@ export const enTranslationMapping: AppTranslationMapping = {
     closeInstructions: 'Close instructions',
     searchControl: 'Search control',
     refineSearch: 'Refine search',
-    searchResults: 'Assets',
+    assets: 'Assets',
+    files: 'Files',
+    fileName: 'File name',
+    page: 'Page',
+    textMatch: 'Text match',
     author: 'Author',
     documentDate: 'Document date',
     usage: 'Usage',
@@ -215,9 +219,11 @@ export const enTranslationMapping: AppTranslationMapping = {
         pageRanges: {
           title: 'Classification',
           edit: 'Edit classification',
-          recalculateRanges: 'Recalculate page ranges',
+          updateOrder: 'Update order',
           type: 'Type',
           language: 'Language',
+          label: 'Title',
+          addSection: 'Add section',
           pageFrom: 'Page from',
           pageTo: 'Page to',
           save: 'Finish editing',
@@ -357,6 +363,10 @@ export const enTranslationMapping: AppTranslationMapping = {
       'Equalises the state of Elasticsearch with the local database.' +
       ' This ensures that the search includes all existing assets.',
     adminInstructionsSyncElasticAssetsStart: 'Start synchronisation',
+    adminInstructionsSyncFileContentFromStorageHeading: 'Renew full-text search',
+    adminInstructionsSyncFileContentFromStorage:
+      'Reloads the full texts of the files from the file storage and updates the corresponding index.',
+    adminInstructionsSyncFileContentFromStorageHeadingStart: 'Start full-text synchronization',
   },
   admin: {
     users: 'Users',

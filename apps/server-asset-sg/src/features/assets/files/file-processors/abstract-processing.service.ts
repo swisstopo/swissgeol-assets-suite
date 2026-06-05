@@ -119,7 +119,7 @@ export abstract class AbstractProcessingService<T> {
   }
 
   private async finishProcessing(file: ProcessableFile): Promise<void> {
-    for (;;) {
+    while (true) {
       await sleep(1000);
       const result = await this.collectResult(file);
       if (result.has_finished) {

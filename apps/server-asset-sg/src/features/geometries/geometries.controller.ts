@@ -1,38 +1,57 @@
 import {
-  AssetSearchQuery,
-  AssetSearchQuerySchema,
-  AssetSearchResult,
+  AssetSearchResultItem,
   Geometry,
   GeometryAccessType,
+  SearchQueries,
+  SearchQuerySchema,
+  SearchType,
   serializeGeometryAsCsv,
   User,
 } from '@asset-sg/shared/v2';
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Post } from '@nestjs/common';
+import { restrictQueryForUser } from '../assets/search/asset-search.utils';
 import { Authorize } from '@/core/decorators/authorize.decorator';
 import { CurrentUser } from '@/core/decorators/current-user.decorator';
 import { ParseBody } from '@/core/decorators/parse.decorator';
-import { restrictQueryForUser } from '@/features/assets/search/asset-search.controller';
 import { AssetSearchService } from '@/features/assets/search/asset-search.service';
+import { FileSearchService } from '@/features/assets/search/file-search.service';
 
 @Controller('/geometries')
 export class GeometriesController {
-  constructor(private readonly assetSearchService: AssetSearchService) {}
+  constructor(
+    private readonly assetSearchService: AssetSearchService,
+    private readonly fileSearchService: FileSearchService,
+  ) {}
 
-  @Get('/')
+  @Post('/')
   @Authorize.User()
   async list(
-    @ParseBody(AssetSearchQuerySchema)
-    query: AssetSearchQuery,
+    @ParseBody(SearchQuerySchema)
+    body: SearchQuerySchema,
     @CurrentUser() user: User,
   ): Promise<string> {
+    const query: SearchQueries = { type: body.type };
     restrictQueryForUser(query, user);
-    const geometries = await this.assetSearchService.search(query, user, { limit: 100_000_000, decode: false });
-    const mappedGeometries = mapToGeometry(geometries);
+    let assetsItems: AssetSearchResultItem[] = [];
 
-    return mappedGeometries.map((m) => `${serializeGeometryAsCsv(m)}`).join('\n');
+    switch (query.type) {
+      case SearchType.File: {
+        const files = await this.fileSearchService.search(query, user, { limit: 100_000_000 });
+        assetsItems = files.assets;
+        break;
+      }
+      case SearchType.Asset: {
+        const assets = await this.assetSearchService.search(query, user, { limit: 100_000_000, decode: false });
+        assetsItems = assets.data;
+        break;
+      }
+    }
+
+    const geometries = mapToGeometry(assetsItems);
+    return geometries.map((m) => `${serializeGeometryAsCsv(m)}`).join('\n');
   }
 }
-const mapToGeometry: (data: AssetSearchResult) => Geometry[] = ({ data }: AssetSearchResult) => {
+const mapToGeometry: (data: AssetSearchResultItem[]) => Geometry[] = (data: AssetSearchResultItem[]) => {
   return data.flatMap((d) => {
     return d.geometries.map((g) => ({
       assetId: d.id,

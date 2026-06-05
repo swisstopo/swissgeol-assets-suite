@@ -1,5 +1,4 @@
 import {
-  CopyObjectCommand,
   DeleteObjectCommand,
   GetObjectCommand,
   HeadObjectCommand,
@@ -76,21 +75,6 @@ export class FileS3Service {
       return this.createMetadata(output, name);
     } catch (e) {
       return handleS3Error(e);
-    }
-  }
-
-  async copy(sourceName: string, destinationName: string): Promise<boolean> {
-    try {
-      await this.client.send(
-        new CopyObjectCommand({
-          CopySource: `${this.bucket}/${this.getKey(sourceName)}`,
-          Key: this.getKey(destinationName),
-          Bucket: this.bucket,
-        }),
-      );
-      return true;
-    } catch (e) {
-      return handleS3Error(e) ?? false;
     }
   }
 

@@ -44,7 +44,7 @@ model Asset {
   restrictionDate     DateTime?       @map("restriction_date")
 
   assetContacts   AssetContact[]
-  assetFiles      AssetFile[]
+  files           File[]
   assetLanguages  AssetLanguage[]
   ids             Id[]
   manCatLabelRefs ManCatLabelRef[]
@@ -102,16 +102,6 @@ model AssetXAssetY {
   @@map("asset_x_asset_y")
 }
 
-model AssetFile {
-  assetId Int   @map("asset_id")
-  asset   Asset @relation(fields: [assetId], references: [assetId], onDelete: Cascade)
-  fileId  Int   @map("file_id")
-  file    File  @relation(fields: [fileId], references: [id], onDelete: Cascade)
-
-  @@id([assetId, fileId])
-  @@map("asset_file")
-}
-
 enum FileProcessingStage {
   Ocr
   Extraction
@@ -149,9 +139,11 @@ model File {
   legalDocItem     LegalDocItem? @relation(fields: [legalDocItemCode], references: [legalDocItemCode])
 
   pageRangeClassifications Json? @map("page_range_classifications")
-  fulltextContent Json? @map("fulltext_content")
+  fulltextContent          Json? @map("fulltext_content")
+  pageDimensions           Json? @map("page_dimensions")
 
-  AssetFile AssetFile[]
+  assetId Int   @map("asset_id")
+  asset   Asset @relation(fields: [assetId], references: [assetId], onDelete: Cascade)
 
   @@unique([name])
   @@index([type])

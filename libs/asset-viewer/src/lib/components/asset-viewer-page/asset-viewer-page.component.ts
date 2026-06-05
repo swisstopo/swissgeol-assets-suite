@@ -1,15 +1,4 @@
-import { TemplatePortal } from '@angular/cdk/portal';
-import {
-  ChangeDetectorRef,
-  Component,
-  ElementRef,
-  inject,
-  OnDestroy,
-  OnInit,
-  TemplateRef,
-  ViewChild,
-  ViewContainerRef,
-} from '@angular/core';
+import { ChangeDetectorRef, Component, inject, OnDestroy, OnInit } from '@angular/core';
 import {
   AppPortalService,
   AppSharedState,
@@ -42,11 +31,7 @@ import { ViewerControllerService } from '../../services/viewer-controller.servic
 import * as actions from '../../state/asset-search/asset-search.actions';
 import { PanelState } from '../../state/asset-search/asset-search.actions';
 import { AppStateWithAssetSearch, AssetSearchState } from '../../state/asset-search/asset-search.reducer';
-import {
-  selectIsFiltersOpen,
-  selectSearchQuery,
-  selectSearchResults,
-} from '../../state/asset-search/asset-search.selector';
+import { selectIsFiltersOpen, selectSearchResults } from '../../state/asset-search/asset-search.selector';
 
 @UntilDestroy()
 @Component({
@@ -57,12 +42,8 @@ import {
   hostDirectives: [LifecycleHooksDirective],
 })
 export class AssetViewerPageComponent implements OnInit, OnDestroy {
-  @ViewChild('templateAppBarPortalContent') templateAppBarPortalContent!: TemplateRef<unknown>;
-  @ViewChild('searchInput') searchInput!: ElementRef<HTMLInputElement>;
-
   private readonly lc = inject(LifecycleHooks);
   private readonly appPortalService = inject(AppPortalService);
-  private readonly viewContainerRef = inject(ViewContainerRef);
   private readonly store = inject(Store<AppStateWithAssetSearch>);
   private readonly cd = inject(ChangeDetectorRef);
 
@@ -90,12 +71,6 @@ export class AssetViewerPageComponent implements OnInit, OnDestroy {
 
   public isFiltersOpen$ = this.store.select(selectIsFiltersOpen);
 
-  public searchTextKeyDown$ = new Subject<KeyboardEvent>();
-  private readonly searchTextChanged$ = this.searchTextKeyDown$.pipe(
-    filter((event) => event.key === 'Enter'),
-    map((event) => (event.target as HTMLInputElement).value),
-  );
-
   public assetClicked$ = new Subject<number[]>();
   public assetsForPicker$: Observable<AssetSearchResultItem[]>;
   public highlightedAssetId: number | null = null;
@@ -106,9 +81,6 @@ export class AssetViewerPageComponent implements OnInit, OnDestroy {
       switchMap(
         () =>
           new Promise<void>((resolve) => {
-            this.appPortalService.setAppBarPortalContent(
-              new TemplatePortal(this.templateAppBarPortalContent, this.viewContainerRef),
-            );
             this.appPortalService.setDrawerPortalContent(null);
             setTimeout(() => {
               this.cd.detectChanges();
@@ -119,20 +91,6 @@ export class AssetViewerPageComponent implements OnInit, OnDestroy {
       share(),
     );
     setupPortals$.pipe(untilDestroyed(this)).subscribe();
-
-    setupPortals$
-      .pipe(
-        switchMap(() => this.store.select(selectSearchQuery)),
-        untilDestroyed(this),
-      )
-      .subscribe((searchQuery) => {
-        if (this.searchInput == null) {
-          return;
-        }
-        if (searchQuery.text || '' !== this.searchInput.nativeElement.value || '') {
-          this.searchInput.nativeElement.value = searchQuery.text ?? '';
-        }
-      });
 
     const [singleGeometryClicked$, multipleGeometriesClicked$] = partition(
       this.assetClicked$.pipe(
@@ -150,10 +108,6 @@ export class AssetViewerPageComponent implements OnInit, OnDestroy {
 
     singleGeometryClicked$.pipe(untilDestroyed(this)).subscribe((assetIds) => {
       this.viewerControllerService.selectAsset(assetIds[0]);
-    });
-
-    this.searchTextChanged$.pipe(untilDestroyed(this)).subscribe((text) => {
-      this.store.dispatch(actions.updateSearchQuery({ query: { text } }));
     });
   }
 

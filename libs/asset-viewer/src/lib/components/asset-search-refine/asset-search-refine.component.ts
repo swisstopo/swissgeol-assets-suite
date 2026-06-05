@@ -1,7 +1,15 @@
 import { AfterViewInit, Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { MatOptionSelectionChange } from '@angular/material/core';
-import { AssetSearchQuery, Contact, ContactId, LocalDate, LocalDateRange, ValueCount } from '@asset-sg/shared/v2';
+import {
+  AssetSearchQuery,
+  Contact,
+  ContactId,
+  LocalDate,
+  LocalDateRange,
+  SearchType,
+  ValueCount,
+} from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
 import { map, startWith, Subscription } from 'rxjs';
 
@@ -11,16 +19,16 @@ import {
   Filter,
   selectActiveFilters,
   selectAssetKindFilters,
+  selectAssetTopicFilters,
   selectAvailableAuthors,
   selectCreatedAt,
   selectGeometryFilters,
   selectIsFiltersOpen,
   selectLanguageFilters,
-  selectAssetTopicFilters,
   selectSearchQuery,
+  selectStatusFilters,
   selectUsageCodeFilters,
   selectWorkgroupFilters,
-  selectStatusFilters,
 } from '../../state/asset-search/asset-search.selector';
 import * as mapControlActions from '../../state/map-control/map-control.actions';
 import { selectMapControlIsDrawing } from '../../state/map-control/map-control.selector';
@@ -48,8 +56,6 @@ export class AssetSearchRefineComponent implements OnInit, OnDestroy, AfterViewI
   public maxDate?: Date;
   public isFiltersOpen = false;
 
-  public assetSearchQuery!: AssetSearchQuery;
-
   public activeFilters: Filter<string | number>[] = [];
   private readonly createDateRange$ = this.store.select(selectCreatedAt);
   private readonly availableAuthors$ = this.store.select(selectAvailableAuthors);
@@ -62,6 +68,7 @@ export class AssetSearchRefineComponent implements OnInit, OnDestroy, AfterViewI
   readonly languageFilters$ = this.store.select(selectLanguageFilters);
   readonly assetKindFilters$ = this.store.select(selectAssetKindFilters);
   readonly workgroupFilters$ = this.store.select(selectWorkgroupFilters);
+  readonly searchQuery$ = this.store.select(selectSearchQuery);
 
   readonly activeFilters$ = this.store.select(selectActiveFilters);
   readonly isDrawActive$ = this.store.select(selectMapControlIsDrawing);
@@ -182,11 +189,6 @@ export class AssetSearchRefineComponent implements OnInit, OnDestroy, AfterViewI
   private initSubscriptions() {
     this.subscriptions.add(this.isFiltersOpen$.subscribe((isOpen) => (this.isFiltersOpen = isOpen)));
     this.subscriptions.add(this.activeFilters$.subscribe((activeFilter) => (this.activeFilters = activeFilter)));
-    this.subscriptions.add(
-      this.store.select(selectSearchQuery).subscribe((query) => {
-        this.assetSearchQuery = query;
-      }),
-    );
 
     this.subscriptions.add(
       this.createDateRange$.subscribe((dateRange) => {
@@ -216,4 +218,14 @@ export class AssetSearchRefineComponent implements OnInit, OnDestroy, AfterViewI
   protected trackFilter(filter: Filter<string | number>): string {
     return `${filter.queryKey}:${filter.value}`;
   }
+
+  protected search(text: string) {
+    this.store.dispatch(actions.updateSearchQuery({ query: { text } }));
+  }
+
+  protected setSearchType(type: SearchType) {
+    this.store.dispatch(actions.updateSearchQuery({ query: { type } }));
+  }
+
+  protected readonly SearchType = SearchType;
 }

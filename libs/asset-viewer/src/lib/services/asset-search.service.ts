@@ -9,8 +9,12 @@ import {
   AssetSearchResultSchema,
   AssetSearchStats,
   AssetSearchStatsSchema,
+  FileSearchQuery,
+  FileSearchResult,
+  FileSearchResultSchema,
   GeometryDetail,
   GeometryDetailSchema,
+  SearchQueries,
 } from '@asset-sg/shared/v2';
 import { plainToInstance } from 'class-transformer';
 import { map, Observable } from 'rxjs';
@@ -25,9 +29,21 @@ export class AssetSearchService {
       .pipe(map((res) => plainToInstance(AssetSearchResultSchema, res)));
   }
 
-  public searchStats(searchQuery: AssetSearchQuery): Observable<AssetSearchStats> {
+  public searchStats(searchQuery: SearchQueries): Observable<AssetSearchStats> {
     return this.httpClient
       .post('/api/assets/search/stats', searchQuery)
+      .pipe(map((res) => plainToInstance(AssetSearchStatsSchema, res)));
+  }
+
+  public searchFiles(searchQuery: FileSearchQuery, limit = 100, offset = 0): Observable<FileSearchResult> {
+    return this.httpClient
+      .post(`/api/files/search?limit=${limit}&offset=${offset}`, searchQuery)
+      .pipe(map((res) => plainToInstance(FileSearchResultSchema, res)));
+  }
+
+  public searchFileStats(searchQuery: FileSearchQuery): Observable<AssetSearchStats> {
+    return this.httpClient
+      .post('/api/files/search/stats', searchQuery)
       .pipe(map((res) => plainToInstance(AssetSearchStatsSchema, res)));
   }
 

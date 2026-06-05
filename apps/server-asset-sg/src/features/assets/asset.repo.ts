@@ -103,12 +103,12 @@ export class AssetRepo implements Repo<Asset, AssetId, CreateAssetDataWithCreato
     try {
       await this.prisma.$transaction(async () => {
         // Delete the record's `file` records.
-        const assetFileIds = await this.prisma.assetFile.findMany({
+        const files = await this.prisma.file.findMany({
           where: { assetId: id },
-          select: { fileId: true },
+          select: { id: true },
         });
 
-        for (const { fileId } of assetFileIds) {
+        for (const { id: fileId } of files) {
           await this.fileRepo.delete({ id: fileId, assetId: id });
         }
 

@@ -179,7 +179,8 @@ export class AssetEditorFilesComponent implements OnInit, OnDestroy, OnChanges {
           assetId: this.asset!.id,
           assetFile: { id: file.id, fileName: file.name, pageRangeClassifications: file.pageRangeClassifications },
         }, // todo: pageCount can be 0
-        width: 'auto',
+        width: 'min(1485px, 96vw)',
+        maxWidth: '96vw',
         height: '90%',
         autoFocus: false,
       });
