@@ -54,8 +54,13 @@ export abstract class AtomicProgressService<T extends object> {
 
     await writeProgress(0);
     setTimeout(async () => {
-      await this.sync(writeProgress, options);
-      await rm(this.syncFile);
+      try {
+        await this.sync(writeProgress, options);
+      } catch (error) {
+        this.logger.error('Sync failed with an unhandled error', error);
+      } finally {
+        await rm(this.syncFile);
+      }
     });
   }
 

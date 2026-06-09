@@ -52,6 +52,7 @@ export class AssetRepo implements Repo<Asset, AssetId, CreateAssetDataWithCreato
       where: ids == null ? undefined : { assetId: { in: ids } },
       take: limit,
       skip: offset,
+      orderBy: { assetId: 'asc' },
       select: assetSelection,
     });
     return await Promise.all(entries.map((it) => parseAssetFromPrisma(it)));

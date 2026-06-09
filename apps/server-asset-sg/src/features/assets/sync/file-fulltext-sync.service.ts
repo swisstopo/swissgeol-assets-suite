@@ -76,16 +76,27 @@ export class FileFulltextSyncService extends AtomicProgressService<FileFulltextS
 
     let offset = 0;
     while (true) {
-      this.logger.debug('Indexing file fulltext content.', {
-        total,
-        offset,
-        progress: Number((offset / total).toFixed(2)),
-      });
       const records = await this.assetRepo.list({ limit: 1000, offset });
       if (records.length === 0) {
         break;
       }
-      await fileWriter.writeAssetFiles(records);
+      const firstAssetId = records[0].id;
+      const lastAssetId = records[records.length - 1].id;
+      this.logger.debug('Indexing file fulltext content.', {
+        total,
+        offset,
+        progress: Number((offset / total).toFixed(2)),
+        assetIdRange: `${firstAssetId}–${lastAssetId}`,
+      });
+      try {
+        await fileWriter.writeAssetFiles(records);
+      } catch (error) {
+        this.logger.error('Failed to write file index for batch, continuing with next batch', {
+          offset,
+          assetIdRange: `${firstAssetId}–${lastAssetId}`,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
       offset += records.length;
       await writeProgress(progressOffset + Math.min(offset / total, 1) * progressScale);
     }

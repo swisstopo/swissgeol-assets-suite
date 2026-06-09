@@ -10,16 +10,20 @@
  * ---------------------------------------------------------------
  */
 
-/** PascalPageClasses */
-export enum PascalPageClasses {
-  Text = 'Text',
-  Boreprofile = 'Boreprofile',
-  Map = 'Map',
-  GeoProfile = 'GeoProfile',
-  TitlePage = 'TitlePage',
-  Diagram = 'Diagram',
-  Table = 'Table',
-  Unknown = 'Unknown',
+/**
+ * PageClasses
+ * Enum for classifying pages into page types.
+ */
+export enum PageClasses {
+  Boreprofile = 'boreprofile',
+  Diagram = 'diagram',
+  GeoProfile = 'geo_profile',
+  Map = 'map',
+  SectionHeader = 'section_header',
+  Table = 'table',
+  Text = 'text',
+  TitlePage = 'title_page',
+  Unknown = 'unknown',
 }
 
 /**
@@ -38,13 +42,12 @@ export interface CollectPayload {
 /**
  * CollectResponse
  * Response model for the collect request endpoint containing processing status and results.
- * @example {"data":[{"filename":"input.pdf","metadata":{"languages":["fr"],"page_count":1},"pages":[{"page_metadata":{"is_frontpage":true,"language":"fr"},"page_number":1,"predicted_class":"Map"}]}],"has_finished":true}
+ * @example {"data":{"entities":[{"classification":"boreprofile","language":"de","page_end":3,"page_start":1,"title":"BS1"}],"filename":"input.pdf","languages":["de"],"page_count":3},"has_finished":true}
  */
 export interface CollectResponse {
   /** Has Finished */
   has_finished: boolean;
-  /** Data */
-  data: PredictionSchema[] | null;
+  data: ProcessorDocumentEntities | null;
 }
 
 /**
@@ -57,54 +60,36 @@ export interface ErrorResponse {
 }
 
 /**
- * MetaDataSchema
- * Schema for document-level metadata including page count and languages.
+ * ProcessedEntities
+ * Processed page entities from PDF.
  */
-export interface MetaDataSchema {
+export interface ProcessedEntities {
+  /** Enum for classifying pages into page types. */
+  classification: PageClasses;
+  /** Language */
+  language: string | null;
+  /** Page Start */
+  page_start: number;
+  /** Page End */
+  page_end: number;
+  /** Title */
+  title?: string | null;
+}
+
+/**
+ * ProcessorDocumentEntities
+ * Restructured document as entities.
+ * @example {"entities":[{"classification":"boreprofile","language":"de","page_end":3,"page_start":1,"title":"BS1"},{"classification":"map","language":"fr","page_end":4,"page_start":4}],"filename":"input.pdf","languages":["de"],"page_count":3}
+ */
+export interface ProcessorDocumentEntities {
+  /** Filename */
+  filename: string;
   /** Page Count */
   page_count: number;
   /** Languages */
   languages: string[];
-}
-
-/**
- * PageMetaDataSchema
- * Schema for page-level metadata including language and frontpage status.
- */
-export interface PageMetaDataSchema {
-  /** Language */
-  language: string | null;
-  /** Is Frontpage */
-  is_frontpage: boolean;
-}
-
-/**
- * PagePrediction
- * Schema for individual page prediction results including class, number and metadata.
- */
-export interface PagePrediction {
-  predicted_class: PascalPageClasses;
-  /**
-   * Page Number
-   * Page number must be greater than 0
-   * @exclusiveMin 0
-   */
-  page_number: number;
-  /** Schema for page-level metadata including language and frontpage status. */
-  page_metadata: PageMetaDataSchema;
-}
-
-/**
- * PredictionSchema
- * Schema for the complete document prediction results including metadata and page predictions.
- */
-export interface PredictionSchema {
-  /** Filename */
-  filename: string;
-  /** Schema for document-level metadata including page count and languages. */
-  metadata: MetaDataSchema;
-  /** Pages */
-  pages: PagePrediction[];
+  /** Entities */
+  entities: ProcessedEntities[];
 }
 
 /**

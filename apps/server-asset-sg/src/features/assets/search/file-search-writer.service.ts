@@ -15,11 +15,13 @@ import {
 import { transformJsonToFulltextContent } from '@asset-sg/shared/v2';
 import { Client as ElasticsearchClient } from '@elastic/elasticsearch';
 import { BulkOperationContainer } from '@elastic/elasticsearch/lib/api/types';
+import { Logger } from '@nestjs/common';
 import { Prisma, PrismaClient } from '@prisma/client';
 import { plainToInstance } from 'class-transformer';
 import {
   buildFavoritesMap,
   buildGeometryMetadataMap,
+  chunkBulkOperations,
   fetchContactNamesForAsset,
   fetchFavoredByUserIdsForAsset,
   fetchGeometryMetadataForAsset,
@@ -32,8 +34,10 @@ import { GeometryRepo } from '@/features/geometries/geometry.repo';
 import { ProcessQueue } from '@/utils/process-queue';
 
 const QUEUE_SIZE = 10;
+const BULK_CHUNK_SIZE = 200;
 
 export class FileSearchWriterService {
+  private readonly logger = new Logger(FileSearchWriterService.name);
   private eager?: Promise<SharedEagerData | null>;
 
   constructor(
@@ -215,11 +219,13 @@ export class FileSearchWriterService {
       return;
     }
 
-    await this.elastic.bulk({
-      index: this.options.index,
-      refresh: this.options.shouldRefresh,
-      operations,
-    });
+    for (const chunk of chunkBulkOperations(operations, BULK_CHUNK_SIZE)) {
+      await this.elastic.bulk({
+        index: this.options.index,
+        refresh: this.options.shouldRefresh,
+        operations: chunk,
+      });
+    }
   }
 
   async writeAssetFiles(oneOrMore: Asset | Asset[]): Promise<void> {
@@ -243,7 +249,16 @@ export class FileSearchWriterService {
     for (let i = 0; i < assets.length; i++) {
       const asset = assets[i];
       await processQueue.add(async () => {
-        operationsByAsset[i] = await this.mapAssetFilesToElastic(asset);
+        try {
+          operationsByAsset[i] = await this.mapAssetFilesToElastic(asset);
+        } catch (error) {
+          this.logger.error('Failed to index files for asset in elastic, skipping', {
+            assetId: asset.id,
+            assetTitle: asset.title,
+            fileIds: asset.files.map((f) => f.id),
+            error: error instanceof Error ? error.message : String(error),
+          });
+        }
       });
     }
     await processQueue.waitForIdle();
@@ -258,11 +273,13 @@ export class FileSearchWriterService {
       return;
     }
 
-    await this.elastic.bulk({
-      index: this.options.index,
-      refresh: this.options.shouldRefresh,
-      operations: allOperations,
-    });
+    for (const chunk of chunkBulkOperations(allOperations, BULK_CHUNK_SIZE)) {
+      await this.elastic.bulk({
+        index: this.options.index,
+        refresh: this.options.shouldRefresh,
+        operations: chunk,
+      });
+    }
   }
 
   async deleteByAssetId(assetId: AssetId): Promise<void> {
