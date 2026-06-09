@@ -397,7 +397,6 @@ export class PdfViewerService implements OnDestroy {
 
   private async destroyPdfJsWorker() {
     await this.loadingTask?.destroy();
-    await this.pdfDoc?.destroy();
   }
 
   private getAuthorizationHeader(): Record<string, string> {

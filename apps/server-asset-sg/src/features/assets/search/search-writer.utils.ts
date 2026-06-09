@@ -91,6 +91,18 @@ export function buildFavoritesMap(records: Array<{ assetId: AssetId; userId: Use
   return mapping;
 }
 
+/**
+ * Splits a flat bulk operations array (alternating header/document pairs) into chunks.
+ * Each chunk contains at most `chunkSize` document pairs (i.e., `chunkSize * 2` array items).
+ */
+export function chunkBulkOperations<T>(operations: T[], chunkSize: number): T[][] {
+  const chunks: T[][] = [];
+  for (let i = 0; i < operations.length; i += chunkSize * 2) {
+    chunks.push(operations.slice(i, i + chunkSize * 2));
+  }
+  return chunks;
+}
+
 export function buildGeometryMetadataMap(
   geometries: Array<{ assetId: AssetId; type: GeometryType; center: { x: number; y: number } }>,
 ): Map<AssetId, GeometryMetadata> {
