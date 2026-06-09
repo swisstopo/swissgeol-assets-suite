@@ -83,7 +83,7 @@ export class PdfMetadataService {
       throw new Error(`PDF metadata extraction failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       // Ensure PDF document is properly destroyed to free memory
-      await doc?.loadingTask.destroy();
+      doc?.destroy();
     }
   }
 

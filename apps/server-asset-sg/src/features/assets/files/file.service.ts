@@ -222,7 +222,7 @@ export class FileService {
         data: { fulltextContent: content as unknown as Prisma.JsonArray },
       });
     } catch (e) {
-      this.logger.warn('Failed to load fulltext content from S3', { fileId, error: e });
+      // this.logger.warn('Failed to load fulltext content from S3', { fileId, error: e });
     }
   }
 
@@ -247,7 +247,7 @@ export class FileService {
         yield { pageNumber: i, text };
       }
     } finally {
-      await doc?.loadingTask.destroy();
+      doc?.destroy();
     }
   }
 
