@@ -4,54 +4,45 @@ import {
   FileProcessingState,
   getLanguageCodesOfPages,
   PageCategory,
-  PageClassification,
   PageRangeClassification,
   SupportedPageLanguage,
   SupportedPageLanguages,
-  transformPagesToRanges,
 } from '@asset-sg/shared/v2';
 import { Injectable, Logger } from '@nestjs/common';
-import { EventEmitter2 } from '@nestjs/event-emitter';
+import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { Prisma } from '@prisma/client';
+import { PageClasses, ProcessedEntities, ProcessorDocumentEntities } from './extraction-service-generated.interfaces';
+import { EVENTS } from '@/core/events';
 import { PrismaService } from '@/core/prisma.service';
 import {
   AbstractProcessingService,
   ProcessableFile,
 } from '@/features/assets/files/file-processors/abstract-processing.service';
-import {
-  PagePrediction,
-  PascalPageClasses,
-  PredictionSchema,
-} from '@/features/assets/files/file-processors/file-extraction/extraction-service-generated.interfaces';
 import { FileS3Service } from '@/features/assets/files/file-s3.service';
 import { requireEnv } from '@/utils/requireEnv';
 
 type CategoryMap = {
-  [key in PascalPageClasses]: PageCategory;
+  [key in PageClasses]: PageCategory;
 };
 
-const externalToInternalCategoryMap: CategoryMap = {
-  Text: PageCategory.Text,
-  Boreprofile: PageCategory.Boreprofile,
-  Map: PageCategory.Map,
-  TitlePage: PageCategory.TitlePage,
-  Unknown: PageCategory.Unknown,
-  GeoProfile: PageCategory.GeoProfile,
-  Diagram: PageCategory.Diagram,
-  Table: PageCategory.Table,
+const entityClassificationToPageCategory: CategoryMap = {
+  [PageClasses.Boreprofile]: PageCategory.Boreprofile,
+  [PageClasses.Diagram]: PageCategory.Diagram,
+  [PageClasses.GeoProfile]: PageCategory.GeoProfile,
+  [PageClasses.Map]: PageCategory.Map,
+  [PageClasses.SectionHeader]: PageCategory.Text,
+  [PageClasses.Table]: PageCategory.Table,
+  [PageClasses.Text]: PageCategory.Text,
+  [PageClasses.TitlePage]: PageCategory.TitlePage,
+  [PageClasses.Unknown]: PageCategory.Unknown,
 };
 
-/**
- * @deprecated Use the v2 FileExtractionService instead (`v2/file-extraction.service.ts`). Remove once v2 is confirmed stable.
- */
 @Injectable()
-export class FileExtractionService extends AbstractProcessingService<PredictionSchema[]> {
-  // todo: why array
-
+export class FileExtractionService extends AbstractProcessingService<ProcessorDocumentEntities | null> {
   protected readonly logger = new Logger(FileExtractionService.name);
   protected readonly processingStage = FileProcessingStage.Extraction;
   protected readonly serviceUrl = requireEnv('EXTRACTION_SERVICE_URL');
-  protected readonly serviceVersion = 'v1';
+  protected readonly serviceVersion = 'v2';
 
   constructor(
     protected readonly fileS3Service: FileS3Service,
@@ -61,13 +52,27 @@ export class FileExtractionService extends AbstractProcessingService<PredictionS
     super();
   }
 
-  /** @deprecated Handled by v2/FileExtractionService. Remove once v2 is confirmed stable. */
+  @OnEvent(EVENTS.FILE_START_EXTRACT)
   protected async handleStartEvent(payload: ProcessableFile): Promise<void> {
+    this.logger.log('[EXTRACT-V2] Received FILE_START_EXTRACT event.', { fileId: payload.id, fileName: payload.name });
     void this.process(payload);
   }
 
-  protected async postProcess(file: ProcessableFile, result: PredictionSchema[]): Promise<void> {
-    const ranges = this.createPageRanges(result[0].pages);
+  protected async postProcess(file: ProcessableFile, result: ProcessorDocumentEntities | null): Promise<void> {
+    this.logger.log('[EXTRACT-V2] postProcess called.', {
+      fileId: file.id,
+      fileName: file.name,
+      hasResult: result != null,
+      entityCount: result?.entities?.length ?? 0,
+    });
+
+    if (result == null || !Array.isArray(result.entities) || result.entities.length === 0) {
+      this.logger.error('[EXTRACT-V2] Extraction API returned no valid result.');
+      await this.updateStatus(file, FileProcessingState.Error);
+      return;
+    }
+
+    const ranges = this.mapEntitiesToPageRanges(result.entities);
     try {
       await this.storeRanges(file.id, ranges);
       await this.storeLanguages(file.id, result);
@@ -77,37 +82,28 @@ export class FileExtractionService extends AbstractProcessingService<PredictionS
     }
   }
 
-  private createPageRanges(result: PagePrediction[]): PageRangeClassification[] {
-    const pageClassifications = this.transformExtractionResultToPageClassifications(result);
-    return transformPagesToRanges(pageClassifications);
-  }
-
-  private transformExtractionResultToPageClassifications(result: PagePrediction[]): PageClassification[] {
-    const pages: PageClassification[] = [];
-
-    for (const page of result) {
-      // note: in v1, the API only returns a single predicted class per page, but we keep the structure for multiple categories for future use
-      const categories: PageCategory[] = [];
-      if (page.predicted_class in externalToInternalCategoryMap) {
-        categories.push(externalToInternalCategoryMap[page.predicted_class]);
-      } else {
+  private mapEntitiesToPageRanges(entities: ProcessedEntities[]): PageRangeClassification[] {
+    return entities.map((entity) => {
+      const category = entityClassificationToPageCategory[entity.classification];
+      if (category == null) {
         this.logger.warn(
-          `Extraction API sent an unknown page classification (it will be ignored): '${page.predicted_class}'`,
+          `Extraction API sent an unknown entity classification (it will be treated as Unknown): '${entity.classification}'`,
         );
       }
 
-      const languages =
-        page.page_metadata.language && this.isSupportedPageLanguage(page.page_metadata.language)
-          ? [page.page_metadata.language]
-          : [];
+      const languages = entity.language && this.isSupportedPageLanguage(entity.language) ? [entity.language] : [];
 
-      pages.push({ page: page.page_number, categories, languages });
-    }
-
-    return pages;
+      return {
+        from: entity.page_start,
+        to: entity.page_end,
+        categories: [category ?? PageCategory.Unknown],
+        languages,
+        label: entity.title,
+      };
+    });
   }
 
-  private async storeRanges(fileId: AssetFileId, ranges: PageRangeClassification[]) {
+  private async storeRanges(fileId: AssetFileId, ranges: PageRangeClassification[]): Promise<void> {
     await this.prisma.file.update({
       where: { id: fileId },
       data: {
@@ -125,13 +121,11 @@ export class FileExtractionService extends AbstractProcessingService<PredictionS
     }
   }
 
-  private async storeLanguages(fileId: AssetFileId, results: PredictionSchema[]): Promise<void> {
-    // Find all languages that have been extracted.
-    const languages = getLanguageCodesOfPages(
-      results.map((it) => ({ languages: it.metadata.languages.filter(this.isSupportedPageLanguage) })),
-    );
+  private async storeLanguages(fileId: AssetFileId, result: ProcessorDocumentEntities): Promise<void> {
+    const languages = getLanguageCodesOfPages([
+      { languages: result.languages.filter((l) => this.isSupportedPageLanguage(l)) },
+    ]);
 
-    // Find the asset that the processed file belongs to.
     const file = await this.prisma.file.findUnique({
       where: { id: fileId },
       select: { assetId: true },
@@ -142,7 +136,6 @@ export class FileExtractionService extends AbstractProcessingService<PredictionS
       return;
     }
 
-    // Add all languages that have not yet been mapped to the asset.
     await this.prisma.assetLanguage.createMany({
       data: [...languages].map((code) => ({ assetId: file.assetId, languageItemCode: code })),
       skipDuplicates: true,
