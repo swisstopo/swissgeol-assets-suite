@@ -24,7 +24,7 @@ export class PdfMetadataService {
   async extractMetadata(fileUrl: string): Promise<PdfMetadataResult> {
     let doc: PDFDocumentProxy | null = null;
 
-    let loadingTask: PDFDocumentLoadingTask = null;
+    let loadingTask: PDFDocumentLoadingTask | null = null;
     try {
       this.logger.debug('Starting PDF metadata extraction', { fileUrl: this.sanitizeUrl(fileUrl) });
 
@@ -35,7 +35,7 @@ export class PdfMetadataService {
         disableStream: false,
       });
       // Load the PDF document without fetching all pages
-      doc = loadingTask.promise;
+      doc = await loadingTask.promise;
 
       const pageCount = doc.numPages;
       const pageDimensions: PageDimension[] = [];
