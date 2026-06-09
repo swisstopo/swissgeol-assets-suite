@@ -189,7 +189,7 @@ export class FileService {
       i++;
       await this.loadFulltextContentFromS3(file.id);
     }
-    writeProgress?.(1);
+    await writeProgress?.(1);
     this.logger.debug('Done downloading file fulltext.', { total: files.length });
   }
 
@@ -227,17 +227,21 @@ export class FileService {
   }
 
   private async *streamPdfPages(presignedUrl: string) {
+    // Save loadingTask before awaiting so it can always be destroyed in the finally block,
+    // even if the promise rejects (e.g. 503 from S3). Without this, pdfjs internal tasks
+    // leak as unhandled rejections that crash Node.js.
+    const loadingTask = getDocument({
+      url: presignedUrl,
+      standardFontDataUrl: STANDARD_FONT_DATA_URL,
+      disableAutoFetch: true,
+      disableStream: true,
+    });
     let doc: PDFDocumentProxy | null = null;
     try {
-      doc = await getDocument({
-        url: presignedUrl,
-        standardFontDataUrl: STANDARD_FONT_DATA_URL,
-        disableAutoFetch: true,
-        disableStream: false,
-      }).promise;
+      doc = await loadingTask.promise;
 
-      for (let i = 1; i <= doc?.numPages; i++) {
-        const page = await doc?.getPage(i);
+      for (let i = 1; i <= doc.numPages; i++) {
+        const page = await doc.getPage(i);
         const textContent = await page.getTextContent();
         const text = textContent.items
           .filter((item: TextItem | TextMarkedContent) => 'str' in item)
@@ -247,7 +251,7 @@ export class FileService {
         yield { pageNumber: i, text };
       }
     } finally {
-      await doc?.destroy();
+      await loadingTask.destroy();
     }
   }
 
