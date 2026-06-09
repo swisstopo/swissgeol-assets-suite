@@ -15,6 +15,7 @@ import {
 import { transformJsonToFulltextContent } from '@asset-sg/shared/v2';
 import { Client as ElasticsearchClient } from '@elastic/elasticsearch';
 import { BulkOperationContainer } from '@elastic/elasticsearch/lib/api/types';
+import { Logger } from '@nestjs/common';
 import { Prisma, PrismaClient } from '@prisma/client';
 import { plainToInstance } from 'class-transformer';
 import {
@@ -34,6 +35,7 @@ import { ProcessQueue } from '@/utils/process-queue';
 const QUEUE_SIZE = 10;
 
 export class FileSearchWriterService {
+  private readonly logger = new Logger(FileSearchWriterService.name);
   private eager?: Promise<SharedEagerData | null>;
 
   constructor(
@@ -243,7 +245,16 @@ export class FileSearchWriterService {
     for (let i = 0; i < assets.length; i++) {
       const asset = assets[i];
       await processQueue.add(async () => {
-        operationsByAsset[i] = await this.mapAssetFilesToElastic(asset);
+        try {
+          operationsByAsset[i] = await this.mapAssetFilesToElastic(asset);
+        } catch (error) {
+          this.logger.error('Failed to index files for asset in elastic, skipping', {
+            assetId: asset.id,
+            assetTitle: asset.title,
+            fileIds: asset.files.map((f) => f.id),
+            error: error instanceof Error ? error.message : String(error),
+          });
+        }
       });
     }
     await processQueue.waitForIdle();

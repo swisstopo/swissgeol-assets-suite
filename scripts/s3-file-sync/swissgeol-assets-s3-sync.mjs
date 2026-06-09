@@ -70,10 +70,12 @@ import {
   ListObjectsV2Command,
   DeleteObjectsCommand,
   DeleteObjectCommand,
+  GetObjectCommand,
   PutObjectCommand,
   CopyObjectCommand,
   HeadObjectCommand,
   CreateMultipartUploadCommand,
+  UploadPartCommand,
   UploadPartCopyCommand,
   CompleteMultipartUploadCommand,
   AbortMultipartUploadCommand,
@@ -115,6 +117,9 @@ function parseArgs(argv) {
     workgroups: null, // null = all workgroups
     deleteDestFiles: false,
     region: "eu-central-1",
+    endpoint: null, // custom S3 endpoint for destination (e.g. http://localhost:9000 for local MinIO)
+    destAccessKey: process.env.DEST_ACCESS_KEY_ID ?? null,
+    destSecretKey: process.env.DEST_SECRET_ACCESS_KEY ?? null,
     dryRun: false,
   };
 
@@ -148,6 +153,24 @@ function parseArgs(argv) {
       case "--region":
         args.region = argv[++i];
         break;
+      case "--endpoint":
+        args.endpoint = argv[++i];
+        break;
+      case "--dest-access-key":
+        args.destAccessKey = argv[++i];
+        break;
+      case "--dest-secret-key":
+        args.destSecretKey = argv[++i];
+        break;
+      case "--endpoint":
+        args.endpoint = argv[++i];
+        break;
+      case "--dest-access-key":
+        args.destAccessKey = argv[++i];
+        break;
+      case "--dest-secret-key":
+        args.destSecretKey = argv[++i];
+        break;
       case "--dry-run":
         args.dryRun = true;
         break;
@@ -164,6 +187,16 @@ function parseArgs(argv) {
   if (missing.length > 0) {
     const flags = missing.map((k) => `--${k.replace(/([A-Z])/g, "-$1").toLowerCase()}`);
     console.error(`❌ Error: missing required argument(s): ${flags.join(", ")}\n`);
+    printHelp();
+    process.exit(1);
+  }
+
+  if (args.endpoint && (!args.destAccessKey || !args.destSecretKey)) {
+    console.error(
+      "❌ Error: destination credentials are required when --endpoint is set.\n" +
+        "  Provide --dest-access-key / --dest-secret-key, or set the\n" +
+        "  DEST_ACCESS_KEY_ID / DEST_SECRET_ACCESS_KEY environment variables.\n",
+    );
     printHelp();
     process.exit(1);
   }
@@ -207,6 +240,17 @@ OPTIONAL OPTIONS
                                   before copying. By default the destination is left
                                   untouched and files are only added/overwritten.
   --region      <aws-region>    AWS region  (default: eu-central-1)
+  --endpoint    <url>           Custom S3 endpoint URL for the DESTINATION only.
+                                  Use for local MinIO: --endpoint http://localhost:9000
+                                  The source always uses standard AWS S3.
+                                  Requires --dest-access-key and --dest-secret-key.
+                                  forcePathStyle is enabled automatically.
+  --dest-access-key <key>       Access key ID for the destination (MinIO) bucket.
+                                  Required when --endpoint is set (unless
+                                  DEST_ACCESS_KEY_ID env var is set).
+  --dest-secret-key <secret>    Secret access key for the destination (MinIO) bucket.
+                                  Required when --endpoint is set (unless
+                                  DEST_SECRET_ACCESS_KEY env var is set).
   --dry-run                     Print all operations without executing any of them
   --help, -h                    Show this help text
 
@@ -230,6 +274,21 @@ PROD → INT EXAMPLE (with password stored in $PGPASSWORD)
     export PGPASSWORD='p@ss#word'
     --db "postgresql://<user>@<prod-host>:5432/assets"
 
+LOCAL DEV EXAMPLE (copy from INT into local MinIO — data streams through this machine)
+  export DEST_ACCESS_KEY_ID=<STORAGE_ACCESS_KEY from development/.env>
+  export DEST_SECRET_ACCESS_KEY=<STORAGE_ACCESS_KEY_SECRET from development/.env>
+  node swissgeol-assets-s3-sync.mjs \\
+    --src-bucket  swissgeol-assets-int-swisstopo \\
+    --src-path  asset/asset_files/ \\
+    --dest-bucket asset-sg \\
+    --dest-path asset/asset_files/ \\
+    --endpoint http://localhost:9000 \\
+    --db "postgresql://<user>@<int-host>:5432/asset-swissgeol"
+
+  Source AWS credentials are taken from the standard credential chain (env vars,
+  ~/.aws/credentials, AWS SSO, etc.) — do NOT set AWS_ACCESS_KEY_ID/SECRET to
+  MinIO values, as that would break access to the source bucket.
+
 NOTE
   The PostgreSQL DB dump from PROD must be imported into INT manually
   BEFORE running this script. This script only handles S3 file synchronisation.
@@ -252,16 +311,14 @@ async function fetchFileNames(connectionString, workgroups, dbSsl, dbSslNoVerify
           `SELECT f.file_name
            FROM asset AS a
              INNER JOIN workgroup  AS w  ON w.id         = a.workgroup_id
-             INNER JOIN asset_file AS af ON af.asset_id  = a.asset_id
-             INNER JOIN file       AS f  ON f.id         = af.file_id
+             INNER JOIN file       AS f  ON f.asset_id         = a.asset_id
            WHERE w.name = ANY($1)`,
           [workgroups],
         )
       : await client.query(
           `SELECT f.file_name
            FROM asset AS a
-             INNER JOIN asset_file AS af ON af.asset_id  = a.asset_id
-             INNER JOIN file       AS f  ON f.id         = af.file_id`,
+             INNER JOIN file       AS f  ON f.asset_id         = a.asset_id`,
         );
     return rows.map((r) => r.file_name);
   } finally {
@@ -380,7 +437,7 @@ function prompt(question) {
 // Pre-flight S3 access check
 // ---------------------------------------------------------------------------
 
-async function checkS3Access(s3, srcBucket, srcPath, destBucket, destPath) {
+async function checkS3Access(srcS3, destS3, srcBucket, srcPath, destBucket, destPath) {
   console.log("\n[Step 2/5] Pre-flight S3 access check ...");
 
   const errors = [];
@@ -388,7 +445,7 @@ async function checkS3Access(s3, srcBucket, srcPath, destBucket, destPath) {
   // 1. Check source: list up to 1 key under srcPath to confirm read access + valid token.
   process.stdout.write("  Source bucket  (ListObjects) ... ");
   try {
-    await s3.send(new ListObjectsV2Command({ Bucket: srcBucket, Prefix: srcPath, MaxKeys: 1 }));
+    await srcS3.send(new ListObjectsV2Command({ Bucket: srcBucket, Prefix: srcPath, MaxKeys: 1 }));
     console.log("✓");
   } catch (err) {
     const detail = [err.Code ?? err.code ?? err.name, err.message].filter(Boolean).join(" — ");
@@ -400,7 +457,7 @@ async function checkS3Access(s3, srcBucket, srcPath, destBucket, destPath) {
   const sentinelKey = `${destPath}.s3sync-preflight-${Date.now()}`;
   process.stdout.write("  Destination bucket  (PutObject) ... ");
   try {
-    await s3.send(
+    await destS3.send(
       new PutObjectCommand({ Bucket: destBucket, Key: sentinelKey, Body: Buffer.alloc(0), ContentLength: 0 }),
     );
     console.log("✓");
@@ -412,7 +469,7 @@ async function checkS3Access(s3, srcBucket, srcPath, destBucket, destPath) {
 
   process.stdout.write("  Destination bucket  (DeleteObject) ... ");
   try {
-    await s3.send(new DeleteObjectCommand({ Bucket: destBucket, Key: sentinelKey }));
+    await destS3.send(new DeleteObjectCommand({ Bucket: destBucket, Key: sentinelKey }));
     console.log("✓");
   } catch (err) {
     const detail = [err.Code ?? err.code ?? err.name, err.message].filter(Boolean).join(" — ");
@@ -564,10 +621,71 @@ async function copyMultipart(s3, srcBucket, srcKey, destBucket, destKey, content
 }
 
 // ---------------------------------------------------------------------------
+// Cross-service streaming copy (AWS S3 → MinIO or any other endpoint)
+// Data flows through this machine: GET from source, PUT/UploadPart to destination.
+// ---------------------------------------------------------------------------
+
+async function copySingleObjectStream(srcS3, destS3, srcBucket, srcKey, destBucket, destKey) {
+  const { Body, ContentLength } = await srcS3.send(new GetObjectCommand({ Bucket: srcBucket, Key: srcKey }));
+  await destS3.send(new PutObjectCommand({ Bucket: destBucket, Key: destKey, Body, ContentLength }));
+}
+
+async function copyMultipartStream(srcS3, destS3, srcBucket, srcKey, destBucket, destKey, contentLength, onPartCopied) {
+  const { UploadId } = await destS3.send(new CreateMultipartUploadCommand({ Bucket: destBucket, Key: destKey }));
+
+  const parts = [];
+  try {
+    let byteOffset = 0;
+    let partNumber = 1;
+
+    while (byteOffset < contentLength) {
+      const end = Math.min(byteOffset + MULTIPART_PART_SIZE - 1, contentLength - 1);
+      const range = `bytes=${byteOffset}-${end}`;
+
+      // Download the chunk from the source
+      const { Body } = await srcS3.send(new GetObjectCommand({ Bucket: srcBucket, Key: srcKey, Range: range }));
+      const chunks = [];
+      for await (const chunk of Body) chunks.push(chunk);
+      const buffer = Buffer.concat(chunks);
+
+      // Upload the chunk to the destination
+      const { ETag } = await destS3.send(
+        new UploadPartCommand({
+          Bucket: destBucket,
+          Key: destKey,
+          UploadId,
+          PartNumber: partNumber,
+          Body: buffer,
+          ContentLength: buffer.length,
+        }),
+      );
+
+      parts.push({ PartNumber: partNumber, ETag });
+      const partBytes = end - byteOffset + 1;
+      byteOffset = end + 1;
+      partNumber++;
+      if (onPartCopied) onPartCopied(partBytes);
+    }
+
+    await destS3.send(
+      new CompleteMultipartUploadCommand({
+        Bucket: destBucket,
+        Key: destKey,
+        UploadId,
+        MultipartUpload: { Parts: parts },
+      }),
+    );
+  } catch (err) {
+    await destS3.send(new AbortMultipartUploadCommand({ Bucket: destBucket, Key: destKey, UploadId }));
+    throw err;
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Size scan
 // ---------------------------------------------------------------------------
 
-async function scanFileSizes(s3, fileNames, srcBucket, srcPath) {
+async function scanFileSizes(srcS3, fileNames, srcBucket, srcPath) {
   const ui = new TerminalUI();
   const t0 = Date.now();
   const trunc = (s, n) => (s.length > n ? s.slice(0, n - 1) + "…" : s);
@@ -592,7 +710,7 @@ async function scanFileSizes(s3, fileNames, srcBucket, srcPath) {
       while (idx < fileNames.length) {
         const fileName = fileNames[idx++];
         try {
-          const { ContentLength } = await s3.send(
+          const { ContentLength } = await srcS3.send(
             new HeadObjectCommand({ Bucket: srcBucket, Key: `${srcPath}${fileName}` }),
           );
           (ContentLength > COPY_OBJECT_MAX_BYTES ? multiFiles : singleFiles).push({
@@ -660,7 +778,8 @@ async function scanFileSizes(s3, fileNames, srcBucket, srcPath) {
 // Copy
 // ---------------------------------------------------------------------------
 
-async function copyFiles(s3, singleFiles, multiFiles, srcBucket, srcPath, destBucket, destPath, dryRun) {
+async function copyFiles(srcS3, destS3, singleFiles, multiFiles, srcBucket, srcPath, destBucket, destPath, dryRun) {
+  const crossService = srcS3 !== destS3;
   const ui = new TerminalUI();
   const trunc = (s, n) => (s.length > n ? s.slice(0, n - 1) + "…" : s);
   const allErrors = [];
@@ -717,7 +836,16 @@ async function copyFiles(s3, singleFiles, multiFiles, srcBucket, srcPath, destBu
           active.set(fileName, true);
           redraw();
           try {
-            await copySingleObject(s3, srcBucket, `${srcPath}${fileName}`, destBucket, `${destPath}${fileName}`);
+            await (crossService
+              ? copySingleObjectStream(
+                  srcS3,
+                  destS3,
+                  srcBucket,
+                  `${srcPath}${fileName}`,
+                  destBucket,
+                  `${destPath}${fileName}`,
+                )
+              : copySingleObject(destS3, srcBucket, `${srcPath}${fileName}`, destBucket, `${destPath}${fileName}`));
             const ms = Date.now() - t0;
             copied++;
             totalMs += ms;
@@ -793,19 +921,34 @@ async function copyFiles(s3, singleFiles, multiFiles, srcBucket, srcPath, destBu
       active.set(fileName, activeInfo);
       redraw();
       try {
-        await copyMultipart(
-          s3,
-          srcBucket,
-          `${srcPath}${fileName}`,
-          destBucket,
-          `${destPath}${fileName}`,
-          contentLength,
-          (partBytes) => {
-            bytesCopied += partBytes;
-            activeInfo.bytesDone += partBytes;
-            redraw();
-          },
-        );
+        await (crossService
+          ? copyMultipartStream(
+              srcS3,
+              destS3,
+              srcBucket,
+              `${srcPath}${fileName}`,
+              destBucket,
+              `${destPath}${fileName}`,
+              contentLength,
+              (partBytes) => {
+                bytesCopied += partBytes;
+                activeInfo.bytesDone += partBytes;
+                redraw();
+              },
+            )
+          : copyMultipart(
+              destS3,
+              srcBucket,
+              `${srcPath}${fileName}`,
+              destBucket,
+              `${destPath}${fileName}`,
+              contentLength,
+              (partBytes) => {
+                bytesCopied += partBytes;
+                activeInfo.bytesDone += partBytes;
+                redraw();
+              },
+            ));
         const ms = Date.now() - t0;
         copied++;
         totalMs += ms;
@@ -856,10 +999,23 @@ async function main() {
     `  Delete dest : ${args.deleteDestFiles ? "yes — destination will be wiped before copy" : "no (use --delete-dest-files to wipe first)"}`,
   );
   console.log(`  Region      : ${args.region}`);
+  if (args.endpoint) console.log(`  Endpoint    : ${args.endpoint}  (destination only, forcePathStyle enabled)`);
   if (args.dryRun) console.log("  Mode        : ⚠️ DRY-RUN — no changes will be made");
   console.log("");
 
-  const s3 = new S3Client({ region: args.region });
+  // Source always uses the standard AWS credential chain.
+  const srcS3 = new S3Client({ region: args.region });
+
+  // Destination uses a custom endpoint + explicit credentials when --endpoint is set (e.g. local MinIO),
+  // otherwise it also uses the standard AWS credential chain (same-service copy).
+  const destS3 = args.endpoint
+    ? new S3Client({
+        region: args.region,
+        endpoint: args.endpoint,
+        forcePathStyle: true,
+        credentials: { accessKeyId: args.destAccessKey, secretAccessKey: args.destSecretKey },
+      })
+    : srcS3;
 
   // Step 1: query DB for file list (before confirmation so the user sees the count)
   console.log("[Step 1/5] Querying the source database for asset files ...");
@@ -880,17 +1036,17 @@ async function main() {
   console.log("");
 
   // Step 2: pre-flight access check — verify token and permissions before doing anything destructive
-  await checkS3Access(s3, args.srcBucket, args.srcPath, args.destBucket, args.destPath);
+  await checkS3Access(srcS3, destS3, args.srcBucket, args.srcPath, args.destBucket, args.destPath);
 
   // Step 3: optionally delete all objects at destination path
   if (args.deleteDestFiles) {
-    await deleteAllInPath(s3, args.destBucket, args.destPath, args.dryRun);
+    await deleteAllInPath(destS3, args.destBucket, args.destPath, args.dryRun);
   } else {
     console.log("\n[Step 3/5] Skipping destination deletion (use --delete-dest-files to enable).");
   }
 
   // Step 4: scan all file sizes and group into single / multipart
-  const { singleFiles, multiFiles, missing } = await scanFileSizes(s3, fileNames, args.srcBucket, args.srcPath);
+  const { singleFiles, multiFiles, missing } = await scanFileSizes(srcS3, fileNames, args.srcBucket, args.srcPath);
 
   // Confirm before copying
 
@@ -909,9 +1065,10 @@ async function main() {
     return;
   }
 
-  // Step 4: copy files in two phases
+  // Step 5: copy files in two phases
   const { copied, errors } = await copyFiles(
-    s3,
+    srcS3,
+    destS3,
     singleFiles,
     multiFiles,
     args.srcBucket,

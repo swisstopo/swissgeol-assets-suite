@@ -1,7 +1,14 @@
+import * as path from 'path';
 import { PageDimension } from '@asset-sg/shared/v2';
 import { Injectable, Logger } from '@nestjs/common';
 import { getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs';
 import { PDFDocumentProxy } from 'pdfjs-dist/types/src/display/api';
+
+// eval('require') bypasses webpack's static require analysis so the path is resolved at runtime by Node.js.
+
+const STANDARD_FONT_DATA_URL =
+  path.join(path.dirname((eval('require') as NodeRequire).resolve('pdfjs-dist/package.json')), 'standard_fonts') +
+  path.sep;
 
 @Injectable()
 export class PdfMetadataService {
@@ -23,6 +30,7 @@ export class PdfMetadataService {
       // Load the PDF document without fetching all pages
       doc = await getDocument({
         url: fileUrl,
+        standardFontDataUrl: STANDARD_FONT_DATA_URL,
         disableAutoFetch: true,
         disableStream: false,
       }).promise;
@@ -75,7 +83,7 @@ export class PdfMetadataService {
       throw new Error(`PDF metadata extraction failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       // Ensure PDF document is properly destroyed to free memory
-      await doc?.destroy();
+      await doc?.loadingTask.destroy();
     }
   }
 
