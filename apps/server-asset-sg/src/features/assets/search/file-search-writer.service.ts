@@ -21,6 +21,7 @@ import { plainToInstance } from 'class-transformer';
 import {
   buildFavoritesMap,
   buildGeometryMetadataMap,
+  chunkBulkOperations,
   fetchContactNamesForAsset,
   fetchFavoredByUserIdsForAsset,
   fetchGeometryMetadataForAsset,
@@ -33,6 +34,7 @@ import { GeometryRepo } from '@/features/geometries/geometry.repo';
 import { ProcessQueue } from '@/utils/process-queue';
 
 const QUEUE_SIZE = 10;
+const BULK_CHUNK_SIZE = 200;
 
 export class FileSearchWriterService {
   private readonly logger = new Logger(FileSearchWriterService.name);
@@ -217,11 +219,13 @@ export class FileSearchWriterService {
       return;
     }
 
-    await this.elastic.bulk({
-      index: this.options.index,
-      refresh: this.options.shouldRefresh,
-      operations,
-    });
+    for (const chunk of chunkBulkOperations(operations, BULK_CHUNK_SIZE)) {
+      await this.elastic.bulk({
+        index: this.options.index,
+        refresh: this.options.shouldRefresh,
+        operations: chunk,
+      });
+    }
   }
 
   async writeAssetFiles(oneOrMore: Asset | Asset[]): Promise<void> {
@@ -269,11 +273,13 @@ export class FileSearchWriterService {
       return;
     }
 
-    await this.elastic.bulk({
-      index: this.options.index,
-      refresh: this.options.shouldRefresh,
-      operations: allOperations,
-    });
+    for (const chunk of chunkBulkOperations(allOperations, BULK_CHUNK_SIZE)) {
+      await this.elastic.bulk({
+        index: this.options.index,
+        refresh: this.options.shouldRefresh,
+        operations: chunk,
+      });
+    }
   }
 
   async deleteByAssetId(assetId: AssetId): Promise<void> {
