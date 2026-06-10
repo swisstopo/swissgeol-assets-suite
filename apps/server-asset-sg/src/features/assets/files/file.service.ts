@@ -1,3 +1,4 @@
+import * as path from 'node:path';
 import {
   Asset,
   AssetFile,
@@ -26,6 +27,11 @@ import { FileS3Service, SaveFileS3Options } from '@/features/assets/files/file-s
 import { CreateFileData, FileIdentifier, FileRepo } from '@/features/assets/files/file.repo';
 import { PdfMetadataService } from '@/features/assets/files/pdf-metadata.service';
 import { mapAssetLanguagesToPrismaUpdate } from '@/features/assets/prisma-asset';
+
+// eval('require') bypasses webpack's static require analysis so the path is resolved at runtime by Node.js.
+const STANDARD_FONT_DATA_URL =
+  path.join(path.dirname((eval('require') as NodeRequire).resolve('pdfjs-dist/package.json')), 'standard_fonts') +
+  path.sep;
 
 @Injectable()
 export class FileService {
@@ -225,9 +231,9 @@ export class FileService {
     // leak as unhandled rejections that crash Node.js.
     const loadingTask = getDocument({
       url: presignedUrl,
-      useSystemFonts: true,
+      standardFontDataUrl: STANDARD_FONT_DATA_URL,
       disableAutoFetch: true,
-      disableStream: true,
+      disableStream: false,
     });
     let doc: PDFDocumentProxy | null = null;
     try {
