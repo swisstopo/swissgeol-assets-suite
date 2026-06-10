@@ -8,14 +8,17 @@ import {
   PDFDocumentLoadingTask,
   PDFDocumentProxy,
   TextLayer,
+  version,
 } from 'pdfjs-dist';
 import { PDFPageProxy, TextContent } from 'pdfjs-dist/types/src/display/api';
 import { SessionStorageService } from '../../services/session-storage.service';
 import { selectIsAnonymousMode } from '../../state/app-shared-state.selectors';
 import { PdfRenderTask, PDF_VIEWER_DEBUG } from './pdf-viewer.models';
 
-// Worker source for PDF JS. Note that this must match the path that is defined in the builder configuration
-GlobalWorkerOptions.workerSrc = 'assets/pdfjs/pdf.worker.min.mjs';
+// Worker source for PDF JS. Note that this must match the path that is defined in the builder configuration.
+// The version query parameter busts the browser cache when the pdfjs-dist version changes, since the worker
+// filename itself has no content hash.
+GlobalWorkerOptions.workerSrc = `assets/pdfjs/pdf.worker.min.mjs?v=${version}`;
 
 @Injectable()
 export class PdfViewerService implements OnDestroy {

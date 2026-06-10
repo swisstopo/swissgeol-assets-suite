@@ -27,6 +27,7 @@ import { FileS3Service, SaveFileS3Options } from '@/features/assets/files/file-s
 import { CreateFileData, FileIdentifier, FileRepo } from '@/features/assets/files/file.repo';
 import { PdfMetadataService } from '@/features/assets/files/pdf-metadata.service';
 import { mapAssetLanguagesToPrismaUpdate } from '@/features/assets/prisma-asset';
+import { withTimeout } from '@/utils/timeout';
 
 // eval('require') bypasses webpack's static require analysis so the path is resolved at runtime by Node.js.
 const STANDARD_FONT_DATA_URL =
@@ -237,7 +238,11 @@ export class FileService {
     });
     let doc: PDFDocumentProxy | null = null;
     try {
-      doc = await loadingTask.promise;
+      // Use a timeout so that huge PDFs (e.g. 3 GB) can't stall the entire sync.
+      // When the timeout fires, the generator exits and the finally block calls
+      // loadingTask.destroy(), which cancels the network request and cleans up.
+      // Newer versions of pdf-js allow to do this with a singal provided in getDocument
+      doc = await withTimeout(loadingTask.promise, 120_000, 'PDF loading timed out');
 
       for (let i = 1; i <= doc.numPages; i++) {
         const page = await doc.getPage(i);
