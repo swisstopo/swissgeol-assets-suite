@@ -204,6 +204,22 @@ export class FileService {
         return;
       }
 
+      const metadata = await this.fileS3Service.loadMetadata(file.name);
+      if (metadata === null) {
+        this.logger.warn('File not found in S3', { fileId, fileName: file.name });
+        return;
+      }
+
+      const MAX_FILE_SIZE = 2 * 1024 * 1024 * 1024; // 2 GB
+      if (metadata.byteCount != null && metadata.byteCount > MAX_FILE_SIZE) {
+        this.logger.warn('Skipping fulltext extraction: file exceeds 2 GB size limit', {
+          fileId,
+          fileName: file.name,
+          fileSize: `${(metadata.byteCount / (1024 * 1024 * 1024)).toFixed(2)} GB`,
+        });
+        return;
+      }
+
       const presignedUrl = await this.fileS3Service.getPresignedUrl(file.name, file.nameAlias, false);
       if (presignedUrl === null) {
         this.logger.warn('File not found in S3', { fileId, fileName: file.name });
@@ -222,7 +238,10 @@ export class FileService {
         data: { fulltextContent: content as unknown as Prisma.JsonArray },
       });
     } catch (e) {
-      this.logger.warn('Failed to load fulltext content from S3', { fileId, error: e });
+      this.logger.warn('Failed to load fulltext content from S3', {
+        fileId,
+        error: e instanceof Error ? e.message : String(e),
+      });
     }
   }
 
@@ -238,15 +257,11 @@ export class FileService {
     });
     let doc: PDFDocumentProxy | null = null;
     try {
-      // Use a timeout so that huge PDFs (e.g. 3 GB) can't stall the entire sync.
-      // When the timeout fires, the generator exits and the finally block calls
-      // loadingTask.destroy(), which cancels the network request and cleans up.
-      // Newer versions of pdf-js allow to do this with a singal provided in getDocument
-      doc = await withTimeout(loadingTask.promise, 120_000, 'PDF loading timed out');
+      doc = await withTimeout(loadingTask.promise, 300_000, 'PDF loading timed out');
 
       for (let i = 1; i <= doc.numPages; i++) {
-        const page = await doc.getPage(i);
-        const textContent = await page.getTextContent();
+        const page = await withTimeout(doc.getPage(i), 30_000, `Loading page ${i} timed out`);
+        const textContent = await withTimeout(page.getTextContent(), 30_000, `Text extraction for page ${i} timed out`);
         const text = textContent.items
           .filter((item: TextItem | TextMarkedContent) => 'str' in item)
           .map((item: { str: string }) => item.str)
@@ -254,8 +269,17 @@ export class FileService {
         page.cleanup();
         yield { pageNumber: i, text };
       }
+    } catch (error) {
+      this.logger.warn('streamPdfPages error in try block', {
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
     } finally {
-      await loadingTask.destroy();
+      await withTimeout(loadingTask.destroy(), 30_000, 'PDF cleanup timed out').catch((e) => {
+        this.logger.warn('loadingTask.destroy() timed out or failed', {
+          error: e instanceof Error ? e.message : String(e),
+        });
+      });
     }
   }
 

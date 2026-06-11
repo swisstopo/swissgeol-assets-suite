@@ -67,6 +67,7 @@ describe('PdfMetadataService', () => {
 
       mockGetDocument.mockReturnValue({
         promise: Promise.resolve(mockDoc as any),
+        destroy: jest.fn().mockResolvedValue(undefined),
       } as any);
 
       // When: Extracting metadata
@@ -106,6 +107,7 @@ describe('PdfMetadataService', () => {
 
       mockGetDocument.mockReturnValue({
         promise: Promise.resolve(mockDoc as any),
+        destroy: jest.fn().mockResolvedValue(undefined),
       } as any);
 
       const warnSpy = jest.spyOn(Logger.prototype, 'warn').mockImplementation();
@@ -137,6 +139,7 @@ describe('PdfMetadataService', () => {
       // Given: A PDF that fails to load
       mockGetDocument.mockReturnValue({
         promise: Promise.reject(new Error('Invalid PDF file')),
+        destroy: jest.fn().mockResolvedValue(undefined),
       } as any);
 
       const errorSpy = jest.spyOn(Logger.prototype, 'error').mockImplementation();
@@ -171,6 +174,7 @@ describe('PdfMetadataService', () => {
 
       mockGetDocument.mockReturnValue({
         promise: Promise.resolve(mockDoc as any),
+        destroy: jest.fn().mockResolvedValue(undefined),
       } as any);
 
       const debugSpy = jest.spyOn(Logger.prototype, 'debug').mockImplementation();
