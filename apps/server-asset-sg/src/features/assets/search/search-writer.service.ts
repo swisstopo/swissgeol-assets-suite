@@ -149,11 +149,11 @@ export class SearchWriterService {
       // Use wait_for_completion: false to avoid client/server timeouts on large datasets,
       // then poll the task until it completes.
       await this.elastic.indices.refresh({ index: SYNC_INDEX });
-      await this.waitForReindex(SYNC_INDEX, ASSET_ELASTIC_INDEX);
+      await this.reindexAndPollForCompletion(SYNC_INDEX, ASSET_ELASTIC_INDEX);
       await this.elastic.indices.refresh({ index: ASSET_ELASTIC_INDEX });
 
       await this.elastic.indices.refresh({ index: FILE_SYNC_INDEX });
-      await this.waitForReindex(FILE_SYNC_INDEX, FILE_ELASTIC_INDEX);
+      await this.reindexAndPollForCompletion(FILE_SYNC_INDEX, FILE_ELASTIC_INDEX);
       await this.elastic.indices.refresh({ index: FILE_ELASTIC_INDEX });
     } catch (error) {
       this.logger.error('Failed to sync search index with database', error);
@@ -172,7 +172,7 @@ export class SearchWriterService {
    * Starts a reindex operation asynchronously and polls until it completes.
    * This avoids HTTP timeouts on large datasets.
    */
-  private async waitForReindex(sourceIndex: string, destIndex: string): Promise<void> {
+  private async reindexAndPollForCompletion(sourceIndex: string, destIndex: string): Promise<void> {
     const POLL_INTERVAL_MS = 1_000;
     const response = await this.elastic.reindex({
       source: { index: sourceIndex },
@@ -197,6 +197,8 @@ export class SearchWriterService {
           created: taskResponse.response?.created,
         });
         return;
+      } else {
+        this.logger.debug('Reindex task still in progress', { sourceIndex, destIndex, taskId });
       }
     }
   }
