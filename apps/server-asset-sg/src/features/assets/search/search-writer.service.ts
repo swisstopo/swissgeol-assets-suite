@@ -120,7 +120,15 @@ export class SearchWriterService {
         if (records.length === 0) {
           break;
         }
-        await Promise.all([writer.write(records), fileWriter.writeAssetFiles(records)]);
+        try {
+          await Promise.all([writer.write(records), fileWriter.writeAssetFiles(records)]);
+        } catch (error) {
+          this.logger.error('Failed to sync batch, continuing with next batch', {
+            offset,
+            batchSize: records.length,
+            error: error instanceof Error ? error.message : String(error),
+          });
+        }
         offset += records.length;
         if (onProgress != null) {
           await onProgress(Math.min(offset / total, 1));
@@ -151,8 +159,12 @@ export class SearchWriterService {
       this.logger.error('Failed to sync search index with database', error);
       throw error;
     } finally {
-      await this.elastic.indices.delete({ index: SYNC_INDEX });
-      await this.elastic.indices.delete({ index: FILE_SYNC_INDEX });
+      await this.elastic.indices.delete({ index: SYNC_INDEX }).catch((e) => {
+        this.logger.error('Failed to delete sync index', { index: SYNC_INDEX, error: e });
+      });
+      await this.elastic.indices.delete({ index: FILE_SYNC_INDEX }).catch((e) => {
+        this.logger.error('Failed to delete file sync index', { index: FILE_SYNC_INDEX, error: e });
+      });
     }
   }
 
