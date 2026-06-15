@@ -27,6 +27,7 @@ import { FileS3Service, SaveFileS3Options } from '@/features/assets/files/file-s
 import { CreateFileData, FileIdentifier, FileRepo } from '@/features/assets/files/file.repo';
 import { PdfMetadataService } from '@/features/assets/files/pdf-metadata.service';
 import { mapAssetLanguagesToPrismaUpdate } from '@/features/assets/prisma-asset';
+import { sanitizeTextForJson } from '@/utils/sanitize';
 import { withTimeout } from '@/utils/timeout';
 
 // eval('require') bypasses webpack's static require analysis so the path is resolved at runtime by Node.js.
@@ -262,10 +263,11 @@ export class FileService {
       for (let i = 1; i <= doc.numPages; i++) {
         const page = await withTimeout(doc.getPage(i), 30_000, `Loading page ${i} timed out`);
         const textContent = await withTimeout(page.getTextContent(), 30_000, `Text extraction for page ${i} timed out`);
-        const text = textContent.items
+        const rawText = textContent.items
           .filter((item: TextItem | TextMarkedContent) => 'str' in item)
           .map((item: { str: string }) => item.str)
           .join(' ');
+        const text = sanitizeTextForJson(rawText);
         page.cleanup();
         yield { pageNumber: i, text };
       }
