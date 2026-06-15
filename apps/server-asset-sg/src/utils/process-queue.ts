@@ -14,25 +14,28 @@ export class ProcessQueue {
   }
 
   /**
-   * Registers a new tasks to be run.
+   * Registers a new task to be run.
+   * If the task throws, the error propagates through the returned Promise.
+   * The queue continues processing subsequent tasks regardless.
    *
    * @param run The task to run.
    */
   add(run: () => void | Promise<void>): Promise<void> {
     if (this.active.size < this.quantity) {
-      return new Promise((resolve) => {
-        const process: Process = { run, resolve };
-        this.run(process).then();
+      return new Promise((resolve, reject) => {
+        const process: Process = { run, resolve, reject };
+        this.run(process);
       });
     }
-    return new Promise((resolve) => {
-      const process: Process = { run, resolve };
+    return new Promise((resolve, reject) => {
+      const process: Process = { run, resolve, reject };
       this.buffer.push(process);
     });
   }
 
   /**
    * Returns a promise that resolves when the queue has no more tasks to run.
+   * Individual task failures do not cause this to reject.
    */
   async waitForIdle(): Promise<void> {
     while (true) {
@@ -40,7 +43,7 @@ export class ProcessQueue {
         return;
       }
       if (this.active.size > 0) {
-        await Promise.all(this.active.values());
+        await Promise.allSettled(this.active.values());
       } else {
         await sleep(1);
       }
@@ -49,6 +52,7 @@ export class ProcessQueue {
 
   /**
    * Runs a task. Automatically continues to run any queued tasks afterward.
+   * Resolves or rejects the outer Promise (from `add()`) based on the task outcome.
    *
    * @param process The task to run.
    * @private
@@ -59,23 +63,16 @@ export class ProcessQueue {
       const promise = result instanceof Promise ? result : Promise.resolve();
       this.active.set(process, promise);
       await promise;
+      process.resolve();
+    } catch (error) {
+      process.reject(error);
     } finally {
-      this.finalize(process);
-    }
-  }
-
-  /**
-   * Resolves a finished process, and runs the next task in the queue, if present.
-   *
-   * @param process The task to resolve.
-   * @private
-   */
-  private finalize(process: Process): void {
-    this.active.delete(process);
-    process.resolve();
-    const next = this.buffer.shift();
-    if (next !== undefined) {
-      this.run(next).then();
+      // Resolves a finished process, and runs the next task in the queue, if present.
+      this.active.delete(process);
+      const next = this.buffer.shift();
+      if (next !== undefined) {
+        this.run(next);
+      }
     }
   }
 }
@@ -83,4 +80,5 @@ export class ProcessQueue {
 interface Process {
   run(): void | Promise<void>;
   resolve(): void;
+  reject(error: unknown): void;
 }

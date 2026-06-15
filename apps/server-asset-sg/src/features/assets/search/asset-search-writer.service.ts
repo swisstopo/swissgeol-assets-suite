@@ -12,6 +12,7 @@ import { BulkOperationContainer } from '@elastic/elasticsearch/lib/api/types';
 import { PrismaClient } from '@prisma/client';
 import { plainToInstance } from 'class-transformer';
 import {
+  chunkBulkOperations,
   fetchContactNamesForAsset,
   fetchFavoredByUserIdsForAsset,
   fetchGeometryMetadataForAsset,
@@ -24,6 +25,7 @@ import { GeometryRepo } from '@/features/geometries/geometry.repo';
 import { ProcessQueue } from '@/utils/process-queue';
 
 const QUEUE_SIZE = 10;
+const BULK_CHUNK_SIZE = 200;
 
 export class AssetSearchWriterService {
   private eager?: Promise<SharedEagerData | null>;
@@ -53,11 +55,13 @@ export class AssetSearchWriterService {
         .then();
     }
     await processQueue.waitForIdle();
-    await this.elastic.bulk({
-      index: this.options.index,
-      refresh: this.options.shouldRefresh,
-      operations,
-    });
+    for (const chunk of chunkBulkOperations(operations, BULK_CHUNK_SIZE)) {
+      await this.elastic.bulk({
+        index: this.options.index,
+        refresh: this.options.shouldRefresh,
+        operations: chunk,
+      });
+    }
   }
 
   private async mapAssetToElastic(asset: Asset): Promise<ElasticsearchAsset> {

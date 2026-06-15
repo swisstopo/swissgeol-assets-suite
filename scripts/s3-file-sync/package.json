@@ -1,0 +1,11 @@
+{
+  "name": "swissgeol-assets-scripts",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Standalone utility scripts for swissgeol-assets-suite",
+  "type": "module",
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.1061.0",
+    "pg": "^8.13.3"
+  }
+}
