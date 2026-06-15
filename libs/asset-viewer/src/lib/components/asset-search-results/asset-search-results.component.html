@@ -51,9 +51,11 @@
           <ng-container matColumnDef="manCatLabel">
             <th mat-header-cell *matHeaderCellDef translate>{{ "search.topic" }}</th>
             <td mat-cell *matCellDef="let asset">
-              @for (topicCode of asset.topicCodes; track topicCode) {
-                <div>{{ topicCode | reference: "assetTopics" }}</div>
-              }
+              <div class="clamped-cell-content">
+                @for (topicCode of asset.topicCodes; track topicCode) {
+                  <div>{{ topicCode | reference: "assetTopics" }}</div>
+                }
+              </div>
             </td>
           </ng-container>
           <ng-container matColumnDef="authors">

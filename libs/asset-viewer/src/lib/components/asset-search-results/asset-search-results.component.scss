@@ -78,11 +78,14 @@
       overflow: hidden;
       display: -webkit-box;
       -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
 
-      // Limit the cells width to max 350px and break words if longer
+      // Limit the cells width to max 300px and break words if longer
       // this avoids un-sanitized colum data blowing up table horizontally
       word-wrap: break-word;
       max-width: 300px;
+      margin-top: 4px;
+      margin-bottom: 4px;
     }
 
     .selected {
