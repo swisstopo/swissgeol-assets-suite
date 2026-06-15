@@ -220,11 +220,19 @@ export class FileSearchWriterService {
     }
 
     for (const chunk of chunkBulkOperations(operations, BULK_CHUNK_SIZE)) {
-      await this.elastic.bulk({
+      const result = await this.elastic.bulk({
         index: this.options.index,
         refresh: this.options.shouldRefresh,
         operations: chunk,
       });
+      if (result.errors) {
+        const failed = result.items.filter((item) => item.index?.error);
+        this.logger.error('Bulk indexing had errors', {
+          failedCount: failed.length,
+          totalCount: result.items.length,
+          errors: failed.slice(0, 5).map((item) => item.index?.error),
+        });
+      }
     }
   }
 
@@ -274,11 +282,19 @@ export class FileSearchWriterService {
     }
 
     for (const chunk of chunkBulkOperations(allOperations, BULK_CHUNK_SIZE)) {
-      await this.elastic.bulk({
+      const result = await this.elastic.bulk({
         index: this.options.index,
         refresh: this.options.shouldRefresh,
         operations: chunk,
       });
+      if (result.errors) {
+        const failed = result.items.filter((item) => item.index?.error);
+        this.logger.error('Bulk indexing had errors', {
+          failedCount: failed.length,
+          totalCount: result.items.length,
+          errors: failed.slice(0, 5).map((item) => item.index?.error),
+        });
+      }
     }
   }
 
