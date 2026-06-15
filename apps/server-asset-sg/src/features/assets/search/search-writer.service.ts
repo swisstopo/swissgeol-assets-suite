@@ -173,7 +173,7 @@ export class SearchWriterService {
    * This avoids HTTP timeouts on large datasets.
    */
   private async waitForReindex(sourceIndex: string, destIndex: string): Promise<void> {
-    const POLL_INTERVAL_MS = 5_000;
+    const POLL_INTERVAL_MS = 1_000;
     const response = await this.elastic.reindex({
       source: { index: sourceIndex },
       dest: { index: destIndex },
