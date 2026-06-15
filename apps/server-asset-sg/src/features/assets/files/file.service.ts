@@ -178,6 +178,8 @@ export class FileService {
   async loadAllFulltextContentFromS3(writeProgress?: (progress: number) => Promise<void>): Promise<void> {
     const files = await this.prismaService.file.findMany({ select: { id: true } });
     let i = 0;
+    let failures = 0;
+    const failedFileIds: number[] = [];
     for (const file of files) {
       if (i % 1000 === 0) {
         this.logger.debug('Downloading file fulltext..', {
@@ -188,10 +190,23 @@ export class FileService {
         await writeProgress?.(Math.min(i / files.length, 1));
       }
       i++;
-      await this.loadFulltextContentFromS3(file.id);
+      try {
+        await this.loadFulltextContentFromS3(file.id);
+      } catch (e) {
+        failures++;
+        failedFileIds.push(file.id);
+        this.logger.error('Unexpected error in loadFulltextContentFromS3, continuing with next file', {
+          fileId: file.id,
+          error: e instanceof Error ? e.message : String(e),
+        });
+      }
     }
     await writeProgress?.(1);
-    this.logger.debug('Done downloading file fulltext.', { total: files.length });
+    this.logger.debug('Done downloading file fulltext.', {
+      total: files.length,
+      failures,
+      ...(failedFileIds.length > 0 ? { failedFileIds } : {}),
+    });
   }
 
   async loadFulltextContentFromS3(fileId: number): Promise<void> {
