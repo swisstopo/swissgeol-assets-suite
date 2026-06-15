@@ -138,18 +138,14 @@ export class SearchWriterService {
       await this.elastic.indices.putMapping({ index: FILE_ELASTIC_INDEX, ...fileIndexMapping });
 
       // Refresh and reindex sync indices into live indices.
+      // Use wait_for_completion: false to avoid client/server timeouts on large datasets,
+      // then poll the task until it completes.
       await this.elastic.indices.refresh({ index: SYNC_INDEX });
-      await this.elastic.reindex({
-        source: { index: SYNC_INDEX },
-        dest: { index: ASSET_ELASTIC_INDEX },
-      });
+      await this.waitForReindex(SYNC_INDEX, ASSET_ELASTIC_INDEX);
       await this.elastic.indices.refresh({ index: ASSET_ELASTIC_INDEX });
 
       await this.elastic.indices.refresh({ index: FILE_SYNC_INDEX });
-      await this.elastic.reindex({
-        source: { index: FILE_SYNC_INDEX },
-        dest: { index: FILE_ELASTIC_INDEX },
-      });
+      await this.waitForReindex(FILE_SYNC_INDEX, FILE_ELASTIC_INDEX);
       await this.elastic.indices.refresh({ index: FILE_ELASTIC_INDEX });
     } catch (error) {
       this.logger.error('Failed to sync search index with database', error);
@@ -157,6 +153,39 @@ export class SearchWriterService {
     } finally {
       await this.elastic.indices.delete({ index: SYNC_INDEX });
       await this.elastic.indices.delete({ index: FILE_SYNC_INDEX });
+    }
+  }
+
+  /**
+   * Starts a reindex operation asynchronously and polls until it completes.
+   * This avoids HTTP timeouts on large datasets.
+   */
+  private async waitForReindex(sourceIndex: string, destIndex: string): Promise<void> {
+    const POLL_INTERVAL_MS = 5_000;
+    const response = await this.elastic.reindex({
+      source: { index: sourceIndex },
+      dest: { index: destIndex },
+      wait_for_completion: false,
+    });
+    const taskId = response.task as string;
+    this.logger.debug('Reindex task started', { sourceIndex, destIndex, taskId });
+
+    while (true) {
+      await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
+      const taskResponse = await this.elastic.tasks.get({ task_id: taskId });
+      if (taskResponse.completed) {
+        const failures = taskResponse.response?.failures ?? [];
+        if (failures.length > 0) {
+          this.logger.error('Reindex completed with failures', { sourceIndex, destIndex, failures });
+        }
+        this.logger.debug('Reindex task completed', {
+          sourceIndex,
+          destIndex,
+          total: taskResponse.response?.total,
+          created: taskResponse.response?.created,
+        });
+        return;
+      }
     }
   }
 }
