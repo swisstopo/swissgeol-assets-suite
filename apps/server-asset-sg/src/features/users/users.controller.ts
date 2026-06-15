@@ -41,7 +41,7 @@ export class UsersController {
   ): Promise<User> {
     const user = await this.userRepo.update(id, data);
     if (user == null) {
-      throw new HttpException('not found', 404);
+      throw new HttpException('not found', HttpStatus.NOT_FOUND);
     }
     return convert(UserSchema, user);
   }
@@ -52,7 +52,7 @@ export class UsersController {
   async delete(@Param('id') id: UserId): Promise<void> {
     const isOk = await this.userRepo.delete(id);
     if (!isOk) {
-      throw new HttpException('not found', 404);
+      throw new HttpException('not found', HttpStatus.NOT_FOUND);
     }
   }
 }
