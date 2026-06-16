@@ -34,7 +34,7 @@ export class AssetsController {
   async show(@Param('id', ParseIntPipe) id: AssetId, @CurrentUser() user: User): Promise<AssetSchema> {
     const record = await this.assetService.find(id);
     if (record === null) {
-      throw new HttpException('not found', 404);
+      throw new HttpException('not found', HttpStatus.FORBIDDEN);
     }
     authorize(AssetPolicy, user).canShow(record);
     return plainToInstance(AssetSchema, record);
@@ -63,7 +63,7 @@ export class AssetsController {
     authorize(AssetPolicy, user).canUpdate(record);
     const asset = await this.assetService.update(record, data, user);
     if (asset === null) {
-      throw new HttpException('not found', 404);
+      throw new HttpException('not found', HttpStatus.NOT_FOUND);
     }
     return plainToInstance(AssetSchema, asset);
   }

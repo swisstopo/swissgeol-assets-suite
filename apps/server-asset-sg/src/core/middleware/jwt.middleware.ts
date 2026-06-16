@@ -2,7 +2,7 @@ import { Role, User, WorkgroupId } from '@asset-sg/shared/v2';
 import { environment } from '@environment';
 import { HttpService } from '@nestjs/axios';
 import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
-import { HttpException, Inject, Injectable, NestMiddleware } from '@nestjs/common';
+import { HttpException, HttpStatus, Inject, Injectable, NestMiddleware } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { NextFunction, Request, Response } from 'express';
 import * as E from 'fp-ts/Either';
@@ -175,7 +175,7 @@ export class JwtMiddleware implements NestMiddleware {
           ),
           E.map((verified) => {
             if (typeof verified === 'string') {
-              throw new HttpException('invalid JWT payload: unable to decode', 401);
+              throw new HttpException('invalid JWT payload: unable to decode', HttpStatus.UNAUTHORIZED);
             }
             return { accessToken: tokenString, jwtPayload: verified };
           }),
@@ -187,7 +187,7 @@ export class JwtMiddleware implements NestMiddleware {
   private async initializeRequest(req: Request, accessToken: string, payload: JwtPayload): Promise<void> {
     const oidcId = payload.sub;
     if (oidcId == null || oidcId.length === 0) {
-      throw new HttpException('invalid JWT payload: missing sub', 401);
+      throw new HttpException('invalid JWT payload: missing sub', HttpStatus.UNAUTHORIZED);
     }
 
     // Load the JWT's user, or create it if it does not exist yet.
@@ -259,7 +259,7 @@ export class JwtMiddleware implements NestMiddleware {
   private async initializeDefaultUser(accessToken: string): Promise<User> {
     const userData = await this.getUserInfo(accessToken)();
     if (E.isLeft(userData)) {
-      throw new HttpException('invalid JWT payload: missing username', 401);
+      throw new HttpException('invalid JWT payload: missing username', HttpStatus.UNAUTHORIZED);
     }
     const data = userData.right;
     try {
@@ -289,7 +289,7 @@ export class JwtMiddleware implements NestMiddleware {
   private async updateExistingUser(accessToken: string, user: User): Promise<User | null> {
     const userData = await this.getUserInfo(accessToken)();
     if (E.isLeft(userData)) {
-      throw new HttpException('invalid JWT payload: missing username', 401);
+      throw new HttpException('invalid JWT payload: missing username', HttpStatus.UNAUTHORIZED);
     }
     const data = userData.right;
     user.firstName = data.firstName;

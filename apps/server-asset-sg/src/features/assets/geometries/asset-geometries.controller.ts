@@ -1,5 +1,5 @@
 import { AssetId, AssetPolicy, GeometryDetailSchema, User } from '@asset-sg/shared/v2';
-import { Controller, Get, HttpException, Param, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, HttpException, HttpStatus, Param, ParseIntPipe } from '@nestjs/common';
 import { plainToInstance } from 'class-transformer';
 import { authorize } from '@/core/authorize';
 import { CurrentUser } from '@/core/decorators/current-user.decorator';
@@ -13,7 +13,7 @@ export class AssetGeometriesController {
   async list(@Param('id', ParseIntPipe) id: AssetId, @CurrentUser() user: User): Promise<GeometryDetailSchema[]> {
     const record = await this.assetService.find(id);
     if (record === null) {
-      throw new HttpException('not found', 404);
+      throw new HttpException('not found', HttpStatus.NOT_FOUND);
     }
     authorize(AssetPolicy, user).canShow(record);
     const records = await this.assetService.listGeometries(id);

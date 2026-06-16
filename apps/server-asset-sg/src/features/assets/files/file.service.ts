@@ -255,6 +255,7 @@ export class FileService {
       standardFontDataUrl: STANDARD_FONT_DATA_URL,
       disableAutoFetch: true,
       disableStream: false,
+      verbosity: 0,
     });
     let doc: PDFDocumentProxy | null = null;
     try {
