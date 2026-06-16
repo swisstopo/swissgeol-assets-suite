@@ -56,6 +56,7 @@ import {
   PdfViewerVirtualItem,
   VIRTUAL_GAP,
   VIRTUAL_PADDING,
+  ZOOM_SETTLE_DELAY_MS,
   ZOOM_STEP,
   ZOOM_STEP_FINE,
 } from './pdf-viewer.models';
@@ -122,6 +123,7 @@ export class PdfViewerComponent implements OnDestroy {
   private scrollRenderTimer: ReturnType<typeof setTimeout> | null = null;
   private scrollAnimationFrame: number | null = null;
   private zoomAnimationFrame: number | null = null;
+  private zoomSettleTimer: ReturnType<typeof setTimeout> | null = null;
 
   private renderPassInFlight = false;
   private renderPassQueued = false;
@@ -143,6 +145,7 @@ export class PdfViewerComponent implements OnDestroy {
   private pendingWheelZoomMouseOffsetX: number | null = null;
   private programmaticScrollDepth = 0;
   private pinnedPageNumber: number | null = null;
+  private pendingZoomRenderBlocked = false;
 
   // estimateSize must read plain fields, not signals.
   private _estimateZoom = 1;
@@ -185,6 +188,7 @@ export class PdfViewerComponent implements OnDestroy {
     if (this.zoomAnimationFrame !== null) {
       cancelAnimationFrame(this.zoomAnimationFrame);
     }
+    this.cancelZoomSettleTimer();
   }
 
   protected onViewerMouseDown(event: MouseEvent) {
@@ -375,10 +379,49 @@ export class PdfViewerComponent implements OnDestroy {
       }
     }
 
+    const isWheelZoom = mouseOffsetY !== null && mouseOffsetX !== null;
     this.renderMode = 'zoom';
     this.viewportEpoch++;
     this.pdfViewerRendererService.prepareForZoomRender();
+    if (isWheelZoom) {
+      this.scheduleZoomLayoutPass(horizontalRatio);
+    } else {
+      // Button zoom: render immediately — each button press is a discrete action.
+      this.pendingZoomRenderBlocked = false;
+      this.cancelZoomSettleTimer();
+      this.scheduleVirtualRefresh(horizontalRatio);
+    }
+  }
+
+  /**
+   * Schedules an immediate layout-only pass (virtual sizes, scroll positions, stale
+   * preview scaling) and a debounced render pass. During rapid CTRL+wheel zoom the
+   * layout pass keeps the viewport consistent while the stale CSS-scaled canvases
+   * serve as placeholders. PDF.js re-renders are delayed until zoom settles
+   * (ZOOM_SETTLE_DELAY_MS with no new zoom commits).
+   */
+  private scheduleZoomLayoutPass(horizontalRatio: number | null): void {
+    // The render pass will run the layout portion immediately.
+    // Setting pendingZoomRenderBlocked tells it to skip queueing PDF.js renders.
+    this.pendingZoomRenderBlocked = true;
     this.scheduleVirtualRefresh(horizontalRatio);
+
+    // Reset the settle timer — actual PDF.js renders start only after zoom stops.
+    this.cancelZoomSettleTimer();
+    this.zoomSettleTimer = setTimeout(() => {
+      this.zoomSettleTimer = null;
+      this.pendingZoomRenderBlocked = false;
+      if (this.renderMode === 'zoom') {
+        this.scheduleRender();
+      }
+    }, ZOOM_SETTLE_DELAY_MS);
+  }
+
+  private cancelZoomSettleTimer(): void {
+    if (this.zoomSettleTimer !== null) {
+      clearTimeout(this.zoomSettleTimer);
+      this.zoomSettleTimer = null;
+    }
   }
 
   protected onCloseViewer() {
@@ -522,6 +565,8 @@ export class PdfViewerComponent implements OnDestroy {
     this.pendingWheelZoomMouseOffsetX = null;
     this.programmaticScrollDepth = 0;
     this.pinnedPageNumber = null;
+    this.pendingZoomRenderBlocked = false;
+    this.cancelZoomSettleTimer();
     if (this.zoomAnimationFrame !== null) {
       cancelAnimationFrame(this.zoomAnimationFrame);
       this.zoomAnimationFrame = null;
@@ -763,6 +808,31 @@ export class PdfViewerComponent implements OnDestroy {
 
     if (this.renderMode === 'normal') {
       this.evictPagesOutside(items);
+    }
+
+    // During zoom, CSS-scale all stale canvases to match the new slot dimensions
+    // and reattach any wrappers orphaned by slot recycling. This runs BEFORE
+    // queueing PDF.js renders so the user sees correctly sized placeholders
+    // even while re-renders are blocked (during rapid CTRL+wheel zoom).
+    if (this.renderMode === 'zoom') {
+      const scrollEl = this.pdfElement()?.nativeElement;
+      if (scrollEl) {
+        this.pdfViewerRendererService.scaleAllStalePreviews(
+          this.zoom(),
+          this.rotation(),
+          this.baseScale(),
+          scrollEl,
+          this.renderer,
+        );
+      }
+      this.pdfViewerRendererService.updateVisiblePages(items);
+    }
+
+    if (this.pendingZoomRenderBlocked) {
+      // Zoom is still in progress — stale previews are visible, skip PDF.js renders
+      // until the settle timer fires.
+      this.releasePagePinIfIdle(items);
+      return;
     }
 
     const expectedZoom = this.zoom();

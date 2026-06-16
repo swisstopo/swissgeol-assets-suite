@@ -70,6 +70,52 @@ export class PdfViewerRendererService {
   }
 
   /**
+   * CSS-scales all previously rendered page wrappers to match the new zoom/baseScale
+   * dimensions. This keeps stale bitmaps visible at the correct visual size while
+   * PDF.js re-renders at the target resolution, preventing blank flashes.
+   *
+   * Also reattaches any wrappers that were orphaned when TanStack Virtual recycled
+   * slot elements (e.g. pages scrolling in/out of the virtual window during zoom).
+   */
+  scaleAllStalePreviews(
+    newZoom: number,
+    newRotation: number,
+    newBaseScale: number,
+    scrollElement: HTMLDivElement,
+    renderer: Renderer2,
+  ): void {
+    for (const [pageNum, rendered] of this.renderedPages) {
+      if (rendered.rotation !== newRotation) continue;
+
+      const scale = (newZoom * newBaseScale) / (rendered.zoom * rendered.baseScale);
+      const isUpToDate = rendered.zoom === newZoom && Math.abs(rendered.baseScale - newBaseScale) < BASE_SCALE_EPSILON;
+
+      // Re-attach the wrapper if the slot was recreated by Angular's @for.
+      const slot = scrollElement.querySelector(`.page-slot[data-page-num="${pageNum}"]`) as HTMLElement | null;
+      if (slot && rendered.wrapper.parentNode !== slot) {
+        const existing = slot.querySelector('.canvas-wrapper');
+        if (existing) {
+          slot.replaceChild(rendered.wrapper, existing);
+        } else {
+          slot.appendChild(rendered.wrapper);
+        }
+        renderer.addClass(slot, 'page-slot--loaded');
+      }
+
+      if (isUpToDate) {
+        // Already at target resolution — remove stale styling.
+        rendered.wrapper.style.transform = '';
+        rendered.wrapper.style.transformOrigin = '';
+        rendered.wrapper.classList.remove('canvas-wrapper--stale');
+      } else if (Math.abs(scale - 1) >= 0.0001) {
+        rendered.wrapper.style.transformOrigin = 'center center';
+        rendered.wrapper.style.transform = `scale(${scale})`;
+        rendered.wrapper.classList.add('canvas-wrapper--stale');
+      }
+    }
+  }
+
+  /**
    * Lightweight scroll-frame handler: updates the visible page set so that
    * the `.finally()` cascade in `drainSlots()` picks the right pages.
    */

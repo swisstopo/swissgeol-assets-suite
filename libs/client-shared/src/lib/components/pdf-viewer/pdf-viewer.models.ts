@@ -63,6 +63,12 @@ export const VIRTUAL_GAP = 8;
 // Default number of pages kept in the virtual range before/after the viewport.
 export const DEFAULT_OVERSCAN = 6;
 /**
+ * Delay in milliseconds after the last zoom commit before PDF.js re-renders are
+ * dispatched. During this window only CSS-scaled stale previews are shown, which
+ * avoids expensive render-and-cancel cycles during rapid CTRL+wheel zoom.
+ */
+export const ZOOM_SETTLE_DELAY_MS = 300;
+/**
  * Maximum number of PDF.js page render tasks (and therefore concurrent network/byte-range
  * fetches). Lower values reduce simultaneous overlapping requests; higher values fill the viewport faster at the
  * cost of more concurrent CPU/memory/network usage.
