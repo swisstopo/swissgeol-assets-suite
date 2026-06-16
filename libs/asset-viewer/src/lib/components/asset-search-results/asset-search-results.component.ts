@@ -49,7 +49,7 @@ export class AssetSearchResultsComponent implements OnInit, OnDestroy {
     'createDate',
   ];
 
-  protected readonly FILE_COLUMNS = ['fileName', 'assetTitle', 'pages', 'actions'];
+  protected readonly FILE_COLUMNS = ['actions', 'fileName', 'assetTitle', 'pages'];
 
   public allResults$ = new BehaviorSubject<AssetSearchResultItem[]>([]);
 

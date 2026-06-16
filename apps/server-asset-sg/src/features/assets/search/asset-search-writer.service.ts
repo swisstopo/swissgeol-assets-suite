@@ -9,9 +9,11 @@ import {
 } from '@asset-sg/shared/v2';
 import { Client as ElasticsearchClient } from '@elastic/elasticsearch';
 import { BulkOperationContainer } from '@elastic/elasticsearch/lib/api/types';
+import { Logger } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 import { plainToInstance } from 'class-transformer';
 import {
+  chunkBulkOperations,
   fetchContactNamesForAsset,
   fetchFavoredByUserIdsForAsset,
   fetchGeometryMetadataForAsset,
@@ -24,8 +26,10 @@ import { GeometryRepo } from '@/features/geometries/geometry.repo';
 import { ProcessQueue } from '@/utils/process-queue';
 
 const QUEUE_SIZE = 10;
+const BULK_CHUNK_SIZE = 200;
 
 export class AssetSearchWriterService {
+  private readonly logger = new Logger(AssetSearchWriterService.name);
   private eager?: Promise<SharedEagerData | null>;
 
   constructor(
@@ -38,26 +42,54 @@ export class AssetSearchWriterService {
 
   async write(oneOrMore: Asset | Asset[]): Promise<void> {
     const assets = Array.isArray(oneOrMore) ? oneOrMore : [oneOrMore];
-    const operations: Array<BulkOperationContainer | ElasticsearchAsset> = Array(assets.length * 2);
+    const operations: Array<BulkOperationContainer | ElasticsearchAsset> = [];
 
     const processQueue = new ProcessQueue(QUEUE_SIZE);
+    const operationsByAsset: Array<[BulkOperationContainer, ElasticsearchAsset] | undefined> = new Array(assets.length);
+
     for (let j = 0; j < assets.length; j++) {
       const i = j;
       const asset = assets[i];
-      processQueue
-        .add(async () => {
+      await processQueue.add(async () => {
+        try {
           const elasticAsset = await this.mapAssetToElastic(asset);
-          operations[i * 2] = { index: { _index: this.options.index, _id: `${elasticAsset.id}` } };
-          operations[i * 2 + 1] = elasticAsset;
-        })
-        .then();
+          operationsByAsset[i] = [{ index: { _index: this.options.index, _id: `${elasticAsset.id}` } }, elasticAsset];
+        } catch (error) {
+          this.logger.error('Failed to map asset to elastic, skipping', {
+            assetId: asset.id,
+            assetTitle: asset.title,
+            error: error instanceof Error ? error.message : String(error),
+          });
+        }
+      });
     }
     await processQueue.waitForIdle();
-    await this.elastic.bulk({
-      index: this.options.index,
-      refresh: this.options.shouldRefresh,
-      operations,
-    });
+
+    for (const ops of operationsByAsset) {
+      if (ops != null) {
+        operations.push(...ops);
+      }
+    }
+
+    if (operations.length === 0) {
+      return;
+    }
+
+    for (const chunk of chunkBulkOperations(operations, BULK_CHUNK_SIZE)) {
+      const result = await this.elastic.bulk({
+        index: this.options.index,
+        refresh: this.options.shouldRefresh,
+        operations: chunk,
+      });
+      if (result.errors) {
+        const failed = result.items.filter((item) => item.index?.error);
+        this.logger.error('Bulk indexing had errors', {
+          failedCount: failed.length,
+          totalCount: result.items.length,
+          errors: failed.slice(0, 5).map((item) => item.index?.error),
+        });
+      }
+    }
   }
 
   private async mapAssetToElastic(asset: Asset): Promise<ElasticsearchAsset> {

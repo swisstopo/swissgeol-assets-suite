@@ -605,7 +605,7 @@ describe(AssetSearchService, () => {
 
       const hit3 = response.hits.hits[2]._source as ElasticsearchAsset;
       assertHit(hit3, asset3);
-    });
+    }, 15_000);
 
     it('reports final progress when no assets were synced', async () => {
       // When

@@ -64,7 +64,7 @@ export class WorkgroupsController {
   async show(@Param('id', ParseIntPipe) id: WorkgroupId, @CurrentUser() user: User): Promise<Workgroup> {
     const record = await this.workgroupRepo.find(id);
     if (record === null) {
-      throw new HttpException('not found', 404);
+      throw new HttpException('not found', HttpStatus.NOT_FOUND);
     }
     authorize(WorkgroupPolicy, user).canShow(record);
     return convert(WorkgroupSchema, record);
@@ -74,7 +74,7 @@ export class WorkgroupsController {
   async listUsers(@Param('id', ParseIntPipe) id: WorkgroupId, @CurrentUser() user: User): Promise<SimpleUser[]> {
     const record = await this.workgroupRepo.find(id);
     if (record === null) {
-      throw new HttpException('not found', 404);
+      throw new HttpException('not found', HttpStatus.NOT_FOUND);
     }
     authorize(WorkgroupPolicy, user).canShow(record);
     const users = await this.userRepo.findByWorkgroupId(id);
@@ -102,12 +102,12 @@ export class WorkgroupsController {
   ): Promise<Workgroup> {
     const record = await this.workgroupRepo.find(id);
     if (record === null) {
-      throw new HttpException('not found', 404);
+      throw new HttpException('not found', HttpStatus.NOT_FOUND);
     }
     authorize(WorkgroupPolicy, user).canUpdate(record);
     const workgroup = await this.workgroupRepo.update(record.id, data);
     if (workgroup === null) {
-      throw new HttpException('not found', 404);
+      throw new HttpException('not found', HttpStatus.NOT_FOUND);
     }
     return convert(WorkgroupSchema, workgroup);
   }

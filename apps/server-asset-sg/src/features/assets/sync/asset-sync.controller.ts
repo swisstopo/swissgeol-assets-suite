@@ -1,4 +1,15 @@
-import { Controller, DefaultValuePipe, Get, HttpException, ParseBoolPipe, Post, Query, Res } from '@nestjs/common';
+import {
+  Controller,
+  DefaultValuePipe,
+  Get,
+  HttpException,
+  HttpStatus,
+  Logger,
+  ParseBoolPipe,
+  Post,
+  Query,
+  Res,
+} from '@nestjs/common';
 import { Response } from 'express';
 import { Authorize } from '@/core/decorators/authorize.decorator';
 import { AssetSyncService } from '@/features/assets/sync/asset-sync.service';
@@ -6,6 +17,8 @@ import { FileFulltextSyncService } from '@/features/assets/sync/file-fulltext-sy
 
 @Controller('/assets/sync')
 export class AssetSyncController {
+  private readonly logger = new Logger(AssetSyncController.name);
+
   constructor(
     private readonly assetSyncService: AssetSyncService,
     private readonly fileFulltextSyncService: FileFulltextSyncService,
@@ -22,7 +35,8 @@ export class AssetSyncController {
       }
       res.status(200).json({ progress: state.progress }).end();
     } catch (e) {
-      throw new HttpException(`${e}`, 500);
+      this.logger.error('Failed to show sync state', e instanceof Error ? e.stack : e);
+      throw new HttpException('Internal Server Error', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -44,7 +58,8 @@ export class AssetSyncController {
       }
       res.status(200).json({ progress: state.progress }).end();
     } catch (e) {
-      throw new HttpException(`${e}`, 500);
+      this.logger.error('Failed to show full-text sync state', e instanceof Error ? e.stack : e);
+      throw new HttpException('Internal Server Error', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 

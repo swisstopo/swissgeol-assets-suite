@@ -29,7 +29,7 @@ export class ContactsController {
     authorize(ContactPolicy, user).canUpdate(record);
     const contact = await this.contactRepo.update(record.id, data);
     if (contact == null) {
-      throw new HttpException('not found', 404);
+      throw new HttpException('not found', HttpStatus.NOT_FOUND);
     }
     return contact;
   }

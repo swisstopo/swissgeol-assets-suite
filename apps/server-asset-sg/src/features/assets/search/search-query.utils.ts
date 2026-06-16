@@ -63,7 +63,7 @@ export const mapQueryToElasticDslParts = (
             content: {
               query: query.text,
               operator: 'and',
-              fuzziness: 'AUTO',
+              fuzziness: 0,
             },
           },
         };

@@ -119,7 +119,12 @@ export abstract class AbstractProcessingService<T> {
   }
 
   private async finishProcessing(file: ProcessableFile): Promise<void> {
+    const MAX_POLL_DURATION_MS = 30 * 60 * 1000; // 30 minutes
+    const startTime = Date.now();
     while (true) {
+      if (Date.now() - startTime > MAX_POLL_DURATION_MS) {
+        throw new Error(`${this.processingStage} polling timed out after ${MAX_POLL_DURATION_MS / 1000}s`);
+      }
       await sleep(1000);
       const result = await this.collectResult(file);
       if (result.has_finished) {

@@ -8,6 +8,7 @@ export const openElasticsearchClient = () =>
       username: process.env.ELASTICSEARCH_USERNAME ?? '',
       password: process.env.ELASTICSEARCH_PASSWORD ?? '',
     },
+    requestTimeout: parseInt(process.env.ELASTICSEARCH_REQUEST_TIMEOUT ?? '300000', 10),
   });
 
 export const provideElasticsearch: FactoryProvider<Client> = {

@@ -1,3 +1,4 @@
+import * as path from 'node:path';
 import {
   Asset,
   AssetFile,
@@ -26,6 +27,13 @@ import { FileS3Service, SaveFileS3Options } from '@/features/assets/files/file-s
 import { CreateFileData, FileIdentifier, FileRepo } from '@/features/assets/files/file.repo';
 import { PdfMetadataService } from '@/features/assets/files/pdf-metadata.service';
 import { mapAssetLanguagesToPrismaUpdate } from '@/features/assets/prisma-asset';
+import { sanitizeTextForJson } from '@/utils/sanitize';
+import { withTimeout } from '@/utils/timeout';
+
+// eval('require') bypasses webpack's static require analysis so the path is resolved at runtime by Node.js.
+const STANDARD_FONT_DATA_URL =
+  path.join(path.dirname((eval('require') as NodeRequire).resolve('pdfjs-dist/package.json')), 'standard_fonts') +
+  path.sep;
 
 @Injectable()
 export class FileService {
@@ -182,7 +190,7 @@ export class FileService {
       i++;
       await this.loadFulltextContentFromS3(file.id);
     }
-    writeProgress?.(1);
+    await writeProgress?.(1);
     this.logger.debug('Done downloading file fulltext.', { total: files.length });
   }
 
@@ -194,6 +202,22 @@ export class FileService {
       });
       if (file === null) {
         this.logger.warn('File not found in database', { fileId });
+        return;
+      }
+
+      const metadata = await this.fileS3Service.loadMetadata(file.name);
+      if (metadata === null) {
+        this.logger.warn('File not found in S3', { fileId, fileName: file.name });
+        return;
+      }
+
+      const MAX_FILE_SIZE = 2 * 1024 * 1024 * 1024; // 2 GB
+      if (metadata.byteCount != null && metadata.byteCount > MAX_FILE_SIZE) {
+        this.logger.warn('Skipping fulltext extraction: file exceeds 2 GB size limit', {
+          fileId,
+          fileName: file.name,
+          fileSize: `${(metadata.byteCount / (1024 * 1024 * 1024)).toFixed(2)} GB`,
+        });
         return;
       }
 
@@ -215,31 +239,49 @@ export class FileService {
         data: { fulltextContent: content as unknown as Prisma.JsonArray },
       });
     } catch (e) {
-      this.logger.warn('Failed to load fulltext content from S3', { fileId, error: e });
+      this.logger.warn('Failed to load fulltext content from S3', {
+        fileId,
+        error: e instanceof Error ? e.message : String(e),
+      });
     }
   }
 
   private async *streamPdfPages(presignedUrl: string) {
+    // Save loadingTask before awaiting so it can always be destroyed in the finally block,
+    // even if the promise rejects (e.g. 503 from S3). Without this, pdfjs internal tasks
+    // leak as unhandled rejections that crash Node.js.
+    const loadingTask = getDocument({
+      url: presignedUrl,
+      standardFontDataUrl: STANDARD_FONT_DATA_URL,
+      disableAutoFetch: true,
+      disableStream: false,
+    });
     let doc: PDFDocumentProxy | null = null;
     try {
-      doc = await getDocument({
-        url: presignedUrl,
-        disableAutoFetch: true,
-        disableStream: false,
-      }).promise;
+      doc = await withTimeout(loadingTask.promise, 300_000, 'PDF loading timed out');
 
-      for (let i = 1; i <= doc?.numPages; i++) {
-        const page = await doc?.getPage(i);
-        const textContent = await page.getTextContent();
-        const text = textContent.items
+      for (let i = 1; i <= doc.numPages; i++) {
+        const page = await withTimeout(doc.getPage(i), 30_000, `Loading page ${i} timed out`);
+        const textContent = await withTimeout(page.getTextContent(), 30_000, `Text extraction for page ${i} timed out`);
+        const rawText = textContent.items
           .filter((item: TextItem | TextMarkedContent) => 'str' in item)
           .map((item: { str: string }) => item.str)
           .join(' ');
+        const text = sanitizeTextForJson(rawText);
         page.cleanup();
         yield { pageNumber: i, text };
       }
+    } catch (error) {
+      this.logger.warn('streamPdfPages error in try block', {
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
     } finally {
-      doc?.destroy();
+      await withTimeout(loadingTask.destroy(), 30_000, 'PDF cleanup timed out').catch((e) => {
+        this.logger.warn('loadingTask.destroy() timed out or failed', {
+          error: e instanceof Error ? e.message : String(e),
+        });
+      });
     }
   }
 

@@ -1,7 +1,13 @@
+import * as path from 'node:path';
 import { PageDimension } from '@asset-sg/shared/v2';
 import { Injectable, Logger } from '@nestjs/common';
 import { getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs';
-import { PDFDocumentProxy } from 'pdfjs-dist/types/src/display/api';
+import { PDFDocumentLoadingTask, PDFDocumentProxy } from 'pdfjs-dist/types/src/display/api';
+
+// eval('require') bypasses webpack's static require analysis so the path is resolved at runtime by Node.js.
+const STANDARD_FONT_DATA_URL =
+  path.join(path.dirname((eval('require') as NodeRequire).resolve('pdfjs-dist/package.json')), 'standard_fonts') +
+  path.sep;
 
 @Injectable()
 export class PdfMetadataService {
@@ -17,15 +23,18 @@ export class PdfMetadataService {
   async extractMetadata(fileUrl: string): Promise<PdfMetadataResult> {
     let doc: PDFDocumentProxy | null = null;
 
+    let loadingTask: PDFDocumentLoadingTask | null = null;
     try {
       this.logger.debug('Starting PDF metadata extraction', { fileUrl: this.sanitizeUrl(fileUrl) });
 
-      // Load the PDF document without fetching all pages
-      doc = await getDocument({
+      loadingTask = getDocument({
         url: fileUrl,
+        standardFontDataUrl: STANDARD_FONT_DATA_URL,
         disableAutoFetch: true,
         disableStream: false,
-      }).promise;
+      });
+      // Load the PDF document without fetching all pages
+      doc = await loadingTask.promise;
 
       const pageCount = doc.numPages;
       const pageDimensions: PageDimension[] = [];
@@ -75,7 +84,7 @@ export class PdfMetadataService {
       throw new Error(`PDF metadata extraction failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       // Ensure PDF document is properly destroyed to free memory
-      await doc?.destroy();
+      await loadingTask?.destroy();
     }
   }
 
