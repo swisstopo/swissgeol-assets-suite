@@ -138,6 +138,7 @@ export class PdfViewerComponent implements OnDestroy {
   private zoomAnchorPageNumber: number | null = null;
   private pendingZoomReanchorPageNumber: number | null = null;
   private pendingZoomScrollTop: number | null = null;
+  private pendingZoomScrollLeft: number | null = null;
   private pendingWheelZoomMouseOffsetY: number | null = null;
   private pendingWheelZoomMouseOffsetX: number | null = null;
   private programmaticScrollDepth = 0;
@@ -297,10 +298,13 @@ export class PdfViewerComponent implements OnDestroy {
     this.pendingZoomTarget = null;
 
     // Capture pre-zoom state so we can compute exact scroll positions after zoom.
+    // When rapid CTRL+wheel zoom commits faster than the render pass can apply them,
+    // the DOM scroll positions are stale. Use the pending values (which represent the
+    // intended state for the current zoom level) to keep the anchor calculation correct.
     const oldZoom = this.zoom();
     const scrollEl = this.pdfElement()?.nativeElement;
-    const scrollTop = scrollEl?.scrollTop ?? 0;
-    const scrollLeft = scrollEl?.scrollLeft ?? 0;
+    const scrollTop = this.pendingZoomScrollTop ?? scrollEl?.scrollTop ?? 0;
+    const scrollLeft = this.pendingZoomScrollLeft ?? scrollEl?.scrollLeft ?? 0;
     const mouseOffsetY = this.pendingWheelZoomMouseOffsetY;
     const mouseOffsetX = this.pendingWheelZoomMouseOffsetX;
     this.pendingWheelZoomMouseOffsetY = null;
@@ -322,9 +326,11 @@ export class PdfViewerComponent implements OnDestroy {
 
     let horizontalRatio: number | null = null;
 
-    // Compute the new scrollTop/horizontal ratio that keeps the visual anchor in place.
+    // Compute the new scrollTop/scrollLeft that keeps the visual anchor in place.
     if (scrollEl && pageDims.length > 0) {
       const containerWidth = scrollEl.clientWidth;
+      const contentWidthOld = getDocumentWidth(pageDims, containerWidth, baseScl, oldZoom, rotation);
+      const contentWidthNew = getDocumentWidth(pageDims, containerWidth, baseScl, newZoom, rotation);
 
       if (mouseOffsetY !== null && mouseOffsetX !== null) {
         // CTRL+wheel: both axes anchor to the cursor position.
@@ -342,12 +348,10 @@ export class PdfViewerComponent implements OnDestroy {
         // Horizontal — pages are CSS-centred inside the virtual spacer, so we must
         // anchor to the distance from the page centre, not from scroll origin 0.
         // contentWidthOld/New accounts for the min-width clamping at zoom < 1.
-        const contentWidthOld = getDocumentWidth(pageDims, containerWidth, baseScl, oldZoom, rotation);
-        const contentWidthNew = getDocumentWidth(pageDims, containerWidth, baseScl, newZoom, rotation);
         const dX = scrollLeft + mouseOffsetX - contentWidthOld / 2;
-        const newScrollLeft = Math.max(0, contentWidthNew / 2 + dX * (newZoom / oldZoom) - mouseOffsetX);
+        const newScrollLeft = contentWidthNew / 2 + dX * (newZoom / oldZoom) - mouseOffsetX;
         const newMaxScrollLeft = Math.max(0, contentWidthNew - containerWidth);
-        horizontalRatio = newMaxScrollLeft > 0 ? newScrollLeft / newMaxScrollLeft : 0;
+        this.pendingZoomScrollLeft = Math.max(0, Math.min(newScrollLeft, newMaxScrollLeft));
       } else {
         // Button zoom: preserve the relative position within the anchor page (vertical)
         // and the current horizontal scroll ratio.
@@ -363,8 +367,11 @@ export class PdfViewerComponent implements OnDestroy {
         // When there is no overflow (zoom ≤ 1) the only sensible starting position
         // is the centre (0.5), so crossing into zoom > 1 stays centred rather than
         // snapping to the left edge.
-        const maxScrollLeft = Math.max(0, scrollEl.scrollWidth - containerWidth);
-        horizontalRatio = maxScrollLeft > 0 ? scrollLeft / maxScrollLeft : 0.5;
+        const maxScrollLeftOld = Math.max(0, contentWidthOld - containerWidth);
+        const maxScrollLeftNew = Math.max(0, contentWidthNew - containerWidth);
+        horizontalRatio = maxScrollLeftOld > 0 ? scrollLeft / maxScrollLeftOld : 0.5;
+        this.pendingZoomScrollLeft = Math.max(0, horizontalRatio * maxScrollLeftNew);
+        horizontalRatio = null;
       }
     }
 
@@ -510,6 +517,7 @@ export class PdfViewerComponent implements OnDestroy {
     this.zoomAnchorPageNumber = null;
     this.pendingZoomReanchorPageNumber = null;
     this.pendingZoomScrollTop = null;
+    this.pendingZoomScrollLeft = null;
     this.pendingWheelZoomMouseOffsetY = null;
     this.pendingWheelZoomMouseOffsetX = null;
     this.programmaticScrollDepth = 0;
@@ -721,7 +729,16 @@ export class PdfViewerComponent implements OnDestroy {
       await this.waitForDom();
     }
 
-    if (this.pendingHorizontalScrollRatio !== null) {
+    if (this.pendingZoomScrollLeft !== null) {
+      const pendingScrollLeft = this.pendingZoomScrollLeft;
+      this.pendingZoomScrollLeft = null;
+      const scrollEl = this.pdfElement()?.nativeElement;
+      if (scrollEl) {
+        this.runProgrammaticScroll(() => {
+          scrollEl.scrollLeft = pendingScrollLeft;
+        });
+      }
+    } else if (this.pendingHorizontalScrollRatio !== null) {
       this.applyHorizontalScrollRatio(this.pendingHorizontalScrollRatio);
       this.pendingHorizontalScrollRatio = null;
     }
