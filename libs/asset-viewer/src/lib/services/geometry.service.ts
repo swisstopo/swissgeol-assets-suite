@@ -1,20 +1,16 @@
 import { HttpClient, HttpDownloadProgressEvent, HttpEvent, HttpEventType } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { LV95 } from '@asset-sg/shared';
-import { Geometry, GeometryAccessType, GeometryId, GeometryType, SearchQueries, SearchType } from '@asset-sg/shared/v2';
+import { Geometry, GeometryAccessType, GeometryId, GeometryType } from '@asset-sg/shared/v2';
 import { concatMap, filter, from, map, Observable, scan, toArray } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class GeometryService {
   private readonly _httpClient = inject(HttpClient);
 
-  fetchAll(type = SearchType.Asset): Observable<Geometry[]> {
-    return this.getAllGeometriesFromApi({ type });
-  }
-
-  private getAllGeometriesFromApi(query: SearchQueries): Observable<Geometry[]> {
+  fetchAll(): Observable<Geometry[]> {
     return this._httpClient
-      .post('/api/geometries', query, { observe: 'events', responseType: 'text', reportProgress: true })
+      .post('/api/geometries', {}, { observe: 'events', responseType: 'text', reportProgress: true })
       .pipe(
         filter((event) => event.type === HttpEventType.DownloadProgress || event.type === HttpEventType.Response),
         map((event: HttpEvent<string>) => (event as HttpDownloadProgressEvent).partialText ?? ''),
