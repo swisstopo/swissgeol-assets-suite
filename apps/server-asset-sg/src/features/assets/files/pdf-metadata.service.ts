@@ -32,6 +32,7 @@ export class PdfMetadataService {
         standardFontDataUrl: STANDARD_FONT_DATA_URL,
         disableAutoFetch: true,
         disableStream: false,
+        verbosity: 0,
       });
       // Load the PDF document without fetching all pages
       doc = await loadingTask.promise;
