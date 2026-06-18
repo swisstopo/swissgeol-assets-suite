@@ -23,6 +23,13 @@ export class PdfMetadataService {
   async extractMetadata(fileUrl: string): Promise<PdfMetadataResult> {
     let doc: PDFDocumentProxy | null = null;
 
+    // same rejection guard as streamPdfPages — pdfjs-dist leaks fetch rejections
+    const leakedErrors: unknown[] = [];
+    const rejectionGuard = (reason: unknown) => {
+      leakedErrors.push(reason);
+    };
+    process.on('unhandledRejection', rejectionGuard);
+
     let loadingTask: PDFDocumentLoadingTask | null = null;
     try {
       this.logger.debug('Starting PDF metadata extraction', { fileUrl: this.sanitizeUrl(fileUrl) });
@@ -86,6 +93,12 @@ export class PdfMetadataService {
     } finally {
       // Ensure PDF document is properly destroyed to free memory
       await loadingTask?.destroy();
+      // defer listener removal — pdfjs-dist rejections may still be queued as microtasks
+      await new Promise((resolve) => setImmediate(resolve));
+      process.removeListener('unhandledRejection', rejectionGuard);
+      if (leakedErrors.length > 0) {
+        this.logger.debug('Absorbed leaked pdfjs-dist rejections', { count: leakedErrors.length });
+      }
     }
   }
 
