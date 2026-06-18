@@ -6,6 +6,14 @@ import { languageItems } from './data/language-items';
 import { manCatLabelItems } from './data/man-cat-label-item';
 
 const clearDB = async (prisma: PrismaClient, dbName: string): Promise<void> => {
+  const dbUrl = process.env.DATABASE_URL || '';
+  if (!dbUrl.includes('_test')) {
+    throw new Error(
+      'Refusing to clear database: DATABASE_URL does not point to a test database. ' +
+        'Ensure .env.test exists at the project root and contains a DATABASE_URL with a test database (e.g. postgres_test).',
+    );
+  }
+
   const tables = await prisma.$queryRawUnsafe(`
       SELECT table_name
       FROM information_schema.tables
