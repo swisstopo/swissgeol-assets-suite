@@ -16,7 +16,7 @@ services:
 
   db:
     container_name: swissgeol-assets-db
-    image: postgis/postgis:17-3.5
+    image: postgis/postgis:18-3.6
     restart: unless-stopped
     ports:
       - 5432:5432
@@ -27,7 +27,7 @@ services:
     volumes:
       - ./init/db:/docker-entrypoint-initdb.d
       - ./init/dump.sql:/dump.sql
-      - ./volumes/db/data/postgres:/var/lib/postgresql/data
+      - ./volumes/db/data/postgres:/var/lib/postgresql
       - ./init/testing:/testing
 
     healthcheck:

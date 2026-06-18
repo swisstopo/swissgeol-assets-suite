@@ -1,7 +1,7 @@
 services:
   db:
     container_name: swissgeol-assets-postgres-test
-    image: postgis/postgis:17-3.5
+    image: postgis/postgis:18-3.6
     restart: unless-stopped
     ports:
       - 5432:5432
@@ -11,7 +11,7 @@ services:
       POSTGRES_DB: postgres
     volumes:
       - ./init/db:/docker-entrypoint-initdb.d
-      - ./volumes/test.db/data/postgres:/var/lib/postgresql/data
+      - ./volumes/test.db/data/postgres:/var/lib/postgresql
     healthcheck:
       test: "pg_isready -U ${DB_USER} -d postgres -h db"
       interval: 5s
