@@ -15,7 +15,11 @@ export default async function globalSetup() {
 
   try {
     execSync('npx prisma migrate deploy --schema libs/persistence/prisma/schema.prisma', {
-      env: { ...process.env, DATABASE_URL: databaseUrl },
+      env: {
+        ...process.env,
+        DATABASE_URL: databaseUrl,
+        PATH: [path.dirname(process.execPath), '/usr/local/bin', '/usr/bin', '/bin'].join(path.delimiter),
+      },
       stdio: 'inherit',
     });
   } catch {
