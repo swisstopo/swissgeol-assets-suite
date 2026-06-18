@@ -26,6 +26,7 @@ import { PrismaService } from '@/core/prisma.service';
 import { FileS3Service, SaveFileS3Options } from '@/features/assets/files/file-s3.service';
 import { CreateFileData, FileIdentifier, FileRepo } from '@/features/assets/files/file.repo';
 import { PdfMetadataService } from '@/features/assets/files/pdf-metadata.service';
+import { createS3PdfTransport, S3PdfRangeTransport } from '@/features/assets/files/s3-pdf-range-transport';
 import { mapAssetLanguagesToPrismaUpdate } from '@/features/assets/prisma-asset';
 import { sanitizeTextForJson } from '@/utils/sanitize';
 import { withTimeout } from '@/utils/timeout';
@@ -146,8 +147,7 @@ export class FileService {
     });
 
     try {
-      const presignedUrl = await this.fileS3Service.getPresignedUrl(file.name, file.alias, false);
-      const metadata = await this.pdfMetadataService.extractMetadata(presignedUrl);
+      const metadata = await this.pdfMetadataService.extractMetadata(file.name);
 
       await this.prismaService.file.update({
         where: { id: file.id },
@@ -205,30 +205,14 @@ export class FileService {
         return;
       }
 
-      const metadata = await this.fileS3Service.loadMetadata(file.name);
-      if (metadata === null) {
-        this.logger.warn('File not found in S3', { fileId, fileName: file.name });
-        return;
-      }
-
-      const MAX_FILE_SIZE = 2 * 1024 * 1024 * 1024; // 2 GB
-      if (metadata.byteCount != null && metadata.byteCount > MAX_FILE_SIZE) {
-        this.logger.warn('Skipping fulltext extraction: file exceeds 2 GB size limit', {
-          fileId,
-          fileName: file.name,
-          fileSize: `${(metadata.byteCount / (1024 * 1024 * 1024)).toFixed(2)} GB`,
-        });
-        return;
-      }
-
-      const presignedUrl = await this.fileS3Service.getPresignedUrl(file.name, file.nameAlias, false);
-      if (presignedUrl === null) {
-        this.logger.warn('File not found in S3', { fileId, fileName: file.name });
+      const transport = await createS3PdfTransport(file.name, this.fileS3Service);
+      if (transport === null) {
+        this.logger.warn('File not found in S3 or has no size', { fileId, fileName: file.name });
         return;
       }
 
       const content: FulltextContent[] = [];
-      for await (const page of this.streamPdfPages(presignedUrl)) {
+      for await (const page of this.streamPdfPages(transport)) {
         content.push({
           page: page.pageNumber,
           content: page.text,
@@ -246,17 +230,9 @@ export class FileService {
     }
   }
 
-  private async *streamPdfPages(presignedUrl: string) {
-    // pdfjs-dist leaks internal fetch rejections that bypass try/catch and crash Node.js.
-    // Scoped handler absorbs them; the real error is still caught and logged below.
-    const leakedErrors: unknown[] = [];
-    const rejectionGuard = (reason: unknown) => {
-      leakedErrors.push(reason);
-    };
-    process.on('unhandledRejection', rejectionGuard);
-
+  private async *streamPdfPages(transport: S3PdfRangeTransport) {
     const loadingTask = getDocument({
-      url: presignedUrl,
+      range: transport,
       standardFontDataUrl: STANDARD_FONT_DATA_URL,
       disableAutoFetch: true,
       disableStream: false,
@@ -283,18 +259,12 @@ export class FileService {
       });
       throw error;
     } finally {
+      transport.abort();
       await withTimeout(loadingTask.destroy(), 30_000, 'PDF cleanup timed out').catch((e) => {
         this.logger.warn('loadingTask.destroy() timed out or failed', {
           error: e instanceof Error ? e.message : String(e),
         });
       });
-      // defer listener removal — pdfjs-dist rejections may still be queued as microtasks
-      // after destroy() resolves. One extra tick lets them land in our guard.
-      await new Promise((resolve) => setImmediate(resolve));
-      process.removeListener('unhandledRejection', rejectionGuard);
-      if (leakedErrors.length > 0) {
-        this.logger.debug('Absorbed leaked pdfjs-dist rejections', { count: leakedErrors.length });
-      }
     }
   }
 

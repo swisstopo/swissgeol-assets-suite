@@ -2,6 +2,7 @@
 
 import { Logger } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
+import { FileS3Service } from './file-s3.service';
 import { PdfMetadataService } from './pdf-metadata.service';
 
 // Mock pdfjs-dist to avoid ES module import.meta issues in Jest
@@ -9,12 +10,20 @@ jest.mock('pdfjs-dist/legacy/build/pdf.mjs', () => ({
   getDocument: jest.fn(),
 }));
 
+// Mock the S3 transport so we don't need real S3
+jest.mock('./s3-pdf-range-transport', () => ({
+  createS3PdfTransport: jest.fn(),
+  S3PdfRangeTransport: jest.fn(),
+}));
+
 // Import after mocking
 const pdfjsMock = require('pdfjs-dist/legacy/build/pdf.mjs');
+const transportMock = require('./s3-pdf-range-transport');
 
 describe('PdfMetadataService', () => {
   let service: PdfMetadataService;
   let mockGetDocument: jest.MockedFunction<any>;
+  let mockCreateTransport: jest.MockedFunction<any>;
 
   beforeAll(() => {
     // Suppress logger output during tests
@@ -28,11 +37,12 @@ describe('PdfMetadataService', () => {
     jest.clearAllMocks();
 
     const module: TestingModule = await Test.createTestingModule({
-      providers: [PdfMetadataService],
+      providers: [PdfMetadataService, { provide: FileS3Service, useValue: {} }],
     }).compile();
 
     service = module.get<PdfMetadataService>(PdfMetadataService);
     mockGetDocument = pdfjsMock.getDocument;
+    mockCreateTransport = transportMock.createS3PdfTransport;
   });
 
   afterAll(() => {
@@ -41,17 +51,19 @@ describe('PdfMetadataService', () => {
 
   describe('extractMetadata', () => {
     it('should handle PDFs with different page sizes', async () => {
-      // Given: A PDF with pages of different sizes (portrait and landscape)
+      const mockTransport = { abort: jest.fn() };
+      mockCreateTransport.mockResolvedValue(mockTransport);
+
       const mockPage1 = {
-        getViewport: jest.fn().mockReturnValue({ width: 595.28, height: 841.89 }), // A4 portrait
+        getViewport: jest.fn().mockReturnValue({ width: 595.28, height: 841.89 }),
         cleanup: jest.fn(),
       };
       const mockPage2 = {
-        getViewport: jest.fn().mockReturnValue({ width: 841.89, height: 595.28 }), // A4 landscape
+        getViewport: jest.fn().mockReturnValue({ width: 841.89, height: 595.28 }),
         cleanup: jest.fn(),
       };
       const mockPage3 = {
-        getViewport: jest.fn().mockReturnValue({ width: 612, height: 792 }), // US Letter
+        getViewport: jest.fn().mockReturnValue({ width: 612, height: 792 }),
         cleanup: jest.fn(),
       };
 
@@ -70,10 +82,8 @@ describe('PdfMetadataService', () => {
         destroy: jest.fn().mockResolvedValue(undefined),
       } as any);
 
-      // When: Extracting metadata
-      const result = await service.extractMetadata('https://example.com/mixed.pdf');
+      const result = await service.extractMetadata('test-file.pdf');
 
-      // Then: Should return dimensions for each page
       expect(result).toEqual({
         pageCount: 3,
         pageDimensions: [
@@ -82,10 +92,13 @@ describe('PdfMetadataService', () => {
           { page: 3, width: 612, height: 792 },
         ],
       });
+      expect(mockGetDocument).toHaveBeenCalledWith(expect.objectContaining({ range: mockTransport }));
     });
 
     it('should use fallback dimensions when individual page extraction fails', async () => {
-      // Given: A PDF where page 2 fails to extract
+      const mockTransport = { abort: jest.fn() };
+      mockCreateTransport.mockResolvedValue(mockTransport);
+
       const mockPage1 = {
         getViewport: jest.fn().mockReturnValue({ width: 595.28, height: 841.89 }),
         cleanup: jest.fn(),
@@ -112,31 +125,30 @@ describe('PdfMetadataService', () => {
 
       const warnSpy = jest.spyOn(Logger.prototype, 'warn').mockImplementation();
 
-      // When: Extracting metadata
-      const result = await service.extractMetadata('https://example.com/partial-fail.pdf');
+      const result = await service.extractMetadata('test-file.pdf');
 
-      // Then: Should use fallback dimensions for failed page
       expect(result).toEqual({
         pageCount: 3,
         pageDimensions: [
           { page: 1, width: 595.28, height: 841.89 },
-          { page: 2, width: 595.28, height: 841.89 }, // Fallback A4 dimensions
+          { page: 2, width: 595.28, height: 841.89 },
           { page: 3, width: 595.28, height: 841.89 },
         ],
       });
 
-      // Verify warning was logged
       expect(warnSpy).toHaveBeenCalledWith(
         'Failed to extract dimensions for page 2',
         expect.objectContaining({
           error: expect.any(Error),
-          fileUrl: 'https://example.com/partial-fail.pdf',
+          fileName: 'test-file.pdf',
         }),
       );
     });
 
     it('should throw error when PDF document fails to load', async () => {
-      // Given: A PDF that fails to load
+      const mockTransport = { abort: jest.fn() };
+      mockCreateTransport.mockResolvedValue(mockTransport);
+
       mockGetDocument.mockReturnValue({
         promise: Promise.reject(new Error('Invalid PDF file')),
         destroy: jest.fn().mockResolvedValue(undefined),
@@ -144,50 +156,24 @@ describe('PdfMetadataService', () => {
 
       const errorSpy = jest.spyOn(Logger.prototype, 'error').mockImplementation();
 
-      // When/Then: Should throw error
-      await expect(service.extractMetadata('https://example.com/invalid.pdf')).rejects.toThrow(
+      await expect(service.extractMetadata('invalid.pdf')).rejects.toThrow(
         'PDF metadata extraction failed: Invalid PDF file',
       );
 
-      // Verify error was logged
       expect(errorSpy).toHaveBeenCalledWith(
         'Failed to extract PDF metadata',
         expect.objectContaining({
           error: expect.any(Error),
-          fileUrl: 'https://example.com/invalid.pdf',
+          fileName: 'invalid.pdf',
         }),
       );
     });
 
-    it('should handle invalid URLs gracefully', async () => {
-      // Given: An invalid URL
-      const invalidUrl = 'not-a-valid-url';
+    it('should throw when transport creation returns null (file not in S3)', async () => {
+      mockCreateTransport.mockResolvedValue(null);
 
-      const mockDoc = {
-        numPages: 1,
-        getPage: jest.fn().mockResolvedValue({
-          getViewport: jest.fn().mockReturnValue({ width: 595.28, height: 841.89 }),
-          cleanup: jest.fn(),
-        }),
-        destroy: jest.fn().mockResolvedValue(undefined),
-      };
-
-      mockGetDocument.mockReturnValue({
-        promise: Promise.resolve(mockDoc as any),
-        destroy: jest.fn().mockResolvedValue(undefined),
-      } as any);
-
-      const debugSpy = jest.spyOn(Logger.prototype, 'debug').mockImplementation();
-
-      // When: Extracting metadata
-      await service.extractMetadata(invalidUrl);
-
-      // Then: Should use fallback URL representation in logs
-      expect(debugSpy).toHaveBeenCalledWith(
-        'Starting PDF metadata extraction',
-        expect.objectContaining({
-          fileUrl: '[invalid-url]',
-        }),
+      await expect(service.extractMetadata('missing.pdf')).rejects.toThrow(
+        'PDF metadata extraction failed: File not found in S3 or has no size',
       );
     });
   });

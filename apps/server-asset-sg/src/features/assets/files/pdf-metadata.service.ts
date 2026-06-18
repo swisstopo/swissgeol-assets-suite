@@ -3,6 +3,8 @@ import { PageDimension } from '@asset-sg/shared/v2';
 import { Injectable, Logger } from '@nestjs/common';
 import { getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs';
 import { PDFDocumentLoadingTask, PDFDocumentProxy } from 'pdfjs-dist/types/src/display/api';
+import { FileS3Service } from '@/features/assets/files/file-s3.service';
+import { createS3PdfTransport, S3PdfRangeTransport } from '@/features/assets/files/s3-pdf-range-transport';
 
 // eval('require') bypasses webpack's static require analysis so the path is resolved at runtime by Node.js.
 const STANDARD_FONT_DATA_URL =
@@ -13,42 +15,39 @@ const STANDARD_FONT_DATA_URL =
 export class PdfMetadataService {
   private readonly logger = new Logger(PdfMetadataService.name);
 
+  constructor(private readonly fileS3Service: FileS3Service) {}
+
   /**
-   * Extracts metadata from a PDF file including page count and dimensions for all pages,
-   * using pdfjs-dist library
+   * Extracts metadata from a PDF file including page count and dimensions for all pages.
    *
-   * @param fileUrl - Pre-signed URL or full path to the PDF file
+   * @param fileName - S3 object name of the PDF file
    * @returns Metadata including page count and array of page dimensions
    */
-  async extractMetadata(fileUrl: string): Promise<PdfMetadataResult> {
+  async extractMetadata(fileName: string): Promise<PdfMetadataResult> {
     let doc: PDFDocumentProxy | null = null;
-
-    // same rejection guard as streamPdfPages — pdfjs-dist leaks fetch rejections
-    const leakedErrors: unknown[] = [];
-    const rejectionGuard = (reason: unknown) => {
-      leakedErrors.push(reason);
-    };
-    process.on('unhandledRejection', rejectionGuard);
-
+    let transport: S3PdfRangeTransport | null = null;
     let loadingTask: PDFDocumentLoadingTask | null = null;
+
     try {
-      this.logger.debug('Starting PDF metadata extraction', { fileUrl: this.sanitizeUrl(fileUrl) });
+      this.logger.debug('Starting PDF metadata extraction', { fileName });
+
+      transport = await createS3PdfTransport(fileName, this.fileS3Service);
+      if (transport === null) {
+        throw new Error('File not found in S3 or has no size');
+      }
 
       loadingTask = getDocument({
-        url: fileUrl,
+        range: transport,
         standardFontDataUrl: STANDARD_FONT_DATA_URL,
         disableAutoFetch: true,
         disableStream: false,
         verbosity: 0,
       });
-      // Load the PDF document without fetching all pages
       doc = await loadingTask.promise;
 
       const pageCount = doc.numPages;
       const pageDimensions: PageDimension[] = [];
 
-      // Extract dimensions for each page
-      // This is lightweight - only fetches page structure, not rendering
       for (let pageNum = 1; pageNum <= pageCount; pageNum++) {
         try {
           const page = await doc.getPage(pageNum);
@@ -60,12 +59,11 @@ export class PdfMetadataService {
             height: viewport.height,
           });
 
-          // Clean up page resources immediately
           page.cleanup();
         } catch (pageError) {
           this.logger.warn(`Failed to extract dimensions for page ${pageNum}`, {
             error: pageError,
-            fileUrl: this.sanitizeUrl(fileUrl),
+            fileName,
           });
 
           // Use fallback dimensions (A4 portrait in points: 595.28 x 841.89)
@@ -78,39 +76,18 @@ export class PdfMetadataService {
       }
 
       this.logger.debug('PDF metadata extraction completed', {
-        fileUrl: this.sanitizeUrl(fileUrl),
+        fileName,
         pageCount,
         dimensionsExtracted: pageDimensions.length,
       });
 
       return { pageCount, pageDimensions };
     } catch (error) {
-      this.logger.error('Failed to extract PDF metadata', {
-        error,
-        fileUrl: this.sanitizeUrl(fileUrl),
-      });
+      this.logger.error('Failed to extract PDF metadata', { error, fileName });
       throw new Error(`PDF metadata extraction failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
-      // Ensure PDF document is properly destroyed to free memory
+      transport?.abort();
       await loadingTask?.destroy();
-      // defer listener removal — pdfjs-dist rejections may still be queued as microtasks
-      await new Promise((resolve) => setImmediate(resolve));
-      process.removeListener('unhandledRejection', rejectionGuard);
-      if (leakedErrors.length > 0) {
-        this.logger.debug('Absorbed leaked pdfjs-dist rejections', { count: leakedErrors.length });
-      }
-    }
-  }
-
-  /**
-   * Sanitizes URL for logging by removing query parameters (which may contain sensitive tokens)
-   */
-  private sanitizeUrl(url: string): string {
-    try {
-      const parsed = new URL(url);
-      return `${parsed.origin}${parsed.pathname}`;
-    } catch {
-      return '[invalid-url]';
     }
   }
 }
