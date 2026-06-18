@@ -3,6 +3,7 @@ import {
   AssetSearchResultItem,
   Geometry,
   GeometryAccessType,
+  SearchQuerySchema,
   SearchType,
   serializeGeometryAsCsv,
   User,
@@ -11,6 +12,7 @@ import { Controller, Post } from '@nestjs/common';
 import { restrictQueryForUser } from '../assets/search/asset-search.utils';
 import { Authorize } from '@/core/decorators/authorize.decorator';
 import { CurrentUser } from '@/core/decorators/current-user.decorator';
+import { ParseBody } from '@/core/decorators/parse.decorator';
 import { AssetSearchService } from '@/features/assets/search/asset-search.service';
 
 @Controller('/geometries')
@@ -19,8 +21,16 @@ export class GeometriesController {
 
   @Post('/')
   @Authorize.User()
-  async list(@CurrentUser() user: User): Promise<string> {
-    const query: AssetSearchQuery = { type: SearchType.Asset };
+  async list(
+    @ParseBody(SearchQuerySchema)
+    body: SearchQuerySchema,
+    @CurrentUser() user: User,
+  ): Promise<string> {
+    // Always query the asset index. When type is 'file', filter to assets that have files.
+    const query: AssetSearchQuery = {
+      type: SearchType.Asset,
+      hasFiles: body.type === SearchType.File ? true : undefined,
+    };
     restrictQueryForUser(query, user);
     const assets = await this.assetSearchService.search(query, user, { limit: 100_000_000, decode: false });
 

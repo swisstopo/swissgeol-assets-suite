@@ -119,7 +119,7 @@ export class ViewerControllerService {
 
     const geometries = await firstValueFrom(this.store.select(selectGeometries));
     if (geometries.length === 0) {
-      loads.push(this.loadGeometries());
+      loads.push(this.loadGeometries(params.query.type));
     }
     loads.push(
       this.loadResults(params.query, {
@@ -142,9 +142,9 @@ export class ViewerControllerService {
     this.viewerReadySubject.next();
   }
 
-  private async loadGeometries(): Promise<void> {
+  private async loadGeometries(type: SearchType): Promise<void> {
     this.store.dispatch(actions.setGeometries({ isLoading: true }));
-    const geometries = await firstValueFrom(this.geometryService.fetchAll());
+    const geometries = await firstValueFrom(this.geometryService.fetchAll(type));
     this.store.dispatch(actions.setGeometries({ geometries, isLoading: false }));
   }
 
@@ -235,12 +235,13 @@ export class ViewerControllerService {
       this.store.dispatch(actions.setMapPosition({ position: DEFAULT_MAP_POSITION }));
     }
 
-    // Load results and stats in parallel.
+    // Load results and stats in parallel, plus geometries if search type changed.
     await Promise.all([
       this.loadResults(query, {
         force: !isPanelAutomaticallyToggled(currentResultsState) && isPanelOpen(currentResultsState),
       }),
       this.loadStats(query),
+      ...(previousQuery?.type !== query.type ? [this.loadGeometries(query.type)] : []),
     ]);
 
     // Use file results total for file search, asset results total for asset search.

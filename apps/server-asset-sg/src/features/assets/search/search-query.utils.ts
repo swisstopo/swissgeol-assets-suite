@@ -127,6 +127,10 @@ export const mapQueryToElasticDslParts = (
     });
   }
 
+  if (query.hasFiles != null) {
+    filters.push({ term: { hasFiles: query.hasFiles } });
+  }
+
   if (query.assetIds != null && query.assetIds.length > 0) {
     const field = query.type === SearchType.File ? 'assetId' : 'id';
     filters.push({ terms: { [field]: query.assetIds } });
