@@ -78,6 +78,26 @@
     },
     "hasFiles": {
       "type": "boolean"
+    },
+    "isPublic": {
+      "type": "boolean"
+    },
+    "geometryData": {
+      "type": "nested",
+      "properties": {
+        "id": {
+          "type": "keyword"
+        },
+        "type": {
+          "type": "keyword"
+        },
+        "centroidX": {
+          "type": "integer"
+        },
+        "centroidY": {
+          "type": "integer"
+        }
+      }
     }
   }
 }

@@ -8,6 +8,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 
 import { AppController } from '@/app.controller';
 import { FixturesCreateCommand } from '@/commands/fixtures-create.command';
+import { provideElasticsearch } from '@/core/elasticsearch';
 import { AuthorizationGuard } from '@/core/guards/authorization-guard.service';
 import { JwtMiddleware } from '@/core/middleware/jwt.middleware';
 import { PrismaService } from '@/core/prisma.service';
@@ -47,6 +48,7 @@ import { WorkgroupsController } from '@/features/workgroups/workgroups.controlle
     PrismaService,
     WorkgroupRepo,
     GeometryRepo,
+    provideElasticsearch,
     {
       provide: APP_GUARD,
       useClass: AuthorizationGuard,

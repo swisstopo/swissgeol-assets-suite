@@ -30,11 +30,20 @@ export interface ElasticsearchAsset {
   alternativeIds: string[];
   status: string;
   hasFiles: boolean;
+  isPublic: boolean;
+  geometryData: ElasticsearchGeometry[];
 }
 
 export interface ElasticsearchPoint {
   lat: number;
   lon: number;
+}
+
+export interface ElasticsearchGeometry {
+  id: string;
+  type: string;
+  centroidX: number;
+  centroidY: number;
 }
 
 export type ElasticsearchLocalDate = `${number}-${number}-${number}`;

@@ -135,6 +135,13 @@ export class AssetSearchWriterService {
         } satisfies AssetSearchResultItem),
       ),
       hasFiles: asset.files.length > 0,
+      isPublic: asset.isPublic,
+      geometryData: geometries.map((g) => ({
+        id: g.id,
+        type: g.type,
+        centroidX: g.centroid.x,
+        centroidY: g.centroid.y,
+      })),
     };
   }
 
