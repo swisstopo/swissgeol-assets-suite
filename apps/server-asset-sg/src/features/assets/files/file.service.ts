@@ -247,14 +247,20 @@ export class FileService {
   }
 
   private async *streamPdfPages(presignedUrl: string) {
-    // Save loadingTask before awaiting so it can always be destroyed in the finally block,
-    // even if the promise rejects (e.g. 503 from S3). Without this, pdfjs internal tasks
-    // leak as unhandled rejections that crash Node.js.
+    // pdfjs-dist leaks internal fetch rejections that bypass try/catch and crash Node.js.
+    // Scoped handler absorbs them; the real error is still caught and logged below.
+    const leakedErrors: unknown[] = [];
+    const rejectionGuard = (reason: unknown) => {
+      leakedErrors.push(reason);
+    };
+    process.on('unhandledRejection', rejectionGuard);
+
     const loadingTask = getDocument({
       url: presignedUrl,
       standardFontDataUrl: STANDARD_FONT_DATA_URL,
       disableAutoFetch: true,
       disableStream: false,
+      verbosity: 0,
     });
     let doc: PDFDocumentProxy | null = null;
     try {
@@ -282,6 +288,13 @@ export class FileService {
           error: e instanceof Error ? e.message : String(e),
         });
       });
+      // defer listener removal — pdfjs-dist rejections may still be queued as microtasks
+      // after destroy() resolves. One extra tick lets them land in our guard.
+      await new Promise((resolve) => setImmediate(resolve));
+      process.removeListener('unhandledRejection', rejectionGuard);
+      if (leakedErrors.length > 0) {
+        this.logger.debug('Absorbed leaked pdfjs-dist rejections', { count: leakedErrors.length });
+      }
     }
   }
 

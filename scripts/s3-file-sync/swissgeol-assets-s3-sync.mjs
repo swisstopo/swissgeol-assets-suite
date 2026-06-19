@@ -20,6 +20,8 @@
  *   4. Scan all file sizes via HeadObject (20 concurrent) and group them into
  *      single (≤ 5 GB) and multipart (> 5 GB) lists, printing an overview with
  *      exact GB totals and the individual large-file list before any copy starts.
+ *      Unless --delete-dest-files is used, files already present at the destination
+ *      are identified and excluded from the copy list.
  *      Requires confirmation to proceed.
  *   5. Copy in two phases (server-side — no data flows through this machine):
  *      Phase 1 — single files:    worker pool of 20, CopyObject.
@@ -162,15 +164,6 @@ function parseArgs(argv) {
       case "--dest-secret-key":
         args.destSecretKey = argv[++i];
         break;
-      case "--endpoint":
-        args.endpoint = argv[++i];
-        break;
-      case "--dest-access-key":
-        args.destAccessKey = argv[++i];
-        break;
-      case "--dest-secret-key":
-        args.destSecretKey = argv[++i];
-        break;
       case "--dry-run":
         args.dryRun = true;
         break;
@@ -237,8 +230,8 @@ OPTIONAL OPTIONS
                                   e.g. "Swisstopo"
                                   e.g. "Swisstopo, BAFU, Meteoschweiz"
   --delete-dest-files           Delete ALL existing files at the destination path
-                                  before copying. By default the destination is left
-                                  untouched and files are only added/overwritten.
+                                  before copying. By default, files already present
+                                  at the destination are skipped.
   --region      <aws-region>    AWS region  (default: eu-central-1)
   --endpoint    <url>           Custom S3 endpoint URL for the DESTINATION only.
                                   Use for local MinIO: --endpoint http://localhost:9000
@@ -1046,7 +1039,23 @@ async function main() {
   }
 
   // Step 4: scan all file sizes and group into single / multipart
-  const { singleFiles, multiFiles, missing } = await scanFileSizes(srcS3, fileNames, args.srcBucket, args.srcPath);
+  let { singleFiles, multiFiles, missing } = await scanFileSizes(srcS3, fileNames, args.srcBucket, args.srcPath);
+
+  // Skip files already present at destination (unless destination was wiped via --delete-dest-files)
+  let skippedExisting = 0;
+  if (!args.deleteDestFiles) {
+    console.log("  Checking destination for existing files ...");
+    const destKeys = new Set(await listAllKeys(destS3, args.destBucket, args.destPath));
+    const prevCount = singleFiles.length + multiFiles.length;
+    singleFiles = singleFiles.filter((f) => !destKeys.has(`${args.destPath}${f.fileName}`));
+    multiFiles = multiFiles.filter((f) => !destKeys.has(`${args.destPath}${f.fileName}`));
+    skippedExisting = prevCount - (singleFiles.length + multiFiles.length);
+    if (skippedExisting > 0) {
+      console.log(`  ⏭  Skipping ${skippedExisting} file(s) already present at destination.`);
+    } else {
+      console.log(`  No existing files found at destination — nothing to skip.`);
+    }
+  }
 
   // Confirm before copying
 
@@ -1057,6 +1066,7 @@ async function main() {
   }
   const answer = await prompt(
     `Proceed with copying ${totalCopyable} file(s)` +
+      (skippedExisting > 0 ? ` (${skippedExisting} already at destination will be skipped)` : "") +
       (missing.length > 0 ? ` (${missing.length} missing file(s) will be skipped)` : "") +
       `? [y/N] `,
   );
@@ -1081,6 +1091,7 @@ async function main() {
   const modeLabel = args.dryRun ? "would be copied" : "copied";
   console.log(
     `\nDone. Files ${modeLabel}: ${copied}, Errors: ${errors.length}` +
+      (skippedExisting > 0 ? `, Skipped (already at destination): ${skippedExisting}` : "") +
       (missing.length > 0 ? `, Skipped (missing in source): ${missing.length}` : ""),
   );
 
