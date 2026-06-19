@@ -141,11 +141,16 @@ export class PdfViewerComponent implements OnDestroy {
   private pendingZoomReanchorPageNumber: number | null = null;
   private pendingZoomScrollTop: number | null = null;
   private pendingZoomScrollLeft: number | null = null;
-  private pendingWheelZoomMouseOffsetY: number | null = null;
-  private pendingWheelZoomMouseOffsetX: number | null = null;
   private programmaticScrollDepth = 0;
   private pinnedPageNumber: number | null = null;
   private pendingZoomRenderBlocked = false;
+
+  // CTRL+wheel zoom CSS-transform state.
+  // During rapid zoom, only a CSS scale is applied. TanStack is not touched.
+  private wheelZoomTarget: number | null = null;
+  private wheelZoomBaseZoom = 1;
+  private wheelZoomMouseOffsetX = 0;
+  private wheelZoomMouseOffsetY = 0;
 
   // estimateSize must read plain fields, not signals.
   private _estimateZoom = 1;
@@ -239,23 +244,58 @@ export class PdfViewerComponent implements OnDestroy {
   private handleWheelZoom(accumulatedDeltaY: number, mouseClientY: number, mouseClientX: number): void {
     const scrollEl = this.pdfElement()?.nativeElement;
     if (!scrollEl) return;
-    const rect = scrollEl.getBoundingClientRect();
-    // Store cursor offsets relative to the scroll container for cursor-centred zoom.
-    this.pendingWheelZoomMouseOffsetY = mouseClientY - rect.top;
-    this.pendingWheelZoomMouseOffsetX = mouseClientX - rect.left;
+
     this.ngZone.runOutsideAngular(() => {
-      // Always use ZOOM_STEP_FINE for wheel zoom so each scroll notch is a small
-      // increment — prevents large jumps when zoom is above 1.
-      const current = this.pendingZoomTarget ?? this.zoom();
+      // Compute the target zoom level.
+      const current = this.wheelZoomTarget ?? this.zoom();
       const target = accumulatedDeltaY > 0 ? current - ZOOM_STEP_FINE : current + ZOOM_STEP_FINE;
       const clamped = this.normalizeZoom(target);
-      if (Math.abs(clamped - this.zoom()) < 0.0001 && this.pendingZoomTarget === null) return;
-      this.pendingZoomTarget = clamped;
-      if (this.zoomAnimationFrame !== null) return;
-      this.zoomAnimationFrame = requestAnimationFrame(() => {
-        this.zoomAnimationFrame = null;
-        this.commitPendingZoom();
-      });
+      if (Math.abs(clamped - (this.wheelZoomTarget ?? this.zoom())) < 0.0001) return;
+
+      // On first tick of a zoom gesture, snapshot the base state.
+      if (this.wheelZoomTarget === null) {
+        this.wheelZoomBaseZoom = this.zoom();
+        this.pdfViewerRendererService.prepareForZoomRender();
+        this.renderMode = 'zoom';
+      }
+
+      this.wheelZoomTarget = clamped;
+
+      // Compute cursor offset relative to the scroll container viewport.
+      const rect = scrollEl.getBoundingClientRect();
+      const cursorOffsetY = mouseClientY - rect.top;
+      const cursorOffsetX = mouseClientX - rect.left;
+
+      // Vertical origin: always anchored to the cursor position.
+      this.wheelZoomMouseOffsetY = cursorOffsetY;
+      const originY = scrollEl.scrollTop + cursorOffsetY;
+
+      // Horizontal origin: when target zoom <= 1 the content will be centered
+      // (no horizontal overflow), so use viewport center to match final layout.
+      // Above zoom 1, anchor to the cursor position.
+      let originX: number;
+      if (clamped <= 1) {
+        this.wheelZoomMouseOffsetX = scrollEl.clientWidth / 2;
+        originX = scrollEl.scrollLeft + scrollEl.clientWidth / 2;
+      } else {
+        this.wheelZoomMouseOffsetX = cursorOffsetX;
+        originX = scrollEl.scrollLeft + cursorOffsetX;
+      }
+
+      const scale = clamped / this.wheelZoomBaseZoom;
+
+      const spacer = scrollEl.querySelector('.viewer__virtual-spacer') as HTMLElement | null;
+      if (spacer) {
+        spacer.style.transformOrigin = `${originX}px ${originY}px`;
+        spacer.style.transform = `scale(${scale})`;
+      }
+
+      // Reset the settle timer.
+      this.cancelZoomSettleTimer();
+      this.zoomSettleTimer = setTimeout(() => {
+        this.zoomSettleTimer = null;
+        this.commitWheelZoom();
+      }, ZOOM_SETTLE_DELAY_MS);
     });
   }
 
@@ -301,18 +341,10 @@ export class PdfViewerComponent implements OnDestroy {
 
     this.pendingZoomTarget = null;
 
-    // Capture pre-zoom state so we can compute exact scroll positions after zoom.
-    // When rapid CTRL+wheel zoom commits faster than the render pass can apply them,
-    // the DOM scroll positions are stale. Use the pending values (which represent the
-    // intended state for the current zoom level) to keep the anchor calculation correct.
     const oldZoom = this.zoom();
     const scrollEl = this.pdfElement()?.nativeElement;
     const scrollTop = this.pendingZoomScrollTop ?? scrollEl?.scrollTop ?? 0;
     const scrollLeft = this.pendingZoomScrollLeft ?? scrollEl?.scrollLeft ?? 0;
-    const mouseOffsetY = this.pendingWheelZoomMouseOffsetY;
-    const mouseOffsetX = this.pendingWheelZoomMouseOffsetX;
-    this.pendingWheelZoomMouseOffsetY = null;
-    this.pendingWheelZoomMouseOffsetX = null;
 
     if (!this.setZoom(target)) return;
 
@@ -328,93 +360,114 @@ export class PdfViewerComponent implements OnDestroy {
     this.pinnedPageNumber = zoomAnchorPage;
     this.logJumpDebug('commit-zoom-anchor-page', { zoomAnchorPage });
 
-    let horizontalRatio: number | null = null;
-
-    // Compute the new scrollTop/scrollLeft that keeps the visual anchor in place.
+    // Button zoom: preserve the relative position within the anchor page (vertical)
+    // and the current horizontal scroll ratio.
     if (scrollEl && pageDims.length > 0) {
       const containerWidth = scrollEl.clientWidth;
       const contentWidthOld = getDocumentWidth(pageDims, containerWidth, baseScl, oldZoom, rotation);
       const contentWidthNew = getDocumentWidth(pageDims, containerWidth, baseScl, newZoom, rotation);
 
-      if (mouseOffsetY !== null && mouseOffsetX !== null) {
-        // CTRL+wheel: both axes anchor to the cursor position.
-        // Vertical — keep the document point under the cursor at the same screen Y.
-        const cursorDocY = scrollTop + mouseOffsetY;
-        const pageAtCursor = findPageAtScrollOffset(cursorDocY, pageCount, pageDims, baseScl, oldZoom, rotation);
-        if (pageAtCursor) {
-          const ratio = pageAtCursor.size > 0 ? (cursorDocY - pageAtCursor.start) / pageAtCursor.size : 0;
-          const newPageLayout = getPageLayout(pageAtCursor.pageNum, pageCount, pageDims, baseScl, newZoom, rotation);
-          if (newPageLayout) {
-            const newDocY = newPageLayout.start + ratio * newPageLayout.size;
-            this.pendingZoomScrollTop = Math.max(0, newDocY - mouseOffsetY);
-          }
+      const anchorLayout = getPageLayout(zoomAnchorPage, pageCount, pageDims, baseScl, oldZoom, rotation);
+      if (anchorLayout && anchorLayout.size > 0) {
+        const ratio = (scrollTop - anchorLayout.start) / anchorLayout.size;
+        const newAnchorLayout = getPageLayout(zoomAnchorPage, pageCount, pageDims, baseScl, newZoom, rotation);
+        if (newAnchorLayout) {
+          this.pendingZoomScrollTop = Math.max(0, newAnchorLayout.start + ratio * newAnchorLayout.size);
         }
-        // Horizontal — pages are CSS-centred inside the virtual spacer, so we must
-        // anchor to the distance from the page centre, not from scroll origin 0.
-        // contentWidthOld/New accounts for the min-width clamping at zoom < 1.
-        const dX = scrollLeft + mouseOffsetX - contentWidthOld / 2;
-        const newScrollLeft = contentWidthNew / 2 + dX * (newZoom / oldZoom) - mouseOffsetX;
-        const newMaxScrollLeft = Math.max(0, contentWidthNew - containerWidth);
-        this.pendingZoomScrollLeft = Math.max(0, Math.min(newScrollLeft, newMaxScrollLeft));
-      } else {
-        // Button zoom: preserve the relative position within the anchor page (vertical)
-        // and the current horizontal scroll ratio.
-        const anchorLayout = getPageLayout(zoomAnchorPage, pageCount, pageDims, baseScl, oldZoom, rotation);
-        if (anchorLayout && anchorLayout.size > 0) {
-          const ratio = (scrollTop - anchorLayout.start) / anchorLayout.size;
-          const newAnchorLayout = getPageLayout(zoomAnchorPage, pageCount, pageDims, baseScl, newZoom, rotation);
-          if (newAnchorLayout) {
-            this.pendingZoomScrollTop = Math.max(0, newAnchorLayout.start + ratio * newAnchorLayout.size);
-          }
-        }
-        // Horizontal: preserve the current proportional position.
-        // When there is no overflow (zoom ≤ 1) the only sensible starting position
-        // is the centre (0.5), so crossing into zoom > 1 stays centred rather than
-        // snapping to the left edge.
-        const maxScrollLeftOld = Math.max(0, contentWidthOld - containerWidth);
-        const maxScrollLeftNew = Math.max(0, contentWidthNew - containerWidth);
-        horizontalRatio = maxScrollLeftOld > 0 ? scrollLeft / maxScrollLeftOld : 0.5;
-        this.pendingZoomScrollLeft = Math.max(0, horizontalRatio * maxScrollLeftNew);
-        horizontalRatio = null;
       }
+      // Horizontal: preserve the current proportional position.
+      const maxScrollLeftOld = Math.max(0, contentWidthOld - containerWidth);
+      const maxScrollLeftNew = Math.max(0, contentWidthNew - containerWidth);
+      const horizontalRatio = maxScrollLeftOld > 0 ? scrollLeft / maxScrollLeftOld : 0.5;
+      this.pendingZoomScrollLeft = Math.max(0, horizontalRatio * maxScrollLeftNew);
     }
 
-    const isWheelZoom = mouseOffsetY !== null && mouseOffsetX !== null;
     this.renderMode = 'zoom';
     this.viewportEpoch++;
     this.pdfViewerRendererService.prepareForZoomRender();
-    if (isWheelZoom) {
-      this.scheduleZoomLayoutPass(horizontalRatio);
-    } else {
-      // Button zoom: render immediately — each button press is a discrete action.
-      this.pendingZoomRenderBlocked = false;
-      this.cancelZoomSettleTimer();
-      this.scheduleVirtualRefresh(horizontalRatio);
-    }
+    this.pendingZoomRenderBlocked = false;
+    this.cancelZoomSettleTimer();
+    this.scheduleVirtualRefresh(null);
   }
 
   /**
-   * Schedules an immediate layout-only pass (virtual sizes, scroll positions, stale
-   * preview scaling) and a debounced render pass. During rapid CTRL+wheel zoom the
-   * layout pass keeps the viewport consistent while the stale CSS-scaled canvases
-   * serve as placeholders. PDF.js re-renders are delayed until zoom settles
-   * (ZOOM_SETTLE_DELAY_MS with no new zoom commits).
+   * Called when CTRL+wheel zoom settles (ZOOM_SETTLE_DELAY_MS after the last tick).
+   * Removes the CSS transform, commits the zoom to TanStack with the correct
+   * scroll position, and triggers a full re-render.
    */
-  private scheduleZoomLayoutPass(horizontalRatio: number | null): void {
-    // The render pass will run the layout portion immediately.
-    // Setting pendingZoomRenderBlocked tells it to skip queueing PDF.js renders.
-    this.pendingZoomRenderBlocked = true;
-    this.scheduleVirtualRefresh(horizontalRatio);
+  private commitWheelZoom(): void {
+    const targetZoom = this.wheelZoomTarget;
+    if (targetZoom === null) return;
 
-    // Reset the settle timer — actual PDF.js renders start only after zoom stops.
-    this.cancelZoomSettleTimer();
-    this.zoomSettleTimer = setTimeout(() => {
-      this.zoomSettleTimer = null;
-      this.pendingZoomRenderBlocked = false;
-      if (this.renderMode === 'zoom') {
-        this.scheduleRender();
+    const baseZoom = this.wheelZoomBaseZoom;
+    const mouseOffsetX = this.wheelZoomMouseOffsetX;
+    const mouseOffsetY = this.wheelZoomMouseOffsetY;
+
+    // Reset wheel zoom state.
+    this.wheelZoomTarget = null;
+
+    // Remove the CSS transform immediately.
+    const scrollEl = this.pdfElement()?.nativeElement;
+    const spacer = scrollEl?.querySelector('.viewer__virtual-spacer') as HTMLElement | null;
+    if (spacer) {
+      spacer.style.transform = '';
+      spacer.style.transformOrigin = '';
+    }
+
+    if (!scrollEl) return;
+
+    // Compute the scroll positions for the new zoom level that keep the cursor
+    // anchor point fixed on screen.
+    const oldZoom = baseZoom;
+    const scrollTop = scrollEl.scrollTop;
+    const scrollLeft = scrollEl.scrollLeft;
+
+    if (!this.setZoom(targetZoom)) {
+      this.renderMode = 'normal';
+      return;
+    }
+
+    const newZoom = this.zoom();
+    const pageDims = this.pageDimensions();
+    const pageCount = this.pageCount();
+    const baseScl = this.baseScale();
+    const rotation = this.rotation();
+    const containerWidth = scrollEl.clientWidth;
+
+    // Vertical anchor — keep the document point under the cursor at the same screen Y.
+    const cursorDocY = scrollTop + mouseOffsetY;
+    const pageAtCursor = findPageAtScrollOffset(cursorDocY, pageCount, pageDims, baseScl, oldZoom, rotation);
+    if (pageAtCursor) {
+      const ratio = pageAtCursor.size > 0 ? (cursorDocY - pageAtCursor.start) / pageAtCursor.size : 0;
+      const newPageLayout = getPageLayout(pageAtCursor.pageNum, pageCount, pageDims, baseScl, newZoom, rotation);
+      if (newPageLayout) {
+        const newDocY = newPageLayout.start + ratio * newPageLayout.size;
+        this.pendingZoomScrollTop = Math.max(0, newDocY - mouseOffsetY);
       }
-    }, ZOOM_SETTLE_DELAY_MS);
+    }
+
+    // Horizontal anchor — when target zoom <= 1 content fits in container (centered),
+    // so scrollLeft = 0. Otherwise keep cursor point fixed.
+    if (newZoom <= 1) {
+      this.pendingZoomScrollLeft = 0;
+    } else {
+      const contentWidthOld = getDocumentWidth(pageDims, containerWidth, baseScl, oldZoom, rotation);
+      const contentWidthNew = getDocumentWidth(pageDims, containerWidth, baseScl, newZoom, rotation);
+      const dX = scrollLeft + mouseOffsetX - contentWidthOld / 2;
+      const newScrollLeft = contentWidthNew / 2 + dX * (newZoom / oldZoom) - mouseOffsetX;
+      const newMaxScrollLeft = Math.max(0, contentWidthNew - containerWidth);
+      this.pendingZoomScrollLeft = Math.max(0, Math.min(newScrollLeft, newMaxScrollLeft));
+    }
+
+    // Set up anchor page for TanStack.
+    const zoomAnchorPage = this.zoomAnchorPageNumber ?? this.pinnedPageNumber ?? this.getCurrentPageFromVirtualizer();
+    this.zoomAnchorPageNumber = zoomAnchorPage;
+    this.pendingZoomReanchorPageNumber = zoomAnchorPage;
+    this.pinnedPageNumber = zoomAnchorPage;
+
+    this.viewportEpoch++;
+    this.pendingZoomRenderBlocked = false;
+    this.scheduleVirtualRefresh(null);
   }
 
   private cancelZoomSettleTimer(): void {
@@ -454,6 +507,7 @@ export class PdfViewerComponent implements OnDestroy {
   private handleViewerScroll(): void {
     if (this.pageCount() === 0) return;
     if (this.renderMode === 'zoom') return;
+    if (this.wheelZoomTarget !== null) return;
     if (this.programmaticScrollDepth > 0) return;
     if (this.scrollAnimationFrame !== null) return;
     this.scrollAnimationFrame = requestAnimationFrame(() => {
@@ -561,11 +615,10 @@ export class PdfViewerComponent implements OnDestroy {
     this.pendingZoomReanchorPageNumber = null;
     this.pendingZoomScrollTop = null;
     this.pendingZoomScrollLeft = null;
-    this.pendingWheelZoomMouseOffsetY = null;
-    this.pendingWheelZoomMouseOffsetX = null;
     this.programmaticScrollDepth = 0;
     this.pinnedPageNumber = null;
     this.pendingZoomRenderBlocked = false;
+    this.wheelZoomTarget = null;
     this.cancelZoomSettleTimer();
     if (this.zoomAnimationFrame !== null) {
       cancelAnimationFrame(this.zoomAnimationFrame);
@@ -743,6 +796,17 @@ export class PdfViewerComponent implements OnDestroy {
       if (zoomAnchorPage >= 1 && zoomAnchorPage <= this.pageCount()) {
         const scrollEl = this.pdfElement()?.nativeElement;
         if (scrollEl) {
+          // Directly set the spacer dimensions on the DOM BEFORE applying scroll
+          // positions. Angular's signal-based rendering hasn't processed the new
+          // virtualContentWidth/virtualTotalSize yet (outside zone), so the
+          // scrollable area in the DOM is still at the old size. Without this,
+          // the browser would clamp scrollLeft/scrollTop to the old bounds.
+          const spacer = scrollEl.querySelector('.viewer__virtual-spacer') as HTMLElement | null;
+          if (spacer) {
+            spacer.style.width = `${this.virtualContentWidth()}px`;
+            spacer.style.height = `${this.virtualTotalSize()}px`;
+          }
+
           // Apply both scrollTop and scrollLeft in the same synchronous block
           // so the browser never renders a frame with stale horizontal position.
           this.runProgrammaticScroll(() => {
