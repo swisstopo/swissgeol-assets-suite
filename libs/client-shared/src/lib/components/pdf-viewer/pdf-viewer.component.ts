@@ -782,6 +782,12 @@ export class PdfViewerComponent implements OnDestroy {
       this.syncEstimateFields();
       this.updateVirtualContentWidth();
       this.virtualizer.measure();
+      // Immediately sync the total size so the spacer height is correct before
+      // applying scroll positions (prevents clamping near end of document).
+      const newTotalSize = this.virtualizer.getTotalSize();
+      if (newTotalSize !== this.virtualTotalSize()) {
+        this.virtualTotalSize.set(newTotalSize);
+      }
       this.pendingVirtualMeasure = false;
       virtualSizesChanged = true;
     }
