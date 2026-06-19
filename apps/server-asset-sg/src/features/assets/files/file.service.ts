@@ -209,6 +209,7 @@ export class FileService {
       }
 
       if (!file.name.toLowerCase().endsWith('.pdf')) {
+        console.warn('Tried to load fulltext-content for non-PDF file. ignoring', { fileId });
         return;
       }
 
