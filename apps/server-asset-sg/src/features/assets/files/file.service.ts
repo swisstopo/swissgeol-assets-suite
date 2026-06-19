@@ -176,7 +176,10 @@ export class FileService {
   }
 
   async loadAllFulltextContentFromS3(writeProgress?: (progress: number) => Promise<void>): Promise<void> {
-    const files = await this.prismaService.file.findMany({ select: { id: true } });
+    const files = await this.prismaService.file.findMany({
+      where: { name: { endsWith: '.pdf', mode: 'insensitive' } },
+      select: { id: true },
+    });
     let i = 0;
     for (const file of files) {
       if (i % 1000 === 0) {
@@ -202,6 +205,10 @@ export class FileService {
       });
       if (file === null) {
         this.logger.warn('File not found in database', { fileId });
+        return;
+      }
+
+      if (!file.name.toLowerCase().endsWith('.pdf')) {
         return;
       }
 
