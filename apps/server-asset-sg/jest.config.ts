@@ -1,6 +1,7 @@
 export default {
   displayName: 'server-asset-sg',
   preset: '../../jest.preset.js',
+  globalSetup: './jest.global-setup.ts',
   setupFilesAfterEnv: ['./jest.setup.ts'],
   globals: {},
   testEnvironment: 'node',

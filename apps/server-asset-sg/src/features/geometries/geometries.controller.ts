@@ -1,8 +1,8 @@
 import {
+  AssetSearchQuery,
   AssetSearchResultItem,
   Geometry,
   GeometryAccessType,
-  SearchQueries,
   SearchQuerySchema,
   SearchType,
   serializeGeometryAsCsv,
@@ -14,14 +14,10 @@ import { Authorize } from '@/core/decorators/authorize.decorator';
 import { CurrentUser } from '@/core/decorators/current-user.decorator';
 import { ParseBody } from '@/core/decorators/parse.decorator';
 import { AssetSearchService } from '@/features/assets/search/asset-search.service';
-import { FileSearchService } from '@/features/assets/search/file-search.service';
 
 @Controller('/geometries')
 export class GeometriesController {
-  constructor(
-    private readonly assetSearchService: AssetSearchService,
-    private readonly fileSearchService: FileSearchService,
-  ) {}
+  constructor(private readonly assetSearchService: AssetSearchService) {}
 
   @Post('/')
   @Authorize.User()
@@ -30,28 +26,20 @@ export class GeometriesController {
     body: SearchQuerySchema,
     @CurrentUser() user: User,
   ): Promise<string> {
-    const query: SearchQueries = { type: body.type };
+    // Always query the asset index. When type is 'file', filter to assets that have files.
+    const query: AssetSearchQuery = {
+      type: SearchType.Asset,
+      hasFiles: body.type === SearchType.File ? true : undefined,
+    };
     restrictQueryForUser(query, user);
-    let assetsItems: AssetSearchResultItem[] = [];
+    const assets = await this.assetSearchService.search(query, user, { limit: 100_000_000, decode: false });
 
-    switch (query.type) {
-      case SearchType.File: {
-        const files = await this.fileSearchService.search(query, user, { limit: 100_000_000 });
-        assetsItems = files.assets;
-        break;
-      }
-      case SearchType.Asset: {
-        const assets = await this.assetSearchService.search(query, user, { limit: 100_000_000, decode: false });
-        assetsItems = assets.data;
-        break;
-      }
-    }
-
-    const geometries = mapToGeometry(assetsItems);
-    return geometries.map((m) => `${serializeGeometryAsCsv(m)}`).join('\n');
+    const geometries = mapToGeometry(assets.data);
+    return geometries.map((m) => serializeGeometryAsCsv(m)).join('\n');
   }
 }
-const mapToGeometry: (data: AssetSearchResultItem[]) => Geometry[] = (data: AssetSearchResultItem[]) => {
+
+const mapToGeometry = (data: AssetSearchResultItem[]): Geometry[] => {
   return data.flatMap((d) => {
     return d.geometries.map((g) => ({
       assetId: d.id,

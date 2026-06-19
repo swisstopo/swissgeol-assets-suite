@@ -29,6 +29,7 @@ export interface AssetFilters {
   favoritesOnly?: boolean;
   createdAt?: Partial<LocalDateRange>;
   status?: Array<WorkflowStatus>;
+  hasFiles?: boolean;
 }
 
 export type SearchQueries = AssetSearchQuery | FileSearchQuery;
