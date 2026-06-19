@@ -738,23 +738,25 @@ export class PdfViewerComponent implements OnDestroy {
       this.pendingZoomReanchorPageNumber = null;
       const pendingScrollTop = this.pendingZoomScrollTop;
       this.pendingZoomScrollTop = null;
+      const pendingScrollLeft = this.pendingZoomScrollLeft;
+      this.pendingZoomScrollLeft = null;
       if (zoomAnchorPage >= 1 && zoomAnchorPage <= this.pageCount()) {
         const scrollEl = this.pdfElement()?.nativeElement;
         if (scrollEl) {
-          if (pendingScrollTop !== null) {
-            // Set the exact scroll position computed in commitPendingZoom() so the
-            // anchor point stays visually stable across zoom changes.
-            this.runProgrammaticScroll(() => {
+          // Apply both scrollTop and scrollLeft in the same synchronous block
+          // so the browser never renders a frame with stale horizontal position.
+          this.runProgrammaticScroll(() => {
+            if (pendingScrollTop !== null) {
               scrollEl.scrollTop = pendingScrollTop;
-            });
-          } else {
-            // Fallback: align to page start (avoids the 'auto' jump-to-bottom bug).
-            this.runProgrammaticScroll(() => {
+            } else {
               this.virtualizer.scrollToIndex(zoomAnchorPage - 1, { align: 'start', behavior: 'auto' });
-            });
-          }
+            }
+            if (pendingScrollLeft !== null) {
+              scrollEl.scrollLeft = pendingScrollLeft;
+            }
+          });
         }
-        this.logJumpDebug('zoom-pass-scroll-to-anchor', { zoomAnchorPage, pendingScrollTop });
+        this.logJumpDebug('zoom-pass-scroll-to-anchor', { zoomAnchorPage, pendingScrollTop, pendingScrollLeft });
       }
     }
 
@@ -775,6 +777,8 @@ export class PdfViewerComponent implements OnDestroy {
     }
 
     if (this.pendingZoomScrollLeft !== null) {
+      // Fallback: scrollLeft that wasn't consumed by the zoom-anchor block above
+      // (e.g. if pendingZoomReanchorPageNumber was null).
       const pendingScrollLeft = this.pendingZoomScrollLeft;
       this.pendingZoomScrollLeft = null;
       const scrollEl = this.pdfElement()?.nativeElement;
