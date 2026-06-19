@@ -134,6 +134,7 @@ export class AssetSearchWriterService {
           createdAt: asset.createdAt,
         } satisfies AssetSearchResultItem),
       ),
+      hasFiles: asset.files.length > 0,
     };
   }
 

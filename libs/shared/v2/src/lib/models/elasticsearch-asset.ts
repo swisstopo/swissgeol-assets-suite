@@ -29,6 +29,7 @@ export interface ElasticsearchAsset {
   data: AssetJSON;
   alternativeIds: string[];
   status: string;
+  hasFiles: boolean;
 }
 
 export interface ElasticsearchPoint {

@@ -75,6 +75,9 @@
     },
     "favoredByUserIds": {
       "type": "keyword"
+    },
+    "hasFiles": {
+      "type": "boolean"
     }
   }
 }

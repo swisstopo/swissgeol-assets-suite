@@ -235,7 +235,7 @@ export class ViewerControllerService {
       this.store.dispatch(actions.setMapPosition({ position: DEFAULT_MAP_POSITION }));
     }
 
-    // Load results and stats in parallel, plus geometries if search type changed
+    // Load results and stats in parallel, plus geometries if search type changed.
     await Promise.all([
       this.loadResults(query, {
         force: !isPanelAutomaticallyToggled(currentResultsState) && isPanelOpen(currentResultsState),
