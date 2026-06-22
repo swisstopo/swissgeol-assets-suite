@@ -53,7 +53,7 @@ export interface PdfViewerVirtualItem {
 // Fit rendered pages slightly inside the available viewer width.
 export const PDF_RENDERING_MARGIN = 0.95;
 // Zoom bounds and button step size.
-export const MAX_ZOOM_LEVEL = 5;
+export const MAX_ZOOM_LEVEL = 10;
 export const MIN_ZOOM_LEVEL = 0.2;
 export const ZOOM_STEP = 0.5;
 export const ZOOM_STEP_FINE = 0.1;

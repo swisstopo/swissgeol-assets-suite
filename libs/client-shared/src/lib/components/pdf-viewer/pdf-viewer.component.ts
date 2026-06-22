@@ -884,10 +884,8 @@ export class PdfViewerComponent implements OnDestroy {
       this.evictPagesOutside(items);
     }
 
-    // During zoom, CSS-scale all stale canvases to match the new slot dimensions
-    // and reattach any wrappers orphaned by slot recycling. This runs BEFORE
-    // queueing PDF.js renders so the user sees correctly sized placeholders
-    // even while re-renders are blocked (during rapid CTRL+wheel zoom).
+    // During zoom, re-run scaleAllStalePreviews after DOM updates to reattach
+    // any wrappers orphaned by Angular's @for slot recycling.
     if (this.renderMode === 'zoom') {
       const scrollEl = this.pdfElement()?.nativeElement;
       if (scrollEl) {

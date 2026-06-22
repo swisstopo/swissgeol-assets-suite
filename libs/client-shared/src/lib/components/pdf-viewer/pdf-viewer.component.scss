@@ -149,7 +149,7 @@
     width: var(--page-width, min(95%, 860px));
     height: var(--page-height, min(95%, 1200px));
     transform: translate(-50%, -50%);
-    border-radius: 10px;
+    border-radius: 0;
     border: 1px solid #e4e4e4;
     background: #fbfbfb;
     box-shadow:
@@ -166,7 +166,7 @@
     width: var(--page-width, min(95%, 860px));
     height: var(--page-height, min(95%, 1200px));
     transform: translate(-50%, -50%);
-    border-radius: 10px;
+    border-radius: 0;
     overflow: hidden;
     pointer-events: none;
     z-index: 1;

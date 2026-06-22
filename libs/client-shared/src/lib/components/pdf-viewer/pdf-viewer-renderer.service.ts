@@ -92,15 +92,19 @@ export class PdfViewerRendererService {
 
       // Re-attach the wrapper if the slot was recreated by Angular's @for.
       const slot = scrollElement.querySelector(`.page-slot[data-page-num="${pageNum}"]`) as HTMLElement | null;
-      if (slot && rendered.wrapper.parentNode !== slot) {
+      if (!slot) continue;
+
+      if (rendered.wrapper.parentNode !== slot) {
         const existing = slot.querySelector('.canvas-wrapper');
         if (existing) {
           slot.replaceChild(rendered.wrapper, existing);
         } else {
           slot.appendChild(rendered.wrapper);
         }
-        renderer.addClass(slot, 'page-slot--loaded');
       }
+
+      // Always ensure loaded class — prevents skeleton flash if Angular updated the slot.
+      renderer.addClass(slot, 'page-slot--loaded');
 
       if (isUpToDate) {
         // Already at target resolution — remove stale styling.
