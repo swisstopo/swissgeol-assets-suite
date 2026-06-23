@@ -144,7 +144,7 @@ export class PdfViewerRendererService {
   }
 
   private scheduleTextLayerIfNeeded(options: QueueVisiblePageRendersOptions): void {
-    if (options.renderMode === 'zoom') return;
+    if (options.renderMode !== 'normal') return;
     for (const pageNum of this.latestRenderablePages) {
       const rendered = this.renderedPages.get(pageNum);
       if (
@@ -175,8 +175,8 @@ export class PdfViewerRendererService {
     const currentPage = options.getCurrentPage();
     this.scheduleTextLayerIfNeeded(options);
 
-    // Handle zoom callback if current page is already rendered.
-    if (options.renderMode === 'zoom') {
+    // Handle transition callback if current page is already rendered.
+    if (options.renderMode !== 'normal') {
       const rendered = this.renderedPages.get(currentPage);
       if (
         rendered &&
@@ -218,7 +218,7 @@ export class PdfViewerRendererService {
     if (!options) return;
 
     const renderMode = options.getRenderMode();
-    const maxConcurrent = renderMode === 'zoom' ? 1 : options.maxConcurrentPageLoads;
+    const maxConcurrent = renderMode !== 'normal' ? 1 : options.maxConcurrentPageLoads;
     const currentZoom = options.getZoom();
     const currentRotation = options.getRotation();
     const currentPage = options.getCurrentPage();
@@ -252,7 +252,7 @@ export class PdfViewerRendererService {
   }
 
   private filterCandidatesForMode(candidates: number[], renderMode: PdfRenderMode, currentPage: number): number[] {
-    if (renderMode !== 'zoom') return candidates;
+    if (renderMode === 'normal') return candidates;
     const idx = candidates.indexOf(currentPage);
     return idx === -1 ? [] : [candidates[idx]];
   }
@@ -434,7 +434,7 @@ export class PdfViewerRendererService {
       if (!existingRendered.textLayerRendered && existingRendered.page && existingRendered.viewport) {
         this.scheduleTextLayerRender(pageNum, existingRendered);
       }
-      if (options.renderMode === 'zoom' && pageNum === options.currentPage) {
+      if (options.renderMode !== 'normal' && pageNum === options.currentPage) {
         options.onCurrentPageRendered?.();
       }
       return true;
@@ -535,7 +535,7 @@ export class PdfViewerRendererService {
   /** Fires the post-render callback or schedules the text-layer for visible pages. */
   private notifyPageRendered(pageNum: number, rendered: RenderedPage, options: QueueVisiblePageRendersOptions): void {
     options.onPageRendered?.(pageNum);
-    if (options.renderMode === 'zoom') {
+    if (options.renderMode !== 'normal') {
       if (pageNum === options.currentPage) {
         options.onCurrentPageRendered?.();
       }

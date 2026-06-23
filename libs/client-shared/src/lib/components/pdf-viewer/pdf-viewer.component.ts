@@ -268,7 +268,7 @@ export class PdfViewerComponent implements OnDestroy {
     // Pin the page and use zoom-mode scroll anchoring to prevent page jumps.
     this.pinnedPageNumber = anchorPage;
     this.pendingZoomReanchorPageNumber = anchorPage;
-    this.renderMode = 'zoom';
+    this.renderMode = 'rotation';
     this.pdfViewerRendererService.prepareForZoomRender();
     this.pendingZoomRenderBlocked = false;
 
@@ -621,7 +621,7 @@ export class PdfViewerComponent implements OnDestroy {
 
   private handleViewerScroll(): void {
     if (this.pageCount() === 0) return;
-    if (this.renderMode === 'zoom') return;
+    if (this.renderMode !== 'normal') return;
     if (this.wheelZoomTarget !== null) return;
     if (this.programmaticScrollDepth > 0) return;
     if (this.scrollAnimationFrame !== null) return;
@@ -1030,6 +1030,8 @@ export class PdfViewerComponent implements OnDestroy {
           this.renderer,
         );
       }
+    }
+    if (this.renderMode !== 'normal') {
       this.pdfViewerRendererService.updateVisiblePages(items);
     }
 
@@ -1129,11 +1131,11 @@ export class PdfViewerComponent implements OnDestroy {
 
     const effectiveCurrentPage = this.getEffectiveCurrentPage(items[0]?.pageNum ?? 1);
     const currentPageForRender =
-      renderMode === 'zoom' && !items.some((item) => item.pageNum === effectiveCurrentPage)
+      renderMode !== 'normal' && !items.some((item) => item.pageNum === effectiveCurrentPage)
         ? (items[0]?.pageNum ?? effectiveCurrentPage)
         : effectiveCurrentPage;
-    if (renderMode === 'zoom' && currentPageForRender !== effectiveCurrentPage) {
-      this.logJumpDebug('zoom-render-page-fallback', {
+    if (renderMode !== 'normal' && currentPageForRender !== effectiveCurrentPage) {
+      this.logJumpDebug('transition-render-page-fallback', {
         effectiveCurrentPage,
         fallbackPage: currentPageForRender,
       });
@@ -1159,7 +1161,7 @@ export class PdfViewerComponent implements OnDestroy {
       scheduleVirtualRefresh: () => this.scheduleVirtualRefresh(),
       renderMode,
       onCurrentPageRendered:
-        renderMode === 'zoom' ? () => this.handleZoomCurrentPageRendered(expectedZoom, renderEpoch) : undefined,
+        renderMode !== 'normal' ? () => this.handleTransitionCurrentPageRendered(expectedZoom, renderEpoch) : undefined,
       onPageRendered: (pageNum) => {
         if (this.pdfViewerHandoverService.isActive()) {
           this.pdfViewerHandoverService.releasePage(pageNum);
@@ -1292,13 +1294,16 @@ export class PdfViewerComponent implements OnDestroy {
     this._estimateDims = this.pageDimensions();
   }
 
-  private handleZoomCurrentPageRendered(expectedZoom: number, renderEpoch: number): void {
-    if (this.renderMode !== 'zoom') return;
+  private handleTransitionCurrentPageRendered(expectedZoom: number, renderEpoch: number): void {
+    if (this.renderMode === 'normal') return;
     if (Math.abs(this.zoom() - expectedZoom) >= 0.0001) return;
     if (this.viewportEpoch !== renderEpoch) return;
     if (this.pendingZoomTarget !== null || this.zoomAnimationFrame !== null) return;
 
-    this.logJumpDebug('zoom-complete-normal', { zoomAnchorPage: this.zoomAnchorPageNumber });
+    this.logJumpDebug('transition-complete', {
+      zoomAnchorPage: this.zoomAnchorPageNumber,
+      renderMode: this.renderMode,
+    });
     this.renderMode = 'normal';
     this.zoomAnchorPageNumber = null;
     this.scheduleRender();
