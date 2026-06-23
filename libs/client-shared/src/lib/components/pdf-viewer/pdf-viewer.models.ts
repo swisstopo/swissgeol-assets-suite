@@ -1,4 +1,5 @@
-import { AssetFile } from '@asset-sg/shared/v2';
+import { Renderer2 } from '@angular/core';
+import { AssetFile, PageDimension } from '@asset-sg/shared/v2';
 import { PageViewport } from 'pdfjs-dist';
 import { PDFPageProxy } from 'pdfjs-dist/types/src/display/api';
 
@@ -81,3 +82,28 @@ export const DEFAULT_MAX_CONCURRENT_PAGE_LOADS = 3;
 export const CURRENT_PAGE_CHANGE_RENDER_DELAY_MS = 16;
 /** Set to `true` to enable verbose PDF-viewer diagnostic logs in the browser console. */
 export const PDF_VIEWER_DEBUG = false;
+/** Duration of the per-page crossfade when a handover clone is released. */
+export const HANDOVER_CROSSFADE_MS = 300;
+/** Delay before starting the crossfade — ensures the fresh canvas is composited on screen. */
+export const HANDOVER_RELEASE_DELAY_MS = 100;
+/** Maximum time the handover layer can remain before being force-removed. */
+export const HANDOVER_SAFETY_TIMEOUT_MS = 6000;
+
+/**
+ * Context passed to `PdfViewerHandoverService.begin()` to create a temporary
+ * overlay of canvas clones that bridges the visual gap between CSS-transform
+ * removal and fresh Angular-rendered slots.
+ */
+export interface PdfViewerHandoverContext {
+  spacerElement: HTMLElement;
+  scrollElement: HTMLDivElement;
+  renderer: Renderer2;
+  pageDimensions: PageDimension[];
+  pageCount: number;
+  visiblePageNums: number[];
+  /** Pages actually in the viewport (excludes overscan) — used for early teardown. */
+  viewportPageNums: number[];
+  source: { rotation: number; baseScale: number; zoom: number };
+  target: { rotation: number; baseScale: number; zoom: number };
+  getRenderedPage(pageNum: number): { canvas: HTMLCanvasElement; rotation: number } | null;
+}

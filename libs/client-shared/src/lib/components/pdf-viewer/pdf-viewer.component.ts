@@ -24,12 +24,14 @@ import { showAlert } from '../../state/alert/alert.actions';
 import { AlertType } from '../../state/alert/alert.model';
 import { triggerDownload } from '../../utils';
 import { PdfViewerApiService } from './pdf-viewer-api.service';
+import { PdfViewerHandoverService } from './pdf-viewer-handover.service';
 import { PdfViewerHeaderComponent } from './pdf-viewer-header/pdf-viewer-header.component';
 import { PdfViewerInputService } from './pdf-viewer-input.service';
 import {
   findPageAtScrollOffset,
   getBaseScale,
   getConfiguredInteger,
+  getDocumentHeight,
   getDocumentWidth,
   getPageLayout,
   getPageWidth,
@@ -75,7 +77,7 @@ import { PdfViewerService } from './pdf-viewer.service';
   ],
   templateUrl: './pdf-viewer.component.html',
   styleUrl: './pdf-viewer.component.scss',
-  providers: [PdfViewerService, PdfViewerInputService, PdfViewerRendererService],
+  providers: [PdfViewerService, PdfViewerInputService, PdfViewerRendererService, PdfViewerHandoverService],
 })
 export class PdfViewerComponent implements OnDestroy {
   public readonly hideHeader = input(false);
@@ -118,6 +120,7 @@ export class PdfViewerComponent implements OnDestroy {
   private readonly ngZone = inject(NgZone);
   private readonly pdfViewerInputService = inject(PdfViewerInputService);
   private readonly pdfViewerRendererService = inject(PdfViewerRendererService);
+  private readonly pdfViewerHandoverService = inject(PdfViewerHandoverService);
 
   private resizeObserver: ResizeObserver | null = null;
   private scrollRenderTimer: ReturnType<typeof setTimeout> | null = null;
@@ -184,6 +187,7 @@ export class PdfViewerComponent implements OnDestroy {
   public ngOnDestroy() {
     this.resizeObserver?.disconnect();
     this.pdfViewerInputService.destroy();
+    this.pdfViewerHandoverService.end();
     if (this.scrollRenderTimer) {
       clearTimeout(this.scrollRenderTimer);
     }
@@ -380,6 +384,31 @@ export class PdfViewerComponent implements OnDestroy {
       const maxScrollLeftNew = Math.max(0, contentWidthNew - containerWidth);
       const horizontalRatio = maxScrollLeftOld > 0 ? scrollLeft / maxScrollLeftOld : 0.5;
       this.pendingZoomScrollLeft = Math.max(0, horizontalRatio * maxScrollLeftNew);
+
+      // Begin handover — reuses canvas elements positioned at the target zoom layout.
+      const spacer = scrollEl.querySelector('.viewer__virtual-spacer') as HTMLElement | null;
+      const virtualItems = this.virtualizer.getVirtualItems();
+      const visiblePageNums = virtualItems.map((item) => item.index + 1);
+      if (spacer && visiblePageNums.length > 0) {
+        const viewportTop = scrollEl.scrollTop;
+        const viewportBottom = viewportTop + scrollEl.clientHeight;
+        const viewportPageNums = virtualItems
+          .filter((item) => item.end > viewportTop && item.start < viewportBottom)
+          .map((item) => item.index + 1);
+
+        this.pdfViewerHandoverService.begin({
+          spacerElement: spacer,
+          scrollElement: scrollEl,
+          renderer: this.renderer,
+          pageDimensions: pageDims,
+          pageCount,
+          visiblePageNums,
+          viewportPageNums,
+          source: { rotation, baseScale: baseScl, zoom: oldZoom },
+          target: { rotation, baseScale: baseScl, zoom: newZoom },
+          getRenderedPage: (pageNum) => this.pdfViewerRendererService.getRenderedPage(pageNum),
+        });
+      }
     }
 
     this.renderMode = 'zoom';
@@ -394,6 +423,10 @@ export class PdfViewerComponent implements OnDestroy {
    * Called when CTRL+wheel zoom settles (ZOOM_SETTLE_DELAY_MS after the last tick).
    * Removes the CSS transform, commits the zoom to TanStack with the correct
    * scroll position, and triggers a full re-render.
+   *
+   * A handover layer with canvas clones is created in the same synchronous block
+   * as the CSS-transform removal so the browser never paints a frame without
+   * visible page content.
    */
   private commitWheelZoom(): void {
     const targetZoom = this.wheelZoomTarget;
@@ -406,21 +439,31 @@ export class PdfViewerComponent implements OnDestroy {
     // Reset wheel zoom state.
     this.wheelZoomTarget = null;
 
-    // Remove the CSS transform immediately.
     const scrollEl = this.pdfElement()?.nativeElement;
     const spacer = scrollEl?.querySelector('.viewer__virtual-spacer') as HTMLElement | null;
+    if (!scrollEl) return;
+
+    // Capture visible pages while the CSS transform is still applied.
+    const virtualItems = this.virtualizer.getVirtualItems();
+    const visiblePageNums = virtualItems.map((item) => item.index + 1);
+
+    // Identify pages actually in the viewport (excludes overscan) for early handover teardown.
+    const viewportTop = scrollEl.scrollTop;
+    const viewportBottom = viewportTop + scrollEl.clientHeight;
+    const viewportPageNums = virtualItems
+      .filter((item) => item.end > viewportTop && item.start < viewportBottom)
+      .map((item) => item.index + 1);
+
+    // Capture scroll positions in the OLD zoom coordinate system.
+    const oldZoom = baseZoom;
+    const scrollTop = scrollEl.scrollTop;
+    const scrollLeft = scrollEl.scrollLeft;
+
+    // Remove the CSS transform.
     if (spacer) {
       spacer.style.transform = '';
       spacer.style.transformOrigin = '';
     }
-
-    if (!scrollEl) return;
-
-    // Compute the scroll positions for the new zoom level that keep the cursor
-    // anchor point fixed on screen.
-    const oldZoom = baseZoom;
-    const scrollTop = scrollEl.scrollTop;
-    const scrollLeft = scrollEl.scrollLeft;
 
     if (!this.setZoom(targetZoom)) {
       this.renderMode = 'normal';
@@ -457,6 +500,43 @@ export class PdfViewerComponent implements OnDestroy {
       const newScrollLeft = contentWidthNew / 2 + dX * (newZoom / oldZoom) - mouseOffsetX;
       const newMaxScrollLeft = Math.max(0, contentWidthNew - containerWidth);
       this.pendingZoomScrollLeft = Math.max(0, Math.min(newScrollLeft, newMaxScrollLeft));
+    }
+
+    // Begin handover — creates canvas clones positioned at the target zoom layout.
+    // This runs in the same synchronous block as the CSS-transform removal, so the
+    // browser paints the clones instead of empty slots.
+    if (spacer && visiblePageNums.length > 0) {
+      this.pdfViewerHandoverService.begin({
+        spacerElement: spacer,
+        scrollElement: scrollEl,
+        renderer: this.renderer,
+        pageDimensions: pageDims,
+        pageCount,
+        visiblePageNums,
+        viewportPageNums,
+        source: { rotation, baseScale: baseScl, zoom: oldZoom },
+        target: { rotation, baseScale: baseScl, zoom: newZoom },
+        getRenderedPage: (pageNum) => this.pdfViewerRendererService.getRenderedPage(pageNum),
+      });
+
+      // Set spacer to target dimensions immediately so scroll positions aren't
+      // clamped by the browser to the old (smaller/larger) scrollable area.
+      const targetWidth = getDocumentWidth(pageDims, containerWidth, baseScl, newZoom, rotation);
+      const targetHeight = getDocumentHeight(pageCount, pageDims, baseScl, newZoom, rotation);
+      spacer.style.width = `${targetWidth}px`;
+      spacer.style.height = `${targetHeight}px`;
+
+      // Keep signals in sync so Angular doesn't overwrite the manual DOM update.
+      this.virtualContentWidth.set(targetWidth);
+      this.virtualTotalSize.set(targetHeight);
+    }
+
+    // Apply computed scroll positions immediately for visual continuity.
+    if (this.pendingZoomScrollTop !== null) {
+      scrollEl.scrollTop = this.pendingZoomScrollTop;
+    }
+    if (this.pendingZoomScrollLeft !== null) {
+      scrollEl.scrollLeft = this.pendingZoomScrollLeft;
     }
 
     // Set up anchor page for TanStack.
@@ -590,6 +670,7 @@ export class PdfViewerComponent implements OnDestroy {
   private async loadPdf(pdfId: number, initialPage = 1) {
     this.resizeObserver?.disconnect();
     this.pdfViewerRendererService.resetPages();
+    this.pdfViewerHandoverService.end();
     this.pdfViewerInputService.finishPanDrag();
 
     this.pageCount.set(0);
@@ -835,6 +916,23 @@ export class PdfViewerComponent implements OnDestroy {
       this.pendingCanvasRefresh = false;
     }
 
+    // CSS-scale stale canvases BEFORE yielding to the browser. This ensures that
+    // when Angular updates slot sizes (in the next rAF), the canvas wrappers
+    // already have the correct visual scale — preventing a skeleton flash where
+    // the old-size canvas sits in a bigger slot.
+    if (this.renderMode === 'zoom') {
+      const scrollEl = this.pdfElement()?.nativeElement;
+      if (scrollEl) {
+        this.pdfViewerRendererService.scaleAllStalePreviews(
+          this.zoom(),
+          this.rotation(),
+          this.baseScale(),
+          scrollEl,
+          this.renderer,
+        );
+      }
+    }
+
     this.syncVirtualViewport();
     await this.waitForDom();
 
@@ -1027,6 +1125,11 @@ export class PdfViewerComponent implements OnDestroy {
       renderMode,
       onCurrentPageRendered:
         renderMode === 'zoom' ? () => this.handleZoomCurrentPageRendered(expectedZoom, renderEpoch) : undefined,
+      onPageRendered: (pageNum) => {
+        if (this.pdfViewerHandoverService.isActive()) {
+          this.pdfViewerHandoverService.releasePage(pageNum);
+        }
+      },
     });
   }
 

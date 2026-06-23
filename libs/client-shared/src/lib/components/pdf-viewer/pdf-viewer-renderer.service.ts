@@ -32,6 +32,7 @@ interface QueueVisiblePageRendersOptions {
   scheduleVirtualRefresh: () => void;
   renderMode: PdfRenderMode;
   onCurrentPageRendered?: () => void;
+  onPageRendered?: (pageNum: number) => void;
 }
 
 interface RenderSlotElements {
@@ -63,6 +64,12 @@ export class PdfViewerRendererService {
     this.renderOptions = null;
   }
 
+  getRenderedPage(pageNum: number): { canvas: HTMLCanvasElement; rotation: number } | null {
+    const rendered = this.renderedPages.get(pageNum);
+    if (!rendered) return null;
+    return { canvas: rendered.canvas, rotation: rendered.rotation };
+  }
+
   prepareForZoomRender(): void {
     this.cancelAllRenderingPages();
     this.cancelTextLayerTimers();
@@ -87,7 +94,6 @@ export class PdfViewerRendererService {
     for (const [pageNum, rendered] of this.renderedPages) {
       if (rendered.rotation !== newRotation) continue;
 
-      const scale = (newZoom * newBaseScale) / (rendered.zoom * rendered.baseScale);
       const isUpToDate = rendered.zoom === newZoom && Math.abs(rendered.baseScale - newBaseScale) < BASE_SCALE_EPSILON;
 
       // Re-attach the wrapper if the slot was recreated by Angular's @for.
@@ -107,14 +113,15 @@ export class PdfViewerRendererService {
       renderer.addClass(slot, 'page-slot--loaded');
 
       if (isUpToDate) {
-        // Already at target resolution — remove stale styling.
         rendered.wrapper.style.transform = '';
         rendered.wrapper.style.transformOrigin = '';
         rendered.wrapper.classList.remove('canvas-wrapper--stale');
-      } else if (Math.abs(scale - 1) >= 0.0001) {
-        rendered.wrapper.style.transformOrigin = 'center center';
-        rendered.wrapper.style.transform = `scale(${scale})`;
+      } else {
+        // Mark as stale — CSS handles filling the slot via absolute positioning
+        // and stretching the canvas. No CSS transform needed.
         rendered.wrapper.classList.add('canvas-wrapper--stale');
+        rendered.wrapper.style.transform = '';
+        rendered.wrapper.style.transformOrigin = '';
       }
     }
   }
@@ -423,6 +430,7 @@ export class PdfViewerRendererService {
       existingRendered?.rotation === rotationAtStart &&
       Math.abs(existingRendered?.baseScale - options.baseScale) < BASE_SCALE_EPSILON
     ) {
+      options.onPageRendered?.(pageNum);
       if (!existingRendered.textLayerRendered && existingRendered.page && existingRendered.viewport) {
         this.scheduleTextLayerRender(pageNum, existingRendered);
       }
@@ -526,6 +534,7 @@ export class PdfViewerRendererService {
 
   /** Fires the post-render callback or schedules the text-layer for visible pages. */
   private notifyPageRendered(pageNum: number, rendered: RenderedPage, options: QueueVisiblePageRendersOptions): void {
+    options.onPageRendered?.(pageNum);
     if (options.renderMode === 'zoom') {
       if (pageNum === options.currentPage) {
         options.onCurrentPageRendered?.();
@@ -587,14 +596,12 @@ export class PdfViewerRendererService {
     if (!existing) return;
     if (existing.rotation !== newRotation) return;
 
-    // PDF.js viewport size scales linearly with both zoom and baseScale, so
-    // the CSS display size of the canvas changes by their combined ratio.
-    const scale = (newZoom * newBaseScale) / (existing.zoom * existing.baseScale);
-    if (Math.abs(scale - 1) < 0.0001) return; // Already at the right size — nothing to do.
+    const isUpToDate = existing.zoom === newZoom && Math.abs(existing.baseScale - newBaseScale) < BASE_SCALE_EPSILON;
+    if (isUpToDate) return;
 
-    existing.wrapper.style.transformOrigin = 'center center';
-    existing.wrapper.style.transform = `scale(${scale})`;
     existing.wrapper.classList.add('canvas-wrapper--stale');
+    existing.wrapper.style.transform = '';
+    existing.wrapper.style.transformOrigin = '';
   }
 
   private disposeRenderedPage(pageNum: number, rendered: RenderedPage): void {

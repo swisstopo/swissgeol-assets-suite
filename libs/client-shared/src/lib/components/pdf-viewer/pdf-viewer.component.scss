@@ -179,7 +179,7 @@
       left: -100%;
       width: 100%;
       height: 100%;
-      background: linear-gradient(90deg, transparent 0%, rgb(255 255 255 / 0.65) 48%, transparent 100%);
+      background: linear-gradient(90deg, transparent 0%, rgb(248 116 116 / 0.65) 48%, transparent 100%);
       animation: page-skeleton-shimmer 1.6s ease-in-out infinite;
       will-change: transform;
     }
@@ -217,11 +217,26 @@
       animation: canvas-appear 0.15s ease-out both;
     }
 
-    // Stale placeholder: the previous canvas, CSS-scaled to the new slot dimensions
-    // while a fresh PDF.js render is in progress. Pointer events are disabled so
-    // text-selection on the stale layer cannot interfere.
+    // Stale placeholder: the previous canvas, scaled to match the new page
+    // dimensions while a fresh PDF.js render is in progress. Constrained to
+    // the page width/height via CSS variables to avoid stretching across the
+    // full slot width (which would cause full-viewport-width artifacts on zoom-out).
     &--stale {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: var(--page-width);
+      height: var(--page-height);
+      transform: translate(-50%, -50%);
       pointer-events: none;
+      overflow: hidden;
+
+      // !important overrides the inline style="width: Xpx; height: Ypx" set
+      // by prepareCanvas() at the old zoom level.
+      canvas {
+        width: 100% !important;
+        height: 100% !important;
+      }
 
       // Debug overlay: semi-transparent pink tint on stale/cached canvases.
       // Remove this block once caching behaviour is verified.
@@ -229,7 +244,7 @@
         content: "";
         position: absolute;
         inset: 0;
-        background: rgba(255, 0, 128, 0.18);
+        //background: rgba(255, 0, 128, 0.18);
         pointer-events: none;
         z-index: 10;
       }
@@ -317,6 +332,37 @@
     &.selecting .endOfContent {
       top: 0;
     }
+  }
+}
+
+// Handover layer: temporary overlay with canvas clones from the previous zoom level.
+// Bridges the visual gap between CSS-transform removal and fresh Angular-rendered slots.
+.viewer__handover-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 10;
+  //background: rgba(0, 255, 0, 0.3); // DEBUG: lime green to verify layer visibility
+}
+
+.handover-page {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+
+  &--releasing {
+    opacity: 0;
+    transition: opacity var(--handover-crossfade-ms, 200ms) ease-out;
+  }
+
+  &__canvas-wrapper {
+    position: relative;
   }
 }
 
