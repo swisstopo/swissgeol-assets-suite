@@ -154,6 +154,7 @@ export class PdfViewerComponent implements OnDestroy {
   private wheelZoomBaseZoom = 1;
   private wheelZoomMouseOffsetX = 0;
   private wheelZoomMouseOffsetY = 0;
+  private wheelZoomCursorOverPage = false;
 
   // estimateSize must read plain fields, not signals.
   private _estimateZoom = 1;
@@ -243,9 +244,6 @@ export class PdfViewerComponent implements OnDestroy {
     const baseScl = this.baseScale();
     const currentZoom = this.zoom();
 
-    // Capture horizontal scroll ratio before the layout changes.
-    const horizontalRatio = this.captureHorizontalScrollRatio();
-
     // Determine the anchor page and the user's position within it.
     const anchorPage = this.pinnedPageNumber ?? this.getCurrentPageFromVirtualizer();
     const scrollTop = scrollEl?.scrollTop ?? 0;
@@ -265,6 +263,12 @@ export class PdfViewerComponent implements OnDestroy {
       this.pendingZoomScrollTop = Math.max(0, newLayout.start + anchorRatio * newLayout.size);
     }
 
+    // Center horizontal scrollbar after rotation.
+    const containerWidth = scrollEl?.clientWidth ?? 0;
+    const newContentWidth = getDocumentWidth(pageDims, containerWidth, baseScl, currentZoom, newRotation);
+    const maxScrollLeft = Math.max(0, newContentWidth - containerWidth);
+    this.pendingZoomScrollLeft = maxScrollLeft / 2;
+
     // Pin the page and use zoom-mode scroll anchoring to prevent page jumps.
     this.pinnedPageNumber = anchorPage;
     this.pendingZoomReanchorPageNumber = anchorPage;
@@ -273,7 +277,7 @@ export class PdfViewerComponent implements OnDestroy {
     this.pendingZoomRenderBlocked = false;
 
     this.viewportEpoch++;
-    this.scheduleVirtualRefresh(horizontalRatio);
+    this.scheduleVirtualRefresh(null);
   }
 
   protected handleZoom(action: PdfZoomAction) {
@@ -291,27 +295,40 @@ export class PdfViewerComponent implements OnDestroy {
       const clamped = this.normalizeZoom(target);
       if (Math.abs(clamped - (this.wheelZoomTarget ?? this.zoom())) < 0.0001) return;
 
-      // On first tick of a zoom gesture, snapshot the base state.
+      // On first tick of a zoom gesture, snapshot the base state and cursor context.
       if (this.wheelZoomTarget === null) {
         this.wheelZoomBaseZoom = this.zoom();
+        this.wheelZoomCursorOverPage = this.isCursorOverPage(mouseClientX, mouseClientY, scrollEl);
         this.pdfViewerRendererService.prepareForZoomRender();
         this.renderMode = 'zoom';
       }
+
+      // Update cursor direction on every tick (user may switch between zoom-in/out).
+      this.applyZoomCursor(scrollEl, accumulatedDeltaY < 0 ? 'in' : 'out');
 
       this.wheelZoomTarget = clamped;
 
       // Compute cursor offset relative to the scroll container viewport.
       const rect = scrollEl.getBoundingClientRect();
-      const cursorOffsetY = mouseClientY - rect.top;
-      const cursorOffsetX = mouseClientX - rect.left;
+      let cursorOffsetY: number;
+      let cursorOffsetX: number;
 
-      // Vertical origin: always anchored to the cursor position.
+      if (this.wheelZoomCursorOverPage) {
+        cursorOffsetY = mouseClientY - rect.top;
+        cursorOffsetX = mouseClientX - rect.left;
+      } else {
+        // Cursor is not over a page — zoom from viewport center.
+        cursorOffsetY = scrollEl.clientHeight / 2;
+        cursorOffsetX = scrollEl.clientWidth / 2;
+      }
+
+      // Vertical origin: anchored to the resolved point.
       this.wheelZoomMouseOffsetY = cursorOffsetY;
       const originY = scrollEl.scrollTop + cursorOffsetY;
 
       // Horizontal origin: when target zoom <= 1 the content will be centered
       // (no horizontal overflow), so use viewport center to match final layout.
-      // Above zoom 1, anchor to the cursor position.
+      // Above zoom 1, anchor to the resolved point.
       let originX: number;
       if (clamped <= 1) {
         this.wheelZoomMouseOffsetX = scrollEl.clientWidth / 2;
@@ -473,6 +490,7 @@ export class PdfViewerComponent implements OnDestroy {
 
     // Reset wheel zoom state.
     this.wheelZoomTarget = null;
+    this.clearZoomCursor();
 
     const scrollEl = this.pdfElement()?.nativeElement;
     const spacer = scrollEl?.querySelector('.viewer__virtual-spacer') as HTMLElement | null;
@@ -590,6 +608,24 @@ export class PdfViewerComponent implements OnDestroy {
       clearTimeout(this.zoomSettleTimer);
       this.zoomSettleTimer = null;
     }
+  }
+
+  private applyZoomCursor(scrollEl: HTMLElement, direction: 'in' | 'out'): void {
+    scrollEl.classList.remove('viewer__page-wrapper--zoom-in', 'viewer__page-wrapper--zoom-out');
+    scrollEl.classList.add(direction === 'in' ? 'viewer__page-wrapper--zoom-in' : 'viewer__page-wrapper--zoom-out');
+  }
+
+  private clearZoomCursor(): void {
+    const scrollEl = this.pdfElement()?.nativeElement;
+    if (scrollEl) {
+      scrollEl.classList.remove('viewer__page-wrapper--zoom-in', 'viewer__page-wrapper--zoom-out');
+    }
+  }
+
+  private isCursorOverPage(clientX: number, clientY: number, scrollEl: HTMLElement): boolean {
+    const el = document.elementFromPoint(clientX, clientY);
+    if (!el || !scrollEl.contains(el)) return false;
+    return el.closest('.canvas-wrapper') !== null || el.tagName === 'CANVAS';
   }
 
   protected onCloseViewer() {
