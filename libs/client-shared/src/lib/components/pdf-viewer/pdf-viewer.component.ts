@@ -236,9 +236,44 @@ export class PdfViewerComponent implements OnDestroy {
   }
 
   protected handleRotation() {
-    this.rotation.update((value) => (value + 90) % 360);
+    const scrollEl = this.pdfElement()?.nativeElement;
+    const oldRotation = this.rotation();
+    const pageDims = this.pageDimensions();
+    const pageCount = this.pageCount();
+    const baseScl = this.baseScale();
+    const currentZoom = this.zoom();
+
+    // Capture horizontal scroll ratio before the layout changes.
+    const horizontalRatio = this.captureHorizontalScrollRatio();
+
+    // Determine the anchor page and the user's position within it.
+    const anchorPage = this.pinnedPageNumber ?? this.getCurrentPageFromVirtualizer();
+    const scrollTop = scrollEl?.scrollTop ?? 0;
+    const oldLayout = getPageLayout(anchorPage, pageCount, pageDims, baseScl, currentZoom, oldRotation);
+    let anchorRatio = 0;
+    if (oldLayout && oldLayout.size > 0) {
+      anchorRatio = Math.max(0, Math.min(1, (scrollTop - oldLayout.start) / oldLayout.size));
+    }
+
+    // Apply rotation.
+    const newRotation = (oldRotation + 90) % 360;
+    this.rotation.set(newRotation);
+
+    // Compute the target scrollTop so the same anchor page stays in view.
+    const newLayout = getPageLayout(anchorPage, pageCount, pageDims, baseScl, currentZoom, newRotation);
+    if (newLayout) {
+      this.pendingZoomScrollTop = Math.max(0, newLayout.start + anchorRatio * newLayout.size);
+    }
+
+    // Pin the page and use zoom-mode scroll anchoring to prevent page jumps.
+    this.pinnedPageNumber = anchorPage;
+    this.pendingZoomReanchorPageNumber = anchorPage;
+    this.renderMode = 'zoom';
+    this.pdfViewerRendererService.prepareForZoomRender();
+    this.pendingZoomRenderBlocked = false;
+
     this.viewportEpoch++;
-    this.scheduleVirtualRefresh(this.captureHorizontalScrollRatio());
+    this.scheduleVirtualRefresh(horizontalRatio);
   }
 
   protected handleZoom(action: PdfZoomAction) {
