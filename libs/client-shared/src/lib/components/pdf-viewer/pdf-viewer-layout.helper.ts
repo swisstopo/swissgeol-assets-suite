@@ -10,6 +10,16 @@ export function getBaseScale(pageDimensions: PageDimension[], containerWidth: nu
   return containerWidth / maxNativeWidth;
 }
 
+/**
+ * Computes the initial zoom level so that the tallest page fits entirely within the viewport.
+ * Returns a value <= 1. If pages already fit at zoom=1, returns 1.
+ */
+export function getInitialZoom(pageDimensions: PageDimension[], baseScale: number, containerHeight: number): number {
+  const maxNativeHeight = Math.max(1, ...pageDimensions.map((dimension) => dimension.height));
+  const fittingZoom = containerHeight / (maxNativeHeight * baseScale);
+  return Math.min(1, fittingZoom);
+}
+
 export function getPageHeight(
   pageNum: number,
   pageDimensions: PageDimension[],

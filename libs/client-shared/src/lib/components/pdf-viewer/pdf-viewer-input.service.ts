@@ -7,6 +7,7 @@ interface PdfViewerInputHandlers {
   navigateToPage: (pageNum: number) => void;
   setSpacePanMode: (enabled: boolean) => void;
   setPanning: (enabled: boolean) => void;
+  onWheelZoom: (accumulatedDeltaY: number, mouseClientY: number, mouseClientX: number) => void;
 }
 
 @Injectable()
@@ -23,6 +24,12 @@ export class PdfViewerInputService {
   private panLastX = 0;
   private panLastY = 0;
   private panPointerId: number | null = null;
+
+  // CTRL+wheel zoom accumulation — batched per animation frame.
+  private wheelDeltaAccum = 0;
+  private wheelMouseClientY = 0;
+  private wheelMouseClientX = 0;
+  private wheelRafId: number | null = null;
 
   setup(scrollElement: HTMLDivElement, handlers: PdfViewerInputHandlers): void {
     this.destroy();
@@ -54,11 +61,42 @@ export class PdfViewerInputService {
       globalThis.addEventListener('blur', onBlur, true);
     });
 
+    // CTRL+wheel zoom.  Must be non-passive so we can call preventDefault() and
+    // suppress the browser's built-in page zoom on CTRL+scroll.
+    const onWheel = (event: WheelEvent) => {
+      if (!event.ctrlKey && !event.metaKey) return;
+      event.preventDefault();
+      this.wheelDeltaAccum += event.deltaY;
+      this.wheelMouseClientY = event.clientY;
+      this.wheelMouseClientX = event.clientX;
+      if (this.wheelRafId === null) {
+        this.wheelRafId = requestAnimationFrame(() => {
+          this.wheelRafId = null;
+          const delta = this.wheelDeltaAccum;
+          const clientY = this.wheelMouseClientY;
+          const clientX = this.wheelMouseClientX;
+          this.wheelDeltaAccum = 0;
+          if (delta !== 0) {
+            this.handlers?.onWheelZoom(delta, clientY, clientX);
+          }
+        });
+      }
+    };
+    this.ngZone.runOutsideAngular(() => {
+      scrollElement.addEventListener('wheel', onWheel, { passive: false });
+    });
+
     this.inputCleanup = () => {
       scrollElement.removeEventListener('scroll', onScroll);
+      scrollElement.removeEventListener('wheel', onWheel);
       globalThis.removeEventListener('keydown', onKeyDown, true);
       globalThis.removeEventListener('keyup', onKeyUp, true);
       globalThis.removeEventListener('blur', onBlur, true);
+      if (this.wheelRafId !== null) {
+        cancelAnimationFrame(this.wheelRafId);
+        this.wheelRafId = null;
+      }
+      this.wheelDeltaAccum = 0;
       this.finishPanDrag();
     };
   }
