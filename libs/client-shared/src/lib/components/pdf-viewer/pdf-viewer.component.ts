@@ -33,6 +33,7 @@ import {
   getConfiguredInteger,
   getDocumentHeight,
   getDocumentWidth,
+  getInitialZoom,
   getPageLayout,
   getPageWidth,
   isRotationSwapped,
@@ -326,9 +327,8 @@ export class PdfViewerComponent implements OnDestroy {
       this.wheelZoomMouseOffsetY = cursorOffsetY;
       const originY = scrollEl.scrollTop + cursorOffsetY;
 
-      // Horizontal origin: when target zoom <= 1 the content will be centered
-      // (no horizontal overflow), so use viewport center to match final layout.
-      // Above zoom 1, anchor to the resolved point.
+      // Horizontal origin: when zoom <= 1 content is centered (no overflow),
+      // so use viewport center. Otherwise anchor to cursor point.
       let originX: number;
       if (clamped <= 1) {
         this.wheelZoomMouseOffsetX = scrollEl.clientWidth / 2;
@@ -542,8 +542,8 @@ export class PdfViewerComponent implements OnDestroy {
       }
     }
 
-    // Horizontal anchor — when target zoom <= 1 content fits in container (centered),
-    // so scrollLeft = 0. Otherwise keep cursor point fixed.
+    // Horizontal anchor — when zoom <= 1 content is centered (no overflow),
+    // scrollLeft stays 0. Otherwise keep cursor point fixed.
     if (newZoom <= 1) {
       this.pendingZoomScrollLeft = 0;
     } else {
@@ -810,14 +810,17 @@ export class PdfViewerComponent implements OnDestroy {
       if (!scrollEl) return;
 
       const containerWidth = scrollEl.getBoundingClientRect().width * PDF_RENDERING_MARGIN;
+      const containerHeight = scrollEl.clientHeight;
       const newBaseScale = getBaseScale(dims, containerWidth);
+      const initialZoom = getInitialZoom(dims, newBaseScale, containerHeight);
 
-      this._estimateZoom = 1;
+      this._estimateZoom = initialZoom;
       this._estimateScale = newBaseScale;
       this._estimateRotation = 0;
       this._estimateDims = dims;
 
       this.baseScale.set(newBaseScale);
+      this.zoom.set(initialZoom);
       this.pageDimensions.set(dims);
       this.updateVirtualContentWidth();
       this.pageCount.set(numPages);
