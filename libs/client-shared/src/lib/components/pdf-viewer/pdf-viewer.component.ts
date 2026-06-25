@@ -305,7 +305,13 @@ export class PdfViewerComponent implements OnDestroy {
       if (this.wheelZoomTarget === null) {
         this.wheelZoomBaseZoom = this.zoom();
         this.wheelZoomCursorOverPage = this.isCursorOverPage(mouseClientX, mouseClientY, scrollEl);
-        this.pdfViewerRendererService.prepareForZoomRender();
+        // Only cancel in-flight renders when entering zoom mode from normal.
+        // When re-entering after a commit (renderMode is already 'zoom'), let the
+        // render from the previous commit continue — the CSS transform provides
+        // visual feedback on top while the render finishes in the background.
+        if (this.renderMode !== 'zoom') {
+          this.pdfViewerRendererService.prepareForZoomRender();
+        }
         this.renderMode = 'zoom';
       }
 
@@ -1344,6 +1350,9 @@ export class PdfViewerComponent implements OnDestroy {
     if (Math.abs(this.zoom() - expectedZoom) >= 0.0001) return;
     if (this.viewportEpoch !== renderEpoch) return;
     if (this.pendingZoomTarget !== null || this.zoomAnimationFrame !== null) return;
+    // Don't transition to normal while a new wheel zoom gesture is active —
+    // the CSS transform is in flight and a commit will follow.
+    if (this.wheelZoomTarget !== null || this.zoomSettleTimer !== null) return;
 
     this.logJumpDebug('transition-complete', {
       zoomAnchorPage: this.zoomAnchorPageNumber,
@@ -1351,7 +1360,12 @@ export class PdfViewerComponent implements OnDestroy {
     });
     this.renderMode = 'normal';
     this.zoomAnchorPageNumber = null;
-    this.scheduleRender();
+
+    // Reconcile scroll state: while renderMode was not 'normal', handleViewerScroll()
+    // was a no-op — any user scrolls that occurred during zoom rendering were lost.
+    // Process the current scroll position so visible pages, current page indicator,
+    // and lazy loading are back in sync.
+    this.processViewerScroll();
   }
 
   private setZoom(target: number): boolean {
