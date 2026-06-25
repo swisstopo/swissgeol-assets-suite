@@ -19,6 +19,7 @@ import {
 export class PdfViewerHandoverService {
   private layerElement: HTMLDivElement | null = null;
   private safetyTimer: ReturnType<typeof setTimeout> | null = null;
+  private releaseTimers = new Set<ReturnType<typeof setTimeout>>();
   private activePages = new Map<number, HTMLElement>();
   private viewportPageNums = new Set<number>();
   private releasedViewportPages = new Set<number>();
@@ -138,17 +139,23 @@ export class PdfViewerHandoverService {
     }
 
     // Delay before crossfade — gives the browser time to composite the fresh canvas.
-    setTimeout(() => {
+    const outerTimer = setTimeout(() => {
+      this.releaseTimers.delete(outerTimer);
+      if (!this.layerElement) return;
       pageEl.style.transition = `opacity ${HANDOVER_CROSSFADE_MS}ms ease-out`;
       pageEl.style.opacity = '0';
-      setTimeout(() => {
+      const innerTimer = setTimeout(() => {
+        this.releaseTimers.delete(innerTimer);
+        if (!this.layerElement) return;
         pageEl.remove();
         // End the entire layer once all viewport pages are released and faded.
         if (this.releasedViewportPages.size >= this.viewportPageNums.size) {
           this.end();
         }
       }, HANDOVER_CROSSFADE_MS);
+      this.releaseTimers.add(innerTimer);
     }, HANDOVER_RELEASE_DELAY_MS);
+    this.releaseTimers.add(outerTimer);
   }
 
   end(): void {
@@ -156,6 +163,11 @@ export class PdfViewerHandoverService {
       clearTimeout(this.safetyTimer);
       this.safetyTimer = null;
     }
+
+    for (const timer of this.releaseTimers) {
+      clearTimeout(timer);
+    }
+    this.releaseTimers.clear();
 
     if (this.layerElement) {
       this.layerElement.remove();

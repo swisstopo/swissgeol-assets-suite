@@ -257,17 +257,6 @@
         width: 100% !important;
         height: 100% !important;
       }
-
-      // Debug overlay: semi-transparent pink tint on stale/cached canvases.
-      // Remove this block once caching behaviour is verified.
-      &::after {
-        content: "";
-        position: absolute;
-        inset: 0;
-        //background: rgba(255, 0, 128, 0.18);
-        pointer-events: none;
-        z-index: 10;
-      }
     }
   }
 
@@ -375,7 +364,6 @@
   left: 0;
   pointer-events: none;
   z-index: 10;
-  //background: rgba(0, 255, 0, 0.3); // DEBUG: lime green to verify layer visibility
 }
 
 .handover-page {
