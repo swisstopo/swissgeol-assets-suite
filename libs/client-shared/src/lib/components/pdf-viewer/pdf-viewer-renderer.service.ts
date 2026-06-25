@@ -77,6 +77,21 @@ export class PdfViewerRendererService {
   }
 
   /**
+   * Evicts all rendered pages from the DOM and internal cache.
+   * Used when rotation changes: old canvases are at the wrong orientation
+   * and cannot be CSS-scaled (unlike zoom). Showing the shimmer skeleton
+   * is better UX than displaying incorrectly-rotated content.
+   */
+  evictAllRenderedPages(scrollElement: HTMLDivElement, renderer: Renderer2): void {
+    this.cancelAllRenderingPages();
+    this.cancelTextLayerTimers();
+    this.cancelDrainTimer();
+    for (const pageNum of [...this.renderedPages.keys()]) {
+      this.evictPage(pageNum, scrollElement, renderer);
+    }
+  }
+
+  /**
    * CSS-scales all previously rendered page wrappers to match the new zoom/baseScale
    * dimensions. This keeps stale bitmaps visible at the correct visual size while
    * PDF.js re-renders at the target resolution, preventing blank flashes.

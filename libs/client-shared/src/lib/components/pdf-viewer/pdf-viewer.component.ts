@@ -148,6 +148,7 @@ export class PdfViewerComponent implements OnDestroy {
   private programmaticScrollDepth = 0;
   private pinnedPageNumber: number | null = null;
   private pendingZoomRenderBlocked = false;
+  private initialZoomLevel = 1;
 
   // CTRL+wheel zoom CSS-transform state.
   // During rapid zoom, only a CSS scale is applied. TanStack is not touched.
@@ -270,12 +271,16 @@ export class PdfViewerComponent implements OnDestroy {
     const maxScrollLeft = Math.max(0, newContentWidth - containerWidth);
     this.pendingZoomScrollLeft = maxScrollLeft / 2;
 
-    // Pin the page and use zoom-mode scroll anchoring to prevent page jumps.
+    // Pin the page to maintain scroll anchoring during re-render.
     this.pinnedPageNumber = anchorPage;
     this.pendingZoomReanchorPageNumber = anchorPage;
-    this.renderMode = 'rotation';
-    this.pdfViewerRendererService.prepareForZoomRender();
-    this.pendingZoomRenderBlocked = false;
+
+    // Evict all rendered pages: their rotation is wrong and cannot be CSS-scaled
+    // like zoom previews. Showing shimmers is better UX than wrong-orientation canvases.
+    // Stay in 'normal' mode so scroll events and lazy loading continue working.
+    if (scrollEl) {
+      this.pdfViewerRendererService.evictAllRenderedPages(scrollEl, this.renderer);
+    }
 
     this.viewportEpoch++;
     this.scheduleVirtualRefresh(null);
@@ -367,7 +372,7 @@ export class PdfViewerComponent implements OnDestroy {
         target = current - step;
         break;
       case 'reset':
-        target = 1;
+        target = this.initialZoomLevel;
         break;
     }
 
@@ -813,6 +818,7 @@ export class PdfViewerComponent implements OnDestroy {
       const containerHeight = scrollEl.clientHeight;
       const newBaseScale = getBaseScale(dims, containerWidth);
       const initialZoom = getInitialZoom(dims, newBaseScale, containerHeight);
+      this.initialZoomLevel = initialZoom;
 
       this._estimateZoom = initialZoom;
       this._estimateScale = newBaseScale;

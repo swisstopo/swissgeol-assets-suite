@@ -12,7 +12,7 @@ export interface PdfRenderTask {
   cancel(): void;
 }
 
-export type PdfRenderMode = 'normal' | 'zoom' | 'rotation';
+export type PdfRenderMode = 'normal' | 'zoom';
 
 export interface RenderedPage {
   wrapper: HTMLDivElement;
