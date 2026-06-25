@@ -23,10 +23,12 @@ import { getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs';
 import { PDFDocumentProxy, TextItem, TextMarkedContent } from 'pdfjs-dist/types/src/display/api';
 import { EVENTS } from '@/core/events';
 import { PrismaService } from '@/core/prisma.service';
+import { AssetRepo } from '@/features/assets/asset.repo';
 import { FileS3Service, SaveFileS3Options } from '@/features/assets/files/file-s3.service';
 import { CreateFileData, FileIdentifier, FileRepo } from '@/features/assets/files/file.repo';
 import { PdfMetadataService } from '@/features/assets/files/pdf-metadata.service';
 import { mapAssetLanguagesToPrismaUpdate } from '@/features/assets/prisma-asset';
+import { SearchWriterService } from '@/features/assets/search/search-writer.service';
 import { sanitizeTextForJson } from '@/utils/sanitize';
 import { withTimeout } from '@/utils/timeout';
 
@@ -45,6 +47,8 @@ export class FileService {
     private readonly eventEmitter: EventEmitter2,
     private readonly prismaService: PrismaService,
     private readonly pdfMetadataService: PdfMetadataService,
+    private readonly assetRepo: AssetRepo,
+    private readonly searchWriterService: SearchWriterService,
   ) {}
 
   async create(data: UploadFileData): Promise<AssetFile> {
@@ -63,6 +67,12 @@ export class FileService {
 
     if (isOcrCompatible) {
       this.eventEmitter.emit(EVENTS.FILE_START_OCR, record);
+    }
+
+    // Re-register asset in ES so the `hasFiles` flag is updated.
+    const asset = await this.assetRepo.find(data.assetId);
+    if (asset != null) {
+      await this.searchWriterService.register(asset);
     }
 
     return record;
@@ -176,7 +186,10 @@ export class FileService {
   }
 
   async loadAllFulltextContentFromS3(writeProgress?: (progress: number) => Promise<void>): Promise<void> {
-    const files = await this.prismaService.file.findMany({ select: { id: true } });
+    const files = await this.prismaService.file.findMany({
+      where: { name: { endsWith: '.pdf', mode: 'insensitive' } },
+      select: { id: true },
+    });
     let i = 0;
     for (const file of files) {
       if (i % 1000 === 0) {
@@ -202,6 +215,11 @@ export class FileService {
       });
       if (file === null) {
         this.logger.warn('File not found in database', { fileId });
+        return;
+      }
+
+      if (!file.name.toLowerCase().endsWith('.pdf')) {
+        console.warn('Tried to load fulltext-content for non-PDF file. ignoring', { fileId });
         return;
       }
 
