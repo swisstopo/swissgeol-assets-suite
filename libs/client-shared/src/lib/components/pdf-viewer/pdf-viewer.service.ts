@@ -186,6 +186,12 @@ export class PdfViewerService implements OnDestroy {
     const textDivs = textLayer.textDivs;
     const textItems = textContent.items.filter((item) => 'str' in item && 'width' in item);
 
+    // When the textLayer container is rotated 90° or 270° (via [data-main-rotation] CSS),
+    // getBoundingClientRect() reports screen-space dimensions — width and height are swapped
+    // relative to the span's local frame. Use .height in those cases.
+    const rotation = viewport.rotation % 360;
+    const useHeight = rotation === 90 || rotation === 270;
+
     // --- Batch write: remove transforms so natural widths can be measured ---
     const savedTransforms: string[] = [];
     for (let i = 0; i < textDivs.length && i < textItems.length; i++) {
@@ -204,10 +210,11 @@ export class PdfViewerService implements OnDestroy {
       if (!item.width || !textDivs[i].textContent) {
         continue;
       }
+      const rect = textDivs[i].getBoundingClientRect();
       measurements.push({
         index: i,
         expectedCssWidth: item.width * viewport.scale,
-        naturalWidth: textDivs[i].getBoundingClientRect().width,
+        naturalWidth: useHeight ? rect.height : rect.width,
       });
     }
 
