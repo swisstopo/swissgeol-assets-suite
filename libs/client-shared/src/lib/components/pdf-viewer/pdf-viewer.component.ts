@@ -421,7 +421,7 @@ export class PdfViewerComponent implements OnDestroy {
 
     const clampedTarget = this.normalizeZoom(target);
     if (Math.abs(clampedTarget - this.zoom()) < 0.0001 && this.pendingZoomTarget === null) return;
-    this.logJumpDebug('schedule-zoom', {
+    this.debugLog('schedule-zoom', {
       action,
       currentZoom: current,
       requestedZoom: target,
@@ -441,7 +441,7 @@ export class PdfViewerComponent implements OnDestroy {
   private commitPendingZoom(): void {
     const target = this.pendingZoomTarget;
     if (target === null) return;
-    this.logJumpDebug('commit-zoom-start', { targetZoom: target });
+    this.debugLog('commit-zoom-start', { targetZoom: target });
 
     this.pendingZoomTarget = null;
 
@@ -462,7 +462,7 @@ export class PdfViewerComponent implements OnDestroy {
     this.zoomAnchorPageNumber = zoomAnchorPage;
     this.pendingZoomReanchorPageNumber = zoomAnchorPage;
     this.pinnedPageNumber = zoomAnchorPage;
-    this.logJumpDebug('commit-zoom-anchor-page', { zoomAnchorPage });
+    this.debugLog('commit-zoom-anchor-page', { zoomAnchorPage });
 
     // Button zoom: anchor to viewport center, except at document edges.
     if (scrollEl && pageDims.length > 0) {
@@ -1066,7 +1066,7 @@ export class PdfViewerComponent implements OnDestroy {
             }
           });
         }
-        this.logJumpDebug('zoom-pass-scroll-to-anchor', { zoomAnchorPage, pendingScrollTop, pendingScrollLeft });
+        this.debugLog('zoom-pass-scroll-to-anchor', { zoomAnchorPage, pendingScrollTop, pendingScrollLeft });
       }
     }
 
@@ -1259,7 +1259,7 @@ export class PdfViewerComponent implements OnDestroy {
         ? (items[0]?.pageNum ?? effectiveCurrentPage)
         : effectiveCurrentPage;
     if (renderMode !== 'normal' && currentPageForRender !== effectiveCurrentPage) {
-      this.logJumpDebug('transition-render-page-fallback', {
+      this.debugLog('transition-render-page-fallback', {
         effectiveCurrentPage,
         fallbackPage: currentPageForRender,
       });
@@ -1421,15 +1421,16 @@ export class PdfViewerComponent implements OnDestroy {
   private handleTransitionCurrentPageRendered(expectedZoom: number, renderEpoch: number): void {
     if (this.renderMode === 'normal') return;
     if (Math.abs(this.zoom() - expectedZoom) >= 0.0001) return;
-    if (this.viewportEpoch !== renderEpoch) return;
     if (this.pendingZoomTarget !== null || this.zoomAnimationFrame !== null) return;
     // Don't transition to normal while a new wheel zoom gesture is active —
     // the CSS transform is in flight and a commit will follow.
     if (this.wheelZoomTarget !== null || this.zoomSettleTimer !== null) return;
 
-    this.logJumpDebug('transition-complete', {
+    this.debugLog('transition-complete', {
       zoomAnchorPage: this.zoomAnchorPageNumber,
       renderMode: this.renderMode,
+      renderEpoch,
+      viewportEpoch: this.viewportEpoch,
     });
     this.renderMode = 'normal';
     this.zoomAnchorPageNumber = null;
@@ -1453,7 +1454,7 @@ export class PdfViewerComponent implements OnDestroy {
     return Math.round(clamped * 1000) / 1000;
   }
 
-  private logJumpDebug(event: string, details: Record<string, unknown> = {}): void {
+  private debugLog(event: string, details: Record<string, unknown> = {}): void {
     if (!PDF_VIEWER_DEBUG) return;
 
     const el = this.pdfElement()?.nativeElement;
