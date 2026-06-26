@@ -419,7 +419,7 @@ export class PdfViewerService implements OnDestroy {
       // calls are pending while the worker is being torn down. Fire the cleanup
       // and race it against a timeout so we always proceed.
       const DESTROY_TIMEOUT_MS = 2000;
-      withTimeout(
+      await withTimeout(
         task.destroy().catch(noop),
         DESTROY_TIMEOUT_MS,
         '[pdf-service] loadingTask.destroy() timed out — continuing',
