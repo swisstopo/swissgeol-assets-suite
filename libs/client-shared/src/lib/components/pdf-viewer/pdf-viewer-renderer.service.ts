@@ -232,6 +232,10 @@ export class PdfViewerRendererService {
     const options = this.renderOptions;
     if (!options) return;
 
+    // Stop draining if the document has changed since these options were created.
+    // Without this guard, a destroyed PDF proxy causes infinite error→retry loops.
+    if (options.getLoadGeneration() !== options.loadGeneration) return;
+
     const renderMode = options.getRenderMode();
     const maxConcurrent = renderMode !== 'normal' ? 1 : options.maxConcurrentPageLoads;
     const currentZoom = options.getZoom();
@@ -248,6 +252,16 @@ export class PdfViewerRendererService {
 
     // In zoom mode, restrict to only the current page.
     const filtered = this.filterCandidatesForMode(candidates, renderMode, currentPage);
+
+    // If in zoom mode with nothing left to dispatch and the current page is already
+    // rendered, fire the transition callback. This prevents permanently stuck zoom mode
+    // when a race condition causes the initial transition callback to be missed.
+    if (renderMode !== 'normal' && filtered.length === 0 && this.renderingPages.size === 0) {
+      if (this.isPageRenderedWithCurrentParams(currentPage, currentZoom, currentRotation, options.baseScale)) {
+        options.onCurrentPageRendered?.();
+      }
+      return;
+    }
 
     // Sort by dynamic priority: current page first, then nearest neighbors.
     filtered.sort((a, b) => getPageRenderPriority(a, currentPage) - getPageRenderPriority(b, currentPage));

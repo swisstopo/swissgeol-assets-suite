@@ -351,9 +351,46 @@ export class PdfViewerComponent implements OnDestroy {
 
       const scale = clamped / this.wheelZoomBaseZoom;
 
+      // Clamp originY so the scaled content doesn't detach from viewport edges.
+      // After CSS scale with transform-origin at originY, a point at document
+      // position y appears at visual position: originY + (y - originY) * scale.
+      // Relative to viewport top that is: originY * (1 - scale) + y * scale - scrollTop.
+      let clampedOriginY = originY;
+
+      if (Math.abs(scale - 1) > 0.0001) {
+        const viewportHeight = scrollEl.clientHeight;
+        const pageDims = this.pageDimensions();
+        const pageCount = this.pageCount();
+        const baseScl = this.baseScale();
+        const rotation = this.rotation();
+        const docHeight = getDocumentHeight(pageCount, pageDims, baseScl, this.wheelZoomBaseZoom, rotation);
+        const scrollTopVal = scrollEl.scrollTop;
+
+        // Visual position of first page's top edge (y=0) relative to viewport top
+        const topEdgeOffset = clampedOriginY * (1 - scale) - scrollTopVal;
+        // Visual position of last page's bottom edge (y=docHeight) relative to viewport top
+        const bottomEdgeOffset = clampedOriginY * (1 - scale) + docHeight * scale - scrollTopVal;
+
+        if (topEdgeOffset > 0) {
+          // First page's top edge is below viewport top — pin to top edge
+          clampedOriginY = scrollTopVal / (1 - scale);
+        } else if (bottomEdgeOffset < viewportHeight) {
+          // Last page's bottom edge is above viewport bottom — pin to bottom edge
+          clampedOriginY = (scrollTopVal + viewportHeight - docHeight * scale) / (1 - scale);
+          // If pinning bottom pushes top below viewport, prioritize top
+          const newTopOffset = clampedOriginY * (1 - scale) - scrollTopVal;
+          if (newTopOffset > 0) {
+            clampedOriginY = scrollTopVal / (1 - scale);
+          }
+        }
+      }
+
+      // Update mouseOffsetY to match the clamped origin for commitWheelZoom.
+      this.wheelZoomMouseOffsetY = clampedOriginY - scrollEl.scrollTop;
+
       const spacer = scrollEl.querySelector('.viewer__virtual-spacer') as HTMLElement | null;
       if (spacer) {
-        spacer.style.transformOrigin = `${originX}px ${originY}px`;
+        spacer.style.transformOrigin = `${originX}px ${clampedOriginY}px`;
         spacer.style.transform = `scale(${scale})`;
       }
 
@@ -384,7 +421,7 @@ export class PdfViewerComponent implements OnDestroy {
 
     const clampedTarget = this.normalizeZoom(target);
     if (Math.abs(clampedTarget - this.zoom()) < 0.0001 && this.pendingZoomTarget === null) return;
-    this.logJumpDebug('schedule-zoom', {
+    this.debugLog('schedule-zoom', {
       action,
       currentZoom: current,
       requestedZoom: target,
@@ -404,7 +441,7 @@ export class PdfViewerComponent implements OnDestroy {
   private commitPendingZoom(): void {
     const target = this.pendingZoomTarget;
     if (target === null) return;
-    this.logJumpDebug('commit-zoom-start', { targetZoom: target });
+    this.debugLog('commit-zoom-start', { targetZoom: target });
 
     this.pendingZoomTarget = null;
 
@@ -425,21 +462,36 @@ export class PdfViewerComponent implements OnDestroy {
     this.zoomAnchorPageNumber = zoomAnchorPage;
     this.pendingZoomReanchorPageNumber = zoomAnchorPage;
     this.pinnedPageNumber = zoomAnchorPage;
-    this.logJumpDebug('commit-zoom-anchor-page', { zoomAnchorPage });
+    this.debugLog('commit-zoom-anchor-page', { zoomAnchorPage });
 
-    // Button zoom: preserve the relative position within the anchor page (vertical)
-    // and the current horizontal scroll ratio.
+    // Button zoom: anchor to viewport center, except at document edges.
     if (scrollEl && pageDims.length > 0) {
       const containerWidth = scrollEl.clientWidth;
       const contentWidthOld = getDocumentWidth(pageDims, containerWidth, baseScl, oldZoom, rotation);
       const contentWidthNew = getDocumentWidth(pageDims, containerWidth, baseScl, newZoom, rotation);
 
-      const anchorLayout = getPageLayout(zoomAnchorPage, pageCount, pageDims, baseScl, oldZoom, rotation);
-      if (anchorLayout && anchorLayout.size > 0) {
-        const ratio = (scrollTop - anchorLayout.start) / anchorLayout.size;
-        const newAnchorLayout = getPageLayout(zoomAnchorPage, pageCount, pageDims, baseScl, newZoom, rotation);
-        if (newAnchorLayout) {
-          this.pendingZoomScrollTop = Math.max(0, newAnchorLayout.start + ratio * newAnchorLayout.size);
+      const viewportHeight = scrollEl.clientHeight;
+      const oldDocHeight = getDocumentHeight(pageCount, pageDims, baseScl, oldZoom, rotation);
+      const oldMaxScrollTop = Math.max(0, oldDocHeight - viewportHeight);
+
+      if (scrollTop <= 0) {
+        // At top edge: keep top of document visible.
+        this.pendingZoomScrollTop = 0;
+      } else if (oldMaxScrollTop > 0 && scrollTop >= oldMaxScrollTop - 1) {
+        // At bottom edge: keep bottom of document visible.
+        const newDocHeight = getDocumentHeight(pageCount, pageDims, baseScl, newZoom, rotation);
+        this.pendingZoomScrollTop = Math.max(0, newDocHeight - viewportHeight);
+      } else {
+        // Center-anchored: the viewport center stays at the same relative document position.
+        const viewportCenter = scrollTop + viewportHeight / 2;
+        const centerPage = findPageAtScrollOffset(viewportCenter, pageCount, pageDims, baseScl, oldZoom, rotation);
+        if (centerPage && centerPage.size > 0) {
+          const centerRatio = (viewportCenter - centerPage.start) / centerPage.size;
+          const newCenterLayout = getPageLayout(centerPage.pageNum, pageCount, pageDims, baseScl, newZoom, rotation);
+          if (newCenterLayout) {
+            const newCenter = newCenterLayout.start + centerRatio * newCenterLayout.size;
+            this.pendingZoomScrollTop = Math.max(0, newCenter - viewportHeight / 2);
+          }
         }
       }
       // Horizontal: preserve the current proportional position.
@@ -773,6 +825,8 @@ export class PdfViewerComponent implements OnDestroy {
     this.pendingInitialPage = null;
     this.lastVirtualItemsSignature = '';
     this.renderMode = 'normal';
+    this.renderPassInFlight = false;
+    this.renderPassQueued = false;
     this.pendingZoomTarget = null;
     this.zoomAnchorPageNumber = null;
     this.pendingZoomReanchorPageNumber = null;
@@ -783,6 +837,12 @@ export class PdfViewerComponent implements OnDestroy {
     this.pendingZoomRenderBlocked = false;
     this.wheelZoomTarget = null;
     this.cancelZoomSettleTimer();
+    this.cancelScrollRenderTimer();
+
+    if (this.scrollAnimationFrame !== null) {
+      cancelAnimationFrame(this.scrollAnimationFrame);
+      this.scrollAnimationFrame = null;
+    }
     if (this.zoomAnimationFrame !== null) {
       cancelAnimationFrame(this.zoomAnimationFrame);
       this.zoomAnimationFrame = null;
@@ -802,7 +862,9 @@ export class PdfViewerComponent implements OnDestroy {
         this.pdfViewerApiService.fetchMetadata(this.assetId(), pdfId),
       ]);
 
-      if (this.loadGeneration !== generation) return;
+      if (this.loadGeneration !== generation) {
+        return;
+      }
 
       let dims = metadata.pageDimensions;
       if (dims.length === 0 && numPages > 0) {
@@ -818,7 +880,9 @@ export class PdfViewerComponent implements OnDestroy {
       }
 
       const scrollEl = this.pdfElement()?.nativeElement;
-      if (!scrollEl) return;
+      if (!scrollEl) {
+        return;
+      }
 
       const containerWidth = scrollEl.getBoundingClientRect().width * PDF_RENDERING_MARGIN;
       const containerHeight = scrollEl.clientHeight;
@@ -840,6 +904,11 @@ export class PdfViewerComponent implements OnDestroy {
 
       this.isRendering.set(false);
       await this.waitForDom();
+
+      if (this.loadGeneration !== generation) {
+        return;
+      }
+
       this.initializeResizeObserver();
 
       if (initialPage && initialPage > 1) {
@@ -849,6 +918,10 @@ export class PdfViewerComponent implements OnDestroy {
       this.pendingCanvasRefresh = true;
       this.scheduleRender();
     } catch (e) {
+      // Ignore errors from stale loads — a newer loadPdf call is already in progress.
+      if (this.loadGeneration !== generation) {
+        return;
+      }
       this.hasError.set(true);
       this.store.dispatch(
         showAlert({
@@ -932,7 +1005,7 @@ export class PdfViewerComponent implements OnDestroy {
     this.renderPassInFlight = true;
     void this.renderVisiblePages()
       .catch((error) => {
-        console.error('Failed to render visible pages', error);
+        console.error('[pdf-load] renderVisiblePages FAILED:', error);
       })
       .finally(() => {
         this.renderPassInFlight = false;
@@ -993,7 +1066,7 @@ export class PdfViewerComponent implements OnDestroy {
             }
           });
         }
-        this.logJumpDebug('zoom-pass-scroll-to-anchor', { zoomAnchorPage, pendingScrollTop, pendingScrollLeft });
+        this.debugLog('zoom-pass-scroll-to-anchor', { zoomAnchorPage, pendingScrollTop, pendingScrollLeft });
       }
     }
 
@@ -1186,7 +1259,7 @@ export class PdfViewerComponent implements OnDestroy {
         ? (items[0]?.pageNum ?? effectiveCurrentPage)
         : effectiveCurrentPage;
     if (renderMode !== 'normal' && currentPageForRender !== effectiveCurrentPage) {
-      this.logJumpDebug('transition-render-page-fallback', {
+      this.debugLog('transition-render-page-fallback', {
         effectiveCurrentPage,
         fallbackPage: currentPageForRender,
       });
@@ -1354,9 +1427,11 @@ export class PdfViewerComponent implements OnDestroy {
     // the CSS transform is in flight and a commit will follow.
     if (this.wheelZoomTarget !== null || this.zoomSettleTimer !== null) return;
 
-    this.logJumpDebug('transition-complete', {
+    this.debugLog('transition-complete', {
       zoomAnchorPage: this.zoomAnchorPageNumber,
       renderMode: this.renderMode,
+      renderEpoch,
+      viewportEpoch: this.viewportEpoch,
     });
     this.renderMode = 'normal';
     this.zoomAnchorPageNumber = null;
@@ -1380,7 +1455,7 @@ export class PdfViewerComponent implements OnDestroy {
     return Math.round(clamped * 1000) / 1000;
   }
 
-  private logJumpDebug(event: string, details: Record<string, unknown> = {}): void {
+  private debugLog(event: string, details: Record<string, unknown> = {}): void {
     if (!PDF_VIEWER_DEBUG) return;
 
     const el = this.pdfElement()?.nativeElement;

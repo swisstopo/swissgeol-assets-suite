@@ -1,5 +1,6 @@
 import { inject, Injectable, NgZone, OnDestroy } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { withTimeout } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
 import {
   getDocument,
@@ -11,6 +12,7 @@ import {
   version,
 } from 'pdfjs-dist';
 import { PDFPageProxy, TextContent } from 'pdfjs-dist/types/src/display/api';
+import { noop } from 'rxjs';
 import { SessionStorageService } from '../../services/session-storage.service';
 import { selectIsAnonymousMode } from '../../state/app-shared-state.selectors';
 import { PdfRenderTask, PDF_VIEWER_DEBUG } from './pdf-viewer.models';
@@ -24,6 +26,7 @@ GlobalWorkerOptions.workerSrc = `assets/pdfjs/pdf.worker.min.mjs?v=${version}`;
 export class PdfViewerService implements OnDestroy {
   private loadingTask: PDFDocumentLoadingTask | undefined;
   private pdfDoc: PDFDocumentProxy | undefined;
+  private loadGeneration = 0;
   private readonly sessionStorageService = inject(SessionStorageService);
   private readonly ngZone = inject(NgZone);
   private readonly selectionAbortControllers = new Map<HTMLElement, AbortController>();
@@ -49,8 +52,17 @@ export class PdfViewerService implements OnDestroy {
    * @param pdfId
    */
   public async loadPdf(assetId: number, pdfId: number): Promise<number> {
+    const generation = ++this.loadGeneration;
     await this.destroyPdfJsWorker();
 
+    // If another loadPdf call started while we were destroying, bail out.
+    if (this.loadGeneration !== generation) {
+      throw new Error('Load superseded');
+    }
+
+    if (PDF_VIEWER_DEBUG) {
+      console.log(`[pdf-service] loadPdf pdfId=${pdfId} svcGen=${generation} — starting getDocument`);
+    }
     this.loadingTask = getDocument({
       url: `/api/assets/${assetId}/files/${pdfId}`,
       httpHeaders: this.getAuthorizationHeader(),
@@ -58,21 +70,18 @@ export class PdfViewerService implements OnDestroy {
       disableStream: true,
     });
     try {
-      this.pdfDoc = await this.loadingTask.promise;
+      const doc = await this.loadingTask.promise;
+      // Only adopt the document if this is still the active load.
+      if (this.loadGeneration !== generation) {
+        await doc.destroy().catch(noop);
+        throw new Error('Load superseded');
+      }
+      this.pdfDoc = doc;
       return this.pdfDoc.numPages;
     } catch (e) {
-      /**
-       * In theory, we could catch an out of memory error here, as the error thrown is along these lines:
-       * UnknownErrorException{message: 'Array buffer allocation failed', name: 'UnknownErrorException', details:
-       * 'RangeError: Array buffer allocation failed', stack: 'Error\n    at BaseExceptionClosure (http://localhos…oke
-       * (http://localhost:4200/polyfills.js:3135:158)'}
-       *
-       * However, this should be tackled once it occurs in practice; as for now, we don't know if this ocurrs. It is
-       * better to implement a maximum file size limit for PDFs to be visible online instead of catching the error,
-       * since recovery behaviour is not yet defined.
-       */
-      console.log('Error rendering PDF');
-
+      if (PDF_VIEWER_DEBUG) {
+        console.log(`[pdf-service] loadPdf pdfId=${pdfId} svcGen=${generation} — error:`, e);
+      }
       throw e;
     }
   }
@@ -406,7 +415,20 @@ export class PdfViewerService implements OnDestroy {
   }
 
   private async destroyPdfJsWorker() {
-    await this.loadingTask?.destroy();
+    this.pdfDoc = undefined;
+    if (this.loadingTask) {
+      const task = this.loadingTask;
+      this.loadingTask = undefined;
+      // Do not block on destroy — pdfjs can deadlock when in-flight getPage()
+      // calls are pending while the worker is being torn down. Fire the cleanup
+      // and race it against a timeout so we always proceed.
+      const DESTROY_TIMEOUT_MS = 2000;
+      await withTimeout(
+        task.destroy(),
+        DESTROY_TIMEOUT_MS,
+        '[pdf-service] loadingTask.destroy() timed out — continuing',
+      ).catch(noop);
+    }
   }
 
   private getAuthorizationHeader(): Record<string, string> {
