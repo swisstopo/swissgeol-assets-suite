@@ -351,9 +351,46 @@ export class PdfViewerComponent implements OnDestroy {
 
       const scale = clamped / this.wheelZoomBaseZoom;
 
+      // Clamp originY so the scaled content doesn't detach from viewport edges.
+      // After CSS scale with transform-origin at originY, a point at document
+      // position y appears at visual position: originY + (y - originY) * scale.
+      // Relative to viewport top that is: originY * (1 - scale) + y * scale - scrollTop.
+      let clampedOriginY = originY;
+
+      if (Math.abs(scale - 1) > 0.0001) {
+        const viewportHeight = scrollEl.clientHeight;
+        const pageDims = this.pageDimensions();
+        const pageCount = this.pageCount();
+        const baseScl = this.baseScale();
+        const rotation = this.rotation();
+        const docHeight = getDocumentHeight(pageCount, pageDims, baseScl, this.wheelZoomBaseZoom, rotation);
+        const scrollTopVal = scrollEl.scrollTop;
+
+        // Visual position of first page's top edge (y=0) relative to viewport top
+        const topEdgeOffset = clampedOriginY * (1 - scale) - scrollTopVal;
+        // Visual position of last page's bottom edge (y=docHeight) relative to viewport top
+        const bottomEdgeOffset = clampedOriginY * (1 - scale) + docHeight * scale - scrollTopVal;
+
+        if (topEdgeOffset > 0) {
+          // First page's top edge is below viewport top — pin to top edge
+          clampedOriginY = scrollTopVal / (1 - scale);
+        } else if (bottomEdgeOffset < viewportHeight) {
+          // Last page's bottom edge is above viewport bottom — pin to bottom edge
+          clampedOriginY = (scrollTopVal + viewportHeight - docHeight * scale) / (1 - scale);
+          // If pinning bottom pushes top below viewport, prioritize top
+          const newTopOffset = clampedOriginY * (1 - scale) - scrollTopVal;
+          if (newTopOffset > 0) {
+            clampedOriginY = scrollTopVal / (1 - scale);
+          }
+        }
+      }
+
+      // Update mouseOffsetY to match the clamped origin for commitWheelZoom.
+      this.wheelZoomMouseOffsetY = clampedOriginY - scrollEl.scrollTop;
+
       const spacer = scrollEl.querySelector('.viewer__virtual-spacer') as HTMLElement | null;
       if (spacer) {
-        spacer.style.transformOrigin = `${originX}px ${originY}px`;
+        spacer.style.transformOrigin = `${originX}px ${clampedOriginY}px`;
         spacer.style.transform = `scale(${scale})`;
       }
 
