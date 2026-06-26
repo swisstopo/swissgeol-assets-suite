@@ -773,6 +773,8 @@ export class PdfViewerComponent implements OnDestroy {
     this.pendingInitialPage = null;
     this.lastVirtualItemsSignature = '';
     this.renderMode = 'normal';
+    this.renderPassInFlight = false;
+    this.renderPassQueued = false;
     this.pendingZoomTarget = null;
     this.zoomAnchorPageNumber = null;
     this.pendingZoomReanchorPageNumber = null;
@@ -783,6 +785,12 @@ export class PdfViewerComponent implements OnDestroy {
     this.pendingZoomRenderBlocked = false;
     this.wheelZoomTarget = null;
     this.cancelZoomSettleTimer();
+    this.cancelScrollRenderTimer();
+
+    if (this.scrollAnimationFrame !== null) {
+      cancelAnimationFrame(this.scrollAnimationFrame);
+      this.scrollAnimationFrame = null;
+    }
     if (this.zoomAnimationFrame !== null) {
       cancelAnimationFrame(this.zoomAnimationFrame);
       this.zoomAnimationFrame = null;
@@ -802,7 +810,9 @@ export class PdfViewerComponent implements OnDestroy {
         this.pdfViewerApiService.fetchMetadata(this.assetId(), pdfId),
       ]);
 
-      if (this.loadGeneration !== generation) return;
+      if (this.loadGeneration !== generation) {
+        return;
+      }
 
       let dims = metadata.pageDimensions;
       if (dims.length === 0 && numPages > 0) {
@@ -818,7 +828,9 @@ export class PdfViewerComponent implements OnDestroy {
       }
 
       const scrollEl = this.pdfElement()?.nativeElement;
-      if (!scrollEl) return;
+      if (!scrollEl) {
+        return;
+      }
 
       const containerWidth = scrollEl.getBoundingClientRect().width * PDF_RENDERING_MARGIN;
       const containerHeight = scrollEl.clientHeight;
@@ -840,6 +852,11 @@ export class PdfViewerComponent implements OnDestroy {
 
       this.isRendering.set(false);
       await this.waitForDom();
+
+      if (this.loadGeneration !== generation) {
+        return;
+      }
+
       this.initializeResizeObserver();
 
       if (initialPage && initialPage > 1) {
@@ -849,6 +866,10 @@ export class PdfViewerComponent implements OnDestroy {
       this.pendingCanvasRefresh = true;
       this.scheduleRender();
     } catch (e) {
+      // Ignore errors from stale loads — a newer loadPdf call is already in progress.
+      if (this.loadGeneration !== generation) {
+        return;
+      }
       this.hasError.set(true);
       this.store.dispatch(
         showAlert({
@@ -932,7 +953,7 @@ export class PdfViewerComponent implements OnDestroy {
     this.renderPassInFlight = true;
     void this.renderVisiblePages()
       .catch((error) => {
-        console.error('Failed to render visible pages', error);
+        console.error('[pdf-load] renderVisiblePages FAILED:', error);
       })
       .finally(() => {
         this.renderPassInFlight = false;

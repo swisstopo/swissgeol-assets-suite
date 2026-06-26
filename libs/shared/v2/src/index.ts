@@ -56,6 +56,8 @@ export * from './lib/utils/transform-json-to-fulltextcontent';
 export * from './lib/utils/transform-pages-to-ranges';
 export * from './lib/utils/object';
 export * from './lib/utils/sleep';
+export * from './lib/utils/timeout';
+
 export { extractGroupedPageRageClassifications } from './lib/models/page-classification';
 export { sortPageCategories } from './lib/models/page-classification';
 export { mapSupportedPageLanguageToCode } from './lib/models/page-classification';

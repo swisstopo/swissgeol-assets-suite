@@ -232,6 +232,10 @@ export class PdfViewerRendererService {
     const options = this.renderOptions;
     if (!options) return;
 
+    // Stop draining if the document has changed since these options were created.
+    // Without this guard, a destroyed PDF proxy causes infinite error→retry loops.
+    if (options.getLoadGeneration() !== options.loadGeneration) return;
+
     const renderMode = options.getRenderMode();
     const maxConcurrent = renderMode !== 'normal' ? 1 : options.maxConcurrentPageLoads;
     const currentZoom = options.getZoom();
