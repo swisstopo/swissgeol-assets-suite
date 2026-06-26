@@ -60,7 +60,9 @@ export class PdfViewerService implements OnDestroy {
       throw new Error('Load superseded');
     }
 
-    console.log(`[pdf-service] loadPdf pdfId=${pdfId} svcGen=${generation} — starting getDocument`);
+    if (PDF_VIEWER_DEBUG) {
+      console.log(`[pdf-service] loadPdf pdfId=${pdfId} svcGen=${generation} — starting getDocument`);
+    }
     this.loadingTask = getDocument({
       url: `/api/assets/${assetId}/files/${pdfId}`,
       httpHeaders: this.getAuthorizationHeader(),
@@ -71,13 +73,15 @@ export class PdfViewerService implements OnDestroy {
       const doc = await this.loadingTask.promise;
       // Only adopt the document if this is still the active load.
       if (this.loadGeneration !== generation) {
-        doc.destroy();
+        await doc.destroy().catch(noop);
         throw new Error('Load superseded');
       }
       this.pdfDoc = doc;
       return this.pdfDoc.numPages;
     } catch (e) {
-      console.log(`[pdf-service] loadPdf pdfId=${pdfId} svcGen=${generation} — error:`, e);
+      if (PDF_VIEWER_DEBUG) {
+        console.log(`[pdf-service] loadPdf pdfId=${pdfId} svcGen=${generation} — error:`, e);
+      }
       throw e;
     }
   }
@@ -420,10 +424,10 @@ export class PdfViewerService implements OnDestroy {
       // and race it against a timeout so we always proceed.
       const DESTROY_TIMEOUT_MS = 2000;
       await withTimeout(
-        task.destroy().catch(noop),
+        task.destroy(),
         DESTROY_TIMEOUT_MS,
         '[pdf-service] loadingTask.destroy() timed out — continuing',
-      );
+      ).catch(noop);
     }
   }
 

@@ -1421,6 +1421,7 @@ export class PdfViewerComponent implements OnDestroy {
   private handleTransitionCurrentPageRendered(expectedZoom: number, renderEpoch: number): void {
     if (this.renderMode === 'normal') return;
     if (Math.abs(this.zoom() - expectedZoom) >= 0.0001) return;
+    if (this.viewportEpoch !== renderEpoch) return;
     if (this.pendingZoomTarget !== null || this.zoomAnimationFrame !== null) return;
     // Don't transition to normal while a new wheel zoom gesture is active —
     // the CSS transform is in flight and a commit will follow.
