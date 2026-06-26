@@ -36,7 +36,8 @@ export class FileOcrService extends AbstractProcessingService<[]> {
   }
 
   protected async postProcess(file: ProcessableFile, _: []): Promise<void> {
-    const data: Prisma.FileUpdateInput = {};
+    // Invalidate cached page dimensions because OCR preprocessing may rescale pages
+    const data: Prisma.FileUpdateInput = { pageDimensions: Prisma.JsonNull };
 
     const metadata = await this.fileS3Service.loadMetadata(file.name);
     if (metadata === null) {

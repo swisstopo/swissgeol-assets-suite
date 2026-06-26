@@ -32,6 +32,7 @@ interface QueueVisiblePageRendersOptions {
   scheduleVirtualRefresh: () => void;
   renderMode: PdfRenderMode;
   onCurrentPageRendered?: () => void;
+  onPageRendered?: (pageNum: number) => void;
 }
 
 interface RenderSlotElements {
@@ -63,10 +64,81 @@ export class PdfViewerRendererService {
     this.renderOptions = null;
   }
 
+  getRenderedPage(pageNum: number): { canvas: HTMLCanvasElement; rotation: number } | null {
+    const rendered = this.renderedPages.get(pageNum);
+    if (!rendered) return null;
+    return { canvas: rendered.canvas, rotation: rendered.rotation };
+  }
+
   prepareForZoomRender(): void {
     this.cancelAllRenderingPages();
     this.cancelTextLayerTimers();
     this.cancelDrainTimer();
+  }
+
+  /**
+   * Evicts all rendered pages from the DOM and internal cache.
+   * Used when rotation changes: old canvases are at the wrong orientation
+   * and cannot be CSS-scaled (unlike zoom). Showing the shimmer skeleton
+   * is better UX than displaying incorrectly-rotated content.
+   */
+  evictAllRenderedPages(scrollElement: HTMLDivElement, renderer: Renderer2): void {
+    this.cancelAllRenderingPages();
+    this.cancelTextLayerTimers();
+    this.cancelDrainTimer();
+    for (const pageNum of [...this.renderedPages.keys()]) {
+      this.evictPage(pageNum, scrollElement, renderer);
+    }
+  }
+
+  /**
+   * CSS-scales all previously rendered page wrappers to match the new zoom/baseScale
+   * dimensions. This keeps stale bitmaps visible at the correct visual size while
+   * PDF.js re-renders at the target resolution, preventing blank flashes.
+   *
+   * Also reattaches any wrappers that were orphaned when TanStack Virtual recycled
+   * slot elements (e.g. pages scrolling in/out of the virtual window during zoom).
+   */
+  scaleAllStalePreviews(
+    newZoom: number,
+    newRotation: number,
+    newBaseScale: number,
+    scrollElement: HTMLDivElement,
+    renderer: Renderer2,
+  ): void {
+    for (const [pageNum, rendered] of this.renderedPages) {
+      if (rendered.rotation !== newRotation) continue;
+
+      const isUpToDate = rendered.zoom === newZoom && Math.abs(rendered.baseScale - newBaseScale) < BASE_SCALE_EPSILON;
+
+      // Re-attach the wrapper if the slot was recreated by Angular's @for.
+      const slot = scrollElement.querySelector(`.page-slot[data-page-num="${pageNum}"]`) as HTMLElement | null;
+      if (!slot) continue;
+
+      if (rendered.wrapper.parentNode !== slot) {
+        const existing = slot.querySelector('.canvas-wrapper');
+        if (existing) {
+          slot.replaceChild(rendered.wrapper, existing);
+        } else {
+          slot.appendChild(rendered.wrapper);
+        }
+      }
+
+      // Always ensure loaded class — prevents skeleton flash if Angular updated the slot.
+      renderer.addClass(slot, 'page-slot--loaded');
+
+      if (isUpToDate) {
+        rendered.wrapper.style.transform = '';
+        rendered.wrapper.style.transformOrigin = '';
+        rendered.wrapper.classList.remove('canvas-wrapper--stale');
+      } else {
+        // Mark as stale — CSS handles filling the slot via absolute positioning
+        // and stretching the canvas. No CSS transform needed.
+        rendered.wrapper.classList.add('canvas-wrapper--stale');
+        rendered.wrapper.style.transform = '';
+        rendered.wrapper.style.transformOrigin = '';
+      }
+    }
   }
 
   /**
@@ -87,7 +159,7 @@ export class PdfViewerRendererService {
   }
 
   private scheduleTextLayerIfNeeded(options: QueueVisiblePageRendersOptions): void {
-    if (options.renderMode === 'zoom') return;
+    if (options.renderMode !== 'normal') return;
     for (const pageNum of this.latestRenderablePages) {
       const rendered = this.renderedPages.get(pageNum);
       if (
@@ -118,8 +190,8 @@ export class PdfViewerRendererService {
     const currentPage = options.getCurrentPage();
     this.scheduleTextLayerIfNeeded(options);
 
-    // Handle zoom callback if current page is already rendered.
-    if (options.renderMode === 'zoom') {
+    // Handle transition callback if current page is already rendered.
+    if (options.renderMode !== 'normal') {
       const rendered = this.renderedPages.get(currentPage);
       if (
         rendered &&
@@ -160,8 +232,12 @@ export class PdfViewerRendererService {
     const options = this.renderOptions;
     if (!options) return;
 
+    // Stop draining if the document has changed since these options were created.
+    // Without this guard, a destroyed PDF proxy causes infinite error→retry loops.
+    if (options.getLoadGeneration() !== options.loadGeneration) return;
+
     const renderMode = options.getRenderMode();
-    const maxConcurrent = renderMode === 'zoom' ? 1 : options.maxConcurrentPageLoads;
+    const maxConcurrent = renderMode !== 'normal' ? 1 : options.maxConcurrentPageLoads;
     const currentZoom = options.getZoom();
     const currentRotation = options.getRotation();
     const currentPage = options.getCurrentPage();
@@ -176,6 +252,16 @@ export class PdfViewerRendererService {
 
     // In zoom mode, restrict to only the current page.
     const filtered = this.filterCandidatesForMode(candidates, renderMode, currentPage);
+
+    // If in zoom mode with nothing left to dispatch and the current page is already
+    // rendered, fire the transition callback. This prevents permanently stuck zoom mode
+    // when a race condition causes the initial transition callback to be missed.
+    if (renderMode !== 'normal' && filtered.length === 0 && this.renderingPages.size === 0) {
+      if (this.isPageRenderedWithCurrentParams(currentPage, currentZoom, currentRotation, options.baseScale)) {
+        options.onCurrentPageRendered?.();
+      }
+      return;
+    }
 
     // Sort by dynamic priority: current page first, then nearest neighbors.
     filtered.sort((a, b) => getPageRenderPriority(a, currentPage) - getPageRenderPriority(b, currentPage));
@@ -195,7 +281,7 @@ export class PdfViewerRendererService {
   }
 
   private filterCandidatesForMode(candidates: number[], renderMode: PdfRenderMode, currentPage: number): number[] {
-    if (renderMode !== 'zoom') return candidates;
+    if (renderMode === 'normal') return candidates;
     const idx = candidates.indexOf(currentPage);
     return idx === -1 ? [] : [candidates[idx]];
   }
@@ -308,6 +394,11 @@ export class PdfViewerRendererService {
     const parentWidth = (isSwapped ? dim.height : dim.width) * options.baseScale;
     const parentHeight = (isSwapped ? dim.width : dim.height) * options.baseScale;
 
+    // While we wait for the fresh PDF.js render, scale the existing stale canvas
+    // wrapper to roughly match the new slot dimensions. This eliminates the blank
+    // flash during zoom changes without requiring a separate snapshot cache.
+    this.scaleStalePreview(pageNum, zoomAtStart, rotationAtStart, options.baseScale);
+
     const canvas = options.renderer.createElement('canvas') as HTMLCanvasElement;
     const textLayerDiv = options.renderer.createElement('div') as HTMLDivElement;
     options.renderer.addClass(textLayerDiv, 'textLayer');
@@ -368,10 +459,11 @@ export class PdfViewerRendererService {
       existingRendered?.rotation === rotationAtStart &&
       Math.abs(existingRendered?.baseScale - options.baseScale) < BASE_SCALE_EPSILON
     ) {
+      options.onPageRendered?.(pageNum);
       if (!existingRendered.textLayerRendered && existingRendered.page && existingRendered.viewport) {
         this.scheduleTextLayerRender(pageNum, existingRendered);
       }
-      if (options.renderMode === 'zoom' && pageNum === options.currentPage) {
+      if (options.renderMode !== 'normal' && pageNum === options.currentPage) {
         options.onCurrentPageRendered?.();
       }
       return true;
@@ -471,7 +563,8 @@ export class PdfViewerRendererService {
 
   /** Fires the post-render callback or schedules the text-layer for visible pages. */
   private notifyPageRendered(pageNum: number, rendered: RenderedPage, options: QueueVisiblePageRendersOptions): void {
-    if (options.renderMode === 'zoom') {
+    options.onPageRendered?.(pageNum);
+    if (options.renderMode !== 'normal') {
       if (pageNum === options.currentPage) {
         options.onCurrentPageRendered?.();
       }
@@ -498,6 +591,9 @@ export class PdfViewerRendererService {
       this.disposeRenderedPage(pageNum, previous);
     }
 
+    // Mark the incoming wrapper so CSS can play a short fade-in.
+    rendered.wrapper.classList.add('canvas-wrapper--appearing');
+
     if (rendered.wrapper.parentNode === slotElement) {
       // Already in the DOM — class may already be set; skip the DOM read (classList.contains)
       // to avoid forcing a style recalculation.
@@ -514,6 +610,27 @@ export class PdfViewerRendererService {
     }
     renderer.addClass(slotElement, 'page-slot--loaded');
     this.renderedPages.set(pageNum, rendered);
+  }
+
+  /**
+   * Scales the existing stale canvas wrapper to visually match the upcoming
+   * render's dimensions so it acts as an in-place placeholder while PDF.js
+   * re-renders at the new zoom/baseScale level.
+   *
+   * Only applied when the rotation is unchanged; a rotated canvas would appear
+   * in the wrong orientation and look worse than the shimmer.
+   */
+  private scaleStalePreview(pageNum: number, newZoom: number, newRotation: number, newBaseScale: number): void {
+    const existing = this.renderedPages.get(pageNum);
+    if (!existing) return;
+    if (existing.rotation !== newRotation) return;
+
+    const isUpToDate = existing.zoom === newZoom && Math.abs(existing.baseScale - newBaseScale) < BASE_SCALE_EPSILON;
+    if (isUpToDate) return;
+
+    existing.wrapper.classList.add('canvas-wrapper--stale');
+    existing.wrapper.style.transform = '';
+    existing.wrapper.style.transformOrigin = '';
   }
 
   private disposeRenderedPage(pageNum: number, rendered: RenderedPage): void {

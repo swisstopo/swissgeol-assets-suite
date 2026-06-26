@@ -35,6 +35,26 @@
     overflow-x: auto;
     scrollbar-gutter: stable;
 
+    &--zoom-in {
+      cursor: zoom-in;
+
+      .canvas-wrapper,
+      canvas,
+      .textLayer {
+        cursor: zoom-in;
+      }
+    }
+
+    &--zoom-out {
+      cursor: zoom-out;
+
+      .canvas-wrapper,
+      canvas,
+      .textLayer {
+        cursor: zoom-out;
+      }
+    }
+
     &--space-pan {
       cursor: grab;
       touch-action: none;
@@ -149,7 +169,7 @@
     width: var(--page-width, min(95%, 860px));
     height: var(--page-height, min(95%, 1200px));
     transform: translate(-50%, -50%);
-    border-radius: 10px;
+    border-radius: 0;
     border: 1px solid #e4e4e4;
     background: #fbfbfb;
     box-shadow:
@@ -166,7 +186,7 @@
     width: var(--page-width, min(95%, 860px));
     height: var(--page-height, min(95%, 1200px));
     transform: translate(-50%, -50%);
-    border-radius: 10px;
+    border-radius: 0;
     overflow: hidden;
     pointer-events: none;
     z-index: 1;
@@ -179,7 +199,7 @@
       left: -100%;
       width: 100%;
       height: 100%;
-      background: linear-gradient(90deg, transparent 0%, rgb(255 255 255 / 0.65) 48%, transparent 100%);
+      background: linear-gradient(90deg, transparent 0%, rgb(100 138 174 / 0.24) 48%, transparent 100%);
       animation: page-skeleton-shimmer 1.6s ease-in-out infinite;
       will-change: transform;
     }
@@ -210,6 +230,34 @@
 
   .canvas-wrapper {
     position: relative;
+
+    // Subtle fade-in whenever a freshly rendered canvas is inserted into a slot.
+    // The animation name changes when --appearing is added, re-triggering the effect.
+    &--appearing {
+      animation: canvas-appear 0.15s ease-out both;
+    }
+
+    // Stale placeholder: the previous canvas, scaled to match the new page
+    // dimensions while a fresh PDF.js render is in progress. Constrained to
+    // the page width/height via CSS variables to avoid stretching across the
+    // full slot width (which would cause full-viewport-width artifacts on zoom-out).
+    &--stale {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: var(--page-width);
+      height: var(--page-height);
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      overflow: hidden;
+
+      // !important overrides the inline style="width: Xpx; height: Ypx" set
+      // by prepareCanvas() at the old zoom level.
+      canvas {
+        width: 100% !important;
+        height: 100% !important;
+      }
+    }
   }
 
   // PDF.js text layer styles for text selection.
@@ -230,6 +278,18 @@
     caret-color: CanvasText;
     z-index: 0;
     font-weight: normal;
+
+    // Rotation support: pdfjs TextLayer sets data-main-rotation on the container
+    // but relies on external CSS to apply the visual rotation (from pdf_viewer.css).
+    &[data-main-rotation="90"] {
+      transform: rotate(90deg) translateY(-100%);
+    }
+    &[data-main-rotation="180"] {
+      transform: rotate(180deg) translate(-100%, -100%);
+    }
+    &[data-main-rotation="270"] {
+      transform: rotate(270deg) translateX(-100%);
+    }
 
     --text-scale-factor: calc(var(--total-scale-factor) * var(--min-font-size));
     --min-font-size-inv: calc(1 / var(--min-font-size));
@@ -296,6 +356,36 @@
   }
 }
 
+// Handover layer: temporary overlay with canvas clones from the previous zoom level.
+// Bridges the visual gap between CSS-transform removal and fresh Angular-rendered slots.
+.viewer__handover-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.handover-page {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+
+  &--releasing {
+    opacity: 0;
+    transition: opacity var(--handover-crossfade-ms, 200ms) ease-out;
+  }
+
+  &__canvas-wrapper {
+    position: relative;
+  }
+}
+
 // GPU-composited shimmer: only transform is animated (no repaint).
 @keyframes page-skeleton-shimmer {
   0% {
@@ -303,5 +393,15 @@
   }
   100% {
     transform: translateX(200%);
+  }
+}
+
+// Fade-in applied to a freshly rendered canvas wrapper replacing a stale placeholder.
+@keyframes canvas-appear {
+  from {
+    opacity: 0.5;
+  }
+  to {
+    opacity: 1;
   }
 }

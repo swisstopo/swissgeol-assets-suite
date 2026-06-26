@@ -9,6 +9,7 @@ import {
   FulltextContent,
   getLanguageCodesOfPages,
   LanguageCode,
+  withTimeout,
 } from '@asset-sg/shared/v2';
 import {
   BadRequestException,
@@ -30,7 +31,6 @@ import { PdfMetadataService } from '@/features/assets/files/pdf-metadata.service
 import { mapAssetLanguagesToPrismaUpdate } from '@/features/assets/prisma-asset';
 import { SearchWriterService } from '@/features/assets/search/search-writer.service';
 import { sanitizeTextForJson } from '@/utils/sanitize';
-import { withTimeout } from '@/utils/timeout';
 
 // eval('require') bypasses webpack's static require analysis so the path is resolved at runtime by Node.js.
 const STANDARD_FONT_DATA_URL =
