@@ -427,19 +427,34 @@ export class PdfViewerComponent implements OnDestroy {
     this.pinnedPageNumber = zoomAnchorPage;
     this.logJumpDebug('commit-zoom-anchor-page', { zoomAnchorPage });
 
-    // Button zoom: preserve the relative position within the anchor page (vertical)
-    // and the current horizontal scroll ratio.
+    // Button zoom: anchor to viewport center, except at document edges.
     if (scrollEl && pageDims.length > 0) {
       const containerWidth = scrollEl.clientWidth;
       const contentWidthOld = getDocumentWidth(pageDims, containerWidth, baseScl, oldZoom, rotation);
       const contentWidthNew = getDocumentWidth(pageDims, containerWidth, baseScl, newZoom, rotation);
 
-      const anchorLayout = getPageLayout(zoomAnchorPage, pageCount, pageDims, baseScl, oldZoom, rotation);
-      if (anchorLayout && anchorLayout.size > 0) {
-        const ratio = (scrollTop - anchorLayout.start) / anchorLayout.size;
-        const newAnchorLayout = getPageLayout(zoomAnchorPage, pageCount, pageDims, baseScl, newZoom, rotation);
-        if (newAnchorLayout) {
-          this.pendingZoomScrollTop = Math.max(0, newAnchorLayout.start + ratio * newAnchorLayout.size);
+      const viewportHeight = scrollEl.clientHeight;
+      const oldDocHeight = getDocumentHeight(pageCount, pageDims, baseScl, oldZoom, rotation);
+      const oldMaxScrollTop = Math.max(0, oldDocHeight - viewportHeight);
+
+      if (scrollTop <= 0) {
+        // At top edge: keep top of document visible.
+        this.pendingZoomScrollTop = 0;
+      } else if (oldMaxScrollTop > 0 && scrollTop >= oldMaxScrollTop - 1) {
+        // At bottom edge: keep bottom of document visible.
+        const newDocHeight = getDocumentHeight(pageCount, pageDims, baseScl, newZoom, rotation);
+        this.pendingZoomScrollTop = Math.max(0, newDocHeight - viewportHeight);
+      } else {
+        // Center-anchored: the viewport center stays at the same relative document position.
+        const viewportCenter = scrollTop + viewportHeight / 2;
+        const centerPage = findPageAtScrollOffset(viewportCenter, pageCount, pageDims, baseScl, oldZoom, rotation);
+        if (centerPage && centerPage.size > 0) {
+          const centerRatio = (viewportCenter - centerPage.start) / centerPage.size;
+          const newCenterLayout = getPageLayout(centerPage.pageNum, pageCount, pageDims, baseScl, newZoom, rotation);
+          if (newCenterLayout) {
+            const newCenter = newCenterLayout.start + centerRatio * newCenterLayout.size;
+            this.pendingZoomScrollTop = Math.max(0, newCenter - viewportHeight / 2);
+          }
         }
       }
       // Horizontal: preserve the current proportional position.
