@@ -2,6 +2,29 @@
 
 ## [Unreleased]
 
+## v.1.21.0
+
+### Added
+
+- Full-text Document Search — Search within PDF documents with results grouped by file. Indexing limited to files with 2 GB.
+- PDF Viewer now has continuous scroll & incremental zoom features (CTRL + Scrollwheel or Trackpad). Lazy loading of pages.
+- Asset Sync Script to sync S3 assets between environments.
+- Assets remembers Disclaimer Consent for one year like in Boreholes.
+
+### Changed
+
+- Asset-File Relationship — Changed from many-to-many to one-to-many.
+- Usage of new FileExtractionService.
+- Search Results Behavior — Always close result panel on reset.
+- PostgreSQL Version update to reflect DEV-Server.
+
+### Fixed
+
+- Document Search Results Layout — Fixed horizontal scrollbar and number of lines in result.
+- Integration Tests — Added a separate local test db for integration tests
+
+## v.1.20._0_
+
 ### Added
 
 - Publiccode.yml so that the repository will be found and listed in the [swiss federal OSS-Catalogue](https://www.opensource.admin.ch/).
