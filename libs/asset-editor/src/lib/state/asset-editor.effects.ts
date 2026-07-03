@@ -1,7 +1,14 @@
 import { inject, Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { AssetSearchService } from '@asset-sg/asset-viewer';
-import { Alert, AlertType, appSharedStateActions, fromAppShared, showAlert } from '@asset-sg/client-shared';
+import {
+  Alert,
+  AlertType,
+  appSharedStateActions,
+  fromAppShared,
+  LanguageService,
+  showAlert,
+} from '@asset-sg/client-shared';
 import { UntilDestroy } from '@ngneat/until-destroy';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { Store } from '@ngrx/store';
@@ -18,6 +25,7 @@ export class AssetEditorEffects {
   private readonly actions$ = inject(Actions);
   private readonly store = inject(Store);
   private readonly router = inject(Router);
+  private readonly languageService = inject(LanguageService);
   private readonly assetEditorService = inject(AssetEditorService);
   private readonly assetSearchService = inject(AssetSearchService);
   private readonly workflowApiService = inject(WorkflowApiService);
@@ -75,7 +83,7 @@ export class AssetEditorEffects {
     this.actions$.pipe(
       ofType(actions.handleSuccessfulDeletion),
       switchMap(async ({ assetId }) => {
-        await this.router.navigate(['/']);
+        await this.router.navigate([`/${this.languageService.language}`]);
         return assetId;
       }),
       map((assetId) => appSharedStateActions.removeAsset({ assetId })),

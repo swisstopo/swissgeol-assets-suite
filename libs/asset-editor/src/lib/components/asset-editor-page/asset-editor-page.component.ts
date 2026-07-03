@@ -175,7 +175,7 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
   }
 
   public navigateToStart() {
-    this.router.navigate(['/']).then();
+    this.router.navigate([`/${this.languageService.language}`]).then();
   }
 
   public initializeForm() {

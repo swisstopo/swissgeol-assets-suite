@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, HostBinding, inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { can$, fromAppShared, ROUTER_SEGMENTS } from '@asset-sg/client-shared';
+import { can$, fromAppShared, LanguageService, ROUTER_SEGMENTS } from '@asset-sg/client-shared';
 import { AssetEditPolicy } from '@asset-sg/shared/v2';
 import { UntilDestroy } from '@ngneat/until-destroy';
 import { Store } from '@ngrx/store';
@@ -35,6 +35,7 @@ export class MenuBarComponent {
 
   private readonly router = inject(Router);
   private readonly store = inject(Store<AppState>);
+  private readonly languageService = inject(LanguageService);
 
   private readonly routerSegments$ = inject(ROUTER_SEGMENTS);
 
@@ -78,8 +79,9 @@ export class MenuBarComponent {
   }
 
   goToViewer({ favoritesOnly }: { favoritesOnly: boolean }): void {
-    const basePath = '/';
-    const favoritesPath = '/favorites';
+    const lang = this.languageService.language;
+    const basePath = `/${lang}`;
+    const favoritesPath = `/${lang}/favorites`;
 
     const [sourcePath, targetPath] = favoritesOnly ? [basePath, favoritesPath] : [favoritesPath, basePath];
 
