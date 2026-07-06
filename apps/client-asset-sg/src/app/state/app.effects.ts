@@ -1,6 +1,12 @@
 import { inject, Injectable } from '@angular/core';
 import { Router } from '@angular/router';
-import { appSharedStateActions, AuthService, fromAppShared, LanguageService } from '@asset-sg/client-shared';
+import {
+  appSharedStateActions,
+  AuthService,
+  fromAppShared,
+  LanguageService,
+  replaceLanguageInUrl,
+} from '@asset-sg/client-shared';
 import { isNotNull } from '@asset-sg/core';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
@@ -30,8 +36,7 @@ export class AppSharedStateEffects {
         if (currentLang === user.lang) {
           return;
         }
-        const currentUrl = this.router.url; // e.g. "/de/admin/users?foo=bar#section"
-        const newUrl = `/${user.lang}${currentUrl.substring(currentLang.length + 1)}`;
+        const newUrl = replaceLanguageInUrl(this.router.url, currentLang, user.lang);
         this.router.navigateByUrl(newUrl, { replaceUrl: true });
       });
 
