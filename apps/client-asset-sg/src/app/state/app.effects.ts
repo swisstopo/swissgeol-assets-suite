@@ -1,11 +1,11 @@
 import { inject, Injectable } from '@angular/core';
-import { NavigationEnd, Router } from '@angular/router';
+import { Router } from '@angular/router';
 import { appSharedStateActions, AuthService, fromAppShared, LanguageService } from '@asset-sg/client-shared';
 import { isNotNull } from '@asset-sg/core';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { Store } from '@ngrx/store';
-import { combineLatest, filter, map, switchMap, take } from 'rxjs';
+import { filter, map, switchMap, take } from 'rxjs';
 import { AppSharedStateService } from './app-shared-state.service';
 import { AppState } from './app-state';
 
@@ -20,21 +20,19 @@ export class AppSharedStateEffects {
   languageService = inject(LanguageService);
 
   constructor() {
-    combineLatest([
-      this.store.select(fromAppShared.selectUser).pipe(filter(isNotNull)),
-      this.router.events.pipe(filter((e) => e instanceof NavigationEnd)),
-    ])
-      .pipe(take(1), untilDestroyed(this))
-      .subscribe(([user]) => {
-        if (this.languageService.language === user.lang) {
+    // Once the user profile is loaded, switch to the user's preferred language (if different)
+    // The URL is updated to reflect the new language via replaceUrl so the back button isn't affected.
+    this.store
+      .select(fromAppShared.selectUser)
+      .pipe(filter(isNotNull), take(1), untilDestroyed(this))
+      .subscribe((user) => {
+        const currentLang = this.languageService.language;
+        if (currentLang === user.lang) {
           return;
         }
-        const urlTree = this.router.parseUrl(this.router.url);
-        const segments = urlTree.root.children['primary']?.segments;
-        if (segments && segments.length > 0) {
-          segments[0].path = user.lang;
-        }
-        this.router.navigateByUrl(urlTree, { replaceUrl: true }).then();
+        const currentUrl = this.router.url; // e.g. "/de/admin/users?foo=bar#section"
+        const newUrl = `/${user.lang}${currentUrl.substring(currentLang.length + 1)}`;
+        this.router.navigateByUrl(newUrl, { replaceUrl: true });
       });
 
     this.actions$.pipe(ofType(appSharedStateActions.logout), untilDestroyed(this)).subscribe(() => {
