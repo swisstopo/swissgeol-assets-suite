@@ -45,7 +45,7 @@ interface AssetInfo {
   };
 }
 
-const BATCH_SIZE = 500;
+const BATCH_SIZE = 250;
 const BATCH_SIZE_GEOMETRIES = 10_000;
 
 export class ExportToViewService {
