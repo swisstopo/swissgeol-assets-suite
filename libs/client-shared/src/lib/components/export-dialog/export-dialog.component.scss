@@ -1,0 +1,118 @@
+@use "../../styles/variables";
+
+.export-dialog-panel .mat-mdc-dialog-surface {
+  padding-top: 12px;
+}
+
+:host {
+  display: block;
+}
+
+.export-dialog {
+  h2[mat-dialog-title] {
+    margin: 0;
+    padding: 0 24px 10px;
+    font-size: 16px;
+    font-weight: variables.$font-semibold;
+    line-height: 24px;
+    border-bottom: 1px solid variables.$grey-03;
+  }
+
+  &__content {
+    min-width: 400px;
+    padding: 20px 24px 8px !important;
+  }
+
+  &__description {
+    margin: 0 0 16px;
+    color: variables.$grey-08;
+    font-size: 14px;
+    line-height: 20px;
+  }
+
+  &__options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  &__option {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 16px;
+    border: 1px solid variables.$grey-04;
+    border-radius: 4px;
+    cursor: pointer;
+    transition:
+      background-color 0.15s ease,
+      border-color 0.15s ease,
+      color 0.15s ease;
+
+    mat-checkbox {
+      margin-top: 2px;
+    }
+
+    &--centered {
+      align-items: center;
+
+      mat-checkbox {
+        margin-top: 0;
+      }
+    }
+
+    &--selected {
+      background-color: variables.$cyan-09;
+      border-color: variables.$cyan-09;
+      color: variables.$white;
+
+      ::ng-deep {
+        .mdc-checkbox .mdc-checkbox__background {
+          border-color: variables.$white !important;
+        }
+
+        .mdc-checkbox--selected .mdc-checkbox__background {
+          background-color: variables.$white !important;
+          border-color: variables.$white !important;
+        }
+
+        .mdc-checkbox--selected .mdc-checkbox__checkmark {
+          color: variables.$cyan-09 !important;
+        }
+      }
+    }
+
+    &--disabled {
+      cursor: not-allowed;
+    }
+  }
+
+  &__option-label {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  &__option-title {
+    font-size: 14px;
+    line-height: 20px;
+  }
+
+  &__option-hint {
+    font-size: 12px;
+    line-height: 16px;
+    font-style: italic;
+    opacity: 0.75;
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 12px 24px 16px !important;
+    border-top: 1px solid variables.$grey-03;
+    margin: 0;
+    min-height: unset;
+  }
+}

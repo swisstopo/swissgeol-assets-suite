@@ -19,6 +19,12 @@
   margin: 0;
   font-weight: 400;
 
+  &__left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
   &__tabs {
     display: flex;
     gap: 16px;
@@ -86,6 +92,11 @@
       max-width: 300px;
       margin-top: 4px;
       margin-bottom: 4px;
+    }
+
+    .column-select {
+      width: 48px;
+      padding-right: 0;
     }
 
     .selected {

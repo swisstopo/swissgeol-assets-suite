@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import {
   AlertType,
   appSharedStateActions,
+  AssetExportService,
   can$,
   fromAppShared,
   LanguageService,
@@ -97,9 +98,14 @@ export class AssetSearchDetailComponent {
 
   private readonly router = inject(Router);
   private readonly viewerControllerService = inject(ViewerControllerService);
+  private readonly assetExportService = inject(AssetExportService);
 
   public navigateToEdit(lang: string | null, assetId: AssetId) {
     this.router.navigate([lang, 'asset-admin', assetId]).then();
+  }
+
+  public async exportAsset(assetId: AssetId): Promise<void> {
+    await this.assetExportService.export([assetId]);
   }
 
   public clearSelectedAsset() {
