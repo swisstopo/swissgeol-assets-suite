@@ -8,6 +8,7 @@ import {
   LanguageCode,
   LocalizedItem,
   LocalizedItemCode,
+  MAX_EXPORT_ASSETS,
   User,
   WorkgroupId,
 } from '@asset-sg/shared/v2';
@@ -28,8 +29,6 @@ import {
 import { ContactRepo } from '@/features/contacts/contact.repo';
 import { localizedItemSelection, mapItems } from '@/features/reference-data/prisma-reference-data';
 import { WorkgroupRepo } from '@/features/workgroups/workgroup.repo';
-
-export const MAX_EXPORT_ASSETS = 100;
 
 const CSV_DELIMITER = ';';
 const MULTI_VALUE_SEPARATOR = ',';

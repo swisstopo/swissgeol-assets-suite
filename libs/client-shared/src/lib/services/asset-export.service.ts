@@ -1,14 +1,12 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
-import { AssetId } from '@asset-sg/shared/v2';
+import { AssetId, MAX_EXPORT_ASSETS } from '@asset-sg/shared/v2';
 import { firstValueFrom } from 'rxjs';
 import { ConfirmDialogComponent, ConfirmDialogData } from '../components/confirm-dialog';
 import { ExportDialogComponent, ExportDialogResult } from '../components/export-dialog';
 import { triggerDownload } from '../utils/trigger-download';
 import { LanguageService } from './language.service';
-
-export const MAX_EXPORT_ASSETS = 100;
 
 @Injectable({ providedIn: 'root' })
 export class AssetExportService {

@@ -1,6 +1,6 @@
 import { Component, ElementRef, EventEmitter, inject, OnDestroy, OnInit, Output, ViewChild } from '@angular/core';
 import { MatCheckboxChange } from '@angular/material/checkbox';
-import { AssetExportService, fromAppShared, MAX_EXPORT_ASSETS, PdfOverlayService } from '@asset-sg/client-shared';
+import { AssetExportService, fromAppShared, PdfOverlayService } from '@asset-sg/client-shared';
 import {
   AssetContact,
   AssetContactRole,
@@ -8,6 +8,7 @@ import {
   AssetSearchResultItem,
   FileSearchResultItem,
   FileSearchResultPage,
+  MAX_EXPORT_ASSETS,
   SearchType,
   sleep,
   tick,

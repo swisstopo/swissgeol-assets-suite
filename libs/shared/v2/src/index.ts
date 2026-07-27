@@ -46,6 +46,7 @@ export * from './lib/schemas/contact.schema';
 export * from './lib/schemas/geometry.schema';
 export * from './lib/schemas/reference-data.schema';
 export * from './lib/schemas/user.schema';
+export * from './lib/schemas/asset-export.schema';
 export * from './lib/schemas/workflow.schema';
 export * from './lib/schemas/workgroup.schema';
 

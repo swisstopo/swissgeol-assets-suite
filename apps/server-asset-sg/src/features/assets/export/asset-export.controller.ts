@@ -1,17 +1,10 @@
-import { User } from '@asset-sg/shared/v2';
+import { AssetExportRequestSchema, User } from '@asset-sg/shared/v2';
 import { Controller, Header, Post, Query } from '@nestjs/common';
-import { IsArray, IsInt } from 'class-validator';
 import { Authorize } from '@/core/decorators/authorize.decorator';
 import { CurrentUser } from '@/core/decorators/current-user.decorator';
 import { ParseBody } from '@/core/decorators/parse.decorator';
 import { DEFAULT_EXPORT_LANGUAGE, isExportLanguage } from '@/features/assets/export/asset-export.i18n';
 import { AssetExportService } from '@/features/assets/export/asset-export.service';
-
-export class AssetExportRequestSchema {
-  @IsArray()
-  @IsInt({ each: true })
-  assetIds!: number[];
-}
 
 @Controller('/assets/export')
 export class AssetExportController {
