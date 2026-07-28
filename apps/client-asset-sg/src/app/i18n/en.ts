@@ -143,6 +143,22 @@ export const enTranslationMapping: AppTranslationMapping = {
     drawPolygon: 'Polygon selection',
     hideTable: 'Hide table',
     showTable: 'Show table',
+    export: 'Export',
+  },
+  export: {
+    export: 'Export',
+    dialogTitle: 'Export',
+    dialogDescription: 'Select the data to export.',
+    comingSoon: 'Coming soon',
+    formats: {
+      files: 'Files (ZIP)',
+      csv: 'Metadata (CSV)',
+      geopackage: 'Geolocation & metadata (GeoPackage)',
+    },
+    maxSelectionWarning:
+      'You have selected more than 100 assets, but a maximum of 100 assets can be exported. Do you want to continue?',
+    exportFirstAssets: 'Export 100 assets',
+    selectAllCap: 'Selects up to 1000 results (not all search hits).',
   },
   contactRoles: {
     author: 'Author',

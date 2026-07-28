@@ -8,6 +8,7 @@ export * from './datepicker-toggle-icon';
 export * from './detail-section/detail-section.component';
 export * from './drag-handle';
 export * from './drawer';
+export * from './export-dialog';
 export * from './file-name.pipe';
 export * from './filter-selector';
 export * from './form-item-wrapper/form-item-wrapper.component';

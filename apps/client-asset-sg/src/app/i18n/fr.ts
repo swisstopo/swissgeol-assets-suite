@@ -145,6 +145,22 @@ export const frTranslationMapping: AppTranslationMapping = {
     drawPolygon: 'Sélection par polygone',
     hideTable: 'Masquer le tableau',
     showTable: 'Afficher le tableau',
+    export: 'Exporter',
+  },
+  export: {
+    export: 'Exporter',
+    dialogTitle: 'Export',
+    dialogDescription: 'Sélectionnez les données à exporter.',
+    comingSoon: 'Bientôt disponible',
+    formats: {
+      files: 'Fichiers (ZIP)',
+      csv: 'Métadonnées (CSV)',
+      geopackage: 'Géolocalisation et métadonnées (GeoPackage)',
+    },
+    maxSelectionWarning:
+      'Vous avez sélectionné plus de 100 assets, mais un maximum de 100 assets peut être exporté. Voulez-vous continuer ?',
+    exportFirstAssets: 'Exporter 100 assets',
+    selectAllCap: 'Sélectionne au maximum 1000 résultats (pas tous les résultats de recherche).',
   },
   contactRoles: {
     author: 'Auteur',
