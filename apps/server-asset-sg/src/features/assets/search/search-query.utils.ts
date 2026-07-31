@@ -187,7 +187,7 @@ export const getDateTimeString = (): string => {
   return (
     '' +
     now.getUTCFullYear() +
-    padZero(now.getUTCMonth()) +
+    padZero(now.getUTCMonth() + 1) +
     padZero(now.getUTCDate()) +
     padZero(now.getUTCHours()) +
     padZero(now.getUTCMinutes()) +
