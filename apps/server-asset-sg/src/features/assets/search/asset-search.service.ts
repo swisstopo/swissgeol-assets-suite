@@ -40,12 +40,12 @@ export class AssetSearchService {
     const { results, total } = await this.searchService.search(
       elasticQuery,
       { limit, offset },
-      { storedFields: ['id', 'data'] },
+      { sourceFields: ['id', 'data'] },
     );
 
     const data: AssetSearchResultItem[] = [];
     for (const hit of results.values()) {
-      const encodedAsset = JSON.parse(hit.fields?.['data']?.[0] as string);
+      const encodedAsset = JSON.parse(hit.source?.['data'] as string);
       data.push(
         shouldDecode
           ? plainToInstance(AssetSearchResultItemSchema, encodedAsset, { excludeExtraneousValues: true })
