@@ -24,6 +24,7 @@ import {
   CSV_PUBLIC_COLUMNS,
   CsvColumnKey,
   ExportLanguage,
+  RESTRICTION_TYPE_LABELS,
   WORKFLOW_STATUS_LABELS,
 } from '@/features/assets/export/asset-export.i18n';
 import { ContactRepo } from '@/features/contacts/contact.repo';
@@ -99,7 +100,15 @@ export class AssetExportService {
         return asset.title;
       case 'status':
         return WORKFLOW_STATUS_LABELS[asset.workflowStatus]?.[language] ?? asset.workflowStatus;
-      case 'restriction':
+      case 'restrictionType': {
+        if (asset.isPublic) {
+          return RESTRICTION_TYPE_LABELS.free[language];
+        }
+        return asset.restrictionDate != null
+          ? RESTRICTION_TYPE_LABELS.lockedUntil[language]
+          : RESTRICTION_TYPE_LABELS.locked[language];
+      }
+      case 'restrictionDate':
         return asset.restrictionDate?.toString() ?? '';
       case 'topic':
         return joinCodes(asset.topicCodes, references.topics);
