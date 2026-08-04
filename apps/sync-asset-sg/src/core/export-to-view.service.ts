@@ -1,3 +1,4 @@
+import { getHeapStatistics } from 'v8';
 import { Prisma, PrismaClient } from '@prisma/client';
 import { SyncConfig } from './config';
 import { log } from './log';
@@ -5,6 +6,10 @@ import { log } from './log';
 /**
  * Contains all attributes that should be published, _except_ the geometries which need to be merged manually due to
  * missing PostGIS support in Prisma.
+ *
+ * Note: files are intentionally *not* selected here. They are exported separately in a bounded, chunked fashion by
+ * {@link ExportToViewService.exportFiles} to avoid holding the large JSON columns (`fulltextContent`,
+ * `pageRangeClassifications`, `pageDimensions`) of every file of a whole asset batch in memory at once.
  */
 type PublishedAssetSelection = Prisma.AssetGetPayload<{
   select: {
@@ -14,7 +19,6 @@ type PublishedAssetSelection = Prisma.AssetGetPayload<{
     createDate: true;
     receiptDate: true;
     assetContacts: true;
-    files: true;
     isNatRel: true;
     assetKindItemCode: true;
     assetFormatItemCode: true;
@@ -48,6 +52,13 @@ interface AssetInfo {
 const BATCH_SIZE = 100;
 const BATCH_SIZE_GEOMETRIES = 10_000;
 
+/**
+ * Number of full file rows (including their large JSON columns) fetched, transformed and inserted per iteration while
+ * exporting files. A single conservative value bounds the file-export memory peak to at most this many file rows at a
+ * time, independent of the asset batch size. Each chunk is inserted and released before the next chunk is fetched.
+ */
+const FILE_CHUNK_SIZE = 10;
+
 export class ExportToViewService {
   private readonly allowedWorkgroupIds: number[];
   private readonly publicAssetConfigs: Map<number, Omit<AssetInfo, 'assetId'>> = new Map();
@@ -62,6 +73,8 @@ export class ExportToViewService {
   }
 
   public async exportToView() {
+    this.publicAssetConfigs.clear();
+
     const publicAssets = await this.findPublicAssetIds();
     publicAssets.forEach(({ assetId, ...rest }) => this.publicAssetConfigs.set(assetId, rest));
 
@@ -77,17 +90,20 @@ export class ExportToViewService {
 
     // batch the list of public asset ids
     for (const [index, batch] of batches.entries()) {
-      log(`Export batch #${index + 1}`);
+      const batchNumber = index + 1;
+      log(`Export batch #${batchNumber}`);
       const time = Date.now();
       const assetIds = batch.map((item) => item.assetId);
       await this.exportAssets(assetIds);
+      await this.exportFiles(assetIds, batchNumber);
       await this.export('assetLanguage', 'assetId', assetIds, true);
 
       await this.export('manCatLabelRef', 'assetId', assetIds, true);
       await this.export('typeNatRel', 'assetId', assetIds, true);
 
       const timeTaken = Date.now() - time;
-      log(`Exported batch #${index + 1} of ${assetIds.length} assets in ${timeTaken} ms.`, 'batch');
+      log(`Exported batch #${batchNumber} of ${assetIds.length} assets in ${timeTaken} ms.`, 'batch');
+      this.logMemoryUsage(`after batch #${batchNumber}`, { batch: batchNumber, assets: assetIds.length });
     }
 
     // only export siblings after all assets have been exported so no foreign key constraint is violated
@@ -120,6 +136,10 @@ export class ExportToViewService {
 
   /**
    * Export assets with the given ids.
+   *
+   * Note: files are intentionally *not* exported here. They are exported by {@link ExportToViewService.exportFiles}
+   * from the outer batch loop, so that the local `assets`, `filteredAssets` and contact arrays of this method become
+   * unreachable (and collectible) before any heavy file rows are fetched.
    */
   private async exportAssets(assetIds: number[]) {
     const assets: PublishedAssetSelection[] = await this.sourcePrisma.asset.findMany({
@@ -135,7 +155,6 @@ export class ExportToViewService {
         createDate: true,
         receiptDate: true,
         assetContacts: true,
-        files: true,
         isNatRel: true,
         assetKindItemCode: true,
         assetFormatItemCode: true,
@@ -159,15 +178,6 @@ export class ExportToViewService {
     result = await this.destinationPrisma.assetContact.createMany({ data: filteredAssets.assetContacts });
     log(`Created ${result.count} assetContacts.`, 'batch');
 
-    // Export files that belong to the published assets (filtered by type based on publish config)
-    if (filteredAssets.filesToExport.length > 0) {
-      result = await this.destinationPrisma.file.createMany({
-        data: filteredAssets.filesToExport,
-        skipDuplicates: true,
-      });
-      log(`Created ${result.count} files.`, 'batch');
-    }
-
     const geometriesToPublish = assetIds.filter((f) => this.publicAssetConfigs.get(f)?.publishData.geometries);
     for (const [idx, batch] of this.batchList(geometriesToPublish, BATCH_SIZE_GEOMETRIES).entries()) {
       log(`Creating batch #${idx + 1} of geometries`, 'batch');
@@ -176,6 +186,112 @@ export class ExportToViewService {
       await this.exportGeometries(batch, 'study_trace');
       log(`Finished batch #${idx + 1} of geometries`, 'batch');
     }
+  }
+
+  /**
+   * Export the publishable files of the given assets in a memory-bounded fashion.
+   *
+   * Instead of loading every file (including its large JSON columns `fulltextContent`, `pageRangeClassifications`
+   * and `pageDimensions`) for the whole asset batch at once, this method:
+   *   1. determines which file *types* are publishable per asset (Normal / Legal) from the publish config;
+   *   2. filters the publishable files in the *database* (never loading the large columns of non-publishable files);
+   *   3. fetches only the file ids first;
+   *   4. then, one fixed-size chunk at a time, fetches those full rows, transforms them, inserts them, and drops the
+   *      references before fetching the next chunk.
+   *
+   * No file rows are accumulated across fetch iterations: at most one {@link FILE_CHUNK_SIZE}-sized batch is processed at a time.
+   * The publication rules are preserved exactly: `Normal` files are exported for assets whose config has
+   * `normalFiles`, `Legal` files for assets whose config has `legalFiles`.
+   */
+  private async exportFiles(assetIds: number[], batchNumber: number) {
+    const normalFileAssetIds = assetIds.filter((id) => this.publicAssetConfigs.get(id)?.publishData.normalFiles);
+    const legalFileAssetIds = assetIds.filter((id) => this.publicAssetConfigs.get(id)?.publishData.legalFiles);
+
+    const typeFilters: Prisma.FileWhereInput[] = [];
+    if (normalFileAssetIds.length > 0) {
+      typeFilters.push({ assetId: { in: normalFileAssetIds }, type: 'Normal' });
+    }
+    if (legalFileAssetIds.length > 0) {
+      typeFilters.push({ assetId: { in: legalFileAssetIds }, type: 'Legal' });
+    }
+
+    if (typeFilters.length === 0) {
+      return;
+    }
+
+    const where: Prisma.FileWhereInput = { OR: typeFilters };
+
+    // Only fetch the ids first: this keeps the "which files to export" list cheap and lets us pull the heavy rows in
+    // small, fixed-size chunks below.
+    const fileIdRows = await this.sourcePrisma.file.findMany({
+      where,
+      select: { id: true },
+      orderBy: { id: 'asc' },
+    });
+    const fileIds = fileIdRows.map((row) => row.id);
+
+    if (fileIds.length === 0) {
+      return;
+    }
+
+    let totalCreated = 0;
+
+    for (const [chunkIndex, idChunk] of this.batchList(fileIds, FILE_CHUNK_SIZE).entries()) {
+      const chunkNumber = chunkIndex + 1;
+      const memoryContext = { batch: batchNumber, chunk: chunkNumber, ids: idChunk.length };
+
+      this.logMemoryUsage('before files', memoryContext);
+
+      const files = await this.sourcePrisma.file.findMany({
+        where: { id: { in: idChunk } },
+        orderBy: { id: 'asc' },
+      });
+      this.logMemoryUsage('after file fetch', { ...memoryContext, fetched: files.length });
+
+      const inputs: Prisma.FileCreateManyInput[] = files.map((file) => ({
+        ...file,
+        pageRangeClassifications: file.pageRangeClassifications as Prisma.InputJsonValue,
+        fulltextContent: file.fulltextContent as Prisma.InputJsonValue,
+        pageDimensions: file.pageDimensions as Prisma.InputJsonValue,
+      }));
+
+      const result = await this.destinationPrisma.file.createMany({ data: inputs, skipDuplicates: true });
+      totalCreated += result.count;
+      this.logMemoryUsage('after file insert', { ...memoryContext, inserted: result.count });
+
+      // `files` and `inputs` go out of scope on the next iteration, so at most one chunk of heavy rows is retained.
+    }
+
+    this.logMemoryUsage(`after files of batch #${batchNumber}`, {
+      batch: batchNumber,
+      files: fileIds.length,
+      created: totalCreated,
+    });
+  }
+
+  /**
+   * Log the current process memory usage together with the V8 heap limit and optional extra context. Emitted at
+   * batch boundaries and around each file chunk so heap growth can be correlated with batch number, chunk number and
+   * file counts. Deliberately avoids serializing file contents (no JSON.stringify) so that logging cannot itself
+   * allocate large temporaries.
+   */
+  private logMemoryUsage(context: string, extra: Record<string, number | string> = {}) {
+    const mem = process.memoryUsage();
+    const heapLimit = getHeapStatistics().heap_size_limit;
+    const parts = [
+      `rss=${this.formatBytes(mem.rss)}`,
+      `heapUsed=${this.formatBytes(mem.heapUsed)}`,
+      `heapTotal=${this.formatBytes(mem.heapTotal)}`,
+      `external=${this.formatBytes(mem.external)}`,
+      `arrayBuffers=${this.formatBytes(mem.arrayBuffers)}`,
+      `heapLimit=${this.formatBytes(heapLimit)}`,
+      ...Object.entries(extra).map(([key, value]) => `${key}=${value}`),
+    ];
+    log(`Memory [${context}] ${parts.join(' ')}`, 'batch');
+  }
+
+  private formatBytes(bytes: number): string {
+    return `${(bytes / (1024 * 1024)).toFixed(1)}MB`;
   }
 
   /**
@@ -349,12 +465,10 @@ export class ExportToViewService {
   private preparePublishedData(assets: PublishedAssetSelection[]): {
     assets: Prisma.AssetCreateManyInput[];
     assetContacts: Prisma.AssetContactCreateManyInput[];
-    filesToExport: Prisma.FileCreateManyInput[];
   } {
     const filteredAssets: Prisma.AssetCreateManyInput[] = [];
-    const filteredFiles: Prisma.FileCreateManyInput[] = [];
     const filteredAssetContacts: Prisma.AssetContactCreateManyInput[] = [];
-    for (const { files, assetContacts, ...asset } of assets) {
+    for (const { assetContacts, ...asset } of assets) {
       const publicAssetConfig = this.publicAssetConfigs.get(asset.assetId);
       if (publicAssetConfig === undefined) {
         continue;
@@ -370,31 +484,6 @@ export class ExportToViewService {
       }
       if (publishData.suppliers) {
         filteredAssetContacts.push(...assetContacts.filter((c) => c.role === 'supplier'));
-      }
-
-      if (publishData.legalFiles) {
-        filteredFiles.push(
-          ...files
-            .filter((f) => f.type === 'Legal')
-            .map((f) => ({
-              ...f,
-              pageRangeClassifications: f.pageRangeClassifications as Prisma.InputJsonValue,
-              fulltextContent: f.fulltextContent as Prisma.InputJsonValue,
-              pageDimensions: f.pageDimensions as Prisma.InputJsonValue,
-            })),
-        );
-      }
-      if (publishData.normalFiles) {
-        filteredFiles.push(
-          ...files
-            .filter((f) => f.type === 'Normal')
-            .map((f) => ({
-              ...f,
-              pageRangeClassifications: f.pageRangeClassifications as Prisma.InputJsonValue,
-              fulltextContent: f.fulltextContent as Prisma.InputJsonValue,
-              pageDimensions: f.pageDimensions as Prisma.InputJsonValue,
-            })),
-        );
       }
 
       const filteredAsset: Prisma.AssetCreateManyInput = {
@@ -416,7 +505,6 @@ export class ExportToViewService {
     return {
       assets: filteredAssets,
       assetContacts: filteredAssetContacts,
-      filesToExport: filteredFiles,
     };
   }
 }
