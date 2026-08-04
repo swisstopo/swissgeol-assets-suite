@@ -58,7 +58,7 @@ function file(id: number, assetId: number, type: 'Normal' | 'Legal', overrides: 
     id,
     assetId,
     type,
-    size: 1n,
+    size: BigInt(1),
     fulltextContent: null,
     pageRangeClassifications: null,
     pageDimensions: null,
