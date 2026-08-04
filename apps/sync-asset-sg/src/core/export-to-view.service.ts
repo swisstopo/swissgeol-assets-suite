@@ -1,6 +1,6 @@
 import { getHeapStatistics } from 'v8';
 import { Prisma, PrismaClient } from '@prisma/client';
-import { SyncConfig } from './config';
+import { FILE_CHUNK_SIZE, SyncConfig } from './config';
 import { log } from './log';
 
 /**
@@ -51,13 +51,6 @@ interface AssetInfo {
 
 const BATCH_SIZE = 100;
 const BATCH_SIZE_GEOMETRIES = 10_000;
-
-/**
- * Number of full file rows (including their large JSON columns) fetched, transformed and inserted per iteration while
- * exporting files. A single conservative value bounds the file-export memory peak to at most this many file rows at a
- * time, independent of the asset batch size. Each chunk is inserted and released before the next chunk is fetched.
- */
-const FILE_CHUNK_SIZE = 10;
 
 export class ExportToViewService {
   private readonly allowedWorkgroupIds: number[];

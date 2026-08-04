@@ -1,5 +1,12 @@
 export type Mode = 'view' | 'extern';
 
+/**
+ * Number of full file rows (including their large JSON columns) fetched, transformed and inserted per iteration while
+ * exporting files. A single conservative value bounds the file-export memory peak to at most this many file rows at a
+ * time, independent of the asset batch size. Each chunk is inserted and released before the next chunk is fetched.
+ */
+export const FILE_CHUNK_SIZE = 100;
+
 export interface SyncConfig {
   mode: Mode;
   syncAssignee: string | undefined;

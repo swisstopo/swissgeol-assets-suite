@@ -1,13 +1,10 @@
-import { SyncConfig } from './config';
+import { FILE_CHUNK_SIZE, SyncConfig } from './config';
 import { ExportToViewService } from './export-to-view.service';
 
 // Suppress log output during tests
 jest.mock('./log', () => ({
   log: jest.fn(),
 }));
-
-// Keep this in sync with FILE_CHUNK_SIZE in export-to-view.service.ts.
-const FILE_CHUNK_SIZE = 10;
 
 const config: SyncConfig = {
   mode: 'view',
