@@ -23,7 +23,8 @@ type Localized = Record<ExportLanguage, string>;
 export const CSV_COLUMN_KEYS = [
   'title',
   'status',
-  'restriction',
+  'restrictionType',
+  'restrictionDate',
   'topic',
   'kind',
   'language',
@@ -49,7 +50,8 @@ export type CsvColumnKey = (typeof CSV_COLUMN_KEYS)[number];
 export const CSV_PUBLIC_COLUMNS: Record<CsvColumnKey, boolean> = {
   title: true,
   status: true,
-  restriction: true,
+  restrictionType: true,
+  restrictionDate: true,
   topic: true,
   kind: true,
   language: true,
@@ -73,7 +75,13 @@ export const CSV_PUBLIC_COLUMNS: Record<CsvColumnKey, boolean> = {
 export const CSV_COLUMN_HEADERS: Record<CsvColumnKey, Localized> = {
   title: { de: 'Öffentlicher Titel', fr: 'Titre public', it: 'Titolo pubblico', en: 'Public title' },
   status: { de: 'Status', fr: 'Statut', it: 'Stato', en: 'Status' },
-  restriction: { de: 'Beschränkung', fr: 'Restriction', it: 'Restrizione', en: 'Restriction' },
+  restrictionType: { de: 'Beschränkung', fr: 'Restriction', it: 'Restrizione', en: 'Restriction' },
+  restrictionDate: {
+    de: 'Beschränkungsdatum',
+    fr: 'Date de restriction',
+    it: 'Data di restrizione',
+    en: 'Restriction date',
+  },
   topic: { de: 'Thema', fr: 'Thème', it: 'Tema', en: 'Topic' },
   kind: { de: 'Typ', fr: 'Type', it: 'Tipo', en: 'Kind' },
   language: { de: 'Sprache', fr: 'Langue', it: 'Lingua', en: 'Language' },
@@ -136,3 +144,9 @@ export const BOOLEAN_LABELS: { true: Localized; false: Localized } = {
   true: { de: 'Ja', fr: 'Oui', it: 'Sì', en: 'Yes' },
   false: { de: 'Nein', fr: 'Non', it: 'No', en: 'No' },
 };
+
+export const RESTRICTION_TYPE_LABELS = {
+  free: { de: 'frei', fr: 'libre', it: 'libero', en: 'free' },
+  locked: { de: 'gesperrt', fr: 'bloqué', it: 'bloccato', en: 'locked' },
+  lockedUntil: { de: 'gesperrt bis', fr: "bloqué jusqu'au", it: 'bloccato fino al', en: 'locked until' },
+} as const;
