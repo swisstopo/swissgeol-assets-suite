@@ -161,6 +161,7 @@ export const assetSearchReducer = createReducer(
       query: { type: state.query.type, favoritesOnly: state.query.favoritesOnly },
       ui: {
         ...state.ui,
+        resultsState: PanelState.ClosedAutomatically,
       },
     }),
   ),

@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- Search Results Behavior — Keep an open results list open when switching between the "Filter" and "Favorites" tabs. A results list opened by the user now stays open until manually closed or the search is completely reset.
+
 ## v.1.21.0
 
 ### Added

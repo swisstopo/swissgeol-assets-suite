@@ -230,6 +230,9 @@ export class ViewerControllerService {
     }
     const currentResultsState = await firstValueFrom(this.store.select(selectResultsState));
     const isSearchQueryEmpty = isEmptySearchQuery(query);
+    // Switching between the "Filter" and "Favorites" tabs only toggles `favoritesOnly`.
+    // Such a tab switch must not change the results list, so we skip the panel logic below.
+    const didFavoritesOnlyChange = previousQuery.favoritesOnly !== query.favoritesOnly;
     if (isSearchQueryEmpty && !query.favoritesOnly) {
       // Only reset map position if the query is empty and not in favorites mode
       this.store.dispatch(actions.setMapPosition({ position: DEFAULT_MAP_POSITION }));
@@ -250,17 +253,16 @@ export class ViewerControllerService {
         ? (await firstValueFrom(this.store.select(selectFileSearchResults))).page.total
         : (await firstValueFrom(this.store.select(selectSearchResults))).page.total;
 
-    if (isSearchQueryEmpty) {
-      // If the query is empty, we ALWAYS close the results
+    // On a "Filter"/"Favorites" tab switch (`didFavoritesOnlyChange`), the results list must stay
+    // exactly as it was until the user changes it or resets the search, so we skip this entirely.
+    // A results list that the user opened or closed manually is also left untouched here; it only
+    // changes on explicit user interaction or a complete reset (via the `resetSearch` action).
+    if (!didFavoritesOnlyChange && isPanelAutomaticallyToggled(currentResultsState)) {
+      // Automatically open the results list when a search yields results, and close it otherwise.
+      const shouldClose = isSearchQueryEmpty || total === 0;
       this.store.dispatch(
         actions.setResultsState({
-          state: PanelState.ClosedAutomatically,
-        }),
-      );
-    } else if (isPanelAutomaticallyToggled(currentResultsState)) {
-      this.store.dispatch(
-        actions.setResultsState({
-          state: total === 0 ? PanelState.ClosedAutomatically : PanelState.OpenedAutomatically,
+          state: shouldClose ? PanelState.ClosedAutomatically : PanelState.OpenedAutomatically,
         }),
       );
     }
