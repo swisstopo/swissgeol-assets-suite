@@ -1,5 +1,6 @@
-import { LocalDate, WorkflowStatus } from '@swissgeol/ui-core';
+import { WorkflowStatus } from '@swissgeol/ui-core';
 import { Asset } from '../models/asset';
+import { LocalDate } from '../models/base/local-date';
 import { AssetContactRole } from '../models/contact';
 import { PageCategory } from '../models/page-classification';
 import { LanguageCode } from '../models/reference-data';
