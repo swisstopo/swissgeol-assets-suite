@@ -63,17 +63,17 @@ export class PdfViewerService implements OnDestroy {
     if (PDF_VIEWER_DEBUG) {
       console.log(`[pdf-service] loadPdf pdfId=${pdfId} svcGen=${generation} — starting getDocument`);
     }
-    this.loadingTask = getDocument({
+    const loadingTask = getDocument({
       url: `/api/assets/${assetId}/files/${pdfId}`,
       httpHeaders: this.getAuthorizationHeader(),
       disableAutoFetch: true,
       disableStream: true,
     });
+    this.loadingTask = loadingTask;
     try {
-      const doc = await this.loadingTask.promise;
-      // Only adopt the document if this is still the active load.
+      const doc = await loadingTask.promise;
       if (this.loadGeneration !== generation) {
-        await doc.destroy().catch(noop);
+        await loadingTask.destroy().catch(noop);
         throw new Error('Load superseded');
       }
       this.pdfDoc = doc;
