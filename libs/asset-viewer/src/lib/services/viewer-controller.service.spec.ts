@@ -8,6 +8,8 @@ jest.mock('@asset-sg/client-shared', () => {
   return {
     appSharedStateActions: {
       setCurrentAsset: store.createAction('[Asset Search] Set Current Asset', store.props()),
+      removeAsset: store.createAction('[Asset Shared] Remove Asset', store.props()),
+      updateAsset: store.createAction('[Asset Shared] Update Asset', store.props()),
     },
     fromAppShared: {
       selectCurrentAsset: stubSelector,
@@ -27,6 +29,11 @@ jest.mock('../components/map/map-controller', () => ({
   MapController: class MockMapController {},
 }));
 
+// The state reducer pulls in OpenLayers (ESM) purely for geometry-center helpers that are
+// irrelevant to these tests, so we stub those modules to keep the reducer importable.
+jest.mock('ol/extent', () => ({ getCenter: jest.fn(() => [0, 0]) }));
+jest.mock('ol/geom', () => ({ LineString: class {}, Polygon: class {} }));
+
 import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import {
@@ -39,8 +46,13 @@ import {
 import { MockStore, provideMockStore } from '@ngrx/store/testing';
 import { of } from 'rxjs';
 
-import { PanelState } from '../state/asset-search/asset-search.actions';
-import { AppStateWithAssetSearch, AssetSearchState } from '../state/asset-search/asset-search.reducer';
+import { PanelState, setScrollOffsetForResults } from '../state/asset-search/asset-search.actions';
+import {
+  assetSearchReducer,
+  AppStateWithAssetSearch,
+  AssetSearchState,
+} from '../state/asset-search/asset-search.reducer';
+import { selectScrollOffsetForResults } from '../state/asset-search/asset-search.selector';
 import { AssetSearchService } from './asset-search.service';
 import { GeometryService } from './geometry.service';
 import { isFavoritesOnlyChange, ViewerControllerService } from './viewer-controller.service';
@@ -69,6 +81,7 @@ const makeSearchState = (overrides: Partial<AssetSearchState['ui']> = {}): Asset
       map: { x: 1, y: 2, z: 3 },
       ...overrides,
     },
+    scrollOffsetForFavorites: 0,
     isLoadingGeometries: false,
     isLoadingResults: false,
     isLoadingFileResults: false,
@@ -182,5 +195,67 @@ describe(ViewerControllerService.name, () => {
     expect(resetAsset?.asset).toBeNull();
     // ...and recomputes the results panel state (open, since there are results).
     expect(types).toContain(SET_RESULTS_STATE);
+  });
+});
+
+describe('result-list scroll offset decoupling (Filter vs Favorites)', () => {
+  const favoritesQuery = { type: SearchType.Asset, favoritesOnly: true } as const;
+
+  describe('reducer', () => {
+    it('routes the offset to the Filter view when not in favorites mode', () => {
+      const state = makeSearchState({ scrollOffsetForResults: 0 });
+
+      const next = assetSearchReducer(state, setScrollOffsetForResults({ offset: 1000 }));
+
+      expect(next.ui.scrollOffsetForResults).toBe(1000);
+      expect(next.scrollOffsetForFavorites).toBe(0);
+    });
+
+    it('routes the offset to the Favorites view when in favorites mode', () => {
+      const state: AssetSearchState = { ...makeSearchState({ scrollOffsetForResults: 500 }), query: favoritesQuery };
+
+      const next = assetSearchReducer(state, setScrollOffsetForResults({ offset: 1000 }));
+
+      expect(next.scrollOffsetForFavorites).toBe(1000);
+      // The Filter view's offset must remain untouched.
+      expect(next.ui.scrollOffsetForResults).toBe(500);
+    });
+
+    it('keeps the Filter scroll position when scrolling in the Favorites view', () => {
+      // Filter view scrolled to 1000.
+      let state = assetSearchReducer(
+        makeSearchState({ scrollOffsetForResults: 0 }),
+        setScrollOffsetForResults({ offset: 1000 }),
+      );
+      // Switch to the Favorites tab and scroll there.
+      state = assetSearchReducer(
+        { ...state, query: { ...state.query, favoritesOnly: true } },
+        setScrollOffsetForResults({ offset: 200 }),
+      );
+
+      expect(state.ui.scrollOffsetForResults).toBe(1000);
+      expect(state.scrollOffsetForFavorites).toBe(200);
+    });
+  });
+
+  describe('selector', () => {
+    it('returns the Filter offset in Filter mode', () => {
+      const state: AssetSearchState = {
+        ...makeSearchState({ scrollOffsetForResults: 1000 }),
+        scrollOffsetForFavorites: 200,
+      };
+
+      expect(selectScrollOffsetForResults.projector(state)).toBe(1000);
+    });
+
+    it('returns the Favorites offset in Favorites mode', () => {
+      const state: AssetSearchState = {
+        ...makeSearchState({ scrollOffsetForResults: 1000 }),
+        query: favoritesQuery,
+        scrollOffsetForFavorites: 200,
+      };
+
+      expect(selectScrollOffsetForResults.projector(state)).toBe(200);
+    });
   });
 });

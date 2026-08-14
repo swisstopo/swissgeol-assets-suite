@@ -17,7 +17,7 @@ import { createSelector } from '@ngrx/store';
 
 import { WorkflowStatus } from '@swissgeol/ui-core';
 import { isPanelOpen } from './asset-search.actions';
-import { AppStateWithAssetSearch } from './asset-search.reducer';
+import { AppStateWithAssetSearch, getActiveScrollOffset } from './asset-search.reducer';
 
 const assetSearchFeature = (state: AppStateWithAssetSearch) => state.assetSearch;
 export const selectFiltersState = createSelector(assetSearchFeature, (state) => state.ui.filtersState);
@@ -30,10 +30,7 @@ export const selectIsResultsOpen = createSelector(selectResultsState, isPanelOpe
 
 export const selectMapPosition = createSelector(assetSearchFeature, (state) => state.ui.map);
 
-export const selectScrollOffsetForResults = createSelector(
-  assetSearchFeature,
-  (state) => state.ui.scrollOffsetForResults,
-);
+export const selectScrollOffsetForResults = createSelector(assetSearchFeature, getActiveScrollOffset);
 
 export const selectSearchQuery = createSelector(assetSearchFeature, (state) => state?.query ?? {});
 

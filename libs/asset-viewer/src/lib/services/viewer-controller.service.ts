@@ -369,11 +369,13 @@ export class ViewerControllerService {
 
   private updateStoreByParams(params: ViewerParams): Promise<void> {
     const { ui, query, assetId } = params;
+    // `setQuery` must be dispatched before `setScrollOffsetForResults`, so that the reducer
+    // routes the offset to the view (Filter or Favorites) that this navigation targets.
+    this.store.dispatch(setQuery({ query }));
     this.store.dispatch(setScrollOffsetForResults({ offset: ui.scrollOffsetForResults }));
     this.store.dispatch(setFiltersState({ state: ui.filtersState }));
     this.store.dispatch(setResultsState({ state: ui.resultsState }));
     this.store.dispatch(setMapPosition({ position: ui.map }));
-    this.store.dispatch(setQuery({ query }));
     return this.loadAsset(assetId);
   }
 }
