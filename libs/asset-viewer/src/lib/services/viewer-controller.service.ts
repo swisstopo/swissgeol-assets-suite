@@ -150,7 +150,7 @@ export class ViewerControllerService {
 
   private async loadResults(
     query: SearchQueries,
-    options: { force?: boolean; skipAssetReset?: boolean } = {},
+    options: { force?: boolean; skipAssetReset?: boolean; preserveCurrentAsset?: boolean } = {},
   ): Promise<void> {
     // Always load results when favoritesOnly is true, even if other search criteria are empty
     if (!options.force && isEmptySearchQuery(query) && !query.favoritesOnly) {
@@ -165,6 +165,11 @@ export class ViewerControllerService {
         this.store.dispatch(actions.setAssetsResults({ isLoading: true }));
         const results = await firstValueFrom(this.assetSearchService.search(query));
         this.store.dispatch(actions.setAssetsResults({ results, isLoading: false }));
+        // When preserving the current asset (e.g. when only toggling `favoritesOnly`),
+        // we neither auto-select a single result nor reset the selection.
+        if (options.preserveCurrentAsset) {
+          break;
+        }
         if (results.data.length === 1) {
           await this.loadAsset(results.data[0].id);
         } else if (!options.skipAssetReset) {
@@ -228,9 +233,16 @@ export class ViewerControllerService {
     if (!previousQuery) {
       return;
     }
+
+    // Toggling `favoritesOnly` corresponds to switching between the Filter and Favorites tabs.
+    // This is a view switch, not a change to the search filters, so it must not discard the
+    // user-established view state (selected asset, results panel, scroll offset, map position).
+    // We only reload the data that depends on the favorites flag and otherwise preserve the UI.
+    const isFavoritesToggle = isFavoritesOnlyChange(previousQuery, query);
+
     const currentResultsState = await firstValueFrom(this.store.select(selectResultsState));
     const isSearchQueryEmpty = isEmptySearchQuery(query);
-    if (isSearchQueryEmpty && !query.favoritesOnly) {
+    if (!isFavoritesToggle && isSearchQueryEmpty && !query.favoritesOnly) {
       // Only reset map position if the query is empty and not in favorites mode
       this.store.dispatch(actions.setMapPosition({ position: DEFAULT_MAP_POSITION }));
     }
@@ -238,11 +250,20 @@ export class ViewerControllerService {
     // Load results and stats in parallel, plus geometries if search type changed.
     await Promise.all([
       this.loadResults(query, {
-        force: !isPanelAutomaticallyToggled(currentResultsState) && isPanelOpen(currentResultsState),
+        force: isFavoritesToggle
+          ? isPanelOpen(currentResultsState)
+          : !isPanelAutomaticallyToggled(currentResultsState) && isPanelOpen(currentResultsState),
+        preserveCurrentAsset: isFavoritesToggle,
       }),
       this.loadStats(query),
       ...(previousQuery?.type !== query.type ? [this.loadGeometries(query.type)] : []),
     ]);
+
+    // A favorites toggle preserves the results panel state as-is; the panel should only
+    // open/close on an actual search change or when the user toggles it manually.
+    if (isFavoritesToggle) {
+      return;
+    }
 
     // Use file results total for file search, asset results total for asset search.
     const total =
@@ -348,11 +369,26 @@ export class ViewerControllerService {
 
   private updateStoreByParams(params: ViewerParams): Promise<void> {
     const { ui, query, assetId } = params;
+    // `setQuery` must be dispatched before `setScrollOffsetForResults`, so that the reducer
+    // routes the offset to the view (Filter or Favorites) that this navigation targets.
+    this.store.dispatch(setQuery({ query }));
     this.store.dispatch(setScrollOffsetForResults({ offset: ui.scrollOffsetForResults }));
     this.store.dispatch(setFiltersState({ state: ui.filtersState }));
     this.store.dispatch(setResultsState({ state: ui.resultsState }));
     this.store.dispatch(setMapPosition({ position: ui.map }));
-    this.store.dispatch(setQuery({ query }));
     return this.loadAsset(assetId);
   }
 }
+
+/**
+ * Determines whether the only difference between two queries is the `favoritesOnly` flag.
+ * This corresponds to a Filter <-> Favorites tab switch, as opposed to a change of the search filters.
+ */
+export const isFavoritesOnlyChange = (previous: SearchQueries, current: SearchQueries): boolean => {
+  if (Boolean(previous.favoritesOnly) === Boolean(current.favoritesOnly)) {
+    return false;
+  }
+  const { favoritesOnly: _previousFavoritesOnly, ...previousRest } = previous;
+  const { favoritesOnly: _currentFavoritesOnly, ...currentRest } = current;
+  return JSON.stringify(previousRest) === JSON.stringify(currentRest);
+};

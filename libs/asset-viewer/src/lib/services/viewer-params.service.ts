@@ -13,6 +13,7 @@ import {
   AppStateWithAssetSearch,
   AssetSearchState,
   AssetSearchUiState,
+  getActiveScrollOffset,
 } from '../state/asset-search/asset-search.reducer';
 
 @Injectable({ providedIn: 'root' })
@@ -26,10 +27,14 @@ export class ViewerParamsService {
       this.store.pipe(map((store) => [store.assetSearch, store.shared] as [AssetSearchState, AppSharedState])),
     );
 
+    // `ViewerParams`/URL only carry a single result-list scroll offset, always for the currently
+    // active view. The Favorites view keeps its offset separately, so we normalize it here.
+    const scrollOffsetForResults = getActiveScrollOffset(searchState);
+
     return {
       assetId: sharedState.currentAsset?.asset.id ?? null,
       query: searchState.query,
-      ui: searchState.ui,
+      ui: { ...searchState.ui, scrollOffsetForResults },
     };
   }
 

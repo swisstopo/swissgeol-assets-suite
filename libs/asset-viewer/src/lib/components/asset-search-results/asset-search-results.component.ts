@@ -91,6 +91,13 @@ export class AssetSearchResultsComponent implements OnInit, OnDestroy {
   }
 
   public ngOnDestroy(): void {
+    // Cancel any debounced scroll-offset save that is still pending. Without this, a save
+    // scheduled just before a tab switch could run after `favoritesOnly` has flipped and be
+    // routed to the wrong view's scroll offset.
+    if (this.timeoutForSetOffset !== null) {
+      clearTimeout(this.timeoutForSetOffset);
+      this.timeoutForSetOffset = null;
+    }
     this.subscriptions.unsubscribe();
   }
 

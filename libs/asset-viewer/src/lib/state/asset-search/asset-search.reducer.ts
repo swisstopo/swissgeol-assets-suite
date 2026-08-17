@@ -30,6 +30,16 @@ export interface AssetSearchState {
   geometries: Geometry[];
   ui: AssetSearchUiState;
 
+  /**
+   * The result-list scroll offset for the Favorites view.
+   *
+   * The Filter and Favorites tabs share this state slice but represent two independent views.
+   * Their result-list scroll positions must therefore be tracked separately, so that scrolling
+   * in one tab does not overwrite the remembered scroll position of the other. The Filter view's
+   * offset lives in {@link AssetSearchUiState.scrollOffsetForResults}, the Favorites view's here.
+   */
+  scrollOffsetForFavorites: number;
+
   fileResults: FileSearchResult;
   isLoadingFileResults: boolean;
 
@@ -62,11 +72,27 @@ const initialState: AssetSearchState = {
     map: DEFAULT_MAP_POSITION,
   },
 
+  scrollOffsetForFavorites: 0,
+
   isLoadingGeometries: false,
   isLoadingResults: false,
   isLoadingFileResults: false,
   isLoadingStats: false,
 };
+
+/**
+ * The Filter and Favorites tabs share this state slice but are two independent views, each with its
+ * own result-list scroll position. These two helpers are the single source of truth for mapping the
+ * currently active view (determined by `query.favoritesOnly`) to its scroll offset, so the reducer,
+ * selector, and URL serialization all stay in sync.
+ */
+export const getActiveScrollOffset = (state: AssetSearchState): number =>
+  state.query.favoritesOnly ? state.scrollOffsetForFavorites : state.ui.scrollOffsetForResults;
+
+export const setActiveScrollOffset = (state: AssetSearchState, offset: number): AssetSearchState =>
+  state.query.favoritesOnly
+    ? { ...state, scrollOffsetForFavorites: offset }
+    : { ...state, ui: { ...state.ui, scrollOffsetForResults: offset } };
 
 export const assetSearchReducer = createReducer(
   initialState,
@@ -142,12 +168,7 @@ export const assetSearchReducer = createReducer(
       ui: { ...state.ui, resultsState },
     }),
   ),
-  on(actions.setScrollOffsetForResults, (state, { offset }): AssetSearchState => {
-    return {
-      ...state,
-      ui: { ...state.ui, scrollOffsetForResults: offset },
-    };
-  }),
+  on(actions.setScrollOffsetForResults, (state, { offset }): AssetSearchState => setActiveScrollOffset(state, offset)),
   on(actions.setMapPosition, (state, { position }): AssetSearchState => {
     return {
       ...state,
