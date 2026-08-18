@@ -1,4 +1,4 @@
-<div class="file" *rxFor="let assetFile of this.files()">
+<div class="file" *rxFor="let assetFile of this.files(); trackBy: 'id'">
   <div class="file__info">
     <div class="file__info__metadata">
       <sgc-icon name="file"></sgc-icon>
