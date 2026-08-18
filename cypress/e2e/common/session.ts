@@ -29,7 +29,7 @@ const hasValidAccessToken = (storage: Storage): boolean => {
   }
   // An unparsable expiration yields `NaN`, which compares false and therefore counts as
   // valid, again matching the library.
-  return !(Number.parseInt(expiresAt, 10) < Date.now() - CLOCK_SKEW_IN_MS);
+  return Number.parseInt(expiresAt, 10) >= Date.now() - CLOCK_SKEW_IN_MS;
 };
 
 export const waitForExternalNavigation = () =>

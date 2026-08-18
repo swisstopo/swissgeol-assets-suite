@@ -22,7 +22,7 @@ export const getSelectOptions = (): Cypress.Chainable<JQuery<HTMLElement>> => cy
  */
 export const selectOptionByLabel = (label: string): void => {
   getSelectOptions()
-    .contains(new RegExp(`^\\s*${escapeRegExp(label)}\\s*$`))
+    .contains(new RegExp(String.raw`^\s*${escapeRegExp(label)}\s*$`))
     .click();
 };
 
@@ -60,4 +60,4 @@ export const closeSelectOverlay = (): void => {
   cy.get('mat-option').should('not.exist');
 };
 
-const escapeRegExp = (value: string): string => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const escapeRegExp = (value: string): string => value.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);

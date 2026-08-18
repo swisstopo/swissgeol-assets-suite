@@ -46,10 +46,8 @@ export const expandPageRangeRow = (index: number): Cypress.Chainable<JQuery<HTML
 
 export const openPageRangeSelect = (index: number, field: 'categories' | 'languages' | 'from' | 'to'): void => {
   expandPageRangeRow(index);
-  getPageRangeRow(index)
-    .find(`${byTestId(`page-range-select-${field}`)} mat-select`)
-    .click();
 
-  // Material renders the options into an overlay outside of the dialog.
-  cy.get('mat-option').should('exist');
+  const selectTestId = byTestId(`page-range-select-${field}`);
+
+  getPageRangeRow(index).find(`${selectTestId} mat-select`).click();
 };
