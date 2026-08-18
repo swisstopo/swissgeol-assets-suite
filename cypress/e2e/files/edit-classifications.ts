@@ -4,7 +4,7 @@ import { Given, Then, When } from '@badeball/cypress-cucumber-preprocessor';
 import { deTranslationMapping as t } from '../../../apps/client-asset-sg/src/app/i18n';
 import { fetchAssetFile, interceptAssetUpdate, waitForSuccess } from '../../support/api';
 import { closeSelectOverlay, deselectAllOptions, selectOptionByLabel } from '../../support/material';
-import { getAssetDetail } from '../../support/pages/assetSearch';
+import { openAssetEditor } from '../../support/pages/assetSearch';
 import {
   getPageRangeEditor,
   getPageRangeRows,
@@ -29,7 +29,7 @@ const withClassifications = (check: (classifications: PageRangeClassification[])
 };
 
 Given(/^the user navigates to the asset's edit files page$/, () => {
-  getAssetDetail().find(byTestId('edit-asset-button')).should('be.visible').click();
+  openAssetEditor();
 
   cy.get('asset-sg-editor-navigation > [data-tab="files"]').should('be.visible').click();
 
