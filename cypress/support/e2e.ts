@@ -1,11 +1,9 @@
 import 'reflect-metadata';
 import './waitUntil';
+import { resetFixtures } from './fixtures';
 
+// Recreates the database fixtures once per spec file, so that a spec never depends on the
+// state that a previously executed spec left behind.
 before(() => {
-  const shouldSkip = Cypress.env('SKIP_E2E_SETUP');
-  if (shouldSkip) {
-    console.log('Skipping e2e fixtures.');
-  } else {
-    cy.exec('npm run api-command -- fixtures:create');
-  }
+  resetFixtures();
 });
