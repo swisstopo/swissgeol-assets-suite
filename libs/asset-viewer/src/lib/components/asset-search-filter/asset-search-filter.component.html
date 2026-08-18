@@ -1,7 +1,8 @@
-<ul>
-  <li *rxFor="let filter of filters; trackBy: 'value'">
+<ul data-testid="filter-list">
+  <li *rxFor="let filter of filters; trackBy: 'value'" data-testid="filter-item">
     <button
       asset-sg-secondary
+      [attr.data-testid]="'filter-' + filter.value"
       [disabled]="filter.isDisabled || (filter.count === 0 && !filter.isActive)"
       [class.active]="filter.isActive"
       [class.disabled-with-count]="filter.isDisabled"

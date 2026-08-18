@@ -98,7 +98,7 @@
       </ng-container>
 
       <tr mat-header-row *matHeaderRowDef="COLUMNS" class="table__header"></tr>
-      <tr mat-row *matRowDef="let row; columns: COLUMNS"></tr>
+      <tr mat-row *matRowDef="let row; columns: COLUMNS" [attr.data-testid]="'workgroup-row-' + row.id"></tr>
     </table>
     <mat-paginator [pageSizeOptions]="[25, 50, 100]" [showFirstLastButtons]="true"></mat-paginator>
   </div>

@@ -18,9 +18,10 @@
     <hr />
     <div class="form-wrapper" mat-dialog-content>
       <form #formElement [formGroup]="form">
-        <div class="page-range-editor">
+        <div class="page-range-editor" data-testid="page-range-rows">
           @for (group of this.form.controls.classifications.controls; track group) {
             <asset-sg-page-range-editor-group
+              [attr.data-testid]="'page-range-row-' + $index"
               [group]="group"
               [categories]="categories"
               [languages]="languages"
