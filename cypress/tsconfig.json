@@ -3,6 +3,15 @@
   "files": [],
   "compilerOptions": {
     "types": ["cypress", "node"],
+    // `@badeball/cypress-cucumber-preprocessor` exposes its subpaths, such as
+    // `.../esbuild`, only through the `exports` field of its package.json. The `node`
+    // resolution inherited from the base config implements the node10 algorithm, which
+    // predates `exports` and therefore cannot see them.
+    //
+    // `bundler` is the matching setting here, because these sources are bundled by esbuild
+    // rather than run by node directly. It is scoped to this project so that the resolution
+    // of the applications and libraries stays untouched.
+    "moduleResolution": "bundler",
     "paths": {
       "@asset-sg/admin": ["libs/admin/src/index.ts"],
       "@asset-sg/asset-editor": ["libs/asset-editor/src/index.ts"],
