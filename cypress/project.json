@@ -13,13 +13,6 @@
         "local": { "baseUrl": "http://localhost:4200" }
       },
       "dependsOn": ["^serve"]
-    },
-    "component": {
-      "executor": "@nx/cypress:cypress",
-      "options": {
-        "cypressConfig": "cypress/cypress.component.config.ts",
-        "testingType": "component"
-      }
     }
   },
   "tags": ["scope:root-e2e"],
