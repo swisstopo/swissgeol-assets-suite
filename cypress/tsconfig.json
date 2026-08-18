@@ -26,5 +26,7 @@
       "persistence": ["libs/persistence/src/index.ts"]
     }
   },
-  "include": ["**/*.ts"]
+  "include": ["**/*.ts"],
+  // The unit tests of the support code run in jest and are typed by `tsconfig.spec.json`.
+  "exclude": ["**/*.spec.ts", "jest.config.ts"]
 }
