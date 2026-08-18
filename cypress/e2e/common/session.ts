@@ -4,6 +4,34 @@ import { Given } from '@badeball/cypress-cucumber-preprocessor';
 export const APP_URL = 'http://localhost:4200';
 export const IDENTITY_URL = 'http://localhost:4011';
 
+// `AuthService.configureOAuth` passes on an `OAuthConfig`, which carries neither
+// `clockSkewInSec` nor `decreaseExpirationBySec`. The defaults of `angular-oauth2-oidc`
+// therefore apply: the expiration is not decreased, and a token counts as valid until ten
+// minutes past its expiration.
+const CLOCK_SKEW_IN_MS = 600_000;
+
+/**
+ * Reports whether the session storage holds an access token that the application would
+ * accept, mirroring `OAuthService.hasValidAccessToken`.
+ *
+ * The library keeps the expiration in `expires_at`, next to the token itself, so this needs
+ * nothing but the storage that `cy.session` has restored. A token without an expiration
+ * counts as valid, which is what the library does as well.
+ */
+const hasValidAccessToken = (storage: Storage): boolean => {
+  const accessToken = storage.getItem('access_token');
+  if (!accessToken) {
+    return false;
+  }
+  const expiresAt = storage.getItem('expires_at');
+  if (!expiresAt) {
+    return true;
+  }
+  // An unparsable expiration yields `NaN`, which compares false and therefore counts as
+  // valid, again matching the library.
+  return !(Number.parseInt(expiresAt, 10) < Date.now() - CLOCK_SKEW_IN_MS);
+};
+
 export const waitForExternalNavigation = () =>
   cy.window().then((window) =>
     cy.waitUntil(() => {
@@ -53,10 +81,18 @@ export const signIn = (username: keyof typeof fixtures.users): void => {
     },
     {
       cacheAcrossSpecs: true,
-      // Without a validation the suite silently reuses a session whose token has been
-      // dropped or has expired, which surfaces much later as unrelated request failures.
+      // A restored session is only useful while its access token is one that the application
+      // accepts. The HTTP interceptor drops every API request once the token is missing, and
+      // logs the user out once it has expired, which surfaces much later as unrelated
+      // failures. Checking the token here instead makes cypress run the sign in again.
+      //
+      // This reads the same session storage entries as the application, so it catches a
+      // token that was never restored as well as one that has expired. It does not verify
+      // the token against the identity provider or the api.
       validate: () => {
-        cy.window().its('sessionStorage.access_token').should('be.a', 'string');
+        cy.window({ log: false }).should((win) => {
+          expect(hasValidAccessToken(win.sessionStorage), 'cached session has a valid access token').to.equal(true);
+        });
       },
     },
   );
