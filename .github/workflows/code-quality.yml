@@ -241,8 +241,7 @@ jobs:
           command: |
             npm run cypress:run -- \
               --browser edge \
-              --record \
-              --key ${{ secrets.CYPRESS_RECORD_KEY }}
+              --record
           start: npm start
           wait-on: "http://localhost:4200"
           wait-on-timeout: 120
@@ -250,6 +249,10 @@ jobs:
           TZ: Europe/Zurich
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CYPRESS_SKIP_E2E_SETUP: true
+          # Passed as an environment variable rather than via `--key`, so that the record key
+          # never appears in a command line, where it can leak into process listings and into
+          # the output of commands that echo their invocation.
+          CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
       - name: Stop services
         if: always()
         run: |
