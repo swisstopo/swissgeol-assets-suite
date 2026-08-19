@@ -1,96 +1,128 @@
-import { PageCategory, SupportedPageLanguages } from '@asset-sg/shared/v2';
+import { PageCategory, PageRangeClassification, SupportedPageLanguages } from '@asset-sg/shared/v2';
 import { Then, When } from '@badeball/cypress-cucumber-preprocessor';
-import { pdf } from '../common/viewer';
+import { fetchAssetFile } from '../../support/api';
+import { getViewerFile, scrollAssetDetailToBottom } from '../../support/pages/assetSearch';
+import { byTestId } from '../../support/testId';
+import { assetWithPdf, pdf } from '../common/viewer';
+
+const getFile = () => getViewerFile(pdf.id);
+const getFileSummary = () => getFile().find('asset-sg-asset-viewer-files-content-summary');
+const getTableOfContents = () => getFile().find(byTestId('content-body'));
+
+/**
+ * Runs assertions against the classifications that are actually stored for the file.
+ *
+ * See `fetchAssetFile` for why these are read from the API instead of from the fixture.
+ */
+const withClassifications = (check: (classifications: PageRangeClassification[]) => void): void => {
+  fetchAssetFile(assetWithPdf.id, pdf.id).then((file) => check(file.pageRangeClassifications ?? []));
+};
 
 Then(/^the asset's details contain its PDF$/, () => {
-  cy.get('@detail').find('.asset-detail-scroll-container').scrollTo('bottom');
+  scrollAssetDetailToBottom();
 
-  cy.get('@detail')
-    .find('[data-testid="assetNormalFiles"]')
-    .find('asset-sg-asset-viewer-files > .file:first-child')
-    .as('file')
-    .should('exist');
-
-  cy.get('@file')
-    .find('.file__info__file-name')
+  getFile().should('exist');
+  getFile()
+    .find(byTestId('file-name'))
     .should('have.text', pdf.alias ?? pdf.name);
 });
 
 Then(/^the PDF shows its page number$/, () => {
-  cy.get('@file')
-    .find('asset-sg-asset-viewer-files-content-summary asset-sg-asset-viewer-files-tag:first')
-    .should('have.text', `${pdf.pageCount} Seiten`);
+  getFileSummary().find('asset-sg-asset-viewer-files-tag').first().should('have.text', `${pdf.pageCount} Seiten`);
 });
 
 Then(/^the PDF shows all of its languages$/, () => {
-  const languages = new Set(pdf.pageRangeClassifications?.flatMap((it) => it.languages) ?? []);
-  for (const language of languages) {
-    cy.get('@file').find(`asset-sg-asset-viewer-files-tag[data-testid="language-${language}"]`).should('exist');
-  }
+  withClassifications((classifications) => {
+    const languages = new Set(classifications.flatMap((it) => it.languages));
+    for (const language of languages) {
+      getFileSummary()
+        .find(byTestId(`language-${language}`))
+        .should('exist');
+    }
 
-  const unusedLanguages = SupportedPageLanguages.filter((it) => !languages.has(it));
-  for (const language of unusedLanguages) {
-    cy.get('@file').find(`asset-sg-asset-viewer-files-tag[data-testid="language-${language}"]`).should('not.exist');
-  }
+    const unusedLanguages = SupportedPageLanguages.filter((it) => !languages.has(it));
+    for (const language of unusedLanguages) {
+      getFileSummary()
+        .find(byTestId(`language-${language}`))
+        .should('not.exist');
+    }
+  });
 });
 
 Then(/^the PDF shows all of its page categories$/, () => {
-  const categories = new Set(pdf.pageRangeClassifications?.flatMap((it) => it.categories) ?? []);
-  for (const category of categories) {
-    cy.get('@file').find(`asset-sg-asset-viewer-files-tag[data-testid="category-${category}"]`).should('exist');
-  }
+  withClassifications((classifications) => {
+    const categories = new Set(classifications.flatMap((it) => it.categories));
+    for (const category of categories) {
+      getFileSummary()
+        .find(byTestId(`category-${category}`))
+        .should('exist');
+    }
 
-  const unusedCategories = Object.values(PageCategory).filter((it) => !categories.has(it));
-  for (const category of unusedCategories) {
-    cy.get('@file').find(`asset-sg-asset-viewer-files-tag[data-testid="category-${category}"]`).should('not.exist');
-  }
+    const unusedCategories = Object.values(PageCategory).filter((it) => !categories.has(it));
+    for (const category of unusedCategories) {
+      getFileSummary()
+        .find(byTestId(`category-${category}`))
+        .should('not.exist');
+    }
+  });
 });
 
 When(/^the PDF's table of contents is toggled$/, () => {
-  cy.wait(1000);
+  // The toggle sits inside a scrollable container, so it may be clipped rather than
+  // visible. `click` scrolls it into view on its own; asserting on visibility first would
+  // fail even though the element is perfectly clickable.
+  getFile().find(byTestId('content-toggle')).should('exist').click();
 
-  cy.get('@file').find('[data-testid="content-toggle"]').click();
+  // The accordion body is rendered lazily, so wait for it before continuing instead of
+  // letting the following steps race against the expansion.
+  getTableOfContents().should('exist');
 
   // Scroll to the bottom again as the toc will have appeared partially out of frame.
-  cy.get('@detail').find('.asset-detail-scroll-container').scrollTo('bottom');
+  scrollAssetDetailToBottom();
 });
 
 Then(/^the table becomes visible$/, () => {
-  cy.get('@file').find('[data-testid="content-body"]').as('table').should('be.visible');
+  getTableOfContents().should('be.visible');
 });
 
 Then(/^the table lists the file's classifications$/, () => {
-  for (const category of Object.values(PageCategory)) {
-    checkTableOfContentsHasCategory(category);
-  }
+  withClassifications((classifications) => {
+    for (const category of Object.values(PageCategory)) {
+      checkTableOfContentsHasCategory(classifications, category);
+    }
+  });
 });
 
-const checkTableOfContentsHasCategory = (category: PageCategory): void => {
-  if (pdf.pageRangeClassifications === null) {
-    return;
-  }
+const checkTableOfContentsHasCategory = (
+  allClassifications: PageRangeClassification[],
+  category: PageCategory,
+): void => {
+  const classifications = allClassifications.filter((it) => it.categories.includes(category));
+  const categorySelector = byTestId(`category-${category}`);
 
-  const classifications = pdf.pageRangeClassifications.filter((it) => it.categories.includes(category));
-  console.log(pdf.pageRangeClassifications);
-  const classificationList = cy.get('@table').find(`dl[data-testid="category-${category}"]`);
   if (classifications.length === 0) {
-    classificationList.should('not.exist');
+    getTableOfContents().find(`dl${categorySelector}`).should('not.exist');
     return;
   }
 
-  classificationList.as('classificationList').should('exist');
+  getTableOfContents().find(`dl${categorySelector}`).should('exist');
 
-  let i = 0;
-  for (const classification of classifications) {
-    i += 1;
-    cy.get('@classificationList').find(`dd:nth-of-type(${i})`).as('item').should('exist');
+  classifications.forEach((classification, index) => {
+    const getItem = () =>
+      getTableOfContents()
+        .find(`dl${categorySelector}`)
+        .find(`dd:nth-of-type(${index + 1})`);
+
+    getItem().should('exist');
 
     const range =
       classification.from === classification.to ? classification.from : `${classification.from} - ${classification.to}`;
-    cy.get('@item').find('.page-range').should('contain.text', range);
+    getItem().find('.page-range').should('contain.text', range);
 
     for (const language of classification.languages) {
-      cy.get('@item').find(`asset-sg-asset-viewer-files-tag[data-testid="language-${language}"]`).should('exist');
+      getItem()
+        .find(byTestId(`language-${language}`))
+        .should('exist');
     }
-  }
+  });
 };

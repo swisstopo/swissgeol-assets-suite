@@ -11,6 +11,7 @@ Scenario Outline: The default workgroup is shown for the "<username>" user
     | editor    |
     | reader    |
 
-Scenario: The default workgroup is not shown for the "admin" user
+Scenario: The default workgroup is not selectable for the "admin" user
   Given the application has been accessed as "admin"
-  Then no workgroups are visible
+  Then the "Swisstopo" workgroup is visible
+  And no workgroup is selectable

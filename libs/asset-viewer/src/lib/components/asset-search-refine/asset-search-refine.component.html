@@ -55,7 +55,7 @@
       <asset-sg-separator></asset-sg-separator>
       <section>
         <h4 translate>search.workgroup</h4>
-        <asset-sg-asset-search-filter [filters]="workgroupFilters$ | push" />
+        <asset-sg-asset-search-filter data-testid="workgroup-filters" [filters]="workgroupFilters$ | push" />
       </section>
       <section>
         <h4 translate>search.usage</h4>

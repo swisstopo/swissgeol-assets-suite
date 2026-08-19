@@ -1,8 +1,8 @@
-<div class="file" *rxFor="let assetFile of this.files()">
+<div class="file" *rxFor="let assetFile of this.files(); trackBy: 'id'" [attr.data-testid]="'file-' + assetFile.id">
   <div class="file__info">
     <div class="file__info__metadata">
       <sgc-icon name="file"></sgc-icon>
-      <span class="file__info__file-name">{{ assetFile | fileName }}</span>
+      <span class="file__info__file-name" data-testid="file-name">{{ assetFile | fileName }}</span>
       @if (locale$ | async; as locale) {
         <asset-sg-asset-viewer-files-tag>{{ assetFile | fileSize: locale }}</asset-sg-asset-viewer-files-tag>
       }

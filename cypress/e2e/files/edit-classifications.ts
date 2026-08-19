@@ -1,84 +1,110 @@
+import { PageRangeClassification } from '@asset-sg/shared/v2';
 import { Given, Then, When } from '@badeball/cypress-cucumber-preprocessor';
 // eslint-disable-next-line @nx/enforce-module-boundaries
 import { deTranslationMapping as t } from '../../../apps/client-asset-sg/src/app/i18n';
+import { fetchAssetFile, interceptAssetUpdate, waitForSuccess } from '../../support/api';
+import { closeSelectOverlay, deselectAllOptions, selectOptionByLabel } from '../../support/material';
+import { openAssetEditor } from '../../support/pages/assetSearch';
+import {
+  getPageRangeEditor,
+  getPageRangeRows,
+  getPageRangeSummary,
+  openPageRangeSelect,
+} from '../../support/pages/pageRangeEditor';
+import { byTestId, getByTestId } from '../../support/testId';
 import { assetWithPdf, pdf } from '../common/viewer';
 
+/**
+ * The page range that the mutating scenario edits, as a zero-based index.
+ */
+const EDITED_ROW_INDEX = 2;
+
+/**
+ * Runs assertions against the classifications that are actually stored for the file.
+ *
+ * See `fetchAssetFile` for why these are read from the API instead of from the fixture.
+ */
+const withClassifications = (check: (classifications: PageRangeClassification[]) => void): void => {
+  fetchAssetFile(assetWithPdf.id, pdf.id).then((file) => check(file.pageRangeClassifications ?? []));
+};
+
 Given(/^the user navigates to the asset's edit files page$/, () => {
-  cy.get('@detail').find('[data-testid="edit-asset-button"]').click();
-  cy.get('asset-sg-editor-navigation > [data-tab="files"]').click();
+  openAssetEditor();
+
+  cy.get('asset-sg-editor-navigation > [data-tab="files"]').should('be.visible').click();
+
+  getByTestId(`file-${pdf.id}`).should('be.visible');
 });
 
 When(/^a PDF's page range editor is opened$/, () => {
-  cy.get(`tr[data-testid="file-${pdf.id}"]`).as('fileRow').should('exist');
-  cy.get('@fileRow').find('[data-testid="page-range-editor-button"]').click();
+  getByTestId(`file-${pdf.id}`).find(byTestId('page-range-editor-button')).should('be.visible').click();
 
-  cy.get('asset-sg-page-range-editor').as('pageRangeEditor').parent().should('be.visible');
+  // The dialog's component host itself has no dimensions, so assert on the dialog container
+  // and on the rendered rows rather than on the host's visibility.
+  getPageRangeEditor().should('exist');
+  cy.get('mat-dialog-container').should('be.visible');
+  withClassifications((classifications) => {
+    getPageRangeRows().should('have.length', classifications.length);
+  });
 });
 
 Then(/^the file's page ranges are displayed$/, () => {
-  let i = 0;
-  for (const classification of pdf.pageRangeClassifications ?? []) {
-    i += 1;
-    cy.get('@pageRangeEditor').find(`.page-range-editor__row:nth-of-type(${i})`).as('row');
-    cy.get('@row').should('exist');
+  withClassifications((classifications) => {
+    classifications.forEach((classification, index) => {
+      // Assert against each group's summary. It always reflects the current form state and,
+      // unlike the form controls, is rendered whether or not the group is expanded.
+      for (const category of classification.categories) {
+        getPageRangeSummary(index, 'categories').should('contain.text', t.pageClassificationCodes[category]);
+      }
 
-    getSelectedLabel('categories').as('selectedClassificationsLabel');
-    for (const category of classification.categories) {
-      const text = t.pageClassificationCodes[category];
-      cy.get('@selectedClassificationsLabel').should('contain.text', text);
-    }
+      for (const language of classification.languages) {
+        getPageRangeSummary(index, 'languages').should('contain.text', language.toLocaleUpperCase());
+      }
 
-    getSelectedLabel('languages').as('selectedLanguagesLabel');
-    for (const language of classification.languages) {
-      cy.get('@selectedLanguagesLabel').should('contain.text', language.toLocaleUpperCase());
-    }
-
-    getSelectedLabel('from').should('have.text', classification.from);
-    getSelectedLabel('to').should('have.text', classification.to);
-  }
+      const pages =
+        classification.from === classification.to
+          ? `P. ${classification.from}`
+          : `P. ${classification.from} - ${classification.to}`;
+      getPageRangeSummary(index, 'pages').should('have.text', pages);
+    });
+  });
 });
 
 When(/^a range's category select is opened$/, () => {
-  getPageRangeRow().as('row');
-  cy.get('@row').find(`asset-sg-select[formcontrolname="categories"] mat-select`).click();
+  openPageRangeSelect(EDITED_ROW_INDEX, 'categories');
 });
 
 When(/^the active categories are deselected$/, () => {
-  cy.get('mat-option.mdc-list-item--selected').click({ multiple: true });
+  deselectAllOptions();
 });
 
-When(/^the category "([^"]*)" is selected$/, (categoryName) => {
-  cy.get('mat-option').filter(`:contains("${categoryName}")`).click();
+When(/^the category "([^"]*)" is selected$/, (categoryName: string) => {
+  selectOptionByLabel(categoryName);
 });
 
 When(/^the page range changes are saved$/, () => {
-  // Click the select's backdrop to close it.
-  cy.get('.cdk-overlay-transparent-backdrop').click({ force: true });
+  closeSelectOverlay();
 
-  cy.get('@pageRangeEditor').find(`[data-testid="save-page-ranges"]`).click();
+  getPageRangeEditor().find(byTestId('save-page-ranges')).should('be.visible').click();
+  getPageRangeEditor().should('not.exist');
 });
 
 When(/^the editor's changes are saved$/, () => {
-  cy.intercept('PUT', `/api/assets/${assetWithPdf.id}`).as('saveRequest');
-  cy.get('[data-testid="save-asset"]').click();
-  cy.wait('@saveRequest');
+  const updateAlias = interceptAssetUpdate(assetWithPdf.id);
+
+  getByTestId('save-asset').should('be.visible').click();
+
+  waitForSuccess(updateAlias);
 });
 
 When(/^the page is reloaded$/, () => {
   cy.reload();
+
+  // Wait for the reloaded editor to be interactive again instead of letting the next step
+  // race against the application's bootstrap.
+  getByTestId(`file-${pdf.id}`).should('be.visible');
 });
 
-Then(/^the page range has the category "([^"]*)"$/, (categoryName) => {
-  getPageRangeRow().as('row');
-
-  getSelectedLabel('categories').should('contain.text', categoryName);
+Then(/^the page range has the category "([^"]*)"$/, (categoryName: string) => {
+  getPageRangeSummary(EDITED_ROW_INDEX, 'categories').should('contain.text', categoryName);
 });
-
-const getPageRangeRow = () => cy.get('@pageRangeEditor').find(`.page-range-editor__row:nth-of-type(3)`);
-
-const getSelectedLabel = (formControlName: string) =>
-  cy
-    .get('@row')
-    .find(`asset-sg-select[formcontrolname="${formControlName}"]`)
-    .find('mat-select')
-    .find('.mat-mdc-select-value .mat-mdc-select-min-line');

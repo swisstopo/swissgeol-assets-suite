@@ -5,6 +5,7 @@
 <div mat-dialog-content>
   <asset-sg-select
     title="{{ 'admin.workgroups' | translate }}"
+    data-testid="workgroup-select"
     [values]="workgroupValues"
     (selectionChanged)="setSelectedWorkgroups($event)"
     errorMessage="{{ shouldShowError ? ('admin.userPage.workgroupAddError' | translate) : '' }}"
@@ -13,6 +14,7 @@
   </asset-sg-select>
   <asset-sg-select
     title="{{ 'admin.role' | translate }}"
+    data-testid="role-select"
     [values]="roles"
     (selectionChanged)="setSelectedRole($event)"
     [initialKeys]="[selectedRole]"

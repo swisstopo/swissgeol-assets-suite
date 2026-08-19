@@ -1,11 +1,16 @@
 ﻿<div class="page-range-editor__row__content" [class.page-range-editor__row__content--expanded]="expanded()">
   <div class="page-range-editor__row__header">
-    <button type="button" class="page-range-editor__row__toggle" (click)="toggleGroup()">
+    <button
+      type="button"
+      class="page-range-editor__row__toggle"
+      data-testid="page-range-toggle"
+      (click)="toggleGroup()"
+    >
       <div class="page-range-editor__row__summary">
-        <span class="page-range-editor__row__summary-label">{{ getHeaderLabel() }}</span>
-        <span class="page-range-editor__row__tag">{{ getTypeSummary() }}</span>
-        <span class="page-range-editor__row__tag">{{ getLanguageSummary() }}</span>
-        <span class="page-range-editor__row__tag">{{ getPageSummary() }}</span>
+        <span class="page-range-editor__row__summary-label" data-testid="page-range-label">{{ getHeaderLabel() }}</span>
+        <span class="page-range-editor__row__tag" data-testid="page-range-categories">{{ getTypeSummary() }}</span>
+        <span class="page-range-editor__row__tag" data-testid="page-range-languages">{{ getLanguageSummary() }}</span>
+        <span class="page-range-editor__row__tag" data-testid="page-range-pages">{{ getPageSummary() }}</span>
       </div>
     </button>
 
@@ -32,7 +37,7 @@
   </div>
 
   @if (expanded()) {
-    <div class="page-range-editor__row__body" [formGroup]="group()">
+    <div class="page-range-editor__row__body" data-testid="page-range-body" [formGroup]="group()">
       <div class="page-range-editor__row__title-row">
         <label
           [title]="'edit.tabs.files.pageRanges.label' | translate"
@@ -51,6 +56,7 @@
       <div class="page-range-editor__row__inputs">
         <asset-sg-select
           formControlName="categories"
+          data-testid="page-range-select-categories"
           [title]="'edit.tabs.files.pageRanges.type' | translate"
           [values]="categories()"
           [bindKey]="'value'"
@@ -61,6 +67,7 @@
 
         <asset-sg-select
           formControlName="languages"
+          data-testid="page-range-select-languages"
           [title]="'edit.tabs.files.pageRanges.language' | translate"
           [values]="languages()"
           [bindKey]="'value'"
@@ -70,6 +77,7 @@
 
         <asset-sg-select
           formControlName="from"
+          data-testid="page-range-select-from"
           [title]="'edit.tabs.files.pageRanges.pageFrom' | translate"
           [values]="availablePages()"
           skipTranslate
@@ -77,6 +85,7 @@
 
         <asset-sg-select
           formControlName="to"
+          data-testid="page-range-select-to"
           [title]="'edit.tabs.files.pageRanges.pageTo' | translate"
           [values]="availablePages()"
           skipTranslate

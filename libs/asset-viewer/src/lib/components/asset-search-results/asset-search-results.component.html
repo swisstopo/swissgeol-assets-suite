@@ -129,6 +129,7 @@
             clickable
             mat-row
             *matRowDef="let row; columns: COLUMNS"
+            [attr.data-testid]="'asset-row-' + row.id"
             (click)="searchForAsset(row.id)"
             (mouseover)="assetMouseOver.emit(row.id)"
             (mouseleave)="assetMouseOver.emit(null)"
