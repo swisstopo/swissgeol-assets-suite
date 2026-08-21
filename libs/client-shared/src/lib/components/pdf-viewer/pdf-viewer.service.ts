@@ -2,12 +2,6 @@ import { inject, Injectable, NgZone, OnDestroy } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { withTimeout } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
-// The `legacy` build is used instead of the default one because it ships the polyfills for the modern
-// JavaScript features that PDF.js relies on (e.g. `Promise.try`, `Math.sumPrecise`, `Iterator.prototype.join`).
-// The default build assumes these to be natively available, which does not hold in this application:
-// zone.js replaces the global `Promise` with its own `ZoneAwarePromise`, which does not implement
-// `Promise.try`, causing PDF.js to fail immediately when loading a document.
-// The `legacy` worker build (see the builder configuration) is required for the same reason.
 import {
   getDocument,
   GlobalWorkerOptions,
@@ -16,7 +10,7 @@ import {
   PDFDocumentProxy,
   TextLayer,
   version,
-} from 'pdfjs-dist/legacy/build/pdf.mjs';
+} from 'pdfjs-dist';
 import { PDFPageProxy, TextContent } from 'pdfjs-dist/types/src/display/api';
 import { noop } from 'rxjs';
 import { SessionStorageService } from '../../services/session-storage.service';
@@ -69,17 +63,17 @@ export class PdfViewerService implements OnDestroy {
     if (PDF_VIEWER_DEBUG) {
       console.log(`[pdf-service] loadPdf pdfId=${pdfId} svcGen=${generation} — starting getDocument`);
     }
-    const loadingTask = getDocument({
+    this.loadingTask = getDocument({
       url: `/api/assets/${assetId}/files/${pdfId}`,
       httpHeaders: this.getAuthorizationHeader(),
       disableAutoFetch: true,
       disableStream: true,
     });
-    this.loadingTask = loadingTask;
     try {
-      const doc = await loadingTask.promise;
+      const doc = await this.loadingTask.promise;
+      // Only adopt the document if this is still the active load.
       if (this.loadGeneration !== generation) {
-        await loadingTask.destroy().catch(noop);
+        await doc.destroy().catch(noop);
         throw new Error('Load superseded');
       }
       this.pdfDoc = doc;

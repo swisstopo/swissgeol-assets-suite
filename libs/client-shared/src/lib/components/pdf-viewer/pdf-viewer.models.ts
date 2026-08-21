@@ -1,7 +1,7 @@
 import { Renderer2 } from '@angular/core';
 import { AssetFile, PageDimension } from '@asset-sg/shared/v2';
-import type { PageViewport } from 'pdfjs-dist';
-import type { PDFPageProxy } from 'pdfjs-dist/types/src/display/api';
+import { PageViewport } from 'pdfjs-dist';
+import { PDFPageProxy } from 'pdfjs-dist/types/src/display/api';
 
 export type PdfViewerFile = Pick<AssetFile, 'id' | 'pageRangeClassifications'> & {
   fileName: string;
