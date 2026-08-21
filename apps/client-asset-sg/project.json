@@ -26,7 +26,7 @@
           },
           {
             "glob": "pdf.worker.*",
-            "input": "node_modules/pdfjs-dist/legacy/build/",
+            "input": "node_modules/pdfjs-dist/build/",
             "output": "/assets/pdfjs"
           }
         ],
@@ -53,7 +53,7 @@
             {
               "type": "initial",
               "maximumWarning": "2.6mb",
-              "maximumError": "3.7mb"
+              "maximumError": "3.5mb"
             },
             {
               "type": "anyComponentStyle",
