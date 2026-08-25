@@ -23,6 +23,9 @@ export const deTranslationMapping = {
   deletedUserName: 'gelöschter Benutzer',
   downloadFailed: 'Datei konnte nicht heruntergeladen werden.',
   pdfNoLongerAvailable: 'Das geöffnete PDF ist nicht mehr verfügbar. Es wurde ein anderes PDF ausgewählt.',
+  pdfSlowLoading:
+    'Das Laden dieses PDFs kann längere Zeit in Anspruch nehmen. Wir empfehlen, das Dokument stattdessen herunterzuladen.',
+  pdfSlowLoadingDownload: 'Herunterladen',
   workgroup: {
     title: 'Arbeitsgruppe',
     errors: {

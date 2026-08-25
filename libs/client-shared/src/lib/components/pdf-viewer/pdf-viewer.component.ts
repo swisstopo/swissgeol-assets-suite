@@ -23,6 +23,7 @@ import { injectVirtualizer, VirtualItem } from '@tanstack/angular-virtual';
 import { showAlert } from '../../state/alert/alert.actions';
 import { AlertType } from '../../state/alert/alert.model';
 import { triggerDownload } from '../../utils';
+import { PdfSlowLoadingService } from './pdf-slow-loading.service';
 import { PdfViewerApiService } from './pdf-viewer-api.service';
 import { PdfViewerHandoverService } from './pdf-viewer-handover.service';
 import { PdfViewerHeaderComponent } from './pdf-viewer-header/pdf-viewer-header.component';
@@ -78,7 +79,13 @@ import { PdfViewerService } from './pdf-viewer.service';
   ],
   templateUrl: './pdf-viewer.component.html',
   styleUrl: './pdf-viewer.component.scss',
-  providers: [PdfViewerService, PdfViewerInputService, PdfViewerRendererService, PdfViewerHandoverService],
+  providers: [
+    PdfViewerService,
+    PdfViewerInputService,
+    PdfViewerRendererService,
+    PdfViewerHandoverService,
+    PdfSlowLoadingService,
+  ],
 })
 export class PdfViewerComponent implements OnDestroy {
   public readonly hideHeader = input(false);
@@ -122,6 +129,7 @@ export class PdfViewerComponent implements OnDestroy {
   private readonly pdfViewerInputService = inject(PdfViewerInputService);
   private readonly pdfViewerRendererService = inject(PdfViewerRendererService);
   private readonly pdfViewerHandoverService = inject(PdfViewerHandoverService);
+  private readonly pdfSlowLoadingService = inject(PdfSlowLoadingService);
 
   private resizeObserver: ResizeObserver | null = null;
   private scrollRenderTimer: ReturnType<typeof setTimeout> | null = null;
@@ -191,6 +199,7 @@ export class PdfViewerComponent implements OnDestroy {
     this.resizeObserver?.disconnect();
     this.pdfViewerInputService.destroy();
     this.pdfViewerHandoverService.end();
+    this.pdfSlowLoadingService.reset();
     if (this.scrollRenderTimer) {
       clearTimeout(this.scrollRenderTimer);
     }
@@ -818,6 +827,12 @@ export class PdfViewerComponent implements OnDestroy {
     this.currentPage.set(-1);
     this.hasError.set(false);
     this.isRendering.set(true);
+    // The PDF is not usable until isRendering becomes false. Watch this loading attempt so a
+    // slow-loading fallback dialog can be offered if it takes too long.
+    this.pdfSlowLoadingService.beginLoading(() => {
+      this.downloadPdf();
+      this.closeViewer();
+    });
 
     this.pendingVirtualMeasure = false;
     this.pendingCanvasRefresh = false;
@@ -903,6 +918,7 @@ export class PdfViewerComponent implements OnDestroy {
       this.virtualizer.measure();
 
       this.isRendering.set(false);
+      this.pdfSlowLoadingService.completeLoading();
       await this.waitForDom();
 
       if (this.loadGeneration !== generation) {
@@ -922,6 +938,7 @@ export class PdfViewerComponent implements OnDestroy {
       if (this.loadGeneration !== generation) {
         return;
       }
+      this.pdfSlowLoadingService.completeLoading();
       this.hasError.set(true);
       this.store.dispatch(
         showAlert({

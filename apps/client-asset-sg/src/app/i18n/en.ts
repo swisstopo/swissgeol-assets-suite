@@ -25,6 +25,8 @@ export const enTranslationMapping: AppTranslationMapping = {
   deletedUserName: 'deleted user',
   downloadFailed: 'File could not be downloaded.',
   pdfNoLongerAvailable: 'The opened PDF is no longer available. Another PDF has been opened.',
+  pdfSlowLoading: 'Loading this PDF may take a long time. We recommend downloading the document instead.',
+  pdfSlowLoadingDownload: 'Download',
   workgroup: {
     title: 'Workgroup',
     errors: {
