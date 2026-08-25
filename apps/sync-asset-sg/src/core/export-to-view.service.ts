@@ -1,4 +1,3 @@
-import { getHeapStatistics } from 'v8';
 import { Prisma, PrismaClient } from '@prisma/client';
 import { FILE_CHUNK_SIZE, SyncConfig } from './config';
 import { log } from './log';
@@ -82,21 +81,14 @@ export class ExportToViewService {
     await this.export('workgroup', 'id', workgroupIds);
 
     // batch the list of public asset ids
-    for (const [index, batch] of batches.entries()) {
-      const batchNumber = index + 1;
-      log(`Export batch #${batchNumber}`);
-      const time = Date.now();
+    for (const batch of batches) {
       const assetIds = batch.map((item) => item.assetId);
       await this.exportAssets(assetIds);
-      await this.exportFiles(assetIds, batchNumber);
+      await this.exportFiles(assetIds);
       await this.export('assetLanguage', 'assetId', assetIds, true);
 
       await this.export('manCatLabelRef', 'assetId', assetIds, true);
       await this.export('typeNatRel', 'assetId', assetIds, true);
-
-      const timeTaken = Date.now() - time;
-      log(`Exported batch #${batchNumber} of ${assetIds.length} assets in ${timeTaken} ms.`, 'batch');
-      this.logMemoryUsage(`after batch #${batchNumber}`, { batch: batchNumber, assets: assetIds.length });
     }
 
     // only export siblings after all assets have been exported so no foreign key constraint is violated
@@ -196,7 +188,7 @@ export class ExportToViewService {
    * The publication rules are preserved exactly: `Normal` files are exported for assets whose config has
    * `normalFiles`, `Legal` files for assets whose config has `legalFiles`.
    */
-  private async exportFiles(assetIds: number[], batchNumber: number) {
+  private async exportFiles(assetIds: number[]) {
     const normalFileAssetIds = assetIds.filter((id) => this.publicAssetConfigs.get(id)?.publishData.normalFiles);
     const legalFileAssetIds = assetIds.filter((id) => this.publicAssetConfigs.get(id)?.publishData.legalFiles);
 
@@ -227,19 +219,11 @@ export class ExportToViewService {
       return;
     }
 
-    let totalCreated = 0;
-
-    for (const [chunkIndex, idChunk] of this.batchList(fileIds, FILE_CHUNK_SIZE).entries()) {
-      const chunkNumber = chunkIndex + 1;
-      const memoryContext = { batch: batchNumber, chunk: chunkNumber, ids: idChunk.length };
-
-      this.logMemoryUsage('before files', memoryContext);
-
+    for (const idChunk of this.batchList(fileIds, FILE_CHUNK_SIZE)) {
       const files = await this.sourcePrisma.file.findMany({
         where: { id: { in: idChunk } },
         orderBy: { id: 'asc' },
       });
-      this.logMemoryUsage('after file fetch', { ...memoryContext, fetched: files.length });
 
       const inputs: Prisma.FileCreateManyInput[] = files.map((file) => ({
         ...file,
@@ -248,43 +232,10 @@ export class ExportToViewService {
         pageDimensions: file.pageDimensions as Prisma.InputJsonValue,
       }));
 
-      const result = await this.destinationPrisma.file.createMany({ data: inputs, skipDuplicates: true });
-      totalCreated += result.count;
-      this.logMemoryUsage('after file insert', { ...memoryContext, inserted: result.count });
+      await this.destinationPrisma.file.createMany({ data: inputs, skipDuplicates: true });
 
       // `files` and `inputs` go out of scope on the next iteration, so at most one chunk of heavy rows is retained.
     }
-
-    this.logMemoryUsage(`after files of batch #${batchNumber}`, {
-      batch: batchNumber,
-      files: fileIds.length,
-      created: totalCreated,
-    });
-  }
-
-  /**
-   * Log the current process memory usage together with the V8 heap limit and optional extra context. Emitted at
-   * batch boundaries and around each file chunk so heap growth can be correlated with batch number, chunk number and
-   * file counts. Deliberately avoids serializing file contents (no JSON.stringify) so that logging cannot itself
-   * allocate large temporaries.
-   */
-  private logMemoryUsage(context: string, extra: Record<string, number | string> = {}) {
-    const mem = process.memoryUsage();
-    const heapLimit = getHeapStatistics().heap_size_limit;
-    const parts = [
-      `rss=${this.formatBytes(mem.rss)}`,
-      `heapUsed=${this.formatBytes(mem.heapUsed)}`,
-      `heapTotal=${this.formatBytes(mem.heapTotal)}`,
-      `external=${this.formatBytes(mem.external)}`,
-      `arrayBuffers=${this.formatBytes(mem.arrayBuffers)}`,
-      `heapLimit=${this.formatBytes(heapLimit)}`,
-      ...Object.entries(extra).map(([key, value]) => `${key}=${value}`),
-    ];
-    log(`Memory [${context}] ${parts.join(' ')}`, 'batch');
-  }
-
-  private formatBytes(bytes: number): string {
-    return `${(bytes / (1024 * 1024)).toFixed(1)}MB`;
   }
 
   /**
