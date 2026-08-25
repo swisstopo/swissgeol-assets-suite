@@ -22,5 +22,13 @@ dataextraction_service_account_role:
 cognito_pool_id:
 cognito_group:
 
+# Max time (in milliseconds) the API waits for the extraction/OCR service to finish processing a
+# single file before aborting. Defaults to 7200000 (2 hours) when left empty. Set to 0 to disable.
+file_processing_poll_timeout:
+
+# Max time (in milliseconds) an S3 socket may be idle (no data received) before the request is
+# aborted. Defaults to 300000 (5 minutes) when left empty. Set to 0 to disable.
+s3_socket_timeout:
+
 # Basic auth settings for additional authentication via middleware. If true, set secret values for basicAuthUsername and basicAuthPassword.
 basicAuthEnabled: false
