@@ -4,6 +4,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '@/core/prisma.service';
 import { FileS3Service } from '@/features/assets/files/file-s3.service';
+import { readEnv } from '@/utils/requireEnv';
 
 export type ProcessableFile = Pick<AssetFile, 'id' | 'name' | 'fileProcessingState' | 'fileProcessingStage'>;
 
@@ -119,10 +120,11 @@ export abstract class AbstractProcessingService<T> {
   }
 
   private async finishProcessing(file: ProcessableFile): Promise<void> {
-    const MAX_POLL_DURATION_MS = 30 * 60 * 1000; // 30 minutes
+    // Configurable via FILE_PROCESSING_POLL_TIMEOUT (milliseconds); set to 0 to disable the timeout entirely.
+    const MAX_POLL_DURATION_MS = parseInt(readEnv('FILE_PROCESSING_POLL_TIMEOUT') ?? `${30 * 60 * 1000}`, 10); // default 30 minutes
     const startTime = Date.now();
     while (true) {
-      if (Date.now() - startTime > MAX_POLL_DURATION_MS) {
+      if (MAX_POLL_DURATION_MS > 0 && Date.now() - startTime > MAX_POLL_DURATION_MS) {
         throw new Error(`${this.processingStage} polling timed out after ${MAX_POLL_DURATION_MS / 1000}s`);
       }
       await sleep(1000);
