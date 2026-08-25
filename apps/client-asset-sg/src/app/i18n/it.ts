@@ -25,6 +25,9 @@ export const itTranslationMapping: AppTranslationMapping = {
   deletedUserName: 'Utente cancellato',
   downloadFailed: 'Impossibile scaricare il file.',
   pdfNoLongerAvailable: 'Il PDF aperto non è più disponibile. È stato selezionato un altro PDF.',
+  pdfSlowLoading:
+    'Il caricamento di questo PDF potrebbe richiedere molto tempo. Consigliamo di scaricare invece il documento.',
+  pdfSlowLoadingDownload: 'Scarica',
   workgroup: {
     title: 'Gruppo di lavoro',
     errors: {

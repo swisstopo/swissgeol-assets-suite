@@ -80,6 +80,12 @@ export const ZOOM_SETTLE_DELAY_MS = 300;
 export const DEFAULT_MAX_CONCURRENT_PAGE_LOADS = 3;
 // Delay expensive page rendering only while the active page is changing quickly.
 export const CURRENT_PAGE_CHANGE_RENDER_DELAY_MS = 16;
+/**
+ * Time a single PDF may spend loading before the slow-loading fallback dialog is shown,
+ * recommending the user download the document instead. If the PDF becomes usable before this
+ * delay elapses, the dialog is never shown.
+ */
+export const SLOW_LOADING_WARNING_DELAY_MS = 5000;
 /** Set to `true` to enable verbose PDF-viewer diagnostic logs in the browser console. */
 export const PDF_VIEWER_DEBUG = false;
 /** Duration of the per-page crossfade when a handover clone is released. */
