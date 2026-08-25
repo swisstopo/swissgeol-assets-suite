@@ -134,7 +134,9 @@ const loadS3ClientConfig = (): S3ClientConfig => {
       // disconnects if a request is terminated prematurely. If left out, aborted requests leave sockets occupied
       // without returning them, leading to an exhaustion of sockets after the default (50 sockets) are taken.
       // Configurable via S3_SOCKET_TIMEOUT (milliseconds); set to 0 to disable the timeout entirely.
-      socketTimeout: parseInt(readEnv('S3_SOCKET_TIMEOUT') ?? '5000', 10),
+      // readEnv(..., Number) returns null for both unset and non-numeric values, so a misconfiguration
+      // falls back to the default instead of silently passing NaN to the SDK.
+      socketTimeout: readEnv('S3_SOCKET_TIMEOUT', Number) ?? 5000,
     },
   };
 };

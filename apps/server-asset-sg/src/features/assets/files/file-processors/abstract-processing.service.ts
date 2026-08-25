@@ -121,7 +121,9 @@ export abstract class AbstractProcessingService<T> {
 
   private async finishProcessing(file: ProcessableFile): Promise<void> {
     // Configurable via FILE_PROCESSING_POLL_TIMEOUT (milliseconds); set to 0 to disable the timeout entirely.
-    const MAX_POLL_DURATION_MS = parseInt(readEnv('FILE_PROCESSING_POLL_TIMEOUT') ?? `${30 * 60 * 1000}`, 10); // default 30 minutes
+    // readEnv(..., Number) returns null for both unset and non-numeric values, so a misconfiguration
+    // falls back to the default instead of silently producing NaN (which would disable the guard).
+    const MAX_POLL_DURATION_MS = readEnv('FILE_PROCESSING_POLL_TIMEOUT', Number) ?? 30 * 60 * 1000; // default 30 minutes
     const startTime = Date.now();
     while (true) {
       if (MAX_POLL_DURATION_MS > 0 && Date.now() - startTime > MAX_POLL_DURATION_MS) {
