@@ -326,6 +326,6 @@ describe('ExportToViewService.exportToView', () => {
     await service.exportToView();
 
     expect(order).toEqual(['assets', 'files']);
-    expect((service as any).exportFiles).toHaveBeenCalledWith([1], 1);
+    expect((service as any).exportFiles).toHaveBeenCalledWith([1]);
   });
 });
