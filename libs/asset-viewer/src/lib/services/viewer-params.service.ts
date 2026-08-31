@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { Params, Router } from '@angular/router';
-import { AppSharedState } from '@asset-sg/client-shared';
+import { AppSharedState, LanguageService } from '@asset-sg/client-shared';
 import { isNotNull } from '@asset-sg/core';
 import { LV95 } from '@asset-sg/shared';
 import { AssetId, isEmptySearchQuery, LocalDate, Polygon, SearchQueries, SearchType } from '@asset-sg/shared/v2';
@@ -13,22 +13,28 @@ import {
   AppStateWithAssetSearch,
   AssetSearchState,
   AssetSearchUiState,
+  getActiveScrollOffset,
 } from '../state/asset-search/asset-search.reducer';
 
 @Injectable({ providedIn: 'root' })
 export class ViewerParamsService {
   private readonly router = inject(Router);
   private readonly store = inject(Store<AppStateWithAssetSearch>);
+  private readonly languageService = inject(LanguageService);
 
   async readParamsFromStore(): Promise<ViewerParams> {
     const [searchState, sharedState] = await firstValueFrom(
       this.store.pipe(map((store) => [store.assetSearch, store.shared] as [AssetSearchState, AppSharedState])),
     );
 
+    // `ViewerParams`/URL only carry a single result-list scroll offset, always for the currently
+    // active view. The Favorites view keeps its offset separately, so we normalize it here.
+    const scrollOffsetForResults = getActiveScrollOffset(searchState);
+
     return {
       assetId: sharedState.currentAsset?.asset.id ?? null,
       query: searchState.query,
-      ui: searchState.ui,
+      ui: { ...searchState.ui, scrollOffsetForResults },
     };
   }
 
@@ -102,18 +108,18 @@ export class ViewerParamsService {
     updatePlainParam(params, UI_PARAM_MAPPING.map.y, ui.map.y, { defaultValue: DEFAULT_MAP_POSITION.y });
     updatePlainParam(params, UI_PARAM_MAPPING.map.z, ui.map.z, { defaultValue: DEFAULT_MAP_POSITION.z });
 
-    const url = document.location.pathname.split('/', 3);
     const route = query.favoritesOnly ? ['favorites'] : [];
 
-    await this.router.navigate([url[1], ...route], {
+    await this.router.navigate([this.languageService.language, ...route], {
       queryParams: params,
       replaceUrl: options.shouldReplaceUrl,
     });
   }
 
   private parseFavoritesOnlyFromUrl(): boolean | undefined {
-    const url = document.location.pathname.split('/', 3);
-    return url.length === 3 && url[2] === 'favorites' ? true : undefined;
+    const path = this.router.url.split('?')[0].split('#')[0];
+    const segments = path.split('/');
+    return segments.length >= 3 && segments[2] === 'favorites' ? true : undefined;
   }
 }
 

@@ -1,11 +1,14 @@
 import { Component, ElementRef, EventEmitter, inject, OnDestroy, OnInit, Output, ViewChild } from '@angular/core';
-import { fromAppShared, PdfOverlayService } from '@asset-sg/client-shared';
+import { MatCheckboxChange } from '@angular/material/checkbox';
+import { AssetExportService, fromAppShared, PdfOverlayService } from '@asset-sg/client-shared';
 import {
   AssetContact,
   AssetContactRole,
+  AssetId,
   AssetSearchResultItem,
   FileSearchResultItem,
   FileSearchResultPage,
+  MAX_EXPORT_ASSETS,
   SearchType,
   sleep,
   tick,
@@ -24,6 +27,7 @@ import {
   selectScrollOffsetForResults,
   selectSearchQuery,
   selectSearchResultItems,
+  selectSearchResults,
   selectSearchStats,
 } from '../../state/asset-search/asset-search.selector';
 
@@ -40,6 +44,7 @@ export class AssetSearchResultsComponent implements OnInit, OnDestroy {
   @Output() assetMouseOver = new EventEmitter<number | null>();
 
   protected readonly COLUMNS = [
+    'select',
     'favourites',
     'titlePublic',
     'assetFormat',
@@ -55,13 +60,16 @@ export class AssetSearchResultsComponent implements OnInit, OnDestroy {
 
   public resultsToDisplay: AssetSearchResultItem[] = [];
   public fileResultsToDisplay: FileSearchResultItem[] = [];
+  protected readonly selectedAssetIds = new Set<AssetId>();
   private size = 0;
   private readonly pageSize = 50;
+  private isRestoringScroll = false;
 
   private readonly store = inject(Store<AppStateWithAssetSearch>);
   private readonly viewerControllerService = inject(ViewerControllerService);
   private readonly pdfOverlayService = inject(PdfOverlayService);
   private readonly assetSearchService = inject(AssetSearchService);
+  private readonly assetExportService = inject(AssetExportService);
   public readonly isResultsOpen$ = this.store.select(selectIsResultsOpen);
   public readonly assets$ = this.store.select(selectSearchResultItems);
   public readonly fileResults$ = this.store.select(selectFileSearchResultItems);
@@ -83,11 +91,71 @@ export class AssetSearchResultsComponent implements OnInit, OnDestroy {
   }
 
   public ngOnDestroy(): void {
+    // Cancel any debounced scroll-offset save that is still pending. Without this, a save
+    // scheduled just before a tab switch could run after `favoritesOnly` has flipped and be
+    // routed to the wrong view's scroll offset.
+    if (this.timeoutForSetOffset !== null) {
+      clearTimeout(this.timeoutForSetOffset);
+      this.timeoutForSetOffset = null;
+    }
     this.subscriptions.unsubscribe();
   }
 
   public searchForAsset(assetId: number): void {
     this.viewerControllerService.selectAsset(assetId);
+  }
+
+  protected get hasSelectedAssets(): boolean {
+    return this.selectedAssetIds.size > 0;
+  }
+
+  protected get selectedCountLabel(): string {
+    const count = this.selectedAssetIds.size;
+    return count > MAX_EXPORT_ASSETS ? `>${MAX_EXPORT_ASSETS}` : String(count);
+  }
+
+  protected get areAllLoadedSelected(): boolean {
+    return this.allResults.length > 0 && this.allResults.every((asset) => this.selectedAssetIds.has(asset.id));
+  }
+
+  protected get isSomeLoadedSelected(): boolean {
+    const selectedInResults = this.allResults.filter((asset) => this.selectedAssetIds.has(asset.id)).length;
+    return selectedInResults > 0 && selectedInResults < this.allResults.length;
+  }
+
+  protected get showSelectAllCapHint(): boolean {
+    return this.searchResultTotal > this.allResults.length;
+  }
+
+  private searchResultTotal = 0;
+
+  protected isSelected(assetId: AssetId): boolean {
+    return this.selectedAssetIds.has(assetId);
+  }
+
+  protected toggleAsset(assetId: AssetId, event: MatCheckboxChange): void {
+    if (event.checked) {
+      this.selectedAssetIds.add(assetId);
+      return;
+    }
+    this.selectedAssetIds.delete(assetId);
+  }
+
+  protected toggleAllLoaded(event: MatCheckboxChange): void {
+    const ids = this.allResults.map((asset) => asset.id);
+    if (event.checked) {
+      for (const id of ids) {
+        this.selectedAssetIds.add(id);
+      }
+      return;
+    }
+    for (const id of ids) {
+      this.selectedAssetIds.delete(id);
+    }
+  }
+
+  protected async exportSelected(): Promise<void> {
+    await this.assetExportService.export([...this.selectedAssetIds]);
   }
 
   public async toggleResultsOpen(): Promise<void> {
@@ -102,11 +170,18 @@ export class AssetSearchResultsComponent implements OnInit, OnDestroy {
 
   public onScroll(event: Event): void {
     const target = event.target as HTMLElement;
-    if (target.offsetHeight + target.scrollTop >= target.scrollHeight) {
-      this.size += this.pageSize;
-      this.resultsToDisplay = this.allResults.slice(0, this.size);
-    }
     this.saveScrollToStore(target.scrollTop);
+
+    if (this.isRestoringScroll) {
+      return;
+    }
+
+    const hasOverflow = target.scrollHeight > target.clientHeight;
+    const scrolledToBottom = target.scrollTop + target.clientHeight >= target.scrollHeight - 1;
+    if (hasOverflow && scrolledToBottom && this.size < this.allResults.length) {
+      this.size = Math.min(this.size + this.pageSize, this.allResults.length);
+      this.updateDisplayedResults();
+    }
   }
 
   private saveScrollToStore(offset: number): void {
@@ -125,22 +200,34 @@ export class AssetSearchResultsComponent implements OnInit, OnDestroy {
       throw new Error("Can't scroll, table is not rendered.");
     }
 
-    const MIN_ROW_HEIGHT = 52;
-    const minimalElementCount = offset / MIN_ROW_HEIGHT;
-    const minimalRequiredPageSize = Math.ceil(minimalElementCount / this.pageSize) * this.pageSize;
+    this.isRestoringScroll = true;
+    try {
+      if (offset <= 0) {
+        this.size = Math.min(this.pageSize, this.allResults.length);
+        this.updateDisplayedResults();
+        container.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+      }
 
-    this.size = Math.max(minimalRequiredPageSize, this.pageSize);
-    this.resultsToDisplay = this.allResults.slice(0, this.size);
+      const MIN_ROW_HEIGHT = 52;
+      const minimalElementCount = offset / MIN_ROW_HEIGHT;
+      const minimalRequiredPageSize = Math.ceil(minimalElementCount / this.pageSize) * this.pageSize;
 
-    await tick();
-    while (table.clientHeight <= offset && this.size < this.allResults.length) {
-      this.size += this.pageSize;
-      this.resultsToDisplay = this.allResults.slice(0, this.size);
+      this.size = Math.min(Math.max(minimalRequiredPageSize, this.pageSize), this.allResults.length);
+      this.updateDisplayedResults();
+
       await tick();
-    }
+      while (table.clientHeight <= offset && this.size < this.allResults.length) {
+        this.size = Math.min(this.size + this.pageSize, this.allResults.length);
+        this.updateDisplayedResults();
+        await tick();
+      }
 
-    await sleep(100);
-    container.scrollTo({ top: offset, behavior: 'smooth' });
+      await sleep(100);
+      container.scrollTo({ top: offset, behavior: 'smooth' });
+    } finally {
+      this.isRestoringScroll = false;
+    }
   }
 
   private initSubscriptions(): void {
@@ -158,9 +245,11 @@ export class AssetSearchResultsComponent implements OnInit, OnDestroy {
     // Subscribe to results.
     this.subscriptions.add(
       this.viewerControllerService.viewerReady$.pipe(switchMap(() => this.assets$)).subscribe(async (assets) => {
+        this.clearSelection();
         this.allResults$.next(assets);
+        this.searchResultTotal = (await firstValueFrom(this.store.select(selectSearchResults))).page.total;
         this.size = Math.min(this.pageSize, assets.length);
-        this.resultsToDisplay = this.allResults.slice(0, this.size);
+        this.updateDisplayedResults();
         const container = this.scrollContainer?.nativeElement;
         if (container !== undefined) {
           await tick();
@@ -220,6 +309,14 @@ export class AssetSearchResultsComponent implements OnInit, OnDestroy {
 
   private get allResults(): AssetSearchResultItem[] {
     return this.allResults$.value;
+  }
+
+  private updateDisplayedResults(): void {
+    this.resultsToDisplay = this.allResults.slice(0, this.size);
+  }
+
+  private clearSelection(): void {
+    this.selectedAssetIds.clear();
   }
 
   protected trackContact(contact: AssetContact) {

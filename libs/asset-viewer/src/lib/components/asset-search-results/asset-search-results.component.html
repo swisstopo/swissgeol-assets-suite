@@ -1,20 +1,28 @@
 @let searchQuery = searchQuery$ | push;
 @let isResultsOpen = isResultsOpen$ | push;
 <div class="header">
-  <div class="header__tabs">
-    @if (searchQuery.type === SearchType.Asset) {
-      <div>
-        <asset-sg-animate-number [nextValue]="(total$ | async) ?? 0" data-testid="assetCount" />
-        {{ "search.assets" | translate }}
-      </div>
-    }
-    @if (searchQuery.type === SearchType.File) {
-      <div>
-        <asset-sg-animate-number [nextValue]="(fileTotal$ | async) ?? 0" data-testid="fileCount" />
-        {{ "search.files" | translate }}
-        (<asset-sg-animate-number [nextValue]="(total$ | async) ?? 0" data-testid="assetCount" />
-        {{ "search.assets" | translate }})
-      </div>
+  <div class="header__left">
+    <div class="header__tabs">
+      @if (searchQuery.type === SearchType.Asset) {
+        <div>
+          <asset-sg-animate-number [nextValue]="(total$ | async) ?? 0" data-testid="assetCount" />
+          {{ "search.assets" | translate }}
+        </div>
+      }
+      @if (searchQuery.type === SearchType.File) {
+        <div>
+          <asset-sg-animate-number [nextValue]="(fileTotal$ | async) ?? 0" data-testid="fileCount" />
+          {{ "search.files" | translate }}
+          (<asset-sg-animate-number [nextValue]="(total$ | async) ?? 0" data-testid="assetCount" />
+          {{ "search.assets" | translate }})
+        </div>
+      }
+    </div>
+    @if (searchQuery.type === SearchType.Asset && hasSelectedAssets) {
+      <button asset-sg-secondary (click)="exportSelected()">
+        <svg-icon key="export" />
+        <span>{{ "search.export" | translate }} ({{ selectedCountLabel }})</span>
+      </button>
     }
   </div>
   <button asset-sg-tertiary (click)="toggleResultsOpen()">
@@ -27,6 +35,20 @@
     @if (searchQuery.type === SearchType.Asset) {
       <div class="table-container" (scroll)="onScroll($event)" #scrollContainer>
         <table mat-table [dataSource]="resultsToDisplay" class="mat-elevation-z8 table">
+          <ng-container matColumnDef="select">
+            <th mat-header-cell *matHeaderCellDef class="column-select">
+              <mat-checkbox
+                [checked]="areAllLoadedSelected"
+                [indeterminate]="isSomeLoadedSelected"
+                [matTooltip]="showSelectAllCapHint ? ('export.selectAllCap' | translate) : ''"
+                (change)="toggleAllLoaded($event)"
+                color="primary"
+              />
+            </th>
+            <td mat-cell *matCellDef="let asset" class="column-select" (click)="$event.stopPropagation()">
+              <mat-checkbox [checked]="isSelected(asset.id)" (change)="toggleAsset(asset.id, $event)" color="primary" />
+            </td>
+          </ng-container>
           <ng-container matColumnDef="favourites">
             <th mat-header-cell *matHeaderCellDef></th>
             <td mat-cell *matCellDef="let asset">
@@ -107,6 +129,7 @@
             clickable
             mat-row
             *matRowDef="let row; columns: COLUMNS"
+            [attr.data-testid]="'asset-row-' + row.id"
             (click)="searchForAsset(row.id)"
             (mouseover)="assetMouseOver.emit(row.id)"
             (mouseleave)="assetMouseOver.emit(null)"

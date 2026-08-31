@@ -4,6 +4,8 @@ import { PrismaService } from '@/core/prisma.service';
 import { AssetRepo } from '@/features/assets/asset.repo';
 import { AssetService } from '@/features/assets/asset.service';
 import { AssetsController } from '@/features/assets/assets.controller';
+import { AssetExportController } from '@/features/assets/export/asset-export.controller';
+import { AssetExportService } from '@/features/assets/export/asset-export.service';
 import { FavoriteRepo } from '@/features/assets/favorites/favorite.repo';
 import { FavoritesController } from '@/features/assets/favorites/favorites.controller';
 import { FileExtractionService } from '@/features/assets/files/file-processors/file-extraction/file-extraction.service';
@@ -25,15 +27,18 @@ import { FileFulltextSyncService } from '@/features/assets/sync/file-fulltext-sy
 import { WorkflowController } from '@/features/assets/workflow/workflow.controller';
 import { WorkflowRepo } from '@/features/assets/workflow/workflow.repo';
 import { WorkflowService } from '@/features/assets/workflow/workflow.service';
+import { ContactRepo } from '@/features/contacts/contact.repo';
 import { GeometryDetailRepo } from '@/features/geometries/geometry-detail.repo';
 import { GeometryRepo } from '@/features/geometries/geometry.repo';
 import { UsersModule } from '@/features/users/users.module';
+import { WorkgroupRepo } from '@/features/workgroups/workgroup.repo';
 
 @Module({
   controllers: [
     AssetSyncController,
     AssetGeometriesController,
     AssetsController,
+    AssetExportController,
     FilesController,
     AssetSearchController,
     FileSearchController,
@@ -60,6 +65,9 @@ import { UsersModule } from '@/features/users/users.module';
     FileRepo,
     PrismaService,
     AssetService,
+    AssetExportService,
+    ContactRepo,
+    WorkgroupRepo,
     AssetSearchService,
     FileSearchService,
     SearchWriterService,

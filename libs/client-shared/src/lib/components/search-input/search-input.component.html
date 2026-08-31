@@ -2,6 +2,7 @@
 <input
   [(ngModel)]="value"
   class="search-input"
+  data-testid="searchInput"
   (keydown)="onKeydown($event)"
   [placeholder]="placeholderTranslationKey() | translate"
 />

@@ -70,8 +70,11 @@ const routes: Routes = [
         loadChildren: loadAssetViewer,
       },
       {
+        // assets rout is never used within the app, could be removed.
+        // To support old bookmarks we redirect it to the root-url (/:lang)
         path: 'assets',
-        loadChildren: loadAssetViewer,
+        redirectTo: '',
+        pathMatch: 'full',
       },
       {
         path: 'favorites',

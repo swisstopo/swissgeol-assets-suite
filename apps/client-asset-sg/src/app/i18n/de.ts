@@ -23,6 +23,9 @@ export const deTranslationMapping = {
   deletedUserName: 'gelöschter Benutzer',
   downloadFailed: 'Datei konnte nicht heruntergeladen werden.',
   pdfNoLongerAvailable: 'Das geöffnete PDF ist nicht mehr verfügbar. Es wurde ein anderes PDF ausgewählt.',
+  pdfSlowLoading:
+    'Das Laden dieses PDFs kann längere Zeit in Anspruch nehmen. Wir empfehlen, das Dokument stattdessen herunterzuladen.',
+  pdfSlowLoadingDownload: 'Herunterladen',
   workgroup: {
     title: 'Arbeitsgruppe',
     errors: {
@@ -142,6 +145,22 @@ export const deTranslationMapping = {
     drawPolygon: 'Polygon Selektion',
     hideTable: 'Tabelle verbergen',
     showTable: 'Tabelle anzeigen',
+    export: 'Export',
+  },
+  export: {
+    export: 'Export',
+    dialogTitle: 'Export',
+    dialogDescription: 'Wählen Sie die zu exportierenden Daten aus.',
+    comingSoon: 'Demnächst verfügbar',
+    formats: {
+      files: 'Dateien (zip)',
+      csv: 'Metadaten (csv)',
+      geopackage: 'Geolokalisierung & Metadaten (GeoPackage)',
+    },
+    maxSelectionWarning:
+      'Sie haben mehr als 100 Assets selektiert und es können maximal 100 Assets exportiert werden. Wollen Sie fortfahren?',
+    exportFirstAssets: '100 Assets exportieren',
+    selectAllCap: 'Es werden maximal 1000 Treffer ausgewählt (nicht alle Suchergebnisse).',
   },
   contactRoles: {
     author: 'Autor',

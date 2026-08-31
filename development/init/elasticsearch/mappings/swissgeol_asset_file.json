@@ -97,6 +97,10 @@
     "content": {
       "type": "text",
       "term_vector": "with_positions_offsets"
+    },
+    "data": {
+      "type": "text",
+      "index": false
     }
   }
 }

@@ -51,6 +51,10 @@
     <div class="spacer"></div>
 
     @if (asset() !== null) {
+      <button asset-sg-secondary data-testid="export-asset-button" (click)="exportAsset(asset()!.id)">
+        <span translate>export.export</span>
+        <svg-icon key="export"></svg-icon>
+      </button>
       <button asset-sg-secondary (click)="openConfirmDialogForAssetDeletion(asset()!.id)" translate>
         delete
         <svg-icon key="delete"></svg-icon>

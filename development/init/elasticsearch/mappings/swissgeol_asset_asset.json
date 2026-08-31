@@ -78,6 +78,10 @@
     },
     "hasFiles": {
       "type": "boolean"
+    },
+    "data": {
+      "type": "text",
+      "index": false
     }
   }
 }

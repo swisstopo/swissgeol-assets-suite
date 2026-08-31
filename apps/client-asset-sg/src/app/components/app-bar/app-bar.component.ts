@@ -2,7 +2,7 @@ import { ENTER } from '@angular/cdk/keycodes';
 import { HttpClient } from '@angular/common/http';
 import { Component, ElementRef, inject, Input, OnInit, Output, ViewChild } from '@angular/core';
 import { Router } from '@angular/router';
-import { appSharedStateActions, AuthService, fromAppShared } from '@asset-sg/client-shared';
+import { appSharedStateActions, AuthService, fromAppShared, LanguageService } from '@asset-sg/client-shared';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { Store } from '@ngrx/store';
 import * as O from 'fp-ts/Option';
@@ -31,6 +31,7 @@ export class AppBarComponent implements OnInit {
   private readonly store = inject(Store<AppState>);
   private readonly router = inject(Router);
   private readonly authService = inject(AuthService);
+  private readonly languageService = inject(LanguageService);
 
   public readonly isAnonymous$ = this.store.select(fromAppShared.selectIsAnonymousMode);
 
@@ -67,6 +68,6 @@ export class AppBarComponent implements OnInit {
   async logout(): Promise<void> {
     this.authService.logOut();
     this.store.dispatch(appSharedStateActions.logout());
-    await this.router.navigate(['/']);
+    await this.router.navigate([`/${this.languageService.language}`]);
   }
 }

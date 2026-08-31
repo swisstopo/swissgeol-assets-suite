@@ -5,6 +5,7 @@ import { ActivatedRoute, Router, RouterStateSnapshot } from '@angular/router';
 import { AssetSearchService } from '@asset-sg/asset-viewer';
 import {
   AppSharedState,
+  AssetExportService,
   ConfirmDialogComponent,
   ConfirmDialogData,
   fromAppShared,
@@ -118,6 +119,7 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
   private readonly languageService = inject(LanguageService);
   private readonly assetEditorService = inject(AssetEditorService);
   private readonly assetSearchService = inject(AssetSearchService);
+  private readonly assetExportService = inject(AssetExportService);
   private readonly routerSegments$ = inject(ROUTER_SEGMENTS);
   private readonly subscriptions: Subscription = new Subscription();
 
@@ -175,7 +177,7 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
   }
 
   public navigateToStart() {
-    this.router.navigate(['/']).then();
+    this.router.navigate([`/${this.languageService.language}`]).then();
   }
 
   public initializeForm() {
@@ -233,6 +235,10 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
 
       this.form.controls.geometries.setValue([]);
     }
+  }
+
+  public async exportAsset(assetId: number): Promise<void> {
+    await this.assetExportService.export([assetId]);
   }
 
   public openConfirmDialogForAssetDeletion(assetId: number): void {

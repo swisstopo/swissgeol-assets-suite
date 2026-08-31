@@ -1,0 +1,13 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../dist/out-tsc",
+    "module": "commonjs",
+    // `bundler` resolution, which the e2e sources need, cannot be combined with the
+    // commonjs modules that jest consumes. The specs only use relative imports, so the
+    // classic resolution is enough here.
+    "moduleResolution": "node10",
+    "types": ["jest", "node", "cypress"]
+  },
+  "include": ["jest.config.ts", "**/*.spec.ts"]
+}

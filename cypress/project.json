@@ -14,11 +14,11 @@
       },
       "dependsOn": ["^serve"]
     },
-    "component": {
-      "executor": "@nx/cypress:cypress",
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
       "options": {
-        "cypressConfig": "cypress/cypress.component.config.ts",
-        "testingType": "component"
+        "jestConfig": "cypress/jest.config.ts"
       }
     }
   },

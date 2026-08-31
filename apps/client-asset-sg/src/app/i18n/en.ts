@@ -25,6 +25,8 @@ export const enTranslationMapping: AppTranslationMapping = {
   deletedUserName: 'deleted user',
   downloadFailed: 'File could not be downloaded.',
   pdfNoLongerAvailable: 'The opened PDF is no longer available. Another PDF has been opened.',
+  pdfSlowLoading: 'Loading this PDF may take a long time. We recommend downloading the document instead.',
+  pdfSlowLoadingDownload: 'Download',
   workgroup: {
     title: 'Workgroup',
     errors: {
@@ -143,6 +145,22 @@ export const enTranslationMapping: AppTranslationMapping = {
     drawPolygon: 'Polygon selection',
     hideTable: 'Hide table',
     showTable: 'Show table',
+    export: 'Export',
+  },
+  export: {
+    export: 'Export',
+    dialogTitle: 'Export',
+    dialogDescription: 'Select the data to export.',
+    comingSoon: 'Coming soon',
+    formats: {
+      files: 'Files (ZIP)',
+      csv: 'Metadata (CSV)',
+      geopackage: 'Geolocation & metadata (GeoPackage)',
+    },
+    maxSelectionWarning:
+      'You have selected more than 100 assets, but a maximum of 100 assets can be exported. Do you want to continue?',
+    exportFirstAssets: 'Export 100 assets',
+    selectAllCap: 'Selects up to 1000 results (not all search hits).',
   },
   contactRoles: {
     author: 'Author',
