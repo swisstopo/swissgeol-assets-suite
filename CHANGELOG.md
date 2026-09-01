@@ -2,6 +2,28 @@
 
 ## [Unreleased]
 
+## v.1.22.0
+
+### Added
+
+- Asset CSV Export — export search results to CSV, with checkbox multi-selection in the search results and a restriction-type column.
+- PDF Viewer slow-loading fallback — shows a download fallback when a PDF loads slowly.
+- Configurable S3 socket idle timeout and file-processing poll timeout, tuned per environment.
+
+### Changed
+
+- Language-aware routing — consistent language-aware navigation across routes, redirect of the unused `/:lang/assets` route to `/:lang`, and extracted language-replacement logic.
+
+### Fixed
+
+- Gateway timeout during data extraction — prevent NaN timeouts on misconfiguration and align extraction/S3 timeouts across environments.
+- Elasticsearch index handling — explicit ES mapping for the `data` field and use of `sourceFields` for retrieval.
+- Preserve Filter view state across the Filter/Favorites tab switch and decouple their scroll-offset management.
+- PDF Viewer long loading times — correctly tear down a superseded PDF loading task.
+- Asset viewer — reuse file rows when the asset file list is re-emitted.
+- Removed leftover export-to-view logging added during an earlier bug fix.
+- Hardened and stabilized the Cypress e2e test suite.
+
 ## v.1.21.0
 
 ### Added
