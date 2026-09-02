@@ -2,6 +2,27 @@
 
 ## [Unreleased]
 
+## v.1.22.0
+
+### Added
+
+- Export search results to a CSV file, with the ability to select multiple results at once.
+- The PDF viewer now offers a download option when a document is slow to open.
+- Improved handling of large files and long-running data extraction to avoid timeouts on big uploads.
+
+### Changed
+
+- Navigation now preserves the selected language across the app, and outdated or invalid links are redirected to the correct page.
+
+### Fixed
+
+- Data extraction from very large documents no longer fails with a timeout error.
+- Search results are returned more reliably.
+- Switching between the Filter and Favorites tabs now retains your scroll position and view state.
+- Quickly switching between PDFs while one is still loading no longer causes display glitches.
+- The file list in the asset viewer no longer flickers when it refreshes.
+- General internal cleanup and more reliable automated tests.
+
 ## v.1.21.0
 
 ### Added
