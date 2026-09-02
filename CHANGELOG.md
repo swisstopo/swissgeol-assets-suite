@@ -6,23 +6,22 @@
 
 ### Added
 
-- Asset CSV Export — export search results to CSV, with checkbox multi-selection in the search results and a restriction-type column.
-- PDF Viewer slow-loading fallback — shows a download fallback when a PDF loads slowly.
-- Configurable S3 socket idle timeout and file-processing poll timeout, tuned per environment.
+- Export search results to a CSV file, with the ability to select multiple results at once.
+- The PDF viewer now offers a download option when a document is slow to open.
+- Improved handling of large files and long-running data extraction to avoid timeouts on big uploads.
 
 ### Changed
 
-- Language-aware routing — consistent language-aware navigation across routes, redirect of the unused `/:lang/assets` route to `/:lang`, and extracted language-replacement logic.
+- Navigation now preserves the selected language across the app, and outdated or invalid links are redirected to the correct page.
 
 ### Fixed
 
-- Gateway timeout during data extraction — prevent NaN timeouts on misconfiguration and align extraction/S3 timeouts across environments.
-- Elasticsearch index handling — explicit ES mapping for the `data` field and use of `sourceFields` for retrieval.
-- Preserve Filter view state across the Filter/Favorites tab switch and decouple their scroll-offset management.
-- PDF Viewer long loading times — correctly tear down a superseded PDF loading task.
-- Asset viewer — reuse file rows when the asset file list is re-emitted.
-- Removed leftover export-to-view logging added during an earlier bug fix.
-- Hardened and stabilized the Cypress e2e test suite.
+- Data extraction from very large documents no longer fails with a timeout error.
+- Search results are returned more reliably.
+- Switching between the Filter and Favorites tabs now retains your scroll position and view state.
+- Quickly switching between PDFs while one is still loading no longer causes display glitches.
+- The file list in the asset viewer no longer flickers when it refreshes.
+- General internal cleanup and more reliable automated tests.
 
 ## v.1.21.0
 
