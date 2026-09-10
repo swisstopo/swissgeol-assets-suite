@@ -228,7 +228,7 @@ describe('AssetSearchRefineComponent (DOM regression: chips & inputs after reset
 
   const chipTexts = (): string[] =>
     Array.from(fixture.nativeElement.querySelectorAll('asset-sg-chip')).map((el) =>
-      (el as HTMLElement).textContent!.trim(),
+      ((el as HTMLElement).textContent ?? '').trim(),
     );
 
   const authorInput = (): HTMLInputElement => fixture.nativeElement.querySelector('input[placeholder="Autor wählen"]');
@@ -262,7 +262,7 @@ describe('AssetSearchRefineComponent (DOM regression: chips & inputs after reset
 
     // Act: click the actual "Filter zurücksetzen" button.
     const resetButton = Array.from(fixture.nativeElement.querySelectorAll('button')).find((button) =>
-      (button as HTMLElement).textContent!.includes('search.resetSearch'),
+      ((button as HTMLElement).textContent ?? '').includes('search.resetSearch'),
     ) as HTMLButtonElement;
     expect(resetButton).toBeTruthy();
     resetButton.click();
