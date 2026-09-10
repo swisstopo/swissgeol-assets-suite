@@ -86,8 +86,8 @@ export class AssetSearchRefineComponent implements OnInit, OnDestroy, AfterViewI
   public ngAfterViewInit() {
     this.subscriptions.add(
       this.minDateControl.valueChanges.subscribe((minDate) => {
-        if (minDate instanceof Date || minDate === undefined) {
-          this.minDate = minDate;
+        if (minDate instanceof Date || minDate == null) {
+          this.minDate = minDate ?? undefined;
           const maxDate = this.maxDateControl.getRawValue();
           this.updateSearch({
             createdAt: {
@@ -100,8 +100,8 @@ export class AssetSearchRefineComponent implements OnInit, OnDestroy, AfterViewI
     );
     this.subscriptions.add(
       this.maxDateControl.valueChanges.subscribe((maxDate) => {
-        if (maxDate instanceof Date || maxDate === undefined) {
-          this.maxDate = maxDate;
+        if (maxDate instanceof Date || maxDate == null) {
+          this.maxDate = maxDate ?? undefined;
           const minDate = this.minDateControl.getRawValue();
           this.updateSearch({
             createdAt: {
@@ -164,7 +164,8 @@ export class AssetSearchRefineComponent implements OnInit, OnDestroy, AfterViewI
 
   public resetSearch() {
     this.authorAutoCompleteControl.setValue('');
-    this.maxDateControl.setValue(null);
+    this.selectedAuthor = undefined;
+    this.minDateControl.setValue(null);
     this.maxDateControl.setValue(null);
     this.store.dispatch(resetSearch());
   }
