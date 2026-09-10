@@ -118,12 +118,24 @@ describe('AssetSearchRefineComponent', () => {
     jest.restoreAllMocks();
   });
 
+  // Simulates a user picking `author` from the autocomplete dropdown.
+  const selectAuthor = (author: Contact) => {
+    component.authorAutoCompleteControl.setValue(author.name);
+    component.filteredAuthors = [{ value: author, count: 1 }];
+    component.updateAuthor({ isUserInput: true } as never, author.id);
+  };
+
+  // Asserts that all reset-relevant local/UI state is cleared, as it must be after `resetSearch()`.
+  const expectFullyReset = () => {
+    expect(component.authorAutoCompleteControl.value).toBe('');
+    expect(component.selectedAuthor).toBeUndefined();
+    expect(component.minDateControl.value).toBeNull();
+    expect(component.maxDateControl.value).toBeNull();
+  };
+
   it('clears the author, both date fields, and dispatches resetSearch when reset is triggered', () => {
     // Arrange: simulate a user having selected an author and both document dates.
-    component.authorAutoCompleteControl.setValue('Jane Doe');
-    component.filteredAuthors = [{ value: makeContact(1, 'Jane Doe'), count: 3 }];
-    component.updateAuthor({ isUserInput: true } as never, 1);
-
+    selectAuthor(makeContact(1, 'Jane Doe'));
     component.minDateControl.setValue(new Date(2020, 0, 1));
     component.maxDateControl.setValue(new Date(2021, 0, 1));
 
@@ -137,10 +149,7 @@ describe('AssetSearchRefineComponent', () => {
     component.resetSearch();
 
     // Assert: local/UI state is fully cleared.
-    expect(component.authorAutoCompleteControl.value).toBe('');
-    expect(component.selectedAuthor).toBeUndefined();
-    expect(component.minDateControl.value).toBeNull();
-    expect(component.maxDateControl.value).toBeNull();
+    expectFullyReset();
 
     // Assert: the reset action was dispatched to clear the effective search state.
     expect(dispatchSpy).toHaveBeenCalledWith(resetSearchAction());
@@ -152,9 +161,7 @@ describe('AssetSearchRefineComponent', () => {
 
     component.resetSearch();
 
-    expect(component.minDateControl.value).toBeNull();
-    expect(component.maxDateControl.value).toBeNull();
-    expect(component.authorAutoCompleteControl.value).toBe('');
+    expectFullyReset();
   });
 
   it('resets correctly when only the max date is set', () => {
@@ -163,22 +170,16 @@ describe('AssetSearchRefineComponent', () => {
 
     component.resetSearch();
 
-    expect(component.minDateControl.value).toBeNull();
-    expect(component.maxDateControl.value).toBeNull();
-    expect(component.authorAutoCompleteControl.value).toBe('');
+    expectFullyReset();
   });
 
   it('resets correctly when only an author is set', () => {
-    component.authorAutoCompleteControl.setValue('John Smith');
-    component.filteredAuthors = [{ value: makeContact(2, 'John Smith'), count: 1 }];
-    component.updateAuthor({ isUserInput: true } as never, 2);
-
+    selectAuthor(makeContact(2, 'John Smith'));
     expect(component.selectedAuthor?.value.id).toBe(2);
 
     component.resetSearch();
 
-    expect(component.selectedAuthor).toBeUndefined();
-    expect(component.authorAutoCompleteControl.value).toBe('');
+    expectFullyReset();
   });
 });
 
