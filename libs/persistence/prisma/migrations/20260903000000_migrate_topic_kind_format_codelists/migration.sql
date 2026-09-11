@@ -924,14 +924,14 @@ ON CONFLICT (asset_format_item_code) DO UPDATE SET
 INSERT INTO man_cat_label_ref (asset_id, man_cat_label_item_code)
 SELECT asset_id, 'explorationProspection'
 FROM man_cat_label_ref
-WHERE man_cat_label_item_code = 'prospection'
+WHERE man_cat_label_item_code IN ('exploration', 'prospection')
 ON CONFLICT (asset_id, man_cat_label_item_code) DO NOTHING;
 
 DELETE FROM man_cat_label_ref
-WHERE man_cat_label_item_code = 'prospection';
+WHERE man_cat_label_item_code IN ('exploration', 'prospection');
 
 DELETE FROM man_cat_label_item
-WHERE man_cat_label_item_code = 'prospection';
+WHERE man_cat_label_item_code IN ('exploration', 'prospection');
 
 -- =============================================================
 -- KIND code/reference migration
@@ -943,7 +943,7 @@ UPDATE asset SET asset_kind_item_code = 'crossSection' WHERE asset_kind_item_cod
 
 UPDATE asset SET asset_kind_item_code = 'processedData' WHERE asset_kind_item_code = 'deviceOutput';
 
-UPDATE asset SET asset_kind_item_code = 'photoVideo' WHERE asset_kind_item_code = 'video';
+UPDATE asset SET asset_kind_item_code = 'photoVideo' WHERE asset_kind_item_code IN ('photo', 'video');
 
 UPDATE asset SET asset_kind_item_code = 'boreholePath' WHERE asset_kind_item_code = 'drillPath';
 
@@ -955,7 +955,7 @@ UPDATE asset SET asset_kind_item_code = 'interpretation' WHERE asset_kind_item_c
 
 UPDATE asset SET asset_kind_item_code = '2Dseismic' WHERE asset_kind_item_code = 'seismicSection';
 
-DELETE FROM asset_kind_item WHERE asset_kind_item_code IN ('basemap', 'profileSection', 'deviceOutput', 'video', 'drillPath', 'labData', 'seismic3D', 'seismicInterpretation', 'seismicSection');
+DELETE FROM asset_kind_item WHERE asset_kind_item_code IN ('basemap', 'profileSection', 'deviceOutput', 'photo', 'video', 'drillPath', 'labData', 'seismic3D', 'seismicInterpretation', 'seismicSection');
 
 DELETE FROM asset_kind_item WHERE asset_kind_item_code IN ('configuration', 'package', 'shotpointmap');
 
@@ -972,13 +972,13 @@ DELETE FROM asset_format_item WHERE asset_format_item_code IN ('segyExported', '
 -- Post-migration safety checks.
 DO $$
 BEGIN
-  IF EXISTS (SELECT 1 FROM man_cat_label_ref WHERE man_cat_label_item_code = 'prospection') THEN
-    RAISE EXCEPTION 'Topic migration incomplete: prospection reference remains.';
+  IF EXISTS (SELECT 1 FROM man_cat_label_ref WHERE man_cat_label_item_code IN ('exploration', 'prospection')) THEN
+    RAISE EXCEPTION 'Topic migration incomplete: exploration/prospection reference remains.';
   END IF;
 
   IF EXISTS (
     SELECT 1 FROM asset
-    WHERE asset_kind_item_code IN ('basemap', 'profileSection', 'deviceOutput', 'video', 'drillPath', 'labData', 'seismic3D', 'seismicInterpretation', 'seismicSection')
+    WHERE asset_kind_item_code IN ('basemap', 'profileSection', 'deviceOutput', 'photo', 'video', 'drillPath', 'labData', 'seismic3D', 'seismicInterpretation', 'seismicSection')
   ) THEN
     RAISE EXCEPTION 'Kind migration incomplete: obsolete code reference remains.';
   END IF;
