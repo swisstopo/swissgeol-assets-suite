@@ -1,4 +1,4 @@
-import { Asset, AssetId } from '@asset-sg/shared/v2';
+import { Asset, AssetFileId, AssetId } from '@asset-sg/shared/v2';
 import { Client as ElasticsearchClient } from '@elastic/elasticsearch';
 import { Injectable, Logger } from '@nestjs/common';
 
@@ -16,10 +16,22 @@ import { getDateTimeString } from '@/features/assets/search/search-query.utils';
 import { SearchWriterOptions } from '@/features/assets/search/search-writer.utils';
 import { GeometryDetailRepo } from '@/features/geometries/geometry-detail.repo';
 import { GeometryRepo } from '@/features/geometries/geometry.repo';
+import { KeyedMutex } from '@/utils/keyed-mutex';
 
 @Injectable()
 export class SearchWriterService {
   private readonly logger = new Logger(SearchWriterService.name);
+
+  /**
+   * Serializes index synchronization per asset. Concurrent uploads (or other edits) to the same asset
+   * would otherwise run overlapping `deleteByQuery` + bulk index operations, producing
+   * `version_conflict_engine_exception` errors. Different assets are still synchronized concurrently.
+   *
+   * NOTE: This mutex is in-process only. It relies on the current single-replica deployment of the API
+   * (see `k8s/.../deployment.api.yaml`, `replicas: 1`); it does not protect against concurrent writers
+   * running in separate processes/replicas.
+   */
+  private readonly assetMutex = new KeyedMutex<AssetId>();
 
   constructor(
     private readonly elastic: ElasticsearchClient,
@@ -30,7 +42,24 @@ export class SearchWriterService {
   ) {}
 
   async register(asset: Asset): Promise<void> {
-    await Promise.all([this.getAssetWriter().write(asset), this.getFileWriter().writeAssetFiles(asset)]);
+    await this.assetMutex.run(asset.id, async () => {
+      // Reload the asset after acquiring the lock. A registration that was queued behind another
+      // synchronization for the same asset must index the current database state, not the (possibly
+      // stale) snapshot captured before waiting for the lock. Otherwise a queued registration could
+      // overwrite the index with an outdated file list.
+      const currentAsset = await this.assetRepo.find(asset.id);
+      if (currentAsset == null) {
+        // The asset was deleted while we waited for the lock; nothing to index.
+        return;
+      }
+      // The asset writer targets the asset index (document id = asset id, an idempotent overwrite),
+      // while the file writer rebuilds the asset's page documents in the file index. Neither shares
+      // documents with the other, so they can safely run together within the per-asset lock.
+      await Promise.all([
+        this.getAssetWriter().write(currentAsset),
+        this.getFileWriter().writeAssetFiles(currentAsset),
+      ]);
+    });
   }
 
   getAssetWriter(options?: SearchWriterOptions): AssetSearchWriterService {
@@ -53,20 +82,42 @@ export class SearchWriterService {
     );
   }
 
+  /**
+   * Re-indexes a single file's page documents in the file index, serialized per asset so it cannot
+   * race with an asset-wide synchronization (e.g. an upload's `register`) for the same asset.
+   *
+   * Used after OCR completes, when a file's fulltext content first becomes available.
+   */
+  async writeFile(fileId: AssetFileId): Promise<void> {
+    const file = await this.prisma.file.findUnique({
+      where: { id: fileId },
+      select: { assetId: true },
+    });
+    if (file == null) {
+      this.logger.warn('Cannot index file, it no longer exists', { fileId });
+      return;
+    }
+    await this.assetMutex.run(file.assetId, () => this.getFileWriter().write(fileId));
+  }
+
   async deleteFromIndex(assetId: AssetId): Promise<void> {
-    await Promise.all([
-      this.elastic.delete({
-        index: ASSET_ELASTIC_INDEX,
-        id: `${assetId}`,
-        refresh: true,
-      }),
-      this.elastic.deleteByQuery({
-        index: FILE_ELASTIC_INDEX,
-        query: { term: { assetId: assetId } },
-        refresh: true,
-        ignore_unavailable: true,
-      }),
-    ]);
+    // Serialized per asset so index deletion cannot overlap with a concurrent `register` or OCR-time
+    // `writeFile` for the same asset (which would otherwise race on the same file documents).
+    await this.assetMutex.run(assetId, async () => {
+      await Promise.all([
+        this.elastic.delete({
+          index: ASSET_ELASTIC_INDEX,
+          id: `${assetId}`,
+          refresh: true,
+        }),
+        this.elastic.deleteByQuery({
+          index: FILE_ELASTIC_INDEX,
+          query: { term: { assetId: assetId } },
+          refresh: true,
+          ignore_unavailable: true,
+        }),
+      ]);
+    });
   }
 
   async count(): Promise<number> {
