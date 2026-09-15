@@ -155,6 +155,40 @@ describe('AssetSearchRefineComponent', () => {
     expect(dispatchSpy).toHaveBeenCalledWith(resetSearchAction());
   });
 
+  it('dispatches only the authoritative resetSearch, with no intermediate updateSearchQuery emissions', () => {
+    // Arrange: the user has an author and both document dates set, exactly like the repro steps.
+    selectAuthor(makeContact(9, 'Ada Lovelace'));
+    component.minDateControl.setValue(new Date(2020, 0, 1));
+    component.maxDateControl.setValue(new Date(2021, 0, 1));
+
+    // Local chip state must be populated before the reset so we can prove it is cleared in one pass.
+    expect(component.minDate).toBeDefined();
+    expect(component.maxDate).toBeDefined();
+
+    // Only start recording dispatches now, so we observe exactly what a single reset click emits.
+    const dispatchSpy = jest.spyOn(store, 'dispatch');
+
+    // Act: a single "Filter zurücksetzen" click.
+    component.resetSearch();
+
+    // Assert: every local/UI value is cleared after one click (author, dates, and the date chips).
+    expectFullyReset();
+    expect(component.minDate).toBeUndefined();
+    expect(component.maxDate).toBeUndefined();
+
+    const dispatchedActions = dispatchSpy.mock.calls.map(([action]) => action as unknown as { type: string });
+
+    // Assert (root cause): clearing the date controls must NOT emit intermediate `updateSearchQuery`
+    // actions. Those emissions used to spawn concurrent, out-of-order search reloads that raced with
+    // the reset, leaving the results table open and the asset count stuck on the previous filtered
+    // value until a second click.
+    expect(dispatchedActions.some((action) => action.type === updateSearchQuery.type)).toBe(false);
+
+    // Assert: the reset action is the sole, authoritative store reset, dispatched exactly once.
+    const resetDispatches = dispatchedActions.filter((action) => action.type === resetSearchAction.type);
+    expect(resetDispatches).toHaveLength(1);
+  });
+
   it('resets correctly when only the min date is set', () => {
     component.minDateControl.setValue(new Date(2020, 0, 1));
     expect(component.minDateControl.value).not.toBeNull();
