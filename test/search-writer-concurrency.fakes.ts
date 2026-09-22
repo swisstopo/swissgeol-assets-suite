@@ -141,7 +141,7 @@ export class FakeFileIndex {
     this.enter(assetId);
     try {
       await microtaskGap();
-      for (const [id, meta] of [...this.docs.entries()]) {
+      for (const [id, meta] of this.docs.entries()) {
         if (meta.assetId === assetId) {
           this.docs.delete(id);
         }
