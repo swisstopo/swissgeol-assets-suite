@@ -8,6 +8,7 @@ import {
   PdfViewerVirtualItem,
   RenderedPage,
   RenderingPage,
+  TextLayerRenderHandle,
 } from './pdf-viewer.models';
 import { PdfViewerService } from './pdf-viewer.service';
 
@@ -671,27 +672,39 @@ export class PdfViewerRendererService implements OnDestroy {
     const viewport = rendered.viewport;
 
     let timeoutId: ReturnType<typeof setTimeout> | null = null;
+    const handle = new TextLayerRenderHandle();
     const frameId = requestAnimationFrame(() => {
       timeoutId = setTimeout(() => {
-        this.textLayerTimers.delete(pageNum);
-        if (this.renderedPages.get(pageNum) !== rendered) {
-          rendered.textLayerRendered = false;
-          return;
-        }
-        this.pdfViewerService.renderTextLayer(page, rendered.textLayerDiv, viewport).catch((error) => {
-          console.error(`Failed to render text layer for page ${pageNum}`, error);
-          rendered.textLayerRendered = false;
-        });
+        this.pdfViewerService
+          .renderTextLayer(page, rendered.textLayerDiv, viewport, handle)
+          .catch((error) => {
+            if (this.renderedPages.get(pageNum) === rendered && !this.isRenderCancelled(error)) {
+              console.error(`Failed to render text layer for page ${pageNum}`, error);
+            }
+            rendered.textLayerRendered = false;
+          })
+          .finally(() => {
+            // Only clear our own registration — a newer schedule for the same page may
+            // already have replaced it.
+            if (this.textLayerTimers.get(pageNum) === cancel) {
+              this.textLayerTimers.delete(pageNum);
+            }
+          });
       }, 0);
     });
 
-    this.textLayerTimers.set(pageNum, () => {
+    // Stays registered for the whole in-flight render (not just the pre-fire timer). `handle`
+    // covers every phase: before the timer fires, while getTextContent() is pending (no
+    // TextLayer exists yet), and once TextLayer.render() has actually started.
+    const cancel = (): void => {
       cancelAnimationFrame(frameId);
       if (timeoutId) {
         clearTimeout(timeoutId);
       }
+      handle.cancel();
       rendered.textLayerRendered = false;
-    });
+    };
+    this.textLayerTimers.set(pageNum, cancel);
   }
 
   private cancelTextLayerTimer(pageNum: number): void {

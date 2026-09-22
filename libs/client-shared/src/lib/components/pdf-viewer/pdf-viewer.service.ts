@@ -15,7 +15,7 @@ import { PDFPageProxy, TextContent } from 'pdfjs-dist/types/src/display/api';
 import { noop } from 'rxjs';
 import { SessionStorageService } from '../../services/session-storage.service';
 import { selectIsAnonymousMode } from '../../state/app-shared-state.selectors';
-import { PdfLoadSupersededError, PdfRenderTask, PDF_VIEWER_DEBUG } from './pdf-viewer.models';
+import { PdfLoadSupersededError, PdfRenderTask, PDF_VIEWER_DEBUG, TextLayerRenderHandle } from './pdf-viewer.models';
 
 // Worker source for PDF JS. Note that this must match the path that is defined in the builder configuration.
 // The version query parameter busts the browser cache when the pdfjs-dist version changes, since the worker
@@ -171,11 +171,19 @@ export class PdfViewerService implements OnDestroy {
     this.selectionAbortControllers.clear();
   }
 
-  public async renderTextLayer(page: PDFPageProxy, textLayerDiv: HTMLElement, viewport: PageViewport) {
+  public async renderTextLayer(
+    page: PDFPageProxy,
+    textLayerDiv: HTMLElement,
+    viewport: PageViewport,
+    handle?: TextLayerRenderHandle,
+  ) {
     const textContent = await page.getTextContent({
       disableNormalization: true,
     });
     await document.fonts.ready;
+
+    // Teardown may have requested cancellation before a TextLayer existed to cancel directly.
+    if (handle?.isCancelled()) return;
 
     // These CSS variables must be set before constructing TextLayer, because the constructor
     // calls setLayerDimensions which computes width/height from --total-scale-factor.
@@ -189,7 +197,11 @@ export class PdfViewerService implements OnDestroy {
       container: textLayerDiv,
       viewport,
     });
+    handle?.attach(textLayer);
     await textLayer.render();
+
+    if (handle?.isCancelled()) return;
+
     PdfViewerService.hidePdfjsMeasurementCanvas();
     this.setupSelectionBehavior(textLayerDiv);
     this.correctTextLayerScaleX(textLayer, textContent, viewport);
