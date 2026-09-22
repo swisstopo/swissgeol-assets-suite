@@ -155,7 +155,7 @@ export class FakeFileIndex {
     return [...this.docs.entries()]
       .filter(([, meta]) => meta.assetId === assetId)
       .map(([id]) => id)
-      .sort();
+      .sort((a, b) => a.localeCompare(b));
   }
 }
 
@@ -164,7 +164,7 @@ export const staleAsset = (id: number): Asset => ({ id, files: [] }) as unknown 
 
 /** Computes the sorted `<fileId>_<page>` document ids for a set of files. */
 export const docIds = (files: FileDef[]): string[] =>
-  files.flatMap((file) => file.pages.map((page) => `${file.id}_${page}`)).sort();
+  files.flatMap((file) => file.pages.map((page) => `${file.id}_${page}`)).sort((a, b) => a.localeCompare(b));
 
 /** Hooks the test can install to gate operations at deterministic points. */
 export interface IndexHooks {
