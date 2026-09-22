@@ -49,6 +49,7 @@ export class PdfViewerRendererService implements OnDestroy {
 
   private readonly renderedPages = new Map<number, RenderedPage>();
   private readonly renderingPages = new Map<number, RenderingPage>();
+  private readonly failedPages = new Map<number, { zoom: number; rotation: number; baseScale: number }>();
   private latestRenderablePages = new Set<number>();
   private renderOptions: QueueVisiblePageRendersOptions | null = null;
   private readonly textLayerTimers = new Map<number, () => void>();
@@ -65,6 +66,7 @@ export class PdfViewerRendererService implements OnDestroy {
     this.cancelDrainTimer();
     this.renderingPages.clear();
     this.renderedPages.clear();
+    this.failedPages.clear();
     this.latestRenderablePages.clear();
     this.renderOptions = null;
   }
@@ -252,6 +254,7 @@ export class PdfViewerRendererService implements OnDestroy {
     for (const pageNum of this.latestRenderablePages) {
       if (this.isPageRenderedWithCurrentParams(pageNum, currentZoom, currentRotation, options.baseScale)) continue;
       if (this.isPageRenderingWithCurrentParams(pageNum, currentZoom, currentRotation, options.baseScale)) continue;
+      if (this.isPageFailedWithCurrentParams(pageNum, currentZoom, currentRotation, options.baseScale)) continue;
       candidates.push(pageNum);
     }
 
@@ -350,6 +353,17 @@ export class PdfViewerRendererService implements OnDestroy {
       rendering.zoom === zoom &&
       rendering.rotation === rotation &&
       Math.abs(rendering.baseScale - baseScale) < BASE_SCALE_EPSILON
+    );
+  }
+
+  /** Prevents an unbounded retry loop: a genuine failure is only retried once zoom/rotation/baseScale change. */
+  private isPageFailedWithCurrentParams(pageNum: number, zoom: number, rotation: number, baseScale: number): boolean {
+    const failed = this.failedPages.get(pageNum);
+    return (
+      !!failed &&
+      failed.zoom === zoom &&
+      failed.rotation === rotation &&
+      Math.abs(failed.baseScale - baseScale) < BASE_SCALE_EPSILON
     );
   }
 
@@ -531,7 +545,12 @@ export class PdfViewerRendererService implements OnDestroy {
     } catch (error) {
       this.finishPageRender(pageNum, renderEpoch, zoomAtStart, rotationAtStart);
       this.pdfViewerService.cleanupTextLayerSelection(textLayerDiv);
-      if (!this.isRenderCancelled(error)) {
+      // A stale document generation (options captured at dispatch time vs. the live component
+      // generation) must not pollute failedPages/logging for a page number that may equally
+      // belong to a newer document.
+      const isStaleDocument = options.getLoadGeneration() !== options.loadGeneration;
+      if (!isStaleDocument && !this.isRenderCancelled(error)) {
+        this.failedPages.set(pageNum, { zoom: zoomAtStart, rotation: rotationAtStart, baseScale: options.baseScale });
         console.error(`Failed to render page ${pageNum}`, error);
       }
       return null;
