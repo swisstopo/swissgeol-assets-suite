@@ -131,6 +131,8 @@ export class PdfViewerComponent implements OnDestroy {
   private readonly pdfViewerHandoverService = inject(PdfViewerHandoverService);
   private readonly pdfSlowLoadingService = inject(PdfSlowLoadingService);
 
+  private isDestroyed = false;
+
   private resizeObserver: ResizeObserver | null = null;
   private scrollRenderTimer: ReturnType<typeof setTimeout> | null = null;
   private scrollAnimationFrame: number | null = null;
@@ -196,10 +198,16 @@ export class PdfViewerComponent implements OnDestroy {
   }
 
   public ngOnDestroy() {
+    this.isDestroyed = true;
+    this.loadGeneration++;
+    this.viewportEpoch++;
+
     this.resizeObserver?.disconnect();
     this.pdfViewerInputService.destroy();
     this.pdfViewerHandoverService.end();
     this.pdfSlowLoadingService.reset();
+    this.pdfViewerRendererService.resetPages();
+    void this.pdfViewerService.abort();
     if (this.scrollRenderTimer) {
       clearTimeout(this.scrollRenderTimer);
     }
@@ -804,7 +812,12 @@ export class PdfViewerComponent implements OnDestroy {
     effect(async () => {
       const selectedPdf = this.selectedPdf();
       if (this.pdfElement() && selectedPdf) {
-        await this.loadPdf(selectedPdf.id, isFirstRun ? this.initialPageNumber() : 1);
+        try {
+          await this.loadPdf(selectedPdf.id, isFirstRun ? this.initialPageNumber() : 1);
+        } catch {
+          // `effect()` never awaits this callback, so any rethrow here would otherwise surface
+          // as an unhandled rejection.
+        }
         isFirstRun = false;
       }
     });
@@ -877,7 +890,7 @@ export class PdfViewerComponent implements OnDestroy {
         this.pdfViewerApiService.fetchMetadata(this.assetId(), pdfId),
       ]);
 
-      if (this.loadGeneration !== generation) {
+      if (this.isDestroyed || this.loadGeneration !== generation) {
         return;
       }
 
@@ -921,7 +934,7 @@ export class PdfViewerComponent implements OnDestroy {
       this.pdfSlowLoadingService.completeLoading();
       await this.waitForDom();
 
-      if (this.loadGeneration !== generation) {
+      if (this.isDestroyed || this.loadGeneration !== generation) {
         return;
       }
 
@@ -934,8 +947,9 @@ export class PdfViewerComponent implements OnDestroy {
       this.pendingCanvasRefresh = true;
       this.scheduleRender();
     } catch (e) {
-      // Ignore errors from stale loads — a newer loadPdf call is already in progress.
-      if (this.loadGeneration !== generation) {
+      // Stale/destroy-caused rejections (PdfLoadSupersededError or a raw PDF.js
+      // "Worker was destroyed" error) must never alert the user.
+      if (this.isDestroyed || this.loadGeneration !== generation) {
         return;
       }
       this.pdfSlowLoadingService.completeLoading();
