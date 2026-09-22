@@ -3,15 +3,19 @@
 jest.mock('pdfjs-dist', () => ({
   getDocument: jest.fn(),
   GlobalWorkerOptions: {},
-  TextLayer: class MockTextLayer {},
+  TextLayer: jest.fn().mockImplementation(() => ({
+    render: jest.fn().mockResolvedValue(undefined),
+    cancel: jest.fn(),
+  })),
   version: '0.0.0-test',
 }));
 
 import { TestBed } from '@angular/core/testing';
 import { MockStore, provideMockStore } from '@ngrx/store/testing';
-import { getDocument } from 'pdfjs-dist';
+import { getDocument, PageViewport, TextLayer } from 'pdfjs-dist';
+import { PDFPageProxy } from 'pdfjs-dist/types/src/display/api';
 import { selectIsAnonymousMode } from '../../state/app-shared-state.selectors';
-import { PdfLoadSupersededError } from './pdf-viewer.models';
+import { PdfLoadSupersededError, TextLayerRenderHandle } from './pdf-viewer.models';
 import { PdfViewerService } from './pdf-viewer.service';
 
 /** Mirrors real PDF.js behavior: `destroy()` rejects the still-pending `.promise`. */
@@ -100,5 +104,68 @@ describe('PdfViewerService', () => {
 
     await expect(firstLoad).rejects.toBeInstanceOf(PdfLoadSupersededError);
     await expect(secondLoad).resolves.toBe(2);
+  });
+
+  describe('renderTextLayer', () => {
+    const originalFonts = (document as unknown as { fonts?: unknown }).fonts;
+
+    beforeEach(() => {
+      // jsdom has no FontFaceSet; renderTextLayer() awaits document.fonts.ready.
+      (document as unknown as { fonts: unknown }).fonts = { ready: Promise.resolve() };
+    });
+
+    afterEach(() => {
+      (document as unknown as { fonts: unknown }).fonts = originalFonts;
+    });
+
+    it('never constructs a TextLayer if cancelled while getTextContent() is still pending', async () => {
+      let resolveTextContent!: (value: unknown) => void;
+      const page = {
+        getTextContent: jest.fn(() => new Promise((resolve) => (resolveTextContent = resolve))),
+      } as unknown as PDFPageProxy;
+      const viewport = { scale: 1 } as PageViewport;
+      const textLayerDiv = document.createElement('div');
+      const handle = new TextLayerRenderHandle();
+
+      const renderPromise = service.renderTextLayer(page, textLayerDiv, viewport, handle);
+
+      // Teardown happens before a TextLayer exists to cancel directly.
+      handle.cancel();
+      resolveTextContent({ items: [], styles: {} });
+      await renderPromise;
+
+      expect(TextLayer as unknown as jest.Mock).not.toHaveBeenCalled();
+      expect(textLayerDiv.style.getPropertyValue('--scale-factor')).toBe('');
+    });
+
+    it('does not set up selection behavior if cancelled while textLayer.render() was pending', async () => {
+      const page = {
+        getTextContent: jest.fn().mockResolvedValue({ items: [], styles: {} }),
+      } as unknown as PDFPageProxy;
+      const viewport = { scale: 1 } as PageViewport;
+      const textLayerDiv = document.createElement('div');
+      const handle = new TextLayerRenderHandle();
+
+      let resolveRender!: () => void;
+      const cancel = jest.fn();
+      (TextLayer as unknown as jest.Mock).mockImplementationOnce(() => ({
+        render: jest.fn(() => new Promise<void>((resolve) => (resolveRender = resolve))),
+        cancel,
+      }));
+      const hideSpy = jest
+        .spyOn(PdfViewerService as unknown as { hidePdfjsMeasurementCanvas: () => void }, 'hidePdfjsMeasurementCanvas')
+        .mockImplementation(() => undefined);
+
+      const renderPromise = service.renderTextLayer(page, textLayerDiv, viewport, handle);
+      await Promise.resolve();
+      await Promise.resolve();
+
+      handle.cancel();
+      resolveRender();
+      await renderPromise;
+
+      expect(hideSpy).not.toHaveBeenCalled();
+      hideSpy.mockRestore();
+    });
   });
 });
