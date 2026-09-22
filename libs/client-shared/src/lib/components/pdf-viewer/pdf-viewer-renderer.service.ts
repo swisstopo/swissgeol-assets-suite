@@ -1,7 +1,8 @@
-import { inject, Injectable, Renderer2 } from '@angular/core';
+import { inject, Injectable, OnDestroy, Renderer2 } from '@angular/core';
 import { PageDimension } from '@asset-sg/shared/v2';
 import { getPageRenderPriority, isRotationSwapped } from './pdf-viewer-layout.helper';
 import {
+  isExpectedCancellationError,
   PDF_VIEWER_DEBUG,
   PdfRenderMode,
   PdfViewerVirtualItem,
@@ -43,7 +44,7 @@ interface RenderSlotElements {
 }
 
 @Injectable()
-export class PdfViewerRendererService {
+export class PdfViewerRendererService implements OnDestroy {
   private readonly pdfViewerService = inject(PdfViewerService);
 
   private readonly renderedPages = new Map<number, RenderedPage>();
@@ -52,6 +53,10 @@ export class PdfViewerRendererService {
   private renderOptions: QueueVisiblePageRendersOptions | null = null;
   private readonly textLayerTimers = new Map<number, () => void>();
   private drainTimer: ReturnType<typeof setTimeout> | null = null;
+
+  ngOnDestroy(): void {
+    this.resetPages();
+  }
 
   resetPages(): void {
     this.pdfViewerService.cleanupTextLayerSelections();
@@ -696,8 +701,10 @@ export class PdfViewerRendererService {
     }
   }
 
+  /** Also treats any error as cancelled once torn down (`renderOptions === null`), since a raw
+   * PDF.js "Worker was destroyed" error can otherwise reach here after `resetPages()`. */
   private isRenderCancelled(error: unknown): boolean {
-    return error instanceof Error && error.name === 'RenderingCancelledException';
+    return this.renderOptions === null || isExpectedCancellationError(error);
   }
 
   private evictPage(pageNum: number, scrollElement: HTMLDivElement, renderer: Renderer2): void {
