@@ -35,6 +35,26 @@ export interface RenderingPage {
   cancelled?: boolean;
 }
 
+/**
+ * Thrown when a load/render is abandoned due to a newer load or viewer teardown. A dedicated
+ * type lets callers distinguish this from genuine PDF.js/network failures without matching on
+ * message text (PDF.js itself throws a raw "Worker was destroyed" error in the same situation).
+ */
+export class PdfLoadSupersededError extends Error {
+  constructor(message = 'Load superseded') {
+    super(message);
+    this.name = 'PdfLoadSupersededError';
+  }
+}
+
+/** True for errors that are an expected consequence of cancelling in-flight PDF.js work, so
+ * callers can suppress logging/alerts for them while still surfacing genuine failures. */
+export function isExpectedCancellationError(error: unknown): boolean {
+  return (
+    error instanceof Error && (error.name === 'RenderingCancelledException' || error.name === 'PdfLoadSupersededError')
+  );
+}
+
 export interface PageLayout {
   start: number;
   size: number;

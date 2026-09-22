@@ -15,7 +15,7 @@ import { PDFPageProxy, TextContent } from 'pdfjs-dist/types/src/display/api';
 import { noop } from 'rxjs';
 import { SessionStorageService } from '../../services/session-storage.service';
 import { selectIsAnonymousMode } from '../../state/app-shared-state.selectors';
-import { PdfRenderTask, PDF_VIEWER_DEBUG } from './pdf-viewer.models';
+import { PdfLoadSupersededError, PdfRenderTask, PDF_VIEWER_DEBUG } from './pdf-viewer.models';
 
 // Worker source for PDF JS. Note that this must match the path that is defined in the builder configuration.
 // The version query parameter busts the browser cache when the pdfjs-dist version changes, since the worker
@@ -35,6 +35,13 @@ export class PdfViewerService implements OnDestroy {
 
   async ngOnDestroy() {
     this.cleanupTextLayerSelections();
+    await this.abort();
+  }
+
+  /** Called explicitly by `PdfViewerComponent.ngOnDestroy()` so an in-flight `loadPdf()` rejects
+   * immediately instead of racing Angular's own (unawaited) `ngOnDestroy()` above. */
+  public async abort(): Promise<void> {
+    this.loadGeneration++;
     await this.destroyPdfJsWorker();
   }
 
@@ -57,7 +64,7 @@ export class PdfViewerService implements OnDestroy {
 
     // If another loadPdf call started while we were destroying, bail out.
     if (this.loadGeneration !== generation) {
-      throw new Error('Load superseded');
+      throw new PdfLoadSupersededError();
     }
 
     if (PDF_VIEWER_DEBUG) {
@@ -76,13 +83,18 @@ export class PdfViewerService implements OnDestroy {
       if (this.loadGeneration !== generation) {
         // Destroying the loading task also tears down its document proxy.
         await loadingTask.destroy().catch(noop);
-        throw new Error('Load superseded');
+        throw new PdfLoadSupersededError();
       }
       this.pdfDoc = doc;
       return this.pdfDoc.numPages;
     } catch (e) {
       if (PDF_VIEWER_DEBUG) {
         console.log(`[pdf-service] loadPdf pdfId=${pdfId} svcGen=${generation} — error:`, e);
+      }
+      // A generation change while awaiting `getDocument()` means we were superseded/destroyed
+      // mid-flight (this may be a raw PDF.js "Worker was destroyed" error) — normalize it.
+      if (this.loadGeneration !== generation) {
+        throw new PdfLoadSupersededError();
       }
       throw e;
     }
