@@ -88,7 +88,7 @@ export class FakeFileIndex {
     const failures: Array<{ id: string; cause: { type: string } }> = [];
     for (const [docId, seqNo] of snapshot) {
       const current = this.docs.get(docId);
-      if (current === undefined || current.seqNo !== seqNo) {
+      if (current?.seqNo !== seqNo) {
         failures.push({ id: docId, cause: { type: 'version_conflict_engine_exception' } });
       } else {
         this.docs.delete(docId);
