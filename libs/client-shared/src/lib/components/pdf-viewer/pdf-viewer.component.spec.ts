@@ -176,7 +176,6 @@ describe('PdfViewerComponent', () => {
     expect(pdfViewerServiceMock['abort']).toHaveBeenCalledTimes(1);
     expect(rendererServiceMock['resetPages']).toHaveBeenCalled();
 
-    // Settles only after destroy, with a raw PDF.js-style error caused by our own abort().
     loadPdfDeferred.reject(new Error('Worker was destroyed'));
     metadataDeferred.resolve({ pageDimensions: [] });
 

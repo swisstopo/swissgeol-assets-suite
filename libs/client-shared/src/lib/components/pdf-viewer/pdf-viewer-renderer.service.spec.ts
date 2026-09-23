@@ -138,7 +138,6 @@ describe('PdfViewerRendererService', () => {
     service.ngOnDestroy();
     expect(render.cancel).toHaveBeenCalledTimes(1);
 
-    // Without the fix, this would re-arm drainSlots() and dispatch the same page forever.
     await flush();
 
     expect(renderPageToCanvas).toHaveBeenCalledTimes(1);
@@ -186,7 +185,6 @@ describe('PdfViewerRendererService', () => {
       expect(renderPageToCanvas).toHaveBeenCalledTimes(1);
       expect(consoleErrorSpy).toHaveBeenCalledTimes(1);
 
-      // Further drain cycles (triggered by dispatchRender's .finally()) must not retry.
       await flush(5);
       expect(renderPageToCanvas).toHaveBeenCalledTimes(1);
       expect(consoleErrorSpy).toHaveBeenCalledTimes(1);
@@ -222,8 +220,8 @@ describe('PdfViewerRendererService', () => {
     it('ignores a genuine failure that arrives from a stale document after a newer one has started', async () => {
       let currentGeneration = 0;
       const render = makeControllableRender();
-      // No onRenderTask call — simulates document A's render staying in flight uncancelled
-      // (e.g. cancel() didn't reach it in time) while document B replaces it.
+      // No onRenderTask call — cancel() never reaches this render, simulating document A
+      // staying in flight while document B replaces it.
       renderPageToCanvas.mockImplementationOnce(() => render.promise);
       service.queueVisiblePageRenders({
         ...buildOptions(),
@@ -243,7 +241,6 @@ describe('PdfViewerRendererService', () => {
       await flush(5);
       expect(service.getRenderedPage(1)).not.toBeNull();
 
-      // Document A's stale render now fails for a genuine (non-cancellation) reason.
       render.reject(new Error('Corrupt page data'));
       await flush(5);
 
@@ -279,8 +276,6 @@ describe('PdfViewerRendererService', () => {
       const cancel = jest.fn();
       let attachLate!: () => void;
       renderTextLayer.mockImplementation((_page, _div, _viewport, handle) => {
-        // Simulates renderTextLayer() constructing its TextLayer only after getTextContent()
-        // resolves, which may happen after teardown already called handle.cancel().
         return new Promise((resolve) => {
           attachLate = () => {
             handle?.attach({ cancel } as unknown as TextLayer);
@@ -293,12 +288,9 @@ describe('PdfViewerRendererService', () => {
       await flush(5);
       expect(renderTextLayer).toHaveBeenCalledTimes(1);
 
-      // Teardown happens while getTextContent() is still pending — no TextLayer exists yet.
       service.ngOnDestroy();
       expect(cancel).not.toHaveBeenCalled();
 
-      // getTextContent() resolves late and attaches the TextLayer; TextLayerRenderHandle must
-      // cancel it immediately since cancellation was already requested.
       attachLate();
       expect(cancel).toHaveBeenCalledTimes(1);
     });
@@ -339,8 +331,7 @@ describe('PdfViewerRendererService', () => {
       renderPageSuccessfully();
       await flush(5);
 
-      // A newer render for the same page number replaced the entry this text-layer render was
-      // scheduled for (e.g. re-render after a zoom/rotation change).
+      // Simulates the page being replaced by a newer render.
       const renderedPages = (service as unknown as { renderedPages: Map<number, unknown> }).renderedPages;
       renderedPages.set(1, { textLayerRendered: false });
 

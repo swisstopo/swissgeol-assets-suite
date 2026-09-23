@@ -62,7 +62,6 @@ export class PdfViewerService implements OnDestroy {
     const generation = ++this.loadGeneration;
     await this.destroyPdfJsWorker();
 
-    // If another loadPdf call started while we were destroying, bail out.
     if (this.loadGeneration !== generation) {
       throw new PdfLoadSupersededError();
     }
@@ -79,7 +78,6 @@ export class PdfViewerService implements OnDestroy {
     this.loadingTask = loadingTask;
     try {
       const doc = await loadingTask.promise;
-      // Only adopt the document if this is still the active load.
       if (this.loadGeneration !== generation) {
         // Destroying the loading task also tears down its document proxy.
         await loadingTask.destroy().catch(noop);
@@ -91,8 +89,8 @@ export class PdfViewerService implements OnDestroy {
       if (PDF_VIEWER_DEBUG) {
         console.log(`[pdf-service] loadPdf pdfId=${pdfId} svcGen=${generation} — error:`, e);
       }
-      // A generation change while awaiting `getDocument()` means we were superseded/destroyed
-      // mid-flight (this may be a raw PDF.js "Worker was destroyed" error) — normalize it.
+      // A generation change here means we were superseded mid-flight; normalize PDF.js's raw
+      // "Worker was destroyed" error into PdfLoadSupersededError.
       if (this.loadGeneration !== generation) {
         throw new PdfLoadSupersededError();
       }
@@ -445,9 +443,8 @@ export class PdfViewerService implements OnDestroy {
     if (this.loadingTask) {
       const task = this.loadingTask;
       this.loadingTask = undefined;
-      // Do not block on destroy — pdfjs can deadlock when in-flight getPage()
-      // calls are pending while the worker is being torn down. Fire the cleanup
-      // and race it against a timeout so we always proceed.
+      // Do not block on destroy — pdfjs can deadlock if in-flight getPage() calls are pending
+      // while the worker tears down. Race it against a timeout instead.
       const DESTROY_TIMEOUT_MS = 2000;
       await withTimeout(
         task.destroy(),

@@ -240,8 +240,8 @@ export class PdfViewerRendererService implements OnDestroy {
     const options = this.renderOptions;
     if (!options) return;
 
-    // Stop draining if the document has changed since these options were created.
-    // Without this guard, a destroyed PDF proxy causes infinite error→retry loops.
+    // Stop draining if the document has changed — otherwise a destroyed PDF proxy causes
+    // infinite retry loops.
     if (options.getLoadGeneration() !== options.loadGeneration) return;
 
     const renderMode = options.getRenderMode();
@@ -357,7 +357,6 @@ export class PdfViewerRendererService implements OnDestroy {
     );
   }
 
-  /** Prevents an unbounded retry loop: a genuine failure is only retried once zoom/rotation/baseScale change. */
   private isPageFailedWithCurrentParams(pageNum: number, zoom: number, rotation: number, baseScale: number): boolean {
     const failed = this.failedPages.get(pageNum);
     return (
@@ -546,9 +545,8 @@ export class PdfViewerRendererService implements OnDestroy {
     } catch (error) {
       this.finishPageRender(pageNum, renderEpoch, zoomAtStart, rotationAtStart);
       this.pdfViewerService.cleanupTextLayerSelection(textLayerDiv);
-      // A stale document generation (options captured at dispatch time vs. the live component
-      // generation) must not pollute failedPages/logging for a page number that may equally
-      // belong to a newer document.
+      // A stale document must not pollute failedPages/logging — the page number may
+      // belong to a newer document by the time this rejects.
       const isStaleDocument = options.getLoadGeneration() !== options.loadGeneration;
       if (!isStaleDocument && !this.isRenderCancelled(error)) {
         this.failedPages.set(pageNum, { zoom: zoomAtStart, rotation: rotationAtStart, baseScale: options.baseScale });
@@ -693,9 +691,8 @@ export class PdfViewerRendererService implements OnDestroy {
       }, 0);
     });
 
-    // Stays registered for the whole in-flight render (not just the pre-fire timer). `handle`
-    // covers every phase: before the timer fires, while getTextContent() is pending (no
-    // TextLayer exists yet), and once TextLayer.render() has actually started.
+    // Stays registered for the whole in-flight render — `handle` covers cancellation whether it
+    // arrives before the timer fires, during getTextContent(), or during TextLayer.render().
     const cancel = (): void => {
       cancelAnimationFrame(frameId);
       if (timeoutId) {

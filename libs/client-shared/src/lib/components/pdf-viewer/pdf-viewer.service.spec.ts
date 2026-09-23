@@ -58,7 +58,6 @@ describe('PdfViewerService', () => {
 
     const loadPromise = service.loadPdf(1, 2);
 
-    // Let loadPdf() reach getDocument() before we abort, so a task genuinely exists in flight.
     await Promise.resolve();
     await Promise.resolve();
 
@@ -129,7 +128,6 @@ describe('PdfViewerService', () => {
 
       const renderPromise = service.renderTextLayer(page, textLayerDiv, viewport, handle);
 
-      // Teardown happens before a TextLayer exists to cancel directly.
       handle.cancel();
       resolveTextContent({ items: [], styles: {} });
       await renderPromise;

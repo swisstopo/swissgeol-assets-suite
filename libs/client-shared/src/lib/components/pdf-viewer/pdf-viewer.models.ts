@@ -43,7 +43,6 @@ export class TextLayerRenderHandle {
   private textLayer: TextLayer | null = null;
   private cancelled = false;
 
-  /** Called by `renderTextLayer()` once its `TextLayer` instance exists. */
   attach(textLayer: TextLayer): void {
     this.textLayer = textLayer;
     if (this.cancelled) {
@@ -55,8 +54,6 @@ export class TextLayerRenderHandle {
     return this.cancelled;
   }
 
-  /** Cancels the attached `TextLayer` if it already exists; otherwise marks the render so it
-   * aborts before starting once the pending `getTextContent()`/font-loading resolves. */
   cancel(): void {
     this.cancelled = true;
     this.textLayer?.cancel();
