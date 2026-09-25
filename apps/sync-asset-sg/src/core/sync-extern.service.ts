@@ -20,6 +20,9 @@ import { log } from './log';
 const BATCH_SIZE = 10_000;
 const DEFAULT_SYNC_WORKGROUP = 'Sync';
 
+const SYNC_TRANSACTION_MAX_WAIT_MS = 60_000;
+const SYNC_TRANSACTION_TIMEOUT_MS = 3 * 60 * 60 * 1_000;
+
 export class SyncExternService {
   private readonly config: SyncConfig;
   private readonly existingContactIds: Map<string, number> = new Map();
@@ -30,6 +33,7 @@ export class SyncExternService {
   private readonly geometries: Geometries = { areas: new Map(), locations: new Map(), traces: new Map() };
   private readonly sourcePrisma: PrismaClient;
   private readonly destinationPrisma: PrismaClient;
+  private destinationTx: Prisma.TransactionClient | null = null;
   private defaultWorkgroupId!: WorkgroupId;
   private syncAssignee: string | null = null;
 
@@ -37,6 +41,10 @@ export class SyncExternService {
     this.config = config;
     this.sourcePrisma = sourcePrisma;
     this.destinationPrisma = destinationPrisma;
+  }
+
+  private get destination(): Prisma.TransactionClient {
+    return this.destinationTx ?? this.destinationPrisma;
   }
 
   /**
@@ -64,16 +72,28 @@ export class SyncExternService {
         select: { id: true },
       })
     ).id;
-    for (const asset of this.assetsToSync) {
-      await this.synchronizeAsset(asset);
-      await this.createWorkflowForAsset(asset);
-    }
-    log(`Synced ${this.newAssetToOriginalAsset.size} assets`);
 
-    const assetSynchronizations = await this.createAssetSynchronizationRecords();
-    await this.createRelationTables();
-    await this.createGeometriesForAssets();
-    await this.createSiblings(assetSynchronizations);
+    await this.destinationPrisma
+      .$transaction(
+        async (tx) => {
+          this.destinationTx = tx;
+
+          for (const asset of this.assetsToSync) {
+            await this.synchronizeAsset(asset);
+            await this.createWorkflowForAsset(asset);
+          }
+          log(`Synced ${this.newAssetToOriginalAsset.size} assets`);
+
+          const assetSynchronizations = await this.createAssetSynchronizationRecords();
+          await this.createRelationTables();
+          await this.createGeometriesForAssets();
+          await this.createSiblings(assetSynchronizations);
+        },
+        { maxWait: SYNC_TRANSACTION_MAX_WAIT_MS, timeout: SYNC_TRANSACTION_TIMEOUT_MS },
+      )
+      .finally(() => {
+        this.destinationTx = null;
+      });
     log('Data export to extern completed');
   }
 
@@ -81,13 +101,13 @@ export class SyncExternService {
     const contactsCreate = await this.createContactsPayload(asset.assetContacts);
     const filesCreate = await this.createFilesPayload(asset.files);
 
-    const workgroup = await this.destinationPrisma.workgroup.findFirst({
+    const workgroup = await this.destination.workgroup.findFirst({
       where: { name: { equals: asset.workgroupName } },
       select: { id: true },
     });
     const workgroupId = workgroup?.id ?? this.defaultWorkgroupId;
 
-    const newAsset = await this.destinationPrisma.asset.create({
+    const newAsset = await this.destination.asset.create({
       include: { assetContacts: { include: { contact: true } } },
       data: {
         ...asset.asset,
@@ -108,7 +128,7 @@ export class SyncExternService {
         this.existingContactIds.set(this.createUniqueContactKey(c), c.contactId);
       });
 
-    await this.destinationPrisma.assetContact.createMany({
+    await this.destination.assetContact.createMany({
       data: [...contactsCreate.assignAfterwards.entries()].flatMap(([uniqueKey, roles]) =>
         roles.map(
           ({ role }): Prisma.AssetContactCreateManyInput => ({
@@ -156,13 +176,16 @@ export class SyncExternService {
     const existingSiblings = await this.sourcePrisma.assetXAssetY.findMany({
       where: { assetXId: { in: this.assetsToSync.map((a) => a.originalAssetId) } },
     });
-    const allSynchronisations = await this.destinationPrisma.assetSynchronization.findMany();
+    const allSynchronisations = await this.destination.assetSynchronization.findMany();
 
     // Fetch workgroupId for all synced assets on destination to prevent cross-workgroup references
-    const syncedAssetIds = allSynchronisations.map((s) => s.assetId);
+    // Ignore synchronization records whose target asset was deleted.
+    const syncedAssetIds = allSynchronisations
+      .map((s) => s.assetId)
+      .filter((assetId): assetId is number => assetId !== null);
     const assetWorkgroups = new Map(
       (
-        await this.destinationPrisma.asset.findMany({
+        await this.destination.asset.findMany({
           where: { assetId: { in: syncedAssetIds } },
           select: { assetId: true, workgroupId: true },
         })
@@ -170,12 +193,13 @@ export class SyncExternService {
     );
 
     for (const asset of this.assetsToSync) {
-      const newAssetId = assetSynchronizations.find((n) => n.originalAssetId === asset.originalAssetId);
-      if (newAssetId === undefined) {
+      const newAssetSync = assetSynchronizations.find((n) => n.originalAssetId === asset.originalAssetId);
+      if (newAssetSync === undefined || newAssetSync.assetId === null) {
         throw new Error(`Could not find new asset id for asset ${asset.originalAssetId}`);
       }
+      const newAssetId = newAssetSync.assetId;
 
-      const currentWorkgroupId = assetWorkgroups.get(newAssetId.assetId);
+      const currentWorkgroupId = assetWorkgroups.get(newAssetId);
 
       const assetMainLink = allSynchronisations.find((n) => n.originalAssetId === asset.asset.assetMainId);
       const originalAssetXSiblings = existingSiblings
@@ -183,14 +207,15 @@ export class SyncExternService {
         .map((n) => n.assetYId);
       const newAssetSiblings = allSynchronisations
         .filter((n) => originalAssetXSiblings.includes(n.originalAssetId))
-        .map((n) => n.assetId);
+        .map((n) => n.assetId)
+        .filter((assetId): assetId is number => assetId !== null);
 
       // Filter siblings to only include assets in the same workgroup
       const sameWorkgroupSiblings = newAssetSiblings.filter((siblingId) => {
         const siblingWorkgroupId = assetWorkgroups.get(siblingId);
         if (siblingWorkgroupId !== currentWorkgroupId) {
           log(
-            `Skipping cross-workgroup sibling: asset ${newAssetId.assetId} (wg ${currentWorkgroupId}) -> asset ${siblingId} (wg ${siblingWorkgroupId})`,
+            `Skipping cross-workgroup sibling: asset ${newAssetId} (wg ${currentWorkgroupId}) -> asset ${siblingId} (wg ${siblingWorkgroupId})`,
           );
           return false;
         }
@@ -203,15 +228,15 @@ export class SyncExternService {
       let safeAssetMainId: number | null | undefined = undefined;
       if (parentId != null && parentWorkgroupId !== currentWorkgroupId) {
         log(
-          `Skipping cross-workgroup parent: asset ${newAssetId.assetId} (wg ${currentWorkgroupId}) -> parent ${parentId} (wg ${parentWorkgroupId})`,
+          `Skipping cross-workgroup parent: asset ${newAssetId} (wg ${currentWorkgroupId}) -> parent ${parentId} (wg ${parentWorkgroupId})`,
         );
         safeAssetMainId = null;
       } else {
         safeAssetMainId = assetMainLink?.assetId;
       }
 
-      await this.destinationPrisma.asset.update({
-        where: { assetId: newAssetId.assetId },
+      await this.destination.asset.update({
+        where: { assetId: newAssetId },
         data: {
           assetMainId: safeAssetMainId,
           siblingXAssets: { create: sameWorkgroupSiblings.map((n) => ({ assetYId: n })) },
@@ -219,19 +244,19 @@ export class SyncExternService {
       });
       for (const child of asset.children) {
         const syncedChildAsset = allSynchronisations.find((n) => n.originalAssetId === child.assetId);
-        if (syncedChildAsset) {
+        if (syncedChildAsset && syncedChildAsset.assetId !== null) {
           // Only set assetMainId on child if it shares the workgroup with the parent
           const childWorkgroupId = assetWorkgroups.get(syncedChildAsset.assetId);
           if (childWorkgroupId !== currentWorkgroupId) {
             log(
-              `Skipping cross-workgroup child: parent ${newAssetId.assetId} (wg ${currentWorkgroupId}) -> child ${syncedChildAsset.assetId} (wg ${childWorkgroupId})`,
+              `Skipping cross-workgroup child: parent ${newAssetId} (wg ${currentWorkgroupId}) -> child ${syncedChildAsset.assetId} (wg ${childWorkgroupId})`,
             );
             continue;
           }
-          await this.destinationPrisma.asset.update({
+          await this.destination.asset.update({
             where: { assetId: syncedChildAsset.assetId },
             data: {
-              assetMainId: newAssetId.assetId,
+              assetMainId: newAssetId,
             },
           });
         }
@@ -437,7 +462,7 @@ export class SyncExternService {
 
     for (const [idx, batch] of this.batchList(areasSql, BATCH_SIZE).entries()) {
       log(`Creating batch #${idx + 1} of areas`, 'batch');
-      await this.destinationPrisma.$executeRaw`
+      await this.destination.$executeRaw`
         INSERT INTO study_area (asset_id, geom, is_revised)
         VALUES ${Prisma.join(batch)}
       `;
@@ -446,7 +471,7 @@ export class SyncExternService {
 
     for (const [idx, batch] of this.batchList(locationsSql, BATCH_SIZE).entries()) {
       log(`Creating batch #${idx + 1} of locations`, 'batch');
-      await this.destinationPrisma.$executeRaw`
+      await this.destination.$executeRaw`
         INSERT INTO study_location (asset_id, geom, is_revised)
         VALUES ${Prisma.join(batch)}
       `;
@@ -455,7 +480,7 @@ export class SyncExternService {
 
     for (const [idx, batch] of this.batchList(tracesSql, BATCH_SIZE).entries()) {
       log(`Creating batch #${idx + 1} of traces`, 'batch');
-      await this.destinationPrisma.$executeRaw`
+      await this.destination.$executeRaw`
         INSERT INTO study_trace (asset_id, geom, is_revised)
         VALUES ${Prisma.join(batch)}
       `;
@@ -475,7 +500,7 @@ export class SyncExternService {
     log('Create batched relation entries');
     for (const [idx, batch] of this.batchList(this.relationSqls.ids, BATCH_SIZE).entries()) {
       log(`Creating batch #${idx + 1} of ids`, 'batch');
-      await this.destinationPrisma.$executeRaw`
+      await this.destination.$executeRaw`
         INSERT INTO id (asset_id, id, description)
         VALUES ${Prisma.join(batch)}
       `;
@@ -484,7 +509,7 @@ export class SyncExternService {
 
     for (const [idx, batch] of this.batchList(this.relationSqls.assetLanguages, BATCH_SIZE).entries()) {
       log(`Creating batch #${idx + 1} of asset languages`, 'batch');
-      await this.destinationPrisma.$executeRaw`
+      await this.destination.$executeRaw`
         INSERT INTO asset_language (asset_id, language_item_code)
         VALUES ${Prisma.join(batch)}
       `;
@@ -493,7 +518,7 @@ export class SyncExternService {
 
     for (const [idx, batch] of this.batchList(this.relationSqls.manCatLabelRefs, BATCH_SIZE).entries()) {
       log(`Creating batch #${idx + 1} of mancatlabelrefs`, 'batch');
-      await this.destinationPrisma.$executeRaw`
+      await this.destination.$executeRaw`
         INSERT INTO man_cat_label_ref (asset_id, man_cat_label_item_code)
         VALUES ${Prisma.join(batch)}
       `;
@@ -502,7 +527,7 @@ export class SyncExternService {
 
     for (const [idx, batch] of this.batchList(this.relationSqls.typeNatRels, BATCH_SIZE).entries()) {
       log(`Creating batch #${idx + 1} of typeNatRels`, 'batch');
-      await this.destinationPrisma.$executeRaw`
+      await this.destination.$executeRaw`
         INSERT INTO type_nat_rel (asset_id, nat_rel_item_code)
         VALUES ${Prisma.join(batch)}
       `;
@@ -513,13 +538,13 @@ export class SyncExternService {
   private async createWorkflowForAsset(asset: AssetToSync) {
     log(`Create workflow for asset with original ID ${asset.originalAssetId}`);
     const { id: _id, ...selection } = asset.reviewSelection;
-    const reviewSelection = await this.destinationPrisma.workflowSelection.create({
+    const reviewSelection = await this.destination.workflowSelection.create({
       select: { id: true },
       data: {
         ...selection,
       },
     });
-    const approvalSelection = await this.destinationPrisma.workflowSelection.create({ select: { id: true }, data: {} });
+    const approvalSelection = await this.destination.workflowSelection.create({ select: { id: true }, data: {} });
 
     // Find the new asset id by looking up the original asset id in the map
     const newAssetId = Array.from(this.newAssetToOriginalAsset.entries()).find(
@@ -530,7 +555,7 @@ export class SyncExternService {
       throw new Error(`Could not find new asset id for original asset id ${asset.originalAssetId}`);
     }
 
-    const workflow = await this.destinationPrisma.workflow.create({
+    const workflow = await this.destination.workflow.create({
       select: { id: true },
       data: {
         id: newAssetId,
@@ -542,7 +567,7 @@ export class SyncExternService {
     });
 
     const { id: workflowId } = workflow;
-    await this.destinationPrisma.workflowChange.create({
+    await this.destination.workflowChange.create({
       data: {
         workflowId: workflowId,
         comment: `Synchronized from EXTERN with original ID ${asset.originalAssetId}`,
@@ -555,7 +580,7 @@ export class SyncExternService {
 
   private async createAssetSynchronizationRecords(): Promise<Prisma.AssetSynchronizationGetPayload<object>[]> {
     log('Create synchronization records');
-    return this.destinationPrisma.assetSynchronization.createManyAndReturn({
+    return this.destination.assetSynchronization.createManyAndReturn({
       data: Array.from(this.newAssetToOriginalAsset.entries()).map((a) => ({
         assetId: a[0],
         originalAssetId: a[1].originalAssetId,
