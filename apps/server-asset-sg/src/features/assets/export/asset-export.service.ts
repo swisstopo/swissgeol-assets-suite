@@ -123,7 +123,7 @@ export class AssetExportService {
       case 'createdAt':
         return asset.createdAt.toString();
       case 'receivedAt':
-        return asset.receivedAt.toString();
+        return asset.receivedAt?.toString() ?? '';
       case 'nationalInterest':
         return BOOLEAN_LABELS[asset.isOfNationalInterest ? 'true' : 'false'][language];
       case 'nationalInterestType':

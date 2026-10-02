@@ -16,7 +16,7 @@ model Asset {
   titlePublic         String          @map("title_public")
   titleOriginal       String?         @map("title_original")
   isNatRel            Boolean         @map("is_nat_rel")
-  receiptDate         DateTime        @map("receipt_date")
+  receiptDate         DateTime?       @map("receipt_date")
   municipality        String?         @map("municipality")
   url                 String?         @map("url")
   locationAnalog      String?         @map("location_analog")
