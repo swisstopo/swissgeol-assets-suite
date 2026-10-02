@@ -23,13 +23,10 @@ export class SearchWriterService {
   private readonly logger = new Logger(SearchWriterService.name);
 
   /**
-   * Serializes index synchronization per asset. Concurrent uploads (or other edits) to the same asset
-   * would otherwise run overlapping `deleteByQuery` + bulk index operations, producing
-   * `version_conflict_engine_exception` errors. Different assets are still synchronized concurrently.
+   * Serializes per-asset index mutations and blocks them during full index rebuilds,
+   * preventing conflicts between overlapping delete and reindex operations.
    *
-   * NOTE: This mutex is in-process only. It relies on the current single-replica deployment of the API
-   * (see `k8s/.../deployment.api.yaml`, `replicas: 1`); it does not protect against concurrent writers
-   * running in separate processes/replicas.
+   * This lock is process-local and assumes a single API replica.
    */
   private readonly assetMutex = new KeyedMutex<AssetId>();
 
@@ -128,7 +125,23 @@ export class SearchWriterService {
     return (await this.elastic.count({ index: FILE_ELASTIC_INDEX, ignore_unavailable: true })).count;
   }
 
-  async syncWithDatabase(onProgress?: (percentage: number) => void | Promise<void>): Promise<void> {
+  /**
+   * Runs a task while blocking all per-asset index operations.
+   *
+   * The task must not call another locking method on this service.
+   */
+  runExclusively<T>(task: () => Promise<T>): Promise<T> {
+    return this.assetMutex.runExclusive(task);
+  }
+
+  /**
+   * Rebuilds both search indices while blocking incremental updates.
+   */
+  syncWithDatabase(onProgress?: (percentage: number) => void | Promise<void>): Promise<void> {
+    return this.runExclusively(() => this.rebuildIndicesFromDatabase(onProgress));
+  }
+
+  private async rebuildIndicesFromDatabase(onProgress?: (percentage: number) => void | Promise<void>): Promise<void> {
     // Write all Prisma assets into the sync index.
     const total = await this.prisma.asset.count();
     if (total === 0) {

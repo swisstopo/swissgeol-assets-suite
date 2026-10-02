@@ -9,6 +9,7 @@ import {
   makeHarness,
   staleAsset,
 } from '../../../../../../test/search-writer-concurrency.fakes';
+import { SearchWriterService } from '@/features/assets/search/search-writer.service';
 
 /**
  * Fails fast (instead of relying on Jest's global timeout) if a promise that must settle for the test to
@@ -199,5 +200,168 @@ describe('SearchWriterService index-sync concurrency', () => {
     expect(index.conflictsThrown).toBe(0);
     expect(index.docIdsForAsset(1)).toEqual(['10_1']);
     expect(index.docIdsForAsset(2)).toEqual(['20_1']);
+  });
+
+  describe('runExclusively', () => {
+    const flushMacrotasks = () => new Promise((resolve) => setImmediate(resolve));
+
+    it('waits for an in-progress register', async () => {
+      const { service, db, hooks } = makeHarness();
+      db.set(1, [{ id: 10, pages: [1] }]);
+
+      const registerEntered = new Deferred();
+      const releaseRegister = new Deferred();
+      const order: string[] = [];
+      hooks.beforeWriteAssetFiles = async () => {
+        registerEntered.resolve();
+        await releaseRegister.promise;
+        order.push('register');
+      };
+
+      const registration = service.register(staleAsset(1));
+      await withWatchdog(registerEntered.promise, 'registration never acquired the lock');
+
+      const exclusive = service.runExclusively(async () => {
+        order.push('exclusive');
+      });
+      await flushMacrotasks();
+      expect(order).toEqual([]);
+
+      releaseRegister.resolve();
+      await Promise.all([registration, exclusive]);
+      expect(order).toEqual(['register', 'exclusive']);
+    });
+
+    it('defers register, writeFile and deleteFromIndex started during an exclusive task until it finishes', async () => {
+      const fileToAsset = new Map<number, number>([[10, 1]]);
+      const { service, index, db } = makeHarness(fileToAsset);
+      db.set(1, [{ id: 10, pages: [1] }]);
+      db.set(2, [{ id: 20, pages: [1, 2] }]);
+      index.seed(3, [{ id: 30, pages: [1] }]);
+
+      const exclusiveEntered = new Deferred();
+      const releaseExclusive = new Deferred();
+      const exclusive = service.runExclusively(async () => {
+        exclusiveEntered.resolve();
+        await releaseExclusive.promise;
+      });
+      await withWatchdog(exclusiveEntered.promise, 'exclusive task never started');
+
+      const operations = [
+        service.register(staleAsset(2)),
+        service.writeFile(10 as AssetFileId),
+        service.deleteFromIndex(3),
+      ];
+      await flushMacrotasks();
+
+      // None of the operations may have touched the index while the exclusive task is running.
+      expect(index.docIdsForAsset(1)).toEqual([]);
+      expect(index.docIdsForAsset(2)).toEqual([]);
+      expect(index.docIdsForAsset(3)).toEqual(['30_1']);
+
+      releaseExclusive.resolve();
+      await withWatchdog(Promise.all([exclusive, ...operations]), 'queued operations never ran');
+
+      expect(index.docIdsForAsset(1)).toEqual(['10_1']);
+      expect(index.docIdsForAsset(2)).toEqual(['20_1', '20_2']);
+      expect(index.docIdsForAsset(3)).toEqual([]);
+      expect(index.conflictsThrown).toBe(0);
+      expect(index.sameAssetOverlaps).toBe(0);
+    });
+
+    it('releases queued operations when the exclusive task fails', async () => {
+      const { service, index, db } = makeHarness();
+      db.set(1, [{ id: 10, pages: [1] }]);
+
+      const releaseExclusive = new Deferred();
+      const exclusive = service.runExclusively(async () => {
+        await releaseExclusive.promise;
+        throw new Error('sync failed');
+      });
+      const registration = service.register(staleAsset(1));
+
+      releaseExclusive.resolve();
+      await expect(exclusive).rejects.toThrow('sync failed');
+      await expect(
+        withWatchdog(registration, 'registration blocked by failed exclusive task'),
+      ).resolves.toBeUndefined();
+      expect(index.docIdsForAsset(1)).toEqual(['10_1']);
+    });
+  });
+});
+
+describe('SearchWriterService.syncWithDatabase locking', () => {
+  it('runs the entire rebuild within a single exclusive scope', async () => {
+    let inScope = false;
+    let scopes = 0;
+    const calls: Array<{ name: string; inScope: boolean }> = [];
+    const record =
+      <T>(name: string, value?: T) =>
+      async (): Promise<T | undefined> => {
+        calls.push({ name, inScope });
+        return value;
+      };
+
+    let listCalls = 0;
+    const elastic = {
+      indices: {
+        exists: record('indices.exists', false),
+        create: record('indices.create'),
+        putMapping: record('indices.putMapping'),
+        delete: record('indices.delete'),
+        refresh: record('indices.refresh'),
+      },
+    };
+    const prisma = { asset: { count: record('asset.count', 1) } };
+    const assetRepo = {
+      list: async () => {
+        calls.push({ name: 'assetRepo.list', inScope });
+        listCalls += 1;
+        return listCalls === 1 ? [staleAsset(1)] : [];
+      },
+    };
+    const service = new SearchWriterService(
+      elastic as never,
+      prisma as never,
+      assetRepo as never,
+      {} as never,
+      {} as never,
+    );
+    service.getAssetWriter = (() => ({ write: record('assetWriter.write') })) as never;
+    service.getFileWriter = (() => ({ writeAssetFiles: record('fileWriter.writeAssetFiles') })) as never;
+    (service as unknown as { reindexAndPollForCompletion: () => Promise<void> }).reindexAndPollForCompletion = record(
+      'reindex',
+    ) as () => Promise<void>;
+
+    const runExclusively = service.runExclusively.bind(service);
+    service.runExclusively = <T>(task: () => Promise<T>): Promise<T> =>
+      runExclusively(async () => {
+        scopes += 1;
+        inScope = true;
+        try {
+          return await task();
+        } finally {
+          inScope = false;
+        }
+      });
+
+    await service.syncWithDatabase(() => {
+      calls.push({ name: 'onProgress', inScope });
+    });
+
+    expect(scopes).toBe(1);
+    const names = calls.map((it) => it.name);
+    expect(names[0]).toBe('asset.count');
+    expect(names).toEqual(
+      expect.arrayContaining([
+        'fileWriter.writeAssetFiles',
+        'assetWriter.write',
+        'onProgress',
+        'reindex',
+        'indices.delete',
+      ]),
+    );
+    expect(names.filter((it) => it === 'reindex')).toHaveLength(2);
+    expect(calls.filter((it) => !it.inScope)).toEqual([]);
   });
 });
