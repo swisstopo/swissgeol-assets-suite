@@ -542,7 +542,7 @@ const makeForm = () =>
       title: new FormControl<string>('', { validators: [Validators.required], nonNullable: true }),
       originalTitle: new FormControl(''),
       createdAt: new FormControl<Date | null>(null, { validators: [Validators.required] }),
-      receivedAt: new FormControl<Date | null>(null, { validators: [Validators.required] }),
+      receivedAt: new FormControl<Date | null>(null),
       languageCodes: new FormControl<LanguageCode[]>([], { nonNullable: true }),
       formatCode: new FormControl<LocalizedItemCode>('', { validators: [Validators.required], nonNullable: true }),
       kindCode: new FormControl<LocalizedItemCode>('', { validators: [Validators.required], nonNullable: true }),
