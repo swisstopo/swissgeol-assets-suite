@@ -222,7 +222,7 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
         identifiers: asset.identifiers,
         workgroupId: asset.workgroupId,
         createdAt: asset.createdAt.toDate(),
-        receivedAt: asset.receivedAt.toDate(),
+        receivedAt: asset.receivedAt?.toDate() ?? null,
         restrictionType: restrictionType,
         restrictionDate: asset.restrictionDate?.toDate() ?? null,
       });
@@ -483,7 +483,7 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
       siblings: references.siblings.map((it) => it.id),
       workgroupId: general.workgroupId,
       createdAt: LocalDate.fromDate(general.createdAt ?? new Date()),
-      receivedAt: LocalDate.fromDate(general.receivedAt ?? new Date()),
+      receivedAt: general.receivedAt ? LocalDate.fromDate(general.receivedAt) : null,
     };
 
     this.isLoading = true;
@@ -542,7 +542,7 @@ const makeForm = () =>
       title: new FormControl<string>('', { validators: [Validators.required], nonNullable: true }),
       originalTitle: new FormControl(''),
       createdAt: new FormControl<Date | null>(null, { validators: [Validators.required] }),
-      receivedAt: new FormControl<Date | null>(null, { validators: [Validators.required] }),
+      receivedAt: new FormControl<Date | null>(null),
       languageCodes: new FormControl<LanguageCode[]>([], { nonNullable: true }),
       formatCode: new FormControl<LocalizedItemCode>('', { validators: [Validators.required], nonNullable: true }),
       kindCode: new FormControl<LocalizedItemCode>('', { validators: [Validators.required], nonNullable: true }),
