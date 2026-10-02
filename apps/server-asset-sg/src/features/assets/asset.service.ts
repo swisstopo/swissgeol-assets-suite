@@ -66,7 +66,9 @@ export class AssetService {
   }
 
   async delete(id: AssetId): Promise<boolean> {
-    const [ok] = await Promise.all([this.assetRepo.delete(id), this.searchWriterService.deleteFromIndex(id)]);
+    // Delete the database row first so a concurrent registration cannot recreate the asset in the index.
+    const ok = await this.assetRepo.delete(id);
+    await this.searchWriterService.deleteFromIndex(id);
     return ok;
   }
 
