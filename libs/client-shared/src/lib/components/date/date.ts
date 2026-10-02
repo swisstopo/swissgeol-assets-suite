@@ -3,7 +3,10 @@ import { LocalDate } from '@asset-sg/shared/v2';
 
 @Pipe({ name: 'assetSgDate', pure: true, standalone: true })
 export class DatePipe implements PipeTransform {
-  transform(value: Date | LocalDate): string {
+  transform(value: Date | LocalDate | null | undefined): string {
+    if (value == null) {
+      return '';
+    }
     const { year, month, day } = value instanceof Date ? fromDate(value) : value;
     return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
   }
