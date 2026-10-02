@@ -1,41 +1,33 @@
-﻿/**
- * `KeyedMutex` serializes asynchronous operations that share the same key while allowing operations
- * with different keys to run concurrently.
+/**
+ * Serializes tasks by key while allowing tasks with different keys to run concurrently.
+ * Exclusive tasks wait for all keyed tasks and block subsequently scheduled tasks.
  *
- * It is used to prevent concurrent Elasticsearch index mutations for the same asset. Running such
- * mutations in parallel causes `version_conflict_engine_exception` errors, because a `deleteByQuery`
- * snapshot becomes stale as soon as another operation deletes or overwrites the same documents.
- *
- * The mutex keeps a per-key promise chain. Each task is appended to the tail of its key's chain and
- * only starts once the previous task for that key has settled (regardless of success or failure).
- * Once a key's chain drains, its entry is removed to avoid unbounded memory growth.
+ * Tasks must not await another task scheduled on the same mutex, as this may deadlock.
  */
 export class KeyedMutex<K = string> {
-  private readonly tails = new Map<K, Promise<unknown>>();
+  private readonly tails = new Map<K, Promise<void>>();
+  private exclusiveTail: Promise<void> | null = null;
 
   /**
-   * Runs `task` exclusively for the given `key`. Tasks with the same key run one after another in the
-   * order they were scheduled. The returned promise resolves or rejects with the task's own result.
+   * Runs a task after previously scheduled tasks for the same key and any
+   * preceding exclusive task.
    */
   async run<T>(key: K, task: () => Promise<T>): Promise<T> {
-    const previous = this.tails.get(key) ?? Promise.resolve();
+    const previousForKey = this.tails.get(key);
+    const previous = this.waitFor(
+      previousForKey === undefined ? [this.exclusiveTail] : [previousForKey, this.exclusiveTail],
+    );
 
-    // Chain onto the previous task regardless of whether it resolved or rejected, so that a failing
-    // task never blocks subsequent tasks for the same key.
     const result = previous.then(task, task);
 
-    // The new tail must never reject, otherwise it would turn into an unhandled rejection once the
-    // next task chains onto it. We therefore store a guarded promise as the tail.
-    const tail = result.then(
-      () => undefined,
-      () => undefined,
-    );
+    // Stored tails must not reject, or they could produce unhandled rejections.
+    const tail = guard(result);
     this.tails.set(key, tail);
 
     try {
       return await result;
     } finally {
-      // Only clean up if no other task has chained onto this key in the meantime.
+      // A newer task may already have replaced this tail.
       if (this.tails.get(key) === tail) {
         this.tails.delete(key);
       }
@@ -43,10 +35,45 @@ export class KeyedMutex<K = string> {
   }
 
   /**
-   * Returns the number of keys that currently have a pending or running task.
-   * Exposed primarily for testing and diagnostics.
+   * Runs a task after all previously scheduled tasks and blocks subsequent ones.
    */
+  async runExclusive<T>(task: () => Promise<T>): Promise<T> {
+    const previous = this.waitFor([...this.tails.values(), this.exclusiveTail]);
+    const result = previous.then(task, task);
+    const tail = guard(result);
+    this.exclusiveTail = tail;
+
+    try {
+      return await result;
+    } finally {
+      // A newer exclusive task may already have replaced this tail.
+      if (this.exclusiveTail === tail) {
+        this.exclusiveTail = null;
+      }
+    }
+  }
+
+  /** Number of keys with a pending or running task. */
   get size(): number {
     return this.tails.size;
   }
+
+  private waitFor(tails: Array<Promise<void> | null>): Promise<void> {
+    const pending = tails.filter((it): it is Promise<void> => it !== null);
+
+    if (pending.length === 0) {
+      return Promise.resolve();
+    }
+    if (pending.length === 1) {
+      return pending[0];
+    }
+
+    return Promise.all(pending).then(() => undefined);
+  }
 }
+
+const guard = (promise: Promise<unknown>): Promise<void> =>
+  promise.then(
+    () => undefined,
+    () => undefined,
+  );
