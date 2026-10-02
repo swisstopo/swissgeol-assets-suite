@@ -1,6 +1,6 @@
 import { Renderer2 } from '@angular/core';
 import { AssetFile, PageDimension } from '@asset-sg/shared/v2';
-import { PageViewport } from 'pdfjs-dist';
+import { PageViewport, TextLayer } from 'pdfjs-dist';
 import { PDFPageProxy } from 'pdfjs-dist/types/src/display/api';
 
 export type PdfViewerFile = Pick<AssetFile, 'id' | 'pageRangeClassifications'> & {
@@ -33,6 +33,55 @@ export interface RenderingPage {
   baseScale: number;
   renderTask?: PdfRenderTask;
   cancelled?: boolean;
+}
+
+/**
+ * Lets a caller cancel `PdfViewerService.renderTextLayer()` regardless of which phase it's in:
+ * before the `TextLayer` exists (e.g. while `getTextContent()` is still pending) or after.
+ */
+export class TextLayerRenderHandle {
+  private textLayer: TextLayer | null = null;
+  private cancelled = false;
+
+  attach(textLayer: TextLayer): void {
+    this.textLayer = textLayer;
+    if (this.cancelled) {
+      textLayer.cancel();
+    }
+  }
+
+  isCancelled(): boolean {
+    return this.cancelled;
+  }
+
+  cancel(): void {
+    this.cancelled = true;
+    this.textLayer?.cancel();
+  }
+}
+
+/**
+ * Thrown when a load/render is abandoned due to a newer load or viewer teardown. A dedicated
+ * type lets callers distinguish this from genuine PDF.js/network failures without matching on
+ * message text (PDF.js itself throws a raw "Worker was destroyed" error in the same situation).
+ */
+export class PdfLoadSupersededError extends Error {
+  constructor(message = 'Load superseded') {
+    super(message);
+    this.name = 'PdfLoadSupersededError';
+  }
+}
+
+/** True for errors that are an expected consequence of cancelling in-flight PDF.js work, so
+ * callers can suppress logging/alerts for them while still surfacing genuine failures. */
+export function isExpectedCancellationError(error: unknown): boolean {
+  return (
+    error instanceof Error &&
+    (error.name === 'RenderingCancelledException' ||
+      error.name === 'PdfLoadSupersededError' ||
+      // Thrown by PDF.js's TextLayer.cancel().
+      error.name === 'AbortException')
+  );
 }
 
 export interface PageLayout {

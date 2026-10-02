@@ -15,7 +15,7 @@ import { PDFPageProxy, TextContent } from 'pdfjs-dist/types/src/display/api';
 import { noop } from 'rxjs';
 import { SessionStorageService } from '../../services/session-storage.service';
 import { selectIsAnonymousMode } from '../../state/app-shared-state.selectors';
-import { PdfRenderTask, PDF_VIEWER_DEBUG } from './pdf-viewer.models';
+import { PdfLoadSupersededError, PdfRenderTask, PDF_VIEWER_DEBUG, TextLayerRenderHandle } from './pdf-viewer.models';
 
 // Worker source for PDF JS. Note that this must match the path that is defined in the builder configuration.
 // The version query parameter busts the browser cache when the pdfjs-dist version changes, since the worker
@@ -35,6 +35,13 @@ export class PdfViewerService implements OnDestroy {
 
   async ngOnDestroy() {
     this.cleanupTextLayerSelections();
+    await this.abort();
+  }
+
+  /** Called explicitly by `PdfViewerComponent.ngOnDestroy()` so an in-flight `loadPdf()` rejects
+   * immediately instead of racing Angular's own (unawaited) `ngOnDestroy()` above. */
+  public async abort(): Promise<void> {
+    this.loadGeneration++;
     await this.destroyPdfJsWorker();
   }
 
@@ -55,9 +62,8 @@ export class PdfViewerService implements OnDestroy {
     const generation = ++this.loadGeneration;
     await this.destroyPdfJsWorker();
 
-    // If another loadPdf call started while we were destroying, bail out.
     if (this.loadGeneration !== generation) {
-      throw new Error('Load superseded');
+      throw new PdfLoadSupersededError();
     }
 
     if (PDF_VIEWER_DEBUG) {
@@ -72,17 +78,21 @@ export class PdfViewerService implements OnDestroy {
     this.loadingTask = loadingTask;
     try {
       const doc = await loadingTask.promise;
-      // Only adopt the document if this is still the active load.
       if (this.loadGeneration !== generation) {
         // Destroying the loading task also tears down its document proxy.
         await loadingTask.destroy().catch(noop);
-        throw new Error('Load superseded');
+        throw new PdfLoadSupersededError();
       }
       this.pdfDoc = doc;
       return this.pdfDoc.numPages;
     } catch (e) {
       if (PDF_VIEWER_DEBUG) {
         console.log(`[pdf-service] loadPdf pdfId=${pdfId} svcGen=${generation} — error:`, e);
+      }
+      // A generation change here means we were superseded mid-flight; normalize PDF.js's raw
+      // "Worker was destroyed" error into PdfLoadSupersededError.
+      if (this.loadGeneration !== generation) {
+        throw new PdfLoadSupersededError();
       }
       throw e;
     }
@@ -159,11 +169,19 @@ export class PdfViewerService implements OnDestroy {
     this.selectionAbortControllers.clear();
   }
 
-  public async renderTextLayer(page: PDFPageProxy, textLayerDiv: HTMLElement, viewport: PageViewport) {
+  public async renderTextLayer(
+    page: PDFPageProxy,
+    textLayerDiv: HTMLElement,
+    viewport: PageViewport,
+    handle?: TextLayerRenderHandle,
+  ) {
     const textContent = await page.getTextContent({
       disableNormalization: true,
     });
     await document.fonts.ready;
+
+    // Teardown may have requested cancellation before a TextLayer existed to cancel directly.
+    if (handle?.isCancelled()) return;
 
     // These CSS variables must be set before constructing TextLayer, because the constructor
     // calls setLayerDimensions which computes width/height from --total-scale-factor.
@@ -177,7 +195,11 @@ export class PdfViewerService implements OnDestroy {
       container: textLayerDiv,
       viewport,
     });
+    handle?.attach(textLayer);
     await textLayer.render();
+
+    if (handle?.isCancelled()) return;
+
     PdfViewerService.hidePdfjsMeasurementCanvas();
     this.setupSelectionBehavior(textLayerDiv);
     this.correctTextLayerScaleX(textLayer, textContent, viewport);
@@ -421,9 +443,8 @@ export class PdfViewerService implements OnDestroy {
     if (this.loadingTask) {
       const task = this.loadingTask;
       this.loadingTask = undefined;
-      // Do not block on destroy — pdfjs can deadlock when in-flight getPage()
-      // calls are pending while the worker is being torn down. Fire the cleanup
-      // and race it against a timeout so we always proceed.
+      // Do not block on destroy — pdfjs can deadlock if in-flight getPage() calls are pending
+      // while the worker tears down. Race it against a timeout instead.
       const DESTROY_TIMEOUT_MS = 2000;
       await withTimeout(
         task.destroy(),

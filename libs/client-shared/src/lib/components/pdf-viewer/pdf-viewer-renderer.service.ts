@@ -1,12 +1,14 @@
-import { inject, Injectable, Renderer2 } from '@angular/core';
+import { inject, Injectable, OnDestroy, Renderer2 } from '@angular/core';
 import { PageDimension } from '@asset-sg/shared/v2';
 import { getPageRenderPriority, isRotationSwapped } from './pdf-viewer-layout.helper';
 import {
+  isExpectedCancellationError,
   PDF_VIEWER_DEBUG,
   PdfRenderMode,
   PdfViewerVirtualItem,
   RenderedPage,
   RenderingPage,
+  TextLayerRenderHandle,
 } from './pdf-viewer.models';
 import { PdfViewerService } from './pdf-viewer.service';
 
@@ -43,15 +45,20 @@ interface RenderSlotElements {
 }
 
 @Injectable()
-export class PdfViewerRendererService {
+export class PdfViewerRendererService implements OnDestroy {
   private readonly pdfViewerService = inject(PdfViewerService);
 
   private readonly renderedPages = new Map<number, RenderedPage>();
   private readonly renderingPages = new Map<number, RenderingPage>();
+  private readonly failedPages = new Map<number, { zoom: number; rotation: number; baseScale: number }>();
   private latestRenderablePages = new Set<number>();
   private renderOptions: QueueVisiblePageRendersOptions | null = null;
   private readonly textLayerTimers = new Map<number, () => void>();
   private drainTimer: ReturnType<typeof setTimeout> | null = null;
+
+  ngOnDestroy(): void {
+    this.resetPages();
+  }
 
   resetPages(): void {
     this.pdfViewerService.cleanupTextLayerSelections();
@@ -60,6 +67,7 @@ export class PdfViewerRendererService {
     this.cancelDrainTimer();
     this.renderingPages.clear();
     this.renderedPages.clear();
+    this.failedPages.clear();
     this.latestRenderablePages.clear();
     this.renderOptions = null;
   }
@@ -232,8 +240,8 @@ export class PdfViewerRendererService {
     const options = this.renderOptions;
     if (!options) return;
 
-    // Stop draining if the document has changed since these options were created.
-    // Without this guard, a destroyed PDF proxy causes infinite error→retry loops.
+    // Stop draining if the document has changed — otherwise a destroyed PDF proxy causes
+    // infinite retry loops.
     if (options.getLoadGeneration() !== options.loadGeneration) return;
 
     const renderMode = options.getRenderMode();
@@ -247,6 +255,7 @@ export class PdfViewerRendererService {
     for (const pageNum of this.latestRenderablePages) {
       if (this.isPageRenderedWithCurrentParams(pageNum, currentZoom, currentRotation, options.baseScale)) continue;
       if (this.isPageRenderingWithCurrentParams(pageNum, currentZoom, currentRotation, options.baseScale)) continue;
+      if (this.isPageFailedWithCurrentParams(pageNum, currentZoom, currentRotation, options.baseScale)) continue;
       candidates.push(pageNum);
     }
 
@@ -345,6 +354,16 @@ export class PdfViewerRendererService {
       rendering.zoom === zoom &&
       rendering.rotation === rotation &&
       Math.abs(rendering.baseScale - baseScale) < BASE_SCALE_EPSILON
+    );
+  }
+
+  private isPageFailedWithCurrentParams(pageNum: number, zoom: number, rotation: number, baseScale: number): boolean {
+    const failed = this.failedPages.get(pageNum);
+    return (
+      !!failed &&
+      failed.zoom === zoom &&
+      failed.rotation === rotation &&
+      Math.abs(failed.baseScale - baseScale) < BASE_SCALE_EPSILON
     );
   }
 
@@ -526,7 +545,11 @@ export class PdfViewerRendererService {
     } catch (error) {
       this.finishPageRender(pageNum, renderEpoch, zoomAtStart, rotationAtStart);
       this.pdfViewerService.cleanupTextLayerSelection(textLayerDiv);
-      if (!this.isRenderCancelled(error)) {
+      // A stale document must not pollute failedPages/logging — the page number may
+      // belong to a newer document by the time this rejects.
+      const isStaleDocument = options.getLoadGeneration() !== options.loadGeneration;
+      if (!isStaleDocument && !this.isRenderCancelled(error)) {
+        this.failedPages.set(pageNum, { zoom: zoomAtStart, rotation: rotationAtStart, baseScale: options.baseScale });
         console.error(`Failed to render page ${pageNum}`, error);
       }
       return null;
@@ -647,27 +670,38 @@ export class PdfViewerRendererService {
     const viewport = rendered.viewport;
 
     let timeoutId: ReturnType<typeof setTimeout> | null = null;
+    const handle = new TextLayerRenderHandle();
     const frameId = requestAnimationFrame(() => {
       timeoutId = setTimeout(() => {
-        this.textLayerTimers.delete(pageNum);
-        if (this.renderedPages.get(pageNum) !== rendered) {
-          rendered.textLayerRendered = false;
-          return;
-        }
-        this.pdfViewerService.renderTextLayer(page, rendered.textLayerDiv, viewport).catch((error) => {
-          console.error(`Failed to render text layer for page ${pageNum}`, error);
-          rendered.textLayerRendered = false;
-        });
+        this.pdfViewerService
+          .renderTextLayer(page, rendered.textLayerDiv, viewport, handle)
+          .catch((error) => {
+            if (this.renderedPages.get(pageNum) === rendered && !this.isRenderCancelled(error)) {
+              console.error(`Failed to render text layer for page ${pageNum}`, error);
+            }
+            rendered.textLayerRendered = false;
+          })
+          .finally(() => {
+            // Only clear our own registration — a newer schedule for the same page may
+            // already have replaced it.
+            if (this.textLayerTimers.get(pageNum) === cancel) {
+              this.textLayerTimers.delete(pageNum);
+            }
+          });
       }, 0);
     });
 
-    this.textLayerTimers.set(pageNum, () => {
+    // Stays registered for the whole in-flight render — `handle` covers cancellation whether it
+    // arrives before the timer fires, during getTextContent(), or during TextLayer.render().
+    const cancel = (): void => {
       cancelAnimationFrame(frameId);
       if (timeoutId) {
         clearTimeout(timeoutId);
       }
+      handle.cancel();
       rendered.textLayerRendered = false;
-    });
+    };
+    this.textLayerTimers.set(pageNum, cancel);
   }
 
   private cancelTextLayerTimer(pageNum: number): void {
@@ -696,8 +730,10 @@ export class PdfViewerRendererService {
     }
   }
 
+  /** Also treats any error as cancelled once torn down (`renderOptions === null`), since a raw
+   * PDF.js "Worker was destroyed" error can otherwise reach here after `resetPages()`. */
   private isRenderCancelled(error: unknown): boolean {
-    return error instanceof Error && error.name === 'RenderingCancelledException';
+    return this.renderOptions === null || isExpectedCancellationError(error);
   }
 
   private evictPage(pageNum: number, scrollElement: HTMLDivElement, renderer: Renderer2): void {
