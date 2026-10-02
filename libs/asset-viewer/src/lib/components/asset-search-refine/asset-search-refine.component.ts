@@ -163,10 +163,17 @@ export class AssetSearchRefineComponent implements OnInit, OnDestroy, AfterViewI
   }
 
   public resetSearch() {
-    this.authorAutoCompleteControl.setValue('');
+    // Clear the local form controls without emitting `valueChanges`. Emitting would dispatch
+    // intermediate `updateSearchQuery` actions before the authoritative `resetSearch`, spawning
+    // concurrent, out-of-order search reloads that race with the reset and leave a stale asset
+    // count and a re-opened results table. Because the date chips rely on `minDate`/`maxDate`
+    // (normally updated by the suppressed subscriptions), we clear them manually here.
+    this.authorAutoCompleteControl.setValue('', { emitEvent: false });
     this.selectedAuthor = undefined;
-    this.minDateControl.setValue(null);
-    this.maxDateControl.setValue(null);
+    this.minDate = undefined;
+    this.maxDate = undefined;
+    this.minDateControl.setValue(null, { emitEvent: false });
+    this.maxDateControl.setValue(null, { emitEvent: false });
     this.store.dispatch(resetSearch());
   }
 
