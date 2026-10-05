@@ -50,6 +50,7 @@ async function callCreateSiblings(setup: {
   });
 
   const service = new SyncExternService(sourcePrisma, destinationPrisma, config);
+  (service as any).destinationTx = destinationPrisma;
 
   // Populate assetsToSync
   const assetsToSyncInternal: any[] = (service as any).assetsToSync;
@@ -243,61 +244,44 @@ describe('SyncExternService.createSiblings', () => {
   });
 
   describe('deleted synchronization targets (null assetId)', () => {
-    it('should ignore siblings whose synchronization record has a null assetId', async () => {
-      const { destinationPrisma } = await callCreateSiblings({
-        assetsToSync: [{ originalAssetId: 100, asset: { assetMainId: null }, children: [] }],
-        assetSynchronizations: [{ assetId: 1, originalAssetId: 100, originalSgsId: null }],
+    const syncedAndDeleted = [
+      { assetId: 1, originalAssetId: 100, originalSgsId: null },
+      { assetId: null, originalAssetId: 200, originalSgsId: null },
+    ];
+
+    it.each([
+      {
+        name: 'should ignore siblings whose synchronization record has a null assetId',
+        assetMainId: null,
+        children: [],
         existingSiblings: [{ assetXId: 100, assetYId: 200 }],
-        allSynchronisations: [
-          { assetId: 1, originalAssetId: 100, originalSgsId: null },
-          { assetId: null, originalAssetId: 200, originalSgsId: null },
-        ],
-        assetWorkgroups: [{ assetId: 1, workgroupId: 10 }],
-      });
-
-      expect(destinationPrisma.asset.update).toHaveBeenCalledWith({
-        where: { assetId: 1 },
-        data: {
-          assetMainId: undefined,
-          siblingXAssets: { create: [] },
-        },
-      });
-    });
-
-    it('should not set a parent whose synchronization record has a null assetId', async () => {
-      const { destinationPrisma } = await callCreateSiblings({
-        assetsToSync: [{ originalAssetId: 100, asset: { assetMainId: 200 }, children: [] }],
-        assetSynchronizations: [{ assetId: 1, originalAssetId: 100, originalSgsId: null }],
+        expectedData: { assetMainId: undefined, siblingXAssets: { create: [] } },
+      },
+      {
+        name: 'should not set a parent whose synchronization record has a null assetId',
+        assetMainId: 200,
+        children: [],
         existingSiblings: [],
-        allSynchronisations: [
-          { assetId: 1, originalAssetId: 100, originalSgsId: null },
-          { assetId: null, originalAssetId: 200, originalSgsId: null },
-        ],
-        assetWorkgroups: [{ assetId: 1, workgroupId: 10 }],
-      });
-
-      expect(destinationPrisma.asset.update).toHaveBeenCalledWith({
-        where: { assetId: 1 },
-        data: {
-          assetMainId: null,
-          siblingXAssets: { create: [] },
-        },
-      });
-    });
-
-    it('should skip child assignment when the child synchronization record has a null assetId', async () => {
-      const { destinationPrisma } = await callCreateSiblings({
-        assetsToSync: [{ originalAssetId: 100, asset: { assetMainId: null }, children: [{ assetId: 200 }] }],
-        assetSynchronizations: [{ assetId: 1, originalAssetId: 100, originalSgsId: null }],
+        expectedData: { assetMainId: null, siblingXAssets: { create: [] } },
+      },
+      {
+        name: 'should skip child assignment when the child synchronization record has a null assetId',
+        assetMainId: null,
+        children: [{ assetId: 200 }],
         existingSiblings: [],
-        allSynchronisations: [
-          { assetId: 1, originalAssetId: 100, originalSgsId: null },
-          { assetId: null, originalAssetId: 200, originalSgsId: null },
-        ],
+        expectedData: { assetMainId: undefined, siblingXAssets: { create: [] } },
+      },
+    ])('$name', async ({ assetMainId, children, existingSiblings, expectedData }) => {
+      const { destinationPrisma } = await callCreateSiblings({
+        assetsToSync: [{ originalAssetId: 100, asset: { assetMainId }, children }],
+        assetSynchronizations: [syncedAndDeleted[0]],
+        existingSiblings,
+        allSynchronisations: syncedAndDeleted,
         assetWorkgroups: [{ assetId: 1, workgroupId: 10 }],
       });
 
       expect(destinationPrisma.asset.update).toHaveBeenCalledTimes(1);
+      expect(destinationPrisma.asset.update).toHaveBeenCalledWith({ where: { assetId: 1 }, data: expectedData });
       expect(destinationPrisma.asset.update).not.toHaveBeenCalledWith(
         expect.objectContaining({ where: { assetId: null } }),
       );
@@ -376,34 +360,84 @@ describe('SyncExternService.init eligibility', () => {
   });
 });
 
-// Creates a service with non-transactional work stubbed out.
+const SYNC_TRANSACTION_TIMEOUT_MS = 3 * 60 * 60 * 1_000;
+
 function createTransactionService(txClient: unknown) {
   const destinationPrisma = createMockPrisma({
     workgroup: { findFirstOrThrow: jest.fn().mockResolvedValue({ id: 1 }) },
-    $transaction: jest.fn((cb: (tx: unknown) => Promise<unknown>) => cb(txClient)),
+    assetSynchronization: { createManyAndReturn: jest.fn() },
+    $executeRaw: jest.fn(),
+    $transaction: jest.fn((cb: (tx: unknown) => Promise<unknown>, _options: unknown) => cb(txClient)),
   });
   const service = new SyncExternService(createMockPrisma(), destinationPrisma, config);
 
   jest.spyOn(service as any, 'init').mockResolvedValue(undefined);
   jest.spyOn(service as any, 'synchronizeAsset').mockResolvedValue(undefined);
   jest.spyOn(service as any, 'createWorkflowForAsset').mockResolvedValue(undefined);
+  jest.spyOn(service as any, 'createSiblings').mockResolvedValue(undefined);
+
+  (service as any).assetsToSync.push({ originalAssetId: 300 });
+  (service as any).newAssetToOriginalAsset.set(1, { originalAssetId: 300, originalSgsId: null });
+  (service as any).relationSqls.ids.push(Prisma.sql`(1, 'id', 'description')`);
 
   return { service, destinationPrisma };
 }
 
-describe('SyncExternService.syncExternalToInternal transaction boundary', () => {
-  it('should run marker creation and later operations in the same transaction, propagate failures, and reset the client', async () => {
+function expectNoWritesOnDestinationClient(destinationPrisma: any) {
+  expect(destinationPrisma.assetSynchronization.createManyAndReturn).not.toHaveBeenCalled();
+  expect(destinationPrisma.$executeRaw).not.toHaveBeenCalled();
+}
+
+describe('SyncExternService destination client', () => {
+  it('should throw on a write without an active transaction and not call the ordinary client', async () => {
+    const { service, destinationPrisma } = createTransactionService({});
+
+    await expect((service as any).createAssetSynchronizationRecords()).rejects.toThrow(
+      'Synchronization write attempted without an active transaction.',
+    );
+
+    expectNoWritesOnDestinationClient(destinationPrisma);
+  });
+});
+
+describe('SyncExternService.syncExternalToInternal transaction client usage', () => {
+  it('should open the transaction with a three hour timeout', async () => {
+    const txClient = {
+      assetSynchronization: { createManyAndReturn: jest.fn().mockResolvedValue([]) },
+      $executeRaw: jest.fn().mockResolvedValue(1),
+    };
+    const { service, destinationPrisma } = createTransactionService(txClient);
+
+    await service.syncExternalToInternal();
+
+    expect(destinationPrisma.$transaction).toHaveBeenCalledTimes(1);
+    expect(destinationPrisma.$transaction).toHaveBeenCalledWith(
+      expect.any(Function),
+      expect.objectContaining({ timeout: SYNC_TRANSACTION_TIMEOUT_MS }),
+    );
+  });
+
+  it('should write through the transaction client and clear it after a successful run', async () => {
+    const txClient = {
+      assetSynchronization: { createManyAndReturn: jest.fn().mockResolvedValue([]) },
+      $executeRaw: jest.fn().mockResolvedValue(1),
+    };
+    const { service, destinationPrisma } = createTransactionService(txClient);
+
+    await service.syncExternalToInternal();
+
+    expect(txClient.assetSynchronization.createManyAndReturn).toHaveBeenCalledTimes(1);
+    expect(txClient.$executeRaw).toHaveBeenCalledTimes(1);
+    expectNoWritesOnDestinationClient(destinationPrisma);
+    expect((service as any).destinationTx).toBeNull();
+  });
+
+  it('should write through the transaction client in order, propagate a failure, and clear the client', async () => {
     const txClient = {
       assetSynchronization: { createManyAndReturn: jest.fn().mockResolvedValue([]) },
       $executeRaw: jest.fn().mockRejectedValue(new Error('relation insert failed')),
     };
-    const { service } = createTransactionService(txClient);
-    jest.spyOn(service as any, 'createGeometriesForAssets').mockResolvedValue(undefined);
-    jest.spyOn(service as any, 'createSiblings').mockResolvedValue(undefined);
-
-    (service as any).assetsToSync.push({ originalAssetId: 300 });
-    (service as any).newAssetToOriginalAsset.set(1, { originalAssetId: 300, originalSgsId: null });
-    (service as any).relationSqls.ids.push(Prisma.sql`(1, 'id', 'description')`);
+    const { service, destinationPrisma } = createTransactionService(txClient);
 
     await expect(service.syncExternalToInternal()).rejects.toThrow('relation insert failed');
 
@@ -412,22 +446,7 @@ describe('SyncExternService.syncExternalToInternal transaction boundary', () => 
     const markerOrder = txClient.assetSynchronization.createManyAndReturn.mock.invocationCallOrder[0];
     const relationOrder = txClient.$executeRaw.mock.invocationCallOrder[0];
     expect(markerOrder).toBeLessThan(relationOrder);
-    expect((service as any).destinationTx).toBeNull();
-  });
-
-  it('should reset the transaction client after a successful run', async () => {
-    const txClient = {};
-    const { service, destinationPrisma } = createTransactionService(txClient);
-    jest.spyOn(service as any, 'createAssetSynchronizationRecords').mockResolvedValue([]);
-    jest.spyOn(service as any, 'createRelationTables').mockResolvedValue(undefined);
-    jest.spyOn(service as any, 'createGeometriesForAssets').mockResolvedValue(undefined);
-    jest.spyOn(service as any, 'createSiblings').mockResolvedValue(undefined);
-
-    (service as any).assetsToSync.push({ originalAssetId: 300 });
-
-    await service.syncExternalToInternal();
-
-    expect(destinationPrisma.$transaction).toHaveBeenCalled();
+    expectNoWritesOnDestinationClient(destinationPrisma);
     expect((service as any).destinationTx).toBeNull();
   });
 });

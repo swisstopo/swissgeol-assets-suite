@@ -44,7 +44,11 @@ export class SyncExternService {
   }
 
   private get destination(): Prisma.TransactionClient {
-    return this.destinationTx ?? this.destinationPrisma;
+    if (!this.destinationTx) {
+      throw new Error('Synchronization write attempted without an active transaction.');
+    }
+
+    return this.destinationTx;
   }
 
   /**
@@ -73,11 +77,11 @@ export class SyncExternService {
       })
     ).id;
 
-    await this.destinationPrisma
-      .$transaction(
-        async (tx) => {
-          this.destinationTx = tx;
+    await this.destinationPrisma.$transaction(
+      async (tx) => {
+        this.destinationTx = tx;
 
+        try {
           for (const asset of this.assetsToSync) {
             await this.synchronizeAsset(asset);
             await this.createWorkflowForAsset(asset);
@@ -88,12 +92,12 @@ export class SyncExternService {
           await this.createRelationTables();
           await this.createGeometriesForAssets();
           await this.createSiblings(assetSynchronizations);
-        },
-        { maxWait: SYNC_TRANSACTION_MAX_WAIT_MS, timeout: SYNC_TRANSACTION_TIMEOUT_MS },
-      )
-      .finally(() => {
-        this.destinationTx = null;
-      });
+        } finally {
+          this.destinationTx = null;
+        }
+      },
+      { maxWait: SYNC_TRANSACTION_MAX_WAIT_MS, timeout: SYNC_TRANSACTION_TIMEOUT_MS },
+    );
     log('Data export to extern completed');
   }
 
