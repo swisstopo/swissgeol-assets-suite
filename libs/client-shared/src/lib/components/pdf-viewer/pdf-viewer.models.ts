@@ -61,9 +61,8 @@ export class TextLayerRenderHandle {
 }
 
 /**
- * Thrown when a load/render is abandoned due to a newer load or viewer teardown. A dedicated
- * type lets callers distinguish this from genuine PDF.js/network failures without matching on
- * message text (PDF.js itself throws a raw "Worker was destroyed" error in the same situation).
+ * Thrown when a load or render is invalidated by a newer generation (document replacement or
+ * viewer teardown), so callers can tell it apart from genuine failures without matching message text.
  */
 export class PdfLoadSupersededError extends Error {
   constructor(message = 'Load superseded') {
