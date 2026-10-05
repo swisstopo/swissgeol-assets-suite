@@ -43,7 +43,7 @@ import { PdfViewerHandoverService } from './pdf-viewer-handover.service';
 import { PdfViewerInputService } from './pdf-viewer-input.service';
 import { PdfViewerRendererService } from './pdf-viewer-renderer.service';
 import { PdfViewerComponent } from './pdf-viewer.component';
-import { PdfViewerFile } from './pdf-viewer.models';
+import { PdfLoadSupersededError, PdfViewerFile } from './pdf-viewer.models';
 import { PdfViewerService } from './pdf-viewer.service';
 
 /** Deferred promise to control exactly when a mocked async dependency settles. */
@@ -160,7 +160,7 @@ describe('PdfViewerComponent', () => {
     await fixture.whenStable();
   }
 
-  it('aborts the PDF.js worker and stops the renderer without any unhandled rejection or alert when destroyed mid-load', async () => {
+  it('invalidates the pending load and stops the renderer when destroyed', async () => {
     const loadPdfDeferred = defer<number>();
     const metadataDeferred = defer<{ pageDimensions: never[] }>();
     pdfViewerServiceMock['loadPdf'].mockReturnValue(loadPdfDeferred.promise);
@@ -176,15 +176,49 @@ describe('PdfViewerComponent', () => {
     expect(pdfViewerServiceMock['abort']).toHaveBeenCalledTimes(1);
     expect(rendererServiceMock['resetPages']).toHaveBeenCalled();
 
-    loadPdfDeferred.reject(new Error('Worker was destroyed'));
+    loadPdfDeferred.reject(new PdfLoadSupersededError());
     metadataDeferred.resolve({ pageDimensions: [] });
 
     await Promise.resolve();
     await Promise.resolve();
     await Promise.resolve();
 
+    const state = fixture.componentInstance as unknown as {
+      pageDimensions: () => unknown[];
+      pageCount: () => number;
+    };
+    expect(state.pageDimensions()).toEqual([]);
+    expect(state.pageCount()).toBe(0);
+    expect(slowLoadingServiceMock['completeLoading']).not.toHaveBeenCalled();
+    expect(rendererServiceMock['queueVisiblePageRenders']).not.toHaveBeenCalled();
     expect(store.dispatch).not.toHaveBeenCalledWith(expect.objectContaining({ type: showAlert.type }));
     expect(consoleErrorSpy).not.toHaveBeenCalled();
+  });
+
+  it('does not update component state when the fallback page dimensions arrive after the viewer was destroyed', async () => {
+    const dimensionsDeferred = defer<{ width: number; height: number }>();
+    pdfViewerServiceMock['loadPdf'].mockResolvedValue(3);
+    pdfViewerServiceMock['getPageDimensions'].mockReturnValue(dimensionsDeferred.promise);
+    apiServiceMock.fetchMetadata.mockResolvedValue({ pageDimensions: [] });
+
+    const fixture = createFixture();
+    await renderAndFlush(fixture);
+    expect(pdfViewerServiceMock['getPageDimensions']).toHaveBeenCalledWith(1);
+
+    fixture.destroy();
+    dimensionsDeferred.resolve({ width: 100, height: 200 });
+    await Promise.resolve();
+    await Promise.resolve();
+    await Promise.resolve();
+
+    const state = fixture.componentInstance as unknown as {
+      pageDimensions: () => unknown[];
+      pageCount: () => number;
+    };
+    expect(state.pageDimensions()).toEqual([]);
+    expect(state.pageCount()).toBe(0);
+    expect(slowLoadingServiceMock['completeLoading']).not.toHaveBeenCalled();
+    expect(rendererServiceMock['queueVisiblePageRenders']).not.toHaveBeenCalled();
   });
 
   it('still reports a genuine load failure with an alert while the viewer remains open', async () => {

@@ -25,6 +25,11 @@ interface QueueVisiblePageRendersOptions {
   pageDimensions: PageDimension[];
   baseScale: number;
   loadGeneration: number;
+  /**
+   * Identifies the external viewer event (scroll, zoom, rotation, document change, ...) that caused this
+   * request. Re-queues triggered by the renderer itself must reuse the id of the request they continue.
+   */
+  requestId: number;
   getViewportEpoch: () => number;
   getLoadGeneration: () => number;
   getZoom: () => number;
@@ -50,7 +55,14 @@ export class PdfViewerRendererService implements OnDestroy {
 
   private readonly renderedPages = new Map<number, RenderedPage>();
   private readonly renderingPages = new Map<number, RenderingPage>();
-  private readonly failedPages = new Map<number, { zoom: number; rotation: number; baseScale: number }>();
+  /**
+   * Invalidates in-flight work started before the last `resetPages()`. Stale work may still settle, but must not
+   * touch the DOM, log, or schedule further renders.
+   */
+  private generation = 0;
+  private requestId: number | null = null;
+  /** Pages that failed during the current request; keeps a failed render from being redispatched by the same request. */
+  private readonly pagesFailedInRequest = new Set<number>();
   private latestRenderablePages = new Set<number>();
   private renderOptions: QueueVisiblePageRendersOptions | null = null;
   private readonly textLayerTimers = new Map<number, () => void>();
@@ -61,13 +73,15 @@ export class PdfViewerRendererService implements OnDestroy {
   }
 
   resetPages(): void {
+    this.generation++;
     this.pdfViewerService.cleanupTextLayerSelections();
     this.cancelAllRenderingPages();
     this.cancelTextLayerTimers();
     this.cancelDrainTimer();
     this.renderingPages.clear();
     this.renderedPages.clear();
-    this.failedPages.clear();
+    this.pagesFailedInRequest.clear();
+    this.requestId = null;
     this.latestRenderablePages.clear();
     this.renderOptions = null;
   }
@@ -186,6 +200,10 @@ export class PdfViewerRendererService implements OnDestroy {
     const { items } = options;
 
     this.renderOptions = options;
+    if (options.requestId !== this.requestId) {
+      this.requestId = options.requestId;
+      this.pagesFailedInRequest.clear();
+    }
 
     if (items.length === 0) {
       this.latestRenderablePages.clear();
@@ -255,7 +273,7 @@ export class PdfViewerRendererService implements OnDestroy {
     for (const pageNum of this.latestRenderablePages) {
       if (this.isPageRenderedWithCurrentParams(pageNum, currentZoom, currentRotation, options.baseScale)) continue;
       if (this.isPageRenderingWithCurrentParams(pageNum, currentZoom, currentRotation, options.baseScale)) continue;
-      if (this.isPageFailedWithCurrentParams(pageNum, currentZoom, currentRotation, options.baseScale)) continue;
+      if (this.pagesFailedInRequest.has(pageNum)) continue;
       candidates.push(pageNum);
     }
 
@@ -302,13 +320,20 @@ export class PdfViewerRendererService implements OnDestroy {
     options: QueueVisiblePageRendersOptions,
   ): void {
     const renderEpoch = options.getViewportEpoch();
-    void this.renderPageSlot(pageNum, zoom, rotation, renderEpoch, options).finally(() => {
+    const generation = this.generation;
+    void this.renderPageSlot(pageNum, zoom, rotation, renderEpoch, options, generation).finally(() => {
+      // A stale render must not schedule a drain, otherwise a closed viewer keeps redispatching the same page.
+      if (this.isStale(generation, options)) return;
       // Deferred to a macrotask so that early-bail renders (where the promise
       // resolves synchronously as a microtask) don't create an infinite
       // microtask chain that locks the browser. Multiple .finally() callbacks
       // coalesce into a single drain call.
       this.scheduleDrain();
     });
+  }
+
+  private isStale(generation: number, options: QueueVisiblePageRendersOptions): boolean {
+    return this.generation !== generation || options.getLoadGeneration() !== options.loadGeneration;
   }
 
   /**
@@ -357,36 +382,28 @@ export class PdfViewerRendererService implements OnDestroy {
     );
   }
 
-  private isPageFailedWithCurrentParams(pageNum: number, zoom: number, rotation: number, baseScale: number): boolean {
-    const failed = this.failedPages.get(pageNum);
-    return (
-      !!failed &&
-      failed.zoom === zoom &&
-      failed.rotation === rotation &&
-      Math.abs(failed.baseScale - baseScale) < BASE_SCALE_EPSILON
-    );
-  }
-
   private async renderPageSlot(
     pageNum: number,
     zoomAtStart: number,
     rotationAtStart: number,
     renderEpoch: number,
     options: QueueVisiblePageRendersOptions,
+    generation: number,
   ): Promise<void> {
     if (this.isPageAlreadyUpToDate(pageNum, renderEpoch, zoomAtStart, rotationAtStart, options)) return;
 
     // Register in renderingPages so that renderingPages.size reflects the true
     // concurrency count. This runs synchronously before the first await, so
     // drainSlots sees the correct count when it dispatches the next entry.
-    this.renderingPages.set(pageNum, {
+    const entry: RenderingPage = {
       epoch: renderEpoch,
       zoom: zoomAtStart,
       rotation: rotationAtStart,
       baseScale: options.baseScale,
-    });
+    };
+    this.renderingPages.set(pageNum, entry);
     if (renderEpoch !== options.getViewportEpoch()) {
-      this.finishPageRender(pageNum, renderEpoch, zoomAtStart, rotationAtStart);
+      this.finishPageRender(pageNum, entry);
       return;
     }
 
@@ -396,16 +413,16 @@ export class PdfViewerRendererService implements OnDestroy {
     const dim = options.pageDimensions[pageNum - 1];
 
     if (!slotElement) {
-      this.finishPageRender(pageNum, renderEpoch, zoomAtStart, rotationAtStart);
+      this.finishPageRender(pageNum, entry);
       options.scheduleVirtualRefresh();
       return;
     }
     if (!dim) {
-      this.finishPageRender(pageNum, renderEpoch, zoomAtStart, rotationAtStart);
+      this.finishPageRender(pageNum, entry);
       return;
     }
     if (renderEpoch !== options.getViewportEpoch()) {
-      this.finishPageRender(pageNum, renderEpoch, zoomAtStart, rotationAtStart);
+      this.finishPageRender(pageNum, entry);
       return;
     }
 
@@ -435,10 +452,13 @@ export class PdfViewerRendererService implements OnDestroy {
       rotationAtStart,
       elements,
       options,
+      entry,
+      generation,
     );
     if (pageResult === null) return;
 
-    this.finishPageRender(pageNum, renderEpoch, zoomAtStart, rotationAtStart);
+    this.finishPageRender(pageNum, entry);
+    if (this.isStale(generation, options)) return;
     if (this.cleanupIfStaleAfterRender(renderEpoch, zoomAtStart, rotationAtStart, textLayerDiv, options)) return;
 
     const currentSlot = options.scrollElement.querySelector(
@@ -513,10 +533,12 @@ export class PdfViewerRendererService implements OnDestroy {
     rotationAtStart: number,
     { textLayerDiv, canvas, parentWidth, parentHeight }: RenderSlotElements,
     options: QueueVisiblePageRendersOptions,
+    entry: RenderingPage,
+    generation: number,
   ) {
     try {
       if (renderEpoch !== options.getViewportEpoch()) {
-        this.finishPageRender(pageNum, renderEpoch, zoomAtStart, rotationAtStart);
+        this.finishPageRender(pageNum, entry);
         this.pdfViewerService.cleanupTextLayerSelection(textLayerDiv);
         return null;
       }
@@ -528,28 +550,27 @@ export class PdfViewerRendererService implements OnDestroy {
         zoomAtStart,
         rotationAtStart,
         (renderTask) => {
-          const currentRendering = this.renderingPages.get(pageNum);
-          if (
-            currentRendering?.epoch === renderEpoch &&
-            currentRendering.zoom === zoomAtStart &&
-            currentRendering.rotation === rotationAtStart &&
-            Math.abs(currentRendering.baseScale - options.baseScale) < BASE_SCALE_EPSILON &&
-            !currentRendering.cancelled
-          ) {
-            currentRendering.renderTask = renderTask;
+          if (this.renderingPages.get(pageNum) === entry && !entry.cancelled) {
+            entry.renderTask = renderTask;
           } else {
             renderTask.cancel();
           }
         },
       );
     } catch (error) {
-      this.finishPageRender(pageNum, renderEpoch, zoomAtStart, rotationAtStart);
+      this.finishPageRender(pageNum, entry);
+      if (this.isStale(generation, options)) return null;
+
       this.pdfViewerService.cleanupTextLayerSelection(textLayerDiv);
-      // A stale document must not pollute failedPages/logging — the page number may
-      // belong to a newer document by the time this rejects.
-      const isStaleDocument = options.getLoadGeneration() !== options.loadGeneration;
-      if (!isStaleDocument && !this.isRenderCancelled(error)) {
-        this.failedPages.set(pageNum, { zoom: zoomAtStart, rotation: rotationAtStart, baseScale: options.baseScale });
+      // Renderer-initiated cancellations are followed by a fresh request; anything else must not be
+      // redispatched by the request that produced it. A newer request owns the failure set now.
+      if (
+        options.requestId === this.requestId &&
+        !(error instanceof Error && error.name === 'RenderingCancelledException')
+      ) {
+        this.pagesFailedInRequest.add(pageNum);
+      }
+      if (!isExpectedCancellationError(error)) {
         console.error(`Failed to render page ${pageNum}`, error);
       }
       return null;
@@ -568,10 +589,6 @@ export class PdfViewerRendererService implements OnDestroy {
     textLayerDiv: HTMLDivElement,
     options: QueueVisiblePageRendersOptions,
   ): boolean {
-    if (options.getLoadGeneration() !== options.loadGeneration) {
-      this.pdfViewerService.cleanupTextLayerSelection(textLayerDiv);
-      return true;
-    }
     if (renderEpoch !== options.getViewportEpoch()) {
       this.pdfViewerService.cleanupTextLayerSelection(textLayerDiv);
       return true;
@@ -596,9 +613,8 @@ export class PdfViewerRendererService implements OnDestroy {
     }
   }
 
-  private finishPageRender(pageNum: number, epoch: number, zoom: number, rotation: number): void {
-    const rendering = this.renderingPages.get(pageNum);
-    if (rendering?.epoch === epoch && rendering.zoom === zoom && rendering.rotation === rotation) {
+  private finishPageRender(pageNum: number, entry: RenderingPage): void {
+    if (this.renderingPages.get(pageNum) === entry) {
       this.renderingPages.delete(pageNum);
     }
   }
@@ -668,15 +684,18 @@ export class PdfViewerRendererService implements OnDestroy {
     rendered.textLayerRendered = true;
     const page = rendered.page;
     const viewport = rendered.viewport;
+    const generation = this.generation;
 
     let timeoutId: ReturnType<typeof setTimeout> | null = null;
     const handle = new TextLayerRenderHandle();
     const frameId = requestAnimationFrame(() => {
       timeoutId = setTimeout(() => {
+        if (this.generation !== generation) return;
         this.pdfViewerService
           .renderTextLayer(page, rendered.textLayerDiv, viewport, handle)
           .catch((error) => {
-            if (this.renderedPages.get(pageNum) === rendered && !this.isRenderCancelled(error)) {
+            if (this.generation !== generation) return;
+            if (this.renderedPages.get(pageNum) === rendered && !isExpectedCancellationError(error)) {
               console.error(`Failed to render text layer for page ${pageNum}`, error);
             }
             rendered.textLayerRendered = false;
@@ -728,12 +747,6 @@ export class PdfViewerRendererService implements OnDestroy {
     for (const pageNum of this.renderingPages.keys()) {
       this.cancelRenderingPage(pageNum);
     }
-  }
-
-  /** Also treats any error as cancelled once torn down (`renderOptions === null`), since a raw
-   * PDF.js "Worker was destroyed" error can otherwise reach here after `resetPages()`. */
-  private isRenderCancelled(error: unknown): boolean {
-    return this.renderOptions === null || isExpectedCancellationError(error);
   }
 
   private evictPage(pageNum: number, scrollElement: HTMLDivElement, renderer: Renderer2): void {

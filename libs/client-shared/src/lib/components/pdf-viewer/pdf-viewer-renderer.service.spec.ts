@@ -54,6 +54,7 @@ describe('PdfViewerRendererService', () => {
       pageDimensions,
       baseScale: 1,
       loadGeneration: 0,
+      requestId: 0,
       getViewportEpoch: () => 0,
       getLoadGeneration: () => 0,
       getZoom: () => 1,
@@ -197,10 +198,65 @@ describe('PdfViewerRendererService', () => {
       expect(renderPageToCanvas).toHaveBeenCalledTimes(1);
 
       renderPageToCanvas.mockResolvedValueOnce({ page: {}, viewport: {}, nativeWidth: 100, nativeHeight: 100 });
-      service.queueVisiblePageRenders({ ...buildOptions(), getZoom: () => 2 });
+      service.queueVisiblePageRenders({ ...buildOptions(), requestId: 1, getZoom: () => 2 });
       await flush(5);
 
       expect(renderPageToCanvas).toHaveBeenCalledTimes(2);
+    });
+
+    it('renders a previously failed page again on a later request at the same zoom', async () => {
+      renderPageToCanvas.mockRejectedValueOnce(new Error('Corrupt page data'));
+      service.queueVisiblePageRenders(buildOptions());
+      await flush(5);
+      expect(renderPageToCanvas).toHaveBeenCalledTimes(1);
+
+      renderPageToCanvas.mockResolvedValueOnce({ page: {}, viewport: {}, nativeWidth: 100, nativeHeight: 100 });
+      service.queueVisiblePageRenders({ ...buildOptions(), requestId: 1 });
+      await flush(5);
+
+      expect(renderPageToCanvas).toHaveBeenCalledTimes(2);
+      expect(service.getRenderedPage(1)).not.toBeNull();
+    });
+
+    it('does not let a late failure from an older request block the page for the newer request', async () => {
+      const render = makeControllableRender();
+      renderPageToCanvas.mockImplementationOnce(() => render.promise);
+      service.queueVisiblePageRenders({ ...buildOptions(), requestId: 1 });
+      service.queueVisiblePageRenders({ ...buildOptions(), requestId: 2 });
+      expect(renderPageToCanvas).toHaveBeenCalledTimes(1);
+
+      renderPageToCanvas.mockResolvedValueOnce({ page: {}, viewport: {}, nativeWidth: 100, nativeHeight: 100 });
+      render.reject(new Error('Corrupt page data'));
+      await flush(5);
+
+      expect(renderPageToCanvas).toHaveBeenCalledTimes(2);
+      expect(service.getRenderedPage(1)).not.toBeNull();
+    });
+
+    it('keeps a failed page blocked when the same request is re-queued with a different visible set', async () => {
+      const secondSlot = document.createElement('div');
+      secondSlot.className = 'page-slot';
+      secondSlot.dataset['pageNum'] = '2';
+      scrollElement.appendChild(secondSlot);
+      const bothItems: PdfViewerVirtualItem[] = [
+        ...items,
+        { index: 1, key: 2, start: 100, end: 200, size: 100, pageNum: 2, pageWidth: 100, transform: '' },
+      ];
+      const bothDimensions: PageDimension[] = [...pageDimensions, { page: 2, width: 100, height: 100 }];
+      renderPageToCanvas.mockImplementation((_canvas, pageNum) =>
+        pageNum === 1
+          ? Promise.reject(new Error('Corrupt page data'))
+          : Promise.resolve({ page: {}, viewport: {}, nativeWidth: 100, nativeHeight: 100 }),
+      );
+
+      service.queueVisiblePageRenders(buildOptions());
+      await flush(5);
+      service.queueVisiblePageRenders({ ...buildOptions(), items: bothItems, pageDimensions: bothDimensions });
+      await flush(5);
+
+      const dispatchedPages = renderPageToCanvas.mock.calls.map(([, pageNum]) => pageNum);
+      expect(dispatchedPages).toEqual([1, 2]);
+      expect(consoleErrorSpy).toHaveBeenCalledTimes(1);
     });
 
     it('retries a previously failed page after resetPages()', async () => {
@@ -246,6 +302,149 @@ describe('PdfViewerRendererService', () => {
 
       expect(consoleErrorSpy).not.toHaveBeenCalled();
       expect(service.getRenderedPage(1)).not.toBeNull();
+    });
+  });
+
+  describe('stale generations', () => {
+    const renderResult = { page: {}, viewport: {}, nativeWidth: 100, nativeHeight: 100 };
+    let scheduleDrainSpy: jest.SpyInstance;
+
+    beforeEach(() => {
+      scheduleDrainSpy = jest.spyOn(service as unknown as { scheduleDrain: () => void }, 'scheduleDrain');
+    });
+
+    function startPendingRender() {
+      const render = makeControllableRender();
+      renderPageToCanvas.mockImplementationOnce(() => render.promise);
+      return render;
+    }
+
+    it('does not update the DOM for a render that completes after resetPages()', async () => {
+      const render = startPendingRender();
+      service.queueVisiblePageRenders(buildOptions());
+
+      service.resetPages();
+      render.resolve(renderResult);
+      await flush(5);
+
+      expect(scrollElement.querySelector('.canvas-wrapper')).toBeNull();
+      expect(service.getRenderedPage(1)).toBeNull();
+    });
+
+    it('does not update the DOM for a render that completes after the document generation changed', async () => {
+      let currentGeneration = 0;
+      const render = startPendingRender();
+      service.queueVisiblePageRenders({ ...buildOptions(), getLoadGeneration: () => currentGeneration });
+
+      currentGeneration = 1;
+      render.resolve(renderResult);
+      await flush(5);
+
+      expect(scrollElement.querySelector('.canvas-wrapper')).toBeNull();
+      expect(service.getRenderedPage(1)).toBeNull();
+    });
+
+    it('does not create a text layer for a stale render', async () => {
+      const render = startPendingRender();
+      service.queueVisiblePageRenders(buildOptions());
+
+      service.resetPages();
+      render.resolve(renderResult);
+      await flush(5);
+
+      expect(renderTextLayer).not.toHaveBeenCalled();
+    });
+
+    it('does not start a text layer that was scheduled before the generation changed', async () => {
+      renderPageToCanvas.mockResolvedValue(renderResult);
+      service.queueVisiblePageRenders(buildOptions());
+      await Promise.resolve();
+      await Promise.resolve();
+      await Promise.resolve();
+
+      service.resetPages();
+      await flush(5);
+
+      expect(renderTextLayer).not.toHaveBeenCalled();
+    });
+
+    it('does not log a rejection from a stale generation', async () => {
+      let currentGeneration = 0;
+      const render = startPendingRender();
+      service.queueVisiblePageRenders({ ...buildOptions(), getLoadGeneration: () => currentGeneration });
+
+      currentGeneration = 1;
+      render.reject(new Error('Network error'));
+      await flush(5);
+
+      expect(consoleErrorSpy).not.toHaveBeenCalled();
+    });
+
+    it('does not schedule a drain when a stale render completes', async () => {
+      const render = startPendingRender();
+      service.queueVisiblePageRenders(buildOptions());
+      scheduleDrainSpy.mockClear();
+
+      service.resetPages();
+      render.resolve(renderResult);
+      await flush(5);
+
+      expect(scheduleDrainSpy).not.toHaveBeenCalled();
+    });
+
+    it('does not schedule a drain when a stale render fails', async () => {
+      const render = startPendingRender();
+      service.queueVisiblePageRenders(buildOptions());
+      scheduleDrainSpy.mockClear();
+
+      service.resetPages();
+      render.reject(new Error('Worker was destroyed'));
+      await flush(5);
+
+      expect(scheduleDrainSpy).not.toHaveBeenCalled();
+    });
+
+    it('schedules a drain when a current render completes', async () => {
+      renderPageToCanvas.mockResolvedValue(renderResult);
+      service.queueVisiblePageRenders(buildOptions());
+      await flush(5);
+
+      expect(scheduleDrainSpy).toHaveBeenCalled();
+    });
+
+    it('does not redispatch the same page after the viewer was closed', async () => {
+      const render = startPendingRender();
+      service.queueVisiblePageRenders(buildOptions());
+      expect(renderPageToCanvas).toHaveBeenCalledTimes(1);
+
+      service.ngOnDestroy();
+      render.resolve(renderResult);
+      await flush(10);
+
+      expect(renderPageToCanvas).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not redispatch the same page after the document generation changed', async () => {
+      let currentGeneration = 0;
+      const render = startPendingRender();
+      service.queueVisiblePageRenders({ ...buildOptions(), getLoadGeneration: () => currentGeneration });
+
+      currentGeneration = 1;
+      render.reject(new Error('Worker was destroyed'));
+      await flush(10);
+
+      expect(renderPageToCanvas).toHaveBeenCalledTimes(1);
+    });
+
+    it('renders and creates a text layer while the generation stays current', async () => {
+      renderPageToCanvas.mockResolvedValue(renderResult);
+      service.queueVisiblePageRenders(buildOptions());
+      await flush(5);
+
+      expect(service.getRenderedPage(1)).not.toBeNull();
+      expect(scrollElement.querySelector('.canvas-wrapper')).not.toBeNull();
+      expect(renderTextLayer).toHaveBeenCalledTimes(1);
+      expect(consoleErrorSpy).not.toHaveBeenCalled();
     });
   });
 
@@ -325,17 +524,19 @@ describe('PdfViewerRendererService', () => {
     });
 
     it('suppresses a genuine text-layer failure if the page was replaced before it settled', async () => {
-      let reject!: (error: unknown) => void;
-      renderTextLayer.mockImplementation(() => new Promise((_resolve, rej) => (reject = rej)));
+      const textLayerRejects: Array<(error: unknown) => void> = [];
+      renderTextLayer.mockImplementation(() => new Promise((_resolve, rej) => textLayerRejects.push(rej)));
 
       renderPageSuccessfully();
       await flush(5);
+      expect(textLayerRejects).toHaveLength(1);
 
-      // Simulates the page being replaced by a newer render.
-      const renderedPages = (service as unknown as { renderedPages: Map<number, unknown> }).renderedPages;
-      renderedPages.set(1, { textLayerRendered: false });
+      // A render at a different zoom replaces the page, making the first text layer stale.
+      service.queueVisiblePageRenders({ ...buildOptions(), expectedZoom: 2, getZoom: () => 2 });
+      await flush(5);
+      expect(renderPageToCanvas).toHaveBeenCalledTimes(2);
 
-      reject(new Error('Font loading failed'));
+      textLayerRejects[0](new Error('Font loading failed'));
       await flush(5);
 
       expect(consoleErrorSpy).not.toHaveBeenCalled();

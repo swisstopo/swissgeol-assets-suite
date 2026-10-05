@@ -148,6 +148,7 @@ export class PdfViewerComponent implements OnDestroy {
   private viewportEpoch = 0;
 
   private loadGeneration = 0;
+  private renderRequestId = 0;
   private lastVirtualItemsSignature = '';
   private renderMode: PdfRenderMode = 'normal';
   private pendingZoomTarget: number | null = null;
@@ -897,6 +898,9 @@ export class PdfViewerComponent implements OnDestroy {
       let dims = metadata.pageDimensions;
       if (dims.length === 0 && numPages > 0) {
         const firstPage = await this.pdfViewerService.getPageDimensions(1);
+        if (this.isDestroyed || this.loadGeneration !== generation) {
+          return;
+        }
         dims = Array.from(
           { length: numPages },
           (_, index): PageDimension => ({
@@ -947,8 +951,6 @@ export class PdfViewerComponent implements OnDestroy {
       this.pendingCanvasRefresh = true;
       this.scheduleRender();
     } catch (e) {
-      // Stale/destroy-caused rejections (PdfLoadSupersededError or a raw PDF.js
-      // "Worker was destroyed" error) must never alert the user.
       if (this.isDestroyed || this.loadGeneration !== generation) {
         return;
       }
@@ -1004,11 +1006,24 @@ export class PdfViewerComponent implements OnDestroy {
     this.scheduleRender();
   }
 
+  /** Refresh requested by the renderer for the request it is already serving, so it keeps that request's id. */
+  private scheduleInternalVirtualRefresh() {
+    this.pendingVirtualMeasure = true;
+    this.pendingCanvasRefresh = true;
+    this.runRenderPassOutsideAngular();
+  }
+
   private scheduleRender() {
+    this.renderRequestId++;
+    this.runRenderPassOutsideAngular();
+  }
+
+  private runRenderPassOutsideAngular() {
     this.ngZone.runOutsideAngular(() => this.runRenderPass());
   }
 
   private scheduleScrollRender() {
+    this.renderRequestId++;
     this.ngZone.runOutsideAngular(() => {
       if (this.scrollRenderTimer) {
         clearTimeout(this.scrollRenderTimer);
@@ -1042,7 +1057,7 @@ export class PdfViewerComponent implements OnDestroy {
         this.renderPassInFlight = false;
         if (this.renderPassQueued) {
           this.renderPassQueued = false;
-          this.scheduleRender();
+          this.runRenderPassOutsideAngular();
         }
       });
   }
@@ -1307,13 +1322,14 @@ export class PdfViewerComponent implements OnDestroy {
       pageDimensions: this.pageDimensions(),
       baseScale: this.baseScale(),
       loadGeneration: this.loadGeneration,
+      requestId: this.renderRequestId,
       getViewportEpoch: () => this.viewportEpoch,
       getLoadGeneration: () => this.loadGeneration,
       getZoom: () => this.zoom(),
       getRotation: () => this.rotation(),
       getCurrentPage: () => currentPageForRender,
       getRenderMode: () => this.renderMode,
-      scheduleVirtualRefresh: () => this.scheduleVirtualRefresh(),
+      scheduleVirtualRefresh: () => this.scheduleInternalVirtualRefresh(),
       renderMode,
       onCurrentPageRendered:
         renderMode !== 'normal' ? () => this.handleTransitionCurrentPageRendered(expectedZoom, renderEpoch) : undefined,
