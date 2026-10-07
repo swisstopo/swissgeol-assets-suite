@@ -2,6 +2,9 @@
   "name": "asset-sg",
   "version": "0.0.0",
   "license": "MIT",
+  "engines": {
+    "node": ">=22.13"
+  },
   "scripts": {
     "ng": "nx",
     "start": "concurrently \"npm run start:server\" \"npm run start:client\"",
