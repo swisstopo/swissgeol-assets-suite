@@ -4,6 +4,7 @@ import { PrismaService } from '@/core/prisma.service';
 import { AssetRepo } from '@/features/assets/asset.repo';
 import { AssetService } from '@/features/assets/asset.service';
 import { AssetsController } from '@/features/assets/assets.controller';
+import { AssetExportMetadataService } from '@/features/assets/export/asset-export-metadata.service';
 import { AssetExportController } from '@/features/assets/export/asset-export.controller';
 import { AssetExportService } from '@/features/assets/export/asset-export.service';
 import { FavoriteRepo } from '@/features/assets/favorites/favorite.repo';
@@ -66,6 +67,7 @@ import { WorkgroupRepo } from '@/features/workgroups/workgroup.repo';
     PrismaService,
     AssetService,
     AssetExportService,
+    AssetExportMetadataService,
     ContactRepo,
     WorkgroupRepo,
     AssetSearchService,
