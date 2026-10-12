@@ -61,7 +61,7 @@
     "@rx-angular/cdk": "^20.0.0",
     "@rx-angular/state": "^20.0.0",
     "@rx-angular/template": "^20.0.0",
-    "@swissgeol/ui-core": "1.7.0-dev5",
+    "@swissgeol/ui-core": "1.7.0",
     "@swissgeol/ui-core-angular": "1.7.0-dev5",
     "@tanstack/angular-virtual": "^5.0.0",
     "@turf/boolean-within": "^7.2.0",
