@@ -99,6 +99,7 @@ export class AssetSearchDetailComponent {
   private readonly router = inject(Router);
   private readonly viewerControllerService = inject(ViewerControllerService);
   private readonly assetExportService = inject(AssetExportService);
+  protected readonly isExporting = this.assetExportService.isExporting;
 
   public navigateToEdit(lang: string | null, assetId: AssetId) {
     this.router.navigate([lang, 'asset-admin', assetId]).then();
