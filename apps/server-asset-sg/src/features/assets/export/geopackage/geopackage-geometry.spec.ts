@@ -19,7 +19,7 @@ describe('geopackage-geometry', () => {
       expect(blob[2]).toEqual(0); // version
       expect(blob[3]).toEqual(0b0000_0001); // little-endian, no envelope, not empty
       expect(blob.readInt32LE(4)).toEqual(2056);
-      expect(blob.length).toEqual(8 + wkb.length);
+      expect(blob).toHaveLength(8 + wkb.length);
       expect(blob.subarray(8).equals(wkb)).toBe(true);
     });
 
