@@ -1,10 +1,14 @@
 import { HttpClient } from '@angular/common/http';
-import { inject, Injectable } from '@angular/core';
+import { inject, Injectable, signal } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { AssetId, MAX_EXPORT_ASSETS } from '@asset-sg/shared/v2';
-import { firstValueFrom } from 'rxjs';
+import { Store } from '@ngrx/store';
+import { TranslateService } from '@ngx-translate/core';
+import { EmptyError, firstValueFrom } from 'rxjs';
 import { ConfirmDialogComponent, ConfirmDialogData } from '../components/confirm-dialog';
 import { ExportDialogComponent, ExportDialogResult } from '../components/export-dialog';
+import { showAlert } from '../state/alert/alert.actions';
+import { AlertType } from '../state/alert/alert.model';
 import { triggerDownload } from '../utils/trigger-download';
 import { LanguageService } from './language.service';
 
@@ -13,15 +17,15 @@ export class AssetExportService {
   private readonly httpClient = inject(HttpClient);
   private readonly dialogService = inject(MatDialog);
   private readonly languageService = inject(LanguageService);
+  private readonly store = inject(Store);
+  private readonly translateService = inject(TranslateService);
 
-  /**
-   * Runs the full export flow for the given assets:
-   * 1. If more than {@link MAX_EXPORT_ASSETS} are selected, ask the user to confirm and cap the selection.
-   * 2. Let the user choose the export formats.
-   * 3. Download the selected formats.
-   */
+  private readonly _isExporting = signal(false);
+
+  readonly isExporting = this._isExporting.asReadonly();
+
   async export(assetIds: AssetId[]): Promise<void> {
-    if (assetIds.length === 0) {
+    if (assetIds.length === 0 || this._isExporting()) {
       return;
     }
 
@@ -54,8 +58,17 @@ export class AssetExportService {
       return;
     }
 
-    if (result.csv) {
-      await this.downloadCsv(ids);
+    this._isExporting.set(true);
+    try {
+      if (result.csv) {
+        await this.downloadCsv(ids);
+      } else if (result.geopackage) {
+        await this.downloadGeoPackage(ids);
+      }
+    } catch (error) {
+      this.handleError(error);
+    } finally {
+      this._isExporting.set(false);
     }
   }
 
@@ -64,22 +77,47 @@ export class AssetExportService {
     const csv = await firstValueFrom(
       this.httpClient.post(`/api/assets/export/csv?lang=${language}`, { assetIds }, { responseType: 'text' }),
     );
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    try {
-      triggerDownload(url, true, formatCsvExportFilename(new Date()));
-    } finally {
-      URL.revokeObjectURL(url);
+    downloadBlob(new Blob([csv], { type: 'text/csv;charset=utf-8;' }), formatExportFilename(new Date(), 'csv'));
+  }
+
+  private async downloadGeoPackage(assetIds: AssetId[]): Promise<void> {
+    const language = this.languageService.language;
+    const geoPackage = await firstValueFrom(
+      this.httpClient.post(`/api/assets/export/geopackage?lang=${language}`, { assetIds }, { responseType: 'blob' }),
+    );
+    downloadBlob(geoPackage, formatExportFilename(new Date(), 'gpkg'));
+  }
+
+  private handleError(error: unknown): void {
+    if (error instanceof EmptyError) {
+      return;
     }
+    console.error('Asset export failed', error);
+    this.store.dispatch(
+      showAlert({
+        alert: {
+          id: 'asset-export-error',
+          text: this.translateService.instant('export.error'),
+          type: AlertType.Error,
+          isPersistent: false,
+        },
+      }),
+    );
   }
 }
 
-/**
- * Builds the CSV export filename in the format `assets-export-YYYY-MM-DD-HH-mm-ss.csv`.
- */
-export const formatCsvExportFilename = (date: Date): string => {
+const downloadBlob = (blob: Blob, fileName: string): void => {
+  const url = URL.createObjectURL(blob);
+  try {
+    triggerDownload(url, true, fileName);
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+};
+
+export const formatExportFilename = (date: Date, extension: 'csv' | 'gpkg' | 'zip'): string => {
   const pad = (value: number): string => String(value).padStart(2, '0');
   const datePart = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
   const timePart = `${pad(date.getHours())}-${pad(date.getMinutes())}-${pad(date.getSeconds())}`;
-  return `assets-export-${datePart}-${timePart}.csv`;
+  return `assets-export-${datePart}-${timePart}.${extension}`;
 };
