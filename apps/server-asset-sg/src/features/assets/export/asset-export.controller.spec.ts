@@ -85,7 +85,7 @@ describe(AssetExportController, () => {
       expect(contentLength).toBeGreaterThan(0);
 
       const content = new Uint8Array(await response.clone().arrayBuffer());
-      expect(content.length).toEqual(contentLength);
+      expect(content).toHaveLength(contentLength);
       expect(Buffer.from(content.subarray(0, 16)).toString('ascii')).toEqual('SQLite format 3\0');
 
       await readGeoPackage(response, (db) => {
@@ -94,31 +94,17 @@ describe(AssetExportController, () => {
       });
     });
 
-    it('uses German labels by default', async () => {
-      const response = await post('/assets/export/geopackage', { assetIds: [fixture.full.id] });
+    it.each([
+      { description: 'uses German labels by default', query: '', expected: 'gesperrt bis' },
+      { description: 'uses the requested language', query: '?lang=fr', expected: "bloqué jusqu'au" },
+      { description: 'falls back to German for unsupported languages', query: '?lang=xx', expected: 'gesperrt bis' },
+    ])('$description', async ({ query, expected }) => {
+      const response = await post(`/assets/export/geopackage${query}`, { assetIds: [fixture.full.id] });
       const restrictionType = await readGeoPackage(
         response,
         (db) => db.prepare('SELECT restriction_type FROM points').get()?.restriction_type,
       );
-      expect(restrictionType).toEqual('gesperrt bis');
-    });
-
-    it('uses the requested language', async () => {
-      const response = await post('/assets/export/geopackage?lang=fr', { assetIds: [fixture.full.id] });
-      const restrictionType = await readGeoPackage(
-        response,
-        (db) => db.prepare('SELECT restriction_type FROM points').get()?.restriction_type,
-      );
-      expect(restrictionType).toEqual("bloqué jusqu'au");
-    });
-
-    it('falls back to German for unsupported languages', async () => {
-      const response = await post('/assets/export/geopackage?lang=xx', { assetIds: [fixture.full.id] });
-      const restrictionType = await readGeoPackage(
-        response,
-        (db) => db.prepare('SELECT restriction_type FROM points').get()?.restriction_type,
-      );
-      expect(restrictionType).toEqual('gesperrt bis');
+      expect(restrictionType).toEqual(expected);
     });
 
     it('omits inaccessible assets', async () => {

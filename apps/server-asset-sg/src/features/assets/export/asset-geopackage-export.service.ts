@@ -4,7 +4,6 @@ import { AssetExportDataset, ExportValue, ExportValueType } from '@/features/ass
 import { AssetExportMetadataService } from '@/features/assets/export/asset-export-metadata.service';
 import { ExportLanguage } from '@/features/assets/export/asset-export.i18n';
 import {
-  GEOPACKAGE_FILE_NAME,
   GeoPackageColumnType,
   GeoPackageGeometryType,
   GeoPackageGeometryTypeError,
@@ -17,7 +16,7 @@ import { ExportGeometry, ExportGeometryLayer, GeometryExportRepo } from '@/featu
 /**
  * The name of the GeoPackage within a combined export archive.
  */
-export const GEOPACKAGE_ARCHIVE_ENTRY_NAME = GEOPACKAGE_FILE_NAME;
+export { GEOPACKAGE_FILE_NAME as GEOPACKAGE_ARCHIVE_ENTRY_NAME } from '@/features/assets/export/geopackage/geopackage-writer';
 
 export const GEOPACKAGE_MEDIA_TYPE = 'application/geopackage+sqlite3';
 

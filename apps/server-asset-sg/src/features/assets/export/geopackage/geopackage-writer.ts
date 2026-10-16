@@ -285,7 +285,7 @@ export const withTemporaryGeoPackage = async (
   }
 };
 
-const quote = (identifier: string): string => `"${identifier.replace(/"/g, '""')}"`;
+const quote = (identifier: string): string => `"${identifier.replaceAll(/"/g, '""')}"`;
 
 const toSqlValue = (value: GeoPackageValue): SQLInputValue => {
   if (typeof value === 'boolean') {
