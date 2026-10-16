@@ -1,6 +1,7 @@
 import { AfterViewInit, Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { MatOptionSelectionChange } from '@angular/material/core';
+import { fromAppShared } from '@asset-sg/client-shared';
 import {
   AssetSearchQuery,
   Contact,
@@ -11,7 +12,7 @@ import {
   ValueCount,
 } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
-import { map, startWith, Subscription } from 'rxjs';
+import { combineLatest, distinctUntilChanged, map, startWith, Subscription } from 'rxjs';
 
 import * as actions from '../../state/asset-search/asset-search.actions';
 import { PanelState, resetSearch } from '../../state/asset-search/asset-search.actions';
@@ -34,6 +35,9 @@ import * as mapControlActions from '../../state/map-control/map-control.actions'
 import { selectMapControlIsDrawing } from '../../state/map-control/map-control.selector';
 
 const MIN_CREATE_DATE = new Date(1800, 0, 1);
+
+const isSameLocalDate = (a: LocalDate | undefined, b: LocalDate | undefined): boolean =>
+  a === b || (a != null && b != null && a.year === b.year && a.month === b.month && a.day === b.day);
 
 @Component({
   selector: 'asset-sg-asset-search-refine',
@@ -219,6 +223,77 @@ export class AssetSearchRefineComponent implements OnInit, OnDestroy, AfterViewI
         )
         .subscribe((filteredAuthors) => {
           this.filteredAuthors = filteredAuthors;
+        }),
+    );
+
+    this.syncDatesWithQuery();
+    this.syncAuthorWithQuery();
+  }
+
+  /**
+   * The search query in the store is the source of truth for the selected author and document dates.
+   * This component is destroyed and recreated (e.g. when visiting the asset editor), so its local controls
+   * and chips have to be restored from the query. Controls are written with `emitEvent: false`,
+   * so that restoring them never dispatches a query update or triggers a new search.
+   */
+  private syncDatesWithQuery(): void {
+    const query$ = this.store.select(selectSearchQuery);
+    this.subscriptions.add(
+      query$
+        .pipe(
+          map((query) => query.createdAt?.min),
+          distinctUntilChanged(isSameLocalDate),
+        )
+        .subscribe((min) => {
+          this.minDate = this.restoreDate(this.minDateControl, min);
+        }),
+    );
+    this.subscriptions.add(
+      query$
+        .pipe(
+          map((query) => query.createdAt?.max),
+          distinctUntilChanged(isSameLocalDate),
+        )
+        .subscribe((max) => {
+          this.maxDate = this.restoreDate(this.maxDateControl, max);
+        }),
+    );
+  }
+
+  private restoreDate(control: FormControl<Date | null | undefined>, value: LocalDate | undefined): Date | undefined {
+    const current = control.getRawValue();
+    const currentDate = current instanceof Date ? LocalDate.fromDate(current) : undefined;
+    if (!isSameLocalDate(currentDate, value)) {
+      control.setValue(value?.toDate() ?? null, { emitEvent: false });
+    }
+    return value?.toDate();
+  }
+
+  private syncAuthorWithQuery(): void {
+    this.subscriptions.add(
+      combineLatest([
+        this.store.select(selectSearchQuery).pipe(
+          map((query) => query.authorId),
+          distinctUntilChanged(),
+        ),
+        this.store.select(fromAppShared.selectReferenceContacts),
+      ])
+        .pipe(
+          map(([authorId, contacts]) => ({
+            authorId,
+            contact: authorId == null ? undefined : contacts?.get(authorId),
+          })),
+          distinctUntilChanged((a, b) => a.authorId === b.authorId && a.contact === b.contact),
+        )
+        .subscribe(({ contact }) => {
+          if (contact == null) {
+            this.selectedAuthor = undefined;
+            this.authorAutoCompleteControl.setValue('', { emitEvent: false });
+            return;
+          }
+          const count = this.availableAuthors.find((author) => author.value.id === contact.id)?.count ?? 0;
+          this.selectedAuthor = { value: contact, count };
+          this.authorAutoCompleteControl.setValue(contact.name, { emitEvent: false });
         }),
     );
   }
