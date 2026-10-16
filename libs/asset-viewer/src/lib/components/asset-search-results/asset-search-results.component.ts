@@ -70,6 +70,7 @@ export class AssetSearchResultsComponent implements OnInit, OnDestroy {
   private readonly pdfOverlayService = inject(PdfOverlayService);
   private readonly assetSearchService = inject(AssetSearchService);
   private readonly assetExportService = inject(AssetExportService);
+  protected readonly isExporting = this.assetExportService.isExporting;
   public readonly isResultsOpen$ = this.store.select(selectIsResultsOpen);
   public readonly assets$ = this.store.select(selectSearchResultItems);
   public readonly fileResults$ = this.store.select(selectFileSearchResultItems);
