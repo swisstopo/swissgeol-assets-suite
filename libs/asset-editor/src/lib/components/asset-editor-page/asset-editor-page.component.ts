@@ -120,6 +120,7 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
   private readonly assetEditorService = inject(AssetEditorService);
   private readonly assetSearchService = inject(AssetSearchService);
   private readonly assetExportService = inject(AssetExportService);
+  protected readonly isExporting = this.assetExportService.isExporting;
   private readonly routerSegments$ = inject(ROUTER_SEGMENTS);
   private readonly subscriptions: Subscription = new Subscription();
 

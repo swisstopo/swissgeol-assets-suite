@@ -19,7 +19,7 @@
       }
     </div>
     @if (searchQuery.type === SearchType.Asset && hasSelectedAssets) {
-      <button asset-sg-secondary (click)="exportSelected()">
+      <button asset-sg-secondary [disabled]="isExporting()" (click)="exportSelected()">
         <svg-icon key="export" />
         <span>{{ "search.export" | translate }} ({{ selectedCountLabel }})</span>
       </button>

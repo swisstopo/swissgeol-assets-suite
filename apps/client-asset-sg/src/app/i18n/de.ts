@@ -161,6 +161,7 @@ export const deTranslationMapping = {
       'Sie haben mehr als 100 Assets selektiert und es können maximal 100 Assets exportiert werden. Wollen Sie fortfahren?',
     exportFirstAssets: '100 Assets exportieren',
     selectAllCap: 'Es werden maximal 1000 Treffer ausgewählt (nicht alle Suchergebnisse).',
+    error: 'Der Export ist fehlgeschlagen.',
   },
   contactRoles: {
     author: 'Autor',
