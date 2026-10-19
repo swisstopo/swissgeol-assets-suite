@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- Export selected assets as GeoPackage (geometries + metadata)
+
 ## v.1.22.0
 
 ### Added
