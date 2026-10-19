@@ -2,6 +2,9 @@
 // OpenLayers-based map controller, both of which pull in ESM modules that Jest does not transform.
 // We only need a handful of lightweight actions/selectors from them for these unit tests, so we
 // stub the heavy modules (matching the pattern used by other component/service specs in the repo).
+let mockReferenceContacts: Map<number, unknown> | null = null;
+let mockReferenceData: unknown = null;
+
 jest.mock('@asset-sg/client-shared', () => {
   const store = jest.requireActual('@ngrx/store');
   const stubSelector = () => null;
@@ -14,8 +17,8 @@ jest.mock('@asset-sg/client-shared', () => {
     fromAppShared: {
       selectCurrentAsset: stubSelector,
       selectHasCurrentAsset: stubSelector,
-      selectReferenceContacts: stubSelector,
-      selectReferenceData: stubSelector,
+      selectReferenceContacts: () => mockReferenceContacts,
+      selectReferenceData: () => mockReferenceData,
       selectWorkgroups: () => [],
       selectUser: stubSelector,
       selectIsAnonymousMode: stubSelector,
@@ -44,11 +47,12 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { Contact, ContactKindCode, LocalDate, SearchType } from '@asset-sg/shared/v2';
+import { Contact, ContactKindCode, LocalDate, Polygon, SearchType } from '@asset-sg/shared/v2';
 import { StoreModule, Store } from '@ngrx/store';
 import { MockStore, provideMockStore } from '@ngrx/store/testing';
 import { TranslateModule } from '@ngx-translate/core';
 import { RxPush } from '@rx-angular/template/push';
+import { firstValueFrom } from 'rxjs';
 
 import { resetSearch as resetSearchAction, updateSearchQuery } from '../../state/asset-search/asset-search.actions';
 import { AppStateWithAssetSearch, assetSearchReducer } from '../../state/asset-search/asset-search.reducer';
@@ -116,6 +120,7 @@ describe('AssetSearchRefineComponent', () => {
 
   afterEach(() => {
     jest.restoreAllMocks();
+    store.resetSelectors();
   });
 
   // Simulates a user picking `author` from the autocomplete dropdown.
@@ -217,12 +222,42 @@ describe('AssetSearchRefineComponent', () => {
   });
 });
 
-// This suite renders the component's real template (chips, author input, date inputs) against a
-// real Store + real `assetSearchReducer`/selectors (instead of hardcoding `selectActiveFilters`),
-// so it reproduces the actual reported regression: after clicking "Filter zurücksetzen", the author
-// and date chips - and the values shown in their inputs - stayed on screen even though the search
-// itself was reset. If `resetSearch()` regresses to only clearing one of the two date controls (or
-// forgets to clear `selectedAuthor`), this suite fails.
+const configureDomTestBed = () =>
+  TestBed.configureTestingModule({
+    declarations: [AssetSearchRefineComponent, TestSmartTranslatePipe],
+    imports: [
+      ReactiveFormsModule,
+      CommonModule,
+      NoopAnimationsModule,
+      MatAutocompleteModule,
+      MatDatepickerModule,
+      MatNativeDateModule,
+      MatFormFieldModule,
+      MatInputModule,
+      RxPush,
+      TranslateModule.forRoot(),
+      StoreModule.forRoot({ assetSearch: assetSearchReducer, mapControl: mapControlReducer }),
+    ],
+    schemas: [NO_ERRORS_SCHEMA],
+  }).compileComponents();
+
+const REFRESH_REFERENCE_DATA = '[Test] Refresh reference data';
+
+const setMockReferenceData = (data: { contacts?: Map<number, Contact> | null; referenceData?: unknown }) => {
+  if (data.contacts !== undefined) {
+    mockReferenceContacts = data.contacts;
+  }
+  if (data.referenceData !== undefined) {
+    mockReferenceData = data.referenceData;
+  }
+  TestBed.inject(Store).dispatch({ type: REFRESH_REFERENCE_DATA });
+};
+
+afterEach(() => {
+  mockReferenceContacts = null;
+  mockReferenceData = null;
+});
+
 describe('AssetSearchRefineComponent (DOM regression: chips & inputs after reset)', () => {
   let fixture: ComponentFixture<AssetSearchRefineComponent>;
   let component: AssetSearchRefineComponent;
@@ -230,23 +265,10 @@ describe('AssetSearchRefineComponent (DOM regression: chips & inputs after reset
   const author = makeContact(7, 'Jane Doe');
 
   beforeEach(async () => {
-    await TestBed.configureTestingModule({
-      declarations: [AssetSearchRefineComponent, TestSmartTranslatePipe],
-      imports: [
-        ReactiveFormsModule,
-        CommonModule,
-        NoopAnimationsModule,
-        MatAutocompleteModule,
-        MatDatepickerModule,
-        MatNativeDateModule,
-        MatFormFieldModule,
-        MatInputModule,
-        RxPush,
-        TranslateModule.forRoot(),
-        StoreModule.forRoot({ assetSearch: assetSearchReducer, mapControl: mapControlReducer }),
-      ],
-      schemas: [NO_ERRORS_SCHEMA],
-    }).compileComponents();
+    await configureDomTestBed();
+
+    // The selected author is resolved from the reference contacts.
+    mockReferenceContacts = new Map([[author.id, author]]);
 
     fixture = TestBed.createComponent(AssetSearchRefineComponent);
     component = fixture.componentInstance;
@@ -324,6 +346,144 @@ describe('AssetSearchRefineComponent (DOM regression: chips & inputs after reset
     state.subscribe((query) => (latestQuery = query));
     expect(latestQuery?.authorId).toBeUndefined();
     expect(latestQuery?.createdAt).toBeUndefined();
+  });
+});
+
+describe('AssetSearchRefineComponent (DOM regression: restoring author & dates after leaving the viewer)', () => {
+  const author = makeContact(7, 'Jane Doe');
+  const query = {
+    authorId: author.id,
+    createdAt: { min: LocalDate.of(2020, 1, 1), max: LocalDate.of(2021, 1, 1) },
+  };
+
+  let store: Store<AppStateWithAssetSearch>;
+  let fixture: ComponentFixture<AssetSearchRefineComponent>;
+
+  beforeEach(async () => {
+    await configureDomTestBed();
+    store = TestBed.inject(Store);
+  });
+
+  const createFixture = async () => {
+    fixture = TestBed.createComponent(AssetSearchRefineComponent);
+    fixture.detectChanges();
+    fixture.detectChanges();
+    await settle();
+  };
+
+  const settle = async () => {
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+  };
+
+  const leaveAndReturn = async () => {
+    fixture.destroy();
+    await createFixture();
+  };
+
+  const chipTexts = (): string[] =>
+    Array.from(fixture.nativeElement.querySelectorAll('asset-sg-chip')).map((el) =>
+      ((el as HTMLElement).textContent ?? '').replace(/\s+/g, ' ').trim(),
+    );
+  const authorInput = (): HTMLInputElement => fixture.nativeElement.querySelector('input[placeholder="Autor wählen"]');
+  const dateInputs = (): HTMLInputElement[] =>
+    Array.from(fixture.nativeElement.querySelectorAll('mat-form-field input[type="text"]')).filter(
+      (el) => el !== authorInput(),
+    ) as HTMLInputElement[];
+  const searchState = () => firstValueFrom(store.select((state) => state.assetSearch));
+
+  const startRecordingActions = () => {
+    const dispatchSpy = jest.spyOn(store, 'dispatch');
+    return () =>
+      dispatchSpy.mock.calls
+        .map(([action]) => (action as unknown as { type: string }).type)
+        .filter((type) => type !== REFRESH_REFERENCE_DATA);
+  };
+
+  it('restores the author and both dates without dispatching any action', async () => {
+    mockReferenceContacts = new Map([[author.id, author]]);
+    store.dispatch(updateSearchQuery({ query }));
+    await createFixture();
+    expect(chipTexts()).toEqual(['Jane Doe', '> 01.01.2020', '< 01.01.2021']);
+
+    const stateBefore = await searchState();
+    const dispatchedActions = startRecordingActions();
+
+    await leaveAndReturn();
+
+    expect(chipTexts()).toEqual(['Jane Doe', '> 01.01.2020', '< 01.01.2021']);
+    expect(authorInput().value).toBe('Jane Doe');
+    const [minInput, maxInput] = dateInputs();
+    expect(minInput.value).toContain('2020');
+    expect(maxInput.value).toContain('2021');
+
+    expect(await searchState()).toEqual(stateBefore);
+    expect(dispatchedActions()).toEqual([]);
+  });
+
+  it('keeps every filter of a mixed search visible and unchanged', async () => {
+    const polygon = [
+      { x: 2600000, y: 1200000 },
+      { x: 2610000, y: 1200000 },
+      { x: 2610000, y: 1210000 },
+    ] as Polygon;
+    mockReferenceContacts = new Map([[author.id, author]]);
+    mockReferenceData = {
+      languages: new Map([['de', { code: 'de', name: 'Deutsch' }]]),
+      assetKinds: new Map(),
+      assetTopics: new Map([['geology', { code: 'geology', name: 'Geologie' }]]),
+    };
+    store.dispatch(
+      updateSearchQuery({
+        query: { ...query, polygon, languageCodes: ['de'], topicCodes: ['geology'], text: 'granite' },
+      }),
+    );
+    await createFixture();
+    const expectedChips = ['Jane Doe', '', '> 01.01.2020', '< 01.01.2021', 'Deutsch', 'Geologie'];
+    expect(chipTexts()).toEqual(expectedChips);
+
+    const stateBefore = await searchState();
+    const dispatchedActions = startRecordingActions();
+
+    await leaveAndReturn();
+
+    expect(chipTexts()).toEqual(expectedChips);
+    expect(authorInput().value).toBe('Jane Doe');
+    expect(fixture.nativeElement.querySelector('asset-sg-search-input').value).toBe('granite');
+    expect(await searchState()).toEqual(stateBefore);
+    expect(dispatchedActions()).toEqual([]);
+  });
+
+  it('only shows an author once it can be resolved, and never a stale one', async () => {
+    store.dispatch(updateSearchQuery({ query }));
+    await createFixture();
+
+    expect(chipTexts()).toEqual(['> 01.01.2020', '< 01.01.2021']);
+    expect(authorInput().value).toBe('');
+
+    const dispatchedActions = startRecordingActions();
+    setMockReferenceData({ contacts: new Map([[author.id, author]]) });
+    await settle();
+    expect(chipTexts()).toEqual(['Jane Doe', '> 01.01.2020', '< 01.01.2021']);
+    expect(authorInput().value).toBe('Jane Doe');
+
+    store.dispatch(updateSearchQuery({ query: { authorId: 99 } }));
+    await settle();
+    expect(chipTexts()).toEqual(['> 01.01.2020', '< 01.01.2021']);
+    expect(authorInput().value).toBe('');
+    expect(dispatchedActions()).toEqual([updateSearchQuery.type]);
+  });
+
+  it('does not overwrite a partially typed author name when unrelated state changes', async () => {
+    await createFixture();
+    fixture.componentInstance.authorAutoCompleteControl.setValue('Ja');
+
+    store.dispatch(updateSearchQuery({ query: { text: 'granite' } }));
+    setMockReferenceData({ contacts: new Map([[author.id, author]]) });
+    await settle();
+
+    expect(authorInput().value).toBe('Ja');
   });
 });
 
