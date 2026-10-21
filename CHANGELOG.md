@@ -2,9 +2,25 @@
 
 ## [Unreleased]
 
+## v.1.23.0
+
 ### Added
 
-- Export selected assets as GeoPackage (geometries + metadata)
+- Export selected assets as GeoPackage (geometries + metadata).
+
+### Changed
+
+- The receipt date is no longer required when creating or editing an asset, and assets without one are displayed correctly.
+- Updated the lists of asset kinds, formats and manual categories to the revised codelists. Exploration and prospection as well as photo and video are now merged.
+- Updated the swissgeol UI library to version 1.7.0.
+
+### Fixed
+
+- Resetting the search filters now correctly clears the author and document date filters, and the result list closes as expected.
+- Author and date filters are correctly restored when returning to the search.
+- Closing the PDF preview quickly no longer causes pages to fail to render, and loading errors no longer affect other documents.
+- Uploading multiple files at once no longer causes indexing conflicts that made some files fail.
+- Synchronization of assets from the external database is more reliable: deleted assets are not re-synced; on failure the sync transaction is rolled back.
 
 ## v.1.22.0
 
