@@ -16,7 +16,7 @@ export class GeometryDetailRepo extends GeometryBaseRepo<GeometryDetail> {
     const studies: RawStudy[] = await this.prisma.$queryRaw`
         SELECT s.study_id       AS "id",
                ST_AsGeoJSON(ST_GeomFromText(s.geom_text)) AS "geomJson",
-               ST_AsGeoJSON(ST_CENTROID(s.geom_text)) AS "centroidJson"
+               ST_AsGeoJSON(ST_Centroid(ST_GeomFromText(s.geom_text))) AS "centroidJson"
         FROM public.all_study s
             ${condition}
     `;

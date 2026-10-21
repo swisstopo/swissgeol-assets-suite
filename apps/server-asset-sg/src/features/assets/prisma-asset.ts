@@ -141,7 +141,7 @@ export const parseAssetFromPrisma = (data: SelectedAsset): Asset => ({
   workgroupId: data.workgroupId,
   creatorId: data.creatorId,
   createdAt: LocalDate.fromDate(data.createDate),
-  receivedAt: LocalDate.fromDate(data.receiptDate),
+  receivedAt: data.receiptDate ? LocalDate.fromDate(data.receiptDate) : null,
   // Defensive fallback: the previous nonNullAssertion caused the app to crash (see https://github.com/swisstopo/swissgeol-assets-suite/issues/702)
   // We default to 'Draft' if the workflow is missing, though this should not happen under normal operation.
   workflowStatus: mapWorkflowStatusFromPrisma(data.workflow?.status ?? 'Draft'),
@@ -187,7 +187,7 @@ const mapDataToPrisma = (data: AssetData) =>
       },
     },
     createDate: data.createdAt.toDate(),
-    receiptDate: data.receivedAt.toDate(),
+    receiptDate: data.receivedAt ? data.receivedAt.toDate() : null,
   }) satisfies Partial<Prisma.AssetCreateInput & Prisma.AssetUpdateInput>;
 
 export const mapAssetDataToPrismaCreate = (data: CreateAssetDataWithCreator): Prisma.AssetCreateInput => ({

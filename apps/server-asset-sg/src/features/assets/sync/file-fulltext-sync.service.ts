@@ -66,40 +66,43 @@ export class FileFulltextSyncService extends AtomicProgressService<FileFulltextS
       return;
     }
 
-    const fileWriter = this.searchWriterService.getFileWriter({
-      index: FILE_ELASTIC_INDEX,
-      isEager: true,
-    });
-
-    this.logger.debug('Clearing existing file index before reindexing');
-    await fileWriter.clearIndex();
-
-    let offset = 0;
-    while (true) {
-      const records = await this.assetRepo.list({ limit: 1000, offset });
-      if (records.length === 0) {
-        break;
-      }
-      const firstAssetId = records[0].id;
-      const lastAssetId = records[records.length - 1].id;
-      this.logger.debug('Indexing file fulltext content.', {
-        total,
-        offset,
-        progress: Number((offset / total).toFixed(2)),
-        assetIdRange: `${firstAssetId}–${lastAssetId}`,
+    // This callback already holds the exclusive lock, so it must not call a locking SearchWriterService method.
+    await this.searchWriterService.runExclusively(async () => {
+      const fileWriter = this.searchWriterService.getFileWriter({
+        index: FILE_ELASTIC_INDEX,
+        isEager: true,
       });
-      try {
-        await fileWriter.writeAssetFiles(records);
-      } catch (error) {
-        this.logger.error('Failed to write file index for batch, continuing with next batch', {
+
+      this.logger.debug('Clearing existing file index before reindexing');
+      await fileWriter.clearIndex();
+
+      let offset = 0;
+      while (true) {
+        const records = await this.assetRepo.list({ limit: 1000, offset });
+        if (records.length === 0) {
+          break;
+        }
+        const firstAssetId = records[0].id;
+        const lastAssetId = records[records.length - 1].id;
+        this.logger.debug('Indexing file fulltext content.', {
+          total,
           offset,
+          progress: Number((offset / total).toFixed(2)),
           assetIdRange: `${firstAssetId}–${lastAssetId}`,
-          error: error instanceof Error ? error.message : String(error),
         });
+        try {
+          await fileWriter.writeAssetFiles(records);
+        } catch (error) {
+          this.logger.error('Failed to write file index for batch, continuing with next batch', {
+            offset,
+            assetIdRange: `${firstAssetId}–${lastAssetId}`,
+            error: error instanceof Error ? error.message : String(error),
+          });
+        }
+        offset += records.length;
+        await writeProgress(progressOffset + Math.min(offset / total, 1) * progressScale);
       }
-      offset += records.length;
-      await writeProgress(progressOffset + Math.min(offset / total, 1) * progressScale);
-    }
+    });
     this.logger.debug('Done indexing file fulltext content.', { total });
   }
 

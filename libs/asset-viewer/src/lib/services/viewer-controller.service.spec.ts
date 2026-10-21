@@ -60,6 +60,7 @@ import { ViewerParamsService } from './viewer-params.service';
 
 const SET_CURRENT_ASSET = '[Asset Search] Set Current Asset';
 const SET_RESULTS_STATE = '[Asset Search] Set Results Open';
+const SET_MAP_POSITION = '[Asset Search] Set Map Position';
 
 const makeResults = (count: number): AssetSearchResult => ({
   page: { size: count, offset: 0, total: count },
@@ -195,6 +196,39 @@ describe(ViewerControllerService.name, () => {
     expect(resetAsset?.asset).toBeNull();
     // ...and recomputes the results panel state (open, since there are results).
     expect(types).toContain(SET_RESULTS_STATE);
+  });
+
+  it('closes the results table, restores the heatmap, and reloads the count when the search is reset', async () => {
+    // The results panel starts open (automatically) with a non-empty filtered query.
+    setup({ resultsState: PanelState.OpenedAutomatically });
+    const previous: AssetSearchQuery = {
+      type: SearchType.Asset,
+      authorId: 42,
+      text: 'hydro',
+    };
+    // The reset baseline query: only `type`/`favoritesOnly` remain, matching the reducer's resetSearch.
+    const current: AssetSearchQuery = { type: SearchType.Asset, favoritesOnly: undefined };
+
+    await updateByQuery(current, previous);
+
+    const types = dispatchedTypes();
+
+    // Heatmap restored: an empty (non-favorites) query resets the map to its default position.
+    expect(types).toContain(SET_MAP_POSITION);
+    const mapAction = dispatchSpy.mock.calls
+      .map(([action]) => action as { type: string; position?: { x: number; y: number; z: number } })
+      .find((action) => action.type === SET_MAP_POSITION);
+    expect(mapAction?.position).toEqual({ x: 2660000, y: 1190000, z: 8 });
+
+    // Results table closed: an empty query ALWAYS closes the results panel automatically.
+    const resultsAction = dispatchSpy.mock.calls
+      .map(([action]) => action as { type: string; state?: PanelState })
+      .find((action) => action.type === SET_RESULTS_STATE);
+    expect(resultsAction?.state).toBe(PanelState.ClosedAutomatically);
+
+    // Asset count reset: fresh stats are fetched for the (empty) reset query, so the displayed
+    // total returns to the unfiltered value immediately - no stale filtered count is left behind.
+    expect(assetSearchService.searchStats).toHaveBeenCalledWith(current);
   });
 });
 

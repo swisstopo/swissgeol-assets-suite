@@ -1,4 +1,4 @@
-import { Asset, AssetId } from '@asset-sg/shared/v2';
+import { Asset, AssetFileId, AssetId } from '@asset-sg/shared/v2';
 import { Client as ElasticsearchClient } from '@elastic/elasticsearch';
 import { Injectable, Logger } from '@nestjs/common';
 
@@ -16,10 +16,19 @@ import { getDateTimeString } from '@/features/assets/search/search-query.utils';
 import { SearchWriterOptions } from '@/features/assets/search/search-writer.utils';
 import { GeometryDetailRepo } from '@/features/geometries/geometry-detail.repo';
 import { GeometryRepo } from '@/features/geometries/geometry.repo';
+import { KeyedMutex } from '@/utils/keyed-mutex';
 
 @Injectable()
 export class SearchWriterService {
   private readonly logger = new Logger(SearchWriterService.name);
+
+  /**
+   * Serializes per-asset index mutations and blocks them during full index rebuilds,
+   * preventing conflicts between overlapping delete and reindex operations.
+   *
+   * This lock is process-local and assumes a single API replica.
+   */
+  private readonly assetMutex = new KeyedMutex<AssetId>();
 
   constructor(
     private readonly elastic: ElasticsearchClient,
@@ -30,7 +39,24 @@ export class SearchWriterService {
   ) {}
 
   async register(asset: Asset): Promise<void> {
-    await Promise.all([this.getAssetWriter().write(asset), this.getFileWriter().writeAssetFiles(asset)]);
+    await this.assetMutex.run(asset.id, async () => {
+      // Reload the asset after acquiring the lock. A registration that was queued behind another
+      // synchronization for the same asset must index the current database state, not the (possibly
+      // stale) snapshot captured before waiting for the lock. Otherwise a queued registration could
+      // overwrite the index with an outdated file list.
+      const currentAsset = await this.assetRepo.find(asset.id);
+      if (currentAsset == null) {
+        // The asset was deleted while we waited for the lock; nothing to index.
+        return;
+      }
+      // The asset writer targets the asset index (document id = asset id, an idempotent overwrite),
+      // while the file writer rebuilds the asset's page documents in the file index. Neither shares
+      // documents with the other, so they can safely run together within the per-asset lock.
+      await Promise.all([
+        this.getAssetWriter().write(currentAsset),
+        this.getFileWriter().writeAssetFiles(currentAsset),
+      ]);
+    });
   }
 
   getAssetWriter(options?: SearchWriterOptions): AssetSearchWriterService {
@@ -53,20 +79,42 @@ export class SearchWriterService {
     );
   }
 
+  /**
+   * Re-indexes a single file's page documents in the file index, serialized per asset so it cannot
+   * race with an asset-wide synchronization (e.g. an upload's `register`) for the same asset.
+   *
+   * Used after OCR completes, when a file's fulltext content first becomes available.
+   */
+  async writeFile(fileId: AssetFileId): Promise<void> {
+    const file = await this.prisma.file.findUnique({
+      where: { id: fileId },
+      select: { assetId: true },
+    });
+    if (file == null) {
+      this.logger.warn('Cannot index file, it no longer exists', { fileId });
+      return;
+    }
+    await this.assetMutex.run(file.assetId, () => this.getFileWriter().write(fileId));
+  }
+
   async deleteFromIndex(assetId: AssetId): Promise<void> {
-    await Promise.all([
-      this.elastic.delete({
-        index: ASSET_ELASTIC_INDEX,
-        id: `${assetId}`,
-        refresh: true,
-      }),
-      this.elastic.deleteByQuery({
-        index: FILE_ELASTIC_INDEX,
-        query: { term: { assetId: assetId } },
-        refresh: true,
-        ignore_unavailable: true,
-      }),
-    ]);
+    // Serialized per asset so index deletion cannot overlap with a concurrent `register` or OCR-time
+    // `writeFile` for the same asset (which would otherwise race on the same file documents).
+    await this.assetMutex.run(assetId, async () => {
+      await Promise.all([
+        this.elastic.delete({
+          index: ASSET_ELASTIC_INDEX,
+          id: `${assetId}`,
+          refresh: true,
+        }),
+        this.elastic.deleteByQuery({
+          index: FILE_ELASTIC_INDEX,
+          query: { term: { assetId: assetId } },
+          refresh: true,
+          ignore_unavailable: true,
+        }),
+      ]);
+    });
   }
 
   async count(): Promise<number> {
@@ -77,7 +125,23 @@ export class SearchWriterService {
     return (await this.elastic.count({ index: FILE_ELASTIC_INDEX, ignore_unavailable: true })).count;
   }
 
-  async syncWithDatabase(onProgress?: (percentage: number) => void | Promise<void>): Promise<void> {
+  /**
+   * Runs a task while blocking all per-asset index operations.
+   *
+   * The task must not call another locking method on this service.
+   */
+  runExclusively<T>(task: () => Promise<T>): Promise<T> {
+    return this.assetMutex.runExclusive(task);
+  }
+
+  /**
+   * Rebuilds both search indices while blocking incremental updates.
+   */
+  syncWithDatabase(onProgress?: (percentage: number) => void | Promise<void>): Promise<void> {
+    return this.runExclusively(() => this.rebuildIndicesFromDatabase(onProgress));
+  }
+
+  private async rebuildIndicesFromDatabase(onProgress?: (percentage: number) => void | Promise<void>): Promise<void> {
     // Write all Prisma assets into the sync index.
     const total = await this.prisma.asset.count();
     if (total === 0) {

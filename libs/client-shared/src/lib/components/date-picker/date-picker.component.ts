@@ -56,7 +56,7 @@ export class DatePickerComponent implements ControlValueAccessor {
     this.onChange(value);
   }
 
-  public writeValue(value: Date): void {
+  public writeValue(value: Date | null): void {
     this.date = value;
   }
 

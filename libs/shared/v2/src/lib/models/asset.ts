@@ -120,7 +120,7 @@ export interface Asset extends Model<AssetId> {
   /**
    * DB: `receipt_date`
    */
-  receivedAt: LocalDate;
+  receivedAt: LocalDate | null;
 
   /**
    * DB: `workflow` table, "status" field

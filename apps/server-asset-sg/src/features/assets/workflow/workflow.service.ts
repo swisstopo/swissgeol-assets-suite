@@ -160,12 +160,9 @@ export class WorkflowService {
   }
 
   /**
-   * Registers the asset for update in the search index, so that any changes to the workflow will be reflected in the
-   * search results. Note that in theory, this might result in a race condition, where a user submits asset changes and
-   * immediately sends workflow changes; in which case, the asset fetched here might not be updated yet and override
-   * the previously synced asset with the older state. However, this case seems very unlikely and if this happens, the
-   * approach would require changes to how assets are registered, i.e. submitting the assetid only and fetching the
-   * latest asset in AssetSeachService.register().
+   * Registers the asset in the search index, so that workflow changes are reflected in the search results.
+   * `SearchWriterService.register()` reloads the current asset state from the database inside the per-asset
+   * lock, so the passed asset snapshot being outdated does not matter.
    */
   private async registerAssetForChange(asset: Asset) {
     await this.searchWriterService.register(asset);

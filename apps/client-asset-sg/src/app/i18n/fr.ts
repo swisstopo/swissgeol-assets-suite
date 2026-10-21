@@ -164,6 +164,7 @@ export const frTranslationMapping: AppTranslationMapping = {
       'Vous avez sélectionné plus de 100 assets, mais un maximum de 100 assets peut être exporté. Voulez-vous continuer ?',
     exportFirstAssets: 'Exporter 100 assets',
     selectAllCap: 'Sélectionne au maximum 1000 résultats (pas tous les résultats de recherche).',
+    error: "L'exportation a échoué.",
   },
   contactRoles: {
     author: 'Auteur',

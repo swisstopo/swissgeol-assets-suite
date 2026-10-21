@@ -2,6 +2,9 @@
   "name": "asset-sg",
   "version": "0.0.0",
   "license": "MIT",
+  "engines": {
+    "node": ">=22.13"
+  },
   "scripts": {
     "ng": "nx",
     "start": "concurrently \"npm run start:server\" \"npm run start:client\"",
@@ -61,8 +64,8 @@
     "@rx-angular/cdk": "^20.0.0",
     "@rx-angular/state": "^20.0.0",
     "@rx-angular/template": "^20.0.0",
-    "@swissgeol/ui-core": "1.7.0-dev5",
-    "@swissgeol/ui-core-angular": "1.7.0-dev5",
+    "@swissgeol/ui-core": "1.7.0",
+    "@swissgeol/ui-core-angular": "1.7.0",
     "@tanstack/angular-virtual": "^5.0.0",
     "@turf/boolean-within": "^7.2.0",
     "@turf/buffer": "^7.2.0",

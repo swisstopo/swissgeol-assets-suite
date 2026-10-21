@@ -6,10 +6,19 @@ import { ButtonComponent } from '../button';
 
 export interface ExportDialogResult {
   csv: boolean;
+  geopackage: boolean;
 }
 
+type ExportFormatId = keyof ExportDialogResult | 'files';
+
+/**
+ * Formats that can't be selected together.
+ * Combining them requires packaging them into a single ZIP archive, which is not supported yet.
+ */
+const MUTUALLY_EXCLUSIVE_FORMATS: ReadonlySet<ExportFormatId> = new Set(['csv', 'geopackage']);
+
 interface ExportFormatOption {
-  id: keyof ExportDialogResult | 'files' | 'geopackage';
+  id: ExportFormatId;
   labelKey: string;
   hintKey?: string;
   disabled: boolean;
@@ -30,13 +39,7 @@ export class ExportDialogComponent {
   protected readonly options: ExportFormatOption[] = [
     { id: 'files', labelKey: 'export.formats.files', hintKey: 'export.comingSoon', disabled: true, selected: false },
     { id: 'csv', labelKey: 'export.formats.csv', disabled: false, selected: true },
-    {
-      id: 'geopackage',
-      labelKey: 'export.formats.geopackage',
-      hintKey: 'export.comingSoon',
-      disabled: true,
-      selected: false,
-    },
+    { id: 'geopackage', labelKey: 'export.formats.geopackage', disabled: false, selected: false },
   ];
 
   protected get isExportDisabled(): boolean {
@@ -48,6 +51,13 @@ export class ExportDialogComponent {
       return;
     }
     option.selected = checked;
+    if (checked && MUTUALLY_EXCLUSIVE_FORMATS.has(option.id)) {
+      for (const other of this.options) {
+        if (other !== option && MUTUALLY_EXCLUSIVE_FORMATS.has(other.id)) {
+          other.selected = false;
+        }
+      }
+    }
   }
 
   protected cancel(): void {
@@ -56,7 +66,13 @@ export class ExportDialogComponent {
 
   protected confirm(): void {
     this.dialogRef.close({
-      csv: this.options.find((option) => option.id === 'csv')?.selected ?? false,
+      csv: this.isSelected('csv'),
+      geopackage: this.isSelected('geopackage'),
     });
+  }
+
+  private isSelected(id: ExportFormatId): boolean {
+    const option = this.options.find((it) => it.id === id);
+    return option != null && !option.disabled && option.selected;
   }
 }

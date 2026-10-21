@@ -136,6 +136,21 @@ describe(AssetRepo, () => {
       expect(record.files).toEqual([]);
       expect(record.workgroupId).toEqual(data.workgroupId);
     });
+
+    it('inserts a new record without a receipt date', async () => {
+      // Given
+      const user = await userRepo.create(fakeUserData());
+      const data = { ...fakeCreateAssetData(), receivedAt: null };
+
+      // When
+      const record = await repo.create({ ...data, creatorId: user.id });
+
+      // Then
+      expect(record.receivedAt).toBeNull();
+      expect((await repo.find(record.id))!.receivedAt).toBeNull();
+      const row = await prisma.asset.findUniqueOrThrow({ where: { assetId: record.id } });
+      expect(row.receiptDate).toBeNull();
+    });
   });
 
   describe('update', () => {
@@ -181,6 +196,34 @@ describe(AssetRepo, () => {
       expect(updated!.siblings).toEqual([]);
       expect(updated!.files).toEqual([]);
       expect(updated!.workgroupId).toEqual(data.workgroupId);
+    });
+
+    it('clears the receipt date when updating it to `null`', async () => {
+      // Given
+      const creator = await userRepo.create(fakeUserData());
+      const record = await repo.create({ ...fakeCreateAssetData(), creatorId: creator.id });
+      expect(record.receivedAt).not.toBeNull();
+
+      // When
+      const updated = await repo.update(record.id, { ...fakeUpdateAssetData(), receivedAt: null });
+
+      // Then
+      expect(updated!.receivedAt).toBeNull();
+      const row = await prisma.asset.findUniqueOrThrow({ where: { assetId: record.id } });
+      expect(row.receiptDate).toBeNull();
+    });
+
+    it('sets a receipt date on a record that has none', async () => {
+      // Given
+      const creator = await userRepo.create(fakeUserData());
+      const record = await repo.create({ ...fakeCreateAssetData(), receivedAt: null, creatorId: creator.id });
+      const data = fakeUpdateAssetData();
+
+      // When
+      const updated = await repo.update(record.id, data);
+
+      // Then
+      expect(updated!.receivedAt).toEqual(data.receivedAt);
     });
   });
 
