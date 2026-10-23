@@ -7,7 +7,7 @@ on:
       - "**"
 
 env:
-  NODE_VERSION: "22.x"
+  NODE_VERSION: "22.23.4"
   DB_USERNAME: postgres
   DB_PASSWORD: postgres
   DB_DATABASE: postgres
@@ -79,6 +79,8 @@ jobs:
           key: "${{ runner.os }}-node_modules-${{ env.NODE_VERSION }}-${{ hashFiles('package-lock.json') }}-${{ hashFiles('**/schema.prisma') }}"
           restore-keys: |
             ${{ runner.os }}-node_modules-
+      - name: Log node version
+        run: node --version && npm --version
       - name: Install node dependencies
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -120,6 +122,8 @@ jobs:
         with:
           path: ./node_modules
           key: "${{ runner.os }}-node_modules-${{ env.NODE_VERSION }}-${{ hashFiles('package-lock.json') }}-${{ hashFiles('**/schema.prisma') }}"
+      - name: Log node version
+        run: node --version && npm --version
       - name: Migrate database
         run: npm run prisma -- migrate deploy
       - name: Run tests
@@ -140,6 +144,8 @@ jobs:
         with:
           path: ./node_modules
           key: "${{ runner.os }}-node_modules-${{ env.NODE_VERSION }}-${{ hashFiles('package-lock.json') }}-${{ hashFiles('**/schema.prisma') }}"
+      - name: Log node version
+        run: node --version && npm --version
       - name: Run lint
         run: npm run lint
       - name: Run prettier
@@ -169,6 +175,8 @@ jobs:
         with:
           path: ./node_modules
           key: "${{ runner.os }}-node_modules-${{ env.NODE_VERSION }}-${{ hashFiles('package-lock.json') }}-${{ hashFiles('**/schema.prisma') }}"
+      - name: Log node version
+        run: node --version && npm --version
       - name: Reset nx
         run: npx nx reset
       - name: Run build
@@ -191,6 +199,8 @@ jobs:
         with:
           path: ./node_modules
           key: "${{ runner.os }}-node_modules-${{ env.NODE_VERSION }}-${{ hashFiles('package-lock.json') }}-${{ hashFiles('**/schema.prisma') }}"
+      - name: Log node version
+        run: node --version && npm --version
       - name: Install dos2unix
         run: sudo apt-get update && sudo apt-get install -y dos2unix
       - name: Start services
