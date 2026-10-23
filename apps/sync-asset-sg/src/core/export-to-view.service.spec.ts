@@ -1,17 +1,10 @@
-import { FILE_CHUNK_SIZE, SyncConfig } from './config';
+import { FILE_CHUNK_SIZE } from './config';
 import { ExportToViewService } from './export-to-view.service';
 
 // Suppress log output during tests
 jest.mock('./log', () => ({
   log: jest.fn(),
 }));
-
-const config: SyncConfig = {
-  mode: 'view',
-  syncAssignee: 'test@test.com',
-  source: { connectionString: 'source', allowedWorkgroupIds: [1] },
-  destination: { connectionString: 'destination', allowedWorkgroupIds: [1] },
-};
 
 type PublishData = {
   authors: boolean;
@@ -115,7 +108,7 @@ function createService(db: FileRow[], configs: Map<number, { publishData: Publis
     file: { createMany: fileCreateMany },
   } as any;
 
-  const service = new ExportToViewService(sourcePrisma, destinationPrisma, config);
+  const service = new ExportToViewService(sourcePrisma, destinationPrisma);
 
   // Populate the existing (readonly) map instance rather than replacing it, to mirror production behaviour.
   const serviceConfigs = (service as any).publicAssetConfigs as Map<number, { publishData: PublishData }>;
@@ -306,7 +299,7 @@ describe('ExportToViewService.exportToView', () => {
   it('verifies the outer batch flow calls exportFiles after exportAssets', async () => {
     // Drive the outer batch loop with a single public asset while stubbing every heavy collaborator.
     const destinationPrisma = { $executeRaw: jest.fn().mockResolvedValue(0) } as any;
-    const service = new ExportToViewService({} as any, destinationPrisma, config);
+    const service = new ExportToViewService({} as any, destinationPrisma);
 
     const order: string[] = [];
 
@@ -327,5 +320,67 @@ describe('ExportToViewService.exportToView', () => {
 
     expect(order).toEqual(['assets', 'files']);
     expect((service as any).exportFiles).toHaveBeenCalledWith([1]);
+  });
+
+  it('exports the distinct workgroups of eligible assets from several workgroups', async () => {
+    const service = new ExportToViewService({} as any, { $executeRaw: jest.fn().mockResolvedValue(0) } as any);
+    jest.spyOn(service as any, 'findPublicAssetIds').mockResolvedValue([
+      { assetId: 1, workgroupId: 1, publishData: publishData() },
+      { assetId: 2, workgroupId: 2, publishData: publishData() },
+      { assetId: 3, workgroupId: 3, publishData: publishData() },
+      { assetId: 4, workgroupId: 2, publishData: publishData() },
+    ]);
+    jest.spyOn(service as any, 'exportItems').mockResolvedValue(undefined);
+    const exportSpy = jest.spyOn(service as any, 'export').mockResolvedValue(undefined);
+    jest.spyOn(service as any, 'exportSiblings').mockResolvedValue(undefined);
+    const exportAssets = jest.spyOn(service as any, 'exportAssets').mockResolvedValue(undefined);
+    jest.spyOn(service as any, 'exportFiles').mockResolvedValue(undefined);
+
+    await service.exportToView();
+
+    expect(exportSpy).toHaveBeenCalledWith('workgroup', 'id', [1, 2, 3]);
+    expect(exportAssets).toHaveBeenCalledWith([1, 2, 3, 4]);
+  });
+
+  it('completes without exporting workgroups or assets when no asset is eligible', async () => {
+    const workgroupFindMany = jest.fn().mockResolvedValue([]);
+    const workgroupCreateMany = jest.fn().mockResolvedValue({ count: 0 });
+    const sourcePrisma = { workgroup: { findMany: workgroupFindMany } } as any;
+    const destinationPrisma = {
+      $executeRaw: jest.fn().mockResolvedValue(0),
+      workgroup: { createMany: workgroupCreateMany },
+    } as any;
+    const service = new ExportToViewService(sourcePrisma, destinationPrisma);
+    jest.spyOn(service as any, 'findPublicAssetIds').mockResolvedValue([]);
+    jest.spyOn(service as any, 'exportItems').mockResolvedValue(undefined);
+    const exportSiblings = jest.spyOn(service as any, 'exportSiblings').mockResolvedValue(undefined);
+    const exportAssets = jest.spyOn(service as any, 'exportAssets').mockResolvedValue(undefined);
+    const exportFiles = jest.spyOn(service as any, 'exportFiles').mockResolvedValue(undefined);
+
+    await expect(service.exportToView()).resolves.toBeUndefined();
+
+    expect(workgroupFindMany).toHaveBeenCalledWith({ where: { id: { in: [] } } });
+    expect(workgroupCreateMany).toHaveBeenCalledWith({ data: [], skipDuplicates: true });
+    expect(exportAssets).not.toHaveBeenCalled();
+    expect(exportFiles).not.toHaveBeenCalled();
+    expect(exportSiblings).not.toHaveBeenCalled();
+  });
+});
+
+describe('ExportToViewService.findPublicAssetIds', () => {
+  it('selects by publication rules only, without any workgroup restriction or bound parameter', async () => {
+    const queryRaw = jest.fn().mockResolvedValue([]);
+    const service = new ExportToViewService({ $queryRaw: queryRaw } as any, {} as any);
+
+    await (service as any).findPublicAssetIds();
+
+    const [strings, ...values] = queryRaw.mock.calls[0];
+    const sql = (strings as string[]).join('?').replace(/\s+/g, ' ');
+
+    expect(sql).toContain('WHERE a.is_public');
+    expect(sql).toContain("w.status = 'Published'");
+    expect(sql).toContain('a.workgroup_id AS "workgroupId"');
+    expect(sql).not.toMatch(/workgroup_id\s+(IN|=)/i);
+    expect(values).toEqual([]);
   });
 });
