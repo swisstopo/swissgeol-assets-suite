@@ -10,8 +10,8 @@ jest.mock('./log', () => ({
 const config: SyncConfig = {
   mode: 'extern',
   syncAssignee: 'test@test.com',
-  source: { connectionString: 'source', allowedWorkgroupIds: [] },
-  destination: { connectionString: 'destination', allowedWorkgroupIds: [] },
+  source: { connectionString: 'source' },
+  destination: { connectionString: 'destination' },
 };
 
 function createMockPrisma(overrides: Record<string, unknown> = {}) {
