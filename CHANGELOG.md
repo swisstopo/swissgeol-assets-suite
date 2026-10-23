@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Changed
+
+- The nightly PROD to PROD-View sync now publishes released assets of all workgroups instead of only swisstopo. The `SOURCE_WORKGROUP_IDS` / `DESTINATION_WORKGROUP_IDS` settings were removed.
+
 ## v.1.23.0
 
 ### Added
