@@ -2,11 +2,9 @@
 
 ## [Unreleased]
 
-## v.1.23.1
+### Changed
 
-### Security
-
-- Updated Node.js to 22.23.4 in the API, sync and client build images and in the CI pipeline, addressing the October 2026 Node.js security releases.
+- The nightly PROD to PROD-View sync now publishes released assets of all workgroups instead of only swisstopo. The `SOURCE_WORKGROUP_IDS` / `DESTINATION_WORKGROUP_IDS` settings were removed.
 
 ## v.1.23.0
 
@@ -27,6 +25,12 @@
 - Closing the PDF preview quickly no longer causes pages to fail to render, and loading errors no longer affect other documents.
 - Uploading multiple files at once no longer causes indexing conflicts that made some files fail.
 - Synchronization of assets from the external database is more reliable: deleted assets are not re-synced; on failure the sync transaction is rolled back.
+
+## v.1.22.1
+
+### Security
+
+- Updated Node.js to 22.23.4 in the API, sync and client build images and in the CI pipeline, addressing the October 2026 Node.js security releases.
 
 ## v.1.22.0
 
