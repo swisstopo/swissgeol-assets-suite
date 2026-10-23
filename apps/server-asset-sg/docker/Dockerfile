@@ -1,6 +1,6 @@
 ARG APP_VERSION
 
-FROM node:22-alpine AS api-builder
+FROM node:22.23.4-alpine AS api-builder
 
 RUN apk add --no-cache openssl
 
@@ -17,7 +17,7 @@ RUN --mount=type=secret,id=github_token \
  && npx nx build server-asset-sg --configuration=production
 
 # final image build
-FROM node:22-alpine
+FROM node:22.23.4-alpine
 
 RUN apk add --no-cache openssl
 

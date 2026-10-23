@@ -7,7 +7,7 @@ on:
       - "**"
 
 env:
-  NODE_VERSION: "22.x"
+  NODE_VERSION: "22.23.4"
   DB_USERNAME: postgres
   DB_PASSWORD: postgres
   DB_DATABASE: postgres
