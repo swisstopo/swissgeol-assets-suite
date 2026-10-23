@@ -8,15 +8,18 @@ concurrency:
 
 jobs:
   enforce-main:
-    name: "enforce main"
+    name: "validate release branch"
     runs-on: ubuntu-latest
     steps:
-      - name: Fail if not on main
+      - name: Validate release branch
         run: |
-          if [ "${{ github.ref }}" != "refs/heads/main" ]; then
-            echo "This job must be run on the main branch."
-            exit 1
-          fi
+          case "$GITHUB_REF" in
+            refs/heads/main|refs/heads/hotfix/1.22.1) ;;
+            *)
+              echo "Release must run from main or hotfix/1.22.1."
+              exit 1
+              ;;
+          esac
 
   publish:
     needs:
@@ -28,11 +31,12 @@ jobs:
     with:
       tag: latest
       version_script: |
+        if (context.ref === "refs/heads/hotfix/1.22.1") {
+          return "1.22.1";
+        }
+
         const { findLatestReleasableVersion } = await import(`${process.env.GITHUB_WORKSPACE}/.github/scripts/package.utils.mjs`);
-        const {
-        determineNextRcVersionBySourceBranch,
-        stringifyVersion,
-        } = await import(`${process.env.GITHUB_WORKSPACE}/.github/scripts/version.utils.mjs`);
+        const { stringifyVersion } = await import(`${process.env.GITHUB_WORKSPACE}/.github/scripts/version.utils.mjs`);
 
         const releasableVersion = await findLatestReleasableVersion();
         if (releasableVersion === null) {
@@ -97,7 +101,7 @@ jobs:
         with:
           script: |
             const { findOutdatedVersions, removePackageVersions } = await import(`${process.env.GITHUB_WORKSPACE}/.github/scripts/package.utils.mjs`);
-            const { parseVersion, stringifyVersion } = await import(`${process.env.GITHUB_WORKSPACE}/.github/scripts/version.utils.mjs`);
+            const { parseVersion } = await import(`${process.env.GITHUB_WORKSPACE}/.github/scripts/version.utils.mjs`);
 
             const version = parseVersion(process.env.CURRENT_VERSION);
             const outdatedVersions = await findOutdatedVersions(version);
