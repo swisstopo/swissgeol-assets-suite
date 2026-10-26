@@ -12,11 +12,9 @@ export interface SyncConfig {
   syncAssignee: string | undefined;
   source: {
     connectionString: string;
-    allowedWorkgroupIds: number[];
   };
   destination: {
     connectionString: string;
-    allowedWorkgroupIds: number[];
   };
 }
 
@@ -34,11 +32,9 @@ export function getConfig(): SyncConfig {
     syncAssignee: process.env['SYNC_ASSIGNEE'],
     source: {
       connectionString: getEnvOrThrow('SOURCE_CONNECTION_STRING'),
-      allowedWorkgroupIds: process.env['SOURCE_WORKGROUP_IDS']?.split(',').map(Number) ?? [],
     },
     destination: {
       connectionString: getEnvOrThrow('DESTINATION_CONNECTION_STRING'),
-      allowedWorkgroupIds: process.env['DESTINATION_WORKGROUP_IDS']?.split(',').map(Number) ?? [],
     },
   };
 }

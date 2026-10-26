@@ -23,7 +23,7 @@ switch (config.mode) {
     // Reset and migrate destination database
     resetAndMigrateDatabase(config.destination.connectionString);
     // Export data from source to destination database
-    new ExportToViewService(sourcePrisma, destinationPrisma, config)
+    new ExportToViewService(sourcePrisma, destinationPrisma)
       .exportToView()
       .then(() => log('Export to view completed'))
       .catch((error) => console.error(error));

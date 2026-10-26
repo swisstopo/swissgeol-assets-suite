@@ -1,5 +1,5 @@
 import { Prisma, PrismaClient } from '@prisma/client';
-import { FILE_CHUNK_SIZE, SyncConfig } from './config';
+import { FILE_CHUNK_SIZE } from './config';
 import { log } from './log';
 
 /**
@@ -52,14 +52,12 @@ const BATCH_SIZE = 100;
 const BATCH_SIZE_GEOMETRIES = 10_000;
 
 export class ExportToViewService {
-  private readonly allowedWorkgroupIds: number[];
   private readonly publicAssetConfigs: Map<number, Omit<AssetInfo, 'assetId'>> = new Map();
 
   private readonly sourcePrisma: PrismaClient;
   private readonly destinationPrisma: PrismaClient;
 
-  constructor(sourcePrisma: PrismaClient, destinationPrisma: PrismaClient, config: SyncConfig) {
-    this.allowedWorkgroupIds = config.source.allowedWorkgroupIds;
+  constructor(sourcePrisma: PrismaClient, destinationPrisma: PrismaClient) {
     this.sourcePrisma = sourcePrisma;
     this.destinationPrisma = destinationPrisma;
   }
@@ -390,7 +388,6 @@ export class ExportToViewService {
                                                            LEFT JOIN workflow_selection ws ON w.approval_id = ws.id
                                                     WHERE a.is_public
                                                       AND w.status = 'Published'
-                                                      AND workgroup_id IN (${Prisma.join(this.allowedWorkgroupIds)})
                                                     ORDER BY a.asset_id
     `;
   }
