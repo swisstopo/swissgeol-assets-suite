@@ -2,8 +2,14 @@
 
 ## [Unreleased]
 
+### Added
+
+- An asset can now have multiple asset types. The "Type" field in the editor is a checkbox multiselect like "Language", and the search details, the result table, the CSV export and the GeoPackage export show every selected type. Existing assets keep their current type.
+
 ### Changed
 
+- The API and the search index now use `kindCodes` (a list) instead of `kindCode` for the asset types of an asset. After deploying, a full Elasticsearch reindex must take place, otherwise searching and filtering by asset type returns no results until it has run.
+- Synchronization (`sync-extern` and `export-to-view`) copies all asset types of an asset. Both databases must be migrated before the next synchronization.
 - The nightly PROD to PROD-View sync now publishes released assets of all workgroups instead of only swisstopo. The `SOURCE_WORKGROUP_IDS` / `DESTINATION_WORKGROUP_IDS` settings were removed.
 
 ## v.1.23.0
