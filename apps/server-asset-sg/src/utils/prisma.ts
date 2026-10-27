@@ -12,3 +12,12 @@ export const handlePrismaMutationError = (error: unknown): null | never => {
   }
   throw error;
 };
+
+/**
+ * Checks whether an error was caused by a row that references a missing row through the given foreign key.
+ * See https://www.prisma.io/docs/orm/reference/error-reference#p2003.
+ */
+export const isForeignKeyViolation = (error: unknown, constraint: string): boolean =>
+  error instanceof Prisma.PrismaClientKnownRequestError &&
+  error.code === 'P2003' &&
+  error.meta?.['constraint'] === constraint;

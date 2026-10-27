@@ -18,7 +18,7 @@ export interface AssetSearchResultItem {
   id: AssetId;
   title: string;
   isPublic: boolean;
-  kindCode: LocalizedItemCode;
+  kindCodes: LocalizedItemCode[];
   formatCode: LocalizedItemCode;
   topicCodes: LocalizedItemCode[];
   contacts: AssetSearchResultContact[];
