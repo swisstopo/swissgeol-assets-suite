@@ -145,7 +145,7 @@ export class SearchService<EntityId extends number | string> {
       authorIds: makeAggregation('terms', 'authorIds'),
       languageCodes: makeAggregation('terms', 'languageCodes'),
       geometryTypes: makeAggregation('terms', 'geometryTypes'),
-      kindCodes: makeAggregation('terms', 'kindCodes', 'kindCode'),
+      kindCodes: makeAggregation('terms', 'kindCodes'),
       topicCodes: makeAggregation('terms', 'topicCodes'),
       usageCodes: makeAggregation('terms', 'usageCodes', 'usageCode'),
       workgroupIds: makeAggregation('terms', 'workgroupIds', 'workgroupId', options?.unrestrictedWorkgroupQuery),
