@@ -3,6 +3,7 @@ import { run, WorkgroupId } from '@asset-sg/shared/v2';
 import {
   Asset,
   AssetContact,
+  AssetKind,
   AssetLanguage,
   AssetSynchronization,
   Contact,
@@ -26,7 +27,13 @@ const SYNC_TRANSACTION_TIMEOUT_MS = 3 * 60 * 60 * 1_000;
 export class SyncExternService {
   private readonly config: SyncConfig;
   private readonly existingContactIds: Map<string, number> = new Map();
-  private readonly relationSqls: RelationSqls = { ids: [], assetLanguages: [], manCatLabelRefs: [], typeNatRels: [] };
+  private readonly relationSqls: RelationSqls = {
+    ids: [],
+    assetKinds: [],
+    assetLanguages: [],
+    manCatLabelRefs: [],
+    typeNatRels: [],
+  };
   private readonly assetsToSync: AssetToSync[] = [];
   private readonly newAssetToOriginalAsset: Map<number, { originalAssetId: number; originalSgsId: number | null }> =
     new Map();
@@ -156,6 +163,9 @@ export class SyncExternService {
     });
 
     this.relationSqls.ids.push(...asset.ids.map((i) => Prisma.sql`(${newAsset.assetId}, ${i.id}, ${i.description})`));
+    this.relationSqls.assetKinds.push(
+      ...asset.assetKinds.map((a) => Prisma.sql`(${newAsset.assetId}, ${a.assetKindItemCode})`),
+    );
     this.relationSqls.assetLanguages.push(
       ...asset.assetLanguages.map((a) => Prisma.sql`(${newAsset.assetId}, ${a.languageItemCode})`),
     );
@@ -298,6 +308,7 @@ export class SyncExternService {
         include: {
           subordinateAssets: { select: { assetId: true } },
           ids: { select: { id: true, description: true } },
+          assetKinds: { select: { assetKindItemCode: true } },
           assetLanguages: { select: { languageItemCode: true } },
           manCatLabelRefs: { select: { manCatLabelItemCode: true } },
           typeNatRels: { select: { natRelItemCode: true } },
@@ -326,6 +337,7 @@ export class SyncExternService {
         manCatLabelRefs,
         typeNatRels,
         ids,
+        assetKinds,
         assetLanguages,
         workgroup,
         subordinateAssets,
@@ -339,6 +351,7 @@ export class SyncExternService {
         asset,
         workgroupName: workgroup.name,
         manCatLabelRefs,
+        assetKinds,
         assetLanguages,
         typeNatRels,
         ids,
@@ -511,6 +524,15 @@ export class SyncExternService {
       log(`Finished batch #${idx + 1} of ids`, 'batch');
     }
 
+    for (const [idx, batch] of this.batchList(this.relationSqls.assetKinds, BATCH_SIZE).entries()) {
+      log(`Creating batch #${idx + 1} of asset kinds`, 'batch');
+      await this.destination.$executeRaw`
+        INSERT INTO asset_kind (asset_id, asset_kind_item_code)
+        VALUES ${Prisma.join(batch)}
+      `;
+      log(`Finished batch #${idx + 1} of asset kinds`, 'batch');
+    }
+
     for (const [idx, batch] of this.batchList(this.relationSqls.assetLanguages, BATCH_SIZE).entries()) {
       log(`Creating batch #${idx + 1} of asset languages`, 'batch');
       await this.destination.$executeRaw`
@@ -615,6 +637,7 @@ interface Geometries {
 
 interface RelationSqls {
   ids: Prisma.Sql[];
+  assetKinds: Prisma.Sql[];
   assetLanguages: Prisma.Sql[];
   manCatLabelRefs: Prisma.Sql[];
   typeNatRels: Prisma.Sql[];
@@ -630,6 +653,7 @@ interface AssetToSync {
   manCatLabelRefs: Pick<ManCatLabelRef, 'manCatLabelItemCode'>[];
   typeNatRels: Pick<TypeNatRel, 'natRelItemCode'>[];
   ids: Pick<Id, 'id' | 'description'>[];
+  assetKinds: Pick<AssetKind, 'assetKindItemCode'>[];
   assetLanguages: Pick<AssetLanguage, 'languageItemCode'>[];
   reviewSelection: WorkflowSelectionFromPrisma;
   children: Array<{ assetId: number }>;

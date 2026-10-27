@@ -383,4 +383,69 @@ describe('ExportToViewService.findPublicAssetIds', () => {
     expect(sql).not.toMatch(/workgroup_id\s+(IN|=)/i);
     expect(values).toEqual([]);
   });
+
+  it('exports the asset kinds of each batch after the assets they belong to', async () => {
+    const destinationPrisma = { $executeRaw: jest.fn().mockResolvedValue(0) } as any;
+    const service = new ExportToViewService({} as any, destinationPrisma, config);
+
+    const calls: unknown[][] = [];
+
+    jest
+      .spyOn(service as any, 'findPublicAssetIds')
+      .mockResolvedValue([{ assetId: 1, workgroupId: 1, publishData: publishData() }]);
+    jest.spyOn(service as any, 'exportItems').mockResolvedValue(undefined);
+    jest.spyOn(service as any, 'exportSiblings').mockResolvedValue(undefined);
+    jest.spyOn(service as any, 'exportFiles').mockResolvedValue(undefined);
+    jest.spyOn(service as any, 'exportAssets').mockImplementation(async () => {
+      calls.push(['assets']);
+    });
+    jest.spyOn(service as any, 'export').mockImplementation(async (...args: unknown[]) => {
+      calls.push(args);
+    });
+
+    await service.exportToView();
+
+    expect(calls).toEqual(
+      expect.arrayContaining([
+        ['assets'],
+        ['assetKind', 'assetId', [1], true],
+        ['assetLanguage', 'assetId', [1], true],
+      ]),
+    );
+    expect(calls.findIndex((it) => it[0] === 'assets')).toBeLessThan(calls.findIndex((it) => it[0] === 'assetKind'));
+  });
+});
+
+describe('ExportToViewService.exportAssets', () => {
+  it('does not select or write a single-value type column', async () => {
+    const asset = {
+      assetId: 1,
+      titlePublic: 'Asset',
+      isExtract: false,
+      createDate: new Date(),
+      receiptDate: null,
+      assetContacts: [],
+      isNatRel: false,
+      assetFormatItemCode: 'pdf',
+      workgroupId: 1,
+      isPublic: true,
+      assetMainId: null,
+      sgsId: null,
+      geolDataInfo: null,
+      geolAuxDataInfo: null,
+      geolContactDataInfo: null,
+      municipality: null,
+    };
+    const findMany = jest.fn().mockResolvedValue([asset]);
+    const createMany = jest.fn().mockResolvedValue({ count: 1 });
+    const destinationPrisma = { asset: { createMany }, assetContact: { createMany } } as any;
+    const service = new ExportToViewService({ asset: { findMany } } as any, destinationPrisma, config);
+    (service as any).publicAssetConfigs.set(1, { workgroupId: 1, publishData: publishData({ general: true }) });
+    jest.spyOn(service as any, 'exportWorkflows').mockResolvedValue(undefined);
+
+    await (service as any).exportAssets([1]);
+
+    expect(findMany.mock.calls[0][0].select).not.toHaveProperty('assetKindItemCode');
+    expect(createMany.mock.calls[0][0].data[0]).not.toHaveProperty('assetKindItemCode');
+  });
 });

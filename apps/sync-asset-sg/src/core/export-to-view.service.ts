@@ -19,7 +19,6 @@ type PublishedAssetSelection = Prisma.AssetGetPayload<{
     receiptDate: true;
     assetContacts: true;
     isNatRel: true;
-    assetKindItemCode: true;
     assetFormatItemCode: true;
     workgroupId: true;
     isPublic: true;
@@ -83,6 +82,7 @@ export class ExportToViewService {
       const assetIds = batch.map((item) => item.assetId);
       await this.exportAssets(assetIds);
       await this.exportFiles(assetIds);
+      await this.export('assetKind', 'assetId', assetIds, true);
       await this.export('assetLanguage', 'assetId', assetIds, true);
 
       await this.export('manCatLabelRef', 'assetId', assetIds, true);
@@ -139,7 +139,6 @@ export class ExportToViewService {
         receiptDate: true,
         assetContacts: true,
         isNatRel: true,
-        assetKindItemCode: true,
         assetFormatItemCode: true,
         workgroupId: true,
         isPublic: true,
