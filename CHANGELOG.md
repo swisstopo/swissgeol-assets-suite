@@ -8,6 +8,10 @@
 
 - Updated Node.js to 22.23.4 in the API, sync and client build images and in the CI pipeline, addressing the October 2026 Node.js security releases.
 
+### Fixed
+
+- The PROD-View sync no longer aborts when a main asset is exported in a later batch than its child. Main asset references that form a cycle are omitted and logged, and a failed view sync now exits with a failure code.
+
 ## v.1.23.0
 
 ### Added
