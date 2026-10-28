@@ -93,7 +93,7 @@ function orderMainAssetsFirst<T extends { assetId: number }>(assets: T[], mainAs
 }
 
 export class ExportToViewService {
-  private readonly publicAssetConfigs: Map<number, Omit<AssetInfo, 'assetId'>> = new Map();
+  private readonly publicAssetConfigs: Map<number, Omit<AssetInfo, 'assetId' | 'assetMainId'>> = new Map();
   private readonly mainAssetIds: Map<number, number> = new Map();
 
   private readonly sourcePrisma: PrismaClient;
@@ -109,7 +109,9 @@ export class ExportToViewService {
     this.mainAssetIds.clear();
 
     const publicAssets = await this.findPublicAssetIds();
-    publicAssets.forEach(({ assetId, ...rest }) => this.publicAssetConfigs.set(assetId, rest));
+    publicAssets.forEach(({ assetId, workgroupId, publishData }) =>
+      this.publicAssetConfigs.set(assetId, { workgroupId, publishData }),
+    );
 
     log(`Found ${this.publicAssetConfigs.size} public assets.`);
 
