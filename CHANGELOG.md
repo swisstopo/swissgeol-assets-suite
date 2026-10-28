@@ -6,6 +6,10 @@
 
 - The nightly PROD to PROD-View sync now publishes released assets of all workgroups instead of only swisstopo. The `SOURCE_WORKGROUP_IDS` / `DESTINATION_WORKGROUP_IDS` settings were removed.
 
+### Fixed
+
+- The PROD-View sync no longer aborts when a main asset is exported in a later batch than its child. Main asset references that form a cycle are omitted and logged, and a failed view sync now exits with a failure code.
+
 ## v.1.23.0
 
 ### Added

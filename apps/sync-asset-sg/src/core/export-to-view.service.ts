@@ -34,6 +34,7 @@ type PublishedAssetSelection = Prisma.AssetGetPayload<{
 
 interface AssetInfo {
   assetId: number;
+  assetMainId: number | null;
   workgroupId: number;
   publishData: {
     authors: boolean;
@@ -48,11 +49,52 @@ interface AssetInfo {
   };
 }
 
+interface MainAssetRef {
+  assetId: number;
+  assetMainId: number;
+}
+
 const BATCH_SIZE = 100;
 const BATCH_SIZE_GEOMETRIES = 10_000;
 
+function findCycleFormingMainAssetRefs(refs: MainAssetRef[]): MainAssetRef[] {
+  const mainIdByAssetId = new Map(refs.map((ref) => [ref.assetId, ref.assetMainId]));
+  const visited = new Set<number>();
+  const cycleAssetIds = new Set<number>();
+  for (const { assetId } of refs) {
+    const path: number[] = [];
+    let current: number | undefined = assetId;
+    while (current !== undefined && !visited.has(current)) {
+      visited.add(current);
+      path.push(current);
+      current = mainIdByAssetId.get(current);
+    }
+    const cycleStart = current === undefined ? -1 : path.indexOf(current);
+    if (cycleStart !== -1) {
+      path.slice(cycleStart).forEach((id) => cycleAssetIds.add(id));
+    }
+  }
+  return refs.filter((ref) => cycleAssetIds.has(ref.assetId));
+}
+
+function orderMainAssetsFirst<T extends { assetId: number }>(assets: T[], mainAssetIds: Map<number, number>): T[] {
+  const assetsById = new Map(assets.map((asset) => [asset.assetId, asset]));
+  const orderedIds = new Set<number>();
+  for (const { assetId } of assets) {
+    const unorderedAncestry: number[] = [];
+    let current: number | undefined = assetId;
+    while (current !== undefined && !orderedIds.has(current)) {
+      unorderedAncestry.push(current);
+      current = mainAssetIds.get(current);
+    }
+    unorderedAncestry.reverse().forEach((id) => orderedIds.add(id));
+  }
+  return [...orderedIds].flatMap((id) => assetsById.get(id) ?? []);
+}
+
 export class ExportToViewService {
   private readonly publicAssetConfigs: Map<number, Omit<AssetInfo, 'assetId'>> = new Map();
+  private readonly mainAssetIds: Map<number, number> = new Map();
 
   private readonly sourcePrisma: PrismaClient;
   private readonly destinationPrisma: PrismaClient;
@@ -64,13 +106,17 @@ export class ExportToViewService {
 
   public async exportToView() {
     this.publicAssetConfigs.clear();
+    this.mainAssetIds.clear();
 
     const publicAssets = await this.findPublicAssetIds();
     publicAssets.forEach(({ assetId, ...rest }) => this.publicAssetConfigs.set(assetId, rest));
 
     log(`Found ${this.publicAssetConfigs.size} public assets.`);
 
-    const batches = this.batchList(publicAssets, BATCH_SIZE);
+    this.collectMainAssetIds(publicAssets);
+
+    // main assets are inserted in an earlier batch or the same statement as their children
+    const batches = this.batchList(orderMainAssetsFirst(publicAssets, this.mainAssetIds), BATCH_SIZE);
     log(`Created ${batches.length} batches with batch size ${BATCH_SIZE}.`);
 
     await this.exportItems();
@@ -153,7 +199,7 @@ export class ExportToViewService {
     });
     const filteredAssets = this.preparePublishedData(assets);
 
-    let result = await this.destinationPrisma.asset.createMany({ data: filteredAssets.assets });
+    let result = await this.createAssets(assetIds, filteredAssets.assets);
     log(`Created ${result.count} assets.`, 'batch');
 
     await this.exportWorkflows(assetIds);
@@ -168,6 +214,34 @@ export class ExportToViewService {
       await this.exportGeometries(batch, 'study_location');
       await this.exportGeometries(batch, 'study_trace');
       log(`Finished batch #${idx + 1} of geometries`, 'batch');
+    }
+  }
+
+  private collectMainAssetIds(publicAssets: AssetInfo[]) {
+    const refs: MainAssetRef[] = publicAssets.flatMap(({ assetId, assetMainId, publishData }) =>
+      publishData.references && assetMainId && this.publicAssetConfigs.has(assetMainId)
+        ? [{ assetId, assetMainId }]
+        : [],
+    );
+
+    const cycleFormingRefs = new Set(findCycleFormingMainAssetRefs(refs));
+    for (const { assetId, assetMainId } of cycleFormingRefs) {
+      log(`Omitting main asset reference ${assetId} -> ${assetMainId}: part of a cycle.`);
+    }
+
+    for (const ref of refs) {
+      if (!cycleFormingRefs.has(ref)) {
+        this.mainAssetIds.set(ref.assetId, ref.assetMainId);
+      }
+    }
+  }
+
+  private async createAssets(assetIds: number[], assets: Prisma.AssetCreateManyInput[]) {
+    try {
+      return await this.destinationPrisma.asset.createMany({ data: assets });
+    } catch (error) {
+      log(`Failed to create assets [${assetIds.join(', ')}].`, 'batch');
+      throw error;
     }
   }
 
@@ -371,6 +445,7 @@ export class ExportToViewService {
    */
   private async findPublicAssetIds() {
     return this.sourcePrisma.$queryRaw<AssetInfo[]>`SELECT a.asset_id     AS "assetId",
+                                                           a.asset_main_id AS "assetMainId",
                                                            a.workgroup_id AS "workgroupId",
                                                            json_build_object(
                                                              'authors', ws.authors,
@@ -429,11 +504,7 @@ export class ExportToViewService {
 
       const filteredAsset: Prisma.AssetCreateManyInput = {
         ...asset,
-        // optional fields for siblings
-        assetMainId:
-          publishData.references && asset.assetMainId && this.publicAssetConfigs.has(asset.assetMainId)
-            ? asset.assetMainId
-            : null,
+        assetMainId: this.mainAssetIds.get(asset.assetId) ?? null,
         // optional fields for legacy
         sgsId: publishData.legacy ? asset.sgsId : null,
         geolDataInfo: publishData.legacy ? asset.geolDataInfo : null,

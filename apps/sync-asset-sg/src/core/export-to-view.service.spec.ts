@@ -1,5 +1,6 @@
 import { FILE_CHUNK_SIZE } from './config';
 import { ExportToViewService } from './export-to-view.service';
+import { log } from './log';
 
 // Suppress log output during tests
 jest.mock('./log', () => ({
@@ -382,5 +383,297 @@ describe('ExportToViewService.findPublicAssetIds', () => {
     expect(sql).toContain('a.workgroup_id AS "workgroupId"');
     expect(sql).not.toMatch(/workgroup_id\s+(IN|=)/i);
     expect(values).toEqual([]);
+  });
+});
+
+describe('ExportToViewService main asset references', () => {
+  interface SourceAsset {
+    assetId: number;
+    assetMainId: number | null;
+    references?: boolean;
+    eligible?: boolean;
+  }
+
+  const withoutMain = (from: number, to: number): SourceAsset[] =>
+    Array.from({ length: to - from + 1 }, (_, i) => ({ assetId: from + i, assetMainId: null }));
+
+  const foreignKeyViolation = () =>
+    Object.assign(new Error('Foreign key constraint violated: `asset_asset_main_id_fkey`'), { code: 'P2003' });
+
+  beforeEach(() => jest.mocked(log).mockClear());
+
+  /**
+   * Runs the real export loop against an in-memory destination that, like PostgreSQL, checks the
+   * non-deferrable `asset_main_id` foreign key at the end of each statement.
+   */
+  function setup(assets: SourceAsset[], options: { failCreateOnCall?: number } = {}) {
+    let source = assets;
+    const target = new Map<number, number | null>();
+    const createdBatches: number[][] = [];
+
+    const sourcePrisma = {
+      asset: {
+        findMany: jest.fn(async ({ where }: any) =>
+          source
+            .filter((asset) => where.assetId.in.includes(asset.assetId))
+            .map((asset) => ({ assetId: asset.assetId, assetMainId: asset.assetMainId, assetContacts: [] })),
+        ),
+      },
+    } as any;
+
+    const destinationPrisma = {
+      $executeRaw: jest.fn().mockResolvedValue(0),
+      asset: {
+        createMany: jest.fn(async ({ data }: { data: Array<{ assetId: number; assetMainId: number | null }> }) => {
+          if (options.failCreateOnCall === createdBatches.length + 1) {
+            throw new Error('insert failed');
+          }
+          const statementIds = new Set(data.map((row) => row.assetId));
+          if (
+            data.some(
+              (row) => row.assetMainId != null && !target.has(row.assetMainId) && !statementIds.has(row.assetMainId),
+            )
+          ) {
+            throw foreignKeyViolation();
+          }
+          data.forEach((row) => target.set(row.assetId, row.assetMainId ?? null));
+          createdBatches.push(data.map((row) => row.assetId));
+          return { count: data.length };
+        }),
+      },
+      assetContact: { createMany: jest.fn().mockResolvedValue({ count: 0 }) },
+    } as any;
+
+    const service = new ExportToViewService(sourcePrisma, destinationPrisma);
+    jest.spyOn(service as any, 'findPublicAssetIds').mockImplementation(async () =>
+      source
+        .filter((asset) => asset.eligible !== false)
+        .map((asset) => ({
+          assetId: asset.assetId,
+          assetMainId: asset.assetMainId,
+          workgroupId: 1,
+          publishData: publishData({ references: asset.references ?? true }),
+        })),
+    );
+    jest.spyOn(service as any, 'exportItems').mockResolvedValue(undefined);
+    jest.spyOn(service as any, 'export').mockResolvedValue(undefined);
+    jest.spyOn(service as any, 'exportFiles').mockResolvedValue(undefined);
+    jest.spyOn(service as any, 'exportWorkflows').mockResolvedValue(undefined);
+    const exportSiblings = jest.spyOn(service as any, 'exportSiblings').mockResolvedValue(undefined);
+
+    const resetDestination = (next: SourceAsset[]) => {
+      source = next;
+      target.clear();
+      createdBatches.length = 0;
+    };
+
+    return { service, target, createdBatches, destinationPrisma, exportSiblings, resetDestination };
+  }
+
+  const loggedMessages = () => jest.mocked(log).mock.calls.map(([message]) => message);
+
+  it('sets a main asset that is exported in a later batch', async () => {
+    const { service, target } = setup([
+      { assetId: 1, assetMainId: 250 },
+      { assetId: 2, assetMainId: 1 },
+      ...withoutMain(3, 249),
+      { assetId: 250, assetMainId: null },
+    ]);
+
+    await service.exportToView();
+
+    expect(target.size).toBe(250);
+    expect(target.get(1)).toBe(250);
+    expect(target.get(2)).toBe(1);
+  });
+
+  it('sets references along a chain spanning several batches', async () => {
+    const { service, target } = setup([
+      ...withoutMain(1, 9),
+      { assetId: 10, assetMainId: 150 },
+      ...withoutMain(11, 149),
+      { assetId: 150, assetMainId: 260 },
+      ...withoutMain(151, 259),
+      { assetId: 260, assetMainId: 5 },
+      ...withoutMain(261, 300),
+    ]);
+
+    await service.exportToView();
+
+    expect(target.size).toBe(300);
+    expect(target.get(10)).toBe(150);
+    expect(target.get(150)).toBe(260);
+    expect(target.get(260)).toBe(5);
+  });
+
+  it('clears the reference when the main asset is not eligible', async () => {
+    const { service, target } = setup([
+      { assetId: 1, assetMainId: 900 },
+      { assetId: 900, assetMainId: null, eligible: false },
+    ]);
+
+    await service.exportToView();
+
+    expect([...target.entries()]).toEqual([[1, null]]);
+  });
+
+  it('clears the reference when the asset does not publish references', async () => {
+    const { service, target } = setup([
+      { assetId: 1, assetMainId: 2, references: false },
+      { assetId: 2, assetMainId: null },
+    ]);
+
+    await service.exportToView();
+
+    expect(target.get(1)).toBeNull();
+  });
+
+  it('keeps the reference when only the main asset does not publish references', async () => {
+    const { service, target } = setup([
+      { assetId: 1, assetMainId: 2 },
+      { assetId: 2, assetMainId: null, references: false },
+    ]);
+
+    await service.exportToView();
+
+    expect(target.get(1)).toBe(2);
+  });
+
+  it('omits and logs a self-reference but keeps references to that asset', async () => {
+    const { service, target, exportSiblings } = setup([
+      { assetId: 7, assetMainId: 7 },
+      { assetId: 8, assetMainId: 7 },
+    ]);
+
+    await expect(service.exportToView()).resolves.toBeUndefined();
+
+    expect(target.get(7)).toBeNull();
+    expect(target.get(8)).toBe(7);
+    expect(loggedMessages()).toContain('Omitting main asset reference 7 -> 7: part of a cycle.');
+    expect(exportSiblings).toHaveBeenCalled();
+  });
+
+  it('omits and logs every reference of cycles spanning batches and completes the export', async () => {
+    const assets: SourceAsset[] = [
+      { assetId: 1, assetMainId: 250 },
+      ...withoutMain(2, 49),
+      { assetId: 50, assetMainId: 150 },
+      ...withoutMain(51, 149),
+      { assetId: 150, assetMainId: 260 },
+      ...withoutMain(151, 249),
+      { assetId: 250, assetMainId: 1 },
+      ...withoutMain(251, 259),
+      { assetId: 260, assetMainId: 50 },
+      ...withoutMain(261, 300),
+    ];
+    const { service, target, exportSiblings, destinationPrisma } = setup(assets);
+
+    await expect(service.exportToView()).resolves.toBeUndefined();
+
+    expect(target.size).toBe(300);
+    expect([...target.values()].every((assetMainId) => assetMainId === null)).toBe(true);
+    expect(loggedMessages()).toEqual(
+      expect.arrayContaining([
+        'Omitting main asset reference 1 -> 250: part of a cycle.',
+        'Omitting main asset reference 250 -> 1: part of a cycle.',
+        'Omitting main asset reference 50 -> 150: part of a cycle.',
+        'Omitting main asset reference 150 -> 260: part of a cycle.',
+        'Omitting main asset reference 260 -> 50: part of a cycle.',
+      ]),
+    );
+    expect(exportSiblings).toHaveBeenCalled();
+    expect(destinationPrisma.$executeRaw).toHaveBeenCalledTimes(2);
+  });
+
+  it('keeps references into a cycle while omitting the cycle itself', async () => {
+    const { service, target } = setup([
+      { assetId: 1, assetMainId: 250 },
+      { assetId: 3, assetMainId: 1 },
+      { assetId: 4, assetMainId: 3 },
+      ...withoutMain(5, 249),
+      { assetId: 250, assetMainId: 1 },
+    ]);
+
+    await service.exportToView();
+
+    expect(target.get(1)).toBeNull();
+    expect(target.get(250)).toBeNull();
+    expect(target.get(3)).toBe(1);
+    expect(target.get(4)).toBe(3);
+    expect(loggedMessages().filter((message) => message.startsWith('Omitting'))).toHaveLength(2);
+  });
+
+  it('fails and logs the batch when inserting a later batch fails', async () => {
+    const { service, target, exportSiblings } = setup(
+      [{ assetId: 1, assetMainId: 250 }, ...withoutMain(2, 249), { assetId: 250, assetMainId: null }],
+      { failCreateOnCall: 3 },
+    );
+
+    await expect(service.exportToView()).rejects.toThrow('insert failed');
+
+    expect(target.size).toBe(200);
+    expect(loggedMessages()).toEqual(expect.arrayContaining([expect.stringMatching(/^Failed to create assets \[\d+/)]));
+    expect(exportSiblings).not.toHaveBeenCalled();
+  });
+
+  it('does not carry references or omissions over to a later run', async () => {
+    const { service, target, resetDestination } = setup([
+      { assetId: 1, assetMainId: 2 },
+      { assetId: 2, assetMainId: 1 },
+      { assetId: 3, assetMainId: 1 },
+    ]);
+    await service.exportToView();
+
+    resetDestination([
+      { assetId: 1, assetMainId: 2 },
+      { assetId: 2, assetMainId: null },
+      { assetId: 3, assetMainId: null },
+    ]);
+    jest.mocked(log).mockClear();
+    await service.exportToView();
+
+    expect([...target.entries()].sort(([a], [b]) => a - b)).toEqual([
+      [1, 2],
+      [2, null],
+      [3, null],
+    ]);
+    expect(loggedMessages().some((message) => message.startsWith('Omitting'))).toBe(false);
+  });
+
+  it('completes an empty export without touching asset references', async () => {
+    const { service, target, destinationPrisma } = setup([]);
+
+    await expect(service.exportToView()).resolves.toBeUndefined();
+
+    expect(target.size).toBe(0);
+    expect(destinationPrisma.asset.createMany).not.toHaveBeenCalled();
+  });
+
+  it('moves main assets into the batch of their first child and otherwise keeps asset ID order', async () => {
+    const { service, createdBatches } = setup([
+      { assetId: 1, assetMainId: 250 },
+      { assetId: 2, assetMainId: 1 },
+      ...withoutMain(3, 249),
+      { assetId: 250, assetMainId: null },
+    ]);
+    const ids = (from: number, to: number) => withoutMain(from, to).map(({ assetId }) => assetId);
+
+    await service.exportToView();
+
+    expect(createdBatches.map((batch) => [...batch].sort((a, b) => a - b))).toEqual([
+      [...ids(1, 99), 250],
+      ids(100, 199),
+      ids(200, 249),
+    ]);
+  });
+
+  it('selects the main asset id of public assets', async () => {
+    const queryRaw = jest.fn().mockResolvedValue([]);
+    const service = new ExportToViewService({ $queryRaw: queryRaw } as any, {} as any);
+
+    await (service as any).findPublicAssetIds();
+
+    const sql = (queryRaw.mock.calls[0][0] as string[]).join('?').replace(/\s+/g, ' ');
+    expect(sql).toContain('a.asset_main_id AS "assetMainId"');
   });
 });
