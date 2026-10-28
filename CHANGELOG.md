@@ -8,10 +8,6 @@
 
 - Updated Node.js to 22.23.4 in the API, sync and client build images and in the CI pipeline, addressing the October 2026 Node.js security releases.
 
-### Fixed
-
-- The PROD-View sync no longer aborts when a main asset is exported in a later batch than its child. Main asset references that form a cycle are omitted and logged, and a failed view sync now exits with a failure code.
-
 ## v.1.23.0
 
 ### Added
@@ -31,6 +27,7 @@
 - Closing the PDF preview quickly no longer causes pages to fail to render, and loading errors no longer affect other documents.
 - Uploading multiple files at once no longer causes indexing conflicts that made some files fail.
 - Synchronization of assets from the external database is more reliable: deleted assets are not re-synced; on failure the sync transaction is rolled back.
+- The PROD-View sync no longer aborts when a main asset is exported in a later batch than its child. Main asset references that form a cycle are omitted and logged.
 
 ## v.1.22.0
 
