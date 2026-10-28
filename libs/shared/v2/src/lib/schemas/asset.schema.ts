@@ -1,6 +1,7 @@
 import { WorkflowStatus } from '@swissgeol/ui-core';
 import { Type } from 'class-transformer';
 import {
+  ArrayNotEmpty,
   IsArray,
   IsBoolean,
   IsEnum,
@@ -99,8 +100,9 @@ export class AssetSchema extends Schema implements Asset {
   @IsString()
   formatCode!: LocalizedItemCode;
 
-  @IsString()
-  kindCode!: LocalizedItemCode;
+  @IsArray()
+  @IsString({ each: true })
+  kindCodes!: LocalizedItemCode[];
 
   @IsArray()
   @IsEnum(LanguageCode, { each: true })
@@ -190,8 +192,10 @@ class AssetDataSchema extends Schema implements AssetData {
   @IsString()
   formatCode!: LocalizedItemCode;
 
-  @IsString()
-  kindCode!: LocalizedItemCode;
+  @IsArray()
+  @ArrayNotEmpty()
+  @IsString({ each: true })
+  kindCodes!: LocalizedItemCode[];
 
   @IsArray()
   @IsEnum(LanguageCode, { each: true })

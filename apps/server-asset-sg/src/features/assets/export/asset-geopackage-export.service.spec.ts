@@ -73,7 +73,7 @@ describe(AssetGeoPackageExportService, () => {
         restriction_type: 'gesperrt bis',
         restriction_date: '2030-01-15',
         topic: 'Bohrungen',
-        kind: '2D-Seismik',
+        kind: '2D-Seismik,Bericht',
         language: 'englisch',
         format: '3D-spezifisches Format',
         original_title: 'Original A',

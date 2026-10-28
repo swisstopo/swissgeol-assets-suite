@@ -11,7 +11,7 @@ const makePlainData = (): Record<string, unknown> => ({
   isPublic: false,
   restrictionDate: null,
   formatCode: 'format',
-  kindCode: 'kind',
+  kindCodes: ['kind'],
   languageCodes: [],
   nationalInterestTypeCodes: [],
   topicCodes: [],
@@ -58,5 +58,42 @@ describe.each<[string, ClassConstructor<CreateAssetDataSchema | UpdateAssetDataS
   it('still requires `createdAt`', async () => {
     const { errors } = await parse({ ...makePlainData(), createdAt: null });
     expect(errors.map((it) => it.property)).toContain('createdAt');
+  });
+});
+
+describe.each<[string, ClassConstructor<CreateAssetDataSchema | UpdateAssetDataSchema>]>([
+  ['CreateAssetDataSchema', CreateAssetDataSchema],
+  ['UpdateAssetDataSchema', UpdateAssetDataSchema],
+])('%s kindCodes', (_name, schema) => {
+  const validateKindCodes = async (data: Record<string, unknown>) => {
+    const instance = plainToInstance(schema, data);
+    const errors = await validate(instance, { whitelist: true, forbidNonWhitelisted: true });
+    return errors.filter((it) => it.property.startsWith('kind'));
+  };
+
+  it('accepts several types', async () => {
+    const errors = await validateKindCodes({ ...makePlainData(), kindCodes: ['report', 'map'] });
+    expect(errors).toEqual([]);
+  });
+
+  it('accepts duplicate types', async () => {
+    const errors = await validateKindCodes({ ...makePlainData(), kindCodes: ['report', 'report'] });
+    expect(errors).toEqual([]);
+  });
+
+  it('rejects an empty selection', async () => {
+    const errors = await validateKindCodes({ ...makePlainData(), kindCodes: [] });
+    expect(errors.map((it) => it.property)).toEqual(['kindCodes']);
+  });
+
+  it('rejects non-string entries', async () => {
+    const errors = await validateKindCodes({ ...makePlainData(), kindCodes: [1] });
+    expect(errors.map((it) => it.property)).toEqual(['kindCodes']);
+  });
+
+  it('rejects the former single-value field', async () => {
+    const { kindCodes: _kindCodes, ...data } = makePlainData();
+    const errors = await validateKindCodes({ ...data, kindCode: 'report' });
+    expect(errors.map((it) => it.property).sort()).toEqual(['kindCode', 'kindCodes']);
   });
 });

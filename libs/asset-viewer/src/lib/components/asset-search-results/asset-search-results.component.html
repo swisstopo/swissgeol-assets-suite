@@ -66,7 +66,10 @@
           <ng-container matColumnDef="assetFormat">
             <th mat-header-cell *matHeaderCellDef translate>{{ "search.kind" }}</th>
             <td mat-cell *matCellDef="let asset">
-              {{ asset.kindCode | reference: "assetKinds" }} &ndash;
+              @for (kindCode of asset.kindCodes; track kindCode; let isLast = $last) {
+                {{ kindCode | reference: "assetKinds" }}{{ isLast ? "" : "," }}
+              }
+              &ndash;
               {{ asset.formatCode | reference: "assetFormats" }}
             </td>
           </ng-container>

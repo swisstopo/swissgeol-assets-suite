@@ -26,8 +26,6 @@ model Asset {
   geolContactDataInfo String?         @map("geol_contact_data_info")
   geolAuxDataInfo     String?         @map("geol_aux_data_info")
   remark              String?         @map("remark")
-  assetKindItemCode   String          @map("asset_kind_item_code")
-  assetKindItem       AssetKindItem   @relation(fields: [assetKindItemCode], references: [assetKindItemCode])
   createDate          DateTime        @map("create_date") // This refers to the date the actual asset was created, e.g. the study was conducted
   assetFormatItemCode String          @map("asset_format_item_code")
   assetFormatItem     AssetFormatItem @relation(fields: [assetFormatItemCode], references: [assetFormatItemCode])
@@ -45,6 +43,7 @@ model Asset {
 
   assetContacts   AssetContact[]
   files           File[]
+  assetKinds      AssetKind[]
   assetLanguages  AssetLanguage[]
   ids             Id[]
   manCatLabelRefs ManCatLabelRef[]
@@ -269,9 +268,19 @@ model AssetKindItem {
   descriptionIt     String @map("description_it")
   descriptionEn     String @map("description_en")
 
-  assets Asset[]
+  assets AssetKind[]
 
   @@map("asset_kind_item")
+}
+
+model AssetKind {
+  assetId           Int           @map("asset_id")
+  asset             Asset         @relation(fields: [assetId], references: [assetId], onDelete: Cascade)
+  assetKindItemCode String        @map("asset_kind_item_code")
+  assetKindItem     AssetKindItem @relation(fields: [assetKindItemCode], references: [assetKindItemCode])
+
+  @@id([assetId, assetKindItemCode])
+  @@map("asset_kind")
 }
 
 model ContactKindItem {

@@ -37,7 +37,11 @@
       </sgc-card>
 
       <sgc-card [header]="'search.kind' | translate" data-testid="assetKindCode">
-        <asset-sg-chip type="transparent">{{ asset.kindCode | reference: "assetKinds" }}</asset-sg-chip>
+        <div class="chip-group">
+          @for (kindCode of asset.kindCodes; track kindCode) {
+            <asset-sg-chip type="transparent">{{ kindCode | reference: "assetKinds" }}</asset-sg-chip>
+          }
+        </div>
       </sgc-card>
 
       @if (asset.languageCodes.length > 0) {
