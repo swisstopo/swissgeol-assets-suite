@@ -75,7 +75,7 @@ describe('geopackage-geometry', () => {
     it('rejects an invalid byte-order marker', () => {
       const wkb = Buffer.from([2, 0, 0, 0, 1]);
 
-      expect(() => readWkbGeometryType(wkb)).toThrow('invalid WKB byte order: 2');
+      expect(() => readWkbGeometryType(wkb)).toThrow('invalid WKB: unknown byte order');
     });
   });
 });
