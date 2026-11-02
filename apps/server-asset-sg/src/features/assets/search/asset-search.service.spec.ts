@@ -390,15 +390,11 @@ describe(AssetSearchService, () => {
 
     it('finds assets matching any of several selected types', async () => {
       // Given
-      const [code1, code2, code3] = assetKindItems.map((it) => it.assetKindItemCode);
+      const [code1, code2, code3, code4] = assetKindItems.map((it) => it.assetKindItemCode);
       const user = await userRepo.create(fakeUserData());
       await createItem({ ...fakeCreateAssetData(), kindCodes: [code1, code2], creatorId: user.id });
       await createItem({ ...fakeCreateAssetData(), kindCodes: [code3], creatorId: user.id });
-      await createItem({
-        ...fakeCreateAssetData(),
-        kindCodes: [assetKindItems[3].assetKindItemCode],
-        creatorId: user.id,
-      });
+      await createItem({ ...fakeCreateAssetData(), kindCodes: [code4], creatorId: user.id });
 
       // When
       const result = await service.search({ type: SearchType.Asset, kindCodes: [code2, code3] }, user);
