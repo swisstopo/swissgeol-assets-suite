@@ -403,6 +403,20 @@ describe(AssetSearchService, () => {
       expect(result.page.total).toEqual(2);
     });
 
+    it('does not duplicate assets that match several of the selected types', async () => {
+      // Given
+      const [code1, code2, code3] = assetKindItems.map((it) => it.assetKindItemCode);
+      const user = await userRepo.create(fakeUserData());
+      const multiple = await createItem({ ...fakeCreateAssetData(), kindCodes: [code1, code2], creatorId: user.id });
+      await createItem({ ...fakeCreateAssetData(), kindCodes: [code3], creatorId: user.id });
+
+      // When
+      const result = await service.search({ type: SearchType.Asset, kindCodes: [code1, code2] }, user);
+
+      // Then
+      assertSingleResult(result, multiple);
+    });
+
     it('finds assets by topicCode', async () => {
       // Given
       const code1 = manCatLabelItems[0].manCatLabelItemCode;
