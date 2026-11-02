@@ -312,9 +312,7 @@ describe(AssetSearchService, () => {
 
     it('finds assets by languageCode', async () => {
       // Given
-      const code1 = languageItems[0].languageItemCode as LanguageCode;
-      const code2 = languageItems[1].languageItemCode as LanguageCode;
-      const code3 = languageItems[2].languageItemCode as LanguageCode;
+      const [code1, code2, code3] = languageItems.map((it) => it.languageItemCode as LanguageCode);
       const asset = await createItem({
         ...fakeCreateAssetData(),
         languageCodes: [code1],
@@ -347,9 +345,7 @@ describe(AssetSearchService, () => {
 
     it('finds assets by kindCodes', async () => {
       // Given
-      const code1 = assetKindItems[0].assetKindItemCode;
-      const code2 = assetKindItems[1].assetKindItemCode;
-      const code3 = assetKindItems[2].assetKindItemCode;
+      const [code1, code2, code3] = assetKindItems.map((it) => it.assetKindItemCode);
       const user = await userRepo.create(fakeUserData());
       const asset = await createItem({
         ...fakeCreateAssetData(),
@@ -419,9 +415,7 @@ describe(AssetSearchService, () => {
 
     it('finds assets by topicCode', async () => {
       // Given
-      const code1 = manCatLabelItems[0].manCatLabelItemCode;
-      const code2 = manCatLabelItems[1].manCatLabelItemCode;
-      const code3 = manCatLabelItems[2].manCatLabelItemCode;
+      const [code1, code2, code3] = manCatLabelItems.map((it) => it.manCatLabelItemCode);
       const user = await userRepo.create(fakeUserData());
       const asset = await createItem({
         ...fakeCreateAssetData(),
