@@ -106,27 +106,37 @@ describe(AssetSearchResultsComponent, () => {
   };
 
   const kindCells = (): string[] =>
+    Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('td.mat-column-assetFormat')).map((it) => {
+      const clone = it.cloneNode(true) as HTMLElement;
+      clone.querySelectorAll('div.kind').forEach((div) => div.append(' '));
+      return (clone.textContent ?? '').replace(/\s+/g, ' ').trim();
+    });
+
+  const kindLines = (): string[][] =>
     Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('td.mat-column-assetFormat')).map((it) =>
-      (it.textContent ?? '').replace(/\s+/g, ' ').trim(),
+      Array.from(it.querySelectorAll('div.kind')).map((div) => (div.textContent ?? '').trim()),
     );
 
   afterEach(() => fixture.destroy());
 
-  it('lists every type of an asset in front of its format', () => {
+  it('lists every type of an asset in its own div in front of its format', () => {
     render([makeItem(1, ['report', 'map', 'log'])]);
 
-    expect(kindCells()).toEqual(['Bericht, Karte, Log – PDF']);
+    expect(kindLines()).toEqual([['Bericht', 'Karte', 'Log']]);
+    expect(kindCells()).toEqual(['Bericht Karte Log – PDF']);
   });
 
-  it('shows a single type without separator', () => {
+  it('shows a single type in a single div', () => {
     render([makeItem(1, ['map'])]);
 
+    expect(kindLines()).toEqual([['Karte']]);
     expect(kindCells()).toEqual(['Karte – PDF']);
   });
 
   it('shows the types of each asset in its own row', () => {
     render([makeItem(1, ['report', 'map']), makeItem(2, ['log'])]);
 
-    expect(kindCells()).toEqual(['Bericht, Karte – PDF', 'Log – PDF']);
+    expect(kindLines()).toEqual([['Bericht', 'Karte'], ['Log']]);
+    expect(kindCells()).toEqual(['Bericht Karte – PDF', 'Log – PDF']);
   });
 });
