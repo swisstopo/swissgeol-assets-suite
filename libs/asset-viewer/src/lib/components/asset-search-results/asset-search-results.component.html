@@ -66,19 +66,20 @@
           <ng-container matColumnDef="assetFormat">
             <th mat-header-cell *matHeaderCellDef translate>{{ "search.kind" }}</th>
             <td mat-cell *matCellDef="let asset">
-              @for (kindCode of asset.kindCodes; track kindCode) {
-                <div class="kind">{{ kindCode | reference: "assetKinds" }}</div>
-              }
-              &ndash;
-              {{ asset.formatCode | reference: "assetFormats" }}
+              <div class="line-list">
+                @for (kindCode of asset.kindCodes; track kindCode) {
+                  <div class="line-list__item kind">{{ kindCode | reference: "assetKinds" }}</div>
+                }
+                <div class="line-list__item format">{{ asset.formatCode | reference: "assetFormats" }}</div>
+              </div>
             </td>
           </ng-container>
           <ng-container matColumnDef="manCatLabel">
             <th mat-header-cell *matHeaderCellDef translate>{{ "search.topic" }}</th>
             <td mat-cell *matCellDef="let asset">
-              <div class="clamped-cell-content">
+              <div class="line-list">
                 @for (topicCode of asset.topicCodes; track topicCode) {
-                  <div>{{ topicCode | reference: "assetTopics" }}</div>
+                  <div class="line-list__item topic">{{ topicCode | reference: "assetTopics" }}</div>
                 }
               </div>
             </td>

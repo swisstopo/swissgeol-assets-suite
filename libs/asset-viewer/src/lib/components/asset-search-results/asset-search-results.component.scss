@@ -94,6 +94,25 @@
       margin-bottom: 4px;
     }
 
+    // One entry per line: no wrapping, entries that exceed the max width are cut off with an ellipsis.
+    .line-list {
+      max-width: 200px;
+      padding: 4px 0;
+
+      &__item {
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
+
+      .format {
+        margin-top: 4px;
+        font-size: 12px;
+        font-weight: 600;
+        color: variables.$grey-07;
+      }
+    }
+
     .column-select {
       width: 48px;
       padding-right: 0;
@@ -154,7 +173,7 @@
 .file-page-number {
   font-size: 11px;
   font-weight: 600;
-  color: variables.$grey-05;
+  color: variables.$grey-07;
   display: block;
   margin-bottom: 2px;
 }
