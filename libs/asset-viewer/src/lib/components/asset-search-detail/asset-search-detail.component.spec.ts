@@ -2,29 +2,19 @@
 // They are reduced to the members the detail view uses; the component and its template are the real ones.
 jest.mock('@asset-sg/client-shared', () => {
   const { of } = jest.requireActual('rxjs');
-  const store = jest.requireActual('@ngrx/store');
   const state = (key: string) => (s: Record<string, unknown>) => s[key];
-  return {
-    // The state selectors of the viewer are built from many shared selectors; unused ones resolve to null.
-    fromAppShared: new Proxy(
+  return jest
+    .requireActual<
+      typeof import('../../../testing/asset-search-test-helpers')
+    >('../../../testing/asset-search-test-helpers')
+    .createClientSharedMock(
+      { AlertType: {}, LanguageService: class {}, can$: () => of(false), showAlert: jest.fn() },
       {
         selectCurrentAsset: state('currentAsset'),
         selectIsAnonymousMode: state('isAnonymous'),
         selectReferenceContacts: state('contacts'),
-      } as Record<string, unknown>,
-      { get: (target, key: string) => target[key] ?? (() => null) },
-    ),
-    appSharedStateActions: {
-      setCurrentAsset: store.createAction('[Asset Search] Set Current Asset', store.props()),
-      removeAsset: store.createAction('[Asset Shared] Remove Asset', store.props()),
-      updateAsset: store.createAction('[Asset Shared] Update Asset', store.props()),
-    },
-    AlertType: {},
-    AssetExportService: class {},
-    LanguageService: class {},
-    can$: () => of(false),
-    showAlert: jest.fn(),
-  };
+      },
+    );
 });
 jest.mock('../map/map-controller', () => ({ DEFAULT_MAP_POSITION: { x: 0, y: 0, z: 0 }, MapController: class {} }));
 jest.mock('ol/extent', () => ({ getCenter: jest.fn(() => [0, 0]) }));
@@ -32,7 +22,7 @@ jest.mock('ol/geom', () => ({ LineString: class {}, Polygon: class {} }));
 
 import { Clipboard } from '@angular/cdk/clipboard';
 import { CommonModule } from '@angular/common';
-import { NO_ERRORS_SCHEMA, Pipe, PipeTransform, signal } from '@angular/core';
+import { NO_ERRORS_SCHEMA, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { AssetExportService, LanguageService } from '@asset-sg/client-shared';
@@ -40,35 +30,17 @@ import { Asset, fixtures } from '@asset-sg/shared/v2';
 import { provideMockStore } from '@ngrx/store/testing';
 import { TranslateModule } from '@ngx-translate/core';
 import { of } from 'rxjs';
+import { StubDatePipe, StubReferencePipe } from '../../../testing/asset-search-test-helpers';
 import { ViewerControllerService } from '../../services/viewer-controller.service';
 import { AssetSearchDetailComponent } from './asset-search-detail.component';
-
-const REFERENCES: Record<string, Record<string, string>> = {
-  assetKinds: { report: 'Bericht', map: 'Karte', log: 'Log' },
-  assetFormats: { binary: 'Binär' },
-};
-
-@Pipe({ name: 'reference', standalone: false })
-class StubReferencePipe implements PipeTransform {
-  transform(code: string, key: string): string {
-    return REFERENCES[key]?.[code] ?? '';
-  }
-}
-
-@Pipe({ name: 'assetSgDate', standalone: false })
-class StubDatePipe implements PipeTransform {
-  transform(): string {
-    return '';
-  }
-}
 
 describe(AssetSearchDetailComponent, () => {
   let fixture: ComponentFixture<AssetSearchDetailComponent>;
 
   const render = (asset: Asset) => {
     TestBed.configureTestingModule({
-      declarations: [AssetSearchDetailComponent, StubReferencePipe, StubDatePipe],
-      imports: [CommonModule, TranslateModule.forRoot()],
+      declarations: [AssetSearchDetailComponent],
+      imports: [CommonModule, TranslateModule.forRoot(), StubReferencePipe, StubDatePipe],
       schemas: [NO_ERRORS_SCHEMA],
       providers: [
         provideMockStore({
@@ -106,6 +78,6 @@ describe(AssetSearchDetailComponent, () => {
     render({ ...fixtures.assets.minimal, kindCodes: ['report', 'map'], formatCode: 'binary' });
 
     const format = (fixture.nativeElement as HTMLElement).querySelectorAll('[data-testid="assetFormat"] asset-sg-chip');
-    expect(Array.from(format).map((it) => it.textContent?.trim())).toEqual(['Binär']);
+    expect(Array.from(format).map((it) => it.textContent?.trim())).toEqual(['PDF']);
   });
 });
