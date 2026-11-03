@@ -300,6 +300,7 @@ function buildSourceAsset(originalAssetId: number) {
     manCatLabelRefs: [],
     typeNatRels: [],
     ids: [],
+    assetKinds: [{ assetKindItemCode: 'report' }, { assetKindItemCode: 'map' }],
     assetLanguages: [],
     subordinateAssets: [],
     workgroup: { name: 'wg' },
@@ -357,6 +358,66 @@ describe('SyncExternService.init eligibility', () => {
         where: expect.objectContaining({ assetId: { notIn: [100] } }),
       }),
     );
+  });
+});
+
+describe('SyncExternService asset kinds', () => {
+  it('should read the asset kinds of the source assets without copying them into the asset data', async () => {
+    const { service, sourcePrisma } = await callInit({
+      alreadySynced: [],
+      sourceAssets: [buildSourceAsset(300)],
+    });
+
+    expect(sourcePrisma.asset.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        include: expect.objectContaining({ assetKinds: { select: { assetKindItemCode: true } } }),
+      }),
+    );
+    const [toSync] = (service as any).assetsToSync;
+    expect(toSync.assetKinds).toEqual([{ assetKindItemCode: 'report' }, { assetKindItemCode: 'map' }]);
+    expect(toSync.asset).not.toHaveProperty('assetKinds');
+  });
+
+  it('should create one asset_kind row per asset kind in the destination', async () => {
+    const asset = buildSourceAsset(300);
+    const destination = createMockPrisma({
+      workgroup: { findFirst: jest.fn().mockResolvedValue({ id: 1 }) },
+      asset: { create: jest.fn().mockResolvedValue({ assetId: 7, assetContacts: [] }) },
+      assetContact: { createMany: jest.fn() },
+      $executeRaw: jest.fn(),
+    });
+    const service = new SyncExternService(createMockPrisma(), destination, config);
+    (service as any).destinationTx = destination;
+    jest
+      .spyOn(service as any, 'createContactsPayload')
+      .mockResolvedValue({ createData: [], assignAfterwards: new Map() });
+    jest.spyOn(service as any, 'createFilesPayload').mockResolvedValue({});
+
+    await (service as any).synchronizeAsset({
+      asset: { titlePublic: 'asset-300' },
+      workgroupName: 'wg',
+      originalAssetId: 300,
+      originalSgsId: null,
+      files: [],
+      assetContacts: [],
+      manCatLabelRefs: [],
+      typeNatRels: [],
+      ids: [],
+      assetKinds: asset.assetKinds,
+      assetLanguages: [],
+      reviewSelection: {},
+      children: [],
+    });
+    await (service as any).createRelationTables();
+
+    expect(destination.asset.create.mock.calls[0][0].data).not.toHaveProperty('assetKinds');
+    const kindInserts = destination.$executeRaw.mock.calls.filter(([strings]: [TemplateStringsArray]) =>
+      strings.join('').includes('INSERT INTO asset_kind'),
+    );
+    expect(kindInserts).toHaveLength(1);
+    const [, joined] = kindInserts[0];
+    expect(joined.sql).toEqual('(?, ?),(?, ?)');
+    expect(joined.values).toEqual([7, 'report', 7, 'map']);
   });
 });
 

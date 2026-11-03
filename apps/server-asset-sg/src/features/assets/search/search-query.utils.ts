@@ -98,7 +98,7 @@ export const mapQueryToElasticDslParts = (
     filters.push(makeArrayFilter('topicCodes', query.topicCodes));
   }
   if (query.kindCodes != null) {
-    filters.push(makeArrayFilter('kindCode', query.kindCodes));
+    filters.push(makeArrayFilter('kindCodes', query.kindCodes));
   }
   if (query.usageCodes != null) {
     filters.push(makeArrayFilter('usageCode', query.usageCodes));

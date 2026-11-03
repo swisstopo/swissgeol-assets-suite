@@ -121,7 +121,7 @@ describe(AssetRepo, () => {
       expect(record.createdAt).toEqual(data.createdAt);
       expect(record.receivedAt).toEqual(data.receivedAt);
       expect(record.isPublic).toEqual(data.isPublic);
-      expect(record.kindCode).toEqual(data.kindCode);
+      expect(record.kindCodes).toEqual(data.kindCodes);
       expect(record.formatCode).toEqual(data.formatCode);
       expect(record.isOfNationalInterest).toEqual(data.isOfNationalInterest);
       expect(record.legacyData).toBeNull();
@@ -135,6 +135,47 @@ describe(AssetRepo, () => {
       expect(record.siblings).toEqual([]);
       expect(record.files).toEqual([]);
       expect(record.workgroupId).toEqual(data.workgroupId);
+    });
+
+    it('stores several types and returns them in a stable order', async () => {
+      // Given
+      const user = await userRepo.create(fakeUserData());
+      const kindCodes = ['report', 'map', '2Dseismic'];
+
+      // When
+      const record = await repo.create({ ...fakeCreateAssetData(), kindCodes, creatorId: user.id });
+
+      // Then
+      expect(record.kindCodes).toEqual(['2Dseismic', 'map', 'report']);
+      expect((await repo.find(record.id))!.kindCodes).toEqual(['2Dseismic', 'map', 'report']);
+    });
+
+    it('stores duplicate types only once', async () => {
+      // Given
+      const user = await userRepo.create(fakeUserData());
+
+      // When
+      const record = await repo.create({
+        ...fakeCreateAssetData(),
+        kindCodes: ['report', 'report', 'map'],
+        creatorId: user.id,
+      });
+
+      // Then
+      expect(record.kindCodes).toEqual(['map', 'report']);
+      expect(await prisma.assetKind.count({ where: { assetId: record.id } })).toEqual(2);
+    });
+
+    it('rejects a type that is not part of the vocabulary', async () => {
+      // Given
+      const user = await userRepo.create(fakeUserData());
+
+      // When
+      const create = repo.create({ ...fakeCreateAssetData(), kindCodes: ['report', 'noSuchType'], creatorId: user.id });
+
+      // Then
+      await expect(create).rejects.toThrow();
+      expect(await prisma.asset.count()).toEqual(0);
     });
 
     it('inserts a new record without a receipt date', async () => {
@@ -182,7 +223,7 @@ describe(AssetRepo, () => {
       expect(updated!.createdAt).toEqual(data.createdAt);
       expect(updated!.receivedAt).toEqual(data.receivedAt);
       expect(updated!.isPublic).toEqual(data.isPublic);
-      expect(updated!.kindCode).toEqual(data.kindCode);
+      expect(updated!.kindCodes).toEqual(data.kindCodes);
       expect(updated!.formatCode).toEqual(data.formatCode);
       expect(updated!.isOfNationalInterest).toEqual(data.isOfNationalInterest);
       expect(updated!.legacyData).toBeNull();
@@ -196,6 +237,59 @@ describe(AssetRepo, () => {
       expect(updated!.siblings).toEqual([]);
       expect(updated!.files).toEqual([]);
       expect(updated!.workgroupId).toEqual(data.workgroupId);
+    });
+
+    it('replaces the set of types', async () => {
+      // Given
+      const creator = await userRepo.create(fakeUserData());
+      const record = await repo.create({
+        ...fakeCreateAssetData(),
+        kindCodes: ['report', 'map'],
+        creatorId: creator.id,
+      });
+
+      // When
+      const updated = await repo.update(record.id, {
+        ...fakeUpdateAssetData(),
+        kindCodes: ['map', 'log', '3Dseismic'],
+      });
+
+      // Then
+      expect(updated!.kindCodes).toEqual(['3Dseismic', 'log', 'map']);
+      expect((await repo.find(record.id))!.kindCodes).toEqual(['3Dseismic', 'log', 'map']);
+    });
+
+    it('keeps the stored types when the selection is reordered or contains duplicates', async () => {
+      // Given
+      const creator = await userRepo.create(fakeUserData());
+      const record = await repo.create({
+        ...fakeCreateAssetData(),
+        kindCodes: ['report', 'map'],
+        creatorId: creator.id,
+      });
+
+      // When
+      const updated = await repo.update(record.id, {
+        ...fakeUpdateAssetData(),
+        kindCodes: ['report', 'map', 'map'],
+      });
+
+      // Then
+      expect(updated!.kindCodes).toEqual(['map', 'report']);
+      expect(await prisma.assetKind.count({ where: { assetId: record.id } })).toEqual(2);
+    });
+
+    it('keeps the stored types when an update contains an unknown type', async () => {
+      // Given
+      const creator = await userRepo.create(fakeUserData());
+      const record = await repo.create({ ...fakeCreateAssetData(), kindCodes: ['report'], creatorId: creator.id });
+
+      // When
+      const updated = await repo.update(record.id, { ...fakeUpdateAssetData(), kindCodes: ['noSuchType'] });
+
+      // Then
+      expect(updated).toBeNull();
+      expect((await repo.find(record.id))!.kindCodes).toEqual(['report']);
     });
 
     it('clears the receipt date when updating it to `null`', async () => {
@@ -249,6 +343,7 @@ describe(AssetRepo, () => {
 
       const assetCount = await prisma.asset.count({ where: { assetId: record.id } });
       expect(assetCount).toEqual(0);
+      expect(await prisma.assetKind.count({ where: { assetId: record.id } })).toEqual(0);
     });
   });
 });

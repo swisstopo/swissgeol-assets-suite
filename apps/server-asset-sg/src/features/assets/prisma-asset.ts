@@ -9,6 +9,7 @@ import {
   LanguageCode,
   LinkedAsset,
   LocalDate,
+  LocalizedItemCode,
   mapWorkflowStatusFromPrisma,
   UpdateAssetData,
 } from '@asset-sg/shared/v2';
@@ -45,7 +46,12 @@ export const assetSelection = {
   ...legacyDataSelection,
 
   assetFormatItemCode: true,
-  assetKindItemCode: true,
+  assetKinds: {
+    select: {
+      assetKindItemCode: true,
+    },
+    orderBy: { assetKindItemCode: 'asc' },
+  },
   assetLanguages: {
     select: {
       languageItemCode: true,
@@ -118,7 +124,7 @@ export const parseAssetFromPrisma = (data: SelectedAsset): Asset => ({
   restrictionDate: data.restrictionDate ? LocalDate.fromDate(data.restrictionDate) : null,
   legacyData: parseLegacyDataFromPrisma(data),
   formatCode: data.assetFormatItemCode,
-  kindCode: data.assetKindItemCode,
+  kindCodes: data.assetKinds.map((it) => it.assetKindItemCode),
   languageCodes: data.assetLanguages.map((it) => it.languageItemCode as LanguageCode),
   nationalInterestTypeCodes: data.typeNatRels.map((it) => it.natRelItemCode),
   topicCodes: data.manCatLabelRefs.map((it) => it.manCatLabelItemCode),
@@ -175,11 +181,6 @@ const mapDataToPrisma = (data: AssetData) =>
         assetFormatItemCode: data.formatCode,
       },
     },
-    assetKindItem: {
-      connect: {
-        assetKindItemCode: data.kindCode,
-      },
-    },
 
     workgroup: {
       connect: {
@@ -193,6 +194,14 @@ const mapDataToPrisma = (data: AssetData) =>
 export const mapAssetDataToPrismaCreate = (data: CreateAssetDataWithCreator): Prisma.AssetCreateInput => ({
   ...mapDataToPrisma(data),
   isExtract: false,
+  assetKinds: {
+    createMany: {
+      data: data.kindCodes.map((code) => ({
+        assetKindItemCode: code,
+      })),
+      skipDuplicates: true,
+    },
+  },
   assetLanguages: {
     createMany: {
       data: data.languageCodes.map((code) => ({
@@ -277,6 +286,7 @@ export const mapAssetDataToPrismaCreate = (data: CreateAssetDataWithCreator): Pr
 
 export const mapAssetDataToPrismaUpdate = (id: AssetId, data: UpdateAssetData): Prisma.AssetUpdateInput => ({
   ...mapDataToPrisma(data),
+  assetKinds: mapAssetKindsToPrismaUpdate(id, data.kindCodes),
   assetLanguages: mapAssetLanguagesToPrismaUpdate(id, data.languageCodes),
   typeNatRels: {
     // We can't detect which typeNatRels are already mapped as they use a separate id number which we do not use outside the database.
@@ -409,6 +419,22 @@ export const mapAssetDataToPrismaUpdate = (id: AssetId, data: UpdateAssetData): 
         })),
       skipDuplicates: true,
     },
+  },
+});
+
+export const mapAssetKindsToPrismaUpdate = (
+  assetId: AssetId,
+  codes: LocalizedItemCode[],
+): Prisma.AssetKindUpdateManyWithoutAssetNestedInput => ({
+  deleteMany: {
+    assetId,
+    assetKindItemCode: { notIn: codes },
+  },
+  createMany: {
+    data: codes.map((code) => ({
+      assetKindItemCode: code,
+    })),
+    skipDuplicates: true,
   },
 });
 

@@ -26,7 +26,10 @@ import {
   mapAssetDataToPrismaUpdate,
   parseAssetFromPrisma,
 } from '@/features/assets/prisma-asset';
-import { handlePrismaMutationError } from '@/utils/prisma';
+import { handlePrismaMutationError, isForeignKeyViolation } from '@/utils/prisma';
+
+const isUnknownAssetKindError = (error: unknown): boolean =>
+  isForeignKeyViolation(error, 'asset_kind_asset_kind_item_code_fkey');
 
 @Injectable()
 export class AssetRepo implements Repo<Asset, AssetId, CreateAssetDataWithCreator, UpdateAssetData> {
@@ -96,7 +99,7 @@ export class AssetRepo implements Repo<Asset, AssetId, CreateAssetDataWithCreato
         return parseAssetFromPrisma(entry);
       });
     } catch (e) {
-      return handlePrismaMutationError(e);
+      return isUnknownAssetKindError(e) ? null : handlePrismaMutationError(e);
     }
   }
 

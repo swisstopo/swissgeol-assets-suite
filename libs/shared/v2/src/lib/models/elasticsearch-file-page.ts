@@ -25,7 +25,7 @@ export interface ElasticsearchFilePage {
   sgsId: number | null;
   createdAt: ElasticsearchLocalDate;
   usageCode: AssetSearchUsageCode;
-  kindCode: LocalizedItemCode;
+  kindCodes: LocalizedItemCode[];
   languageCodes: LocalizedItemCode[];
   authorIds: ContactId[];
   contactNames: string[];

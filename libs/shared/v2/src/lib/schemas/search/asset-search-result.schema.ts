@@ -49,8 +49,9 @@ export class AssetSearchResultItemSchema extends Schema implements AssetSearchRe
   isPublic!: boolean;
 
   @Expose()
-  @IsString()
-  kindCode!: LocalizedItemCode;
+  @IsArray()
+  @IsString({ each: true })
+  kindCodes!: LocalizedItemCode[];
 
   @Expose()
   @IsString()

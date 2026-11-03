@@ -82,7 +82,7 @@ export class AssetSearchResultsComponent implements OnInit, OnDestroy {
 
   private readonly subscriptions: Subscription = new Subscription();
 
-  private timeoutForSetOffset: number | null = null;
+  private timeoutForSetOffset: ReturnType<typeof setTimeout> | null = null;
 
   private readonly resultsReady$ = new Subject<void>();
   private readonly isTableReady$ = new Subject<void>();

@@ -25,7 +25,7 @@ describe(AssetExportService, () => {
       'gesperrt bis',
       '2030-01-15',
       'Bohrungen',
-      '2D-Seismik',
+      '2D-Seismik,Bericht',
       'englisch',
       '3D-spezifisches Format',
       'Original A',

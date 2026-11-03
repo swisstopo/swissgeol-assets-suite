@@ -40,7 +40,7 @@ export const EXPORT_COLUMN_DEFINITIONS: Record<ExportColumnKey, Omit<ExportColum
   restrictionType: { type: ExportValueType.Text, name: 'restriction_type' },
   restrictionDate: { type: ExportValueType.Date, name: 'restriction_date' },
   topic: { type: ExportValueType.TextList, name: 'topic' },
-  kind: { type: ExportValueType.Text, name: 'kind' },
+  kind: { type: ExportValueType.TextList, name: 'kind' },
   language: { type: ExportValueType.TextList, name: 'language' },
   format: { type: ExportValueType.Text, name: 'format' },
   originalTitle: { type: ExportValueType.Text, name: 'original_title' },
@@ -118,7 +118,7 @@ export const resolveExportValue = (
     case 'topic':
       return localizeCodes(asset.topicCodes, references.topics);
     case 'kind':
-      return localizeCode(asset.kindCode, references.kinds);
+      return localizeCodes(asset.kindCodes, references.kinds);
     case 'language':
       return localizeCodes(asset.languageCodes, references.languages);
     case 'format':

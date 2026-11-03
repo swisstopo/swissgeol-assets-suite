@@ -85,7 +85,7 @@ describe(AssetSearchService, () => {
       title: asset.title,
       isPublic: asset.isPublic,
       formatCode: asset.formatCode,
-      kindCode: asset.kindCode,
+      kindCodes: asset.kindCodes,
       topicCodes: asset.topicCodes,
       contacts: asset.contacts,
       createdAt: asset.createdAt,
@@ -99,7 +99,7 @@ describe(AssetSearchService, () => {
     expect(hit.originalTitle).toEqual(asset.originalTitle);
     expect(hit.sgsId).toEqual(asset.legacyData?.sgsId ?? null);
     expect(hit.createdAt).toEqual(asset.createdAt.toString());
-    expect(hit.kindCode).toEqual(asset.kindCode);
+    expect(hit.kindCodes).toEqual(asset.kindCodes);
     expect(hit.usageCode).toEqual(asset.isPublic ? AssetSearchUsageCode.Public : AssetSearchUsageCode.Internal);
     expect(hit.authorIds).toEqual([]);
     expect(hit.contactNames).toEqual([]);
@@ -312,9 +312,7 @@ describe(AssetSearchService, () => {
 
     it('finds assets by languageCode', async () => {
       // Given
-      const code1 = languageItems[0].languageItemCode as LanguageCode;
-      const code2 = languageItems[1].languageItemCode as LanguageCode;
-      const code3 = languageItems[2].languageItemCode as LanguageCode;
+      const [code1, code2, code3] = languageItems.map((it) => it.languageItemCode as LanguageCode);
       const asset = await createItem({
         ...fakeCreateAssetData(),
         languageCodes: [code1],
@@ -345,19 +343,17 @@ describe(AssetSearchService, () => {
       assertSingleResult(result, asset);
     });
 
-    it('finds assets by kindCode', async () => {
+    it('finds assets by kindCodes', async () => {
       // Given
-      const code1 = assetKindItems[0].assetKindItemCode;
-      const code2 = assetKindItems[1].assetKindItemCode;
-      const code3 = assetKindItems[2].assetKindItemCode;
+      const [code1, code2, code3] = assetKindItems.map((it) => it.assetKindItemCode);
       const user = await userRepo.create(fakeUserData());
       const asset = await createItem({
         ...fakeCreateAssetData(),
-        kindCode: code1,
+        kindCodes: [code1],
         creatorId: user.id,
       });
-      await createItem({ ...fakeCreateAssetData(), kindCode: code2, creatorId: user.id });
-      await createItem({ ...fakeCreateAssetData(), kindCode: code3, creatorId: user.id });
+      await createItem({ ...fakeCreateAssetData(), kindCodes: [code2], creatorId: user.id });
+      await createItem({ ...fakeCreateAssetData(), kindCodes: [code3], creatorId: user.id });
 
       // When
       const result = await service.search(
@@ -372,11 +368,54 @@ describe(AssetSearchService, () => {
       assertSingleResult(result, asset);
     });
 
+    it('finds assets that have several types by any one of them', async () => {
+      // Given
+      const [code1, code2, code3] = assetKindItems.map((it) => it.assetKindItemCode);
+      const user = await userRepo.create(fakeUserData());
+      const multiple = await createItem({ ...fakeCreateAssetData(), kindCodes: [code1, code2], creatorId: user.id });
+      await createItem({ ...fakeCreateAssetData(), kindCodes: [code3], creatorId: user.id });
+
+      // When
+      const byFirst = await service.search({ type: SearchType.Asset, kindCodes: [code1] }, user);
+      const bySecond = await service.search({ type: SearchType.Asset, kindCodes: [code2] }, user);
+
+      // Then
+      assertSingleResult(byFirst, multiple);
+      assertSingleResult(bySecond, multiple);
+    });
+
+    it('finds assets matching any of several selected types', async () => {
+      // Given
+      const [code1, code2, code3, code4] = assetKindItems.map((it) => it.assetKindItemCode);
+      const user = await userRepo.create(fakeUserData());
+      await createItem({ ...fakeCreateAssetData(), kindCodes: [code1, code2], creatorId: user.id });
+      await createItem({ ...fakeCreateAssetData(), kindCodes: [code3], creatorId: user.id });
+      await createItem({ ...fakeCreateAssetData(), kindCodes: [code4], creatorId: user.id });
+
+      // When
+      const result = await service.search({ type: SearchType.Asset, kindCodes: [code2, code3] }, user);
+
+      // Then
+      expect(result.page.total).toEqual(2);
+    });
+
+    it('does not duplicate assets that match several of the selected types', async () => {
+      // Given
+      const [code1, code2, code3] = assetKindItems.map((it) => it.assetKindItemCode);
+      const user = await userRepo.create(fakeUserData());
+      const multiple = await createItem({ ...fakeCreateAssetData(), kindCodes: [code1, code2], creatorId: user.id });
+      await createItem({ ...fakeCreateAssetData(), kindCodes: [code3], creatorId: user.id });
+
+      // When
+      const result = await service.search({ type: SearchType.Asset, kindCodes: [code1, code2] }, user);
+
+      // Then
+      assertSingleResult(result, multiple);
+    });
+
     it('finds assets by topicCode', async () => {
       // Given
-      const code1 = manCatLabelItems[0].manCatLabelItemCode;
-      const code2 = manCatLabelItems[1].manCatLabelItemCode;
-      const code3 = manCatLabelItems[2].manCatLabelItemCode;
+      const [code1, code2, code3] = manCatLabelItems.map((it) => it.manCatLabelItemCode);
       const user = await userRepo.create(fakeUserData());
       const asset = await createItem({
         ...fakeCreateAssetData(),
@@ -479,12 +518,7 @@ describe(AssetSearchService, () => {
   describe('aggregate', () => {
     const assertSingleStats = (stats: AssetSearchStats, asset: Asset): void => {
       expect(stats).not.toBeNull();
-      expect(stats.kindCodes).toEqual([
-        {
-          value: asset.kindCode,
-          count: 1,
-        },
-      ]);
+      expect(stats.kindCodes).toEqual(asset.kindCodes.map((it) => ({ value: it, count: 1 })));
       expect(stats.languageCodes).toEqual(
         asset.languageCodes.length === 0
           ? [
@@ -551,6 +585,30 @@ describe(AssetSearchService, () => {
 
       // Then
       assertSingleStats(result, asset);
+    });
+  });
+
+  describe('aggregate with several types', () => {
+    it('counts an asset once for each of its types', async () => {
+      // Given
+      const [code1, code2, code3] = assetKindItems.map((it) => it.assetKindItemCode);
+      const user = await userRepo.create(fakeUserData());
+      await create({ ...fakeCreateAssetData(), kindCodes: [code1, code2], creatorId: user.id });
+      await create({ ...fakeCreateAssetData(), kindCodes: [code2, code3], creatorId: user.id });
+
+      // When
+      const result = await service.aggregate({ type: SearchType.Asset }, user);
+
+      // Then
+      expect(result.total).toEqual(2);
+      expect(result.kindCodes).toEqual(
+        expect.arrayContaining([
+          { value: code1, count: 1 },
+          { value: code2, count: 2 },
+          { value: code3, count: 1 },
+        ]),
+      );
+      expect(result.kindCodes).toHaveLength(3);
     });
   });
 

@@ -53,9 +53,9 @@ export interface Asset extends Model<AssetId> {
   formatCode: LocalizedItemCode;
 
   /**
-   * DB: `asset_kind_item_code`
+   * DB: `asset_kind` table
    */
-  kindCode: LocalizedItemCode;
+  kindCodes: LocalizedItemCode[];
 
   /**
    * DB: `asset_language` table

@@ -48,7 +48,8 @@
           bindLabel="name"
           bindKey="code"
           isRequired
-          formControlName="kindCode"
+          multiple
+          formControlName="kindCodes"
         />
       }
       @if (languages$ | async; as languages) {
