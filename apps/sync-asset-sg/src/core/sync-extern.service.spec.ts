@@ -421,6 +421,61 @@ describe('SyncExternService asset kinds', () => {
   });
 });
 
+describe('SyncExternService files', () => {
+  it('should copy the stored format of each file, including overrides', async () => {
+    const destination = createMockPrisma({
+      workgroup: { findFirst: jest.fn().mockResolvedValue({ id: 1 }) },
+      asset: { create: jest.fn().mockResolvedValue({ assetId: 7, assetContacts: [] }) },
+      assetContact: { createMany: jest.fn() },
+    });
+    const service = new SyncExternService(createMockPrisma(), destination, config);
+    (service as any).destinationTx = destination;
+    jest
+      .spyOn(service as any, 'createContactsPayload')
+      .mockResolvedValue({ createData: [], assignAfterwards: new Map() });
+    const sourceFile = (id: number, name: string, assetFormatItemCode: string, legalDocItemCode: string | null) => ({
+      id,
+      assetId: 300,
+      name,
+      assetFormatItemCode,
+      legalDocItemCode,
+      type: legalDocItemCode === null ? 'Normal' : 'Legal',
+      fulltextContent: null,
+      pageRangeClassifications: null,
+      pageDimensions: null,
+    });
+
+    await (service as any).synchronizeAsset({
+      asset: { titlePublic: 'asset-300' },
+      workgroupName: 'wg',
+      originalAssetId: 300,
+      originalSgsId: null,
+      files: [sourceFile(1, 'scan.pdf', 'textAnalog', null), sourceFile(2, 'contract.pdf', 'pdf', 'contract')],
+      assetContacts: [],
+      manCatLabelRefs: [],
+      typeNatRels: [],
+      ids: [],
+      assetKinds: [],
+      assetLanguages: [],
+      reviewSelection: {},
+      children: [],
+    });
+
+    const { data } = destination.asset.create.mock.calls[0][0];
+    expect(data).not.toHaveProperty('assetFormatItemCode');
+    expect(
+      data.files.create.map((f: { name: string; assetFormatItemCode: string }) => [f.name, f.assetFormatItemCode]),
+    ).toEqual([
+      ['scan.pdf', 'textAnalog'],
+      ['contract.pdf', 'pdf'],
+    ]);
+    data.files.create.forEach((f: object) => {
+      expect(f).not.toHaveProperty('id');
+      expect(f).not.toHaveProperty('assetId');
+    });
+  });
+});
+
 const SYNC_TRANSACTION_TIMEOUT_MS = 3 * 60 * 60 * 1_000;
 
 function createTransactionService(txClient: unknown) {

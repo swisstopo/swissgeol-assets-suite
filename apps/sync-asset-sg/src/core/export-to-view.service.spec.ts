@@ -38,6 +38,8 @@ interface FileRow {
   id: number;
   assetId: number;
   type: 'Normal' | 'Legal';
+  name: string;
+  assetFormatItemCode: string;
   size: bigint;
   fulltextContent: unknown;
   pageRangeClassifications: unknown;
@@ -49,6 +51,8 @@ function file(id: number, assetId: number, type: 'Normal' | 'Legal', overrides: 
     id,
     assetId,
     type,
+    name: `file-${id}.pdf`,
+    assetFormatItemCode: 'pdf',
     size: BigInt(1),
     fulltextContent: null,
     pageRangeClassifications: null,
@@ -238,6 +242,27 @@ describe('ExportToViewService.exportFiles', () => {
     expect(inserted[0].pageDimensions).toBe(dims);
   });
 
+  it('exports the stored format of each file, including overrides', async () => {
+    const db: FileRow[] = [
+      file(10, 1, 'Normal', { name: 'scan.pdf', assetFormatItemCode: 'textAnalog' }),
+      file(11, 1, 'Normal', { name: 'data.csv', assetFormatItemCode: 'db' }),
+      file(12, 1, 'Legal', { name: 'contract.pdf', assetFormatItemCode: 'pdf' }),
+    ];
+    const configs = new Map<number, { publishData: PublishData }>([
+      [1, { publishData: publishData({ normalFiles: true, legalFiles: true }) }],
+    ]);
+
+    const { service, fileCreateMany } = createService(db, configs);
+    await exportFiles(service, [1]);
+
+    const inserted = fileCreateMany.mock.calls.flatMap((call) => call[0].data as FileRow[]);
+    expect(inserted.map((f) => [f.id, f.assetFormatItemCode])).toEqual([
+      [10, 'textAnalog'],
+      [11, 'db'],
+      [12, 'pdf'],
+    ]);
+  });
+
   it('inserts exactly one bounded chunk when there are exactly FILE_CHUNK_SIZE files', async () => {
     const db: FileRow[] = Array.from({ length: FILE_CHUNK_SIZE }, (_, i) => file(100 + i, 1, 'Normal'));
     const configs = new Map<number, { publishData: PublishData }>([
@@ -387,7 +412,7 @@ describe('ExportToViewService.findPublicAssetIds', () => {
 
   it('exports the asset kinds of each batch after the assets they belong to', async () => {
     const destinationPrisma = { $executeRaw: jest.fn().mockResolvedValue(0) } as any;
-    const service = new ExportToViewService({} as any, destinationPrisma, config);
+    const service = new ExportToViewService({} as any, destinationPrisma);
 
     const calls: unknown[][] = [];
 
@@ -418,7 +443,7 @@ describe('ExportToViewService.findPublicAssetIds', () => {
 });
 
 describe('ExportToViewService.exportAssets', () => {
-  it('does not select or write a single-value type column', async () => {
+  it('does not select or write a single-value type column or an asset-level format', async () => {
     const asset = {
       assetId: 1,
       titlePublic: 'Asset',
@@ -427,7 +452,6 @@ describe('ExportToViewService.exportAssets', () => {
       receiptDate: null,
       assetContacts: [],
       isNatRel: false,
-      assetFormatItemCode: 'pdf',
       workgroupId: 1,
       isPublic: true,
       assetMainId: null,
@@ -440,7 +464,7 @@ describe('ExportToViewService.exportAssets', () => {
     const findMany = jest.fn().mockResolvedValue([asset]);
     const createMany = jest.fn().mockResolvedValue({ count: 1 });
     const destinationPrisma = { asset: { createMany }, assetContact: { createMany } } as any;
-    const service = new ExportToViewService({ asset: { findMany } } as any, destinationPrisma, config);
+    const service = new ExportToViewService({ asset: { findMany } } as any, destinationPrisma);
     (service as any).publicAssetConfigs.set(1, { workgroupId: 1, publishData: publishData({ general: true }) });
     jest.spyOn(service as any, 'exportWorkflows').mockResolvedValue(undefined);
 
@@ -448,6 +472,8 @@ describe('ExportToViewService.exportAssets', () => {
 
     expect(findMany.mock.calls[0][0].select).not.toHaveProperty('assetKindItemCode');
     expect(createMany.mock.calls[0][0].data[0]).not.toHaveProperty('assetKindItemCode');
+    expect(findMany.mock.calls[0][0].select).not.toHaveProperty('assetFormatItemCode');
+    expect(createMany.mock.calls[0][0].data[0]).not.toHaveProperty('assetFormatItemCode');
   });
 });
 
