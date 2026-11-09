@@ -161,6 +161,7 @@ export class FixturesCreateCommand extends CommandRunner {
       const createdFile = await this.fileService.create({
         ...file,
         name: file.alias ?? file.name,
+        formatCode: file.formatCode,
         content: await loadFixtureFile(asset, file.alias ?? file.name),
         mediaType: 'application/pdf',
         assetId: asset.id,

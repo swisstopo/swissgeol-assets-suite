@@ -13,6 +13,8 @@ import {
 } from '@asset-sg/shared/v2';
 import {
   BadRequestException,
+  HttpException,
+  HttpStatus,
   Injectable,
   InternalServerErrorException,
   Logger,
@@ -53,6 +55,16 @@ export class FileService {
 
   async create(data: UploadFileData): Promise<AssetFile> {
     const { content, mediaType, ...createData } = data;
+
+    if (createData.formatCode != null) {
+      const format = await this.prismaService.assetFormatItem.findUnique({
+        where: { assetFormatItemCode: createData.formatCode },
+        select: { assetFormatItemCode: true },
+      });
+      if (format === null) {
+        throw new HttpException('Unknown file format', HttpStatus.UNPROCESSABLE_ENTITY);
+      }
+    }
 
     const isOcrCompatible = mediaType == 'application/pdf';
 

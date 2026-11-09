@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
+import { Asset, FileProcessingState, LegalDocCode, UpdateAssetData } from '@asset-sg/shared/v2';
 // eslint-disable-next-line @nx/enforce-module-boundaries
 import { clearPrismaAssets, setupDB } from '../../../../../test/setup-db';
 
@@ -122,7 +123,7 @@ describe(AssetRepo, () => {
       expect(record.receivedAt).toEqual(data.receivedAt);
       expect(record.isPublic).toEqual(data.isPublic);
       expect(record.kindCodes).toEqual(data.kindCodes);
-      expect(record.formatCode).toEqual(data.formatCode);
+      expect(record.formatCodes).toEqual([]);
       expect(record.isOfNationalInterest).toEqual(data.isOfNationalInterest);
       expect(record.legacyData).toBeNull();
       expect(record.identifiers).toEqual(data.identifiers);
@@ -224,7 +225,7 @@ describe(AssetRepo, () => {
       expect(updated!.receivedAt).toEqual(data.receivedAt);
       expect(updated!.isPublic).toEqual(data.isPublic);
       expect(updated!.kindCodes).toEqual(data.kindCodes);
-      expect(updated!.formatCode).toEqual(data.formatCode);
+      expect(updated!.formatCodes).toEqual([]);
       expect(updated!.isOfNationalInterest).toEqual(data.isOfNationalInterest);
       expect(updated!.legacyData).toBeNull();
       expect(updated!.identifiers).toEqual(data.identifiers);
@@ -318,6 +319,128 @@ describe(AssetRepo, () => {
 
       // Then
       expect(updated!.receivedAt).toEqual(data.receivedAt);
+    });
+  });
+
+  describe('file formats', () => {
+    beforeAll(async () => {
+      await prisma.legalDocItem.upsert({
+        where: { legalDocItemCode: LegalDocCode.Contract },
+        update: {},
+        create: {
+          legalDocItemCode: LegalDocCode.Contract,
+          geolCode: 'test',
+          name: 'Contract',
+          nameDe: 'Vertrag',
+          nameFr: 'Contrat',
+          nameIt: 'Contratto',
+          nameEn: 'Contract',
+          description: 'Contract',
+          descriptionDe: 'Vertrag',
+          descriptionFr: 'Contrat',
+          descriptionIt: 'Contratto',
+          descriptionEn: 'Contract',
+        },
+      });
+    });
+
+    const fileFormats = (asset: Asset | null): string[] =>
+      [...asset!.files].sort((a, b) => a.id - b.id).map((it) => it.formatCode);
+
+    const createAssetWithFiles = async (
+      files: Array<{ name: string; formatCode?: string; legalDocCode?: LegalDocCode }>,
+    ): Promise<Asset> => {
+      const user = await userRepo.create(fakeUserData());
+      const asset = await repo.create({ ...fakeCreateAssetData(), creatorId: user.id });
+      for (const file of files) {
+        await fileRepo.create({
+          name: file.name,
+          size: 1,
+          legalDocCode: file.legalDocCode ?? null,
+          formatCode: file.formatCode,
+          fileProcessingState: FileProcessingState.WillNotBeProcessed,
+          fileProcessingStage: null,
+          assetId: asset.id,
+          user,
+        });
+      }
+      return (await repo.find(asset.id))!;
+    };
+
+    const toUpdateData = (asset: Asset, files: Asset['files'] = asset.files): UpdateAssetData => ({
+      ...fakeUpdateAssetData(),
+      files: files.map((it) => ({
+        id: it.id,
+        legalDocCode: it.legalDocCode,
+        formatCode: it.formatCode,
+        pageRangeClassifications: it.pageRangeClassifications,
+      })),
+    });
+
+    it('derives the distinct formats of the non-legal files', async () => {
+      // When
+      const asset = await createAssetWithFiles([
+        { name: 'a.csv', formatCode: 'other' },
+        { name: 'b.pdf' },
+        { name: 'c.PDF' },
+        { name: 'contract.las', legalDocCode: LegalDocCode.Contract },
+      ]);
+
+      // Then
+      expect(fileFormats(asset)).toEqual(['other', 'pdf', 'pdf', 'las']);
+      expect(asset.formatCodes).toEqual(['pdf', 'other']);
+    });
+
+    it('returns no formats for an asset with only legal files', async () => {
+      // When
+      const asset = await createAssetWithFiles([{ name: 'contract.pdf', legalDocCode: LegalDocCode.Contract }]);
+
+      // Then
+      expect(asset.files[0].formatCode).toEqual('pdf');
+      expect(asset.formatCodes).toEqual([]);
+    });
+
+    it('persists a format override through update and reload', async () => {
+      // Given
+      const asset = await createAssetWithFiles([{ name: 'map.pdf' }, { name: 'notes.txt' }]);
+      const [map, notes] = [...asset.files].sort((a, b) => a.id - b.id);
+
+      // When
+      const updated = await repo.update(
+        asset.id,
+        toUpdateData(asset, [{ ...map, formatCode: 'graphicRaster' }, notes]),
+      );
+
+      // Then
+      expect(fileFormats(updated)).toEqual(['graphicRaster', 'textDigital']);
+      expect(updated!.formatCodes).toEqual(['textDigital', 'graphicRaster']);
+      const reloaded = await repo.find(asset.id);
+      expect(fileFormats(reloaded)).toEqual(['graphicRaster', 'textDigital']);
+      expect(reloaded!.formatCodes).toEqual(['textDigital', 'graphicRaster']);
+    });
+
+    it('keeps a format override when unrelated fields are updated', async () => {
+      // Given
+      const asset = await createAssetWithFiles([{ name: 'map.pdf', formatCode: 'graphicRaster' }]);
+
+      // When
+      const updated = await repo.update(asset.id, { ...toUpdateData(asset), title: 'Another title' });
+
+      // Then
+      expect(updated!.title).toEqual('Another title');
+      expect((await repo.find(asset.id))!.files[0].formatCode).toEqual('graphicRaster');
+    });
+
+    it('rejects an unknown file format and keeps the stored format', async () => {
+      // Given
+      const asset = await createAssetWithFiles([{ name: 'map.pdf' }]);
+
+      // When
+      const update = repo.update(asset.id, toUpdateData(asset, [{ ...asset.files[0], formatCode: 'noSuchFormat' }]));
+
+      // Then
+      await expect(update).rejects.toThrow();
+      expect((await repo.find(asset.id))!.files[0].formatCode).toEqual('pdf');
     });
   });
 
