@@ -22,11 +22,12 @@ jest.mock('ol/geom', () => ({ LineString: class {}, Polygon: class {} }));
 
 import { Clipboard } from '@angular/cdk/clipboard';
 import { CommonModule } from '@angular/common';
-import { NO_ERRORS_SCHEMA, signal } from '@angular/core';
+import { Component, Input, NO_ERRORS_SCHEMA, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { Router } from '@angular/router';
 import { AssetExportService, LanguageService } from '@asset-sg/client-shared';
-import { Asset, fixtures } from '@asset-sg/shared/v2';
+import { Asset, AssetFile, fixtures, LegalDocCode } from '@asset-sg/shared/v2';
 import { provideMockStore } from '@ngrx/store/testing';
 import { TranslateModule } from '@ngx-translate/core';
 import { of } from 'rxjs';
@@ -34,12 +35,24 @@ import { StubDatePipe, StubReferencePipe } from '../../../testing/asset-search-t
 import { ViewerControllerService } from '../../services/viewer-controller.service';
 import { AssetSearchDetailComponent } from './asset-search-detail.component';
 
+// Stands in for the file list, so the inputs each document list receives can be checked.
+// Uses `@Input` because signal inputs in a spec file break the hoisting of `jest.mock` above.
+@Component({ selector: 'asset-sg-asset-viewer-files', template: '', standalone: false })
+class StubAssetViewerFilesComponent {
+  @Input() public assetId?: number;
+  @Input() public files: AssetFile[] = [];
+  @Input() public showFormat = false;
+}
+
+const file = (id: number, name: string, legalDocCode: LegalDocCode | null): AssetFile =>
+  ({ id, name, alias: null, legalDocCode, formatCode: 'pdf' }) as unknown as AssetFile;
+
 describe(AssetSearchDetailComponent, () => {
   let fixture: ComponentFixture<AssetSearchDetailComponent>;
 
   const render = (asset: Asset) => {
     TestBed.configureTestingModule({
-      declarations: [AssetSearchDetailComponent],
+      declarations: [AssetSearchDetailComponent, StubAssetViewerFilesComponent],
       imports: [CommonModule, TranslateModule.forRoot(), StubReferencePipe, StubDatePipe],
       schemas: [NO_ERRORS_SCHEMA],
       providers: [
@@ -74,10 +87,25 @@ describe(AssetSearchDetailComponent, () => {
     expect(kindChips()).toEqual(['Karte']);
   });
 
-  it('keeps the format in its own card', () => {
-    render({ ...fixtures.assets.minimal, kindCodes: ['report', 'map'], formatCode: 'binary' });
+  it('does not show a standalone format card', () => {
+    render({ ...fixtures.assets.minimal, files: [file(1, 'report.pdf', null)], formatCodes: ['pdf'] });
 
-    const format = (fixture.nativeElement as HTMLElement).querySelectorAll('[data-testid="assetFormat"] asset-sg-chip');
-    expect(Array.from(format).map((it) => it.textContent?.trim())).toEqual(['PDF']);
+    expect((fixture.nativeElement as HTMLElement).querySelector('[data-testid="assetFormat"]')).toBeNull();
+  });
+
+  it('shows file formats in the documents list, but not in the legal documents list', () => {
+    const normal = file(1, 'report.pdf', null);
+    const legal = file(2, 'contract.pdf', LegalDocCode.Contract);
+    render({ ...fixtures.assets.minimal, files: [normal, legal], formatCodes: ['pdf'] });
+
+    const list = (testId: string): StubAssetViewerFilesComponent =>
+      fixture.debugElement
+        .query(By.css(`[data-testid="${testId}"]`))
+        .query(By.directive(StubAssetViewerFilesComponent))
+        .injector.get(StubAssetViewerFilesComponent);
+    expect(list('assetNormalFiles').files).toEqual([normal]);
+    expect(list('assetNormalFiles').showFormat).toBe(true);
+    expect(list('assetLegalFiles').files).toEqual([legal]);
+    expect(list('assetLegalFiles').showFormat).toBe(false);
   });
 });
