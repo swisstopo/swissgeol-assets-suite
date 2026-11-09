@@ -1,3 +1,4 @@
+import { LocalizedItemCode } from './localized-item';
 import { PageRangeClassification } from './page-classification';
 
 /**
@@ -35,6 +36,11 @@ export interface AssetFile {
   legalDocCode: LegalDocCode | null;
 
   /**
+   * DB: `asset_format_item_code`
+   */
+  formatCode: LocalizedItemCode;
+
+  /**
    * DB: `last_modified_at`
    */
   lastModifiedAt: Date;
@@ -67,11 +73,13 @@ export type AssetFileId = number;
 export interface CreateAssetFileData {
   file: File;
   legalDocCode: LegalDocCode | null;
+  formatCode: LocalizedItemCode;
 }
 
 export interface UpdateAssetFileData {
   id: AssetFileId;
   legalDocCode: LegalDocCode | null;
+  formatCode: LocalizedItemCode;
   pageRangeClassifications: PageRangeClassification[] | null;
 }
 
