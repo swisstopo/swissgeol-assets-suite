@@ -7,9 +7,11 @@ import {
   AssetSearchUsageCode,
   ElasticsearchAsset,
   LanguageCode,
+  LegalDocCode,
   LocalDate,
   PageStats,
   SearchType,
+  User,
 } from '@asset-sg/shared/v2';
 import { faker } from '@faker-js/faker';
 
@@ -84,7 +86,7 @@ describe(AssetSearchService, () => {
       id: asset.id,
       title: asset.title,
       isPublic: asset.isPublic,
-      formatCode: asset.formatCode,
+      formatCodes: asset.formatCodes,
       kindCodes: asset.kindCodes,
       topicCodes: asset.topicCodes,
       contacts: asset.contacts,
@@ -130,6 +132,124 @@ describe(AssetSearchService, () => {
 
       const hit = response.hits.hits[0]._source as ElasticsearchAsset;
       assertHit(hit, asset);
+    });
+  });
+
+  describe('file formats', () => {
+    beforeAll(async () => {
+      await prisma.legalDocItem.upsert({
+        where: { legalDocItemCode: LegalDocCode.Contract },
+        update: {},
+        create: {
+          legalDocItemCode: LegalDocCode.Contract,
+          geolCode: 'test',
+          name: 'Contract',
+          nameDe: 'Vertrag',
+          nameFr: 'Contrat',
+          nameIt: 'Contratto',
+          nameEn: 'Contract',
+          description: 'Contract',
+          descriptionDe: 'Vertrag',
+          descriptionFr: 'Contrat',
+          descriptionIt: 'Contratto',
+          descriptionEn: 'Contract',
+        },
+      });
+    });
+
+    const searchByTitle = async (title: string, user: User): Promise<AssetSearchResult> =>
+      service.search({ type: SearchType.Asset, text: title }, user);
+
+    const registerReloaded = async (id: number): Promise<void> => {
+      const asset = await assetRepo.find(id);
+      if (asset == null) {
+        throw new Error(`asset ${id} not found`);
+      }
+      await writerService.register(asset);
+    };
+
+    const addFile = (assetId: number, name: string, formatCode: string, legalDocItemCode: LegalDocCode | null = null) =>
+      prisma.file.create({
+        data: {
+          name,
+          size: 1,
+          lastModifiedAt: new Date(),
+          assetId,
+          assetFormatItemCode: formatCode,
+          legalDocItemCode,
+          type: legalDocItemCode === null ? 'Normal' : 'Legal',
+        },
+      });
+
+    it('indexes the distinct formats of non-legal files and updates them when files change', async () => {
+      // Given
+      const user = await userRepo.create(fakeUserData());
+      const asset = await assetRepo.create({
+        ...fakeCreateAssetData(),
+        title: faker.string.uuid(),
+        creatorId: user.id,
+      });
+      await addFile(asset.id, 'data.csv', 'db');
+      await addFile(asset.id, 'report.pdf', 'pdf');
+      const secondPdf = await addFile(asset.id, 'appendix.pdf', 'pdf');
+      await addFile(asset.id, 'contract.pdf', 'textAnalog', LegalDocCode.Contract);
+
+      // When
+      await registerReloaded(asset.id);
+
+      // Then
+      const result = await searchByTitle(asset.title, user);
+      expect(result.data).toHaveLength(1);
+      expect(result.data[0].formatCodes).toEqual(['pdf', 'db']);
+
+      // When a file's format is changed
+      await prisma.file.update({ where: { id: secondPdf.id }, data: { assetFormatItemCode: 'las' } });
+      await registerReloaded(asset.id);
+
+      // Then
+      expect((await searchByTitle(asset.title, user)).data[0].formatCodes).toEqual(['pdf', 'las', 'db']);
+    });
+
+    it('indexes an empty format list for an asset with only legal files', async () => {
+      // Given
+      const user = await userRepo.create(fakeUserData());
+      const asset = await assetRepo.create({
+        ...fakeCreateAssetData(),
+        title: faker.string.uuid(),
+        creatorId: user.id,
+      });
+      await addFile(asset.id, 'contract.pdf', 'pdf', LegalDocCode.Contract);
+
+      // When
+      await registerReloaded(asset.id);
+
+      // Then
+      const result = await searchByTitle(asset.title, user);
+      expect(result.data).toHaveLength(1);
+      expect(result.data[0].formatCodes).toEqual([]);
+    });
+
+    it('returns an empty format list for documents indexed without formats', async () => {
+      // Given
+      const user = await userRepo.create(fakeUserData());
+      const asset = await create({ ...fakeCreateAssetData(), title: faker.string.uuid(), creatorId: user.id });
+      const stored = await elastic.get<ElasticsearchAsset>({ index: ASSET_ELASTIC_INDEX, id: `${asset.id}` });
+      const staleData = JSON.parse(stored._source?.data ?? '{}');
+      delete staleData.formatCodes;
+      await elastic.update({
+        index: ASSET_ELASTIC_INDEX,
+        id: `${asset.id}`,
+        doc: { data: JSON.stringify({ ...staleData, formatCode: 'pdf' }) },
+        refresh: true,
+      });
+
+      // When
+      const result = await searchByTitle(asset.title, user);
+
+      // Then
+      expect(result.data).toHaveLength(1);
+      expect(result.data[0].formatCodes).toEqual([]);
+      expect(result.data[0]).not.toHaveProperty('formatCode');
     });
   });
 
