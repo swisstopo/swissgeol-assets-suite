@@ -179,7 +179,6 @@ export const deTranslationMapping = {
         tabName: 'Allgemein',
         kind: 'Typ',
         language: 'Sprache',
-        format: 'Format',
         topic: 'Thema',
         topics: 'Themen',
         title: 'Titel',

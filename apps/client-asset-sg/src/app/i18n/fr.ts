@@ -182,7 +182,6 @@ export const frTranslationMapping: AppTranslationMapping = {
         tabName: 'Général',
         kind: 'Type',
         language: 'Langue',
-        format: 'Format',
         topic: 'Thème',
         topics: 'Thèmes',
         title: 'Titre',

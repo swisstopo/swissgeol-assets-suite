@@ -179,7 +179,6 @@ export const enTranslationMapping: AppTranslationMapping = {
         tabName: 'General',
         kind: 'Kind',
         language: 'Language',
-        format: 'Format',
         topic: 'Topic',
         topics: 'Topics',
         title: 'Title',

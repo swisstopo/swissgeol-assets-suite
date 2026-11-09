@@ -53,6 +53,7 @@ export class AssetEditorService {
       files.map((file) => {
         const formData = new FormData();
         formData.append('file', file.file);
+        formData.append('formatCode', file.formatCode);
         if (file.legalDocCode != null) {
           formData.append('legalDocCode', file.legalDocCode);
         }

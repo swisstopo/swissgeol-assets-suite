@@ -1,7 +1,7 @@
 import { coerceBooleanProperty } from '@angular/cdk/coercion';
 import { Component, Input } from '@angular/core';
 import { FormControl } from '@angular/forms';
-import { CreateAssetFileData, LegalDocCode } from '@asset-sg/shared/v2';
+import { CreateAssetFileData, getFormatCodeForFileName, LegalDocCode } from '@asset-sg/shared/v2';
 import { AssetForm } from '../../../asset-editor-page/asset-editor-page.component';
 
 @Component({
@@ -54,6 +54,7 @@ export class FileDropZoneComponent {
           {
             file: element,
             legalDocCode: this.isLegal ? LegalDocCode.FederalData : null,
+            formatCode: getFormatCodeForFileName(element.name),
             shouldBeDeleted: false,
           },
           { nonNullable: true },
