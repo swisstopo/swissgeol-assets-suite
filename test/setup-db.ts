@@ -21,14 +21,15 @@ const clearDB = async (prisma: PrismaClient, dbName: string): Promise<void> => {
       AND table_type = 'BASE TABLE'
     `);
 
-  // Iterate over each table and delete all data
-  for (const table of tables as Array<{ table_name: string }>) {
-    const tableName = table.table_name;
-    if (tableName === 'schema_migrations' || tableName === '_prisma_migrations') {
-      continue;
-    }
-    await prisma.$executeRawUnsafe(`TRUNCATE TABLE ${dbName}.${tableName} CASCADE`);
+  const tableNames = (tables as Array<{ table_name: string }>)
+    .map((table) => table.table_name)
+    .filter((tableName) => tableName !== 'schema_migrations' && tableName !== '_prisma_migrations');
+  if (tableNames.length === 0) {
+    return;
   }
+
+  const qualifiedNames = tableNames.map((tableName) => `"${dbName}"."${tableName}"`).join(', ');
+  await prisma.$executeRawUnsafe(`TRUNCATE TABLE ${qualifiedNames} CASCADE`);
 };
 
 export const setupDB = async (prisma: PrismaClient): Promise<void> => {

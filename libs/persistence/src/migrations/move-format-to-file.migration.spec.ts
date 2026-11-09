@@ -169,7 +169,7 @@ describe(`migration ${MIGRATION_NAME}`, () => {
     if (tmpDir) {
       rmSync(tmpDir, { recursive: true, force: true });
     }
-  });
+  }, 60_000);
 
   it('assigns extension-based formats when the asset format is "other"', async () => {
     expect(await formatsOf('other')).toEqual({ 'report.pdf': 'pdf', 'data.csv': 'db' });

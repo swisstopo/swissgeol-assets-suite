@@ -20,4 +20,7 @@ export default {
   // Many of the tests are integration tests, meaning they access actual databases.
   // When running in parallel, read and writes of multiple tests will overlap and cause failing tests.
   maxWorkers: 1,
+
+  // Hooks that reset the database or Elasticsearch can exceed Jest's default of 5 seconds on slow disks.
+  testTimeout: 60_000,
 };

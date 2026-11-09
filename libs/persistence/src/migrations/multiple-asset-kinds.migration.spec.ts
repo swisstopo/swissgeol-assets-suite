@@ -109,7 +109,7 @@ describe(`migration ${MIGRATION_NAME}`, () => {
     if (tmpDir) {
       rmSync(tmpDir, { recursive: true, force: true });
     }
-  });
+  }, 60_000);
 
   it('keeps the existing type of every asset as its only selection', async () => {
     expect(assetIdsByKind.size).toBe(3);
