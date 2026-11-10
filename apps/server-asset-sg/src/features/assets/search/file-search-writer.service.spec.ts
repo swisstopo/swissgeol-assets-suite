@@ -3,6 +3,8 @@ import { ElasticsearchFilePage, AssetSearchResultItem, LegalDocCode } from '@ass
 // eslint-disable-next-line @nx/enforce-module-boundaries
 import fileIndexMapping from '../../../../../../development/init/elasticsearch/mappings/swissgeol_asset_file.json';
 // eslint-disable-next-line @nx/enforce-module-boundaries
+import { createTestFile, setupContractLegalDocItem } from '../../../../../../test/file-fixtures';
+// eslint-disable-next-line @nx/enforce-module-boundaries
 import { clearPrismaAssets, setupDB } from '../../../../../../test/setup-db';
 
 import { FileSearchWriterService } from './file-search-writer.service';
@@ -58,16 +60,7 @@ describe(FileSearchWriterService, () => {
       kindCodes: ['report', 'map', '2Dseismic'],
       creatorId: user.id,
     });
-    const file = await prisma.file.create({
-      data: {
-        name: 'file.pdf',
-        size: 1,
-        lastModifiedAt: new Date(),
-        assetId: asset.id,
-        assetFormatItemCode: 'pdf',
-        fulltextContent: [{ page: 1, content: 'Some text' }],
-      },
-    });
+    const file = await createTestFile(prisma, asset.id, { content: true });
 
     // When
     await writer.write(file.id);
@@ -85,50 +78,21 @@ describe(FileSearchWriterService, () => {
 
   describe('file formats', () => {
     beforeAll(async () => {
-      await prisma.legalDocItem.upsert({
-        where: { legalDocItemCode: LegalDocCode.Contract },
-        update: {},
-        create: {
-          legalDocItemCode: LegalDocCode.Contract,
-          geolCode: 'test',
-          name: 'Contract',
-          nameDe: 'Vertrag',
-          nameFr: 'Contrat',
-          nameIt: 'Contratto',
-          nameEn: 'Contract',
-          description: 'Contract',
-          descriptionDe: 'Vertrag',
-          descriptionFr: 'Contrat',
-          descriptionIt: 'Contratto',
-          descriptionEn: 'Contract',
-        },
-      });
+      await setupContractLegalDocItem(prisma);
     });
 
     // An asset with a searchable PDF, a CSV without content and a legal document of a distinct format.
     const createAssetWithFiles = async () => {
       const user = await userRepo.create(fakeUserData());
       const asset = await assetRepo.create({ ...fakeCreateAssetData(), creatorId: user.id });
-      const addFile = (
-        name: string,
-        formatCode: string,
-        options: { legalDocItemCode?: LegalDocCode; content?: boolean } = {},
-      ) =>
-        prisma.file.create({
-          data: {
-            name,
-            size: 1,
-            lastModifiedAt: new Date(),
-            assetId: asset.id,
-            assetFormatItemCode: formatCode,
-            legalDocItemCode: options.legalDocItemCode ?? null,
-            type: options.legalDocItemCode == null ? 'Normal' : 'Legal',
-            fulltextContent: options.content ? [{ page: 1, content: `Text of ${name}` }] : undefined,
-          },
-        });
-      const pdf = await addFile('report.pdf', 'pdf', { content: true });
-      await addFile('data.csv', 'db');
-      await addFile('contract.pdf', 'textAnalog', { legalDocItemCode: LegalDocCode.Contract, content: true });
+      const pdf = await createTestFile(prisma, asset.id, { name: 'report.pdf', content: true });
+      await createTestFile(prisma, asset.id, { name: 'data.csv', formatCode: 'db' });
+      await createTestFile(prisma, asset.id, {
+        name: 'contract.pdf',
+        formatCode: 'textAnalog',
+        legalDocItemCode: LegalDocCode.Contract,
+        content: true,
+      });
       return { asset, pdf };
     };
 

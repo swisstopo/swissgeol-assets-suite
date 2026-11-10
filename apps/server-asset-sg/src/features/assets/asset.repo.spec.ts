@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { Asset, FileProcessingState, LegalDocCode, UpdateAssetData } from '@asset-sg/shared/v2';
 // eslint-disable-next-line @nx/enforce-module-boundaries
+import { setupContractLegalDocItem } from '../../../../../test/file-fixtures';
+// eslint-disable-next-line @nx/enforce-module-boundaries
 import { clearPrismaAssets, setupDB } from '../../../../../test/setup-db';
 
 import { fakeCreateAssetData, fakeUpdateAssetData, fakeUserData } from './asset.fake';
@@ -23,6 +25,13 @@ describe(AssetRepo, () => {
   beforeEach(async () => {
     await clearPrismaAssets(prisma);
   });
+
+  const createWithKinds = async (kindCodes: string[]): Promise<Asset> => {
+    const user = await userRepo.create(fakeUserData());
+    return repo.create({ ...fakeCreateAssetData(), kindCodes, creatorId: user.id });
+  };
+
+  const findKindCodes = async (id: number): Promise<string[] | undefined> => (await repo.find(id))?.kindCodes;
 
   describe('find', () => {
     it('returns `null` when searching for a non-existent record', async () => {
@@ -140,27 +149,18 @@ describe(AssetRepo, () => {
 
     it('stores several types and returns them in a stable order', async () => {
       // Given
-      const user = await userRepo.create(fakeUserData());
-      const kindCodes = ['report', 'map', '2Dseismic'];
-
       // When
-      const record = await repo.create({ ...fakeCreateAssetData(), kindCodes, creatorId: user.id });
+      const record = await createWithKinds(['report', 'map', '2Dseismic']);
 
       // Then
       expect(record.kindCodes).toEqual(['2Dseismic', 'map', 'report']);
-      expect((await repo.find(record.id))!.kindCodes).toEqual(['2Dseismic', 'map', 'report']);
+      expect(await findKindCodes(record.id)).toEqual(['2Dseismic', 'map', 'report']);
     });
 
     it('stores duplicate types only once', async () => {
       // Given
-      const user = await userRepo.create(fakeUserData());
-
       // When
-      const record = await repo.create({
-        ...fakeCreateAssetData(),
-        kindCodes: ['report', 'report', 'map'],
-        creatorId: user.id,
-      });
+      const record = await createWithKinds(['report', 'report', 'map']);
 
       // Then
       expect(record.kindCodes).toEqual(['map', 'report']);
@@ -242,12 +242,7 @@ describe(AssetRepo, () => {
 
     it('replaces the set of types', async () => {
       // Given
-      const creator = await userRepo.create(fakeUserData());
-      const record = await repo.create({
-        ...fakeCreateAssetData(),
-        kindCodes: ['report', 'map'],
-        creatorId: creator.id,
-      });
+      const record = await createWithKinds(['report', 'map']);
 
       // When
       const updated = await repo.update(record.id, {
@@ -257,17 +252,12 @@ describe(AssetRepo, () => {
 
       // Then
       expect(updated!.kindCodes).toEqual(['3Dseismic', 'log', 'map']);
-      expect((await repo.find(record.id))!.kindCodes).toEqual(['3Dseismic', 'log', 'map']);
+      expect(await findKindCodes(record.id)).toEqual(['3Dseismic', 'log', 'map']);
     });
 
     it('keeps the stored types when the selection is reordered or contains duplicates', async () => {
       // Given
-      const creator = await userRepo.create(fakeUserData());
-      const record = await repo.create({
-        ...fakeCreateAssetData(),
-        kindCodes: ['report', 'map'],
-        creatorId: creator.id,
-      });
+      const record = await createWithKinds(['report', 'map']);
 
       // When
       const updated = await repo.update(record.id, {
@@ -282,15 +272,14 @@ describe(AssetRepo, () => {
 
     it('keeps the stored types when an update contains an unknown type', async () => {
       // Given
-      const creator = await userRepo.create(fakeUserData());
-      const record = await repo.create({ ...fakeCreateAssetData(), kindCodes: ['report'], creatorId: creator.id });
+      const record = await createWithKinds(['report']);
 
       // When
       const updated = await repo.update(record.id, { ...fakeUpdateAssetData(), kindCodes: ['noSuchType'] });
 
       // Then
       expect(updated).toBeNull();
-      expect((await repo.find(record.id))!.kindCodes).toEqual(['report']);
+      expect(await findKindCodes(record.id)).toEqual(['report']);
     });
 
     it('clears the receipt date when updating it to `null`', async () => {
@@ -324,28 +313,12 @@ describe(AssetRepo, () => {
 
   describe('file formats', () => {
     beforeAll(async () => {
-      await prisma.legalDocItem.upsert({
-        where: { legalDocItemCode: LegalDocCode.Contract },
-        update: {},
-        create: {
-          legalDocItemCode: LegalDocCode.Contract,
-          geolCode: 'test',
-          name: 'Contract',
-          nameDe: 'Vertrag',
-          nameFr: 'Contrat',
-          nameIt: 'Contratto',
-          nameEn: 'Contract',
-          description: 'Contract',
-          descriptionDe: 'Vertrag',
-          descriptionFr: 'Contrat',
-          descriptionIt: 'Contratto',
-          descriptionEn: 'Contract',
-        },
-      });
+      await setupContractLegalDocItem(prisma);
     });
 
-    const fileFormats = (asset: Asset | null): string[] =>
-      [...asset!.files].sort((a, b) => a.id - b.id).map((it) => it.formatCode);
+    const sortedFiles = (asset: Asset): Asset['files'] => [...asset.files].sort((a, b) => a.id - b.id);
+
+    const fileFormats = (asset: Asset | null): string[] => sortedFiles(asset!).map((it) => it.formatCode);
 
     const createAssetWithFiles = async (
       files: Array<{ name: string; formatCode?: string; legalDocCode?: LegalDocCode }>,
@@ -403,7 +376,7 @@ describe(AssetRepo, () => {
     it('persists a format override through update and reload', async () => {
       // Given
       const asset = await createAssetWithFiles([{ name: 'map.pdf' }, { name: 'notes.txt' }]);
-      const [map, notes] = [...asset.files].sort((a, b) => a.id - b.id);
+      const [map, notes] = sortedFiles(asset);
 
       // When
       const updated = await repo.update(

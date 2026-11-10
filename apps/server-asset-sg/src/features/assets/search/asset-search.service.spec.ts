@@ -24,6 +24,8 @@ import { languageItems } from '../../../../../../test/data/language-items';
 // eslint-disable-next-line @nx/enforce-module-boundaries
 import { manCatLabelItems } from '../../../../../../test/data/man-cat-label-item';
 // eslint-disable-next-line @nx/enforce-module-boundaries
+import { createTestFile, setupContractLegalDocItem } from '../../../../../../test/file-fixtures';
+// eslint-disable-next-line @nx/enforce-module-boundaries
 import { clearPrismaAssets, setupDB } from '../../../../../../test/setup-db';
 
 import { AssetRepo } from '../asset.repo';
@@ -95,6 +97,9 @@ describe(AssetSearchService, () => {
     };
   };
 
+  const createItemWithKinds = (user: User, kindCodes: string[]): Promise<AssetSearchResultItem> =>
+    createItem({ ...fakeCreateAssetData(), kindCodes, creatorId: user.id });
+
   const assertHit = (hit: ElasticsearchAsset, asset: Asset): void => {
     expect(hit.id).toEqual(asset.id);
     expect(hit.title).toEqual(asset.title);
@@ -137,25 +142,15 @@ describe(AssetSearchService, () => {
 
   describe('file formats', () => {
     beforeAll(async () => {
-      await prisma.legalDocItem.upsert({
-        where: { legalDocItemCode: LegalDocCode.Contract },
-        update: {},
-        create: {
-          legalDocItemCode: LegalDocCode.Contract,
-          geolCode: 'test',
-          name: 'Contract',
-          nameDe: 'Vertrag',
-          nameFr: 'Contrat',
-          nameIt: 'Contratto',
-          nameEn: 'Contract',
-          description: 'Contract',
-          descriptionDe: 'Vertrag',
-          descriptionFr: 'Contrat',
-          descriptionIt: 'Contratto',
-          descriptionEn: 'Contract',
-        },
-      });
+      await setupContractLegalDocItem(prisma);
     });
+
+    const createUserAndAsset = async (register = false) => {
+      const user = await userRepo.create(fakeUserData());
+      const data = { ...fakeCreateAssetData(), title: faker.string.uuid(), creatorId: user.id };
+      const asset = register ? await create(data) : await assetRepo.create(data);
+      return { user, asset };
+    };
 
     const searchByTitle = async (title: string, user: User): Promise<AssetSearchResult> =>
       service.search({ type: SearchType.Asset, text: title }, user);
@@ -168,31 +163,17 @@ describe(AssetSearchService, () => {
       await writerService.register(asset);
     };
 
-    const addFile = (assetId: number, name: string, formatCode: string, legalDocItemCode: LegalDocCode | null = null) =>
-      prisma.file.create({
-        data: {
-          name,
-          size: 1,
-          lastModifiedAt: new Date(),
-          assetId,
-          assetFormatItemCode: formatCode,
-          legalDocItemCode,
-          type: legalDocItemCode === null ? 'Normal' : 'Legal',
-        },
-      });
-
     it('indexes the distinct formats of non-legal files and updates them when files change', async () => {
       // Given
-      const user = await userRepo.create(fakeUserData());
-      const asset = await assetRepo.create({
-        ...fakeCreateAssetData(),
-        title: faker.string.uuid(),
-        creatorId: user.id,
+      const { user, asset } = await createUserAndAsset();
+      await createTestFile(prisma, asset.id, { name: 'data.csv', formatCode: 'db' });
+      await createTestFile(prisma, asset.id, { name: 'report.pdf' });
+      const secondPdf = await createTestFile(prisma, asset.id, { name: 'appendix.pdf' });
+      await createTestFile(prisma, asset.id, {
+        name: 'contract.pdf',
+        formatCode: 'textAnalog',
+        legalDocItemCode: LegalDocCode.Contract,
       });
-      await addFile(asset.id, 'data.csv', 'db');
-      await addFile(asset.id, 'report.pdf', 'pdf');
-      const secondPdf = await addFile(asset.id, 'appendix.pdf', 'pdf');
-      await addFile(asset.id, 'contract.pdf', 'textAnalog', LegalDocCode.Contract);
 
       // When
       await registerReloaded(asset.id);
@@ -212,13 +193,8 @@ describe(AssetSearchService, () => {
 
     it('indexes an empty format list for an asset with only legal files', async () => {
       // Given
-      const user = await userRepo.create(fakeUserData());
-      const asset = await assetRepo.create({
-        ...fakeCreateAssetData(),
-        title: faker.string.uuid(),
-        creatorId: user.id,
-      });
-      await addFile(asset.id, 'contract.pdf', 'pdf', LegalDocCode.Contract);
+      const { user, asset } = await createUserAndAsset();
+      await createTestFile(prisma, asset.id, { name: 'contract.pdf', legalDocItemCode: LegalDocCode.Contract });
 
       // When
       await registerReloaded(asset.id);
@@ -231,8 +207,7 @@ describe(AssetSearchService, () => {
 
     it('returns an empty format list for documents indexed without formats', async () => {
       // Given
-      const user = await userRepo.create(fakeUserData());
-      const asset = await create({ ...fakeCreateAssetData(), title: faker.string.uuid(), creatorId: user.id });
+      const { user, asset } = await createUserAndAsset(true);
       const stored = await elastic.get<ElasticsearchAsset>({ index: ASSET_ELASTIC_INDEX, id: `${asset.id}` });
       const staleData = JSON.parse(stored._source?.data ?? '{}');
       delete staleData.formatCodes;
@@ -467,13 +442,9 @@ describe(AssetSearchService, () => {
       // Given
       const [code1, code2, code3] = assetKindItems.map((it) => it.assetKindItemCode);
       const user = await userRepo.create(fakeUserData());
-      const asset = await createItem({
-        ...fakeCreateAssetData(),
-        kindCodes: [code1],
-        creatorId: user.id,
-      });
-      await createItem({ ...fakeCreateAssetData(), kindCodes: [code2], creatorId: user.id });
-      await createItem({ ...fakeCreateAssetData(), kindCodes: [code3], creatorId: user.id });
+      const asset = await createItemWithKinds(user, [code1]);
+      await createItemWithKinds(user, [code2]);
+      await createItemWithKinds(user, [code3]);
 
       // When
       const result = await service.search(
@@ -492,8 +463,8 @@ describe(AssetSearchService, () => {
       // Given
       const [code1, code2, code3] = assetKindItems.map((it) => it.assetKindItemCode);
       const user = await userRepo.create(fakeUserData());
-      const multiple = await createItem({ ...fakeCreateAssetData(), kindCodes: [code1, code2], creatorId: user.id });
-      await createItem({ ...fakeCreateAssetData(), kindCodes: [code3], creatorId: user.id });
+      const multiple = await createItemWithKinds(user, [code1, code2]);
+      await createItemWithKinds(user, [code3]);
 
       // When
       const byFirst = await service.search({ type: SearchType.Asset, kindCodes: [code1] }, user);
@@ -508,9 +479,9 @@ describe(AssetSearchService, () => {
       // Given
       const [code1, code2, code3, code4] = assetKindItems.map((it) => it.assetKindItemCode);
       const user = await userRepo.create(fakeUserData());
-      await createItem({ ...fakeCreateAssetData(), kindCodes: [code1, code2], creatorId: user.id });
-      await createItem({ ...fakeCreateAssetData(), kindCodes: [code3], creatorId: user.id });
-      await createItem({ ...fakeCreateAssetData(), kindCodes: [code4], creatorId: user.id });
+      await createItemWithKinds(user, [code1, code2]);
+      await createItemWithKinds(user, [code3]);
+      await createItemWithKinds(user, [code4]);
 
       // When
       const result = await service.search({ type: SearchType.Asset, kindCodes: [code2, code3] }, user);
@@ -523,8 +494,8 @@ describe(AssetSearchService, () => {
       // Given
       const [code1, code2, code3] = assetKindItems.map((it) => it.assetKindItemCode);
       const user = await userRepo.create(fakeUserData());
-      const multiple = await createItem({ ...fakeCreateAssetData(), kindCodes: [code1, code2], creatorId: user.id });
-      await createItem({ ...fakeCreateAssetData(), kindCodes: [code3], creatorId: user.id });
+      const multiple = await createItemWithKinds(user, [code1, code2]);
+      await createItemWithKinds(user, [code3]);
 
       // When
       const result = await service.search({ type: SearchType.Asset, kindCodes: [code1, code2] }, user);
@@ -713,8 +684,8 @@ describe(AssetSearchService, () => {
       // Given
       const [code1, code2, code3] = assetKindItems.map((it) => it.assetKindItemCode);
       const user = await userRepo.create(fakeUserData());
-      await create({ ...fakeCreateAssetData(), kindCodes: [code1, code2], creatorId: user.id });
-      await create({ ...fakeCreateAssetData(), kindCodes: [code2, code3], creatorId: user.id });
+      await createItemWithKinds(user, [code1, code2]);
+      await createItemWithKinds(user, [code2, code3]);
 
       // When
       const result = await service.aggregate({ type: SearchType.Asset }, user);
