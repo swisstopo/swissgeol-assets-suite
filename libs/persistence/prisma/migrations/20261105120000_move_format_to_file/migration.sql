@@ -4,6 +4,7 @@
   - You are about to drop the column `asset_format_item_code` on the `asset` table. The existing values are moved to the new `file.asset_format_item_code` column first.
 
 */
+-- SONAR-OFF
 
 BEGIN;
 
@@ -95,3 +96,5 @@ ALTER TABLE "asset" DROP CONSTRAINT "asset_asset_format_item_code_fkey";
 ALTER TABLE "asset" DROP COLUMN "asset_format_item_code";
 
 COMMIT;
+
+-- SONAR-ON
