@@ -48,7 +48,12 @@ export const compareAssetFormatCodes = (a: LocalizedItemCode, b: LocalizedItemCo
   if (rankDifference !== 0) {
     return rankDifference;
   }
-  return a < b ? -1 : a > b ? 1 : 0;
+  if (a < b) {
+    return -1;
+  } else if (a > b) {
+    return 1;
+  }
+  return 0;
 };
 
 export interface AssetFormatSource {
