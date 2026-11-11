@@ -5,7 +5,7 @@ export const frTranslationMapping: AppTranslationMapping = {
   welcomeTo: 'Bienvenue chez',
   accessForbidden: "Vous n'avez pas accès à cette application.",
   resourceForbidden: "Vous n'avez pas accès à cette ressource.",
-  resourceUnavailable: "La ressource demandée n'existe pas, ou vous n'y avez pas accès.",
+  resourceNotFound: "La ressource demandée n'existe pas.",
   ok: 'OK',
   submit: 'Envoyer',
   cancel: 'Annuler',
