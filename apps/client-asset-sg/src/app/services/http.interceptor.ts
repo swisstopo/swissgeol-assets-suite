@@ -12,13 +12,15 @@ import {
   AuthService,
   AuthState,
   fromAppShared,
+  LanguageService,
+  REDIRECT_ON_NOT_FOUND,
   showAlert,
   SessionStorageService,
 } from '@asset-sg/client-shared';
 import { Store } from '@ngrx/store';
 import { TranslateService } from '@ngx-translate/core';
 import { OAuthService } from 'angular-oauth2-oidc';
-import { catchError, EMPTY, from, Observable, Subscription, switchMap } from 'rxjs';
+import { catchError, EMPTY, firstValueFrom, from, Observable, Subscription, switchMap } from 'rxjs';
 
 @Injectable()
 export class HttpInterceptor implements AngularHttpInterceptor, OnDestroy {
@@ -26,6 +28,7 @@ export class HttpInterceptor implements AngularHttpInterceptor, OnDestroy {
   private readonly authService = inject(AuthService);
   private readonly sessionStorageService = inject(SessionStorageService);
   private readonly translateService = inject(TranslateService);
+  private readonly languageService = inject(LanguageService);
 
   private readonly store = inject(Store);
   private readonly router = inject(Router);
@@ -76,9 +79,9 @@ export class HttpInterceptor implements AngularHttpInterceptor, OnDestroy {
   private async handleError(error: HttpErrorResponse, req: HttpRequest<unknown>): Promise<void> {
     switch (error.status) {
       case 404: {
-        const parentPage = req.method === 'GET' ? this.getParentOfDetailPage() : null;
-        if (parentPage != null) {
-          await this.leaveDetailPage(parentPage);
+        const redirectPath = req.context.get(REDIRECT_ON_NOT_FOUND);
+        if (redirectPath != null) {
+          await this.leaveDetailPage(redirectPath);
           break;
         }
         throw error;
@@ -153,22 +156,8 @@ export class HttpInterceptor implements AngularHttpInterceptor, OnDestroy {
     this.subscription.unsubscribe();
   }
 
-  /**
-   * Returns the page to go back to if the user is currently on the detail page of a user, workgroup or asset.
-   *
-   * - `/de/admin/users/<id>` and `/de/admin/workgroups/<id>` go back to the respective list,
-   *   e.g. `/de/admin/users`.
-   * - `/de/assets/<id>` and `/de/asset-admin/<id>` (including sub-pages like `/general`) go back to the start page `/de`.
-   * - Any other page, such as a list page, returns `null`.
-   */
-  private getParentOfDetailPage(): string | null {
-    const [path] = this.router.url.split('?');
-    const adminPage = /^(\/[^/]+\/admin\/(?:users|workgroups))\/[^/]+$/.exec(path);
-    const assetPage = /^(\/[^/]+)\/(?:assets|asset-admin)\/[^/]+/.exec(path);
-    return adminPage?.[1] ?? assetPage?.[1] ?? null;
-  }
-
-  private async leaveDetailPage(parentPage: string) {
+  private async leaveDetailPage(path: string) {
+    const language = await firstValueFrom(this.languageService.language$);
     this.store.dispatch(
       showAlert({
         alert: {
@@ -179,7 +168,7 @@ export class HttpInterceptor implements AngularHttpInterceptor, OnDestroy {
         },
       }),
     );
-    await this.router.navigateByUrl(parentPage);
+    await this.router.navigateByUrl(`/${language}${path}`);
   }
 
   private initializeStoreSubscription(): void {

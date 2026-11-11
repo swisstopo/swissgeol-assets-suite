@@ -7,6 +7,7 @@ import {
   appSharedStateActions,
   fromAppShared,
   LanguageService,
+  redirectOnNotFound,
   showAlert,
 } from '@asset-sg/client-shared';
 import { UntilDestroy } from '@ngneat/until-destroy';
@@ -38,7 +39,7 @@ export class AssetEditorEffects {
       filter(([{ assetId }, asset]) => asset?.id !== assetId),
       switchMap(([{ assetId }]) =>
         Promise.all([
-          firstValueFrom(this.assetSearchService.fetchAsset(assetId)),
+          firstValueFrom(this.assetSearchService.fetchAsset(assetId, { context: redirectOnNotFound('') })),
           firstValueFrom(this.assetSearchService.fetchGeometries(assetId)),
         ]),
       ),

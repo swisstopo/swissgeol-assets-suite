@@ -1,5 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
+import { redirectOnNotFound } from '@asset-sg/client-shared';
 import {
   convert,
   User,
@@ -28,7 +29,9 @@ export class AdminService {
   }
 
   public getUser(id: string): Observable<User> {
-    return this.httpClient.get<object>(`/api/users/${id}`).pipe(map((it) => plainToInstance(UserSchema, it)));
+    return this.httpClient
+      .get<object>(`/api/users/${id}`, { context: redirectOnNotFound('/admin/users') })
+      .pipe(map((it) => plainToInstance(UserSchema, it)));
   }
 
   public getWorkgroups(): Observable<Workgroup[]> {
@@ -39,7 +42,9 @@ export class AdminService {
   }
 
   public getWorkgroup(id: string): Observable<Workgroup> {
-    return this.httpClient.get<object>(`/api/workgroups/${id}`).pipe(map((it) => plainToInstance(WorkgroupSchema, it)));
+    return this.httpClient
+      .get<object>(`/api/workgroups/${id}`, { context: redirectOnNotFound('/admin/workgroups') })
+      .pipe(map((it) => plainToInstance(WorkgroupSchema, it)));
   }
 
   public createWorkgroup(workgroup: WorkgroupData): Observable<Workgroup> {

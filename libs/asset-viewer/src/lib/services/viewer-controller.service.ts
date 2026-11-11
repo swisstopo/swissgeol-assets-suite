@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
-import { appSharedStateActions, fromAppShared } from '@asset-sg/client-shared';
+import { appSharedStateActions, fromAppShared, redirectOnNotFound } from '@asset-sg/client-shared';
 import {
   AssetId,
   AssetSearchStats,
@@ -223,7 +223,7 @@ export class ViewerControllerService {
     }
     this.store.dispatch(appSharedStateActions.setCurrentAsset({ isLoading: true }));
     const [asset, geometries] = await Promise.all([
-      firstValueFrom(this.assetSearchService.fetchAsset(id)),
+      firstValueFrom(this.assetSearchService.fetchAsset(id, { context: redirectOnNotFound('') })),
       firstValueFrom(this.assetSearchService.fetchGeometries(id)),
     ]);
     this.store.dispatch(appSharedStateActions.setCurrentAsset({ asset: { asset, geometries }, isLoading: false }));
