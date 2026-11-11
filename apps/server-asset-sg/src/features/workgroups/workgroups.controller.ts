@@ -10,19 +10,7 @@ import {
   WorkgroupPolicy,
   WorkgroupSchema,
 } from '@asset-sg/shared/v2';
-import {
-  Controller,
-  Delete,
-  Get,
-  HttpCode,
-  HttpException,
-  HttpStatus,
-  Param,
-  ParseIntPipe,
-  Post,
-  Put,
-  Query,
-} from '@nestjs/common';
+import { Controller, Delete, Get, HttpCode, HttpException, HttpStatus, Param, Post, Put, Query } from '@nestjs/common';
 import { SimpleUser } from '@swissgeol/ui-core';
 import { Expose, Transform as TransformValue } from 'class-transformer';
 import { IsBoolean } from 'class-validator';
@@ -30,6 +18,7 @@ import { authorize } from '@/core/authorize';
 import { Authorize } from '@/core/decorators/authorize.decorator';
 import { CurrentUser } from '@/core/decorators/current-user.decorator';
 import { ParseBody } from '@/core/decorators/parse.decorator';
+import { ParseResourceIdPipe } from '@/core/pipes/parse-id.pipe';
 import { RepoListOptions } from '@/core/repo';
 import { UserRepo } from '@/features/users/user.repo';
 import { WorkgroupRepo } from '@/features/workgroups/workgroup.repo';
@@ -61,7 +50,7 @@ export class WorkgroupsController {
   }
 
   @Get('/:id')
-  async show(@Param('id', ParseIntPipe) id: WorkgroupId, @CurrentUser() user: User): Promise<Workgroup> {
+  async show(@Param('id', ParseResourceIdPipe) id: WorkgroupId, @CurrentUser() user: User): Promise<Workgroup> {
     const record = await this.workgroupRepo.find(id);
     if (record === null) {
       throw new HttpException('not found', HttpStatus.NOT_FOUND);
@@ -71,7 +60,7 @@ export class WorkgroupsController {
   }
 
   @Get('/:id/users')
-  async listUsers(@Param('id', ParseIntPipe) id: WorkgroupId, @CurrentUser() user: User): Promise<SimpleUser[]> {
+  async listUsers(@Param('id', ParseResourceIdPipe) id: WorkgroupId, @CurrentUser() user: User): Promise<SimpleUser[]> {
     const record = await this.workgroupRepo.find(id);
     if (record === null) {
       throw new HttpException('not found', HttpStatus.NOT_FOUND);
@@ -95,7 +84,7 @@ export class WorkgroupsController {
 
   @Put('/:id')
   async update(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseResourceIdPipe) id: number,
     @ParseBody(WorkgroupDataSchema)
     data: WorkgroupData,
     @CurrentUser() user: User,
@@ -114,7 +103,7 @@ export class WorkgroupsController {
 
   @Delete('/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async delete(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: User): Promise<void> {
+  async delete(@Param('id', ParseResourceIdPipe) id: number, @CurrentUser() user: User): Promise<void> {
     const record = await this.workgroupRepo.find(id);
     if (record == null) {
       throw new HttpException('not found', HttpStatus.NOT_FOUND);
