@@ -421,11 +421,11 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
         if (!assetIdFromParam) {
           return;
         }
-        const assetId = parseInt(assetIdFromParam);
-        if (isNaN(assetId)) {
+        if (assetIdFromParam === 'new') {
           this.mode = EditorMode.Create;
           return;
         }
+        const assetId = Number(assetIdFromParam);
 
         this.mode = EditorMode.Edit;
         this.store.dispatch(actions.loadAsset({ assetId }));
