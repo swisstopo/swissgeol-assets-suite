@@ -67,12 +67,22 @@ export class HttpInterceptor implements AngularHttpInterceptor, OnDestroy {
     } else {
       return next
         .handle(req)
-        .pipe(catchError((error: HttpErrorResponse) => from(this.handleError(error)).pipe(switchMap(() => EMPTY))));
+        .pipe(
+          catchError((error: HttpErrorResponse) => from(this.handleError(error, req)).pipe(switchMap(() => EMPTY))),
+        );
     }
   }
 
-  private async handleError(error: HttpErrorResponse): Promise<void> {
+  private async handleError(error: HttpErrorResponse, req: HttpRequest<unknown>): Promise<void> {
     switch (error.status) {
+      case 404: {
+        const parentPage = req.method === 'GET' ? this.getParentOfDetailPage() : null;
+        if (parentPage != null) {
+          await this.leaveDetailPage(parentPage);
+          break;
+        }
+        throw error;
+      }
       case 403:
         if (
           error.error == 'not authorized by eIAM' ||
@@ -141,6 +151,35 @@ export class HttpInterceptor implements AngularHttpInterceptor, OnDestroy {
 
   ngOnDestroy(): void {
     this.subscription.unsubscribe();
+  }
+
+  /**
+   * Returns the page to go back to if the user is currently on the detail page of a user, workgroup or asset.
+   *
+   * - `/de/admin/users/<id>` and `/de/admin/workgroups/<id>` go back to the respective list,
+   *   e.g. `/de/admin/users`.
+   * - `/de/assets/<id>` and `/de/asset-admin/<id>` (including sub-pages like `/general`) go back to the start page `/de`.
+   * - Any other page, such as a list page, returns `null`.
+   */
+  private getParentOfDetailPage(): string | null {
+    const [path] = this.router.url.split('?');
+    const adminPage = /^(\/[^/]+\/admin\/(?:users|workgroups))\/[^/]+$/.exec(path);
+    const assetPage = /^(\/[^/]+)\/(?:assets|asset-admin)\/[^/]+/.exec(path);
+    return adminPage?.[1] ?? assetPage?.[1] ?? null;
+  }
+
+  private async leaveDetailPage(parentPage: string) {
+    this.store.dispatch(
+      showAlert({
+        alert: {
+          id: `resource-not-found`,
+          text: this.translateService.instant('resourceNotFound'),
+          type: AlertType.Error,
+          isPersistent: false,
+        },
+      }),
+    );
+    await this.router.navigateByUrl(parentPage);
   }
 
   private initializeStoreSubscription(): void {
