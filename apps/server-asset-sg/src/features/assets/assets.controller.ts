@@ -24,7 +24,7 @@ export class AssetsController {
   async show(@Param('id', ParseResourceIdPipe) id: AssetId, @CurrentUser() user: User): Promise<AssetSchema> {
     const record = await this.assetService.find(id);
     if (record === null) {
-      throw new HttpException('not found', HttpStatus.FORBIDDEN);
+      throw new HttpException('not found', HttpStatus.NOT_FOUND);
     }
     authorize(AssetPolicy, user).canShow(record);
     return plainToInstance(AssetSchema, record);
