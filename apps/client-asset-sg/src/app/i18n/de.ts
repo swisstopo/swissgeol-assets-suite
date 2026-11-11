@@ -3,6 +3,7 @@ export const deTranslationMapping = {
   welcomeTo: 'Willkommen bei',
   accessForbidden: 'Sie haben keinen Zugriff auf diese Applikation.',
   resourceForbidden: 'Sie haben keinen Zugriff auf diese Ressource.',
+  resourceUnavailable: 'Die angeforderte Ressource existiert nicht, oder Sie haben keinen Zugriff darauf.',
   ok: 'OK',
   submit: 'Absenden',
   cancel: 'Abbrechen',
