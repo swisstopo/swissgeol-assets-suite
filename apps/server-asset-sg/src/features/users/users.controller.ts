@@ -3,6 +3,7 @@ import { Controller, Delete, Get, HttpCode, HttpException, HttpStatus, Param, Pu
 import { Authorize } from '@/core/decorators/authorize.decorator';
 import { CurrentUser } from '@/core/decorators/current-user.decorator';
 import { ParseBody } from '@/core/decorators/parse.decorator';
+import { ParseResourceUuidPipe } from '@/core/pipes/parse-uuid.pipe';
 import { UserRepo } from '@/features/users/user.repo';
 
 @Controller('/users')
@@ -24,10 +25,10 @@ export class UsersController {
   }
 
   @Get('/:id')
-  async show(@Param('id') id: UserId): Promise<User | null> {
+  async show(@Param('id', ParseResourceUuidPipe) id: UserId): Promise<User> {
     const user = await this.userRepo.find(id);
     if (user == null) {
-      return null;
+      throw new HttpException('not found', HttpStatus.NOT_FOUND);
     }
     return convert(UserSchema, user);
   }
@@ -35,7 +36,7 @@ export class UsersController {
   @Put('/:id')
   @Authorize.Admin()
   async update(
-    @Param('id') id: UserId,
+    @Param('id', ParseResourceUuidPipe) id: UserId,
     @ParseBody(UserDataSchema)
     data: UserData,
   ): Promise<User> {
@@ -49,7 +50,7 @@ export class UsersController {
   @Delete('/:id')
   @Authorize.Admin()
   @HttpCode(HttpStatus.NO_CONTENT)
-  async delete(@Param('id') id: UserId): Promise<void> {
+  async delete(@Param('id', ParseResourceUuidPipe) id: UserId): Promise<void> {
     const isOk = await this.userRepo.delete(id);
     if (!isOk) {
       throw new HttpException('not found', HttpStatus.NOT_FOUND);

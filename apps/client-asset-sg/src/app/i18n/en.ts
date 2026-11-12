@@ -5,6 +5,7 @@ export const enTranslationMapping: AppTranslationMapping = {
   welcomeTo: 'Welcome to',
   accessForbidden: 'You do not have access to this application.',
   resourceForbidden: 'You do not have access to this resource.',
+  resourceNotFound: 'The requested resource does not exist.',
   ok: 'OK',
   submit: 'Submit',
   cancel: 'Cancel',

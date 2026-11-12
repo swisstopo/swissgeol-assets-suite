@@ -24,6 +24,7 @@ import { WorkflowService } from './workflow.service';
 import { authorize } from '@/core/authorize';
 import { CurrentUser } from '@/core/decorators/current-user.decorator';
 import { ParseBody } from '@/core/decorators/parse.decorator';
+import { ParseResourceIdPipe } from '@/core/pipes/parse-id.pipe';
 import { PartialWorkflowSelectionSchema } from '@/features/assets/workflow/workflow.model';
 
 @Controller('/assets/:assetId/workflow')
@@ -33,7 +34,7 @@ export class WorkflowController {
 
   @Get('/')
   @SerializeOptions({ type: WorkflowSchema, excludeExtraneousValues: true })
-  async show(@Param('assetId', ParseIntPipe) assetId: number, @CurrentUser() user: User): Promise<Workflow> {
+  async show(@Param('assetId', ParseResourceIdPipe) assetId: number, @CurrentUser() user: User): Promise<Workflow> {
     const record = await this.workflowService.find(assetId);
     authorize(WorkflowPolicy, user).canShow(record);
     return record;

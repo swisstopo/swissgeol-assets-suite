@@ -5,6 +5,7 @@ export const itTranslationMapping: AppTranslationMapping = {
   welcomeTo: 'Benvenuto su',
   accessForbidden: 'Non ha accesso a questa applicazione.',
   resourceForbidden: 'Non ha accesso a questa risorsa.',
+  resourceNotFound: 'La risorsa richiesta non esiste.',
   ok: 'OK',
   submit: 'Invia',
   cancel: 'Annulla',

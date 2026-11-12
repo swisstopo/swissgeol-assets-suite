@@ -12,13 +12,15 @@ import {
   AuthService,
   AuthState,
   fromAppShared,
+  LanguageService,
+  REDIRECT_ON_NOT_FOUND,
   showAlert,
   SessionStorageService,
 } from '@asset-sg/client-shared';
 import { Store } from '@ngrx/store';
 import { TranslateService } from '@ngx-translate/core';
 import { OAuthService } from 'angular-oauth2-oidc';
-import { catchError, EMPTY, from, Observable, Subscription, switchMap } from 'rxjs';
+import { catchError, EMPTY, firstValueFrom, from, Observable, Subscription, switchMap } from 'rxjs';
 
 @Injectable()
 export class HttpInterceptor implements AngularHttpInterceptor, OnDestroy {
@@ -26,6 +28,7 @@ export class HttpInterceptor implements AngularHttpInterceptor, OnDestroy {
   private readonly authService = inject(AuthService);
   private readonly sessionStorageService = inject(SessionStorageService);
   private readonly translateService = inject(TranslateService);
+  private readonly languageService = inject(LanguageService);
 
   private readonly store = inject(Store);
   private readonly router = inject(Router);
@@ -67,12 +70,22 @@ export class HttpInterceptor implements AngularHttpInterceptor, OnDestroy {
     } else {
       return next
         .handle(req)
-        .pipe(catchError((error: HttpErrorResponse) => from(this.handleError(error)).pipe(switchMap(() => EMPTY))));
+        .pipe(
+          catchError((error: HttpErrorResponse) => from(this.handleError(error, req)).pipe(switchMap(() => EMPTY))),
+        );
     }
   }
 
-  private async handleError(error: HttpErrorResponse): Promise<void> {
+  private async handleError(error: HttpErrorResponse, req: HttpRequest<unknown>): Promise<void> {
     switch (error.status) {
+      case 404: {
+        const redirectPath = req.context.get(REDIRECT_ON_NOT_FOUND);
+        if (redirectPath != null) {
+          await this.leaveDetailPage(redirectPath);
+          break;
+        }
+        throw error;
+      }
       case 403:
         if (
           error.error == 'not authorized by eIAM' ||
@@ -141,6 +154,21 @@ export class HttpInterceptor implements AngularHttpInterceptor, OnDestroy {
 
   ngOnDestroy(): void {
     this.subscription.unsubscribe();
+  }
+
+  private async leaveDetailPage(path: string) {
+    const language = await firstValueFrom(this.languageService.language$);
+    this.store.dispatch(
+      showAlert({
+        alert: {
+          id: `resource-not-found`,
+          text: this.translateService.instant('resourceNotFound'),
+          type: AlertType.Error,
+          isPersistent: false,
+        },
+      }),
+    );
+    await this.router.navigateByUrl(`/${language}${path}`);
   }
 
   private initializeStoreSubscription(): void {

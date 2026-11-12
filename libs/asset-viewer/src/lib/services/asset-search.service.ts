@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpContext } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import {
   Asset,
@@ -47,8 +47,10 @@ export class AssetSearchService {
       .pipe(map((res) => plainToInstance(AssetSearchStatsSchema, res)));
   }
 
-  public fetchAsset(id: AssetId): Observable<Asset> {
-    return this.httpClient.get<object>(`/api/assets/${id}`).pipe(map((res) => plainToInstance(AssetSchema, res)));
+  public fetchAsset(id: AssetId, options?: { context?: HttpContext }): Observable<Asset> {
+    return this.httpClient
+      .get<object>(`/api/assets/${id}`, options)
+      .pipe(map((res) => plainToInstance(AssetSchema, res)));
   }
 
   public fetchGeometries(id: AssetId): Observable<GeometryDetail[]> {
