@@ -13,8 +13,6 @@ import {
 } from '@asset-sg/shared/v2';
 import {
   BadRequestException,
-  HttpException,
-  HttpStatus,
   Injectable,
   InternalServerErrorException,
   Logger,
@@ -27,6 +25,7 @@ import { PDFDocumentProxy, TextItem, TextMarkedContent } from 'pdfjs-dist/types/
 import { EVENTS } from '@/core/events';
 import { PrismaService } from '@/core/prisma.service';
 import { AssetRepo } from '@/features/assets/asset.repo';
+import { assertKnownFileFormats } from '@/features/assets/files/file-format';
 import { FileS3Service, SaveFileS3Options } from '@/features/assets/files/file-s3.service';
 import { CreateFileData, FileIdentifier, FileRepo } from '@/features/assets/files/file.repo';
 import { PdfMetadataService } from '@/features/assets/files/pdf-metadata.service';
@@ -57,13 +56,7 @@ export class FileService {
     const { content, mediaType, ...createData } = data;
 
     if (createData.formatCode != null) {
-      const format = await this.prismaService.assetFormatItem.findUnique({
-        where: { assetFormatItemCode: createData.formatCode },
-        select: { assetFormatItemCode: true },
-      });
-      if (format === null) {
-        throw new HttpException('Unknown file format', HttpStatus.UNPROCESSABLE_ENTITY);
-      }
+      await assertKnownFileFormats(this.prismaService, [createData.formatCode]);
     }
 
     const isOcrCompatible = mediaType == 'application/pdf';

@@ -8,11 +8,11 @@ import {
   CreateAssetData,
   AssetData,
   GeometryDetail,
-  LocalizedItemCode,
 } from '@asset-sg/shared/v2';
 import { forwardRef, HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { PrismaService } from '@/core/prisma.service';
 import { AssetRepo } from '@/features/assets/asset.repo';
+import { assertKnownFileFormats } from '@/features/assets/files/file-format';
 import { FileService } from '@/features/assets/files/file.service';
 import { SearchWriterService } from '@/features/assets/search/search-writer.service';
 import { WorkflowService } from '@/features/assets/workflow/workflow.service';
@@ -46,7 +46,10 @@ export class AssetService {
 
   async update(asset: Asset, data: UpdateAssetData, user: User): Promise<Asset | null> {
     await this.validateData(user, data, asset);
-    await this.validateFileFormats(data.files.map((it) => it.formatCode));
+    await assertKnownFileFormats(
+      this.prismaService,
+      data.files.map((it) => it.formatCode),
+    );
 
     const updatedAsset = await this.assetRepo.update(asset.id, data);
     if (updatedAsset === null) {
@@ -72,20 +75,6 @@ export class AssetService {
     const ok = await this.assetRepo.delete(id);
     await this.searchWriterService.deleteFromIndex(id);
     return ok;
-  }
-
-  private async validateFileFormats(formatCodes: LocalizedItemCode[]): Promise<void> {
-    const codes = [...new Set(formatCodes)];
-    if (codes.length === 0) {
-      return;
-    }
-    const existing = await this.prismaService.assetFormatItem.findMany({
-      where: { assetFormatItemCode: { in: codes } },
-      select: { assetFormatItemCode: true },
-    });
-    if (existing.length !== codes.length) {
-      throw new HttpException('Unknown file format', HttpStatus.UNPROCESSABLE_ENTITY);
-    }
   }
 
   private async validateData(user: User, data: AssetData, record?: Asset): Promise<void> {
