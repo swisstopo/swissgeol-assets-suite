@@ -14,8 +14,6 @@ import { fakerDE_CH as faker } from '@faker-js/faker';
 
 import { WorkflowStatus } from '@swissgeol/ui-core';
 // eslint-disable-next-line @nx/enforce-module-boundaries
-import { fakeAssetFormatItemCode } from '../../../../../test/data/asset-format-item';
-// eslint-disable-next-line @nx/enforce-module-boundaries
 import { fakeAssetKindItemCode } from '../../../../../test/data/asset-kind-item';
 // eslint-disable-next-line @nx/enforce-module-boundaries
 import { fakeContactKindItemCode } from '../../../../../test/data/contact-kind-item';
@@ -64,7 +62,6 @@ const fakeAssetData = (): AssetData => ({
   title: faker.commerce.productName(),
   originalTitle: faker.music.songName(),
   contacts: [],
-  formatCode: fakeAssetFormatItemCode(),
   kindCodes: [fakeAssetKindItemCode()],
   parent: null,
   identifiers: [],
@@ -97,7 +94,7 @@ export const fakeAsset = (): Asset => ({
   originalTitle: faker.music.songName(),
   contacts: [],
   files: [],
-  formatCode: fakeAssetFormatItemCode(),
+  formatCodes: [],
   kindCodes: [fakeAssetKindItemCode()],
   parent: null,
   children: [],

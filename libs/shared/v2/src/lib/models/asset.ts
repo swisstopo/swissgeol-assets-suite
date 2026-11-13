@@ -48,9 +48,10 @@ export interface Asset extends Model<AssetId> {
   legacyData: AssetLegacyData | null;
 
   /**
-   * DB: `asset_format_item_code`
+   * Derived from the distinct `formatCode` values of the asset's non-legal files.
+   * Read-only: formats are stored and edited per file.
    */
-  formatCode: LocalizedItemCode;
+  formatCodes: LocalizedItemCode[];
 
   /**
    * DB: `asset_kind` table
@@ -174,7 +175,7 @@ export type LinkedAsset = Pick<Asset, 'id' | 'title'>;
 //      I would assume that whenever a `type_nat_rel` exists, `is_nat_rel` should be true.
 //      This would enable use to remove the `is_nat_rel` field.
 
-type OmittedDataKeys = 'id' | 'legacyData' | 'children' | 'creatorId' | 'files' | 'workflowStatus';
+type OmittedDataKeys = 'id' | 'legacyData' | 'children' | 'creatorId' | 'files' | 'formatCodes' | 'workflowStatus';
 
 export type AssetData = {
   [K in keyof Omit<Asset, OmittedDataKeys>]: AssetDataValueMapping<Asset[K]>;

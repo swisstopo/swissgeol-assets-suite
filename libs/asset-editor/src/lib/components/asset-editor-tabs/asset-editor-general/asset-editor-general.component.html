@@ -64,16 +64,6 @@
           [ngModelOptions]="{ standalone: true }"
         />
       }
-      @if (assetFormats$ | async; as assetFormats) {
-        <asset-sg-select
-          [title]="'edit.tabs.general.format' | translate"
-          [values]="assetFormats"
-          bindLabel="name"
-          bindKey="code"
-          isRequired
-          formControlName="formatCode"
-        />
-      }
     </div>
   </asset-sg-detail-section>
   <asset-sg-detail-section [title]="'edit.tabs.general.access.name' | translate">

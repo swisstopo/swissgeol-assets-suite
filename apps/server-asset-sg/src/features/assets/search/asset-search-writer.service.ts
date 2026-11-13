@@ -127,7 +127,7 @@ export class AssetSearchWriterService {
           title: asset.title,
           isPublic: asset.isPublic,
           kindCodes: asset.kindCodes,
-          formatCode: asset.formatCode,
+          formatCodes: asset.formatCodes,
           topicCodes: asset.topicCodes,
           contacts: asset.contacts,
           geometries,

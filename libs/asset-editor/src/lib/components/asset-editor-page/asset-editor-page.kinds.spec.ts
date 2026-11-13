@@ -8,7 +8,6 @@ jest.mock('@asset-sg/client-shared', () => {
     fromAppShared: {
       selectCurrentAssetAndGeometries: state('currentAsset'),
       selectReferenceAssetKinds: state('kinds'),
-      selectReferenceAssetFormats: state('formats'),
       selectReferenceAssetTopics: state('topics'),
       selectReferenceLanguages: state('languages'),
       selectReferenceNationalInterestTypes: state('nationalInterestTypes'),
@@ -33,7 +32,7 @@ jest.mock('../asset-editor-tabs/asset-editor-geometry/asset-editor-geometries.co
 
 import { Directive, forwardRef, NO_ERRORS_SCHEMA, Pipe, PipeTransform, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR, ReactiveFormsModule } from '@angular/forms';
+import { ControlValueAccessor, FormControl, FormsModule, NG_VALUE_ACCESSOR, ReactiveFormsModule } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
@@ -44,7 +43,7 @@ import { Asset, fixtures, LocalizedItem, LocalizedItemCode } from '@asset-sg/sha
 import { provideMockStore } from '@ngrx/store/testing';
 import { TranslateModule } from '@ngx-translate/core';
 import { RxPush } from '@rx-angular/template/push';
-import { of } from 'rxjs';
+import { firstValueFrom, of } from 'rxjs';
 
 // eslint-disable-next-line @nx/enforce-module-boundaries
 import { SelectComponent } from '../../../../../client-shared/src/lib/components/select/select.component';
@@ -146,7 +145,6 @@ describe('asset types in the asset editor', () => {
             editor: { workflow: null },
             currentAsset: { asset, geometries: [] },
             kinds: toMap(KINDS),
-            formats: toMap([item('binary')]),
             topics: toMap(TOPICS),
             languages: toMap([item('de')]),
             nationalInterestTypes: toMap([]),
@@ -233,5 +231,79 @@ describe('asset types in the asset editor', () => {
 
     expect(kindsControl().value).toEqual(['report', 'log']);
     expect(form().dirty).toBe(false);
+  });
+
+  describe('file formats', () => {
+    const save = () => fixture.debugElement.query(By.css('asset-sg-editor-save')).triggerEventHandler('save');
+
+    it('has no asset-level format field', () => {
+      expect(form().controls.general.contains('formatCode')).toBe(false);
+      const titles = fixture.debugElement
+        .queryAll(By.directive(SelectComponent))
+        .map((it) => (it.componentInstance as SelectComponent<LocalizedItem, LocalizedItemCode>).title);
+      expect(titles).not.toContain('edit.tabs.general.format');
+    });
+
+    it('sends the format of an existing file only when the selection differs from the loaded format', async () => {
+      const [file] = form().controls.files.controls;
+      const loaded = file.value.formatCode;
+      await toggleOption('name-map');
+
+      save();
+      let [, payload] = updateAsset.mock.calls[0];
+      expect(payload.files).toHaveLength(1);
+      expect(payload.files[0]).not.toHaveProperty('formatCode');
+
+      file.setValue({ ...file.value, formatCode: 'other' });
+      updateAsset.mockClear();
+      save();
+      [, payload] = updateAsset.mock.calls[0];
+      expect(payload.files).toEqual([expect.objectContaining({ id: asset.files[0].id, formatCode: 'other' })]);
+
+      // Changing the format and switching back counts as untouched.
+      file.setValue({ ...file.value, formatCode: loaded });
+      updateAsset.mockClear();
+      save();
+      [, payload] = updateAsset.mock.calls[0];
+      expect(payload.files[0]).not.toHaveProperty('formatCode');
+    });
+
+    it('saves the format of each file instead of an asset-level format', async () => {
+      const [file] = form().controls.files.controls;
+      file.setValue({ ...file.value, formatCode: 'other' });
+      await toggleOption('name-map');
+
+      save();
+
+      const [, payload] = updateAsset.mock.calls[0];
+      expect(payload).not.toHaveProperty('formatCode');
+      expect(payload).not.toHaveProperty('formatCodes');
+      expect(payload.files).toEqual([expect.objectContaining({ id: asset.files[0].id, formatCode: 'other' })]);
+    });
+
+    it('uploads new files with their format and derives the asset formats from all files', async () => {
+      const uploaded = { ...asset.files[0], id: 999, name: 'scan.tif', formatCode: 'graphicRaster' };
+      const service = TestBed.inject(AssetEditorService) as unknown as { uploadFilesForAsset: jest.Mock };
+      service.uploadFilesForAsset.mockReturnValue(of([uploaded]));
+      updateAsset.mockReturnValue(of(asset));
+      form().controls.files.push(
+        new FormControl(
+          {
+            file: new File(['x'], 'scan.tif'),
+            legalDocCode: null,
+            formatCode: 'graphicRaster',
+            shouldBeDeleted: false,
+          },
+          { nonNullable: true },
+        ),
+      );
+
+      const result = await firstValueFrom(fixture.componentInstance['setupSaveBehaviour']());
+
+      expect(service.uploadFilesForAsset).toHaveBeenCalledWith(asset.id, [
+        expect.objectContaining({ legalDocCode: null, formatCode: 'graphicRaster' }),
+      ]);
+      expect(result.asset.formatCodes).toEqual(['pdf', 'graphicRaster']);
+    });
   });
 });

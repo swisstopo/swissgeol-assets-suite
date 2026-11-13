@@ -12,6 +12,7 @@ import { AssetFile, AssetFileSignedUrl, AssetId } from '@asset-sg/shared/v2';
 export class AssetViewerFilesComponent {
   public readonly assetId = input.required<AssetId>();
   public readonly files = input.required<AssetFile[]>();
+  public readonly showFormat = input(false);
   private readonly httpClient = inject(HttpClient);
   private readonly languageService = inject(LanguageService);
   public readonly locale$ = this.languageService.locale$;

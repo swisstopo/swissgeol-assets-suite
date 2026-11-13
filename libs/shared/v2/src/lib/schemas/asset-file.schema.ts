@@ -1,5 +1,16 @@
 import { Type } from 'class-transformer';
-import { IsDate, IsEnum, IsIn, IsInt, IsNumber, IsString, IsUrl, ValidateNested } from 'class-validator';
+import {
+  IsDate,
+  IsEnum,
+  IsIn,
+  IsInt,
+  IsNotEmpty,
+  IsNumber,
+  IsString,
+  IsUrl,
+  ValidateIf,
+  ValidateNested,
+} from 'class-validator';
 import {
   AssetFile,
   AssetFileId,
@@ -10,6 +21,7 @@ import {
   PageDimension,
   UpdateAssetFileData,
 } from '../models/asset-file';
+import { LocalizedItemCode } from '../models/localized-item';
 import {
   PageCategory,
   PageRangeClassification,
@@ -64,6 +76,10 @@ export class AssetFileSchema extends Schema implements AssetFile {
   @IsEnum(LegalDocCode)
   legalDocCode!: LegalDocCode;
 
+  @IsString()
+  @IsNotEmpty()
+  formatCode!: LocalizedItemCode;
+
   @IsDate()
   @Type(() => Date)
   lastModifiedAt!: Date;
@@ -93,6 +109,11 @@ export class UpdateAssetFileDataSchema extends Schema implements UpdateAssetFile
   @IsNullable()
   @IsEnum(LegalDocCode)
   legalDocCode!: LegalDocCode;
+
+  @ValidateIf((_object, value) => value !== undefined)
+  @IsString()
+  @IsNotEmpty()
+  formatCode?: LocalizedItemCode;
 
   @IsNullable()
   pageRangeClassifications!: PageRangeClassification[] | null;

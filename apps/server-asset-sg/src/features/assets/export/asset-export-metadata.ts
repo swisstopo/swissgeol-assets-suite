@@ -42,7 +42,7 @@ export const EXPORT_COLUMN_DEFINITIONS: Record<ExportColumnKey, Omit<ExportColum
   topic: { type: ExportValueType.TextList, name: 'topic' },
   kind: { type: ExportValueType.TextList, name: 'kind' },
   language: { type: ExportValueType.TextList, name: 'language' },
-  format: { type: ExportValueType.Text, name: 'format' },
+  format: { type: ExportValueType.TextList, name: 'format' },
   originalTitle: { type: ExportValueType.Text, name: 'original_title' },
   createdAt: { type: ExportValueType.Date, name: 'created_at' },
   receivedAt: { type: ExportValueType.Date, name: 'received_at' },
@@ -122,7 +122,7 @@ export const resolveExportValue = (
     case 'language':
       return localizeCodes(asset.languageCodes, references.languages);
     case 'format':
-      return localizeCode(asset.formatCode, references.formats);
+      return localizeCodes(asset.formatCodes, references.formats);
     case 'originalTitle':
       return asset.originalTitle ?? null;
     case 'createdAt':

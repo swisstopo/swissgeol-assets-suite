@@ -6,6 +6,7 @@ import {
   FileProcessingStage,
   FileProcessingState,
   fixtures,
+  getFormatCodeForFileName,
   sleep,
   WorkflowPublishData,
   WorkflowPublishDataSchema,
@@ -158,10 +159,12 @@ export class FixturesCreateCommand extends CommandRunner {
           await this.prismaService.file.delete({ where: { id: file.id } });
         }
       }
+      const uploadName = file.alias ?? file.name;
       const createdFile = await this.fileService.create({
         ...file,
-        name: file.alias ?? file.name,
-        content: await loadFixtureFile(asset, file.alias ?? file.name),
+        name: uploadName,
+        formatCode: file.formatCode === getFormatCodeForFileName(uploadName) ? undefined : file.formatCode,
+        content: await loadFixtureFile(asset, uploadName),
         mediaType: 'application/pdf',
         assetId: asset.id,
         user: fixtures.users.editor,

@@ -6,6 +6,7 @@ import {
   GeometryMutationType,
   GeometryType,
   LanguageCode,
+  LegalDocCode,
   LocalDate,
   Role,
   User,
@@ -23,14 +24,17 @@ export const TEST_NAT_REL_ITEM_CODE = 'testNatRel';
 
 /**
  * - `full`: asset with all metadata fields set, multiple values and point/line/polygon geometries.
- * - `minimal`: public asset without optional values and without geometries.
+ *   Its single file has an overridden format.
+ * - `minimal`: public asset without optional values, files and geometries.
  * - `foreign`: asset in a workgroup the export user does not have access to.
+ * - `formats`: asset with a point geometry and several normal files of repeated formats plus a legal file.
  */
 export interface ExportFixture {
   user: User;
   full: Asset;
   minimal: Asset;
   foreign: Asset;
+  formats: Asset;
 }
 
 export const createExportRepos = (prisma: PrismaService) => {
@@ -80,6 +84,24 @@ export const seedExportFixture = async (prisma: PrismaService): Promise<ExportFi
       descriptionEn: '',
     },
   });
+  await prisma.legalDocItem.upsert({
+    where: { legalDocItemCode: LegalDocCode.Contract },
+    update: {},
+    create: {
+      legalDocItemCode: LegalDocCode.Contract,
+      geolCode: 'No-GeolCode-specified',
+      name: 'Contract',
+      nameDe: 'Vertrag',
+      nameFr: 'Contrat',
+      nameIt: 'Contratto',
+      nameEn: 'Contract',
+      description: '',
+      descriptionDe: '',
+      descriptionFr: '',
+      descriptionIt: '',
+      descriptionEn: '',
+    },
+  });
 
   const creator = await userRepo.create(fakeUserData());
   const initiator = await contactRepo.create({
@@ -105,7 +127,6 @@ export const seedExportFixture = async (prisma: PrismaService): Promise<ExportFi
     title: 'Alpha; "quoted"',
     originalTitle: 'Original A',
     kindCodes: ['report', '2Dseismic'],
-    formatCode: '3D',
     languageCodes: [LanguageCode.English],
     topicCodes: ['borehole'],
     isOfNationalInterest: true,
@@ -135,7 +156,14 @@ export const seedExportFixture = async (prisma: PrismaService): Promise<ExportFi
   });
   await prisma.asset.update({ where: { assetId: created.id }, data: { sgsId: 4711 } });
   await prisma.file.create({
-    data: { name: `export-test-${created.id}.pdf`, size: 1, lastModifiedAt: new Date(), assetId: created.id },
+    data: {
+      name: `export-test-${created.id}.pdf`,
+      size: 1,
+      lastModifiedAt: new Date(),
+      assetId: created.id,
+      assetFormatItemCode: '3D',
+      isFormatOverridden: true,
+    },
   });
   const full = (await assetRepo.find(created.id)) as Asset;
 
@@ -146,7 +174,6 @@ export const seedExportFixture = async (prisma: PrismaService): Promise<ExportFi
     title: 'Beta',
     originalTitle: null,
     kindCodes: ['report'],
-    formatCode: 'pdf',
     languageCodes: [],
     topicCodes: [],
     isOfNationalInterest: false,
@@ -169,5 +196,31 @@ export const seedExportFixture = async (prisma: PrismaService): Promise<ExportFi
     geometries: [createGeometry(GeometryType.Point, 'POINT(2700000 1250000)')],
   });
 
-  return { user: makeExportUser([1]), full, minimal, foreign };
+  const createdWithFormats = await assetRepo.create({
+    ...fakeCreateAssetData(),
+    creatorId: creator.id,
+    workgroupId: 1,
+    title: 'Gamma',
+    geometries: [createGeometry(GeometryType.Point, 'POINT(2650000 1220000)')],
+  });
+  const addFile = (name: string, formatCode: string, legalDocItemCode: LegalDocCode | null = null) =>
+    prisma.file.create({
+      data: {
+        name,
+        size: 1,
+        lastModifiedAt: new Date(),
+        assetId: createdWithFormats.id,
+        assetFormatItemCode: formatCode,
+        isFormatOverridden: false,
+        legalDocItemCode,
+        type: legalDocItemCode === null ? 'Normal' : 'Legal',
+      },
+    });
+  await addFile('export-formats.csv', 'db');
+  await addFile('export-formats.pdf', 'pdf');
+  await addFile('export-formats-appendix.pdf', 'pdf');
+  await addFile('export-formats-contract.pdf', 'textAnalog', LegalDocCode.Contract);
+  const formats = (await assetRepo.find(createdWithFormats.id)) as Asset;
+
+  return { user: makeExportUser([1]), full, minimal, foreign, formats };
 };

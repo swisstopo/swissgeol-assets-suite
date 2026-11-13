@@ -150,12 +150,18 @@ export class FilesController {
 
     const body = req.body as {
       legalDocCode?: string;
+      formatCode?: unknown;
     };
     const legalDocCode = parseEnumFromRequest(LegalDocCode, body.legalDocCode, 'Invalid legalDocCode');
+    if (body.formatCode !== undefined && typeof body.formatCode !== 'string') {
+      throw new HttpException('Invalid formatCode', HttpStatus.BAD_REQUEST);
+    }
+    const formatCode = body.formatCode || undefined;
     const record = await this.fileService.create({
       name: this.decodeFilename(file.originalname),
       size: file.size,
       legalDocCode,
+      formatCode,
       assetId: asset.id,
       user,
       content: file.buffer,

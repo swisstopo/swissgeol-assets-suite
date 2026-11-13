@@ -19,7 +19,6 @@ type PublishedAssetSelection = Prisma.AssetGetPayload<{
     receiptDate: true;
     assetContacts: true;
     isNatRel: true;
-    assetFormatItemCode: true;
     workgroupId: true;
     isPublic: true;
     assetMainId: true;
@@ -187,7 +186,6 @@ export class ExportToViewService {
         receiptDate: true,
         assetContacts: true,
         isNatRel: true,
-        assetFormatItemCode: true,
         workgroupId: true,
         isPublic: true,
         assetMainId: true,

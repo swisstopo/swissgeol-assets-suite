@@ -180,7 +180,6 @@ export const itTranslationMapping: AppTranslationMapping = {
         tabName: 'Generale',
         kind: 'Tipo',
         language: 'Lingua',
-        format: 'Formato',
         topic: 'Tema',
         topics: 'Temi',
         title: 'Titolo',

@@ -28,6 +28,7 @@ import {
   GeometryId,
   GeometryMutationType,
   GeometryType,
+  getAssetFormatCodes,
   isDeepEqual,
   LanguageCode,
   LinkedAsset,
@@ -215,7 +216,6 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
         title: asset.title,
         originalTitle: asset.originalTitle,
         languageCodes: asset.languageCodes,
-        formatCode: asset.formatCode,
         kindCodes: asset.kindCodes,
         topicCodes: asset.topicCodes,
         isOfNationalInterest: asset.isOfNationalInterest,
@@ -441,14 +441,19 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
 
     const { general, geometries, contacts, references, files } = this.form.getRawValue();
 
+    const loadedFormatCodes = new Map(asset?.files.map((it) => [it.id, it.formatCode]));
     const filesToCreate: CreateAssetFileData[] = [];
     const filesToUpdate: UpdateAssetFileData[] = [];
     for (const entry of files) {
       if ('id' in entry) {
         if (!entry.shouldBeDeleted) {
+          const loadedFormatCode = loadedFormatCodes.get(entry.id);
           filesToUpdate.push({
             id: entry.id,
             legalDocCode: entry.legalDocCode,
+            ...(loadedFormatCode !== undefined && loadedFormatCode !== entry.formatCode
+              ? { formatCode: entry.formatCode }
+              : {}),
             pageRangeClassifications: entry.pageRangeClassifications,
           });
         }
@@ -456,6 +461,7 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
         filesToCreate.push({
           file: entry.file,
           legalDocCode: entry.legalDocCode,
+          formatCode: entry.formatCode,
         });
       }
     }
@@ -473,7 +479,6 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
       isOfNationalInterest: general.isOfNationalInterest,
       isPublic: general.restrictionType === RestrictionType.Public,
       restrictionDate,
-      formatCode: general.formatCode,
       kindCodes: general.kindCodes,
       languageCodes: general.languageCodes,
       nationalInterestTypeCodes: general.nationalInterestTypeCodes,
@@ -502,9 +507,12 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
     return formSubmission$.pipe(
       // After the form has been saved, upload the new files.
       switchMap((newAsset) =>
-        this.assetEditorService
-          .uploadFilesForAsset(newAsset.id, filesToCreate)
-          .pipe(map((newFiles) => ({ ...newAsset, files: [...newAsset.files, ...newFiles] }))),
+        this.assetEditorService.uploadFilesForAsset(newAsset.id, filesToCreate).pipe(
+          map((newFiles) => {
+            const files = [...newAsset.files, ...newFiles];
+            return { ...newAsset, files, formatCodes: getAssetFormatCodes(files) };
+          }),
+        ),
       ),
 
       // Fetch the updated geometries.
@@ -525,7 +533,7 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
 
 export type ExistingAssetFile = Pick<
   AssetFile,
-  'id' | 'name' | 'legalDocCode' | 'lastModifiedAt' | 'pageRangeClassifications' | 'pageCount'
+  'id' | 'name' | 'legalDocCode' | 'formatCode' | 'lastModifiedAt' | 'pageRangeClassifications' | 'pageCount'
 > & {
   shouldBeDeleted: boolean;
 };
@@ -545,7 +553,6 @@ const makeForm = () =>
       createdAt: new FormControl<Date | null>(null, { validators: [Validators.required] }),
       receivedAt: new FormControl<Date | null>(null),
       languageCodes: new FormControl<LanguageCode[]>([], { nonNullable: true }),
-      formatCode: new FormControl<LocalizedItemCode>('', { validators: [Validators.required], nonNullable: true }),
       kindCodes: new FormControl<LocalizedItemCode[]>([], { validators: [Validators.required], nonNullable: true }),
       topicCodes: new FormControl<LocalizedItemCode[]>([], { validators: [Validators.required], nonNullable: true }),
       restrictionType: new FormControl<RestrictionType>(RestrictionType.Restricted, { nonNullable: true }),

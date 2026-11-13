@@ -12,6 +12,7 @@ import {
   CreateAssetData,
   CreateAssetDataSchema,
   CreateAssetFileData,
+  getFormatCodeForFileName,
   SimpleUserSchema,
   UpdateAssetData,
   UpdateAssetDataSchema,
@@ -53,6 +54,9 @@ export class AssetEditorService {
       files.map((file) => {
         const formData = new FormData();
         formData.append('file', file.file);
+        if (file.formatCode !== getFormatCodeForFileName(file.file.name)) {
+          formData.append('formatCode', file.formatCode);
+        }
         if (file.legalDocCode != null) {
           formData.append('legalDocCode', file.legalDocCode);
         }

@@ -21,6 +21,7 @@ import {
   FileProcessingState,
   LegalDocCode,
   LocalizedItem,
+  LocalizedItemCode,
   PageRangeClassification,
 } from '@asset-sg/shared/v2';
 import { Store } from '@ngrx/store';
@@ -69,11 +70,17 @@ export class AssetEditorFilesComponent implements OnInit, OnDestroy, OnChanges {
   protected readonly FileProcessingState: typeof FileProcessingState = FileProcessingState;
   protected readonly FileProcessingStage: typeof FileProcessingStage = FileProcessingStage;
   private selectedFiles = new Set<AssetFormFile>();
-  private readonly COLUMNS = ['select', 'name', 'legalDocCode', 'processingState', 'actions'];
-  public displayedColumns: string[] = this.COLUMNS.filter((col) => col !== 'legalDocCode');
+  private readonly COLUMNS = ['select', 'name', 'formatCode', 'legalDocCode', 'processingState', 'actions'];
+  public displayedColumns: string[] = this.getColumns(false);
   private readonly store = inject(Store);
   public readonly legalDocItems$: Observable<Array<LocalizedItem<LegalDocCode>>> = this.store
     .select(fromAppShared.selectReferenceLegalDocCodes)
+    .pipe(
+      filter(isNotNull),
+      map((it) => [...it.values()]),
+    );
+  public readonly assetFormatItems$: Observable<LocalizedItem[]> = this.store
+    .select(fromAppShared.selectReferenceAssetFormats)
     .pipe(
       filter(isNotNull),
       map((it) => [...it.values()]),
@@ -104,7 +111,7 @@ export class AssetEditorFilesComponent implements OnInit, OnDestroy, OnChanges {
           map((it) => it.toLowerCase()),
           combineLatestWith(this.isLegal$, this.form.valueChanges.pipe(startWith(this.form.value))),
           tap(([searchTerm, isLegal]) => {
-            this.displayedColumns = isLegal ? this.COLUMNS : this.COLUMNS.filter((col) => col !== 'legalDocCode');
+            this.displayedColumns = this.getColumns(isLegal);
             this.dataSource.data = this.form.controls.filter((control) => {
               const file = control.value;
               const isLegalFile = file.legalDocCode != null;
@@ -224,6 +231,19 @@ export class AssetEditorFilesComponent implements OnInit, OnDestroy, OnChanges {
     this.form.markAsDirty();
   }
 
+  protected updateFormatCode(control: FormControl<AssetFormFile>, [code]: LocalizedItemCode[]) {
+    const previous = control.value;
+    if (code === undefined || code === previous.formatCode) {
+      return;
+    }
+    const file = { ...previous, formatCode: code };
+    control.setValue(file);
+    if (this.selectedFiles.delete(previous)) {
+      this.selectedFiles.add(file);
+    }
+    this.form.markAsDirty();
+  }
+
   protected toggleAll(event: MatCheckboxChange) {
     if (event.checked) {
       this.selectedFiles = new Set(this.form.value.filter((file) => this.isVisible(file)));
@@ -313,6 +333,11 @@ export class AssetEditorFilesComponent implements OnInit, OnDestroy, OnChanges {
       }),
     );
     this.form.markAsDirty();
+  }
+
+  private getColumns(isLegal: boolean): string[] {
+    const hiddenColumn = isLegal ? 'formatCode' : 'legalDocCode';
+    return this.COLUMNS.filter((col) => col !== hiddenColumn);
   }
 
   private isVisible(file: AssetFormFile): boolean {

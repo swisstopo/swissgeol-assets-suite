@@ -10,7 +10,6 @@ const makePlainData = (): Record<string, unknown> => ({
   isOfNationalInterest: false,
   isPublic: false,
   restrictionDate: null,
-  formatCode: 'format',
   kindCodes: ['kind'],
   languageCodes: [],
   nationalInterestTypeCodes: [],
@@ -95,5 +94,62 @@ describe.each<[string, ClassConstructor<CreateAssetDataSchema | UpdateAssetDataS
     const { kindCodes: _kindCodes, ...data } = makePlainData();
     const errors = await validateKindCodes({ ...data, kindCode: 'report' });
     expect(errors.map((it) => it.property).sort()).toEqual(['kindCode', 'kindCodes']);
+  });
+});
+
+describe.each<[string, ClassConstructor<CreateAssetDataSchema | UpdateAssetDataSchema>]>([
+  ['CreateAssetDataSchema', CreateAssetDataSchema],
+  ['UpdateAssetDataSchema', UpdateAssetDataSchema],
+])('%s asset-level formats', (_name, schema) => {
+  const validateStrict = async (data: Record<string, unknown>) => {
+    if (schema === CreateAssetDataSchema) {
+      delete data['files'];
+    }
+    return validate(plainToInstance(schema, data), { whitelist: true, forbidNonWhitelisted: true });
+  };
+
+  it('accepts data without an asset-level format', async () => {
+    expect(await validateStrict(makePlainData())).toEqual([]);
+  });
+
+  it.each(['formatCode', 'formatCodes'])('rejects `%s`', async (property) => {
+    const value = property === 'formatCode' ? 'pdf' : ['pdf'];
+    const errors = await validateStrict({ ...makePlainData(), [property]: value });
+    expect(errors.map((it) => it.property)).toEqual([property]);
+  });
+});
+
+describe('UpdateAssetDataSchema files', () => {
+  const makeFile = (): Record<string, unknown> => ({
+    id: 1,
+    legalDocCode: null,
+    formatCode: 'pdf',
+    pageRangeClassifications: null,
+  });
+
+  const validateFiles = async (file: Record<string, unknown>) =>
+    validate(plainToInstance(UpdateAssetDataSchema, { ...makePlainData(), files: [file] }), {
+      whitelist: true,
+      forbidNonWhitelisted: true,
+    });
+
+  it('accepts a file with a format', async () => {
+    expect(await validateFiles(makeFile())).toEqual([]);
+  });
+
+  it('accepts a file without a format', async () => {
+    const file = makeFile();
+    delete file['formatCode'];
+    expect(await validateFiles(file)).toEqual([]);
+  });
+
+  it.each([
+    ['null', null],
+    ['empty', ''],
+    ['non-string', 1],
+  ])('rejects a %s file format', async (_case, formatCode) => {
+    const errors = await validateFiles({ ...makeFile(), formatCode });
+    expect(errors.map((it) => it.property)).toEqual(['files']);
+    expect(errors[0].children?.[0].children?.map((it) => it.property)).toEqual(['formatCode']);
   });
 });

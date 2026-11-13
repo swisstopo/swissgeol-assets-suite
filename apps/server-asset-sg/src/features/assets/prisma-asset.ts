@@ -4,6 +4,7 @@ import {
   AssetData,
   AssetId,
   AssetLegacyData,
+  getAssetFormatCodes,
   isNotPersisted,
   isPersisted,
   LanguageCode,
@@ -45,7 +46,6 @@ export const assetSelection = {
 
   ...legacyDataSelection,
 
-  assetFormatItemCode: true,
   assetKinds: {
     select: {
       assetKindItemCode: true,
@@ -115,43 +115,46 @@ export const assetSelection = {
   },
 } satisfies Prisma.AssetSelect;
 
-export const parseAssetFromPrisma = (data: SelectedAsset): Asset => ({
-  id: data.assetId,
-  title: data.titlePublic,
-  originalTitle: data.titleOriginal,
-  isOfNationalInterest: data.isNatRel,
-  isPublic: data.isPublic,
-  restrictionDate: data.restrictionDate ? LocalDate.fromDate(data.restrictionDate) : null,
-  legacyData: parseLegacyDataFromPrisma(data),
-  formatCode: data.assetFormatItemCode,
-  kindCodes: data.assetKinds.map((it) => it.assetKindItemCode),
-  languageCodes: data.assetLanguages.map((it) => it.languageItemCode as LanguageCode),
-  nationalInterestTypeCodes: data.typeNatRels.map((it) => it.natRelItemCode),
-  topicCodes: data.manCatLabelRefs.map((it) => it.manCatLabelItemCode),
-  identifiers: data.ids.map((it) => ({
-    id: it.idId,
-    value: it.id,
-    description: it.description,
-  })),
-  files: data.files.map((it) => mapAssetFileFromPrisma(it)),
-  contacts: data.assetContacts.map((it) => ({
-    id: it.contactId,
-    role: it.role as AssetContactRole,
-  })),
-  parent: data.assetMain === null ? null : parseLinkedAsset(data.assetMain),
-  children: data.subordinateAssets.map(parseLinkedAsset),
-  siblings: [
-    ...data.siblingXAssets.map((it) => parseLinkedAsset(it.assetY)),
-    ...data.siblingYAssets.map((it) => parseLinkedAsset(it.assetX)),
-  ],
-  workgroupId: data.workgroupId,
-  creatorId: data.creatorId,
-  createdAt: LocalDate.fromDate(data.createDate),
-  receivedAt: data.receiptDate ? LocalDate.fromDate(data.receiptDate) : null,
-  // Defensive fallback: the previous nonNullAssertion caused the app to crash (see https://github.com/swisstopo/swissgeol-assets-suite/issues/702)
-  // We default to 'Draft' if the workflow is missing, though this should not happen under normal operation.
-  workflowStatus: mapWorkflowStatusFromPrisma(data.workflow?.status ?? 'Draft'),
-});
+export const parseAssetFromPrisma = (data: SelectedAsset): Asset => {
+  const files = data.files.map((it) => mapAssetFileFromPrisma(it));
+  return {
+    id: data.assetId,
+    title: data.titlePublic,
+    originalTitle: data.titleOriginal,
+    isOfNationalInterest: data.isNatRel,
+    isPublic: data.isPublic,
+    restrictionDate: data.restrictionDate ? LocalDate.fromDate(data.restrictionDate) : null,
+    legacyData: parseLegacyDataFromPrisma(data),
+    formatCodes: getAssetFormatCodes(files),
+    kindCodes: data.assetKinds.map((it) => it.assetKindItemCode),
+    languageCodes: data.assetLanguages.map((it) => it.languageItemCode as LanguageCode),
+    nationalInterestTypeCodes: data.typeNatRels.map((it) => it.natRelItemCode),
+    topicCodes: data.manCatLabelRefs.map((it) => it.manCatLabelItemCode),
+    identifiers: data.ids.map((it) => ({
+      id: it.idId,
+      value: it.id,
+      description: it.description,
+    })),
+    files,
+    contacts: data.assetContacts.map((it) => ({
+      id: it.contactId,
+      role: it.role as AssetContactRole,
+    })),
+    parent: data.assetMain === null ? null : parseLinkedAsset(data.assetMain),
+    children: data.subordinateAssets.map(parseLinkedAsset),
+    siblings: [
+      ...data.siblingXAssets.map((it) => parseLinkedAsset(it.assetY)),
+      ...data.siblingYAssets.map((it) => parseLinkedAsset(it.assetX)),
+    ],
+    workgroupId: data.workgroupId,
+    creatorId: data.creatorId,
+    createdAt: LocalDate.fromDate(data.createDate),
+    receivedAt: data.receiptDate ? LocalDate.fromDate(data.receiptDate) : null,
+    // Defensive fallback: the previous nonNullAssertion caused the app to crash (see https://github.com/swisstopo/swissgeol-assets-suite/issues/702)
+    // We default to 'Draft' if the workflow is missing, though this should not happen under normal operation.
+    workflowStatus: mapWorkflowStatusFromPrisma(data.workflow?.status ?? 'Draft'),
+  };
+};
 
 const parseLegacyDataFromPrisma = (data: SelectedLegacyData): AssetLegacyData | null => {
   const legacyData: AssetLegacyData = {
@@ -176,11 +179,6 @@ const mapDataToPrisma = (data: AssetData) =>
     isNatRel: data.isOfNationalInterest,
     isPublic: data.isPublic,
     restrictionDate: data.restrictionDate ? data.restrictionDate.toDate() : null,
-    assetFormatItem: {
-      connect: {
-        assetFormatItemCode: data.formatCode,
-      },
-    },
 
     workgroup: {
       connect: {
@@ -341,15 +339,28 @@ export const mapAssetDataToPrismaUpdate = (id: AssetId, data: UpdateAssetData): 
         notIn: data.files.map((it) => it.id),
       },
     },
-    updateMany: data.files.map((it) => ({
-      where: { id: it.id, assetId: id },
-      data: {
-        legalDocItemCode: it.legalDocCode,
-        pageRangeClassifications: it.pageRangeClassifications
-          ? (it.pageRangeClassifications as unknown as Prisma.JsonArray)
-          : Prisma.JsonNull,
+    updateMany: data.files.flatMap((it) => [
+      {
+        where: { id: it.id, assetId: id },
+        data: {
+          legalDocItemCode: it.legalDocCode,
+          pageRangeClassifications: it.pageRangeClassifications
+            ? (it.pageRangeClassifications as unknown as Prisma.JsonArray)
+            : Prisma.JsonNull,
+        },
       },
-    })),
+      ...(it.formatCode === undefined
+        ? []
+        : [
+            {
+              where: { id: it.id, assetId: id, assetFormatItemCode: { not: it.formatCode } },
+              data: {
+                assetFormatItemCode: it.formatCode,
+                isFormatOverridden: true,
+              },
+            },
+          ]),
+    ]),
   },
   assetContacts: {
     deleteMany: {
