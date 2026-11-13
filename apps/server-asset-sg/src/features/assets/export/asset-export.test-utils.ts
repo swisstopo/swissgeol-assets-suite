@@ -162,6 +162,7 @@ export const seedExportFixture = async (prisma: PrismaService): Promise<ExportFi
       lastModifiedAt: new Date(),
       assetId: created.id,
       assetFormatItemCode: '3D',
+      isFormatOverridden: true,
     },
   });
   const full = (await assetRepo.find(created.id)) as Asset;
@@ -210,6 +211,7 @@ export const seedExportFixture = async (prisma: PrismaService): Promise<ExportFi
         lastModifiedAt: new Date(),
         assetId: createdWithFormats.id,
         assetFormatItemCode: formatCode,
+        isFormatOverridden: false,
         legalDocItemCode,
         type: legalDocItemCode === null ? 'Normal' : 'Legal',
       },

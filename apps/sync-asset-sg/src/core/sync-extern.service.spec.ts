@@ -422,7 +422,7 @@ describe('SyncExternService asset kinds', () => {
 });
 
 describe('SyncExternService files', () => {
-  it('should copy the stored format of each file, including overrides', async () => {
+  it('should copy the stored format and override flag of each file', async () => {
     const destination = createMockPrisma({
       workgroup: { findFirst: jest.fn().mockResolvedValue({ id: 1 }) },
       asset: { create: jest.fn().mockResolvedValue({ assetId: 7, assetContacts: [] }) },
@@ -433,11 +433,18 @@ describe('SyncExternService files', () => {
     jest
       .spyOn(service as any, 'createContactsPayload')
       .mockResolvedValue({ createData: [], assignAfterwards: new Map() });
-    const sourceFile = (id: number, name: string, assetFormatItemCode: string, legalDocItemCode: string | null) => ({
+    const sourceFile = (
+      id: number,
+      name: string,
+      assetFormatItemCode: string,
+      isFormatOverridden: boolean,
+      legalDocItemCode: string | null,
+    ) => ({
       id,
       assetId: 300,
       name,
       assetFormatItemCode,
+      isFormatOverridden,
       legalDocItemCode,
       type: legalDocItemCode === null ? 'Normal' : 'Legal',
       fulltextContent: null,
@@ -450,7 +457,10 @@ describe('SyncExternService files', () => {
       workgroupName: 'wg',
       originalAssetId: 300,
       originalSgsId: null,
-      files: [sourceFile(1, 'scan.pdf', 'textAnalog', null), sourceFile(2, 'contract.pdf', 'pdf', 'contract')],
+      files: [
+        sourceFile(1, 'scan.pdf', 'textAnalog', true, null),
+        sourceFile(2, 'contract.pdf', 'pdf', false, 'contract'),
+      ],
       assetContacts: [],
       manCatLabelRefs: [],
       typeNatRels: [],
@@ -464,10 +474,14 @@ describe('SyncExternService files', () => {
     const { data } = destination.asset.create.mock.calls[0][0];
     expect(data).not.toHaveProperty('assetFormatItemCode');
     expect(
-      data.files.create.map((f: { name: string; assetFormatItemCode: string }) => [f.name, f.assetFormatItemCode]),
+      data.files.create.map((f: { name: string; assetFormatItemCode: string; isFormatOverridden: boolean }) => [
+        f.name,
+        f.assetFormatItemCode,
+        f.isFormatOverridden,
+      ]),
     ).toEqual([
-      ['scan.pdf', 'textAnalog'],
-      ['contract.pdf', 'pdf'],
+      ['scan.pdf', 'textAnalog', true],
+      ['contract.pdf', 'pdf', false],
     ]);
     data.files.create.forEach((f: object) => {
       expect(f).not.toHaveProperty('id');

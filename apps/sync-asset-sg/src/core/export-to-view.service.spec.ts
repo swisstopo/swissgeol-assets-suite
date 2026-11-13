@@ -40,6 +40,7 @@ interface FileRow {
   type: 'Normal' | 'Legal';
   name: string;
   assetFormatItemCode: string;
+  isFormatOverridden: boolean;
   size: bigint;
   fulltextContent: unknown;
   pageRangeClassifications: unknown;
@@ -53,6 +54,7 @@ function file(id: number, assetId: number, type: 'Normal' | 'Legal', overrides: 
     type,
     name: `file-${id}.pdf`,
     assetFormatItemCode: 'pdf',
+    isFormatOverridden: false,
     size: BigInt(1),
     fulltextContent: null,
     pageRangeClassifications: null,
@@ -242,9 +244,9 @@ describe('ExportToViewService.exportFiles', () => {
     expect(inserted[0].pageDimensions).toBe(dims);
   });
 
-  it('exports the stored format of each file, including overrides', async () => {
+  it('exports the stored format and override flag of each file', async () => {
     const db: FileRow[] = [
-      file(10, 1, 'Normal', { name: 'scan.pdf', assetFormatItemCode: 'textAnalog' }),
+      file(10, 1, 'Normal', { name: 'scan.pdf', assetFormatItemCode: 'textAnalog', isFormatOverridden: true }),
       file(11, 1, 'Normal', { name: 'data.csv', assetFormatItemCode: 'db' }),
       file(12, 1, 'Legal', { name: 'contract.pdf', assetFormatItemCode: 'pdf' }),
     ];
@@ -256,10 +258,10 @@ describe('ExportToViewService.exportFiles', () => {
     await exportFiles(service, [1]);
 
     const inserted = fileCreateMany.mock.calls.flatMap((call) => call[0].data as FileRow[]);
-    expect(inserted.map((f) => [f.id, f.assetFormatItemCode])).toEqual([
-      [10, 'textAnalog'],
-      [11, 'db'],
-      [12, 'pdf'],
+    expect(inserted.map((f) => [f.id, f.assetFormatItemCode, f.isFormatOverridden])).toEqual([
+      [10, 'textAnalog', true],
+      [11, 'db', false],
+      [12, 'pdf', false],
     ]);
   });
 

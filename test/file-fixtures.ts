@@ -25,12 +25,19 @@ export const setupContractLegalDocItem = async (prisma: PrismaClient): Promise<v
 export interface CreateTestFileOptions {
   name?: string;
   formatCode?: string;
+  isFormatOverridden?: boolean;
   legalDocItemCode?: LegalDocCode | null;
   content?: boolean;
 }
 
 export const createTestFile = (prisma: PrismaClient, assetId: number, options: CreateTestFileOptions = {}) => {
-  const { name = 'file.pdf', formatCode = 'pdf', legalDocItemCode = null, content = false } = options;
+  const {
+    name = 'file.pdf',
+    formatCode = 'pdf',
+    isFormatOverridden = false,
+    legalDocItemCode = null,
+    content = false,
+  } = options;
   return prisma.file.create({
     data: {
       name,
@@ -38,6 +45,7 @@ export const createTestFile = (prisma: PrismaClient, assetId: number, options: C
       lastModifiedAt: new Date(),
       assetId,
       assetFormatItemCode: formatCode,
+      isFormatOverridden,
       legalDocItemCode,
       type: legalDocItemCode === null ? 'Normal' : 'Legal',
       fulltextContent: content ? [{ page: 1, content: `Text of ${name}` }] : undefined,

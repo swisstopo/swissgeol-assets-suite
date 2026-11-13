@@ -25,7 +25,14 @@ import { MatTableModule } from '@angular/material/table';
 import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { PdfOverlayService } from '@asset-sg/client-shared';
-import { Asset, fixtures, LegalDocCode, LocalizedItem, LocalizedItemCode } from '@asset-sg/shared/v2';
+import {
+  Asset,
+  CreateAssetFileData,
+  fixtures,
+  LegalDocCode,
+  LocalizedItem,
+  LocalizedItemCode,
+} from '@asset-sg/shared/v2';
 import { provideMockStore } from '@ngrx/store/testing';
 import { TranslateModule } from '@ngx-translate/core';
 import { RxPush } from '@rx-angular/template/push';
@@ -165,9 +172,9 @@ describe('format preselection of dropped files', () => {
   };
 
   it('assigns the extension-based format to each pending file', () => {
-    const files = drop(false, 'Report.PDF', 'scan.tiff', 'notes', 'archive.zip');
+    const files = drop(false, 'Report.PDF', 'scan.tiff', 'notes', 'archive.zip', 'metadata.xml');
 
-    expect(files.map((it) => it.formatCode)).toEqual(['pdf', 'graphicRaster', 'other', 'other']);
+    expect(files.map((it) => it.formatCode)).toEqual(['pdf', 'graphicRaster', 'other', 'archive', 'other']);
   });
 
   it('assigns the extension-based format to pending legal documents', () => {
@@ -179,20 +186,45 @@ describe('format preselection of dropped files', () => {
 });
 
 describe('uploading files with their format', () => {
-  it('sends the selected format with each uploaded file', () => {
+  let service: AssetEditorService;
+  let http: HttpTestingController;
+  const asset: Asset = fixtures.assets.minimal;
+
+  beforeEach(() => {
     TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
-    const service = TestBed.inject(AssetEditorService);
-    const http = TestBed.inject(HttpTestingController);
-    const asset: Asset = fixtures.assets.minimal;
+    service = TestBed.inject(AssetEditorService);
+    http = TestBed.inject(HttpTestingController);
+  });
 
-    service
-      .uploadFilesForAsset(asset.id, [{ file: new File(['x'], 'scan.pdf'), legalDocCode: null, formatCode: 'other' }])
-      .subscribe();
+  afterEach(() => http.verify());
 
-    const request = http.expectOne(`/api/assets/${asset.id}/files`);
-    const body = request.request.body as FormData;
+  const upload = (file: CreateAssetFileData): FormData => {
+    service.uploadFilesForAsset(asset.id, [file]).subscribe();
+    return http.expectOne(`/api/assets/${asset.id}/files`).request.body as FormData;
+  };
+
+  it('sends a format that differs from the detected one as an override', () => {
+    const body = upload({ file: new File(['x'], 'scan.pdf'), legalDocCode: null, formatCode: 'other' });
+
     expect(body.get('formatCode')).toBe('other');
     expect(body.has('legalDocCode')).toBe(false);
-    http.verify();
+  });
+
+  it('omits an untouched detected format so that the server detects it', () => {
+    const body = upload({ file: new File(['x'], 'Scan.PDF'), legalDocCode: null, formatCode: 'pdf' });
+
+    expect(body.has('formatCode')).toBe(false);
+    expect(body.get('file')).toBeInstanceOf(File);
+  });
+
+  it('omits the detected format of a legal document', () => {
+    const body = upload({
+      file: new File(['x'], 'contract.pdf'),
+      legalDocCode: LegalDocCode.Contract,
+      formatCode: 'pdf',
+    });
+
+    expect(body.has('formatCode')).toBe(false);
+    expect(body.get('legalDocCode')).toBe(LegalDocCode.Contract);
   });
 });

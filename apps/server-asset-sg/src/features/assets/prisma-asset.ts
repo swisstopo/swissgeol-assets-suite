@@ -339,16 +339,24 @@ export const mapAssetDataToPrismaUpdate = (id: AssetId, data: UpdateAssetData): 
         notIn: data.files.map((it) => it.id),
       },
     },
-    updateMany: data.files.map((it) => ({
-      where: { id: it.id, assetId: id },
-      data: {
-        legalDocItemCode: it.legalDocCode,
-        assetFormatItemCode: it.formatCode,
-        pageRangeClassifications: it.pageRangeClassifications
-          ? (it.pageRangeClassifications as unknown as Prisma.JsonArray)
-          : Prisma.JsonNull,
+    updateMany: data.files.flatMap((it) => [
+      {
+        where: { id: it.id, assetId: id },
+        data: {
+          legalDocItemCode: it.legalDocCode,
+          pageRangeClassifications: it.pageRangeClassifications
+            ? (it.pageRangeClassifications as unknown as Prisma.JsonArray)
+            : Prisma.JsonNull,
+        },
       },
-    })),
+      {
+        where: { id: it.id, assetId: id, assetFormatItemCode: { not: it.formatCode } },
+        data: {
+          assetFormatItemCode: it.formatCode,
+          isFormatOverridden: true,
+        },
+      },
+    ]),
   },
   assetContacts: {
     deleteMany: {

@@ -320,6 +320,15 @@ describe(AssetRepo, () => {
 
     const fileFormats = (asset: Asset | null): string[] => sortedFiles(asset!).map((it) => it.formatCode);
 
+    const overrideFlags = async (asset: Asset): Promise<boolean[]> =>
+      (
+        await prisma.file.findMany({
+          where: { assetId: asset.id },
+          orderBy: { id: 'asc' },
+          select: { isFormatOverridden: true },
+        })
+      ).map((it) => it.isFormatOverridden);
+
     const createAssetWithFiles = async (
       files: Array<{ name: string; formatCode?: string; legalDocCode?: LegalDocCode }>,
     ): Promise<Asset> => {
@@ -377,6 +386,7 @@ describe(AssetRepo, () => {
       // Given
       const asset = await createAssetWithFiles([{ name: 'map.pdf' }, { name: 'notes.txt' }]);
       const [map, notes] = sortedFiles(asset);
+      expect(await overrideFlags(asset)).toEqual([false, false]);
 
       // When
       const updated = await repo.update(
@@ -387,14 +397,32 @@ describe(AssetRepo, () => {
       // Then
       expect(fileFormats(updated)).toEqual(['graphicRaster', 'textDigital']);
       expect(updated!.formatCodes).toEqual(['textDigital', 'graphicRaster']);
+      expect(await overrideFlags(asset)).toEqual([true, false]);
       const reloaded = await repo.find(asset.id);
       expect(fileFormats(reloaded)).toEqual(['graphicRaster', 'textDigital']);
       expect(reloaded!.formatCodes).toEqual(['textDigital', 'graphicRaster']);
     });
 
-    it('keeps a format override when unrelated fields are updated', async () => {
+    it('marks a changed format as overridden, even if it equals the detected format', async () => {
       // Given
       const asset = await createAssetWithFiles([{ name: 'map.pdf', formatCode: 'graphicRaster' }]);
+      await prisma.file.updateMany({ where: { assetId: asset.id }, data: { isFormatOverridden: false } });
+
+      // When
+      await repo.update(asset.id, toUpdateData(asset, [{ ...asset.files[0], formatCode: 'pdf' }]));
+
+      // Then
+      expect(fileFormats(await repo.find(asset.id))).toEqual(['pdf']);
+      expect(await overrideFlags(asset)).toEqual([true]);
+    });
+
+    it('keeps the format and override flag of each file when unrelated fields are updated', async () => {
+      // Given
+      const asset = await createAssetWithFiles([
+        { name: 'map.pdf', formatCode: 'graphicRaster' },
+        { name: 'notes.txt' },
+      ]);
+      expect(await overrideFlags(asset)).toEqual([true, false]);
 
       // When
       const updated = await repo.update(asset.id, { ...toUpdateData(asset), title: 'Another title' });
@@ -414,6 +442,7 @@ describe(AssetRepo, () => {
       // Then
       await expect(update).rejects.toThrow();
       expect((await repo.find(asset.id))!.files[0].formatCode).toEqual('pdf');
+      expect(await overrideFlags(asset)).toEqual([false]);
     });
   });
 

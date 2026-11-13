@@ -76,6 +76,7 @@ describe(FileRepo, () => {
           type: faker.helpers.arrayElement(['Normal', 'Legal']),
           fileProcessingState: FileProcessingState.WillNotBeProcessed,
           assetFormatItem: { connect: { assetFormatItemCode: 'textDigital' } },
+          isFormatOverridden: false,
           asset: { create: { ...mapAssetDataToPrismaCreate({ ...fakeCreateAssetData(), creatorId: user.id }) } },
         },
       });
@@ -104,7 +105,7 @@ describe(FileRepo, () => {
       });
     };
 
-    it('stores the supplied format, even if it differs from the extension', async () => {
+    it('stores the supplied format as an override, even if it differs from the extension', async () => {
       // When
       const record = await createFile({ name: 'scan.pdf', formatCode: 'graphicRaster' });
 
@@ -112,11 +113,23 @@ describe(FileRepo, () => {
       expect(record.formatCode).toEqual('graphicRaster');
       const row = await prisma.file.findUniqueOrThrow({ where: { id: record.id } });
       expect(row.assetFormatItemCode).toEqual('graphicRaster');
+      expect(row.isFormatOverridden).toBe(true);
+    });
+
+    it('stores a supplied format as an override, even if it equals the detected format', async () => {
+      // When
+      const record = await createFile({ name: 'scan.pdf', formatCode: 'pdf' });
+
+      // Then
+      const row = await prisma.file.findUniqueOrThrow({ where: { id: record.id } });
+      expect(row.assetFormatItemCode).toEqual('pdf');
+      expect(row.isFormatOverridden).toBe(true);
     });
 
     it.each([
       ['Report.PDF', 'pdf'],
       ['layer.shp', 'GISFormat'],
+      ['metadata.xml', 'other'],
       ['archive.tar.gz', 'other'],
       ['README', 'other'],
     ])('derives the format of %s from its extension', async (name, expected) => {
@@ -127,6 +140,7 @@ describe(FileRepo, () => {
       expect(record.formatCode).toEqual(expected);
       const row = await prisma.file.findUniqueOrThrow({ where: { id: record.id } });
       expect(row.assetFormatItemCode).toEqual(expected);
+      expect(row.isFormatOverridden).toBe(false);
     });
 
     it('derives the format from the uploaded name rather than the stored name', async () => {

@@ -52,7 +52,7 @@ describe(FileService, () => {
   };
 
   describe('create', () => {
-    it('stores a supplied format unchanged, even if it differs from the extension', async () => {
+    it('stores a supplied format unchanged as an override, even if it differs from the extension', async () => {
       // When
       const record = await upload({ name: 'notes.txt', formatCode: 'textAnalog' });
 
@@ -60,10 +60,11 @@ describe(FileService, () => {
       expect(record.formatCode).toEqual('textAnalog');
       const row = await prisma.file.findUniqueOrThrow({ where: { id: record.id } });
       expect(row.assetFormatItemCode).toEqual('textAnalog');
+      expect(row.isFormatOverridden).toBe(true);
       expect(fileS3Service.save).toHaveBeenCalledTimes(1);
     });
 
-    it('derives an omitted format from the uploaded filename', async () => {
+    it('derives an omitted format from the uploaded filename without marking it as an override', async () => {
       // When
       const record = await upload({ name: 'Notes.TXT' });
 
@@ -71,6 +72,7 @@ describe(FileService, () => {
       expect(record.formatCode).toEqual('textDigital');
       const row = await prisma.file.findUniqueOrThrow({ where: { id: record.id } });
       expect(row.assetFormatItemCode).toEqual('textDigital');
+      expect(row.isFormatOverridden).toBe(false);
     });
 
     it('rejects an unknown format with 422 before writing to the database or S3', async () => {
