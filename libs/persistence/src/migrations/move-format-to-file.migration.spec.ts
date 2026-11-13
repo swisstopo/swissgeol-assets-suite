@@ -66,7 +66,7 @@ interface SeedFile {
 
 /**
  * Applies every migration preceding `MIGRATION_NAME` to a scratch database, seeds assets with an asset-level format
- * and attached files, then applies `MIGRATION_NAME` and checks the format assigned to each file.
+ * and attached files, then applies `MIGRATION_NAME` and checks the format and override flag assigned to each file.
  */
 describe(`migration ${MIGRATION_NAME}`, () => {
   let scratchUrl: string;
@@ -106,12 +106,17 @@ describe(`migration ${MIGRATION_NAME}`, () => {
     }
   };
 
-  const formatsOf = async (key: string): Promise<Record<string, string>> => {
-    const rows = await prisma.$queryRawUnsafe<Array<{ file_name_alias: string; asset_format_item_code: string }>>(
-      'SELECT file_name_alias, asset_format_item_code FROM file WHERE asset_id = $1',
+  /** Returns the stored format and override flag of each file of an asset, keyed by original file name. */
+  const formatsOf = async (key: string): Promise<Record<string, [string, boolean]>> => {
+    const rows = await prisma.$queryRawUnsafe<
+      Array<{ file_name_alias: string; asset_format_item_code: string; is_format_overridden: boolean }>
+    >(
+      'SELECT file_name_alias, asset_format_item_code, is_format_overridden FROM file WHERE asset_id = $1',
       assetIds.get(key),
     );
-    return Object.fromEntries(rows.map((row) => [row.file_name_alias, row.asset_format_item_code]));
+    return Object.fromEntries(
+      rows.map((row) => [row.file_name_alias, [row.asset_format_item_code, row.is_format_overridden]]),
+    );
   };
 
   beforeAll(async () => {
@@ -143,7 +148,7 @@ describe(`migration ${MIGRATION_NAME}`, () => {
     await seedAsset('match', 'pdf', [{ name: 'map.png' }, { name: 'report.pdf' }, { name: 'notes.txt' }]);
     await seedAsset('exception', 'textAnalog', [
       { name: 'scan.pdf' },
-      { name: 'photo.jpg' },
+      { name: 'scan-2.PDF' },
       { name: 'consent.pdf', legal: true },
     ]);
     await seedAsset('mixed', 'graphicRaster', [
@@ -159,8 +164,16 @@ describe(`migration ${MIGRATION_NAME}`, () => {
     ]);
     await seedAsset('legal-only', 'textAnalog', [{ name: 'contract.docx', legal: true }]);
     await seedAsset('legal-match', 'pdf', [{ name: 'data.csv' }, { name: 'consent.pdf', legal: true }]);
+    await seedAsset('xml-only', 'GISFormat', [{ name: 'layer.xml' }]);
     await seedAsset('no-files', 'pdf', []);
 
+    // Neither asset has a file matching its format, but only the first one has files of several detected formats.
+    await seedAsset('multiple-formats', 'binary', [{ name: 'data.csv' }, { name: 'table.xlsx' }]);
+    await seedAsset('single-format', 'binary', [
+      { name: 'old.xls' },
+      { name: 'new.xlsx' },
+      { name: 'consent.pdf', legal: true },
+    ]);
     const migrationFile = path.join(MIGRATIONS_DIR, MIGRATION_NAME, 'migration.sql');
     prismaCli(`db execute --file "${migrationFile}" --schema "${schemaFile}"`);
   }, 180_000);
@@ -175,46 +188,68 @@ describe(`migration ${MIGRATION_NAME}`, () => {
   }, 60_000);
 
   it('assigns extension-based formats when the asset format is "other"', async () => {
-    expect(await formatsOf('other')).toEqual({ 'report.pdf': 'pdf', 'data.csv': 'db' });
-      'metadata.xml': 'other',
+    expect(await formatsOf('other')).toEqual({
+      'report.pdf': ['pdf', false],
+      'data.csv': ['db', false],
+      'metadata.xml': ['other', false],
+    });
   });
 
   it('assigns extension-based formats when one of several non-legal files matches the asset format', async () => {
     expect(await formatsOf('match')).toEqual({
-      'map.png': 'graphicRaster',
-      'report.pdf': 'pdf',
-      'notes.txt': 'textDigital',
+      'map.png': ['graphicRaster', false],
+      'report.pdf': ['pdf', false],
+      'notes.txt': ['textDigital', false],
     });
   });
 
-  it('keeps an unmatched asset format on non-legal files, but not on legal files', async () => {
+  it('keeps an unmatched asset format on non-legal files as an override, but not on legal files', async () => {
     expect(await formatsOf('exception')).toEqual({
-      'scan.pdf': 'textAnalog',
-      'photo.jpg': 'textAnalog',
-      'consent.pdf': 'pdf',
+      'scan.pdf': ['textAnalog', true],
+      'scan-2.PDF': ['textAnalog', true],
+      'consent.pdf': ['pdf', false],
     });
   });
 
   it('evaluates the last extension case-insensitively and falls back to "other"', async () => {
     expect(await formatsOf('mixed')).toEqual({
-      'IMAGE.TIFF': 'graphicRaster',
-      'Layer.Shp': 'GISFormat',
-      README: 'other',
-      'archive.tar.gz': 'other',
-      'trailing.': 'other',
-      'Movie.MP4': 'multimedia',
-      'Metadata.XML': 'other',
-      'Survey.SGY': 'segy',
-      'slides.pptx': 'presentation',
+      'IMAGE.TIFF': ['graphicRaster', false],
+      'Layer.Shp': ['GISFormat', false],
+      'Metadata.XML': ['other', false],
+      'Survey.SGY': ['segy', false],
+      'slides.pptx': ['presentation', false],
+      README: ['other', false],
+      'archive.tar.gz': ['other', false],
+      'trailing.': ['other', false],
+      'Movie.MP4': ['multimedia', false],
     });
   });
 
+  it('does not treat ".xml" files as matching a GIS asset format', async () => {
+    expect(await formatsOf('xml-only')).toEqual({ 'layer.xml': ['GISFormat', true] });
+  });
+
   it('assigns extension-based formats to the files of an asset with only legal files', async () => {
-    expect(await formatsOf('legal-only')).toEqual({ 'contract.docx': 'textDigital' });
+    expect(await formatsOf('legal-only')).toEqual({ 'contract.docx': ['textDigital', false] });
   });
 
   it('ignores legal files when checking whether a file matches the asset format', async () => {
-    expect(await formatsOf('legal-match')).toEqual({ 'data.csv': 'pdf', 'consent.pdf': 'pdf' });
+    expect(await formatsOf('legal-match')).toEqual({ 'data.csv': ['pdf', true], 'consent.pdf': ['pdf', false] });
+  });
+
+  it('assigns extension-based formats when the non-legal files have several detected formats', async () => {
+    expect(await formatsOf('multiple-formats')).toEqual({
+      'data.csv': ['db', false],
+      'table.xlsx': ['spreadsheet', false],
+    });
+  });
+
+  it('counts detected formats by code and keeps the asset format when there is only one', async () => {
+    expect(await formatsOf('single-format')).toEqual({
+      'old.xls': ['binary', true],
+      'new.xlsx': ['binary', true],
+      'consent.pdf': ['pdf', false],
+    });
   });
 
   it('adds the spreadsheet and presentation formats to the vocabulary', async () => {
@@ -245,30 +280,36 @@ describe(`migration ${MIGRATION_NAME}`, () => {
     expect(rows).toHaveLength(0);
   });
 
-  it('requires a format on every file', async () => {
-    const [{ is_nullable: isNullable }] = await prisma.$queryRawUnsafe<Array<{ is_nullable: string }>>(
-      `SELECT is_nullable FROM information_schema.columns
-       WHERE table_name = 'file' AND column_name = 'asset_format_item_code'`,
+  it.each(['asset_format_item_code', 'is_format_overridden'])('requires %s on every file', async (column) => {
+    const [{ is_nullable: isNullable, column_default: columnDefault }] = await prisma.$queryRawUnsafe<
+      Array<{ is_nullable: string; column_default: string | null }>
+    >(
+      `SELECT is_nullable, column_default FROM information_schema.columns
+       WHERE table_name = 'file' AND column_name = $1`,
+      column,
     );
     expect(isNullable).toBe('NO');
+    expect(columnDefault).toBeNull();
+    const values = { asset_format_item_code: `'pdf'`, is_format_overridden: 'false', [column]: 'NULL' };
+    // 23502 is a not-null violation; the other column always holds a valid value.
     await expect(
       prisma.$executeRawUnsafe(
-        `INSERT INTO file (file_name, size, last_modified_at, asset_id) VALUES ('missing-format.pdf', 1, now(), $1)`,
+        `INSERT INTO file (file_name, size, last_modified_at, asset_id, asset_format_item_code, is_format_overridden)
+         VALUES ('missing-${column}.pdf', 1, now(), $1, ${values.asset_format_item_code}, ${values.is_format_overridden})`,
         assetIds.get('no-files'),
       ),
-    ).rejects.toThrow();
+    ).rejects.toThrow(/Code: `23502`/);
   });
 
   it('rejects file formats that are not part of the vocabulary', async () => {
     await expect(
       prisma.$executeRawUnsafe(
-        `INSERT INTO file (file_name, size, last_modified_at, asset_id, asset_format_item_code)
-         VALUES ('unknown-format.pdf', 1, now(), $1, 'does-not-exist')`,
+        `INSERT INTO file (file_name, size, last_modified_at, asset_id, asset_format_item_code, is_format_overridden)
+         VALUES ('unknown-format.pdf', 1, now(), $1, 'does-not-exist', false)`,
         assetIds.get('no-files'),
       ),
-    ).rejects.toThrow();
+    ).rejects.toThrow(/file_asset_format_item_code_fkey/);
   });
-
   it('prevents deleting a format that is still used by a file', async () => {
     await expect(
       prisma.$executeRawUnsafe(`DELETE FROM asset_format_item WHERE asset_format_item_code = 'pdf'`),

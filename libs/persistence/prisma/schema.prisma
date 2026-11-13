@@ -137,6 +137,7 @@ model File {
 
   assetFormatItemCode String          @map("asset_format_item_code")
   assetFormatItem     AssetFormatItem @relation(fields: [assetFormatItemCode], references: [assetFormatItemCode])
+  isFormatOverridden  Boolean         @map("is_format_overridden")
 
   pageRangeClassifications Json? @map("page_range_classifications")
   fulltextContent          Json? @map("fulltext_content")

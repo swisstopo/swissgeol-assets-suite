@@ -14,6 +14,7 @@ VALUES ('spreadsheet', 'No-GeolCode-specified', 'Spreadsheet', 'Tabellenformat',
 ON CONFLICT ("asset_format_item_code") DO NOTHING;
 
 ALTER TABLE "file" ADD COLUMN "asset_format_item_code" TEXT;
+ALTER TABLE "file" ADD COLUMN "is_format_overridden" BOOLEAN;
 
 -- Keep this mapping in sync with ASSET_FORMAT_EXTENSIONS in
 -- libs/shared/v2/src/lib/models/asset-format.ts.
@@ -82,28 +83,43 @@ WITH "file_extension_format" AS (
       END AS "format_code"
   FROM "file" f
 ),
-     "assets_with_format_match" AS (
-       SELECT DISTINCT e."asset_id"
+     "asset_format_stats" AS (
+       SELECT
+         e."asset_id",
+         bool_or(e."format_code" = a."asset_format_item_code") AS "has_match",
+         count(DISTINCT e."format_code") AS "distinct_formats"
        FROM "file_extension_format" e
               JOIN "asset" a ON a."asset_id" = e."asset_id"
        WHERE NOT e."is_legal"
-         AND e."format_code" = a."asset_format_item_code"
+       GROUP BY e."asset_id"
+     ),
+     "file_format_assignment" AS (
+       SELECT
+         e."id",
+         e."format_code" AS "extension_format_code",
+         a."asset_format_item_code" AS "asset_format_code",
+         CASE
+           WHEN e."is_legal" THEN FALSE
+           WHEN a."asset_format_item_code" = 'other' THEN FALSE
+           WHEN s."has_match" THEN FALSE
+           WHEN s."distinct_formats" > 1 THEN FALSE
+           ELSE TRUE
+           END AS "keeps_asset_format"
+       FROM "file_extension_format" e
+              JOIN "asset" a ON a."asset_id" = e."asset_id"
+              LEFT JOIN "asset_format_stats" s ON s."asset_id" = e."asset_id"
      )
--- Preserve an unmatched legacy format on the asset's non-legal files.
 UPDATE "file" f
 SET "asset_format_item_code" = CASE
-                                 WHEN NOT e."is_legal"
-                                   AND a."asset_format_item_code" <> 'other'
-                                   AND m."asset_id" IS NULL
-                                   THEN a."asset_format_item_code"
-                                 ELSE e."format_code"
-  END
-  FROM "file_extension_format" e
-JOIN "asset" a ON a."asset_id" = e."asset_id"
-  LEFT JOIN "assets_with_format_match" m ON m."asset_id" = e."asset_id"
-WHERE f."id" = e."id";
+                                 WHEN x."keeps_asset_format" THEN x."asset_format_code"
+                                 ELSE x."extension_format_code"
+  END,
+    "is_format_overridden"   = x."keeps_asset_format"
+  FROM "file_format_assignment" x
+WHERE f."id" = x."id";
 
 ALTER TABLE "file" ALTER COLUMN "asset_format_item_code" SET NOT NULL;
+ALTER TABLE "file" ALTER COLUMN "is_format_overridden" SET NOT NULL;
 
 ALTER TABLE "file"
   ADD CONSTRAINT "file_asset_format_item_code_fkey"
