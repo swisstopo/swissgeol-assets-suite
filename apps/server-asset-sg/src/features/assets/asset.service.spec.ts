@@ -44,21 +44,26 @@ describe('AssetService.update file formats', () => {
     const findMany = jest.fn(async ({ where }: { where: { assetFormatItemCode: { in: string[] } } }) =>
       where.assetFormatItemCode.in.filter((it) => knownCodes.includes(it)).map((it) => ({ assetFormatItemCode: it })),
     );
+    const workflowService = {
+      handleWorkflowForUpdatedAsset: jest.fn(async () => undefined),
+      updateSelectionByChanges: jest.fn(async () => undefined),
+    };
+    const fileService = { syncAssetWithRemovedFiles: jest.fn(async (updated: unknown) => updated) };
     const service = new AssetService(
       assetRepo as never,
       {} as never,
+      workflowService as never,
       {} as never,
-      {} as never,
-      {} as never,
+      fileService as never,
       { assetFormatItem: { findMany } } as never,
     );
     return { service, asset, assetRepo, findMany };
   };
 
-  const fileData = (id: number, formatCode: string) => ({
+  const fileData = (id: number, formatCode?: string) => ({
     id,
     legalDocCode: null,
-    formatCode,
+    ...(formatCode === undefined ? {} : { formatCode }),
     pageRangeClassifications: null,
   });
 
@@ -81,6 +86,26 @@ describe('AssetService.update file formats', () => {
       status: HttpStatus.UNPROCESSABLE_ENTITY,
     });
     expect(findMany).toHaveBeenCalledWith(expect.objectContaining({ where: { assetFormatItemCode: { in: ['pdf'] } } }));
+  });
+
+  it('only validates the formats that are submitted', async () => {
+    const { service, asset, assetRepo, findMany } = makeUpdateService(['pdf']);
+    const data = { ...fakeUpdateAssetData(), files: [fileData(1, 'pdf'), fileData(2)] };
+
+    await service.update(asset, data, editor());
+
+    expect(findMany).toHaveBeenCalledWith(expect.objectContaining({ where: { assetFormatItemCode: { in: ['pdf'] } } }));
+    expect(assetRepo.update).toHaveBeenCalledWith(asset.id, data);
+  });
+
+  it('updates files without any submitted format without checking the codelist', async () => {
+    const { service, asset, assetRepo, findMany } = makeUpdateService([]);
+    const data = { ...fakeUpdateAssetData(), files: [fileData(1), fileData(2)] };
+
+    await service.update(asset, data, editor());
+
+    expect(findMany).not.toHaveBeenCalled();
+    expect(assetRepo.update).toHaveBeenCalledWith(asset.id, data);
   });
 });
 

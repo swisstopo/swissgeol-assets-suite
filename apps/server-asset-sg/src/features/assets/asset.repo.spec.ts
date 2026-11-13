@@ -359,6 +359,15 @@ describe(AssetRepo, () => {
       })),
     });
 
+    const toUpdateDataWithoutFormats = (asset: Asset): UpdateAssetData => ({
+      ...fakeUpdateAssetData(),
+      files: asset.files.map((it) => ({
+        id: it.id,
+        legalDocCode: it.legalDocCode,
+        pageRangeClassifications: it.pageRangeClassifications,
+      })),
+    });
+
     it('derives the distinct formats of the non-legal files', async () => {
       // When
       const asset = await createAssetWithFiles([
@@ -429,7 +438,46 @@ describe(AssetRepo, () => {
 
       // Then
       expect(updated!.title).toEqual('Another title');
-      expect((await repo.find(asset.id))!.files[0].formatCode).toEqual('graphicRaster');
+      expect(fileFormats(await repo.find(asset.id))).toEqual(['graphicRaster', 'textDigital']);
+      expect(await overrideFlags(asset)).toEqual([true, false]);
+    });
+
+    it('does not overwrite a newer format when a stale editor saves unrelated fields', async () => {
+      // Given: an editor loads the asset, then another save changes the format of the first file.
+      const staleAsset = await createAssetWithFiles([{ name: 'map.pdf' }, { name: 'notes.txt' }]);
+      const [map, notes] = sortedFiles(staleAsset);
+      await repo.update(staleAsset.id, toUpdateData(staleAsset, [{ ...map, formatCode: 'graphicRaster' }, notes]));
+      expect(await overrideFlags(staleAsset)).toEqual([true, false]);
+
+      // When: the stale editor saves a new title and omits the unchanged formats.
+      const updated = await repo.update(staleAsset.id, {
+        ...toUpdateDataWithoutFormats(staleAsset),
+        title: 'Title from the stale editor',
+      });
+
+      // Then
+      expect(updated!.title).toEqual('Title from the stale editor');
+      expect(fileFormats(updated)).toEqual(['graphicRaster', 'textDigital']);
+      expect(fileFormats(await repo.find(staleAsset.id))).toEqual(['graphicRaster', 'textDigital']);
+      expect(await overrideFlags(staleAsset)).toEqual([true, false]);
+    });
+
+    it('still saves other file metadata when the format is omitted', async () => {
+      // Given
+      const asset = await createAssetWithFiles([{ name: 'map.pdf', formatCode: 'graphicRaster' }]);
+      const data = toUpdateDataWithoutFormats(asset);
+
+      // When
+      await repo.update(asset.id, {
+        ...data,
+        files: data.files.map((it) => ({ ...it, legalDocCode: LegalDocCode.Contract })),
+      });
+
+      // Then
+      const [file] = (await repo.find(asset.id))!.files;
+      expect(file.legalDocCode).toEqual(LegalDocCode.Contract);
+      expect(file.formatCode).toEqual('graphicRaster');
+      expect(await overrideFlags(asset)).toEqual([true]);
     });
 
     it('rejects an unknown file format and keeps the stored format', async () => {

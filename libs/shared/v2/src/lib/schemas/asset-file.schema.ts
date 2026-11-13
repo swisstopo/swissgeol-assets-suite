@@ -1,5 +1,16 @@
 import { Type } from 'class-transformer';
-import { IsDate, IsEnum, IsIn, IsInt, IsNotEmpty, IsNumber, IsString, IsUrl, ValidateNested } from 'class-validator';
+import {
+  IsDate,
+  IsEnum,
+  IsIn,
+  IsInt,
+  IsNotEmpty,
+  IsNumber,
+  IsString,
+  IsUrl,
+  ValidateIf,
+  ValidateNested,
+} from 'class-validator';
 import {
   AssetFile,
   AssetFileId,
@@ -99,9 +110,10 @@ export class UpdateAssetFileDataSchema extends Schema implements UpdateAssetFile
   @IsEnum(LegalDocCode)
   legalDocCode!: LegalDocCode;
 
+  @ValidateIf((_object, value) => value !== undefined)
   @IsString()
   @IsNotEmpty()
-  formatCode!: LocalizedItemCode;
+  formatCode?: LocalizedItemCode;
 
   @IsNullable()
   pageRangeClassifications!: PageRangeClassification[] | null;

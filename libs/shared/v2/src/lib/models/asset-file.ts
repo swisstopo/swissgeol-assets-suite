@@ -79,7 +79,7 @@ export interface CreateAssetFileData {
 export interface UpdateAssetFileData {
   id: AssetFileId;
   legalDocCode: LegalDocCode | null;
-  formatCode: LocalizedItemCode;
+  formatCode?: LocalizedItemCode;
   pageRangeClassifications: PageRangeClassification[] | null;
 }
 

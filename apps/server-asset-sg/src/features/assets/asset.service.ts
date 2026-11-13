@@ -48,7 +48,7 @@ export class AssetService {
     await this.validateData(user, data, asset);
     await assertKnownFileFormats(
       this.prismaService,
-      data.files.map((it) => it.formatCode),
+      data.files.flatMap((it) => (it.formatCode === undefined ? [] : [it.formatCode])),
     );
 
     const updatedAsset = await this.assetRepo.update(asset.id, data);

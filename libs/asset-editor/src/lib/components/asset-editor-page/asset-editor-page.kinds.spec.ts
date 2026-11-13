@@ -244,6 +244,30 @@ describe('asset types in the asset editor', () => {
       expect(titles).not.toContain('edit.tabs.general.format');
     });
 
+    it('sends the format of an existing file only when the selection differs from the loaded format', async () => {
+      const [file] = form().controls.files.controls;
+      const loaded = file.value.formatCode;
+      await toggleOption('name-map');
+
+      save();
+      let [, payload] = updateAsset.mock.calls[0];
+      expect(payload.files).toHaveLength(1);
+      expect(payload.files[0]).not.toHaveProperty('formatCode');
+
+      file.setValue({ ...file.value, formatCode: 'other' });
+      updateAsset.mockClear();
+      save();
+      [, payload] = updateAsset.mock.calls[0];
+      expect(payload.files).toEqual([expect.objectContaining({ id: asset.files[0].id, formatCode: 'other' })]);
+
+      // Changing the format and switching back counts as untouched.
+      file.setValue({ ...file.value, formatCode: loaded });
+      updateAsset.mockClear();
+      save();
+      [, payload] = updateAsset.mock.calls[0];
+      expect(payload.files[0]).not.toHaveProperty('formatCode');
+    });
+
     it('saves the format of each file instead of an asset-level format', async () => {
       const [file] = form().controls.files.controls;
       file.setValue({ ...file.value, formatCode: 'other' });

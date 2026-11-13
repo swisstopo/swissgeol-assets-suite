@@ -137,18 +137,18 @@ describe('UpdateAssetDataSchema files', () => {
     expect(await validateFiles(makeFile())).toEqual([]);
   });
 
+  it('accepts a file without a format', async () => {
+    const file = makeFile();
+    delete file['formatCode'];
+    expect(await validateFiles(file)).toEqual([]);
+  });
+
   it.each([
-    ['missing', undefined],
     ['null', null],
     ['empty', ''],
+    ['non-string', 1],
   ])('rejects a %s file format', async (_case, formatCode) => {
-    const file = makeFile();
-    if (formatCode === undefined) {
-      delete file['formatCode'];
-    } else {
-      file['formatCode'] = formatCode;
-    }
-    const errors = await validateFiles(file);
+    const errors = await validateFiles({ ...makeFile(), formatCode });
     expect(errors.map((it) => it.property)).toEqual(['files']);
     expect(errors[0].children?.[0].children?.map((it) => it.property)).toEqual(['formatCode']);
   });

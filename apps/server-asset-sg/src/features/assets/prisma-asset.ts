@@ -349,13 +349,17 @@ export const mapAssetDataToPrismaUpdate = (id: AssetId, data: UpdateAssetData): 
             : Prisma.JsonNull,
         },
       },
-      {
-        where: { id: it.id, assetId: id, assetFormatItemCode: { not: it.formatCode } },
-        data: {
-          assetFormatItemCode: it.formatCode,
-          isFormatOverridden: true,
-        },
-      },
+      ...(it.formatCode === undefined
+        ? []
+        : [
+            {
+              where: { id: it.id, assetId: id, assetFormatItemCode: { not: it.formatCode } },
+              data: {
+                assetFormatItemCode: it.formatCode,
+                isFormatOverridden: true,
+              },
+            },
+          ]),
     ]),
   },
   assetContacts: {

@@ -441,15 +441,19 @@ export class AssetEditorPageComponent implements OnInit, OnDestroy {
 
     const { general, geometries, contacts, references, files } = this.form.getRawValue();
 
+    const loadedFormatCodes = new Map(asset?.files.map((it) => [it.id, it.formatCode]));
     const filesToCreate: CreateAssetFileData[] = [];
     const filesToUpdate: UpdateAssetFileData[] = [];
     for (const entry of files) {
       if ('id' in entry) {
         if (!entry.shouldBeDeleted) {
+          const loadedFormatCode = loadedFormatCodes.get(entry.id);
           filesToUpdate.push({
             id: entry.id,
             legalDocCode: entry.legalDocCode,
-            formatCode: entry.formatCode,
+            ...(loadedFormatCode !== undefined && loadedFormatCode !== entry.formatCode
+              ? { formatCode: entry.formatCode }
+              : {}),
             pageRangeClassifications: entry.pageRangeClassifications,
           });
         }
