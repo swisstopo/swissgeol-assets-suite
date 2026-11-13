@@ -139,7 +139,7 @@ describe(`migration ${MIGRATION_NAME}`, () => {
       `INSERT INTO workgroup (name, created_at) VALUES ('Migration', now()) RETURNING id`,
     );
 
-    await seedAsset('other', 'other', [{ name: 'report.pdf' }, { name: 'data.csv' }]);
+    await seedAsset('other', 'other', [{ name: 'report.pdf' }, { name: 'data.csv' }, { name: 'metadata.xml' }]);
     await seedAsset('match', 'pdf', [{ name: 'map.png' }, { name: 'report.pdf' }, { name: 'notes.txt' }]);
     await seedAsset('exception', 'textAnalog', [
       { name: 'scan.pdf' },
@@ -149,6 +149,9 @@ describe(`migration ${MIGRATION_NAME}`, () => {
     await seedAsset('mixed', 'graphicRaster', [
       { name: 'IMAGE.TIFF' },
       { name: 'Layer.Shp' },
+      { name: 'Metadata.XML' },
+      { name: 'Survey.SGY' },
+      { name: 'slides.pptx' },
       { name: 'README' },
       { name: 'archive.tar.gz' },
       { name: 'trailing.' },
@@ -173,6 +176,7 @@ describe(`migration ${MIGRATION_NAME}`, () => {
 
   it('assigns extension-based formats when the asset format is "other"', async () => {
     expect(await formatsOf('other')).toEqual({ 'report.pdf': 'pdf', 'data.csv': 'db' });
+      'metadata.xml': 'other',
   });
 
   it('assigns extension-based formats when one of several non-legal files matches the asset format', async () => {
@@ -199,6 +203,9 @@ describe(`migration ${MIGRATION_NAME}`, () => {
       'archive.tar.gz': 'other',
       'trailing.': 'other',
       'Movie.MP4': 'multimedia',
+      'Metadata.XML': 'other',
+      'Survey.SGY': 'segy',
+      'slides.pptx': 'presentation',
     });
   });
 
@@ -210,6 +217,17 @@ describe(`migration ${MIGRATION_NAME}`, () => {
     expect(await formatsOf('legal-match')).toEqual({ 'data.csv': 'pdf', 'consent.pdf': 'pdf' });
   });
 
+  it('adds the spreadsheet and presentation formats to the vocabulary', async () => {
+    const rows = await prisma.$queryRawUnsafe<Array<{ asset_format_item_code: string; name_de: string }>>(
+      `SELECT asset_format_item_code, name_de FROM asset_format_item
+       WHERE asset_format_item_code IN ('spreadsheet', 'presentation')
+       ORDER BY asset_format_item_code`,
+    );
+    expect(rows).toEqual([
+      { asset_format_item_code: 'presentation', name_de: 'Präsentationsformat' },
+      { asset_format_item_code: 'spreadsheet', name_de: 'Tabellenformat' },
+    ]);
+  });
   it('keeps assets without files', async () => {
     const rows = await prisma.$queryRawUnsafe<unknown[]>(
       'SELECT 1 FROM asset WHERE asset_id = $1',

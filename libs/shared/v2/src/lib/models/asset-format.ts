@@ -5,14 +5,18 @@ export const OTHER_ASSET_FORMAT_CODE: LocalizedItemCode = 'other';
 
 export const ASSET_FORMAT_EXTENSIONS: ReadonlyArray<readonly [LocalizedItemCode, readonly string[]]> = [
   ['pdf', ['pdf']],
-  ['GISFormat', ['shp', 'shx', 'dbf', 'prj', 'cpg', 'sbn', 'sbx', 'xml']],
-  ['segy', ['segy']],
+  ['GISFormat', ['shp', 'shx', 'dbf', 'prj', 'cpg', 'sbn', 'sbx', 'gpkg', 'qml', 'qmd', 'qix', 'tfw']],
+  ['segy', ['segy', 'sgy']],
   ['las', ['las']],
   ['db', ['sqlite', 'db', 'sqlite3', 'accdb', 'mdb', 'sql', 'csv']],
   ['textDigital', ['doc', 'docx', 'txt', 'odt', 'rtf', 'md']],
   ['graphicRaster', ['jpg', 'jpeg', 'tif', 'tiff', 'png', 'webp', 'gif']],
   ['graphicVector', ['ai', 'svg', 'cdr', 'eps']],
   ['multimedia', ['mp4', 'mkv', 'mov', 'avi', 'webm']],
+  ['archive', ['zip', 'rar', '7z']],
+  ['spreadsheet', ['xls', 'xlsx']],
+  ['presentation', ['pptx']],
+  ['3D', ['off', '3dx', 'move', 'movz']],
 ];
 
 const FORMAT_CODE_BY_EXTENSION = new Map<string, LocalizedItemCode>(

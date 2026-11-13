@@ -8,6 +8,11 @@
 
 BEGIN;
 
+INSERT INTO "asset_format_item" ("asset_format_item_code", "geol_code", "name", "name_de", "name_fr", "name_it", "name_en", "description", "description_de", "description_fr", "description_it", "description_en")
+VALUES ('spreadsheet', 'No-GeolCode-specified', 'Spreadsheet', 'Tabellenformat', 'Format de tableur', 'Formato foglio di calcolo', 'Spreadsheet format', 'Spreadsheet format, such as xls, xlsx, etc.', 'Tabellenformat, wie z.B. xls, xlsx, etc.', 'Format de tableur, p. ex. xls, xlsx, etc.', 'Formato foglio di calcolo, come ad esempio xls, xlsx, ecc.', 'Spreadsheet format, such as xls, xlsx, etc.'),
+       ('presentation', 'No-GeolCode-specified', 'Presentation', 'Präsentationsformat', 'Format de présentation', 'Formato di presentazione', 'Presentation format', 'Presentation format, such as pptx, etc.', 'Präsentationsformat, wie z.B. pptx, etc.', 'Format de présentation, p. ex. pptx, etc.', 'Formato di presentazione, come ad esempio pptx, ecc.', 'Presentation format, such as pptx, etc.')
+ON CONFLICT ("asset_format_item_code") DO NOTHING;
+
 ALTER TABLE "file" ADD COLUMN "asset_format_item_code" TEXT;
 
 -- Keep this mapping in sync with ASSET_FORMAT_EXTENSIONS in
@@ -26,8 +31,13 @@ WITH "file_extension_format" AS (
       WHEN 'cpg' THEN 'GISFormat'
       WHEN 'sbn' THEN 'GISFormat'
       WHEN 'sbx' THEN 'GISFormat'
-      WHEN 'xml' THEN 'GISFormat'
+      WHEN 'gpkg' THEN 'GISFormat'
+      WHEN 'qml' THEN 'GISFormat'
+      WHEN 'qmd' THEN 'GISFormat'
+      WHEN 'qix' THEN 'GISFormat'
+      WHEN 'tfw' THEN 'GISFormat'
       WHEN 'segy' THEN 'segy'
+      WHEN 'sgy' THEN 'segy'
       WHEN 'las' THEN 'las'
       WHEN 'sqlite' THEN 'db'
       WHEN 'db' THEN 'db'
@@ -58,6 +68,16 @@ WITH "file_extension_format" AS (
       WHEN 'mov' THEN 'multimedia'
       WHEN 'avi' THEN 'multimedia'
       WHEN 'webm' THEN 'multimedia'
+      WHEN 'zip' THEN 'archive'
+      WHEN 'rar' THEN 'archive'
+      WHEN '7z' THEN 'archive'
+      WHEN 'xls' THEN 'spreadsheet'
+      WHEN 'xlsx' THEN 'spreadsheet'
+      WHEN 'pptx' THEN 'presentation'
+      WHEN 'off' THEN '3D'
+      WHEN '3dx' THEN '3D'
+      WHEN 'move' THEN '3D'
+      WHEN 'movz' THEN '3D'
       ELSE 'other'
       END AS "format_code"
   FROM "file" f

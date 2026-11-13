@@ -16,8 +16,13 @@ describe('getFormatCodeForFileName', () => {
     ['cpg', 'GISFormat'],
     ['sbn', 'GISFormat'],
     ['sbx', 'GISFormat'],
-    ['xml', 'GISFormat'],
+    ['gpkg', 'GISFormat'],
+    ['qml', 'GISFormat'],
+    ['qmd', 'GISFormat'],
+    ['qix', 'GISFormat'],
+    ['tfw', 'GISFormat'],
     ['segy', 'segy'],
+    ['sgy', 'segy'],
     ['las', 'las'],
     ['sqlite', 'db'],
     ['db', 'db'],
@@ -48,6 +53,16 @@ describe('getFormatCodeForFileName', () => {
     ['mov', 'multimedia'],
     ['avi', 'multimedia'],
     ['webm', 'multimedia'],
+    ['zip', 'archive'],
+    ['rar', 'archive'],
+    ['7z', 'archive'],
+    ['xls', 'spreadsheet'],
+    ['xlsx', 'spreadsheet'],
+    ['pptx', 'presentation'],
+    ['off', '3D'],
+    ['3dx', '3D'],
+    ['move', '3D'],
+    ['movz', '3D'],
   ])('maps .%s to %s', (extension, formatCode) => {
     expect(getFormatCodeForFileName(`report.${extension}`)).toBe(formatCode);
   });
@@ -58,24 +73,41 @@ describe('getFormatCodeForFileName', () => {
   });
 
   it('uses only the last extension', () => {
-    expect(getFormatCodeForFileName('archive.pdf.zip')).toBe('other');
+    expect(getFormatCodeForFileName('archive.pdf.zip')).toBe('archive');
+    expect(getFormatCodeForFileName('archive.tar.gz')).toBe('other');
     expect(getFormatCodeForFileName('data.backup.csv')).toBe('db');
   });
 
-  it.each(['README', 'report.', 'archive.zip', 'model.3ds', ''])('assigns other to "%s"', (name) => {
-    expect(getFormatCodeForFileName(name)).toBe('other');
-  });
+  it.each(['README', 'report.', 'metadata.xml', 'METADATA.XML', 'slides.ppt', 'model.3ds', ''])(
+    'assigns other to "%s"',
+    (name) => {
+      expect(getFormatCodeForFileName(name)).toBe('other');
+    },
+  );
 });
 
 describe('compareAssetFormatCodes', () => {
   it('orders mapped formats by mapping order, then other codes by code, with other last', () => {
-    const codes = ['other', 'unknown', 'multimedia', '3D', 'pdf', 'textAnalog', 'GISFormat', 'db'];
+    const codes = [
+      'other',
+      'unknown',
+      'presentation',
+      'multimedia',
+      '3D',
+      'pdf',
+      'textAnalog',
+      'GISFormat',
+      'binary',
+      'db',
+    ];
     expect([...codes].sort(compareAssetFormatCodes)).toEqual([
       'pdf',
       'GISFormat',
       'db',
       'multimedia',
+      'presentation',
       '3D',
+      'binary',
       'textAnalog',
       'unknown',
       'other',
