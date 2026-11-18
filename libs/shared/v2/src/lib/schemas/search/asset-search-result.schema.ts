@@ -1,4 +1,4 @@
-import { Expose, Type } from 'class-transformer';
+import { Expose, Transform, Type } from 'class-transformer';
 import { IsArray, IsBoolean, IsEnum, IsNumber, IsString, ValidateNested } from 'class-validator';
 import { AssetId } from '../../models/asset';
 import { LocalDate } from '../../models/base/local-date';
@@ -54,8 +54,10 @@ export class AssetSearchResultItemSchema extends Schema implements AssetSearchRe
   kindCodes!: LocalizedItemCode[];
 
   @Expose()
-  @IsString()
-  formatCode!: LocalizedItemCode;
+  @Transform(({ value }) => value ?? [])
+  @IsArray()
+  @IsString({ each: true })
+  formatCodes!: LocalizedItemCode[];
 
   @Expose()
   @IsArray()

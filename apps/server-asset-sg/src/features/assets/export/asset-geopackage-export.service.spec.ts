@@ -164,7 +164,7 @@ describe(AssetGeoPackageExportService, () => {
         topic: null,
         kind: 'Bericht',
         language: null,
-        format: 'PDF',
+        format: null,
         original_title: null,
         created_at: '2021-01-02',
         received_at: null,
@@ -191,6 +191,13 @@ describe(AssetGeoPackageExportService, () => {
       expect(row?.topic).toEqual('Forages');
       expect(row?.language).toEqual('anglais');
       expect(row?.national_interest_type).toEqual('Test intérêt national');
+    });
+  });
+
+  it('exports the distinct formats of non-legal files as one value', async () => {
+    const content = service.exportAssetsAsGeoPackage([fixture.formats.id], fixture.user, 'fr');
+    await exportAndOpen(content, (db) => {
+      expect(db.prepare('SELECT format FROM points').get()?.format).toEqual('PDF,Base de données');
     });
   });
 

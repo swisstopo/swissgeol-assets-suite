@@ -88,7 +88,6 @@ const selectionCategoryMapping = {
     'createdAt',
     'receivedAt',
     (asset) => [...asset.kindCodes].sort((a, b) => a.localeCompare(b)),
-    'formatCode',
     'languageCodes',
     'isOfNationalInterest',
     'nationalInterestTypeCodes',

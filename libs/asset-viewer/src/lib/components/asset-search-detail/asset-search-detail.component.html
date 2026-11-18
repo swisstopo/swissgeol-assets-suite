@@ -56,10 +56,6 @@
         </sgc-card>
       }
 
-      <sgc-card [header]="'search.format' | translate" data-testid="assetFormat">
-        <asset-sg-chip type="transparent">{{ asset.formatCode | reference: "assetFormats" }}</asset-sg-chip>
-      </sgc-card>
-
       <hr class="divider" />
 
       @if (asset.originalTitle) {
@@ -161,7 +157,11 @@
           @if (normalFiles.length > 0) {
             <hr class="divider" />
             <sgc-card [header]="'search.documents' | translate" data-testid="assetNormalFiles">
-              <asset-sg-asset-viewer-files [assetId]="asset.id" [files]="normalFiles"></asset-sg-asset-viewer-files>
+              <asset-sg-asset-viewer-files
+                [assetId]="asset.id"
+                [files]="normalFiles"
+                [showFormat]="true"
+              ></asset-sg-asset-viewer-files>
             </sgc-card>
           }
 

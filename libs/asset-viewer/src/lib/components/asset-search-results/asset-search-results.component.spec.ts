@@ -15,6 +15,8 @@ import { CommonModule } from '@angular/common';
 import { NO_ERRORS_SCHEMA, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatTableModule } from '@angular/material/table';
+import { MatTooltip, MatTooltipModule } from '@angular/material/tooltip';
+import { By } from '@angular/platform-browser';
 import { AssetExportService, PdfOverlayService } from '@asset-sg/client-shared';
 import { AssetSearchResultItem, LocalDate, SearchType } from '@asset-sg/shared/v2';
 import { provideMockStore } from '@ngrx/store/testing';
@@ -36,12 +38,12 @@ import {
 } from '../../state/asset-search/asset-search.selector';
 import { AssetSearchResultsComponent } from './asset-search-results.component';
 
-const makeItem = (id: number, kindCodes: string[]): AssetSearchResultItem =>
+const makeItem = (id: number, kindCodes: string[], formatCodes: string[] = ['pdf']): AssetSearchResultItem =>
   ({
     id,
     title: `Asset ${id}`,
     kindCodes,
-    formatCode: 'binary',
+    formatCodes,
     topicCodes: [],
     contacts: [],
     createdAt: LocalDate.of(2025, 1, 1),
@@ -53,7 +55,15 @@ describe(AssetSearchResultsComponent, () => {
   const render = (items: AssetSearchResultItem[]) => {
     TestBed.configureTestingModule({
       declarations: [AssetSearchResultsComponent],
-      imports: [CommonModule, MatTableModule, RxPush, TranslateModule.forRoot(), StubReferencePipe, StubDatePipe],
+      imports: [
+        CommonModule,
+        MatTableModule,
+        MatTooltipModule,
+        RxPush,
+        TranslateModule.forRoot(),
+        StubReferencePipe,
+        StubDatePipe,
+      ],
       schemas: [NO_ERRORS_SCHEMA],
       providers: [
         provideMockStore({
@@ -80,10 +90,10 @@ describe(AssetSearchResultsComponent, () => {
     fixture.detectChanges();
   };
 
-  const formats = (): string[] =>
-    Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('td.mat-column-assetFormat div.format')).map(
-      (it) => (it.textContent ?? '').trim(),
-    );
+  const formatLines = (): HTMLElement[] =>
+    Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('td.mat-column-assetFormat div.format'));
+
+  const formats = (): string[] => formatLines().map((it) => (it.textContent ?? '').trim());
 
   const kindLines = (): string[][] =>
     Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('td.mat-column-assetFormat')).map((it) =>
@@ -111,5 +121,28 @@ describe(AssetSearchResultsComponent, () => {
 
     expect(kindLines()).toEqual([['Bericht', 'Karte'], ['Log']]);
     expect(formats()).toEqual(['PDF', 'PDF']);
+  });
+
+  it('shows all formats of an asset comma-separated in a single line after its types', () => {
+    render([makeItem(1, ['report'], ['pdf', 'GISFormat', 'segy', 'las'])]);
+
+    expect(kindLines()).toEqual([['Bericht']]);
+    expect(formats()).toEqual(['PDF, Shapefile, SEG, LAS']);
+    const lines = (fixture.nativeElement as HTMLElement).querySelector('td.mat-column-assetFormat .line-list');
+    expect(lines?.lastElementChild?.classList).toContain('format');
+  });
+
+  it('shows the full format list in a tooltip', () => {
+    render([makeItem(1, ['report'], ['pdf', 'GISFormat', 'segy', 'las'])]);
+
+    const tooltip = fixture.debugElement.query(By.css('td.mat-column-assetFormat div.format')).injector.get(MatTooltip);
+    expect(tooltip.message).toEqual('PDF, Shapefile, SEG, LAS');
+  });
+
+  it('omits the format line for an asset without formats', () => {
+    render([makeItem(1, ['report'], []), makeItem(2, ['map'], ['las'])]);
+
+    expect(kindLines()).toEqual([['Bericht'], ['Karte']]);
+    expect(formats()).toEqual(['LAS']);
   });
 });

@@ -19,7 +19,7 @@ export interface AssetSearchResultItem {
   title: string;
   isPublic: boolean;
   kindCodes: LocalizedItemCode[];
-  formatCode: LocalizedItemCode;
+  formatCodes: LocalizedItemCode[];
   topicCodes: LocalizedItemCode[];
   contacts: AssetSearchResultContact[];
   geometries: GeometryDetail[];

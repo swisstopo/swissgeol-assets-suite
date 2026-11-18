@@ -43,6 +43,7 @@ export class ReferencePipe implements PipeTransform, OnDestroy {
     this.subscription.unsubscribe();
   }
 
+  transform(value: LocalizedItemCode[], key: 'assetFormats'): string;
   transform(value: LocalizedItemCode, key: 'nationalInterestTypes'): string;
   transform(value: LocalizedItemCode, key: 'assetTopics'): string;
   transform(value: LocalizedItemCode, key: 'assetFormats'): string;
@@ -51,7 +52,13 @@ export class ReferencePipe implements PipeTransform, OnDestroy {
   transform(value: LanguageCode, key: 'languages'): string;
   transform(value: LegalDocCode, key: 'legalDocs'): string;
   transform(value: ContactId, key: 'contacts'): string;
-  transform(value: LocalizedItemCode | ContactId, key: keyof ReferenceDataMapping): string {
+  transform(value: LocalizedItemCode[] | LocalizedItemCode | ContactId, key: keyof ReferenceDataMapping): string {
+    if (Array.isArray(value)) {
+      return value
+        .map((code) => this.transform(code, key as 'assetFormats'))
+        .filter((label) => label !== '')
+        .join(', ');
+    }
     if (this.referenceData === null) {
       return '';
     }

@@ -44,7 +44,7 @@ describe(AssetExportMetadataService, () => {
       topic: ['Bohrungen'],
       kind: ['2D-Seismik', 'Bericht'],
       language: ['englisch'],
-      format: '3D-spezifisches Format',
+      format: ['3D-spezifisches Format'],
       original_title: 'Original A',
       created_at: LocalDate.of(2020, 3, 4),
       received_at: LocalDate.of(2020, 5, 6),
@@ -69,7 +69,7 @@ describe(AssetExportMetadataService, () => {
       topic: [],
       kind: ['Bericht'],
       language: [],
-      format: 'PDF',
+      format: [],
       original_title: null,
       created_at: LocalDate.of(2021, 1, 2),
       received_at: null,
@@ -88,7 +88,7 @@ describe(AssetExportMetadataService, () => {
   });
 
   it('returns values matching the declared column types', async () => {
-    const dataset = await service.load([fixture.full.id, fixture.minimal.id], fixture.user, 'de');
+    const dataset = await service.load([fixture.full.id, fixture.minimal.id, fixture.formats.id], fixture.user, 'de');
     for (const record of dataset.records) {
       dataset.columns.forEach((column, i) => {
         const value = record.values[i];
@@ -111,6 +111,13 @@ describe(AssetExportMetadataService, () => {
         }
       });
     }
+  });
+
+  it('exports the distinct formats of non-legal files in canonical order', async () => {
+    const dataset = await service.load([fixture.formats.id], fixture.user, 'de');
+    const values = valuesByName(dataset, 0);
+    expect(values['format']).toEqual(['PDF', 'Datenbank']);
+    expect(values['documents']).toHaveLength(4);
   });
 
   it('uses unique snake_case column names', async () => {

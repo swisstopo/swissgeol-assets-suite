@@ -1,4 +1,13 @@
-import { AssetFile, AssetId, FileProcessingStage, FileProcessingState, LegalDocCode, User } from '@asset-sg/shared/v2';
+import {
+  AssetFile,
+  AssetId,
+  FileProcessingStage,
+  FileProcessingState,
+  getFormatCodeForFileName,
+  LegalDocCode,
+  LocalizedItemCode,
+  User,
+} from '@asset-sg/shared/v2';
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '@/core/prisma.service';
@@ -55,6 +64,7 @@ export class FileRepo implements Repo<AssetFile, FileIdentifier, CreateFileData,
 
   async create(data: CreateFileData): Promise<AssetFile> {
     const { fileName, nameAlias } = await determineUniqueFilename(data.name, data.assetId, this.prisma);
+    const formatCode = data.formatCode ?? getFormatCodeForFileName(data.name);
     const lastModifiedAt = new Date();
     const { id } = await this.prisma.file.create({
       select: { id: true },
@@ -66,6 +76,8 @@ export class FileRepo implements Repo<AssetFile, FileIdentifier, CreateFileData,
         fileProcessingStage: data.fileProcessingStage,
         type: data.legalDocCode === null ? 'Normal' : 'Legal',
         legalDocItemCode: data.legalDocCode,
+        assetFormatItemCode: formatCode,
+        isFormatOverridden: data.formatCode != null,
         lastModifiedAt,
         assetId: data.assetId,
       },
@@ -76,6 +88,7 @@ export class FileRepo implements Repo<AssetFile, FileIdentifier, CreateFileData,
       alias: nameAlias,
       size: data.size,
       legalDocCode: data.legalDocCode,
+      formatCode,
       pageCount: null, // this is filled (if at all) by postprocessing via OCR
       lastModifiedAt,
       fileProcessingStage: data.fileProcessingStage,
@@ -107,13 +120,14 @@ export interface CreateFileData {
   name: string;
   size: number;
   legalDocCode: LegalDocCode | null;
+  formatCode?: LocalizedItemCode;
   fileProcessingState: FileProcessingState;
   fileProcessingStage: FileProcessingStage | null;
   assetId: AssetId;
   user: User;
 }
 
-export type UpdateFileData = Partial<Omit<CreateFileData, 'assetId' | 'user'>>;
+export type UpdateFileData = Partial<Omit<CreateFileData, 'assetId' | 'user' | 'formatCode'>>;
 
 export interface UniqueFileName {
   fileName: string;

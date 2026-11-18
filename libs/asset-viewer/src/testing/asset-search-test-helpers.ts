@@ -2,12 +2,16 @@
 
 const REFERENCES: Record<string, Record<string, string>> = {
   assetKinds: { report: 'Bericht', map: 'Karte', log: 'Log' },
-  assetFormats: { binary: 'PDF' },
+  assetFormats: { pdf: 'PDF', GISFormat: 'Shapefile', segy: 'SEG', las: 'LAS' },
 };
 
+// Mirrors the real pipe: a list of codes is localized and joined with commas.
 @Pipe({ name: 'reference', standalone: true })
 export class StubReferencePipe implements PipeTransform {
-  transform(code: string, key: string): string {
+  transform(code: string | string[], key: string): string {
+    if (Array.isArray(code)) {
+      return code.map((it) => this.transform(it, key)).join(', ');
+    }
     return REFERENCES[key]?.[code] ?? '';
   }
 }

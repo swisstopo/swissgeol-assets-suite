@@ -1,5 +1,5 @@
 import { execSync } from 'node:child_process';
-import { cpSync, mkdtempSync, rmSync } from 'node:fs';
+import { cpSync, mkdtempSync, rmSync, statSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import * as path from 'node:path';
 import { PrismaClient } from '@prisma/client';
@@ -7,6 +7,7 @@ import * as dotenv from 'dotenv';
 
 const ROOT = path.resolve(__dirname, '../../../..');
 const PRISMA_DIR = path.join(ROOT, 'libs/persistence/prisma');
+const MIGRATIONS_DIR = path.join(PRISMA_DIR, 'migrations');
 const MIGRATION_NAME = '20261026120000_multiple_asset_kinds';
 const SCRATCH_DATABASE = 'postgres_test_migration_asset_kinds';
 
@@ -18,8 +19,12 @@ const withDatabase = (url: string, database: string): string => {
   return result.toString();
 };
 
+// Later migrations are excluded too, as they may depend on the schema the seed below writes to.
+const isMigrationBeforeTarget = (source: string): boolean =>
+  path.dirname(source) !== MIGRATIONS_DIR || !statSync(source).isDirectory() || path.basename(source) < MIGRATION_NAME;
+
 /**
- * Applies every migration except `MIGRATION_NAME` to a scratch database, seeds assets that each have a single
+ * Applies every migration preceding `MIGRATION_NAME` to a scratch database, seeds assets that each have a single
  * asset type, then applies `MIGRATION_NAME` and checks the result.
  */
 describe(`migration ${MIGRATION_NAME}`, () => {
@@ -70,10 +75,7 @@ describe(`migration ${MIGRATION_NAME}`, () => {
 
     // Prisma resolves migrations relative to the schema, so we deploy from a copy that lacks the migration under test.
     tmpDir = mkdtempSync(path.join(tmpdir(), 'asset-kind-migration-'));
-    cpSync(PRISMA_DIR, tmpDir, {
-      recursive: true,
-      filter: (source) => path.basename(source) !== MIGRATION_NAME,
-    });
+    cpSync(PRISMA_DIR, tmpDir, { recursive: true, filter: isMigrationBeforeTarget });
     const schemaFile = path.join(tmpDir, 'schema.prisma');
     prismaCli(`migrate deploy --schema "${schemaFile}"`);
 
@@ -107,7 +109,7 @@ describe(`migration ${MIGRATION_NAME}`, () => {
     if (tmpDir) {
       rmSync(tmpDir, { recursive: true, force: true });
     }
-  });
+  }, 60_000);
 
   it('keeps the existing type of every asset as its only selection', async () => {
     expect(assetIdsByKind.size).toBe(3);

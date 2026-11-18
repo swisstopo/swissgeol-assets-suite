@@ -10,6 +10,8 @@ import {
   ElasticsearchFilePage,
   ElasticsearchLocalDate,
   FulltextContent,
+  getAssetFormatCodes,
+  LegalDocCode,
   LocalDate,
 } from '@asset-sg/shared/v2';
 import { transformJsonToFulltextContent } from '@asset-sg/shared/v2';
@@ -80,7 +82,7 @@ export class FileSearchWriterService {
             isPublic: true,
             workgroupId: true,
             assetKinds: { select: { assetKindItemCode: true }, orderBy: { assetKindItemCode: 'asc' } },
-            assetFormatItemCode: true,
+            files: { select: { assetFormatItemCode: true, legalDocItemCode: true } },
             createDate: true,
             assetLanguages: { select: { languageItemCode: true } },
             manCatLabelRefs: { select: { manCatLabelItemCode: true } },
@@ -173,7 +175,12 @@ export class FileSearchWriterService {
           title: asset.titlePublic,
           isPublic: asset.isPublic,
           kindCodes: asset.assetKinds.map((k) => k.assetKindItemCode),
-          formatCode: asset.assetFormatItemCode,
+          formatCodes: getAssetFormatCodes(
+            asset.files.map((f) => ({
+              formatCode: f.assetFormatItemCode,
+              legalDocCode: f.legalDocItemCode as LegalDocCode | null,
+            })),
+          ),
           topicCodes: asset.manCatLabelRefs.map((m) => m.manCatLabelItemCode),
           contacts: asset.assetContacts.map((c) => ({ id: c.contactId, role: c.role as AssetContactRole })),
           geometries: assetGeometryDetails,
@@ -330,7 +337,7 @@ export class FileSearchWriterService {
         title: asset.title,
         isPublic: asset.isPublic,
         kindCodes: asset.kindCodes,
-        formatCode: asset.formatCode,
+        formatCodes: asset.formatCodes,
         topicCodes: asset.topicCodes,
         contacts: asset.contacts,
         geometries: assetGeometryDetails,

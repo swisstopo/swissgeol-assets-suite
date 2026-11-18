@@ -50,13 +50,6 @@ export class AssetEditorGeneralComponent implements OnInit, OnChanges, OnDestroy
       map((it) => [...it.values()]),
     );
 
-  public readonly assetFormats$: Observable<LocalizedItem[]> = this.store
-    .select(fromAppShared.selectReferenceAssetFormats)
-    .pipe(
-      filter(isNotNull),
-      map((it) => [...it.values()]),
-    );
-
   public readonly assetKinds$: Observable<LocalizedItem[]> = this.store
     .select(fromAppShared.selectReferenceAssetKinds)
     .pipe(

@@ -1,5 +1,7 @@
 import { Asset } from '../models/asset';
 import { FileProcessingStage, FileProcessingState } from '../models/asset-file';
+import { getAssetFormatCodes, getFormatCodeForFileName } from '../models/asset-format';
+import { LocalizedItemCode } from '../models/localized-item';
 import { PageCategory, PageRangeClassification } from '../models/page-classification';
 
 export interface RegisterFileOptions {
@@ -8,6 +10,7 @@ export interface RegisterFileOptions {
   size: number;
   lastModifiedAt: Date;
   pageRangeClassifications: PageRangeClassification[];
+  formatCode?: LocalizedItemCode;
 }
 
 const register = (asset: Asset, options: RegisterFileOptions): void => {
@@ -19,12 +22,14 @@ const register = (asset: Asset, options: RegisterFileOptions): void => {
     size: options.size,
     pageCount: options.pageCount,
     legalDocCode: null,
+    formatCode: options.formatCode ?? getFormatCodeForFileName(options.name),
     lastModifiedAt: options.lastModifiedAt,
     fileProcessingState: FileProcessingState.Success,
     fileProcessingStage: FileProcessingStage.Extraction,
     pageRangeClassifications: options.pageRangeClassifications,
     pageDimensions: null, // Populated lazily when metadata endpoint is called
   });
+  asset.formatCodes = getAssetFormatCodes(asset.files);
 };
 
 const registerSampleReport = (asset: Asset) =>

@@ -12,6 +12,7 @@ import {
 import { forwardRef, HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { PrismaService } from '@/core/prisma.service';
 import { AssetRepo } from '@/features/assets/asset.repo';
+import { assertKnownFileFormats } from '@/features/assets/files/file-format';
 import { FileService } from '@/features/assets/files/file.service';
 import { SearchWriterService } from '@/features/assets/search/search-writer.service';
 import { WorkflowService } from '@/features/assets/workflow/workflow.service';
@@ -45,6 +46,10 @@ export class AssetService {
 
   async update(asset: Asset, data: UpdateAssetData, user: User): Promise<Asset | null> {
     await this.validateData(user, data, asset);
+    await assertKnownFileFormats(
+      this.prismaService,
+      data.files.flatMap((it) => (it.formatCode === undefined ? [] : [it.formatCode])),
+    );
 
     const updatedAsset = await this.assetRepo.update(asset.id, data);
     if (updatedAsset === null) {

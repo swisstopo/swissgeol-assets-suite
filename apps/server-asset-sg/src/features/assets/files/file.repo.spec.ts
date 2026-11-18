@@ -75,6 +75,8 @@ describe(FileRepo, () => {
           lastModifiedAt: faker.date.past(),
           type: faker.helpers.arrayElement(['Normal', 'Legal']),
           fileProcessingState: FileProcessingState.WillNotBeProcessed,
+          assetFormatItem: { connect: { assetFormatItemCode: 'textDigital' } },
+          isFormatOverridden: false,
           asset: { create: { ...mapAssetDataToPrismaCreate({ ...fakeCreateAssetData(), creatorId: user.id }) } },
         },
       });
@@ -85,6 +87,91 @@ describe(FileRepo, () => {
       expect(actual.fileName).toMatch(
         new RegExp(`^a${assetId}_${fileName}_\\d{4}\\d{2}\\d{2}\\d{2}\\d{2}\\d{2}\\.${fileExt}$`),
       );
+    });
+  });
+
+  describe('create', () => {
+    const createFile = async (data: { name: string; formatCode?: string }) => {
+      const user = await userRepo.create(fakeUserData());
+      const asset = await assetRepo.create({ ...fakeCreateAssetData(), creatorId: user.id });
+      return repo.create({
+        ...data,
+        size: 1,
+        legalDocCode: null,
+        fileProcessingState: FileProcessingState.WillNotBeProcessed,
+        fileProcessingStage: null,
+        assetId: asset.id,
+        user,
+      });
+    };
+
+    it('stores the supplied format as an override, even if it differs from the extension', async () => {
+      // When
+      const record = await createFile({ name: 'scan.pdf', formatCode: 'graphicRaster' });
+
+      // Then
+      expect(record.formatCode).toEqual('graphicRaster');
+      const row = await prisma.file.findUniqueOrThrow({ where: { id: record.id } });
+      expect(row.assetFormatItemCode).toEqual('graphicRaster');
+      expect(row.isFormatOverridden).toBe(true);
+    });
+
+    it('stores a supplied format as an override, even if it equals the detected format', async () => {
+      // When
+      const record = await createFile({ name: 'scan.pdf', formatCode: 'pdf' });
+
+      // Then
+      const row = await prisma.file.findUniqueOrThrow({ where: { id: record.id } });
+      expect(row.assetFormatItemCode).toEqual('pdf');
+      expect(row.isFormatOverridden).toBe(true);
+    });
+
+    it.each([
+      ['Report.PDF', 'pdf'],
+      ['layer.shp', 'GISFormat'],
+      ['metadata.xml', 'other'],
+      ['archive.tar.gz', 'other'],
+      ['README', 'other'],
+    ])('derives the format of %s from its extension', async (name, expected) => {
+      // When
+      const record = await createFile({ name });
+
+      // Then
+      expect(record.formatCode).toEqual(expected);
+      const row = await prisma.file.findUniqueOrThrow({ where: { id: record.id } });
+      expect(row.assetFormatItemCode).toEqual(expected);
+      expect(row.isFormatOverridden).toBe(false);
+    });
+
+    it('derives the format from the uploaded name rather than the stored name', async () => {
+      // Given
+      const user = await userRepo.create(fakeUserData());
+      const asset = await assetRepo.create({ ...fakeCreateAssetData(), creatorId: user.id });
+      const data = {
+        size: 1,
+        legalDocCode: null,
+        fileProcessingState: FileProcessingState.WillNotBeProcessed,
+        fileProcessingStage: null,
+        assetId: asset.id,
+        user,
+      };
+      await repo.create({ ...data, name: 'notes.txt' });
+
+      // When
+      const record = await repo.create({ ...data, name: 'notes.txt' });
+
+      // Then
+      expect(record.name).not.toEqual(`a${asset.id}_notes.txt`);
+      expect(record.formatCode).toEqual('textDigital');
+    });
+
+    it('rejects a format that is not part of the vocabulary', async () => {
+      // When
+      const create = createFile({ name: 'scan.pdf', formatCode: 'noSuchFormat' });
+
+      // Then
+      await expect(create).rejects.toThrow();
+      expect(await prisma.file.count()).toEqual(0);
     });
   });
 

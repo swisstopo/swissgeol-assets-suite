@@ -13,6 +13,7 @@ export * from './lib/models/search/file-search-result';
 export * from './lib/models/app-config';
 export * from './lib/models/asset';
 export * from './lib/models/asset-file';
+export * from './lib/models/asset-format';
 export * from './lib/models/asset-identifier';
 export * from './lib/models/contact';
 export * from './lib/models/elasticsearch-asset';

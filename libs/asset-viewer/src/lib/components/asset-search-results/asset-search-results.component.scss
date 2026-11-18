@@ -105,11 +105,18 @@
         text-overflow: ellipsis;
       }
 
+      // The comma-separated format list wraps, but is clamped to two lines; the full list is in the tooltip.
       .format {
         margin-top: 4px;
         font-size: 12px;
         font-weight: 600;
         color: variables.$grey-07;
+        display: -webkit-box;
+        overflow: hidden;
+        line-clamp: 2;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        word-wrap: break-word;
       }
     }
 

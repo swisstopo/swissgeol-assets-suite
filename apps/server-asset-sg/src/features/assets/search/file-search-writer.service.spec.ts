@@ -1,7 +1,9 @@
-import { ElasticsearchFilePage, AssetSearchResultItem } from '@asset-sg/shared/v2';
+import { ElasticsearchFilePage, AssetSearchResultItem, LegalDocCode } from '@asset-sg/shared/v2';
 
 // eslint-disable-next-line @nx/enforce-module-boundaries
 import fileIndexMapping from '../../../../../../development/init/elasticsearch/mappings/swissgeol_asset_file.json';
+// eslint-disable-next-line @nx/enforce-module-boundaries
+import { createTestFile, setupContractLegalDocItem } from '../../../../../../test/file-fixtures';
 // eslint-disable-next-line @nx/enforce-module-boundaries
 import { clearPrismaAssets, setupDB } from '../../../../../../test/setup-db';
 
@@ -58,15 +60,7 @@ describe(FileSearchWriterService, () => {
       kindCodes: ['report', 'map', '2Dseismic'],
       creatorId: user.id,
     });
-    const file = await prisma.file.create({
-      data: {
-        name: 'file.pdf',
-        size: 1,
-        lastModifiedAt: new Date(),
-        assetId: asset.id,
-        fulltextContent: [{ page: 1, content: 'Some text' }],
-      },
-    });
+    const file = await createTestFile(prisma, asset.id, { content: true });
 
     // When
     await writer.write(file.id);
@@ -80,5 +74,62 @@ describe(FileSearchWriterService, () => {
 
     const byAnyType = await elastic.search({ index: TEST_INDEX, query: { term: { kindCodes: 'map' } } });
     expect(byAnyType.hits.hits).toHaveLength(1);
+  });
+
+  describe('file formats', () => {
+    beforeAll(async () => {
+      await setupContractLegalDocItem(prisma);
+    });
+
+    // An asset with a searchable PDF, a CSV without content and a legal document of a distinct format.
+    const createAssetWithFiles = async () => {
+      const user = await userRepo.create(fakeUserData());
+      const asset = await assetRepo.create({ ...fakeCreateAssetData(), creatorId: user.id });
+      const pdf = await createTestFile(prisma, asset.id, { name: 'report.pdf', content: true });
+      await createTestFile(prisma, asset.id, { name: 'data.csv', formatCode: 'db' });
+      await createTestFile(prisma, asset.id, {
+        name: 'contract.pdf',
+        formatCode: 'textAnalog',
+        legalDocItemCode: LegalDocCode.Contract,
+        content: true,
+      });
+      return { asset, pdf };
+    };
+
+    const indexedFormatCodes = async (): Promise<string[][]> => {
+      const response = await elastic.search<ElasticsearchFilePage>({ index: TEST_INDEX, query: { match_all: {} } });
+      return response.hits.hits.map(
+        (hit) => (JSON.parse(hit._source?.data ?? '{}') as AssetSearchResultItem).formatCodes,
+      );
+    };
+
+    it('writes the distinct formats of all non-legal files of the asset when writing a file', async () => {
+      // Given
+      const { pdf } = await createAssetWithFiles();
+
+      // When
+      await writer.write(pdf.id);
+
+      // Then
+      expect(await indexedFormatCodes()).toEqual([['pdf', 'db']]);
+    });
+
+    it("writes the asset's derived formats when writing all files of an asset", async () => {
+      // Given
+      const { asset } = await createAssetWithFiles();
+      const reloaded = await assetRepo.find(asset.id);
+      if (reloaded == null) {
+        throw new Error(`asset ${asset.id} not found`);
+      }
+
+      // When
+      await writer.writeAssetFiles(reloaded);
+
+      // Then
+      expect(await indexedFormatCodes()).toEqual([
+        ['pdf', 'db'],
+        ['pdf', 'db'],
+      ]);
+    });
   });
 });

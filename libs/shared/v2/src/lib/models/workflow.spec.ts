@@ -1,4 +1,5 @@
 import { assetFixtures } from '../fixtures/asset.fixtures';
+import { LegalDocCode } from './asset-file';
 import { hasWorkflowSelectionChanged, WorkflowSelectionCategory } from './workflow';
 
 describe('hasWorkflowSelectionChanged', () => {
@@ -44,5 +45,29 @@ describe('hasWorkflowSelectionChanged', () => {
   it('keeps the original types array unmodified', () => {
     hasWorkflowSelectionChanged(original, { ...original }, WorkflowSelectionCategory.General);
     expect(original.kindCodes).toEqual(['report', 'map']);
+  });
+
+  describe('file formats', () => {
+    const [file] = original.files;
+    const update = {
+      ...original,
+      files: [{ ...file, formatCode: 'other' }],
+      formatCodes: ['other'],
+    };
+
+    it('reports a changed file format as a normal file change', () => {
+      expect(file.formatCode).toBe('pdf');
+      expect(hasWorkflowSelectionChanged(original, update, WorkflowSelectionCategory.NormalFiles)).toBe(true);
+    });
+
+    it('does not report a changed file format as a general change', () => {
+      expect(hasWorkflowSelectionChanged(original, update, WorkflowSelectionCategory.General)).toBe(false);
+    });
+
+    it('does not report a changed legal file format as a normal file change', () => {
+      const legal = { ...original, files: [{ ...file, legalDocCode: LegalDocCode.Contract }] };
+      const legalUpdate = { ...legal, files: [{ ...legal.files[0], formatCode: 'other' }] };
+      expect(hasWorkflowSelectionChanged(legal, legalUpdate, WorkflowSelectionCategory.NormalFiles)).toBe(false);
+    });
   });
 });

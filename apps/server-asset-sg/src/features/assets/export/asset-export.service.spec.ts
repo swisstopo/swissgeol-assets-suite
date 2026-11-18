@@ -52,7 +52,7 @@ describe(AssetExportService, () => {
       '',
       'Bericht',
       '',
-      'PDF',
+      '',
       '',
       '2021-01-02',
       '',
@@ -137,6 +137,13 @@ describe(AssetExportService, () => {
       expect(row).toContain(';anglais;');
       expect(row).toContain(';Oui;');
       expect(row).toContain(';Test intérêt national;');
+    });
+
+    it('exports the distinct formats of non-legal files as one cell', async () => {
+      const csv = await service.exportAssetsAsCsv([fixture.formats.id], fixture.user, 'de');
+      const formatIndex = CSV_COLUMN_KEYS.indexOf('format');
+      const cells = splitCsvLine(csv.split('\n')[1]);
+      expect(cells[formatIndex]).toEqual('PDF,Datenbank');
     });
   });
 });

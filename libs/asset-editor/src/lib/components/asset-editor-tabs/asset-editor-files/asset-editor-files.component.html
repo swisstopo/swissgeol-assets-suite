@@ -68,6 +68,22 @@
                 >
               </td>
             </ng-container>
+            <ng-container matColumnDef="formatCode">
+              <th mat-header-cell *matHeaderCellDef class="column-format">
+                <span translate>search.format</span>
+              </th>
+              <td mat-cell *matCellDef="let control" class="column-format" data-testid="file-format-select">
+                <asset-sg-select
+                  [initialKeys]="[control.value.formatCode]"
+                  [values]="assetFormatItems$ | push"
+                  bindLabel="name"
+                  bindKey="code"
+                  (selectionChanged)="updateFormatCode(control, $event)"
+                  small
+                >
+                </asset-sg-select>
+              </td>
+            </ng-container>
             <ng-container matColumnDef="legalDocCode">
               <th mat-header-cell *matHeaderCellDef translate>edit.tabs.general.type</th>
               <td mat-cell *matCellDef="let control">

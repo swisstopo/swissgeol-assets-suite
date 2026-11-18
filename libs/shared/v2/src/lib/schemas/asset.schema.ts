@@ -97,8 +97,9 @@ export class AssetSchema extends Schema implements Asset {
   @Type(() => AssetLegacyDataSchema)
   legacyData!: AssetLegacyData | null;
 
-  @IsString()
-  formatCode!: LocalizedItemCode;
+  @IsArray()
+  @IsString({ each: true })
+  formatCodes!: LocalizedItemCode[];
 
   @IsArray()
   @IsString({ each: true })
@@ -188,9 +189,6 @@ class AssetDataSchema extends Schema implements AssetData {
   @IsRestrictionDateNullIfIsPublic()
   @IsNullable()
   restrictionDate!: LocalDate | null;
-
-  @IsString()
-  formatCode!: LocalizedItemCode;
 
   @IsArray()
   @ArrayNotEmpty()

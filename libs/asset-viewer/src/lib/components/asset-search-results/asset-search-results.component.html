@@ -70,7 +70,10 @@
                 @for (kindCode of asset.kindCodes; track kindCode) {
                   <div class="line-list__item kind">{{ kindCode | reference: "assetKinds" }}</div>
                 }
-                <div class="line-list__item format">{{ asset.formatCode | reference: "assetFormats" }}</div>
+                @if (asset.formatCodes.length > 0) {
+                  @let formatList = asset.formatCodes | reference: "assetFormats";
+                  <div class="format" [matTooltip]="formatList">{{ formatList }}</div>
+                }
               </div>
             </td>
           </ng-container>
