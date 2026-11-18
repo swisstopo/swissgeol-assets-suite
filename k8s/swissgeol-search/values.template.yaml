@@ -1,3 +1,4 @@
 host:
 image_kibana:
 image_elasticsearch:
+storageClass:
