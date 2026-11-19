@@ -6,6 +6,7 @@ import {
   ReferenceDataMapping,
   SimpleWorkgroup,
   User,
+  WorkflowStatus,
 } from '@asset-sg/shared/v2';
 import { createAction, props } from '@ngrx/store';
 
@@ -59,6 +60,20 @@ export const updateAsset = createAction(
     asset: Asset;
     geometries?: GeometryDetail[];
     shouldBeCurrentAsset?: boolean;
+  }>(),
+);
+
+/**
+ * Updates the workflow status and the requested-changes flag of all instances of an asset.
+ * Nothing else of the asset changes, and if the asset is not referenced anywhere or already has these values,
+ * the state does not change.
+ */
+export const updateAssetWorkflow = createAction(
+  '[App Shared State] Update Asset Workflow',
+  props<{
+    assetId: AssetId;
+    workflowStatus: WorkflowStatus;
+    hasRequestedChanges: boolean;
   }>(),
 );
 

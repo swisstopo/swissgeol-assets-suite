@@ -35,6 +35,7 @@ import {
   geometryPolygonGeneralizedIcon,
   geometryPolygonIcon,
 } from './map-styles/geometry';
+import { statusDraftIcon, statusInReviewIcon, statusReviewedIcon } from './map-styles/status';
 import { optionsIcon } from './options';
 import { polygonIcon } from './polygon';
 import { polygonDraw } from './polygon-draw';
@@ -108,6 +109,9 @@ export const icons = [
   accessPublicIcon,
   accessInternalIcon,
   accessLockedIcon,
+  statusDraftIcon,
+  statusInReviewIcon,
+  statusReviewedIcon,
 ];
 
 export { icon24x24 } from './icon';

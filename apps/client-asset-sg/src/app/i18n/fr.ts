@@ -478,6 +478,12 @@ export const frTranslationMapping: AppTranslationMapping = {
         restricted: 'Restreint',
       },
     },
+    workflowStatus: {
+      name: 'Workflow Status',
+      items: {
+        requestedChanges: 'Modification demandée',
+      },
+    },
   },
   pageClassificationCodes: {
     t: 'Texte',

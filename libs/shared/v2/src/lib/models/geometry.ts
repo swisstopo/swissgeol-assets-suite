@@ -1,3 +1,4 @@
+import { WorkflowStatus } from '@swissgeol/ui-core';
 import { AssetId } from './asset';
 
 export interface Geometry {
@@ -6,6 +7,14 @@ export interface Geometry {
   accessType: GeometryAccessType;
   center: Coordinate;
   assetId: AssetId;
+}
+
+/**
+ * A {@link Geometry} as shown in the map overview, including the workflow data of its asset.
+ */
+export interface MapGeometry extends Geometry {
+  workflowStatus: WorkflowStatus;
+  hasRequestedChanges: boolean;
 }
 
 export interface GeometryDetail {
@@ -90,9 +99,10 @@ export const extractGeometryTypeFromId = (id: GeometryId): GeometryType => {
   }
 };
 
-export const serializeGeometryAsCsv = (geometry: Geometry): string => {
+export const serializeGeometryAsCsv = (geometry: MapGeometry): string => {
   // todo: the double ; is because I could not be bothered to fix the parsing; Geometry type is used in multiple sources.
-  return `${geometry.id};${geometry.assetId};;${geometry.accessType};${geometry.center.x};${geometry.center.y}`;
+  const flag = geometry.hasRequestedChanges ? 1 : 0;
+  return `${geometry.id};${geometry.assetId};;${geometry.accessType};${geometry.center.x};${geometry.center.y};${geometry.workflowStatus};${flag}`;
 };
 
 export const parseGeometryIdNumber = (id: GeometryId): number => {

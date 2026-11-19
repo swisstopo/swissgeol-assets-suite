@@ -10,6 +10,8 @@ import {
   LocalDate,
   PageStats,
   SearchType,
+  User,
+  WorkflowStatus,
 } from '@asset-sg/shared/v2';
 import { faker } from '@faker-js/faker';
 
@@ -35,6 +37,7 @@ import { PrismaService } from '@/core/prisma.service';
 import { fakeContact, fakeCreateAssetData, fakeUserData } from '@/features/assets/asset.fake';
 import { CreateAssetDataWithCreator } from '@/features/assets/asset.model';
 import { FileRepo } from '@/features/assets/files/file.repo';
+import { WorkflowRepo } from '@/features/assets/workflow/workflow.repo';
 import { GeometryDetailRepo } from '@/features/geometries/geometry-detail.repo';
 import { GeometryRepo } from '@/features/geometries/geometry.repo';
 import { UserRepo } from '@/features/users/user.repo';
@@ -47,6 +50,7 @@ describe(AssetSearchService, () => {
   const geometryRepo = new GeometryRepo(prisma);
   const geometryDetailRepo = new GeometryDetailRepo(prisma);
   const userRepo = new UserRepo(prisma);
+  const workflowRepo = new WorkflowRepo(prisma);
   const service = new AssetSearchService(elastic);
   const writerService = new SearchWriterService(elastic, prisma, assetRepo, geometryRepo, geometryDetailRepo);
 
@@ -90,6 +94,8 @@ describe(AssetSearchService, () => {
       contacts: asset.contacts,
       createdAt: asset.createdAt,
       geometries: [],
+      workflowStatus: asset.workflowStatus,
+      hasRequestedChanges: asset.hasRequestedChanges,
     };
   };
 
@@ -130,6 +136,43 @@ describe(AssetSearchService, () => {
 
       const hit = response.hits.hits[0]._source as ElasticsearchAsset;
       assertHit(hit, asset);
+    });
+  });
+
+  describe('workflow fields', () => {
+    const searchAll = async (user: User, decode: boolean) =>
+      (await service.search({ type: SearchType.Asset }, user, { decode })).data;
+
+    it('indexes the status and the requested-changes flag of an asset', async () => {
+      const user = await userRepo.create(fakeUserData());
+      const asset = await create({ ...fakeCreateAssetData(), creatorId: user.id });
+
+      for (const decode of [true, false]) {
+        const [item] = await searchAll(user, decode);
+        expect(item.id).toEqual(asset.id);
+        expect(item.workflowStatus).toEqual(WorkflowStatus.Draft);
+        expect(item.hasRequestedChanges).toEqual(false);
+      }
+    });
+
+    it('updates the indexed fields when the workflow changes and the asset is registered again', async () => {
+      const user = await userRepo.create(fakeUserData());
+      const asset = await create({ ...fakeCreateAssetData(), creatorId: user.id });
+
+      const { asset: updatedAsset } = await workflowRepo.change(asset.id, {
+        creatorId: user.id,
+        comment: null,
+        hasRequestedChanges: true,
+        from: { status: WorkflowStatus.Draft, assigneeId: user.id },
+        to: { status: WorkflowStatus.InReview, assigneeId: user.id },
+      });
+      await writerService.register(updatedAsset);
+
+      for (const decode of [true, false]) {
+        const [item] = await searchAll(user, decode);
+        expect(item.workflowStatus).toEqual(WorkflowStatus.InReview);
+        expect(item.hasRequestedChanges).toEqual(true);
+      }
     });
   });
 

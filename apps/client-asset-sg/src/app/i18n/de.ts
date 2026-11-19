@@ -475,6 +475,12 @@ export const deTranslationMapping = {
         restricted: 'Gesperrt',
       },
     },
+    workflowStatus: {
+      name: 'Workflow Status',
+      items: {
+        requestedChanges: 'Änderung angefordert',
+      },
+    },
   },
   pageClassificationCodes: {
     t: 'Text',

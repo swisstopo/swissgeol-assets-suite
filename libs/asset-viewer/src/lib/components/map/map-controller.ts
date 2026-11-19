@@ -3,10 +3,10 @@ import {
   AssetId,
   AssetSearchResultItem,
   extend,
-  Geometry,
   GeometryDetail,
   GeometryId,
   GeometryType,
+  MapGeometry,
 } from '@asset-sg/shared/v2';
 import { buffer } from '@turf/buffer';
 import { Control } from 'ol/control';
@@ -28,6 +28,7 @@ import { CustomFeatureProperties } from '../../shared/map-configuration/custom-f
 import { availableLayerStyles, defaultLayerStyle } from '../../shared/map-configuration/map-layer-styles';
 import { interactionStyles } from '../../shared/map-configuration/styles/system-styles.map-layer-style';
 import { mapAssetAccessToAccessType } from '../../utils/access-type';
+import { mapAssetWorkflowToMapStatus } from '../../utils/workflow-status';
 
 export const DEFAULT_MAP_POSITION: MapPosition = {
   x: SWISS_CENTER[0],
@@ -136,7 +137,7 @@ export class MapController {
     this.map.addControl(control);
   }
 
-  setGeometries(geometries: Geometry[]): void {
+  setGeometries(geometries: MapGeometry[]): void {
     this.assetIdsByGeometryIds.clear();
 
     const locationFeatures: Feature<Point>[] = Array(geometries.length);
@@ -168,7 +169,10 @@ export class MapController {
       locationFeature.setProperties({
         [CustomFeatureProperties.GeometryType]: parseGeometry(geometry.id),
       });
-      locationFeature.setProperties({ [CustomFeatureProperties.AccessType]: geometry.accessType });
+      locationFeature.setProperties({
+        [CustomFeatureProperties.AccessType]: geometry.accessType,
+        [CustomFeatureProperties.WorkflowStatus]: mapAssetWorkflowToMapStatus(geometry),
+      });
       locationFeatures[i] = locationFeature;
     }
 
@@ -199,6 +203,7 @@ export class MapController {
         feature.setProperties({
           [CustomFeatureProperties.GeometryType]: this.mapGeometryToGeometryType(feature.getGeometry()),
           [CustomFeatureProperties.AccessType]: mapAssetAccessToAccessType(asset),
+          [CustomFeatureProperties.WorkflowStatus]: mapAssetWorkflowToMapStatus(asset),
         });
         features.push(feature);
         geometries.push(geometry);
@@ -252,6 +257,7 @@ export class MapController {
         existingFeature.setProperties({
           [CustomFeatureProperties.GeometryType]: this.mapGeometryToGeometryType(existingFeature.getGeometry()),
           [CustomFeatureProperties.AccessType]: mapAssetAccessToAccessType(asset),
+          [CustomFeatureProperties.WorkflowStatus]: mapAssetWorkflowToMapStatus(asset),
         });
       }
       features.push(existingFeature);

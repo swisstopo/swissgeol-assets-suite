@@ -1,8 +1,8 @@
 import {
   AssetSearchQuery,
   AssetSearchResultItem,
-  Geometry,
   GeometryAccessType,
+  MapGeometry,
   SearchQuerySchema,
   SearchType,
   serializeGeometryAsCsv,
@@ -39,7 +39,7 @@ export class GeometriesController {
   }
 }
 
-const mapToGeometry = (data: AssetSearchResultItem[]): Geometry[] => {
+export const mapToGeometry = (data: AssetSearchResultItem[]): MapGeometry[] => {
   return data.flatMap((d) => {
     return d.geometries.map((g) => ({
       assetId: d.id,
@@ -47,6 +47,8 @@ const mapToGeometry = (data: AssetSearchResultItem[]): Geometry[] => {
       center: g.centroid,
       id: g.id,
       type: g.type,
+      workflowStatus: d.workflowStatus,
+      hasRequestedChanges: d.hasRequestedChanges,
     }));
   });
 };

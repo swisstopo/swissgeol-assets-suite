@@ -18,3 +18,5 @@ Newly added Keys (since 22.01.2026)
 - search.fileName
 - search.page
 - search.textMatch
+- mapLayers.workflowStatus.name
+- mapLayers.workflowStatus.items.requestedChanges

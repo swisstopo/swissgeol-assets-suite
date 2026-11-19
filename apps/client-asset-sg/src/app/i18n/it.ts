@@ -474,6 +474,12 @@ export const itTranslationMapping: AppTranslationMapping = {
         restricted: 'Limitato',
       },
     },
+    workflowStatus: {
+      name: 'Workflow Status',
+      items: {
+        requestedChanges: 'Modifica richiesta',
+      },
+    },
   },
   pageClassificationCodes: {
     t: 'Testo',

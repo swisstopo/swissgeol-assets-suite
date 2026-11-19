@@ -32,6 +32,7 @@ const minimal: Asset = {
   createdAt: LocalDate.of(2025, 2, 1),
   receivedAt: LocalDate.of(2025, 4, 3),
   workflowStatus: WorkflowStatus.Draft,
+  hasRequestedChanges: false,
 };
 
 fileFixtures.registerSampleReport(minimal);
@@ -73,6 +74,7 @@ const hauteSorne2dSeismic2023AcquisitionAndProcessingReport: Asset = {
   createdAt: LocalDate.of(2023, 8, 22),
   receivedAt: LocalDate.of(2024, 2, 9),
   workflowStatus: WorkflowStatus.Reviewed,
+  hasRequestedChanges: false,
 };
 
 /**

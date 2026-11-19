@@ -111,6 +111,7 @@ export const assetSelection = {
   workflow: {
     select: {
       status: true,
+      hasRequestedChanges: true,
     },
   },
 } satisfies Prisma.AssetSelect;
@@ -151,6 +152,7 @@ export const parseAssetFromPrisma = (data: SelectedAsset): Asset => ({
   // Defensive fallback: the previous nonNullAssertion caused the app to crash (see https://github.com/swisstopo/swissgeol-assets-suite/issues/702)
   // We default to 'Draft' if the workflow is missing, though this should not happen under normal operation.
   workflowStatus: mapWorkflowStatusFromPrisma(data.workflow?.status ?? 'Draft'),
+  hasRequestedChanges: data.workflow?.hasRequestedChanges ?? false,
 });
 
 const parseLegacyDataFromPrisma = (data: SelectedLegacyData): AssetLegacyData | null => {

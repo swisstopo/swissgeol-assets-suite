@@ -1,8 +1,9 @@
 import { StyleFunction } from 'ol/style/Style';
 import { styleFunctionByAccess } from './styles/access-based.map-layer-style';
 import { styleFunctionByGeometry } from './styles/geometry-based.map-layer-style';
+import { styleFunctionByWorkflowStatus } from './styles/workflow-based.map-layer-style';
 
-export type LayerStyleIdentification = 'geometry' | 'access';
+export type LayerStyleIdentification = 'geometry' | 'access' | 'workflowStatus';
 
 /**
  * A LayerStyle consists of a translatable name, an OpenLayers style function that is responsible for styling the
@@ -64,6 +65,17 @@ export const availableLayerStyles: AvailableLayerStyles = {
         translationKey: 'mapLayers.access.items.internal',
         iconKey: 'access-locked',
       },
+    ],
+  },
+  workflowStatus: {
+    name: 'mapLayers.workflowStatus.name',
+    styleFunction: styleFunctionByWorkflowStatus,
+    styleItems: [
+      { translationKey: 'workflowStatus.Draft', iconKey: 'status-draft' },
+      { translationKey: 'workflowStatus.InReview', iconKey: 'status-in-review' },
+      { translationKey: 'workflowStatus.Reviewed', iconKey: 'status-reviewed' },
+      { translationKey: 'workflowStatus.Published', iconKey: 'access-public' },
+      { translationKey: 'mapLayers.workflowStatus.items.requestedChanges', iconKey: 'access-locked' },
     ],
   },
 };

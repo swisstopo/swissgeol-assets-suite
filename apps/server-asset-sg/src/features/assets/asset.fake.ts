@@ -115,4 +115,5 @@ export const fakeAsset = (): Asset => ({
   creatorId: null,
   restrictionDate: null,
   workflowStatus: WorkflowStatus.Draft,
+  hasRequestedChanges: false,
 });

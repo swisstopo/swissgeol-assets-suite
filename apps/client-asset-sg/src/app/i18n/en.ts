@@ -472,6 +472,12 @@ export const enTranslationMapping: AppTranslationMapping = {
         restricted: 'Restricted',
       },
     },
+    workflowStatus: {
+      name: 'Workflow Status',
+      items: {
+        requestedChanges: 'Change requested',
+      },
+    },
   },
   pageClassificationCodes: {
     t: 'Text',

@@ -110,4 +110,17 @@ export class AssetEditorEffects {
       map(({ asset }) => actions.loadWorkflow({ assetId: asset.id })),
     ),
   );
+
+  updateAssetWorkflowAfterWorkflowChanged$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(setWorkflow),
+      map(({ workflow }) =>
+        appSharedStateActions.updateAssetWorkflow({
+          assetId: workflow.id,
+          workflowStatus: workflow.status,
+          hasRequestedChanges: workflow.hasRequestedChanges,
+        }),
+      ),
+    ),
+  );
 }

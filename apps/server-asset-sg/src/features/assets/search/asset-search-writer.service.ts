@@ -132,6 +132,8 @@ export class AssetSearchWriterService {
           contacts: asset.contacts,
           geometries,
           createdAt: asset.createdAt,
+          workflowStatus: asset.workflowStatus,
+          hasRequestedChanges: asset.hasRequestedChanges,
         } satisfies AssetSearchResultItem),
       ),
       hasFiles: asset.files.length > 0,

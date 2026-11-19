@@ -38,6 +38,7 @@ export const createClientSharedMock = (
       setCurrentAsset: store.createAction('[Asset Search] Set Current Asset', store.props()),
       removeAsset: store.createAction('[Asset Shared] Remove Asset', store.props()),
       updateAsset: store.createAction('[Asset Shared] Update Asset', store.props()),
+      updateAssetWorkflow: store.createAction('[Asset Shared] Update Asset Workflow', store.props()),
     },
     fromAppShared: new Proxy(selectors, { get: (target, key: string) => target[key] ?? (() => null) }),
     AssetExportService: class {},

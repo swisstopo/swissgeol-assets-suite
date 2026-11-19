@@ -126,6 +126,11 @@ export interface Asset extends Model<AssetId> {
    * DB: `workflow` table, "status" field
    */
   workflowStatus: WorkflowStatus;
+
+  /**
+   * DB: `workflow` table, "has_requested_changes" field
+   */
+  hasRequestedChanges: boolean;
 }
 
 export interface AssetLegacyData {
@@ -174,7 +179,14 @@ export type LinkedAsset = Pick<Asset, 'id' | 'title'>;
 //      I would assume that whenever a `type_nat_rel` exists, `is_nat_rel` should be true.
 //      This would enable use to remove the `is_nat_rel` field.
 
-type OmittedDataKeys = 'id' | 'legacyData' | 'children' | 'creatorId' | 'files' | 'workflowStatus';
+type OmittedDataKeys =
+  | 'id'
+  | 'legacyData'
+  | 'children'
+  | 'creatorId'
+  | 'files'
+  | 'workflowStatus'
+  | 'hasRequestedChanges';
 
 export type AssetData = {
   [K in keyof Omit<Asset, OmittedDataKeys>]: AssetDataValueMapping<Asset[K]>;

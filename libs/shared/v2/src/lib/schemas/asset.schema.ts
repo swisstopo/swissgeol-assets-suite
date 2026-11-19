@@ -167,6 +167,8 @@ export class AssetSchema extends Schema implements Asset {
   receivedAt!: LocalDate | null;
 
   workflowStatus!: WorkflowStatus;
+
+  hasRequestedChanges!: boolean;
 }
 
 class AssetDataSchema extends Schema implements AssetData {

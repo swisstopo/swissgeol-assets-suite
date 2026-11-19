@@ -1,3 +1,4 @@
+import { WorkflowStatus } from '@swissgeol/ui-core';
 import { Expose, Type } from 'class-transformer';
 import { IsArray, IsBoolean, IsEnum, IsNumber, IsString, ValidateNested } from 'class-validator';
 import { AssetId } from '../../models/asset';
@@ -77,6 +78,14 @@ export class AssetSearchResultItemSchema extends Schema implements AssetSearchRe
   @Expose()
   @TransformLocalDate()
   createdAt!: LocalDate;
+
+  @Expose()
+  @IsEnum(WorkflowStatus)
+  workflowStatus!: WorkflowStatus;
+
+  @Expose()
+  @IsBoolean()
+  hasRequestedChanges!: boolean;
 }
 
 export class AssetSearchResultSchema extends Schema implements AssetSearchResult {

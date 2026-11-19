@@ -12,7 +12,7 @@ import {
   FulltextContent,
   LocalDate,
 } from '@asset-sg/shared/v2';
-import { transformJsonToFulltextContent } from '@asset-sg/shared/v2';
+import { mapWorkflowStatusFromPrisma, transformJsonToFulltextContent } from '@asset-sg/shared/v2';
 import { Client as ElasticsearchClient } from '@elastic/elasticsearch';
 import { BulkOperationContainer } from '@elastic/elasticsearch/lib/api/types';
 import { Logger } from '@nestjs/common';
@@ -86,7 +86,7 @@ export class FileSearchWriterService {
             manCatLabelRefs: { select: { manCatLabelItemCode: true } },
             assetContacts: { select: { contactId: true, role: true } },
             ids: { select: { id: true } },
-            workflow: { select: { status: true } },
+            workflow: { select: { status: true, hasRequestedChanges: true } },
           },
         },
       },
@@ -178,6 +178,8 @@ export class FileSearchWriterService {
           contacts: asset.assetContacts.map((c) => ({ id: c.contactId, role: c.role as AssetContactRole })),
           geometries: assetGeometryDetails,
           createdAt: LocalDate.fromDate(asset.createDate),
+          workflowStatus: mapWorkflowStatusFromPrisma(asset.workflow?.status ?? 'Draft'),
+          hasRequestedChanges: asset.workflow?.hasRequestedChanges ?? false,
         } satisfies AssetSearchResultItem),
       );
 
@@ -335,6 +337,8 @@ export class FileSearchWriterService {
         contacts: asset.contacts,
         geometries: assetGeometryDetails,
         createdAt: asset.createdAt,
+        workflowStatus: asset.workflowStatus,
+        hasRequestedChanges: asset.hasRequestedChanges,
       } satisfies AssetSearchResultItem),
     );
 

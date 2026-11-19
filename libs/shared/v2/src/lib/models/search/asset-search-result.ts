@@ -1,4 +1,4 @@
-import { LocalDate } from '@swissgeol/ui-core';
+import { LocalDate, WorkflowStatus } from '@swissgeol/ui-core';
 import { AssetId } from '../asset';
 import { AssetContactRole, ContactId } from '../contact';
 import { GeometryDetail, GeometryId } from '../geometry';
@@ -24,6 +24,8 @@ export interface AssetSearchResultItem {
   contacts: AssetSearchResultContact[];
   geometries: GeometryDetail[];
   createdAt: LocalDate;
+  workflowStatus: WorkflowStatus;
+  hasRequestedChanges: boolean;
 }
 
 export interface AssetSearchResult {

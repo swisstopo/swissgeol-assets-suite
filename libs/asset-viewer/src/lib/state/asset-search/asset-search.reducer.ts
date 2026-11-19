@@ -4,13 +4,13 @@ import {
   AssetSearchStats,
   Coordinate,
   FileSearchResult,
-  Geometry,
   GeometryAccessType,
   GeometryDetail,
   GeometryType,
   makeEmptyAssetSearchResults,
   makeEmptyAssetSearchStats,
   makeEmptyFileSearchResults,
+  MapGeometry,
   run,
   SearchQueries,
   SearchType,
@@ -27,7 +27,7 @@ export interface AssetSearchState {
   query: SearchQueries;
   results: AssetSearchResult;
   stats: AssetSearchStats;
-  geometries: Geometry[];
+  geometries: MapGeometry[];
   ui: AssetSearchUiState;
 
   /**
@@ -196,6 +196,23 @@ export const assetSearchReducer = createReducer(
       geometries: state.geometries?.filter((geometry) => geometry.assetId !== assetId) ?? null,
     }),
   ),
+  on(
+    appSharedStateActions.updateAssetWorkflow,
+    (state, { assetId, workflowStatus, hasRequestedChanges }): AssetSearchState => {
+      const isUnchanged = (geometry: MapGeometry) =>
+        geometry.assetId !== assetId ||
+        (geometry.workflowStatus === workflowStatus && geometry.hasRequestedChanges === hasRequestedChanges);
+      if (state.geometries.every(isUnchanged)) {
+        return state;
+      }
+      return {
+        ...state,
+        geometries: state.geometries.map((geometry) =>
+          isUnchanged(geometry) ? geometry : { ...geometry, workflowStatus, hasRequestedChanges },
+        ),
+      };
+    },
+  ),
   on(appSharedStateActions.updateAsset, (state, { asset, geometries }): AssetSearchState => {
     return {
       ...state,
@@ -206,13 +223,15 @@ export const assetSearchReducer = createReducer(
         return state.geometries
           .filter((geometry) => geometry.assetId !== asset.id)
           .concat(
-            geometries.map((geometry): Geometry => {
+            geometries.map((geometry): MapGeometry => {
               return {
                 id: geometry.id,
                 type: geometry.type,
                 accessType: asset.isPublic ? GeometryAccessType.Public : GeometryAccessType.Internal,
                 center: extractCenterFromGeometryDetail(geometry),
                 assetId: asset.id,
+                workflowStatus: asset.workflowStatus,
+                hasRequestedChanges: asset.hasRequestedChanges,
               };
             }),
           );
