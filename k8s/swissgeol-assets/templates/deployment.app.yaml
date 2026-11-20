@@ -22,7 +22,7 @@ spec:
         image: {{ .Values.image_app }}
         imagePullPolicy: Always
         ports:
-          - containerPort: 80
+          - containerPort: 8080
 
         resources:
           limits:
