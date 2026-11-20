@@ -30,7 +30,7 @@ spec:
             - name: discovery.type
               value: single-node
             - name: ES_JAVA_OPTS
-              value: '-Xms1024m -Xmx1024m'
+              value: '-Xms1024m -Xmx1024m -XX:-UseBASE64Intrinsics'
             - name: ELASTIC_PASSWORD
               valueFrom:
                 secretKeyRef:
@@ -54,7 +54,7 @@ spec:
               memory: 2Gi
           volumeMounts:
             - name: {{ .Release.Name }}-elasticsearch-volume
-              mountPath: /usr/share/elasticsearch/data  
+              mountPath: /usr/share/elasticsearch/data
       restartPolicy: Always
       securityContext:
         fsGroup: 0
