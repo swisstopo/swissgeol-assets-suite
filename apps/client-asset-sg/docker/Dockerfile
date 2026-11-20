@@ -1,4 +1,4 @@
-FROM node:22.23.4-alpine AS app-builder
+FROM node:26.13.1-alpine AS app-builder
 
 RUN apk add --no-cache openssl
 
