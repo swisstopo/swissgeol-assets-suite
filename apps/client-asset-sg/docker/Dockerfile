@@ -23,7 +23,8 @@ RUN --mount=type=secret,id=github_token \
  && npx nx build client-asset-sg --configuration=production
 
 # final image build
-FROM nginx:mainline-alpine
+# Pinned to the current patched release (nginx.org/en/security_advisories.html)
+FROM nginx:1.31.9-alpine3.24
 
 ARG APP_VERSION
 ENV APP_VERSION=${APP_VERSION}
