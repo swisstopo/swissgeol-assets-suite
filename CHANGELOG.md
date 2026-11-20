@@ -12,6 +12,12 @@
 - Synchronization (`sync-extern` and `export-to-view`) copies all asset types of an asset. Both databases must be migrated before the next synchronization.
 - The nightly PROD to PROD-View sync now publishes released assets of all workgroups instead of only swisstopo. The `SOURCE_WORKGROUP_IDS` / `DESTINATION_WORKGROUP_IDS` settings were removed.
 
+## v.1.23.1
+
+### Security
+
+- Updated Node.js to 22.23.4 in the API, sync and client build images and in the CI pipeline, addressing the October 2026 Node.js security releases.
+
 ## v.1.23.0
 
 ### Added
